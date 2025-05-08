@@ -48,11 +48,7 @@ def web_search(
     }
 
     # System prompt
-    system = (
-        system_prompt
-        if system_prompt is not None
-        else "You are an artificial intelligence assistant and you need to engage in a helpful, detailed, polite conversation with a user."
-    )
+    system = "You are an artificial intelligence assistant and you need to engage in a helpful, detailed, polite conversation with a user."
 
     # User's question (formating)
     messages = [
