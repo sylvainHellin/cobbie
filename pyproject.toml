@@ -8,13 +8,14 @@ dependencies = [
     "chromadb>=1.0.8",
     "dspy>=2.6.23",
     "duckduckgo-search>=8.0.1",
+    "gradio>=5.29.0",
     "ifcopenshell>=0.8.2",
     "ipykernel>=6.29.5",
     "jupyter>=1.1.1",
     "ollama>=0.4.8",
     "pydantic>=2.11.4",
     "python-dotenv>=1.1.0",
-    "smolagents>=1.15.0",
+    "smolagents[gradio]>=1.15.0",
 ]
 
 [tool.setuptools]
