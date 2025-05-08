@@ -1,0 +1,27 @@
+[project]
+name = "ifcanswerenginev3"
+version = "0.1.0"
+description = "An Engine that can answer any question related to a given BIM model in .ifc format."
+readme = "README.md"
+requires-python = ">=3.12"
+dependencies = [
+    "chromadb>=1.0.8",
+    "dspy>=2.6.23",
+    "duckduckgo-search>=8.0.1",
+    "ifcopenshell>=0.8.2",
+    "ipykernel>=6.29.5",
+    "jupyter>=1.1.1",
+    "ollama>=0.4.8",
+    "pydantic>=2.11.4",
+    "python-dotenv>=1.1.0",
+    "smolagents>=1.15.0",
+]
+
+[tool.setuptools]
+package-dir = { "" = "src" }
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.pytest.ini_options]
+pythonpath = ["."]

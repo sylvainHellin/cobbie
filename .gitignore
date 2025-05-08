@@ -1,0 +1,25 @@
+# Python-generated files
+__pycache__/
+*.py[oc]
+build/
+dist/
+wheels/
+*.egg-info
+
+# Virtual environments
+.venv
+
+# secrets
+.env
+
+# junk
+*.DS_Store
+*.pyc
+*.pdf
+*.bin
+
+# no need to upload
+
+src/bim_models
+src/datasets
+pyrightconfig.json
