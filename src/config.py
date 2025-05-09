@@ -22,6 +22,7 @@ DEEPSEEK_API_KEY = os.environ["DEEPSEEK_API_KEY"]
 GROQ_API_KEY = os.environ["GROQ_API_KEY"]
 MISTRAL_API_KEY = os.environ["MISTRAL_API_KEY"]
 FIREWORKS_API_KEY = os.environ["FIREWORKS_API_KEY"]
+CEREBRAS_API_KEY = os.environ["CEREBRAS_API_KEY"]
 
 # Set up language model (LiteLLM endpoints)
 LANGUAGE_MODELS = {
@@ -41,8 +42,10 @@ LANGUAGE_MODELS = {
     ),
     "gemma_9b": LiteLLMModel("ollama_chat/gemma2:9b-instruct-q8_0"),
     "phi4": LiteLLMModel("ollama_chat/phi4:latest"),
-    "mistral": LiteLLMModel("mistral/mistral-large-latest"),
+    "qwen3_30b": LiteLLMModel("ollama_chat/qwen3:30b"),
+    "mistral": LiteLLMModel("mistral/mistral-medium-latest"),
     "openai": LiteLLMModel("openai/gpt-4o", api_key=OPENAI_API_KEY),
+    "llama4_scout": LiteLLMModel("cerebras/llama-4-scout-17b-16e-instruct", api_key=CEREBRAS_API_KEY),
 }
 
 # Default models to test in comparisons
@@ -57,7 +60,7 @@ MODELS_TO_TEST = [
 ]
 
 # Boilerplate code for the toolmaker
-BOILERPLATE = """ 
+BOILERPLATE = """
 import sys
 import os
 
