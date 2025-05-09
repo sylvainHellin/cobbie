@@ -82,10 +82,6 @@ def web_search(
 if __name__ == "__main__":
     # arguments
     question = "How can I get a list of all doors from an .ifc model using IfcOpenShell in python?"
-    system_prompt = (
-        "You are an artificial intelligence assistant and you need to "
-        "engage in a helpful, detailed, polite conversation with a user."
-    )
 
     response1 = web_search(query=question)
     print(response1)
