@@ -1,5 +1,6 @@
 from smolagents import tool
 import ifcopenshell
+import ifcopenshell.util.element
 
 
 @tool
@@ -13,7 +14,7 @@ def get_room_ceiling_height(ifc_file_path: str, room_identifier: str) -> dict:
 
     Returns:
         dict: Dictionary containing:
-            - height (float): Ceiling height value
+            - height (float): Ceiling hweight value
             - unit (str): Unit of measurement
             - room_info (dict): Additional room information
             - success (bool): Whether the operation was successful
@@ -161,3 +162,13 @@ def get_room_ceiling_height(ifc_file_path: str, room_identifier: str) -> dict:
     except Exception as e:
         result["message"] = f"Error: {str(e)}"
         return result
+
+
+if __name__ == "__main__":
+    from config import TEST_IFC_PATH
+
+    room_name = "A203"
+    result = get_room_ceiling_height(
+        ifc_file_path=TEST_IFC_PATH, room_identifier=room_name
+    )
+    print(result)
