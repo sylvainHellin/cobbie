@@ -3,9 +3,17 @@
 from smolagents import CodeAgent
 from src.tools import TOOLS
 from src.config import LANGUAGE_MODELS
+from phoenix.otel import register
+from openinference.instrumentation.smolagents import SmolagentsInstrumentor
 
+# set up tracing
+register()
+SmolagentsInstrumentor().instrument()
+
+# Select LLM
 model = LANGUAGE_MODELS["mistral"]
 
+# Set up the agent
 agent = CodeAgent(
     tools=TOOLS,
     model=model,
