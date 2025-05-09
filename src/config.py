@@ -7,6 +7,7 @@ load_dotenv(find_dotenv())
 # Get the src directory path
 ROOT_PATH = os.environ["ROOT_PATH"]
 SRC_PATH = os.path.join(ROOT_PATH, "src")
+TEST_IFC_PATH = os.path.join(SRC_PATH, "bim_models/duplex/arc.ifc")
 
 # PATH
 DATASET_PATH = os.path.join(SRC_PATH, "datasets", "ifc-bench-v1.csv")
@@ -45,7 +46,9 @@ LANGUAGE_MODELS = {
     "qwen3_30b": LiteLLMModel("ollama_chat/qwen3:30b"),
     "mistral": LiteLLMModel("mistral/mistral-medium-latest"),
     "openai": LiteLLMModel("openai/gpt-4o", api_key=OPENAI_API_KEY),
-    "llama4_scout": LiteLLMModel("cerebras/llama-4-scout-17b-16e-instruct", api_key=CEREBRAS_API_KEY),
+    "llama4_scout": LiteLLMModel(
+        "cerebras/llama-4-scout-17b-16e-instruct", api_key=CEREBRAS_API_KEY
+    ),
 }
 
 # Default models to test in comparisons
