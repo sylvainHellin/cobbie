@@ -1,17 +1,42 @@
 # %%
+'''
+Current implementation of the IfcAnswerEngineV3.
+Trace can be seen on: https://cloud.langfuse.com/
+'''
 
-from smolagents import CodeAgent
-from src.tools import TOOLS
-from src.config import LANGUAGE_MODELS
-from phoenix.otel import register
+import base64
+import os
+
+from dotenv import find_dotenv, load_dotenv
 from openinference.instrumentation.smolagents import SmolagentsInstrumentor
+from opentelemetry.exporter.otlp.proto.http.trace_exporter import OTLPSpanExporter
+from opentelemetry.sdk.trace import TracerProvider
+from opentelemetry.sdk.trace.export import SimpleSpanProcessor
+from smolagents import CodeAgent
 
-# set up tracing
-register()
-SmolagentsInstrumentor().instrument()
+from src.config import LANGUAGE_MODELS
+from src.tools import TOOLS
+
+# Load secrets
+load_dotenv(find_dotenv())
+
+LANGFUSE_PUBLIC_KEY = os.environ["LANGFUSE_PUBLIC_KEY"]
+LANGFUSE_SECRET_KEY = os.environ["LANGFUSE_SECRET_KEY"]
+LANGFUSE_HOST = os.environ["LANGFUSE_HOST"]
+
+# Set up Langfuse
+LANGFUSE_AUTH=base64.b64encode(f"{LANGFUSE_PUBLIC_KEY}:{LANGFUSE_SECRET_KEY}".encode()).decode()
+os.environ["OTEL_EXPORTER_OTLP_ENDPOINT"] = "https://cloud.langfuse.com/api/public/otel" # EU data region
+os.environ["OTEL_EXPORTER_OTLP_HEADERS"] = f"Authorization=Basic {LANGFUSE_AUTH}"
+
+# Set up Telemetry
+trace_provider = TracerProvider()
+trace_provider.add_span_processor(SimpleSpanProcessor(OTLPSpanExporter()))
+SmolagentsInstrumentor().instrument(tracer_provider=trace_provider)
 
 # Select LLM
-model = LANGUAGE_MODELS["claude"]
+model = LANGUAGE_MODELS["llama4_maverick"]
+model = LANGUAGE_MODELS["llama4_scout"]
 
 # Set up the agent
 agent = CodeAgent(
