@@ -41,6 +41,10 @@ LANGUAGE_MODELS = {
         "fireworks_ai/accounts/fireworks/models/llama-v3p3-70b-instruct",
         api_key=FIREWORKS_API_KEY,
     ),
+    "qwen3_235b": LiteLLMModel(
+        "fireworks_ai/accounts/fireworks/models/qwen3-235b-a22b",
+        api_key=FIREWORKS_API_KEY,
+    ),
     "gemma_9b": LiteLLMModel("ollama_chat/gemma2:9b-instruct-q8_0"),
     "phi4": LiteLLMModel("ollama_chat/phi4:latest"),
     "qwen3_30b": LiteLLMModel("ollama_chat/qwen3:30b"),
@@ -48,6 +52,9 @@ LANGUAGE_MODELS = {
     "openai": LiteLLMModel("openai/gpt-4o", api_key=OPENAI_API_KEY),
     "llama4_scout": LiteLLMModel(
         "cerebras/llama-4-scout-17b-16e-instruct", api_key=CEREBRAS_API_KEY
+    ),
+    "llama4_maverick": LiteLLMModel(
+        "groq/meta-llama/llama-4-maverick-17b-128e-instruct", api_key=GROQ_API_KEY
     ),
 }
 
