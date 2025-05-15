@@ -17,21 +17,23 @@ Tracing:
 
 import base64
 import os
+import re
 import sqlite3
 import uuid
-import re
 from datetime import datetime
+from sqlite3 import Connection
+from typing import Literal
 
+import opentelemetry.trace
 from dotenv import find_dotenv, load_dotenv
 from openinference.instrumentation.smolagents import SmolagentsInstrumentor
 from smolagents import CodeAgent, tool
-from smolagents.monitoring import LogLevel
 from smolagents.agents import ActionStep
-from typing import Literal
-import opentelemetry.trace
+from smolagents.monitoring import LogLevel
 
 from src.config import LANGUAGE_MODELS
-from src.tools import TOOLS, web_search, query_ifcopenshell_documentation
+from src.db import connection
+from src.tools import TOOLS, query_ifcopenshell_documentation, web_search
 
 # Load secrets
 load_dotenv(find_dotenv())
@@ -39,61 +41,17 @@ load_dotenv(find_dotenv())
 # %% Section::config
 
 # SQLite Database setup
-DB_NAME = "smolagents_runs.db"
 current_run_id = None
-db_conn = None
+db_conn: Connection = connection()
 
 # To store previous token counts per agent for calculating per-step tokens
 previous_agent_token_counts = {}
-
-
-def init_sqlite_db():
-    global db_conn, previous_agent_token_counts
-    previous_agent_token_counts = {}  # Reset for each script run / DB init
-    db_conn = sqlite3.connect(DB_NAME)
-    cursor = db_conn.cursor()
-
-    table_columns_to_add = {
-        "action_input_code": "TEXT",
-        "input_tokens": "INTEGER",
-        "output_tokens": "INTEGER",
-    }
-    for column_name, column_type in table_columns_to_add.items():
-        try:
-            cursor.execute(
-                f"ALTER TABLE run_steps ADD COLUMN {column_name} {column_type}"
-            )
-            # print(f"[DB_SETUP] Added column '{column_name}' to 'run_steps' table.") # Optional print
-        except sqlite3.OperationalError as e:
-            if "duplicate column name" in str(e).lower():
-                pass
-            else:
-                raise
-
-    cursor.execute("""
-    CREATE TABLE IF NOT EXISTS run_steps (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        run_id TEXT NOT NULL,
-        agent_name TEXT,
-        step_number INTEGER,
-        timestamp DATETIME DEFAULT CURRENT_TIMESTAMP,
-        model_output TEXT,
-        action_input_code TEXT,
-        action_output TEXT,
-        observations TEXT,
-        error TEXT,
-        duration_s REAL,
-        input_tokens INTEGER,    
-        output_tokens INTEGER    
-    )
-    """)
-    db_conn.commit()
-
 
 # Select LLM
 model = LANGUAGE_MODELS["llama4_maverick"]
 
 # Q&A
+QUESTION_ID = 1
 QUESTION = "What is the height of the ceiling in room A203?"
 GROUND_TRUTH = "The height of the ceiling in room A203 is 2.58 m."
 
@@ -308,9 +266,6 @@ agent = CodeAgent(
 )
 
 # %% Section::run
-
-# Initialize SQLite DB
-init_sqlite_db()
 
 # Generate a unique run ID for this execution
 current_run_id = str(uuid.uuid4())
