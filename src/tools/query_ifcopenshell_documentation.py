@@ -18,7 +18,7 @@ class OllamaEmbeddingFunction(EmbeddingFunction):
     def __call__(self, documents: Documents) -> Embeddings:
         embd = embed(model=EMBEDDING_MODEL, input=documents)
         embeddings = [np.array(embd["embeddings"][0], dtype=np.float32)]
-        return embeddings
+        return embeddings  # type:ignore
 
 
 # Move the client initialization into a function
@@ -110,9 +110,7 @@ def query_ifcopenshell_documentation(
 
     # Input validation for n_results
     if not isinstance(n_results, int) or n_results <= 0:
-        return {
-            "error": "ValueError: n_results must be a positive integer."
-        }  # Return error dict
+        return "ValueError: n_results must be a positive integer."
 
     # Input validation for metadata_filter using Pydantic
     validated_metadata_filter = None
@@ -120,18 +118,15 @@ def query_ifcopenshell_documentation(
         try:
             validated_metadata_filter = MetadataFilter(**metadata_filter)
         except ValidationError as e:
-            return {
-                "error": f"ValueError: Invalid metadata_filter: {e}"
-            }  # Return error dict
+            return f"ValueError: Invalid metadata_filter: {e}"
 
     # create the embedding of the user's query
-
     try:
         embeddings = ollama_embed([query])
     except Exception as e:
         error_msg = f"Error generating embeddings: {e}"
         print(error_msg)  # Optionally keep printing for logs
-        return {"error": error_msg}  # Return error dict
+        return f"error: {error_msg}"
 
     # structure the db query to include filters if passed as arguments
     where_document = {"$contains": docstring_filter} if docstring_filter else None
@@ -151,38 +146,46 @@ def query_ifcopenshell_documentation(
         results = collection.query(
             query_embeddings=embeddings,
             n_results=n_results,
-            where=where_metadata,
-            where_document=where_document,
+            where=where_metadata,  # type:ignore
+            where_document=where_document,  # type:ignore
         )
 
     except Exception as e:
         error_msg = f"Error querying the database: {e}"
         print(error_msg)  # Optionally keep printing for logs
-        return {"error": error_msg}  # Return error dict
+        return f"error: {error_msg}"
 
     # print some details if verbose
     if verbose:
         print("=" * 50)
         print(f"\nRetrieval for the query: \n{query}\n")
+        metadata = None
+        document = None
         # restructured print output for better readability
         for i in range(len(results["ids"][0])):
-            metadata = results["metadatas"][0][i]
-            document = results["documents"][0][i]
+            if results["metadatas"] is not None:
+                if results["metadatas"][0] is not None:
+                    metadata = results["metadatas"][0][i]
+            if results["documents"] is not None:
+                if results["documents"][0] is not None:
+                    document = results["documents"][0][i]
 
-            print("Metadata:")
-            print(json.dumps(metadata, indent=2))
-            print("\nDocument:")
-            print(document)  # This will properly render the newlines
+            if metadata is not None:
+                print("Metadata:")
+                print(json.dumps(metadata, indent=2))
+            if document is not None:
+                print("\nDocument:")
+                print(document)  # This will properly render the newlines
             print("\n" + "=" * 50)
 
     # create and return the successful response
     response = []
     for i in range(len(results["ids"][0])):
         elt = {
-            "module": results["metadatas"][0][i]["module"],
-            "type": results["metadatas"][0][i]["type"],
-            "name": results["metadatas"][0][i]["name"],
-            "docstring": results["documents"][0][i],
+            "module": (results["metadatas"] or [[]])[0][i]["module"],
+            "type": (results["metadatas"] or [[]])[0][i]["type"],
+            "name": (results["metadatas"] or [[]])[0][i]["name"],
+            "docstring": (results["documents"] or [[]])[0][i],
         }
         response.append(elt)
 
@@ -203,19 +206,17 @@ if __name__ == "__main__":
         metadata_filter={"field": "type", "operator": "$eq", "value": "function"},
     )
 
-    print("=" * 50)
-    print("Test with valid example:")
+    print("\n", "=" * 50, "\n")
+    print("<Test with valid example>")
+    print(f"Query: {query}\n")
     # print(json.dumps(res1, indent=2))
     print(res1)
 
     # Example usage with INVALID metadata_filter (missing 'operator')
     print("=" * 50)
-    print("Test with invalid example:")
+    print("<Test with invalid example (missing operator in metadata filter)>")
     res2 = query_ifcopenshell_documentation(
         query="test query",
         metadata_filter={"field": "type", "value": "function"},  # Missing 'operator'
     )
     print(json.dumps(res2, indent=2))
-
-
-# %%
