@@ -25,6 +25,9 @@ MISTRAL_API_KEY = os.environ["MISTRAL_API_KEY"]
 FIREWORKS_API_KEY = os.environ["FIREWORKS_API_KEY"]
 CEREBRAS_API_KEY = os.environ["CEREBRAS_API_KEY"]
 
+# Database
+DB_NAME = "db.db"
+
 # Set up language model (LiteLLM endpoints)
 LANGUAGE_MODELS = {
     "claude": LiteLLMModel(
