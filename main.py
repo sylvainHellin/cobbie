@@ -13,6 +13,9 @@ Tracing:
 
     2. LangFuse
     If running tracing with Langfuse, trace can be seen on: https://cloud.langfuse.com/
+
+Backlog:
+    - Fix current error with fetching data from the db
 """
 
 import base64
