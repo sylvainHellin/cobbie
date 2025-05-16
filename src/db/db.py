@@ -23,6 +23,14 @@ class RunsRow(BaseModel):
     timestamp: Optional[datetime] = None
 
 
+class IfcModelRow(BaseModel):
+    id: int
+    project_name: Optional[str] = None
+    model_name: Optional[str] = None
+    model_path: Optional[str] = None
+    model_description: Optional[str] = None
+
+
 class LogRow(BaseModel):
     id: int
     run_id: Optional[int] = None
@@ -155,6 +163,32 @@ def get_run_row(id: int) -> RunsRow:
         return run
 
 
+def get_ifc_model_row(id: int) -> IfcModelRow:
+    """
+    Returns an IfcModelRow pydantic object with the values of the rows from the database for the given id.
+    If the id is invalid, the IfcModelRow object will only contain the id.
+    """
+    with connection() as db_conn:
+        cursor = db_conn.cursor()
+        cursor.execute("SELECT * FROM ifc_models WHERE id = ?", (id,))
+        result = cursor.fetchone()
+        ifc_model = IfcModelRow(id=id)
+        if result is not None:
+            try:
+                ifc_model.id = result[0]
+                ifc_model.project_name = result[1]
+                ifc_model.model_name = result[2]
+                ifc_model.model_path = result[3]
+                ifc_model.model_description = result[4]
+            except Exception as e:
+                print(
+                    f"Error while trying to fetch the ifc model with id: {id}\nError: {e}"
+                )
+                pass
+
+        return ifc_model
+
+
 def get_log_row(id: int) -> LogRow:
     """
     Returns a LogRow pydantic object with the values of the rows from the database for the given id.
@@ -202,4 +236,7 @@ if __name__ == "__main__":
     )
     print(
         f"Row from logs with id == 1: {json.dumps(get_log_row(1).model_dump(), indent=2)}"
+    )
+    print(
+        f"Row from ifc_models with id == 1: {json.dumps(get_ifc_model_row(1).model_dump(), indent=2)}"
     )
