@@ -32,7 +32,7 @@ from smolagents.agents import ActionStep
 from smolagents.monitoring import LogLevel
 
 from src.config import LANGUAGE_MODELS
-from src.db import connection
+from src.db import connection, get_dataset_row, DatasetRow
 from src.tools import TOOLS, query_ifcopenshell_documentation, web_search
 
 # Load secrets
@@ -40,20 +40,20 @@ load_dotenv(find_dotenv())
 
 # %% Section::config
 
-# SQLite Database setup
-current_run_id = None
-db_conn: Connection = connection()
-
-# To store previous token counts per agent for calculating per-step tokens
-previous_agent_token_counts = {}
-
 # Select LLM
 model = LANGUAGE_MODELS["llama4_maverick"]
 
-# Q&A
+# Select question
 QUESTION_ID = 1
-QUESTION = "What is the height of the ceiling in room A203?"
-GROUND_TRUTH = "The height of the ceiling in room A203 is 2.58 m."
+
+# SQLite Database setup
+current_run_id = None
+db_conn: Connection = connection()
+dataset_row: DatasetRow = get_dataset_row(id=1)
+QUESTION = dataset_row.question if dataset_row.question is not None else ""
+GROUND_TRUTH = dataset_row.ground_truth if dataset_row.ground_truth is not None else ""
+
+previous_agent_token_counts = {}  # To store previous token counts per agent for calculating per-step tokens TODO refactor
 
 # Tracing - Phoenix or Langfuse for OTel, SQLite is always active via callback
 TRACING: Literal["phoenix", "langfuse"] = "phoenix"
