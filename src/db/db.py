@@ -114,15 +114,15 @@ def connection() -> Connection:
     return sqlite3.connect(DB_NAME)
 
 
-def get_dataset_row(question_id: int) -> DatasetRow:
+def get_dataset_row(id: int) -> DatasetRow:
     """
     Returns a Dataset pydantic object with the values of the rows from the database for the given id. If the id is invalid, the Dataset object will only contain 0 for integers and "" for str.
     """
     with connection() as db_conn:
         cursor = db_conn.cursor()
-        cursor.execute("SELECT * FROM dataset WHERE id = ?", (question_id,))
+        cursor.execute("SELECT * FROM dataset WHERE id = ?", (id,))
         result = cursor.fetchone()
-        dataset = DatasetRow(id=question_id)
+        dataset = DatasetRow(id=id)
         if result is not None:
             try:
                 dataset.id = result[0]
@@ -131,7 +131,7 @@ def get_dataset_row(question_id: int) -> DatasetRow:
                 dataset.ifc_id = result[3]
             except Exception as e:
                 print(
-                    f"Error while trying to fetch the questio with id: {question_id}\nError: {e}"
+                    f"Error while trying to fetch the questio with id: {id}\nError: {e}"
                 )
                 pass
 
