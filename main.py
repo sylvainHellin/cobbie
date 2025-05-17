@@ -15,7 +15,8 @@ Tracing:
     If running tracing with Langfuse, trace can be seen on: https://cloud.langfuse.com/
 
 Backlog:
-    - Fix current error with fetching data from the db
+    - Update the logging of runs in the db
+    - Create a detailled summary of the structure of the ifcOpenShell API to be included as part of the context to the ToolMaker agent.
 """
 
 import base64
