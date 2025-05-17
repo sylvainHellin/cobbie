@@ -1,10 +1,15 @@
+import os
 import sqlite3
-from sqlite3 import Connection
-from pydantic import BaseModel
 from datetime import datetime
+from sqlite3 import Connection
 from typing import Optional
 
-from config import DB_NAME
+from dotenv import find_dotenv, load_dotenv
+from pydantic import BaseModel
+
+load_dotenv(find_dotenv())
+
+DB_PATH = os.environ["DB_PATH"]
 
 
 class DatasetRow(BaseModel):
@@ -51,7 +56,7 @@ class LogRow(BaseModel):
 def init_sqlite_db():
     global db_conn, previous_agent_token_counts
     previous_agent_token_counts = {}  # Reset for each script run / DB init
-    db_conn = sqlite3.connect(DB_NAME)
+    db_conn = sqlite3.connect(DB_PATH)
     cursor = db_conn.cursor()
 
     cursor.execute("""
@@ -111,7 +116,7 @@ def init_sqlite_db():
 
 def connection() -> Connection:
     """Return a connection to the database"""
-    return sqlite3.connect(DB_NAME)
+    return sqlite3.connect(DB_PATH)
 
 
 def get_dataset_row(id: int) -> DatasetRow:
