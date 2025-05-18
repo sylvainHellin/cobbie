@@ -15,8 +15,9 @@ Tracing:
     If running tracing with Langfuse, trace can be seen on: https://cloud.langfuse.com/
 
 Backlog:
-    - Update the logging of runs in the db
     - Create a detailled summary of the structure of the ifcOpenShell API to be included as part of the context to the ToolMaker agent.
+    - Remove question_id from logs and move it into runs.
+    - Implemment the logging of runs in the db
 """
 
 import base64
@@ -36,7 +37,7 @@ from smolagents.agents import ActionStep
 from smolagents.monitoring import LogLevel
 
 from src.config import LANGUAGE_MODELS
-from src.db import connection, get_dataset_row, DatasetRow
+from src.db import connection, get_dataset_row, DatasetRow, RunsRow, create_new_run
 from src.tools import TOOLS, query_ifcopenshell_documentation, web_search
 
 # Load secrets
