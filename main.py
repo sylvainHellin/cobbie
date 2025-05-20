@@ -37,7 +37,7 @@ from smolagents.agents import ActionStep
 from smolagents.monitoring import LogLevel
 
 from src.config import LANGUAGE_MODELS
-from src.db import connection, get_dataset_row, DatasetRow, RunsRow, create_new_run
+from src.db import connection, get_dataset_row, DatasetRow, RunsRow, insert_new_run
 from src.tools import TOOLS, query_ifcopenshell_documentation, web_search
 
 # Load secrets
