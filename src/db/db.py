@@ -248,6 +248,20 @@ def get_log_row(id: int) -> LogRow:
         return log
 
 
+def get_last_log_id(run_id: int) -> int:
+    with connection() as conn:
+        cursor = conn.cursor()
+        cursor.execute(
+            """
+            SELECT MAX(id) FROM logs WHERE run_id = ?
+            """,
+            (run_id,)
+        )
+        last_row_id = cursor.fetchone()[0]
+
+    return last_row_id or 0
+
+
 def insert_new_ifc_model(ifc_model: IfcModelRow) -> int:
     """
     Inserts a new ifc model into the ifc_models table and returns the ID of the inserted model or 0 if none is generated.
@@ -420,3 +434,12 @@ if __name__ == "__main__":
     print(
         f"Row from logs with id == {new_log_id}: \n{json.dumps(get_log_row(1).model_dump(), indent=2, cls=DateTimeEncoder)}"
     )
+    
+    # Test getting the last log ID for a run
+    last_log_id = get_last_log_id(run_id=new_run_id)
+    print(f"\nLast log ID for run_id {new_run_id}: {last_log_id}")
+    
+    # Test with a non-existent run_id
+    non_existent_run_id = 9999
+    last_log_id_none = get_last_log_id(run_id=non_existent_run_id)
+    print(f"Last log ID for non-existent run_id {non_existent_run_id}: {last_log_id_none}")
