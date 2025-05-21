@@ -37,7 +37,17 @@ from smolagents.agents import ActionStep
 from smolagents.monitoring import LogLevel
 
 from src.config import LANGUAGE_MODELS
-from src.db import connection, get_dataset_row, DatasetRow, RunsRow, insert_new_run
+from src.db import (
+    get_dataset_row,
+    DatasetRow,
+    RunsRow,
+    LogRow,
+    insert_new_run,
+    insert_new_log,
+    get_log_row,
+    get_last_log_id,
+    get_tokens_count_logs,
+)
 from src.tools import TOOLS, query_ifcopenshell_documentation, web_search
 
 # Load secrets
@@ -53,7 +63,6 @@ QUESTION_ID = 1
 
 # SQLite Database setup
 current_run_id = None
-db_conn: Connection = connection()
 dataset_row: DatasetRow = get_dataset_row(id=1)
 QUESTION = dataset_row.question if dataset_row.question is not None else ""
 GROUND_TRUTH = dataset_row.ground_truth if dataset_row.ground_truth is not None else ""
@@ -100,91 +109,30 @@ elif TRACING == "langfuse":
 CODE_BLOCK_RE = re.compile(r"```(?:python|py)?\s*([\s\S]+?)\s*```")
 
 
-# Custom callback for SQLite logging
-def sqlite_log_callback(step_log: ActionStep, agent: CodeAgent) -> None:
-    global db_conn, current_run_id, previous_agent_token_counts
-    if not db_conn or not current_run_id:
-        print("[SQLITE_CALLBACK_ERROR] DB connection or run_id not set.")
-        return
+# Custom callback for logging each step of the agentic workflow
+def log_step(
+    step: ActionStep,
+    agent: CodeAgent,
+    run_id: int,
+) -> None:
+    previous_input_tokens, previous_output_tokens = get_tokens_count_logs(run_id=run_id)
+    new_log = LogRow(
+        agent_name=agent.name,
+        run_id=run_id,
+        step_number=step.step_number,
+        timestamp=datetime.now(),
+        model_output=step.model_output,
+        action_input_code=None,  # TODO update this when the structure of the model output is clearer
+        action_output=step.action_output,
+        observations=step.observations,
+        error=str(step.error),
+        duration=step.duration,
+        input_tokens=agent.monitor.total_input_token_count - previous_input_tokens,
+        output_tokens=agent.monitor.total_output_token_count - previous_output_tokens,
+    )
+    insert_new_log(new_log=new_log)
 
-    # Get current total token counts for this agent
-    current_total_input = agent.monitor.total_input_token_count
-    current_total_output = agent.monitor.total_output_token_count
-
-    # Get previous counts for this agent, default to 0 if first step
-    agent_key = (
-        agent.name
-    )  # Or id(agent) for more robustness if names can clash and agents are reused
-    prev_counts = previous_agent_token_counts.get(agent_key, {"input": 0, "output": 0})
-
-    step_input_tokens = current_total_input - prev_counts["input"]
-    step_output_tokens = current_total_output - prev_counts["output"]
-
-    log_data = {
-        "run_id": current_run_id,
-        "agent_name": agent.name,
-        "step_number": None,
-        "model_output": None,
-        "action_input_code": None,
-        "action_output": None,
-        "observations": None,
-        "error": None,
-        "duration_s": None,
-        "input_tokens": step_input_tokens,
-        "output_tokens": step_output_tokens,
-        "timestamp": datetime.now().isoformat(),
-    }
-
-    if hasattr(step_log, "step_number"):
-        log_data["step_number"] = step_log.step_number
-
-    raw_model_output = None
-    if hasattr(step_log, "model_output") and step_log.model_output:
-        raw_model_output = str(step_log.model_output)
-        log_data["model_output"] = raw_model_output
-        code_match = CODE_BLOCK_RE.search(raw_model_output)
-        if code_match:
-            log_data["action_input_code"] = code_match.group(1).strip()
-
-    if hasattr(step_log, "action_output") and step_log.action_output:
-        log_data["action_output"] = str(step_log.action_output)
-
-    if hasattr(step_log, "observations") and step_log.observations:
-        log_data["observations"] = str(step_log.observations)
-
-    if hasattr(step_log, "error") and step_log.error:
-        log_data["error"] = str(step_log.error)
-
-    if hasattr(step_log, "duration") and step_log.duration:
-        try:
-            log_data["duration_s"] = float(step_log.duration.total_seconds())  # type: ignore (it works)
-        except AttributeError:
-            try:
-                log_data["duration_s"] = float(step_log.duration)
-            except (ValueError, TypeError):
-                log_data["duration_s"] = None
-
-    # Update previous_agent_token_counts for the next step of this agent
-    previous_agent_token_counts[agent_key] = {
-        "input": current_total_input,
-        "output": current_total_output,
-    }
-
-    cursor = db_conn.cursor()
-    try:
-        cursor.execute(
-            """
-        INSERT INTO run_steps (run_id, agent_name, step_number, timestamp, model_output, action_input_code, action_output, observations, error, duration_s, input_tokens, output_tokens)
-        VALUES (:run_id, :agent_name, :step_number, :timestamp, :model_output, :action_input_code, :action_output, :observations, :error, :duration_s, :input_tokens, :output_tokens)
-        """,
-            log_data,
-        )
-        db_conn.commit()
-        print(
-            f"[SQLITE_CALLBACK] Logged step for run_id {current_run_id}, agent {agent.name}, step {log_data['step_number']}"
-        )
-    except sqlite3.Error as e:
-        print(f"[SQLITE_CALLBACK_ERROR] Failed to log step: {e}")
+    return None
 
 
 # %% Section::Managed agents
@@ -212,7 +160,7 @@ answer_verifier = CodeAgent(
     name="answer_verifier",
     description="Check your answer to see if it is correct.",
     verbosity_level=LogLevel.DEBUG,
-    step_callbacks=[sqlite_log_callback],
+    step_callbacks=[log_step],
 )
 
 tool_maker = CodeAgent(
@@ -273,31 +221,7 @@ agent = CodeAgent(
 # %% Section::run
 
 # Generate a unique run ID for this execution
-current_run_id = str(uuid.uuid4())
-print(f"Starting agent run. SQLite Run ID: {current_run_id}")
 
-# Get an OTel tracer
-otel_tracer = opentelemetry.trace.get_tracer(__name__, "1.0")
-
-try:
-    # Start a parent OTel span for the entire agent.run() orchestration
-    with otel_tracer.start_as_current_span(
-        "main_agent_orchestration",
-        attributes={"sqlite_run_id": current_run_id, "question": QUESTION},
-    ):
-        agent.run(
-            task=TASK_ORCHESTRATOR,
-            max_steps=30,
-            additional_args={
-                "path_to_ifc_file": "/Users/sylvainhellin/GitHub/ifcAnswerEngineV3/src/bim_models/duplex/arc.ifc",
-                "question_id": 1,
-                "question": QUESTION,
-            },
-        )
-finally:
-    if db_conn:
-        db_conn.close()
-        print("SQLite connection closed.")
 
 # TODO: use the additional_arg argument when calling agent.run() to pass more information (like model path, etc.)
 
