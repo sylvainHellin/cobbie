@@ -13,7 +13,7 @@ TEST_IFC_PATH = os.path.join(SRC_PATH, "bim_models/duplex/arc.ifc")
 DATASET_PATH = os.path.join(SRC_PATH, "datasets", "ifc-bench-v1.csv")
 RESULTS_CHECKPOINT_PATH = os.path.join(SRC_PATH, "results", "checkpoint.json")
 OUTPUT_PATH = output_path = os.path.join(SRC_PATH, "results", "benchmark_results.xlsx")
-VECTORSTORE_PATH = os.path.join(SRC_PATH, "tools/vectorstore")
+VECTORSTORE_PATH = os.path.join(SRC_PATH, "special_tools/vectorstore")
 
 # loads secrets
 ANTHROPIC_API_KEY = os.environ["ANTHROPIC_API_KEY"]

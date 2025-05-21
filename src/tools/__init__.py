@@ -1,10 +1,5 @@
 """Import all available tools"""
 
-from .web_search import web_search as web_search
-from .query_ifcopenshell_documentation import (
-    query_ifcopenshell_documentation as query_ifcopenshell_documentation,
-)
-
 
 # Import all functions from each file
 def load_tools(tools: list) -> list:

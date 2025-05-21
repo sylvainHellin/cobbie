@@ -15,9 +15,8 @@ Tracing:
     If running tracing with Langfuse, trace can be seen on: https://cloud.langfuse.com/
 
 Backlog:
+    - Implement the verify_answer tool
     - Create a detailled summary of the structure of the ifcOpenShell API to be included as part of the context to the ToolMaker agent.
-    - Remove question_id from logs and move it into runs.
-    - Implemment the logging of runs in the db
 """
 
 import base64
@@ -43,7 +42,8 @@ from src.db import (
     insert_new_log,
     insert_new_run,
 )
-from src.tools import TOOLS, query_ifcopenshell_documentation, web_search
+from src.tools import TOOLS
+from src.special_tools import query_ifcopenshell_documentation, web_search
 
 # Load secrets
 load_dotenv(find_dotenv())
