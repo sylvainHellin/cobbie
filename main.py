@@ -22,11 +22,7 @@ Backlog:
 
 import base64
 import os
-import re
-import sqlite3
-import uuid
 from datetime import datetime
-from sqlite3 import Connection
 from typing import Literal
 
 import opentelemetry.trace
@@ -36,17 +32,16 @@ from smolagents import CodeAgent, tool
 from smolagents.agents import ActionStep
 from smolagents.monitoring import LogLevel
 
-from src.config import LANGUAGE_MODELS
+from src.config import LANGUAGE_MODELS, ROOT_PATH
 from src.db import (
-    get_dataset_row,
     DatasetRow,
-    RunsRow,
     LogRow,
-    insert_new_run,
-    insert_new_log,
-    get_log_row,
-    get_last_log_id,
+    RunsRow,
+    get_dataset_row,
+    get_ifc_model_row,
     get_tokens_count_logs,
+    insert_new_log,
+    insert_new_run,
 )
 from src.tools import TOOLS, query_ifcopenshell_documentation, web_search
 
@@ -54,23 +49,28 @@ from src.tools import TOOLS, query_ifcopenshell_documentation, web_search
 load_dotenv(find_dotenv())
 
 # %% Section::config
-
 # Select LLM
-model = LANGUAGE_MODELS["llama4_maverick"]
+llm_name = "llama4_maverick"
+LLM = LANGUAGE_MODELS[llm_name]
 
 # Select question
-QUESTION_ID = 1
+question_id = 1
+dataset_row: DatasetRow = get_dataset_row(id=question_id)
+question: str = dataset_row.question or ""
+ground_truth: str = dataset_row.ground_truth or ""
+# If no IFC_ID exist, there is a problem: process should interrupt
+if dataset_row.ifc_id is None:
+    exit()
 
-# SQLite Database setup
-current_run_id = None
-dataset_row: DatasetRow = get_dataset_row(id=1)
-QUESTION = dataset_row.question if dataset_row.question is not None else ""
-GROUND_TRUTH = dataset_row.ground_truth if dataset_row.ground_truth is not None else ""
-
-previous_agent_token_counts = {}  # To store previous token counts per agent for calculating per-step tokens TODO refactor
+# Configure path
+ifc_model = get_ifc_model_row(id=dataset_row.ifc_id)
+if ifc_model.model_path is None:
+    exit()
+ifc_path = os.path.join(ROOT_PATH, ifc_model.model_path)
+ifc_description = ifc_model.model_description or "The IFC model of a building."
 
 # Tracing - Phoenix or Langfuse for OTel, SQLite is always active via callback
-TRACING: Literal["phoenix", "langfuse"] = "phoenix"
+TRACING: Literal["phoenix", "langfuse"] = "langfuse"
 
 if TRACING == "phoenix":
     from phoenix.otel import register
@@ -105,16 +105,13 @@ elif TRACING == "langfuse":
     print("Langfuse tracing enabled.")
 
 
-# Regex to extract code from the model_output (from smolagents.codes.CodeAgent.CODE_BLOCK_RE)
-CODE_BLOCK_RE = re.compile(r"```(?:python|py)?\s*([\s\S]+?)\s*```")
-
-
 # Custom callback for logging each step of the agentic workflow
 def log_step(
     step: ActionStep,
     agent: CodeAgent,
-    run_id: int,
 ) -> None:
+    global run_id
+
     previous_input_tokens, previous_output_tokens = get_tokens_count_logs(run_id=run_id)
     new_log = LogRow(
         agent_name=agent.name,
@@ -123,7 +120,9 @@ def log_step(
         timestamp=datetime.now(),
         model_output=step.model_output,
         action_input_code=None,  # TODO update this when the structure of the model output is clearer
-        action_output=step.action_output,
+        action_output=str(
+            step.action_output
+        ),  # TODO need to investigate why sub-agent are outputing a dict instead of a string
         observations=step.observations,
         error=str(step.error),
         duration=step.duration,
@@ -141,31 +140,18 @@ def log_step(
 
 # tools
 @tool
-def get_correct_answer(question_id: int) -> str:
+def get_correct_answer() -> str:
     """
-    Query the database and return the ground truth to the given question
-
-    Args:
-        question_id: The ID of the question for which the ground truth is to be returned.
-
-    Returns:
-        str: the correct answer
+    Return the ground truth to the question.
     """
-    return GROUND_TRUTH
+    global ground_truth
 
+    return ground_truth  # TODO update this to be more robust for eval pipeline
 
-answer_verifier = CodeAgent(
-    tools=[get_correct_answer],
-    model=model,
-    name="answer_verifier",
-    description="Check your answer to see if it is correct.",
-    verbosity_level=LogLevel.DEBUG,
-    step_callbacks=[log_step],
-)
 
 tool_maker = CodeAgent(
     tools=[web_search, query_ifcopenshell_documentation],
-    model=model,
+    model=LLM,
     name="tool_maker",
     description="Generate a new tool based on the requirements provided. Test the new tool and return a code snippet of the tool implementation if it works.",
     additional_authorized_imports=[
@@ -181,7 +167,7 @@ tool_maker = CodeAgent(
     ],
     max_print_outputs_length=2**12,  # 4.096
     verbosity_level=LogLevel.DEBUG,
-    step_callbacks=[sqlite_log_callback],
+    step_callbacks=[log_step],
 )
 
 # %% Section::Orchestrator agent
@@ -197,9 +183,9 @@ Here is how you should proceed:
 """
 
 # Set up the agent
-agent = CodeAgent(
+agent_orchestrator = CodeAgent(
     tools=TOOLS,
-    model=model,
+    model=LLM,
     name="agent_orchestrator",
     additional_authorized_imports=[
         "ifcopenshell",
@@ -213,21 +199,21 @@ agent = CodeAgent(
         "ifcopenshell.entity_instance",
     ],
     max_print_outputs_length=2**12,  # 4.096
-    managed_agents=[answer_verifier, tool_maker],
+    managed_agents=[tool_maker],
     verbosity_level=LogLevel.DEBUG,
-    step_callbacks=[sqlite_log_callback],
+    step_callbacks=[log_step],
 )
 
 # %% Section::run
+# Create a new run
+current_run = RunsRow(question_id=question_id, llm=llm_name, timestamp=datetime.now())
+run_id = insert_new_run(new_run=current_run)
 
-# Generate a unique run ID for this execution
-
-
-# TODO: use the additional_arg argument when calling agent.run() to pass more information (like model path, etc.)
-
-# # %%
-
-# from smolagents import GradioUI
-
-# GradioUI(agent).launch()
-# # %%
+agent_orchestrator.run(
+    task=TASK_ORCHESTRATOR,
+    additional_args={
+        "ifc_model_path": ifc_path,
+        "ifc_model_description": ifc_description,
+        "question": question,
+    },
+)
