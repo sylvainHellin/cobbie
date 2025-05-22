@@ -1,6 +1,6 @@
 import os
 from dotenv import load_dotenv, find_dotenv
-from smolagents import LiteLLMModel
+from pydantic import BaseModel
 
 load_dotenv(find_dotenv())
 
@@ -25,38 +25,44 @@ MISTRAL_API_KEY = os.environ["MISTRAL_API_KEY"]
 FIREWORKS_API_KEY = os.environ["FIREWORKS_API_KEY"]
 CEREBRAS_API_KEY = os.environ["CEREBRAS_API_KEY"]
 
+
 # Set up language model (LiteLLM endpoints)
-LANGUAGE_MODELS = {
-    "claude": LiteLLMModel(
-        "anthropic/claude-3-7-sonnet-latest", api_key=ANTHROPIC_API_KEY
-    ),
-    "gemini_flash": LiteLLMModel("gemini/gemini-2.0-flash", api_key=GEMINI_API_KEY),
-    "gemini_pro": LiteLLMModel(
-        "gemini/gemini-2.5-pro-preview-05-06", api_key=GEMINI_API_KEY
-    ),
-    "deepseek": LiteLLMModel("deepseek/deepseek-chat", api_key=DEEPSEEK_API_KEY),
-    "llama_3.1_8b": LiteLLMModel("groq/llama-3.1-8b-instant", api_key=GROQ_API_KEY),
-    "llama_3.3_70b": LiteLLMModel("groq/llama-3.3-70b-versatile", api_key=GROQ_API_KEY),
-    "llama_3.3_70b_fireworks": LiteLLMModel(
-        "fireworks_ai/accounts/fireworks/models/llama-v3p3-70b-instruct",
-        api_key=FIREWORKS_API_KEY,
-    ),
-    "qwen3_235b": LiteLLMModel(
-        "fireworks_ai/accounts/fireworks/models/qwen3-235b-a22b",
-        api_key=FIREWORKS_API_KEY,
-    ),
-    "gemma_9b": LiteLLMModel("ollama_chat/gemma2:9b-instruct-q8_0"),
-    "phi4": LiteLLMModel("ollama_chat/phi4:latest"),
-    "qwen3_30b": LiteLLMModel("ollama_chat/qwen3:30b"),
-    "mistral": LiteLLMModel("mistral/mistral-medium-latest"),
-    "openai": LiteLLMModel("openai/gpt-4o", api_key=OPENAI_API_KEY),
-    "llama4_scout": LiteLLMModel(
-        "cerebras/llama-4-scout-17b-16e-instruct", api_key=CEREBRAS_API_KEY
-    ),
-    "llama4_maverick": LiteLLMModel(
-        "groq/meta-llama/llama-4-maverick-17b-128e-instruct", api_key=GROQ_API_KEY
-    ),
-}
+class LLM(BaseModel):
+    url: str
+    api_key: str = ""
+
+
+LANGUAGE_MODELS: dict[str, LLM] = {}
+LANGUAGE_MODELS["claude"] = LLM(
+    url="anthropic/claude-3-7-sonnet-latest", api_key=ANTHROPIC_API_KEY
+)
+LANGUAGE_MODELS["gemini-flash"] = LLM(
+    url="gemini/gemini-2.0-flash", api_key=GEMINI_API_KEY
+)
+LANGUAGE_MODELS["gemini-pro"] = LLM(
+    url="gemini/gemini-2.5-pro-preview-05-06", api_key=GEMINI_API_KEY
+)
+LANGUAGE_MODELS["deepseek-v3"] = LLM(
+    url="deepseek/deepseek-chat", api_key=DEEPSEEK_API_KEY
+)
+LANGUAGE_MODELS["llama3-70b-groq"] = LLM(
+    url="groq/llama-3.3-70b-versatile", api_key=GROQ_API_KEY
+)
+LANGUAGE_MODELS["llama4-maverick-groq"] = LLM(
+    url="groq/meta-llama/llama-4-maverick-17b-128e-instruct", api_key=GROQ_API_KEY
+)
+LANGUAGE_MODELS["llama4-scout-cerebras"] = LLM(
+    url="cerebras/llama-4-scout-17b-16e-instruct", api_key=CEREBRAS_API_KEY
+)
+LANGUAGE_MODELS["llama3-70b-fireworks"] = LLM(
+    url="fireworks_ai/accounts/fireworks/models/llama-v3p3-70b-isntruct",
+    api_key=FIREWORKS_API_KEY,
+)
+LANGUAGE_MODELS["qwen3-235b-fireworks"] = LLM(
+    url="fireworks_ai/accounts/fireworks/models/qwen3-235b-a22b",
+    api_key=FIREWORKS_API_KEY,
+)
+LANGUAGE_MODELS["qwen3-30b-ollama"] = LLM(url="ollama_chat/qwen3:30b")
 
 # Default models to test in comparisons
 MODELS_TO_TEST = [
