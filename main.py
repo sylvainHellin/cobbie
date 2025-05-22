@@ -27,11 +27,11 @@ from typing import Literal
 import opentelemetry.trace
 from dotenv import find_dotenv, load_dotenv
 from openinference.instrumentation.smolagents import SmolagentsInstrumentor
-from smolagents import CodeAgent, tool
+from smolagents import CodeAgent, tool, LiteLLMModel
 from smolagents.agents import ActionStep
 from smolagents.monitoring import LogLevel
 
-from src.config import LANGUAGE_MODELS, ROOT_PATH
+from src.config import LANGUAGE_MODELS, ROOT_PATH, LLM
 from src.db import (
     DatasetRow,
     LogRow,
@@ -50,8 +50,8 @@ load_dotenv(find_dotenv())
 
 # %% Section::config
 # Select LLM
-llm_name = "llama4_maverick"
-LLM = LANGUAGE_MODELS[llm_name]
+llm_info: LLM = LANGUAGE_MODELS["llama4-maverick-groq"]
+llm = LiteLLMModel(api_base=llm_info.url, api_key=llm_info.api_key)
 
 # Select question
 question_id = 1
@@ -151,7 +151,7 @@ def get_correct_answer() -> str:
 
 tool_maker = CodeAgent(
     tools=[web_search, query_ifcopenshell_documentation],
-    model=LLM,
+    model=llm,
     name="tool_maker",
     description="Generate a new tool based on the requirements provided. Test the new tool and return a code snippet of the tool implementation if it works.",
     additional_authorized_imports=[
@@ -185,7 +185,7 @@ Here is how you should proceed:
 # Set up the agent
 agent_orchestrator = CodeAgent(
     tools=TOOLS,
-    model=LLM,
+    model=llm,
     name="agent_orchestrator",
     additional_authorized_imports=[
         "ifcopenshell",
@@ -206,7 +206,9 @@ agent_orchestrator = CodeAgent(
 
 # %% Section::run
 # Create a new run
-current_run = RunsRow(question_id=question_id, llm=llm_name, timestamp=datetime.now())
+current_run = RunsRow(
+    question_id=question_id, llm=llm_info.name, timestamp=datetime.now()
+)
 run_id = insert_new_run(new_run=current_run)
 
 agent_orchestrator.run(
