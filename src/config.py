@@ -29,40 +29,49 @@ CEREBRAS_API_KEY = os.environ["CEREBRAS_API_KEY"]
 # Set up language model (LiteLLM endpoints)
 class LLM(BaseModel):
     url: str
+    name: str
     api_key: str = ""
 
 
 LANGUAGE_MODELS: dict[str, LLM] = {}
 LANGUAGE_MODELS["claude"] = LLM(
-    url="anthropic/claude-3-7-sonnet-latest", api_key=ANTHROPIC_API_KEY
+    url="anthropic/claude-3-7-sonnet-latest", api_key=ANTHROPIC_API_KEY, name="claude"
 )
 LANGUAGE_MODELS["gemini-flash"] = LLM(
-    url="gemini/gemini-2.0-flash", api_key=GEMINI_API_KEY
+    url="gemini/gemini-2.0-flash", api_key=GEMINI_API_KEY, name="gemini-flash"
 )
 LANGUAGE_MODELS["gemini-pro"] = LLM(
-    url="gemini/gemini-2.5-pro-preview-05-06", api_key=GEMINI_API_KEY
+    url="gemini/gemini-2.5-pro-preview-05-06", api_key=GEMINI_API_KEY, name="gemini-pro"
 )
 LANGUAGE_MODELS["deepseek-v3"] = LLM(
-    url="deepseek/deepseek-chat", api_key=DEEPSEEK_API_KEY
+    url="deepseek/deepseek-chat", api_key=DEEPSEEK_API_KEY, name="deepseek-v3"
 )
 LANGUAGE_MODELS["llama3-70b-groq"] = LLM(
-    url="groq/llama-3.3-70b-versatile", api_key=GROQ_API_KEY
+    url="groq/llama-3.3-70b-versatile", api_key=GROQ_API_KEY, name="llama3-70b-groq"
 )
 LANGUAGE_MODELS["llama4-maverick-groq"] = LLM(
-    url="groq/meta-llama/llama-4-maverick-17b-128e-instruct", api_key=GROQ_API_KEY
+    url="groq/meta-llama/llama-4-maverick-17b-128e-instruct",
+    api_key=GROQ_API_KEY,
+    name="llama4-maverick-groq",
 )
 LANGUAGE_MODELS["llama4-scout-cerebras"] = LLM(
-    url="cerebras/llama-4-scout-17b-16e-instruct", api_key=CEREBRAS_API_KEY
+    url="cerebras/llama-4-scout-17b-16e-instruct",
+    api_key=CEREBRAS_API_KEY,
+    name="llama4-scout-cerebras",
 )
 LANGUAGE_MODELS["llama3-70b-fireworks"] = LLM(
     url="fireworks_ai/accounts/fireworks/models/llama-v3p3-70b-isntruct",
     api_key=FIREWORKS_API_KEY,
+    name="llama3-70b-fireworks",
 )
 LANGUAGE_MODELS["qwen3-235b-fireworks"] = LLM(
     url="fireworks_ai/accounts/fireworks/models/qwen3-235b-a22b",
     api_key=FIREWORKS_API_KEY,
+    name="qwen3-235b-fireworks",
 )
-LANGUAGE_MODELS["qwen3-30b-ollama"] = LLM(url="ollama_chat/qwen3:30b")
+LANGUAGE_MODELS["qwen3-30b-ollama"] = LLM(
+    url="ollama_chat/qwen3:30b", name="qwen3-30b-ollama"
+)
 
 # Default models to test in comparisons
 MODELS_TO_TEST = [
