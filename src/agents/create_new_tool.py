@@ -2,13 +2,15 @@
 # =============== Imports and config =============== #
 import os
 import sys
-from typing import Literal
+import inspect
+import ast
+from typing import Literal, Callable, Any
 from smolagents.local_python_executor import LocalPythonExecutor
 
 import dspy
 
-from config import LANGUAGE_MODELS, ROOT_PATH, LLM
-from special_tools import query_ifcopenshell_documentation, web_search
+from src import LANGUAGE_MODELS, ROOT_PATH, LLM
+from src.special_tools import query_ifcopenshell_documentation, web_search
 
 # Set up the path
 if ROOT_PATH not in sys.path:
@@ -29,10 +31,215 @@ with open(doc_path, "r") as file:
 del doc_path
 
 
+# %% Dynamic Tool Creation Utilities
+# =============== Dynamic Tool Creation Utilities =============== #
+
+
+def extract_function_metadata(code: str, function_name: str) -> dict:
+    """
+    Extract function metadata (name, signature, docstring) without executing the code.
+    This allows the assessor to see the function interface without implementation details.
+    """
+    try:
+        tree = ast.parse(code)
+        for node in ast.walk(tree):
+            if isinstance(node, ast.FunctionDef) and node.name == function_name:
+                # Extract docstring
+                docstring = ""
+                if (
+                    node.body
+                    and isinstance(node.body[0], ast.Expr)
+                    and isinstance(node.body[0].value, ast.Constant)
+                ):
+                    docstring = node.body[0].value.value
+
+                # Extract arguments
+                args = []
+                for arg in node.args.args:
+                    args.append(arg.arg)
+
+                # Extract defaults (simplified - just get their string representation)
+                defaults = []
+                for default in node.args.defaults:
+                    if isinstance(default, ast.Constant):
+                        defaults.append(repr(default.value))
+                    else:
+                        defaults.append("...")
+
+                return {
+                    "name": function_name,
+                    "args": args,
+                    "defaults": defaults,
+                    "docstring": docstring,
+                }
+    except Exception as e:
+        return {
+            "name": function_name,
+            "args": ["path_ifc_file"],
+            "defaults": [],
+            "docstring": f"Function {function_name} - metadata extraction failed: {str(e)}",
+        }
+
+    return {
+        "name": function_name,
+        "args": ["path_ifc_file"],
+        "defaults": [],
+        "docstring": f"Function {function_name} - no metadata found",
+    }
+
+
+def create_dynamic_tool(code: str, function_name: str) -> Callable:
+    """
+    Create a callable tool from the generated code that can be used by the assessor.
+    The tool executes the function in isolation without exposing implementation details.
+    """
+    # Execute the code to create the function
+    global_scope = {
+        "__builtins__": __builtins__,
+        "ifcopenshell": None,  # Will be imported within the executed code
+        "math": None,
+        "numpy": None,
+        "pandas": None,
+    }
+    local_scope = {}
+
+    try:
+        exec(code, global_scope, local_scope)
+        generated_function = local_scope.get(function_name)
+
+        if not generated_function:
+            raise ValueError(f"Function {function_name} not found in generated code")
+
+        # Create a wrapper that provides a clean interface
+        def tool_wrapper(*args, **kwargs) -> str:
+            """Dynamic tool wrapper for generated function."""
+            try:
+                result = generated_function(*args, **kwargs)
+                return str(result)
+            except Exception as e:
+                return f"Error executing {function_name}: {str(e)}"
+
+        # Set the function name and docstring for the tool
+        metadata = extract_function_metadata(code, function_name)
+        tool_wrapper.__name__ = function_name
+        tool_wrapper.__doc__ = metadata["docstring"]
+
+        return tool_wrapper
+
+    except Exception as e:
+        # Return a dummy function that reports the error
+        error_message = str(e)
+
+        def error_tool(*args, **kwargs) -> str:
+            return f"Error creating tool {function_name}: {error_message}"
+
+        error_tool.__name__ = function_name
+        error_tool.__doc__ = f"Error in function {function_name}"
+        return error_tool
+
+
+def create_assessor_with_dynamic_tool(
+    base_tools: list, generated_code: str, function_name: str
+) -> "ToolAssessor":
+    """
+    Create a ToolAssessor with the generated function added as a dynamic tool.
+    The assessor can test the function without seeing the implementation.
+    """
+    # Create the dynamic tool
+    dynamic_tool = create_dynamic_tool(generated_code, function_name)
+
+    # Combine with existing tools
+    enhanced_tools = base_tools + [dynamic_tool]
+
+    # Create modified assessor that doesn't receive the function code
+    class EnhancedToolAssessor(dspy.Module):
+        """Modified ToolAssessor that can test the generated function as a tool."""
+
+        def __init__(self, tools: list):
+            super().__init__()
+            self.tools = tools
+            # Use modified signature that doesn't include function_code
+            self.agent = dspy.ReAct(
+                signature=BlindToolAssessmentSignature, tools=self.tools, max_iters=5
+            )
+
+        def forward(
+            self,
+            function_name: str,
+            function_requirements: str,
+            path_ifc_model: str,
+        ):
+            try:
+                result = self.agent(
+                    function_name=function_name,
+                    function_requirements=function_requirements,
+                    path_ifc_model=path_ifc_model,
+                )
+
+                # Parse the assessment result
+                assessment_text = getattr(
+                    result,
+                    "assessment_result",
+                    "STATUS: needs_improvement | DETAILS: No assessment result received",
+                )
+
+                # Extract status and details
+                if "STATUS:" in assessment_text and "DETAILS:" in assessment_text:
+                    parts = assessment_text.split("|", 1)
+                    status_part = parts[0].replace("STATUS:", "").strip()
+                    details_part = (
+                        parts[1].replace("DETAILS:", "").strip()
+                        if len(parts) > 1
+                        else "No details provided"
+                    )
+
+                    # Normalize status
+                    status = (
+                        "ok" if "ok" in status_part.lower() else "needs_improvement"
+                    )
+                else:
+                    status = "needs_improvement"
+                    details_part = assessment_text
+
+                return dspy.Prediction(
+                    assessment_status=status,
+                    assessment_details=details_part,
+                )
+            except Exception as e:
+                return dspy.Prediction(
+                    assessment_status="needs_improvement",
+                    assessment_details=f"Assessment failed due to error: {str(e)}",
+                )
+
+    return EnhancedToolAssessor(tools=enhanced_tools)
+
+
+class BlindToolAssessmentSignature(dspy.Signature):
+    """
+    Assess whether a generated function meets requirements and works correctly.
+    Tests the function by calling it as a tool, without seeing the implementation code.
+    This prevents bias in testing and ensures the function is evaluated solely on its behavior.
+    """
+
+    # inputs
+    function_name: str = dspy.InputField(desc="Name of the function to assess")
+    function_requirements: str = dspy.InputField(
+        desc="Original requirements and description of what the function should do"
+    )
+    path_ifc_model: str = dspy.InputField(
+        desc="Path to an IFC file for testing the function"
+    )
+
+    # outputs
+    assessment_result: str = dspy.OutputField(
+        desc="Assessment result in format 'STATUS: ok/needs_improvement | DETAILS: detailed explanation of assessment including test results and any issues found'"
+    )
+
+
 # %% DSPy
 # =============== Define ToolMaker =============== #
 class NewToolSignature(dspy.Signature):
-    f"""
+    """
     Create a Python function that implements the requirements using the IfcOpenShell Python library.
     This function will be used as a "tool" by an LLM-based ReAct agent to answer some user's query related to a BIM model.
 
@@ -65,12 +272,6 @@ class NewToolSignature(dspy.Signature):
     python_code: str = dspy.OutputField(
         desc="Complete code implementation (including imports etc. from the boilerplate) of your Python function implementation including docstrings, type hints, and error handling."
     )
-    implementation_status: Literal["success", "error"] = dspy.OutputField(
-        desc="'success' if function implemented correctly, 'error' if implementation failed."
-    )
-    error_message: str = dspy.OutputField(
-        desc="Detailed error message if implementation_status is 'error', empty string otherwise."
-    )
 
 
 class ToolCreator(dspy.Module):
@@ -88,15 +289,29 @@ class ToolCreator(dspy.Module):
         function_boilerplate: str,
     ):
         try:
-            return self.agent(
+            result = self.agent(
                 function_description=function_description,
                 function_name=function_name,
                 function_boilerplate=function_boilerplate,
             )
+
+            # Check if we got valid python code
+            if hasattr(result, "python_code") and result.python_code:
+                return dspy.Prediction(
+                    python_code=result.python_code, implementation_status="success"
+                )
+            else:
+                return dspy.Prediction(
+                    python_code=f"# Error: No valid code generated for function {function_name}",
+                    implementation_status="error",
+                    error_message="No valid Python code was generated",
+                )
+
         except Exception as e:
             return dspy.Prediction(
-                function_implementation=f"An error occurred during execution: {str(e)}",
+                python_code=f"# Error occurred during function creation: {str(e)}",
                 implementation_status="error",
+                error_message=f"An error occurred during execution: {str(e)}",
             )
 
 
@@ -199,10 +414,6 @@ class ToolCorrectionSignature(dspy.Signature):
         desc="The updated implementation of the required function, mitigating the issues identified in the detailed assessment."
     )
 
-    implementation_status: Literal["success", "error"] = dspy.OutputField(
-        desc="'success' if function implemented correctly, 'error' if implementation failed."
-    )
-
 
 class ToolCorrector(dspy.Module):
     """Module to correct an existing Python function."""
@@ -214,7 +425,6 @@ class ToolCorrector(dspy.Module):
             signature=ToolCorrectionSignature, tools=tools, max_iters=5
         )
 
-    # def forward(self, function_description, function_name, function_boilerplate, context):
     def forward(
         self,
         function_description: str,
@@ -223,15 +433,31 @@ class ToolCorrector(dspy.Module):
         detailed_function_assessment: str,
     ):
         try:
-            return self.agent(
+            result = self.agent(
                 function_description=function_description,
                 function_name=function_name,
                 current_function_implementation=current_function_implementation,
                 detailed_function_assessment=detailed_function_assessment,
             )
+
+            # Check if we got valid updated code
+            if (
+                hasattr(result, "new_function_implementation")
+                and result.new_function_implementation
+            ):
+                return dspy.Prediction(
+                    new_function_implementation=result.new_function_implementation,
+                    implementation_status="success",
+                )
+            else:
+                return dspy.Prediction(
+                    new_function_implementation=current_function_implementation,  # Return original if no improvement
+                    implementation_status="error",
+                )
+
         except Exception as e:
             return dspy.Prediction(
-                new_function_implementation=f"An error occurred during execution: {str(e)}",
+                new_function_implementation=f"# Error occurred during correction: {str(e)}",
                 implementation_status="error",
             )
 
@@ -289,9 +515,200 @@ def python_interpreter(python_code: str) -> str:
 def create_new_tool(
     requirements: str, path_ifc_model: str, llm_info: LLM = LANGUAGE_MODELS["claude"]
 ):
+    """
+    Create a new tool using a multi-agent system with unbiased testing.
+
+    The workflow:
+    1. ToolCreator generates the function code
+    2. Enhanced ToolAssessor tests it as a tool without seeing the code
+    3. ToolCorrector fixes issues if needed
+    4. Repeat until satisfactory or max iterations reached
+    """
     lm = dspy.LM(model=llm_info.url, api_key=llm_info.api_key)
     dspy.configure(lm=lm)
-    tools = [web_search, query_ifcopenshell_documentation]
-    tool_creator = ToolCreator(tools=tools)
-    tool_assessor = ToolAssessor(tools=tools)
-    tool_corrector = ToolCorrector(tools=tools)
+
+    base_tools = [web_search, query_ifcopenshell_documentation, python_interpreter]
+    tool_creator = ToolCreator(tools=base_tools)
+    tool_corrector = ToolCorrector(tools=base_tools)
+
+    max_iterations = 3
+    current_iteration = 0
+
+    # Extract function name from requirements (you might want to make this more sophisticated)
+    function_name = (
+        "generated_ifc_tool"  # Default name, could be extracted from requirements
+    )
+
+    # Boilerplate for the function
+    function_boilerplate = """
+import ifcopenshell
+import ifcopenshell.util.element
+import ifcopenshell.util.shape
+import ifcopenshell.util.placement
+import ifcopenshell.util.geolocation
+import ifcopenshell.util.system
+import ifcopenshell.geom
+import math
+import json
+from typing import Union, List, Dict, Any
+"""
+
+    print(f"Starting tool creation process for: {requirements}")
+
+    # Step 1: Create initial function
+    print(f"\n--- Iteration {current_iteration + 1}: Creating initial function ---")
+    creation_result = tool_creator(
+        function_description=requirements,
+        function_name=function_name,
+        function_boilerplate=function_boilerplate,
+    )
+
+    if creation_result.implementation_status == "error":
+        error_msg = getattr(creation_result, "error_message", "Unknown error occurred")
+        return {
+            "status": "failed",
+            "error": f"Tool creation failed: {error_msg}",
+            "iterations": current_iteration + 1,
+        }
+
+    current_code = creation_result.python_code
+    print(f"✓ Function created successfully")
+
+    # Iterative improvement loop
+    while current_iteration < max_iterations:
+        current_iteration += 1
+
+        print(f"\n--- Iteration {current_iteration}: Testing function ---")
+
+        # Step 2: Create enhanced assessor with dynamic tool
+        try:
+            enhanced_assessor = create_assessor_with_dynamic_tool(
+                base_tools=base_tools,
+                generated_code=current_code,
+                function_name=function_name,
+            )
+            print(f"✓ Enhanced assessor created with dynamic tool")
+        except Exception as e:
+            print(f"✗ Failed to create enhanced assessor: {str(e)}")
+            break
+
+        # Step 3: Assess the function
+        try:
+            assessment_result = enhanced_assessor(
+                function_name=function_name,
+                function_requirements=requirements,
+                path_ifc_model=path_ifc_model,
+            )
+            print(f"✓ Assessment completed: {assessment_result.assessment_status}")
+            print(f"Assessment details: {assessment_result.assessment_details}")
+        except Exception as e:
+            print(f"✗ Assessment failed: {str(e)}")
+            break
+
+        # Step 4: Check if function is satisfactory
+        if assessment_result.assessment_status == "ok":
+            print(
+                f"🎉 Function passed assessment after {current_iteration} iterations!"
+            )
+            return {
+                "status": "success",
+                "function_code": current_code,
+                "function_name": function_name,
+                "assessment_details": assessment_result.assessment_details,
+                "iterations": current_iteration,
+            }
+
+        # Step 5: If not satisfactory and we have iterations left, correct the function
+        if current_iteration < max_iterations:
+            print(f"\n--- Iteration {current_iteration}: Correcting function ---")
+            correction_result = tool_corrector(
+                function_description=requirements,
+                function_name=function_name,
+                current_function_implementation=current_code,
+                detailed_function_assessment=assessment_result.assessment_details,
+            )
+
+            if correction_result.implementation_status == "error":
+                print(
+                    f"✗ Correction failed: {correction_result.new_function_implementation}"
+                )
+                break
+
+            current_code = correction_result.new_function_implementation
+            print(f"✓ Function corrected")
+        else:
+            print(f"⚠️  Maximum iterations reached")
+
+    # Return final result even if not perfect
+    return {
+        "status": "partial_success"
+        if current_iteration >= max_iterations
+        else "failed",
+        "function_code": current_code,
+        "function_name": function_name,
+        "final_assessment": assessment_result.assessment_details
+        if "assessment_result" in locals()
+        else "Assessment not completed",
+        "iterations": current_iteration,
+        "note": "Function may need manual review"
+        if current_iteration >= max_iterations
+        else "Process failed before completion",
+    }
+
+
+# %% Example Usage
+# =============== Example Usage =============== #
+
+
+def example_usage():
+    """
+    Example demonstrating how to use the multi-agent tool creation system.
+    """
+    # Define requirements for a new tool
+    requirements = """
+    Create a function that extracts all wall elements from an IFC file and returns
+    their basic properties including name, type, height, and thickness. The function
+    should handle cases where some properties might be missing and return the results
+    as a JSON string for easy parsing.
+    """
+
+    # Path to an IFC file for testing
+    path_ifc_model = (
+        "/Users/sylvainhellin/GitHub/ifcAnswerEngineV3/src/bim_models/duplex/arc.ifc"
+    )
+
+    print(f"Creating tool with requirements: {requirements.strip()}")
+    print(f"Using test IFC file: {path_ifc_model}")
+    print(
+        "\nNote: Make sure to update 'path_ifc_model' with a valid IFC file path before running."
+    )
+
+    # Create the tool
+    result = create_new_tool(requirements=requirements, path_ifc_model=path_ifc_model)
+
+    print(f"\nTool Creation Result:")
+    print(f"Status: {result['status']}")
+    print(f"Iterations: {result['iterations']}")
+
+    if result["status"] == "success":
+        print(f"✅ Tool created successfully!")
+        print(f"Function name: {result['function_name']}")
+        print("\nGenerated code:")
+        print("=" * 50)
+        print(result["function_code"])
+        print("=" * 50)
+    else:
+        print(f"❌ Tool creation failed or needs improvement")
+        if "error" in result:
+            print(f"Error: {result['error']}")
+        if "note" in result:
+            print(f"Note: {result['note']}")
+        if "function_code" in result:
+            print(f"\nPartial implementation:")
+            print("=" * 50)
+            print(result["function_code"])
+            print("=" * 50)
+
+
+if __name__ == "__main__":
+    example_usage()
