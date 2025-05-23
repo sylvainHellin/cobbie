@@ -7,7 +7,7 @@ from ollama import embed
 import numpy as np
 from smolagents import tool
 from pydantic import BaseModel, ValidationError
-from config import VECTORSTORE_PATH
+from ..config import VECTORSTORE_PATH
 
 # Define Embedding Model to use
 EMBEDDING_MODEL = "nomic-embed-text"

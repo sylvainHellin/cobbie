@@ -1,6 +1,7 @@
 from smolagents import tool
 import ifcopenshell
 import ifcopenshell.util.element
+from ..config import TEST_IFC_PATH
 
 
 @tool
@@ -165,8 +166,6 @@ def get_room_ceiling_height(ifc_file_path: str, room_identifier: str) -> dict:
 
 
 if __name__ == "__main__":
-    from config import TEST_IFC_PATH
-
     room_name = "A203"
     result = get_room_ceiling_height(
         ifc_file_path=TEST_IFC_PATH, room_identifier=room_name

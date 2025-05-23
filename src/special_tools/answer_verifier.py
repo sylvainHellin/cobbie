@@ -1,5 +1,5 @@
 import dspy
-from config import LANGUAGE_MODELS, LLM
+from ..config import LANGUAGE_MODELS, LLM
 from datetime import datetime
 import time
 from db.db import LogRow, insert_new_log
@@ -130,6 +130,7 @@ if __name__ == "__main__":
         question="How many doors are there in this house ?",
         answer="I could count 13 doors in this house.",
         ground_truth="There are 12 doors in this house.",
+        # llm_info=LANGUAGE_MODELS["qwen3-30b-ollama"],
     )
 
     print(
