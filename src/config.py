@@ -85,10 +85,7 @@ MODELS_TO_TEST = [
 ]
 
 # Boilerplate code for the toolmaker
-BOILERPLATE = """
-import sys
-import os
-
+FUNCTION_BOILERPLATE = """
 import ifcopenshell
 import ifcopenshell.util.element
 import ifcopenshell.util.shape
@@ -96,13 +93,7 @@ import ifcopenshell.util.placement
 import ifcopenshell.util.geolocation
 import ifcopenshell.util.system
 import ifcopenshell.geom
-import ifcopenshell.file
-import ifcopenshell.entity_instance
-
-# Add the project root to the Python path
-project_root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-if project_root not in sys.path:
-    sys.path.append(project_root)
-
-# Start the function implementation here
+import math
+import json
+from typing import Union, List, Dict, Any
 """
