@@ -47,16 +47,18 @@ del doc_path
 logger = logging.getLogger(__name__)
 log_level = getattr(logging, LOG_LEVEL.upper(), logging.INFO)
 handler = logging.StreamHandler()
-formatter = logging.Formatter('%(asctime)s : %(levelname)s : %(name)s : %(message)s')
+formatter = logging.Formatter("%(asctime)s : %(levelname)s : %(name)s : %(message)s")
 handler.setFormatter(formatter)
 logger.addHandler(handler)
+
 
 # %% Types
 # =============== Define Datatypes =============== #
 class ModuleOutput(BaseModel):
     result: Optional[Any] = None
-    status: Literal['error', 'success']
+    status: Literal["error", "success"]
     error_msg: Optional[str] = None
+
 
 # %% Dynamic Tool Creation Utilities
 # =============== Dynamic Tool Creation Utilities =============== #
@@ -95,13 +97,17 @@ class NewToolSignature(dspy.Signature):
         desc="Complete code implementation (including imports from the boilerplate, any necessary helper functions, etc.) of your Python function implementation."
     )
 
+
 class ToolCreator(dspy.Module):
     """Module to create a new Python function that meets the requirements."""
 
-    def __init__(self, tools: list):
+    def __init__(self, tools: list, max_iters: int = 10):
         super().__init__()
         self.tools = tools
-        self.agent = dspy.ReAct(signature=NewToolSignature, tools=tools, max_iters=5)
+        self.max_iters = max_iters
+        self.agent = dspy.ReAct(
+            signature=NewToolSignature, tools=tools, max_iters=self.max_iters
+        )
 
     def forward(
         self,
@@ -118,11 +124,16 @@ class ToolCreator(dspy.Module):
         # Check if we got valid python code
         if hasattr(result, "python_code") and result.python_code:
             logger.info(f"function: {function_name} created successfully.")
-            logger.debug(f'function code:\n{result.python_code}\n')
+            logger.debug(f"function code:\n{result.python_code}\n")
             return ModuleOutput(result=result.python_code, status="success")
         else:
-            logger.error(f"Error when trying to generate code for function: {function_name}")
-            return ModuleOutput(status='error', error_msg=f'No valid code generated for function: {function_name}')
+            logger.error(
+                f"Error when trying to generate code for function: {function_name}"
+            )
+            return ModuleOutput(
+                status="error",
+                error_msg=f"No valid code generated for function: {function_name}",
+            )
 
 
 # =============== Define ToolAssessor =============== #
@@ -156,12 +167,15 @@ class ToolAssessmentSignature(dspy.Signature):
 class ToolAssessor(dspy.Module):
     """Module to assess the quality and functionality of generated tools."""
 
-    def __init__(self, tools: list):
+    def __init__(self, tools: list, max_iters: int = 10):
         super().__init__()
         # Combine base tools with the generated tool
         self.tools = tools
+        self.max_iters = max_iters
         self.agent = dspy.ReAct(
-            signature=ToolAssessmentSignature, tools=self.tools, max_iters=5
+            signature=ToolAssessmentSignature,
+            tools=self.tools,
+            max_iters=self.max_iters,
         )
 
     def forward(
@@ -170,19 +184,27 @@ class ToolAssessor(dspy.Module):
         function_code: str,
         original_requirements: str,
         path_ifc_model: str,
-    ) -> ToolAssessmentSignature:
-        try:
-            return self.agent(
-                function_name=function_name,
-                function_code=function_code,
-                original_requirements=original_requirements,
-                test_file_path=path_ifc_model,
+    ) -> ModuleOutput:
+        output = self.agent(
+            function_name=function_name,
+            function_code=function_code,
+            original_requirements=original_requirements,
+            test_file_path=path_ifc_model,
+        )
+        if output.assessment_status and output.assessment_details:
+            logger.debug("Tool assessment successfull")
+            logger.debug(f"Assessment status: \n{output.assessment_status}")
+            logger.debug(f"Assessment details: \n{output.assessment_details}")
+            return ModuleOutput(
+                result={
+                    "assessment_status": output.assessment_status,
+                    "assessment_details": output.assessment_details,
+                },
+                status="success",
             )
-        except Exception as e:
-            return ToolAssessmentSignature(
-                assessment_status="needs_improvement",
-                assessment_details=f"Assessment failed due to error: {str(e)}",
-            )
+        else:
+            logger.debug("Tool assessment failed")
+            return ModuleOutput(status="error", error_msg="Tool assessment failed")
 
 
 # =============== Define ToolCorrector =============== #
