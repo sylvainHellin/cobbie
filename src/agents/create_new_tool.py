@@ -15,12 +15,13 @@ Need to:
 # =============== Imports and config =============== #
 import os
 import sys
+import logging
 from typing import Literal
 
 import dspy
 from smolagents.local_python_executor import LocalPythonExecutor
 
-from src import LANGUAGE_MODELS, LLM, ROOT_PATH, FUNCTION_BOILERPLATE
+from src import LANGUAGE_MODELS, LLM, ROOT_PATH, FUNCTION_BOILERPLATE, LOG_LEVEL
 from src.special_tools import query_ifcopenshell_documentation, web_search
 from src.agents._create_function_from_source_code import (
     _create_function_from_source_code,
@@ -44,6 +45,13 @@ with open(doc_path, "r") as file:
     ifcopenshell_documentation_overview = file.read()
 del doc_path
 
+# Set up the logger
+logger = logging.getLogger(__name__)
+log_level = getattr(logging, LOG_LEVEL.upper(), logging.INFO)
+handler = logging.StreamHandler()
+formatter = logging.Formatter('%(asctime)s : %(levelname)s : %(name)s : %(message)s')
+handler.setFormatter(formatter)
+logger.addHandler(handler)
 
 # %% Dynamic Tool Creation Utilities
 # =============== Dynamic Tool Creation Utilities =============== #
