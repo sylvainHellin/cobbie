@@ -16,7 +16,8 @@ Need to:
 import logging
 import os
 import sys
-from typing import Any, Literal, Optional
+from typing import Literal, Optional
+import tiktoken
 
 import dspy
 from pydantic import BaseModel
@@ -54,8 +55,14 @@ logger.addHandler(handler)
 
 # %% Types
 # =============== Define Datatypes =============== #
+class Result(BaseModel):
+    python_code: Optional[str] = None
+    assessment_status: Optional[Literal["ok", "needs_improvement"]] = None
+    assessment_details: Optional[str] = None
+
+
 class ModuleOutput(BaseModel):
-    result: Optional[Any] = None
+    result: Optional[Result] = None
     status: Literal["error", "success"]
     error_msg: Optional[str] = None
 
@@ -73,8 +80,11 @@ class NewToolSignature(dspy.Signature):
 
     The generated function should:
     - Take at least one argument: path_ifc_file: str, which is a path to the .ifc file the function should interact with.
-    - Be well-documented with docstrings
-    - include type hints
+    - Be well-documented with docstrings and type hints
+
+    IMPORTANT:
+    - Do not make assumptions about IFC schema or data structure.
+    - Use the provided tools to research proper implementation details through documentation and web search.
 
     Below is an overview of how the structure of the IfcOpenShell Python library. For details regarding the implementation of each available method, use the `query_ifcopenshell_documentation` tool.
 
@@ -125,7 +135,9 @@ class ToolCreator(dspy.Module):
         if hasattr(result, "python_code") and result.python_code:
             logger.info(f"function: {function_name} created successfully.")
             logger.debug(f"function code:\n{result.python_code}\n")
-            return ModuleOutput(result=result.python_code, status="success")
+            return ModuleOutput(
+                result=Result(python_code=result.python_code), status="success"
+            )
         else:
             logger.error(
                 f"Error when trying to generate code for function: {function_name}"
@@ -196,10 +208,10 @@ class ToolAssessor(dspy.Module):
             logger.debug(f"Assessment status: \n{output.assessment_status}")
             logger.debug(f"Assessment details: \n{output.assessment_details}")
             return ModuleOutput(
-                result={
-                    "assessment_status": output.assessment_status,
-                    "assessment_details": output.assessment_details,
-                },
+                result=Result(
+                    assessment_status=output.assessment_status,
+                    assessment_details=output.assessment_details,
+                ),
                 status="success",
             )
         else:
@@ -209,21 +221,22 @@ class ToolAssessor(dspy.Module):
 
 # =============== Define ToolCorrector =============== #
 class ToolCorrectionSignature(dspy.Signature):
-    """
+    f"""
     Update a Python function implementation to incorporate the provided feedback.
     An assessment was conducted on the current implementation and has assessed that it is not working properly. Details regarding what needs to be changed are provided.
 
     The generated function should:
     - Take at least one argument: path_ifc_file: str, which is a path to the .ifc file the function should interact with.
-    - Handle input validation
-    - Include proper error handling
-    - Be well-documented with docstrings
-    - Return a serialized output
-    - Ensure that the output is not too long (so as not to exceed the context window of the ReAct agent)
+    - Be well-documented with docstrings and type hints
 
     IMPORTANT:
     - Do not make assumptions about IFC schema or data structure.
     - Use the provided tools to research proper implementation details through documentation and web search.
+
+    Below is an overview of how the structure of the IfcOpenShell Python library. For details regarding the implementation of each available method, use the `query_ifcopenshell_documentation` tool.
+
+    Overview:
+    {IFCOPENSHELL_DOCUMENTATION_OVERVIEW}
     """
 
     # inputs
@@ -250,11 +263,12 @@ class ToolCorrectionSignature(dspy.Signature):
 class ToolCorrector(dspy.Module):
     """Module to correct an existing Python function."""
 
-    def __init__(self, tools):
+    def __init__(self, tools: list, max_iters: int = 10):
         super().__init__()
         self.tools = tools
+        self.max_iters = max_iters
         self.agent = dspy.ReAct(
-            signature=ToolCorrectionSignature, tools=tools, max_iters=5
+            signature=ToolCorrectionSignature, tools=tools, max_iters=self.max_iters
         )
 
     def forward(
@@ -263,48 +277,35 @@ class ToolCorrector(dspy.Module):
         function_name: str,
         current_function_implementation: str,
         detailed_function_assessment: str,
-    ):
-        try:
-            result = self.agent(
-                function_description=function_description,
-                function_name=function_name,
-                current_function_implementation=current_function_implementation,
-                detailed_function_assessment=detailed_function_assessment,
+    ) -> ModuleOutput:
+        result = self.agent(
+            function_description=function_description,
+            function_name=function_name,
+            current_function_implementation=current_function_implementation,
+            detailed_function_assessment=detailed_function_assessment,
+        )
+
+        if result.new_function_implementation:
+            logger.info("ToolCorrector updated the implementation successfully")
+            logger.debug(f"New implementation: {result.new_function_implementation}")
+            return ModuleOutput(
+                result=Result(python_code=result.new_function_implementation),
+                status="success",
+            )
+        else:
+            logger.info("ToolCorrector failed to update the function.")
+            return ModuleOutput(
+                status="error", error_msg="ToolCorrector failed to update the function."
             )
 
-            # Check if we got valid updated code
-            if (
-                hasattr(result, "new_function_implementation")
-                and result.new_function_implementation
-            ):
-                return dspy.Prediction(
-                    new_function_implementation=result.new_function_implementation,
-                    implementation_status="success",
-                )
-            else:
-                return dspy.Prediction(
-                    new_function_implementation=current_function_implementation,  # Return original if no improvement
-                    implementation_status="error",
-                )
-
-        except Exception as e:
-            return dspy.Prediction(
-                new_function_implementation=f"# Error occurred during correction: {str(e)}",
-                implementation_status="error",
-            )
-
-
-# =============== Define ToolMaker =============== #
-idea_prompt_tool_creator = """
-    You are an expect Python programmer and specialist of the Industry Foundation Class (IFC) format whose goal is to help people implement new Python functions using the IfcOpenShell Library.
-    Given a list of
-    """
 
 # =============== Additional Python Executor tool =============== #
 
 
 # TODO consider moving this to special tools
-def python_interpreter(python_code: str) -> str:
+def python_interpreter(
+    python_code: str, max_tokens_logs: int = 2**12, max_tokens_output: int = 2**12
+) -> str:
     """
     Execute Python code and return both the result and any printed output.
 
@@ -329,17 +330,31 @@ def python_interpreter(python_code: str) -> str:
         "numpy",
         "pandas",
     ]
+
     interpreter = LocalPythonExecutor(
         additional_authorized_imports=additional_authorized_imports
     )
+
     returned_value, logs, is_final = interpreter(code_action=python_code)
+
+    def truncatenate_text(text: str, max_tokens: int) -> str:
+        encoding = tiktoken.get_encoding("cl100k_base")  # GPT-4 encoding
+        tokens = encoding.encode(text)
+
+        if len(tokens) <= max_tokens:
+            return text
+
+        truncated_tokens = tokens[:max_tokens]
+        truncated_text = encoding.decode(truncated_tokens)
+
+        return f"{truncated_text}\n\n...output truncatenated after {max_tokens} tokens."
 
     # format the response to include both printed output and the return value
     result = ""
     if logs:
-        result += f"## Print output:\n{logs}\n\n"
+        result += f"## Print output:\n{truncatenate_text(logs, max_tokens=max_tokens_logs)}\n\n"
 
-    result += f"## Return value:\n{returned_value}"
+    result += f"## Return value:\n{truncatenate_text(returned_value, max_tokens=max_tokens_output)}"
 
     return result
 
