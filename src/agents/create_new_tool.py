@@ -13,19 +13,17 @@ Need to:
 
 # %% Imports
 # =============== Imports and config =============== #
+import logging
 import os
 import sys
-import logging
-from typing import Literal
+from typing import Any, Literal, Optional
 
 import dspy
+from pydantic import BaseModel
 from smolagents.local_python_executor import LocalPythonExecutor
 
-from src import LANGUAGE_MODELS, LLM, ROOT_PATH, FUNCTION_BOILERPLATE, LOG_LEVEL
+from src import FUNCTION_BOILERPLATE, LANGUAGE_MODELS, LLM, LOG_LEVEL, ROOT_PATH
 from src.special_tools import query_ifcopenshell_documentation, web_search
-from src.agents._create_function_from_source_code import (
-    _create_function_from_source_code,
-)
 
 # Set up the path
 if ROOT_PATH not in sys.path:
@@ -52,6 +50,13 @@ handler = logging.StreamHandler()
 formatter = logging.Formatter('%(asctime)s : %(levelname)s : %(name)s : %(message)s')
 handler.setFormatter(formatter)
 logger.addHandler(handler)
+
+# %% Types
+# =============== Define Datatypes =============== #
+class ModuleOutput(BaseModel):
+    result: Optional[Any] = None
+    status: Literal['error', 'success']
+    error_msg: Optional[str] = None
 
 # %% Dynamic Tool Creation Utilities
 # =============== Dynamic Tool Creation Utilities =============== #
@@ -90,7 +95,6 @@ class NewToolSignature(dspy.Signature):
         desc="Complete code implementation (including imports from the boilerplate, any necessary helper functions, etc.) of your Python function implementation."
     )
 
-
 class ToolCreator(dspy.Module):
     """Module to create a new Python function that meets the requirements."""
 
@@ -103,33 +107,22 @@ class ToolCreator(dspy.Module):
         self,
         function_description: str,
         function_name: str,
-        function_boilerplate: str,
-    ):
-        try:
-            result = self.agent(
-                function_description=function_description,
-                function_name=function_name,
-                function_boilerplate=function_boilerplate,
-            )
+        function_boilerplate: str = FUNCTION_BOILERPLATE,
+    ) -> ModuleOutput:
+        result = self.agent(
+            function_description=function_description,
+            function_name=function_name,
+            function_boilerplate=function_boilerplate,
+        )
 
-            # Check if we got valid python code
-            if hasattr(result, "python_code") and result.python_code:
-                return dspy.Prediction(
-                    python_code=result.python_code, implementation_status="success"
-                )
-            else:
-                return dspy.Prediction(
-                    python_code=f"# Error: No valid code generated for function {function_name}",
-                    implementation_status="error",
-                    error_message="No valid Python code was generated",
-                )
-
-        except Exception as e:
-            return dspy.Prediction(
-                python_code=f"# Error occurred during function creation: {str(e)}",
-                implementation_status="error",
-                error_message=f"An error occurred during execution: {str(e)}",
-            )
+        # Check if we got valid python code
+        if hasattr(result, "python_code") and result.python_code:
+            logger.info(f"function: {function_name} created successfully.")
+            logger.debug(f'function code:\n{result.python_code}\n')
+            return ModuleOutput(result=result.python_code, status="success")
+        else:
+            logger.error(f"Error when trying to generate code for function: {function_name}")
+            return ModuleOutput(status='error', error_msg=f'No valid code generated for function: {function_name}')
 
 
 # =============== Define ToolAssessor =============== #
