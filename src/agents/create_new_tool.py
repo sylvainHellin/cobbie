@@ -42,7 +42,7 @@ TOOLS = [web_search, query_ifcopenshell_documentation]
 # Load the overview of the documentation of IfcOpenShell
 doc_path = os.path.join(ROOT_PATH, "src/special_tools/ifcopenshell_api_overview_v2.md")
 with open(doc_path, "r") as file:
-    ifcopenshell_documentation_overview = file.read()
+    IFCOPENSHELL_DOCUMENTATION_OVERVIEW = file.read()
 del doc_path
 
 # Set up the logger
@@ -60,38 +60,34 @@ logger.addHandler(handler)
 # %% DSPy
 # =============== Define ToolMaker =============== #
 class NewToolSignature(dspy.Signature):
-    """
+    f"""
     Create a Python function that implements the requirements using the IfcOpenShell Python library.
     This function will be used as a "tool" by an LLM-based ReAct agent to answer some user's query related to a BIM model.
 
     The generated function should:
     - Take at least one argument: path_ifc_file: str, which is a path to the .ifc file the function should interact with.
-    - Handle input validation
-    - Include proper error handling
     - Be well-documented with docstrings
-    - Return a serialized output
-    - Ensure that the output is not too long (so as not to exceed the context window of the ReAct agent)
+    - include type hints
 
-    Below is an overview of how the structure of the IfcOpenShell Python library. for details regarding the implementation of each available method, use the `query_ifcopenshell_documentation` tool.
+    Below is an overview of how the structure of the IfcOpenShell Python library. For details regarding the implementation of each available method, use the `query_ifcopenshell_documentation` tool.
 
     Overview:
-    {ifcopenshell_documentation_overview}
+    {IFCOPENSHELL_DOCUMENTATION_OVERVIEW}
     """
 
     # inputs
     function_description: str = dspy.InputField(
         desc="Detailed description of what the function should do and its requirements."
     )
-    function_name: str = dspy.InputField(
-        desc="Name of the function following Python naming conventions."
-    )
+    function_name: str = dspy.InputField()
+
     function_boilerplate: str = dspy.InputField(
-        desc="Boilerplate to include at the beginning of your code."
+        desc="This boilerplate must be included at the beginning of your code; otherwise, it will not work properly."
     )
 
     # outputs
     python_code: str = dspy.OutputField(
-        desc="Complete code implementation (including imports etc. from the boilerplate) of your Python function implementation including docstrings, type hints, and error handling."
+        desc="Complete code implementation (including imports from the boilerplate, any necessary helper functions, etc.) of your Python function implementation."
     )
 
 
