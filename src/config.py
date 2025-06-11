@@ -1,6 +1,7 @@
 import os
 from dotenv import load_dotenv, find_dotenv
 from pydantic import BaseModel
+from typing import Literal
 
 load_dotenv(find_dotenv())
 
@@ -97,3 +98,6 @@ import math
 import json
 from typing import Union, List, Dict, Any
 """
+
+# Configure logger
+LOG_LEVEL: Literal["DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"] = "DEBUG"
