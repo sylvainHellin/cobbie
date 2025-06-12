@@ -54,7 +54,7 @@ class Result(BaseModel):
 
 
 class ModuleOutput(BaseModel):
-    result: Optional[Result] = None
+    result: Result = Result()
     status: Literal["error", "success"]
     error_msg: Optional[str] = None
 
@@ -402,7 +402,7 @@ def python_interpreter(
     return result
 
 
-# CONTINUE HERE
+# CONTINUE HERE. Complete the signature of the function: what does it return?
 def create_new_tool(
     function_requirements: str,
     function_name: str,
@@ -410,6 +410,7 @@ def create_new_tool(
     llm_info: LLM = LANGUAGE_MODELS["claude"],
     max_iter: int = 3,
     function_boilerplate: str = FUNCTION_BOILERPLATE,
+    log_level: Literal["DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"] = "DEBUG",
 ):
     """
     Create a new tool using a multi-agent system with unbiased testing.
@@ -428,7 +429,9 @@ def create_new_tool(
     tool_creator = ToolCreator(tools=base_tools)
     tool_corrector = ToolCorrector(tools=base_tools)
 
-    current_iteration = 0
+    current_iteration = 1
+
+    logger = get_logger(name="create_new_tool", log_level=log_level)
 
     logger.info(f"Starting the creation of the tool: {function_name}")
 
@@ -436,22 +439,23 @@ def create_new_tool(
     logger.info(
         f"\n--- Iteration {current_iteration + 1}: Creating initial function ---"
     )
-    creation_result = tool_creator(
+    output_tool_creator = tool_creator.forward(
         function_description=function_requirements,
         function_name=function_name,
         function_boilerplate=function_boilerplate,
     )
 
-    if creation_result.implementation_status == "error":
-        error_msg = getattr(creation_result, "error_message", "Unknown error occurred")
+    if output_tool_creator.status == "error":
+        error_msg = getattr(
+            output_tool_creator, "error_message", "Unknown error occurred"
+        )
         return {
             "status": "failed",
             "error": f"Tool creation failed: {error_msg}",
             "iterations": current_iteration + 1,
         }
 
-    current_code = creation_result.python_code
-    print("✓ Function created successfully")
+    current_code = output_tool_creator.result.python_code
 
     # Iterative improvement loop
     while current_iteration < max_iter:
@@ -461,7 +465,7 @@ def create_new_tool(
 
         # Step 2: Create enhanced assessor with dynamic tool
         try:
-            enhanced_assessor = create_assessor_with_dynamic_tool(
+            enhanced_assessor = create_assessor_with_dynamic_tool(  # CONTINUE HERE: import or recreate this function. Goal is not to create an enhanced tool assesor, but just to create the new tool from the generated code, add it to the base tools, and pass these tools as arguments for creating a new instance of the tool_assessor
                 base_tools=base_tools,
                 generated_code=current_code,
                 function_name=function_name,
