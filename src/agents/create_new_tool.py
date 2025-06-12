@@ -44,14 +44,6 @@ with open(doc_path, "r") as file:
     IFCOPENSHELL_DOCUMENTATION_OVERVIEW = file.read()
 del doc_path
 
-# Set up the logger
-logger = logging.getLogger(__name__)
-log_level = getattr(logging, LOG_LEVEL.upper(), logging.INFO)
-handler = logging.StreamHandler()
-formatter = logging.Formatter("%(asctime)s : %(levelname)s : %(name)s : %(message)s")
-handler.setFormatter(formatter)
-logger.addHandler(handler)
-
 
 # %% Types
 # =============== Define Datatypes =============== #
@@ -65,6 +57,33 @@ class ModuleOutput(BaseModel):
     result: Optional[Result] = None
     status: Literal["error", "success"]
     error_msg: Optional[str] = None
+
+
+# TODO Consider moving this to a dedicated file. Add docstring.
+def get_logger(
+    name: str = __name__,
+    log_level: Literal["DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"] = "DEBUG",
+):
+    logger = logging.getLogger(name)
+    handler = logging.StreamHandler()
+    formatter = logging.Formatter(
+        "%(asctime)s : %(levelname)s : %(name)s : %(message)s"
+    )
+    handler.setFormatter(formatter)
+    logger.addHandler(handler)
+
+    if log_level == "CRITICAL":
+        logger.setLevel(logging.CRITICAL)
+    elif log_level == "ERROR":
+        logger.setLevel(logging.ERROR)
+    elif log_level == "WARNING":
+        logger.setLevel(logging.WARNING)
+    elif log_level == "INFO":
+        logger.setLevel(logging.INFO)
+    else:
+        logger.setLevel(logging.DEBUG)
+
+    return logger
 
 
 # %% Dynamic Tool Creation Utilities
@@ -111,13 +130,20 @@ class NewToolSignature(dspy.Signature):
 class ToolCreator(dspy.Module):
     """Module to create a new Python function that meets the requirements."""
 
-    def __init__(self, tools: list, max_iters: int = 10):
+    def __init__(
+        self,
+        tools: list,
+        max_iters: int = 10,
+        log_level: Literal["DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"] = "DEBUG",
+    ):
         super().__init__()
         self.tools = tools
         self.max_iters = max_iters
         self.agent = dspy.ReAct(
             signature=NewToolSignature, tools=tools, max_iters=self.max_iters
         )
+        self.log_level = log_level
+        self.logger = get_logger(name="ToolCreator", log_level=self.log_level)
 
     def forward(
         self,
@@ -133,13 +159,13 @@ class ToolCreator(dspy.Module):
 
         # Check if we got valid python code
         if hasattr(result, "python_code") and result.python_code:
-            logger.info(f"function: {function_name} created successfully.")
-            logger.debug(f"function code:\n{result.python_code}\n")
+            self.logger.info(f"function: {function_name} created successfully.")
+            self.logger.debug(f"function code:\n{result.python_code}\n")
             return ModuleOutput(
                 result=Result(python_code=result.python_code), status="success"
             )
         else:
-            logger.error(
+            self.logger.error(
                 f"Error when trying to generate code for function: {function_name}"
             )
             return ModuleOutput(
@@ -179,7 +205,12 @@ class ToolAssessmentSignature(dspy.Signature):
 class ToolAssessor(dspy.Module):
     """Module to assess the quality and functionality of generated tools."""
 
-    def __init__(self, tools: list, max_iters: int = 10):
+    def __init__(
+        self,
+        tools: list,
+        max_iters: int = 10,
+        log_level: Literal["DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"] = "DEBUG",
+    ):
         super().__init__()
         # Combine base tools with the generated tool
         self.tools = tools
@@ -189,6 +220,8 @@ class ToolAssessor(dspy.Module):
             tools=self.tools,
             max_iters=self.max_iters,
         )
+        self.log_level = log_level
+        self.logger = get_logger(name="ToolAssessor", log_level=self.log_level)
 
     def forward(
         self,
@@ -203,10 +236,11 @@ class ToolAssessor(dspy.Module):
             original_requirements=original_requirements,
             test_file_path=path_ifc_model,
         )
+
         if output.assessment_status and output.assessment_details:
-            logger.debug("Tool assessment successfull")
-            logger.debug(f"Assessment status: \n{output.assessment_status}")
-            logger.debug(f"Assessment details: \n{output.assessment_details}")
+            self.logger.debug("Tool assessment successfull")
+            self.logger.debug(f"Assessment status: \n{output.assessment_status}")
+            self.logger.debug(f"Assessment details: \n{output.assessment_details}")
             return ModuleOutput(
                 result=Result(
                     assessment_status=output.assessment_status,
@@ -215,7 +249,7 @@ class ToolAssessor(dspy.Module):
                 status="success",
             )
         else:
-            logger.debug("Tool assessment failed")
+            self.logger.debug("Tool assessment failed")
             return ModuleOutput(status="error", error_msg="Tool assessment failed")
 
 
@@ -263,13 +297,20 @@ class ToolCorrectionSignature(dspy.Signature):
 class ToolCorrector(dspy.Module):
     """Module to correct an existing Python function."""
 
-    def __init__(self, tools: list, max_iters: int = 10):
+    def __init__(
+        self,
+        tools: list,
+        max_iters: int = 10,
+        log_level: Literal["DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"] = "DEBUG",
+    ):
         super().__init__()
         self.tools = tools
         self.max_iters = max_iters
         self.agent = dspy.ReAct(
             signature=ToolCorrectionSignature, tools=tools, max_iters=self.max_iters
         )
+        self.log_level = log_level
+        self.logger = get_logger(name="ToolCorrector", log_level=self.log_level)
 
     def forward(
         self,
@@ -286,14 +327,16 @@ class ToolCorrector(dspy.Module):
         )
 
         if result.new_function_implementation:
-            logger.info("ToolCorrector updated the implementation successfully")
-            logger.debug(f"New implementation: {result.new_function_implementation}")
+            self.logger.info("ToolCorrector updated the implementation successfully")
+            self.logger.debug(
+                f"New implementation: {result.new_function_implementation}"
+            )
             return ModuleOutput(
                 result=Result(python_code=result.new_function_implementation),
                 status="success",
             )
         else:
-            logger.info("ToolCorrector failed to update the function.")
+            self.logger.info("ToolCorrector failed to update the function.")
             return ModuleOutput(
                 status="error", error_msg="ToolCorrector failed to update the function."
             )
@@ -359,8 +402,10 @@ def python_interpreter(
     return result
 
 
+# CONTINUE HERE
 def create_new_tool(
-    requirements: str,
+    function_requirements: str,
+    function_name: str,
     path_ifc_model: str,
     llm_info: LLM = LANGUAGE_MODELS["claude"],
     max_iter: int = 3,
@@ -385,17 +430,14 @@ def create_new_tool(
 
     current_iteration = 0
 
-    # Extract function name from requirements (you might want to make this more sophisticated)
-    function_name = (
-        "generated_ifc_tool"  # Default name, could be extracted from requirements
-    )
-
-    print(f"Starting tool creation process for: {requirements}")
+    logger.info(f"Starting the creation of the tool: {function_name}")
 
     # Step 1: Create initial function
-    print(f"\n--- Iteration {current_iteration + 1}: Creating initial function ---")
+    logger.info(
+        f"\n--- Iteration {current_iteration + 1}: Creating initial function ---"
+    )
     creation_result = tool_creator(
-        function_description=requirements,
+        function_description=function_requirements,
         function_name=function_name,
         function_boilerplate=function_boilerplate,
     )
@@ -433,7 +475,7 @@ def create_new_tool(
         try:
             assessment_result = enhanced_assessor(
                 function_name=function_name,
-                function_requirements=requirements,
+                function_requirements=function_requirements,
                 path_ifc_model=path_ifc_model,
             )
             print(f"✓ Assessment completed: {assessment_result.assessment_status}")
@@ -459,7 +501,7 @@ def create_new_tool(
         if current_iteration < max_iter:
             print(f"\n--- Iteration {current_iteration}: Correcting function ---")
             correction_result = tool_corrector(
-                function_description=requirements,
+                function_description=function_requirements,
                 function_name=function_name,
                 current_function_implementation=current_code,
                 detailed_function_assessment=assessment_result.assessment_details,
@@ -519,7 +561,9 @@ def example_usage():
     )
 
     # Create the tool
-    result = create_new_tool(requirements=requirements, path_ifc_model=path_ifc_model)
+    result = create_new_tool(
+        function_requirements=requirements, path_ifc_model=path_ifc_model
+    )
 
     print("\nTool Creation Result:")
     print(f"Status: {result['status']}")
