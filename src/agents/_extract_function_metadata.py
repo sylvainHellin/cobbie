@@ -1,7 +1,15 @@
 import ast
+from pydantic import BaseModel
 
 
-def _extract_function_metadata(code: str, function_name: str) -> dict:
+class PythonFunctionMetadata(BaseModel):
+    name: str
+    args: list = []
+    defaults: list = []
+    docstring: str = ""
+
+
+def _extract_function_metadata(code: str, function_name: str) -> PythonFunctionMetadata:
     """
     Extract function metadata (name, signature, docstring) without executing the code.
     """
@@ -31,26 +39,20 @@ def _extract_function_metadata(code: str, function_name: str) -> dict:
                     else:
                         defaults.append("...")
 
-                return {
-                    "name": function_name,
-                    "args": args,
-                    "defaults": defaults,
-                    "docstring": docstring,
-                }
-    except Exception as e:
-        return {
-            "name": function_name,
-            "args": [],
-            "defaults": [],
-            "docstring": f"Function {function_name} - metadata extraction failed: {str(e)}",
-        }
+                return PythonFunctionMetadata(
+                    name=function_name,
+                    args=args,
+                    defaults=defaults,
+                    docstring=str(docstring),
+                )
 
-    return {
-        "name": function_name,
-        "args": ["path_ifc_file"],
-        "defaults": [],
-        "docstring": f"Function {function_name} - no metadata found",
-    }
+    except Exception as e:
+        return PythonFunctionMetadata(
+            name=function_name,
+            docstring=str(
+                f"Function {function_name} - metadata extraction failed: {str(e)}"
+            ),
+        )
 
 
 def return_blobed_name(name: str) -> str:
@@ -73,5 +75,5 @@ def return_blobed_name(name: str) -> str:
     function_name = "return_blobed_name"
 
     metadata = _extract_function_metadata(code=code, function_name=function_name)
-    for key, value in metadata.items():
+    for key, value in metadata.dict().items():
         print(f"{key}: {value}")
