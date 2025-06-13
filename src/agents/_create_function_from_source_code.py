@@ -15,18 +15,7 @@ import ifcopenshell.util.system
 import numpy
 import pandas
 
-# Import with fallback in case of import issues
-try:
-    from ._extract_function_metadata import _extract_function_metadata
-except ImportError:
-    # Fallback function if import fails
-    def _extract_function_metadata(code: str, function_name: str) -> dict:
-        return {
-            "name": function_name,
-            "args": [],
-            "defaults": [],
-            "docstring": f"Function {function_name} - metadata extraction not available",
-        }
+from ._extract_function_metadata import _extract_function_metadata
 
 
 def _create_function_from_source_code(
@@ -97,7 +86,7 @@ def _create_function_from_source_code(
         # Set the function name and docstring for the tool
         metadata = _extract_function_metadata(cleaned_code, function_name)
         tool_wrapper.__name__ = function_name
-        tool_wrapper.__doc__ = metadata["docstring"]
+        tool_wrapper.__doc__ = metadata.docstring
 
         return tool_wrapper
 
@@ -119,17 +108,17 @@ if __name__ == "__main__":
 
     def sqrt(number: int) -> int:
         '''
-        Return the suqre root of a number
+        Return the square root of a number
         '''
         return math.sqrt(4)
     """
     code = """
     def sqrt(number: int) -> int:
         '''
-        Return the suqre root of a number
+        Return the square root of a number
         '''
         import math
-        return math.sqrt(4)
+        return math.sqrt(number)
 """
 
     # Example with custom imports
@@ -149,8 +138,8 @@ if __name__ == "__main__":
     # Test the original code with default imports
     print("1. Testing code with import inside function (default imports):")
     new_tool = _create_function_from_source_code(code=code, function_name=function_name)
-    res = new_tool(4)
-    print(f"Result: {res}")
+    res = new_tool(9)
+    print(f"Square root of 9 is: {res}")
 
     # Test the wrong_code with default imports
     print("\n2. Testing code with import at module level (default imports):")

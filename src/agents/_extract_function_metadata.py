@@ -13,6 +13,8 @@ def _extract_function_metadata(code: str, function_name: str) -> PythonFunctionM
     """
     Extract function metadata (name, signature, docstring) without executing the code.
     """
+    output = PythonFunctionMetadata(name=function_name)
+
     try:
         tree = ast.parse(code)
         for node in ast.walk(tree):
@@ -39,7 +41,7 @@ def _extract_function_metadata(code: str, function_name: str) -> PythonFunctionM
                     else:
                         defaults.append("...")
 
-                return PythonFunctionMetadata(
+                output = PythonFunctionMetadata(
                     name=function_name,
                     args=args,
                     defaults=defaults,
@@ -47,12 +49,14 @@ def _extract_function_metadata(code: str, function_name: str) -> PythonFunctionM
                 )
 
     except Exception as e:
-        return PythonFunctionMetadata(
+        output = PythonFunctionMetadata(
             name=function_name,
             docstring=str(
                 f"Function {function_name} - metadata extraction failed: {str(e)}"
             ),
         )
+
+    return output
 
 
 def return_blobed_name(name: str) -> str:
