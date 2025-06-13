@@ -13,7 +13,6 @@ Need to:
 
 # %% Imports
 # =============== Imports and config =============== #
-import logging
 import os
 import sys
 from typing import Literal, Optional
@@ -23,8 +22,13 @@ import dspy
 from pydantic import BaseModel
 from smolagents.local_python_executor import LocalPythonExecutor
 
-from src import FUNCTION_BOILERPLATE, LANGUAGE_MODELS, LLM, LOG_LEVEL, ROOT_PATH
+from src import FUNCTION_BOILERPLATE, LANGUAGE_MODELS, LLM, ROOT_PATH
 from src.special_tools import query_ifcopenshell_documentation, web_search
+from src.agents import (
+    _create_function_from_source_code,
+    _extract_function_metadata,
+    get_logger,
+)
 
 # Set up the path
 if ROOT_PATH not in sys.path:
@@ -57,37 +61,6 @@ class ModuleOutput(BaseModel):
     result: Result = Result()
     status: Literal["error", "success"]
     error_msg: Optional[str] = None
-
-
-# TODO Consider moving this to a dedicated file. Add docstring.
-def get_logger(
-    name: str = __name__,
-    log_level: Literal["DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"] = "DEBUG",
-):
-    logger = logging.getLogger(name)
-    handler = logging.StreamHandler()
-    formatter = logging.Formatter(
-        "%(asctime)s : %(levelname)s : %(name)s : %(message)s"
-    )
-    handler.setFormatter(formatter)
-    logger.addHandler(handler)
-
-    if log_level == "CRITICAL":
-        logger.setLevel(logging.CRITICAL)
-    elif log_level == "ERROR":
-        logger.setLevel(logging.ERROR)
-    elif log_level == "WARNING":
-        logger.setLevel(logging.WARNING)
-    elif log_level == "INFO":
-        logger.setLevel(logging.INFO)
-    else:
-        logger.setLevel(logging.DEBUG)
-
-    return logger
-
-
-# %% Dynamic Tool Creation Utilities
-# =============== Dynamic Tool Creation Utilities =============== #
 
 
 # %% DSPy
@@ -183,9 +156,6 @@ class ToolAssessmentSignature(dspy.Signature):
 
     # inputs
     function_name: str = dspy.InputField(desc="Name of the function to assess")
-    function_code: str = dspy.InputField(
-        desc="Source code of the function implementation"
-    )
     function_requirements: str = dspy.InputField(
         desc="Original requirements and description of what the function should do"
     )
@@ -226,13 +196,11 @@ class ToolAssessor(dspy.Module):
     def forward(
         self,
         function_name: str,
-        function_code: str,
         original_requirements: str,
         path_ifc_model: str,
     ) -> ModuleOutput:
         output = self.agent(
             function_name=function_name,
-            function_code=function_code,
             original_requirements=original_requirements,
             test_file_path=path_ifc_model,
         )
@@ -411,7 +379,7 @@ def create_new_tool(
     max_iter: int = 3,
     function_boilerplate: str = FUNCTION_BOILERPLATE,
     log_level: Literal["DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"] = "DEBUG",
-):
+) -> ModuleOutput:
     """
     Create a new tool using a multi-agent system with unbiased testing.
 
@@ -422,23 +390,21 @@ def create_new_tool(
     4. ToolCorrector fixes issues if needed
     5. Repeat until satisfactory or max iterations reached
     """
+    # --- Step 1: Set up the system --- #
+    output = ModuleOutput(status="error")
+    base_tools = [web_search, query_ifcopenshell_documentation, python_interpreter]
+
     lm = dspy.LM(model=llm_info.url, api_key=llm_info.api_key)
     dspy.configure(lm=lm)
 
-    base_tools = [web_search, query_ifcopenshell_documentation, python_interpreter]
     tool_creator = ToolCreator(tools=base_tools)
     tool_corrector = ToolCorrector(tools=base_tools)
 
-    current_iteration = 1
-
     logger = get_logger(name="create_new_tool", log_level=log_level)
-
     logger.info(f"Starting the creation of the tool: {function_name}")
 
-    # Step 1: Create initial function
-    logger.info(
-        f"\n--- Iteration {current_iteration + 1}: Creating initial function ---"
-    )
+    # --- Step 2: Create initial function --- #
+    logger.info("\n--- Creating initial function ---")
     output_tool_creator = tool_creator.forward(
         function_description=function_requirements,
         function_name=function_name,
@@ -446,95 +412,88 @@ def create_new_tool(
     )
 
     if output_tool_creator.status == "error":
-        error_msg = getattr(
-            output_tool_creator, "error_message", "Unknown error occurred"
+        error_msg = (
+            output_tool_creator.error_msg
+            or f"Unknown error occurred  while trying to create the tool: {function_name}."
         )
-        return {
-            "status": "failed",
-            "error": f"Tool creation failed: {error_msg}",
-            "iterations": current_iteration + 1,
-        }
+        logger.error(error_msg)
+        output.error_msg = error_msg
 
-    current_code = output_tool_creator.result.python_code
+    code: str = output_tool_creator.result.python_code or ""
+    current_iteration = 0
 
-    # Iterative improvement loop
+    # --- Step 3: Iterative improvement loop --- #
     while current_iteration < max_iter:
         current_iteration += 1
-
         print(f"\n--- Iteration {current_iteration}: Testing function ---")
 
-        # Step 2: Create enhanced assessor with dynamic tool
+        # Step 3.1: Create enhanced assessor with dynamic tool
         try:
-            enhanced_assessor = create_assessor_with_dynamic_tool(  # CONTINUE HERE: import or recreate this function. Goal is not to create an enhanced tool assesor, but just to create the new tool from the generated code, add it to the base tools, and pass these tools as arguments for creating a new instance of the tool_assessor
-                base_tools=base_tools,
-                generated_code=current_code,
-                function_name=function_name,
+            new_tool = _create_function_from_source_code(
+                function_name=function_name, code=code
             )
-            print("✓ Enhanced assessor created with dynamic tool")
+            tools = base_tools + [new_tool]
+            tool_assessor = ToolAssessor(tools=tools)
+            logger.info("✓ ToolAssessor created with new tool to test.")
         except Exception as e:
-            print(f"✗ Failed to create enhanced assessor: {str(e)}")
-            break
+            logger.error(f"✗ Failed to create ToolAssessor. Error: {str(e)}")
+            continue
 
-        # Step 3: Assess the function
+        # Step 3.2: Assess if the function works properly
         try:
-            assessment_result = enhanced_assessor(
+            output_tool_assessor = tool_assessor.forward(
                 function_name=function_name,
-                function_requirements=function_requirements,
+                original_requirements=function_requirements,
                 path_ifc_model=path_ifc_model,
             )
-            print(f"✓ Assessment completed: {assessment_result.assessment_status}")
-            print(f"Assessment details: {assessment_result.assessment_details}")
+            logger.debug(
+                f"✓ Assessment completed: {output_tool_assessor.result.assessment_status}"
+            )
+            logger.debug(
+                f"Assessment details: {output_tool_assessor.result.assessment_details}"
+            )
         except Exception as e:
-            print(f"✗ Assessment failed: {str(e)}")
-            break
+            logger.error(f"✗ Assessment failed: {str(e)}")
+            continue
 
-        # Step 4: Check if function is satisfactory
-        if assessment_result.assessment_status == "ok":
-            print(
+        # Step 3.3: If the assessment is good, update the ouput and exit the loop
+        if output_tool_assessor.result.assessment_status == "ok":
+            logger.info(
                 f"🎉 Function passed assessment after {current_iteration} iterations!"
             )
-            return {
-                "status": "success",
-                "function_code": current_code,
-                "function_name": function_name,
-                "assessment_details": assessment_result.assessment_details,
-                "iterations": current_iteration,
-            }
+            output.result.python_code = code
+            output.status = "success"
+            output.result.assessment_status = (
+                output_tool_assessor.result.assessment_status
+            )
+            output.result.assessment_details = (
+                output_tool_assessor.result.assessment_details
+            )
+            break
 
-        # Step 5: If not satisfactory and we have iterations left, correct the function
-        if current_iteration < max_iter:
-            print(f"\n--- Iteration {current_iteration}: Correcting function ---")
-            correction_result = tool_corrector(
+        # Step 3.4: If the assessment is not satisfactory, try to correct the function
+        elif current_iteration < max_iter:
+            logger.debug("Code not good enough yet; trying to correct the function.")
+            output_tool_corrector = tool_corrector.forward(
                 function_description=function_requirements,
                 function_name=function_name,
-                current_function_implementation=current_code,
-                detailed_function_assessment=assessment_result.assessment_details,
+                current_function_implementation=code,
+                detailed_function_assessment=output_tool_assessor.result.assessment_details
+                or "No assessment available.",
             )
 
-            if correction_result.implementation_status == "error":
-                print(
-                    f"✗ Correction failed: {correction_result.new_function_implementation}"
-                )
-                break
-
-            current_code = correction_result.new_function_implementation
-            print("✓ Function corrected")
+            if output_tool_corrector.status == "error":
+                logger.error("✗ Correction failed.")
+                continue
+            else:
+                code = output_tool_corrector.result.python_code or ""
+                logger.info("✓ Function corrected")
+                logger.debug(f"New code:\n{code}")
         else:
-            print("⚠️  Maximum iterations reached")
+            logger.debug("⚠️  Maximum iterations reached")
 
-    # Return final result even if not perfect
-    return {
-        "status": "partial_success" if current_iteration >= max_iter else "failed",
-        "function_code": current_code,
-        "function_name": function_name,
-        "final_assessment": assessment_result.assessment_details
-        if "assessment_result" in locals()
-        else "Assessment not completed",
-        "iterations": current_iteration,
-        "note": "Function may need manual review"
-        if current_iteration >= max_iter
-        else "Process failed before completion",
-    }
+    # Return the result (good or bad)
+    return output
 
 
 # %% Example Usage
@@ -552,7 +511,7 @@ def example_usage():
     should handle cases where some properties might be missing and return the results
     as a JSON string for easy parsing.
     """
-
+    function_name = "get_wall_elements"
     # Path to an IFC file for testing
     path_ifc_model = (
         "/Users/sylvainhellin/GitHub/ifcAnswerEngineV3/src/bim_models/duplex/arc.ifc"
@@ -560,37 +519,14 @@ def example_usage():
 
     print(f"Creating tool with requirements: {requirements.strip()}")
     print(f"Using test IFC file: {path_ifc_model}")
-    print(
-        "\nNote: Make sure to update 'path_ifc_model' with a valid IFC file path before running."
-    )
-
     # Create the tool
     result = create_new_tool(
-        function_requirements=requirements, path_ifc_model=path_ifc_model
+        function_requirements=requirements,
+        path_ifc_model=path_ifc_model,
+        function_name=function_name,
     )
-
-    print("\nTool Creation Result:")
-    print(f"Status: {result['status']}")
-    print(f"Iterations: {result['iterations']}")
-
-    if result["status"] == "success":
-        print("✅ Tool created successfully!")
-        print(f"Function name: {result['function_name']}")
-        print("\nGenerated code:")
-        print("=" * 50)
-        print(result["function_code"])
-        print("=" * 50)
-    else:
-        print("❌ Tool creation failed or needs improvement")
-        if "error" in result:
-            print(f"Error: {result['error']}")
-        if "note" in result:
-            print(f"Note: {result['note']}")
-        if "function_code" in result:
-            print("\nPartial implementation:")
-            print("=" * 50)
-            print(result["function_code"])
-            print("=" * 50)
+    for key, value in result.result.dict().items():
+        print(key, ": ", value, "\n")
 
 
 if __name__ == "__main__":
