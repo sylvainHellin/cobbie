@@ -13,6 +13,7 @@ dependencies = [
     "ifcopenshell>=0.8.2",
     "ipykernel>=6.29.5",
     "jupyter>=1.1.1",
+    "mlflow>=3.1.0",
     "ollama>=0.4.8",
     "openinference-instrumentation-smolagents>=0.1.11",
     "opentelemetry-exporter-otlp>=1.32.1",
