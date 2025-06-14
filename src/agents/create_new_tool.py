@@ -26,7 +26,7 @@ from src import FUNCTION_BOILERPLATE, LANGUAGE_MODELS, LLM, ROOT_PATH
 from src.special_tools import (
     query_ifcopenshell_documentation,
     web_search,
-    python_interpreter,
+    get_python_interpreter,
 )
 from src.agents import (
     _create_function_from_source_code,
@@ -343,7 +343,7 @@ def create_new_tool(
     """
     # --- Step 1: Set up the system --- #
     output = ModuleOutput(status="error")
-    base_tools = [web_search, query_ifcopenshell_documentation, python_interpreter]
+    base_tools = [web_search, query_ifcopenshell_documentation, get_python_interpreter]
 
     lm = dspy.LM(model=llm_info.url, api_key=llm_info.api_key)
     dspy.configure(lm=lm)

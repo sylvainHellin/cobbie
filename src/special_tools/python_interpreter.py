@@ -1,47 +1,31 @@
-from smolagents.local_python_executor import LocalPythonExecutor, BASE_PYTHON_TOOLS
+from typing import Callable, List, Dict
+
 import tiktoken
+from smolagents.local_python_executor import BASE_PYTHON_TOOLS, LocalPythonExecutor
+
+ADDITIONAL_AUTHORIZED_IMPORTS = [
+    "ifcopenshell",
+    "ifcopenshell.util.element",
+    "ifcopenshell.util.shape",
+    "ifcopenshell.util.placement",
+    "ifcopenshell.util.geolocation",
+    "ifcopenshell.util.system",
+    "ifcopenshell.geom",
+    "ifcopenshell.file",
+    "ifcopenshell.entity_instance",
+    "math",
+    "numpy",
+    "pandas",
+]
 
 
-def python_interpreter(
-    python_code: str, max_tokens_logs: int = 2**12, max_tokens_output: int = 2**12
-) -> str:
-    """
-    Execute Python code and return both the result and any printed output.
-
-    Args:
-        code: The Python code to execute as a string
-
-    Returns:
-        A formatted string containing both the print outputs and return value
-    """
-
-    additional_authorized_imports = [
-        "ifcopenshell",
-        "ifcopenshell.util.element",
-        "ifcopenshell.util.shape",
-        "ifcopenshell.util.placement",
-        "ifcopenshell.util.geolocation",
-        "ifcopenshell.util.system",
-        "ifcopenshell.geom",
-        "ifcopenshell.file",
-        "ifcopenshell.entity_instance",
-        "math",
-        "numpy",
-        "pandas",
-    ]
-
-    interpreter = LocalPythonExecutor(
-        additional_authorized_imports=additional_authorized_imports
-    )
-    allowed_tools = BASE_PYTHON_TOOLS.copy()
-    allowed_tools["print"] = lambda *args: interpreter.state["_print_outputs"].__iadd__(
-        " ".join(map(str, args)) + "\n"
-    )
-    interpreter.static_tools = allowed_tools
-
-    returned_value, logs, is_final = interpreter(code_action=python_code)
-
-    def truncatenate_text(text: str, max_tokens: int) -> str:
+def get_python_interpreter(
+    max_tokens_logs: int = 2**12,
+    max_tokens_output: int = 2**12,
+    allowed_tools: Dict[str, Callable] = {"print": print},
+    additional_authorized_imports: List[str] = ADDITIONAL_AUTHORIZED_IMPORTS,
+) -> Callable:
+    def _truncatenate_text(text: str, max_tokens: int) -> str:
         encoding = tiktoken.get_encoding("cl100k_base")  # GPT-4 encoding
         tokens = encoding.encode(text)
 
@@ -53,55 +37,114 @@ def python_interpreter(
 
         return f"{truncated_text}\n\n...output truncatenated after {max_tokens} tokens."
 
-    # format the response to include both printed output and the return value
-    result = ""
-    if logs:
-        result += f"## Print output:\n{truncatenate_text(logs, max_tokens=max_tokens_logs)}\n\n"
+    def python_interpreter(
+        python_code: str,
+    ) -> str:
+        """
+        Execute Python code and return both the result and any printed output.
 
-    result += f"## Return value:\n{truncatenate_text(repr(returned_value), max_tokens=max_tokens_output)}"
+        Args:
+            code: The Python code to execute as a string
 
-    return result
+        Returns:
+            A formatted string containing both the print outputs and return value
+        """
+
+        interpreter = LocalPythonExecutor(
+            additional_authorized_imports=additional_authorized_imports
+        )
+        base_tools = BASE_PYTHON_TOOLS.copy()
+        static_tools = {**base_tools, **allowed_tools}
+        interpreter.static_tools = static_tools
+
+        returned_value, logs, is_final = interpreter(code_action=python_code)
+
+        # format the response to include both printed output and the return value
+        result = ""
+        if logs:
+            result += f"## Print output:\n{_truncatenate_text(logs, max_tokens=max_tokens_logs)}\n\n"
+
+        result += f"## Return value:\n{_truncatenate_text(repr(returned_value), max_tokens=max_tokens_output)}"
+
+        return result
+
+    return python_interpreter
 
 
 if __name__ == "__main__":
 
-    def test_basic_execution():
-        print("Running test: basic execution")
+    def test_basic_execution_1():
+        print("Running test: basic execution with print allowed")
         code = 'print("Hello")\n"World"'
-        result = python_interpreter(code)
+        interpreter = get_python_interpreter()
+        result = interpreter(code)
         assert "## Print output" in result
         assert "Hello" in result
         assert "## Return value" in result
         assert "World" in result
-        print("PASS: Basic execution\\n")
+        print("PASS: Basic execution with print allowed\\n")
 
-    def test_log_truncation():
-        print("Running test: log truncation")
-        # This will print many lines, forcing truncation of the logs.
-        code = "\n".join([f"print({i})" for i in range(100)])
-        result = python_interpreter(code, max_tokens_logs=50)
-        assert "truncatenated" in result
+    def test_basic_execution_2():
+        print("Running test: basic execution with print not allowed")
+        code = 'print("Hello")\n"World"'
+        interpreter = get_python_interpreter(allowed_tools={})
+        result = interpreter(code)
         assert "## Print output" in result
-        print("PASS: Log truncation\\n")
-
-    def test_output_truncation():
-        print("Running test: output truncation")
-        # This will return a very long string, forcing truncation of the return value.
-        code = "'a' * 2000"
-        result = python_interpreter(code, max_tokens_output=50)
-        assert "truncatenated" in result
+        # assert "Hello" not in result
         assert "## Return value" in result
-        print("PASS: Output truncation\\n")
+        # assert "World" not in result
+        print(result)
+        print("PASS: Basic execution with print not allowed\\n")
 
-    def test_numpy_import():
-        print("Running test: numpy import")
-        code = "import numpy as np; np.array([1,2,3])"
-        result = python_interpreter(code)
-        assert "array([1, 2, 3])" in result
-        assert "## Return value" in result
-        print("PASS: Numpy import\\n")
+    def double_number(num: int) -> int:
+        return num * 2
 
-    test_basic_execution()
-    test_log_truncation()
-    test_output_truncation()
-    test_numpy_import()
+    def test_custom_fn_allowed():
+        print("Running test: custom function allowed")
+        code = "double = double_number(3)\nprint(double)\ndouble"
+        interpreter = get_python_interpreter(
+            allowed_tools={"double_number": double_number}
+        )
+        result = interpreter(code)
+        print(result)
+
+    def test_custom_fn_not_allowed():
+        print("Running test: custom function not allowed")
+        code = "double = double_number(3)\nprint(double)\ndouble"
+        interpreter = get_python_interpreter(allowed_tools={})
+        result = interpreter(code)
+        print(result)
+
+    # def test_log_truncation():
+    #     print("Running test: log truncation")
+    #     # This will print many lines, forcing truncation of the logs.
+    #     code = "\n".join([f"print({i})" for i in range(100)])
+    #     result = get_python_interpreter(code, max_tokens_logs=50)
+    #     assert "truncatenated" in result
+    #     assert "## Print output" in result
+    #     print("PASS: Log truncation\\n")
+
+    # def test_output_truncation():
+    #     print("Running test: output truncation")
+    #     # This will return a very long string, forcing truncation of the return value.
+    #     code = "'a' * 2000"
+    #     result = get_python_interpreter(code, max_tokens_output=50)
+    #     assert "truncatenated" in result
+    #     assert "## Return value" in result
+    #     print("PASS: Output truncation\\n")
+
+    # def test_numpy_import():
+    #     print("Running test: numpy import")
+    #     code = "import numpy as np; np.array([1,2,3])"
+    #     result = get_python_interpreter(code)
+    #     assert "array([1, 2, 3])" in result
+    #     assert "## Return value" in result
+    #     print("PASS: Numpy import\\n")
+
+    test_basic_execution_1()
+    test_basic_execution_2()
+    test_custom_fn_allowed()
+    test_custom_fn_not_allowed()
+    # test_log_truncation()
+    # test_output_truncation()
+    # test_numpy_import()
