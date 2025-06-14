@@ -343,7 +343,17 @@ def create_new_tool(
     """
     # --- Step 1: Set up the system --- #
     output = ModuleOutput(status="error")
-    base_tools = [web_search, query_ifcopenshell_documentation, get_python_interpreter]
+    python_interpreter = get_python_interpreter(
+        allowed_tools={
+            "web_search": web_search,
+            "query_ifcopenshell_documentation": query_ifcopenshell_documentation,
+        }
+    )
+    special_tools = [
+        web_search,
+        query_ifcopenshell_documentation,
+    ]
+    base_tools = special_tools + [python_interpreter]
 
     lm = dspy.LM(model=llm_info.url, api_key=llm_info.api_key)
     dspy.configure(lm=lm)
@@ -387,7 +397,15 @@ def create_new_tool(
             new_tool = _create_function_from_source_code(
                 function_name=function_name, code=code
             )
-            tools = base_tools + [new_tool]
+            python_interpreter = get_python_interpreter(
+                allowed_tools={
+                    "web_search": web_search,
+                    "query_ifcopenshell_documentation": query_ifcopenshell_documentation,
+                    "python_interpreter": python_interpreter,
+                    f"{function_name}": new_tool,
+                }
+            )
+            tools = special_tools + [new_tool, python_interpreter]
             tool_assessor = ToolAssessor(tools=tools)
             logger.info("✓ ToolAssessor created with new tool to test.")
         except Exception as e:
