@@ -1,4 +1,5 @@
 from typing import Callable, List, Dict
+from smolagents.local_python_executor import InterpreterError
 
 import tiktoken
 from smolagents.local_python_executor import BASE_PYTHON_TOOLS, LocalPythonExecutor
@@ -57,7 +58,10 @@ def get_python_interpreter(
         static_tools = {**base_tools, **allowed_tools}
         interpreter.static_tools = static_tools
 
-        returned_value, logs, is_final = interpreter(code_action=python_code)
+        try:
+            returned_value, logs, is_final = interpreter(code_action=python_code)
+        except InterpreterError as e:
+            return f"An error occured while trying to execute this code:\n{e}"
 
         # format the response to include both printed output and the return value
         result = ""
