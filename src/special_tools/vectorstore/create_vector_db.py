@@ -4,16 +4,16 @@ import os
 import json
 import ast
 import pandas as pd
-from chromadb import PersistentClient
+from chromadb import PersistentClient, Collection
 from dotenv import load_dotenv, find_dotenv
-from tools.query_ifcopenshell_documentation import OllamaEmbeddingFunction
 
 load_dotenv(find_dotenv())
-ROOT_PATH = os.getenv("ROOT_PATH")
+ROOT_PATH = os.getenv("ROOT_PATH", "")
 
-ollama_embed = OllamaEmbeddingFunction()
+
 # %% Use ast to extract classes and functions from IfcOpenShell
-if __name__ == "__main__":
+def extract_module_definitions():
+    """Extract documentation from IfcOpenShell modules and return module definitions dict."""
     # ==================== Extract documentation from IfcOpenShell ==================== #
     relevant_python_files = [
         (
@@ -93,10 +93,18 @@ if __name__ == "__main__":
 
         module_definitions[module_name] = definitions  # module_name might be None now
 
+    return module_definitions
+
+
+if __name__ == "__main__":
+    module_definitions = extract_module_definitions()
     print(json.dumps(module_definitions, indent=2))
+
+
 # %% Post-processing of the result and store them into a pandas DataFrame
 # ==================== Tranform and store the data in a DataFrame ==================== #
-if __name__ == "__main__":
+def process_module_definitions(module_definitions: dict) -> pd.DataFrame:
+    """Process module definitions into a pandas DataFrame with filtered results."""
     data = []
     for module_name, definitions in module_definitions.items():
         for definition in definitions:
@@ -112,30 +120,29 @@ if __name__ == "__main__":
     df_module_definitions = pd.DataFrame(data)
 
     # filter out private methods/class
-    df = df_module_definitions[
-        df_module_definitions["name"].apply(lambda name: name[0] != "_")
-    ]
+    mask = ~df_module_definitions["name"].str.startswith("_")
+    df = df_module_definitions[mask].copy()
 
     # filter out the duplicated values
     df = df.drop_duplicates()
 
     # filter out entities with no description
-    df = df[df["docstring"].apply(lambda x: x is not None)]
+    df = df[pd.DataFrame(df["docstring"]).notna()].copy()
+    df = pd.DataFrame(df)
 
-    df.head(30)
+    return df
+
+
 # %%
 # ==================== Create the Embeddings and add them to the DataFrame ==================== #
-if __name__ == "__main__":
-    ollama_embed = OllamaEmbeddingFunction()
-    ifdocuments = df.docstring.to_list()
+def create_vector_db(df):
+    """Create vector database from DataFrame and return the collection."""
     client = PersistentClient(path=os.path.join(ROOT_PATH, "src/db"))
     collection = client.create_collection(name="ifcopenshell", get_or_create=True)
 
     for idx, row in df.iterrows():
-        embeddings = ollama_embed([row.docstring])
         collection.add(
             ids=[str(idx)],
-            embeddings=embeddings,
             metadatas=[
                 {
                     "name": row["name"],
@@ -146,13 +153,33 @@ if __name__ == "__main__":
             documents=[row.docstring],
         )
 
+    return collection
+
 
 # %% Test retrieval
-if __name__ == "__main__":
+def test_retrieval(collection: Collection):
+    """Test retrieval from the vector database."""
     query = "Get the properties of an Entity."
     text_search = "propert"
-    embd = ollama_embed([query])
     results = collection.query(
-        query_embeddings=embd, n_results=10, where_document={"$contains": text_search}
+        query_texts=[query], n_results=10, where_document={"$contains": text_search}
     )
+    return results
+
+
+if __name__ == "__main__":
+    # Extract module definitions
+    module_definitions = extract_module_definitions()
+
+    # Process into DataFrame
+    df = process_module_definitions(module_definitions)
+    print("DataFrame head:")
+    print(df.head(30))
+
+    # Create vector database
+    collection = create_vector_db(df)
+
+    # Test retrieval
+    results = test_retrieval(collection)
+    print("\nTest retrieval results:")
     print(results)
