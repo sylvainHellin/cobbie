@@ -30,8 +30,8 @@ from src.special_tools import (
 )
 from src.agents import (
     _create_function_from_source_code,
-    get_logger,
 )
+from src.util import get_logger
 
 # Set up the path
 if ROOT_PATH not in sys.path:
