@@ -7,18 +7,8 @@ from ollama import embed
 import numpy as np
 from smolagents import tool
 from pydantic import BaseModel, ValidationError
-from ..config import VECTORSTORE_PATH
-
-# Define Embedding Model to use
-EMBEDDING_MODEL = "nomic-embed-text"
-
-
-# Define a custom embedding function
-class OllamaEmbeddingFunction(EmbeddingFunction):
-    def __call__(self, documents: Documents) -> Embeddings:
-        embd = embed(model=EMBEDDING_MODEL, input=documents)
-        embeddings = [np.array(embd["embeddings"][0], dtype=np.float32)]
-        return embeddings  # type:ignore
+from src.config import VECTORSTORE_PATH, LOG_LEVEL
+from src.util import get_logger
 
 
 # Move the client initialization into a function
@@ -26,11 +16,6 @@ def get_db_client():
     # client = PersistentClient(path=os.path.join(SRC_PATH, "db"))
     client = PersistentClient(path=VECTORSTORE_PATH)
     return client.get_collection(name="ifcopenshell")
-
-
-# Define a custom embedding function
-# !This should be the same as in the create_vector_db.py file
-ollama_embed = OllamaEmbeddingFunction()
 
 
 # Define Pydantic Models for Input Validation
@@ -48,7 +33,6 @@ def query_ifcopenshell_documentation(
     n_results: int = 10,
     metadata_filter: Optional[Dict] = None,
     docstring_filter: Optional[str] = None,
-    verbose: bool = False,
 ) -> str:
     """Queries the documentation vector database to find semantically similar documentation entries.
 
@@ -79,7 +63,6 @@ def query_ifcopenshell_documentation(
                 - "$lt": less than (int, float)
                 - "$lte": less than or equal to (int, float)
         docstring_filter (str, optional): A string to filter results based on whether the docstring contains this expression. Defaults to None.
-        verbose (bool, optional): If True, prints detailed information about the query and results. Defaults to False.
 
     Returns:
         str: A JSON-serialized string containing either:
@@ -97,6 +80,13 @@ def query_ifcopenshell_documentation(
             }
         ]
     """
+    logger = get_logger("query_ifc_documentation", log_level=LOG_LEVEL)
+    logger.info("Tool called.")
+    logger.debug(f"Query: {query}")
+    logger.debug(f"n_results: {n_results}")
+    logger.debug(f"metadata_filter: {metadata_filter}")
+    logger.debug(f"docstring_filter: {docstring_filter}")
+
     # Add input validation for query
     if not query or not query.strip():
         return json.dumps({"error": "Query string cannot be empty"})
@@ -120,14 +110,6 @@ def query_ifcopenshell_documentation(
         except ValidationError as e:
             return f"ValueError: Invalid metadata_filter: {e}"
 
-    # create the embedding of the user's query
-    try:
-        embeddings = ollama_embed([query])
-    except Exception as e:
-        error_msg = f"Error generating embeddings: {e}"
-        print(error_msg)  # Optionally keep printing for logs
-        return f"error: {error_msg}"
-
     # structure the db query to include filters if passed as arguments
     where_document = {"$contains": docstring_filter} if docstring_filter else None
 
@@ -144,39 +126,31 @@ def query_ifcopenshell_documentation(
     # query the similar elements from the db
     try:
         results = collection.query(
-            query_embeddings=embeddings,
+            query_texts=[query],  # Add the query text for semantic search
             n_results=n_results,
             where=where_metadata,  # type:ignore
             where_document=where_document,  # type:ignore
         )
+        logger.info("Database query completed successfully.")
 
     except Exception as e:
         error_msg = f"Error querying the database: {e}"
-        print(error_msg)  # Optionally keep printing for logs
+        logger.error(error_msg)
         return f"error: {error_msg}"
 
-    # print some details if verbose
-    if verbose:
-        print("=" * 50)
-        print(f"\nRetrieval for the query: \n{query}\n")
+    # Log the results at debug level
+    for i in range(len(results["ids"][0])):
         metadata = None
         document = None
-        # restructured print output for better readability
-        for i in range(len(results["ids"][0])):
-            if results["metadatas"] is not None:
-                if results["metadatas"][0] is not None:
-                    metadata = results["metadatas"][0][i]
-            if results["documents"] is not None:
-                if results["documents"][0] is not None:
-                    document = results["documents"][0][i]
+        if results["metadatas"] is not None and results["metadatas"][0] is not None:
+            metadata = results["metadatas"][0][i]
+        if results["documents"] is not None and results["documents"][0] is not None:
+            document = results["documents"][0][i]
 
-            if metadata is not None:
-                print("Metadata:")
-                print(json.dumps(metadata, indent=2))
-            if document is not None:
-                print("\nDocument:")
-                print(document)  # This will properly render the newlines
-            print("\n" + "=" * 50)
+        if metadata is not None:
+            logger.debug(f"Result {i + 1} Metadata: {json.dumps(metadata, indent=2)}")
+        if document is not None:
+            logger.debug(f"Result {i + 1} Document: {document}")
 
     # create and return the successful response
     response = []
@@ -189,7 +163,7 @@ def query_ifcopenshell_documentation(
         }
         response.append(elt)
 
-    # serialize and returnt the output
+    # serialize and return the output
     return json.dumps(response, indent=2)
 
 
@@ -201,7 +175,6 @@ if __name__ == "__main__":
     # Example usage with valid metadata_filter
     res1 = query_ifcopenshell_documentation(
         query=query,
-        verbose=False,
         docstring_filter="instance",
         metadata_filter={"field": "type", "operator": "$eq", "value": "function"},
     )
@@ -209,14 +182,13 @@ if __name__ == "__main__":
     print("\n", "=" * 50, "\n")
     print("<Test with valid example>")
     print(f"Query: {query}\n")
-    # print(json.dumps(res1, indent=2))
     print(res1)
 
     # Example usage with INVALID metadata_filter (missing 'operator')
     print("=" * 50)
     print("<Test with invalid example (missing operator in metadata filter)>")
     res2 = query_ifcopenshell_documentation(
-        query="test query",
+        query="test with invalid metadata filters",
         metadata_filter={"field": "type", "value": "function"},  # Missing 'operator'
     )
     print(json.dumps(res2, indent=2))

@@ -6,6 +6,13 @@ import ast
 import pandas as pd
 from chromadb import PersistentClient, Collection
 from dotenv import load_dotenv, find_dotenv
+import sys
+
+# Add the src directory to the Python path
+sys.path.append(
+    os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+)
+from src.config import VECTORSTORE_PATH
 
 load_dotenv(find_dotenv())
 ROOT_PATH = os.getenv("ROOT_PATH", "")
@@ -108,14 +115,16 @@ def process_module_definitions(module_definitions: dict) -> pd.DataFrame:
     data = []
     for module_name, definitions in module_definitions.items():
         for definition in definitions:
-            data.append(
-                {
-                    "module_name": module_name,
-                    "name": definition["name"],
-                    "type": definition["type"],
-                    "docstring": definition["docstring"],
-                }
-            )
+            # Only add entries that have a non-None docstring
+            if definition["docstring"] is not None:
+                data.append(
+                    {
+                        "module_name": module_name,
+                        "name": definition["name"],
+                        "type": definition["type"],
+                        "docstring": definition["docstring"],
+                    }
+                )
 
     df_module_definitions = pd.DataFrame(data)
 
@@ -126,9 +135,8 @@ def process_module_definitions(module_definitions: dict) -> pd.DataFrame:
     # filter out the duplicated values
     df = df.drop_duplicates()
 
-    # filter out entities with no description
-    df = df[pd.DataFrame(df["docstring"]).notna()].copy()
-    df = pd.DataFrame(df)
+    # Additional validation to ensure no NaN values
+    df = df.dropna(subset=["docstring", "name", "type", "module_name"])
 
     return df
 
@@ -137,10 +145,21 @@ def process_module_definitions(module_definitions: dict) -> pd.DataFrame:
 # ==================== Create the Embeddings and add them to the DataFrame ==================== #
 def create_vector_db(df):
     """Create vector database from DataFrame and return the collection."""
-    client = PersistentClient(path=os.path.join(ROOT_PATH, "src/db"))
+    client = PersistentClient(path=VECTORSTORE_PATH)
     collection = client.create_collection(name="ifcopenshell", get_or_create=True)
 
-    for idx, row in df.iterrows():
+    # Additional validation before adding to collection
+    valid_rows = df.dropna(subset=["docstring", "name", "type", "module_name"])
+
+    for idx, row in valid_rows.iterrows():
+        if (
+            pd.isna(row.docstring)
+            or pd.isna(row.name)
+            or pd.isna(row.type)
+            or pd.isna(row.module_name)
+        ):
+            continue
+
         collection.add(
             ids=[str(idx)],
             metadatas=[
