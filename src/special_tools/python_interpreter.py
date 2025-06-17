@@ -3,6 +3,8 @@ from smolagents.local_python_executor import InterpreterError
 
 import tiktoken
 from smolagents.local_python_executor import BASE_PYTHON_TOOLS, LocalPythonExecutor
+from src.util import get_logger
+from src.config import LOG_LEVEL
 
 ADDITIONAL_AUTHORIZED_IMPORTS = [
     "ifcopenshell",
@@ -50,6 +52,9 @@ def get_python_interpreter(
         Returns:
             A formatted string containing both the print outputs and return value
         """
+        logger = get_logger("python_interpreter", log_level=LOG_LEVEL)
+        logger.info("tool called.")
+        logger.debug(f"code to interpret:\n```python'n{python_code}\n```\n")
 
         interpreter = LocalPythonExecutor(
             additional_authorized_imports=additional_authorized_imports
@@ -57,10 +62,20 @@ def get_python_interpreter(
         base_tools = BASE_PYTHON_TOOLS.copy()
         static_tools = {**base_tools, **allowed_tools}
         interpreter.static_tools = static_tools
+        logger.debug(
+            f"Authorized imports: {'; '.join(additional_authorized_imports)}\n"
+        )
+        logger.debug(f"Authorized functions: {'; '.join(static_tools)}\n")
 
         try:
             returned_value, logs, is_final = interpreter(code_action=python_code)
+            logger.info("Tool execution completed successfully.")
+            logger.debug(f"Returned value: {returned_value}")
+            logger.debug(f"Console output (logs): {logs}")
+            logger.debug(f"Is final: {is_final}")
+
         except InterpreterError as e:
+            logger.error(f"Error during tool execution: {e}")
             return f"An error occured while trying to execute this code:\n{e}"
 
         # format the response to include both printed output and the return value
@@ -71,6 +86,8 @@ def get_python_interpreter(
         result += f"## Return value:\n{_truncatenate_text(repr(returned_value), max_tokens=max_tokens_output)}"
 
         return result
+
+        del logger
 
     return python_interpreter
 
