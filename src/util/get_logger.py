@@ -17,12 +17,15 @@ def get_logger(
         logging.Logger: A configured logger instance with a stream handler and formatter.
     """
     logger = logging.getLogger(name)
-    handler = logging.StreamHandler()
-    formatter = logging.Formatter(
-        "%(asctime)s : %(levelname)s : %(name)s : %(message)s"
-    )
-    handler.setFormatter(formatter)
-    logger.addHandler(handler)
+
+    # Only add handler if none exists
+    if not logger.handlers:
+        handler = logging.StreamHandler()
+        formatter = logging.Formatter(
+            "%(asctime)s : %(levelname)s : %(name)s : %(message)s"
+        )
+        handler.setFormatter(formatter)
+        logger.addHandler(handler)
 
     if log_level == "CRITICAL":
         logger.setLevel(logging.CRITICAL)
