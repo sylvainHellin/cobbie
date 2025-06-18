@@ -71,7 +71,7 @@ class NewToolSignature(dspy.Signature):
     This function will be used as a "tool" by an LLM-based ReAct agent to answer some user's query related to a BIM model.
 
     The generated function should:
-    - Take at least one argument: path_ifc_file: str, which is a path to the .ifc file the function should interact with.
+    - Take at least one argument: path_ifc_file: str, which is a path to the .ifc file the function should interact with. WARNING: the argument should be of type str, NOT of type ifcopenshell.file.
     - Be well-documented with docstrings and type hints
 
     IMPORTANT:
@@ -239,7 +239,7 @@ class ToolCorrectionSignature(dspy.Signature):
     An assessment was conducted on the current implementation and has assessed that it is not working properly. Details regarding what needs to be changed are provided.
 
     The generated function should:
-    - Take at least one argument: path_ifc_file: str, which is a path to the .ifc file the function should interact with.
+    - Take at least one argument: path_ifc_file: str, which is a path to the .ifc file the function should interact with. WARNING: the argument should be of type str, NOT of type ifcopenshell.file.
     - Be well-documented with docstrings and type hints
 
     IMPORTANT:
@@ -347,6 +347,27 @@ def new_tool_pre_check(
             # Single parameter function (like the original)
             test_result = new_tool(path_ifc_model)
             logger.debug(f"Single-parameter function test result: {test_result}")
+            logger.debug(f"Test result type: {type(test_result)}")
+
+            # Check if we got the expected return type (not a formatted string)
+            if (
+                isinstance(test_result, str)
+                and test_result.startswith("Found ")
+                and "items:" in test_result
+            ):
+                logger.warning(
+                    "Function appears to be returning formatted string instead of actual data - possible wrapper issue"
+                )
+                test_passed = False
+                test_result = f"Wrapper issue detected: {test_result}"
+            else:
+                # Check if the direct test shows a successful result
+                test_passed = (
+                    "Error executing" not in str(test_result)
+                    and str(test_result) not in ["No items found", "None"]
+                    and not isinstance(test_result, str)
+                    or len(str(test_result)) > 0
+                )
         else:
             # Multi-parameter function - provide basic test with minimal args
             logger.debug(f"Function has {len(params)} parameters: {params}")
@@ -354,21 +375,18 @@ def new_tool_pre_check(
                 "Multi-parameter function detected. Skipping direct test to avoid parameter mismatch."
             )
             test_result = f"Multi-parameter function with signature: {sig}. Formal assessment required."
+            test_passed = True  # Assume multi-param functions are OK for pre-check
 
     except TypeError as e:
         # If the function requires more parameters, that's okay for now
         test_result = f"Function requires additional parameters: {str(e)}"
         logger.debug(f"TypeError during direct test: {str(e)}")
+        test_passed = True  # This is expected for multi-param functions
 
-    logger.debug(f"Direct tool test result: {test_result}")
-
-    # Check if the direct test shows a successful result (for single-parameter functions)
-    test_passed = (
-        "Error executing" not in str(test_result)
-        and str(test_result) not in ["No items found", "None"]
-        and "Multi-parameter function" not in str(test_result)
-        and "Function requires additional parameters" not in str(test_result)
-    )
+    except Exception as e:
+        test_result = f"Unexpected error during pre-check: {str(e)}"
+        logger.error(f"Unexpected error in pre-check: {str(e)}")
+        test_passed = False
 
     if test_passed:
         logger.debug(f"Pre-check of {function_name} passed! Result: {test_result}")
@@ -419,6 +437,8 @@ def create_new_tool(
         - status: "success" or "error"
         - error_msg: Error description (if status is "error")
     """
+    logger = get_logger(name="create_new_tool", log_level=log_level)
+
     with mlflow.start_span(name="create_new_tool"):
         # --- Step 1: Set up the system --- #
         output = ModuleOutput(status="error")
@@ -433,14 +453,15 @@ def create_new_tool(
             query_ifcopenshell_documentation,
         ]
         base_tools = special_tools + [python_interpreter]
-
         lm = dspy.LM(model=llm_info.url, api_key=llm_info.api_key)
         dspy.configure(lm=lm)
+        logger.debug(
+            f"Tools allowed for the ToolCreator: {'\n    -'.join([getattr(tool, '__name__', str(tool)) for tool in base_tools])}"
+        )
 
         tool_creator = ToolCreator(tools=base_tools)
         tool_corrector = ToolCorrector(tools=base_tools)
 
-        logger = get_logger(name="create_new_tool", log_level=log_level)
         logger.info(f"Starting the creation of the tool: {function_name}")
 
         # --- Step 2: Create initial function --- #
@@ -465,6 +486,8 @@ def create_new_tool(
                 logger.debug(f"Initial function code: \n\n---\n{code}\n\n---")
 
         current_iteration = 0
+        identical_code_count = 0
+        previous_code = ""
 
         # --- Step 3: Iterative improvement loop --- #
         while current_iteration < max_iter:
@@ -485,6 +508,15 @@ def create_new_tool(
                         test_passed, test_result = new_tool_pre_check(
                             new_tool, path_ifc_model, logger
                         )
+
+                        # Check for wrapper issues early
+                        if "Wrapper issue detected" in test_result:
+                            logger.error(
+                                "Detected wrapper-level issue that cannot be fixed by code correction"
+                            )
+                            output.error_msg = f"System-level wrapper issue prevents proper function execution: {test_result}"
+                            output.status = "error"
+                            break
 
                         # Create new python interpreter with the generated tool included
                         authorized_functions = {
@@ -548,6 +580,22 @@ def create_new_tool(
                         logger.debug(
                             "Code not good enough yet; trying to correct the function."
                         )
+
+                        # Check if we're generating identical code (infinite loop detection)
+                        if code == previous_code:
+                            identical_code_count += 1
+                            if identical_code_count >= 2:
+                                logger.error(
+                                    "Detected infinite loop: ToolCorrector is generating identical code repeatedly"
+                                )
+                                output.error_msg = f"Infinite loop detected: Same implementation generated {identical_code_count + 1} times. Assessment: {output_tool_assessor.result.assessment_details}"
+                                output.status = "error"
+                                break
+                        else:
+                            identical_code_count = 0
+
+                        previous_code = code
+
                         output_tool_corrector = tool_corrector.forward(
                             function_description=function_requirements,
                             function_name=function_name,
