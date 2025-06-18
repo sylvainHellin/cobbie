@@ -4,6 +4,8 @@ import requests
 import json
 from dotenv import load_dotenv, find_dotenv
 from smolagents import tool
+from src.util import get_logger
+from src.config import LOG_LEVEL
 
 load_dotenv(find_dotenv())
 
@@ -37,6 +39,10 @@ def web_search(
              On success (status code 200), returns a detailed explanation or answer.
              On failure, returns an error message string containing the status code and error details.
     """
+    logger = get_logger("web_search", log_level=LOG_LEVEL)
+    logger.info("Tool called.")
+    logger.debug(f"Query: {query}")
+    logger.debug(f"Model: {model}")
 
     # API endpoint
     url = "https://api.perplexity.ai/chat/completions"
@@ -68,14 +74,27 @@ def web_search(
         "messages": messages,
     }
 
+    logger.debug(
+        f"Making request to Perplexity API with payload: {json.dumps(payload, indent=2)}"
+    )
+
     # get the response from perplexity API
     response = requests.post(url, json=payload, headers=headers)
 
     # serialize it and return it
     if response.status_code == 200:
-        return json.loads(response.text)["choices"][0]["message"]["content"]
+        result = json.loads(response.text)["choices"][0]["message"]["content"]
+        logger.info("Successfully received response from Perplexity API")
+        logger.debug(
+            f"Response content: {result[:200]}..."
+        )  # Log first 200 chars of response
+        return result
     else:
-        return f"Error when trying to get the answer.\nstatus_code: {response.status_code}."
+        error_msg = f"Error when trying to get the answer.\nstatus_code: {response.status_code}."
+        logger.error(f"API request failed: {error_msg}")
+        return error_msg
+
+    del logger
 
 
 # %% Test

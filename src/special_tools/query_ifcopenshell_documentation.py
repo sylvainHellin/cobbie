@@ -2,9 +2,7 @@
 # ==================== Set up ==================== #
 import json
 from typing import Dict, Optional
-from chromadb import PersistentClient, EmbeddingFunction, Embeddings, Documents
-from ollama import embed
-import numpy as np
+from chromadb import PersistentClient
 from smolagents import tool
 from pydantic import BaseModel, ValidationError
 from src.config import VECTORSTORE_PATH, LOG_LEVEL
