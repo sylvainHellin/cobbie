@@ -1,5 +1,8 @@
 from typing import Literal
 import logging
+import os
+
+SRC_PATH = os.getenv("SRC_PATH", "")
 
 
 def get_logger(
@@ -14,18 +17,30 @@ def get_logger(
             The logging level to set. Defaults to "DEBUG".
 
     Returns:
-        logging.Logger: A configured logger instance with a stream handler and formatter.
+        logging.Logger: A configured logger instance with both stream and file handlers.
     """
     logger = logging.getLogger(name)
 
-    # Only add handler if none exists
+    # Only add handlers if none exist
     if not logger.handlers:
-        handler = logging.StreamHandler()
+        # Console handler
+        stream_handler = logging.StreamHandler()
         formatter = logging.Formatter(
             "%(asctime)s : %(levelname)s : %(name)s : %(message)s"
         )
-        handler.setFormatter(formatter)
-        logger.addHandler(handler)
+        stream_handler.setFormatter(formatter)
+        logger.addHandler(stream_handler)
+
+        # File handler
+        logs_dir = os.path.join(SRC_PATH, "logs")
+
+        # Ensure logs directory exists
+        os.makedirs(logs_dir, exist_ok=True)
+
+        log_file_path = os.path.join(logs_dir, f"{name}.log")
+        file_handler = logging.FileHandler(log_file_path)
+        file_handler.setFormatter(formatter)
+        logger.addHandler(file_handler)
 
     if log_level == "CRITICAL":
         logger.setLevel(logging.CRITICAL)
