@@ -84,20 +84,11 @@ def _create_function_from_source_code(
             sig = inspect.signature(generated_function)
 
             # Create wrapper function dynamically with the same signature
-            def tool_wrapper(*args, **kwargs) -> str:
-                """Dynamic tool wrapper for generated function."""
+            def tool_wrapper(*args, **kwargs):
+                """Dynamic tool wrapper for generated function that preserves return type."""
                 try:
                     result = generated_function(*args, **kwargs)
-                    # Convert result to a more readable string format
-                    if hasattr(result, "__iter__") and not isinstance(result, str):
-                        # If it's a list or iterable, format it nicely
-                        if len(result) == 0:
-                            return "No items found"
-                        elif len(result) <= 10:
-                            return f"Found {len(result)} items: {[str(item) for item in result]}"
-                        else:
-                            return f"Found {len(result)} items: {[str(item) for item in result[:5]]}... (showing first 5)"
-                    return str(result)
+                    return result  # Return the actual result, don't convert to string
                 except Exception as e:
                     return f"Error executing {function_name}: {str(e)}"
 
@@ -126,6 +117,49 @@ def _create_function_from_source_code(
                     args_list.append(f"            {arg}: Required parameter")
             args_description = "\n".join(args_list)
 
+        # Create intelligent return type description
+        return_description = "The actual return value of the function"
+        if metadata.return_type:
+            return_description = (
+                f"{metadata.return_type}: As specified in the function signature"
+            )
+        elif metadata.docstring:
+            # Try to extract return info from docstring more intelligently
+            docstring_lines = metadata.docstring.split("\n")
+            returns_found = False
+            for i, line in enumerate(docstring_lines):
+                line_stripped = line.strip()
+                line_lower = line_stripped.lower()
+
+                # Look for "Returns:" section
+                if line_lower.startswith("returns:"):
+                    returns_found = True
+                    # Get the description from this line if it exists
+                    if (
+                        ":" in line_stripped
+                        and len(line_stripped.split(":", 1)[1].strip()) > 0
+                    ):
+                        return_description = line_stripped.split(":", 1)[1].strip()
+                        break
+                    # Otherwise, look for description in next non-empty lines
+                    elif i + 1 < len(docstring_lines):
+                        for j in range(i + 1, len(docstring_lines)):
+                            next_line = docstring_lines[j].strip()
+                            if next_line and not next_line.lower().startswith(
+                                ("args:", "parameters:", "raises:", "examples:")
+                            ):
+                                return_description = next_line
+                                break
+                    break
+
+            # If no "Returns:" found, use a generic description
+            if not returns_found:
+                return_description = "Return type not documented - preserves function's original return type"
+        else:
+            return_description = (
+                "Return type not specified - preserves function's original return type"
+            )
+
         tool_wrapper.__doc__ = f"""
         {metadata.docstring or f"Tool: {function_name}"}
         
@@ -133,7 +167,7 @@ def _create_function_from_source_code(
 {args_description}
             
         Returns:
-            str: String representation of the function result
+            {return_description}
         """
 
         return tool_wrapper
