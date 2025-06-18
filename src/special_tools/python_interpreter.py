@@ -256,6 +256,7 @@ def get_python_interpreter(
     def python_interpreter(python_code: str) -> str:
         """
         Execute Python code and return both the result and any printed output.
+        As this interpreter has no state, variables will not be carried over when this function is used again.
 
         Args:
             python_code: The Python code to execute as a string
