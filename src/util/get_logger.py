@@ -37,7 +37,7 @@ def get_logger(
         # Ensure logs directory exists
         os.makedirs(logs_dir, exist_ok=True)
 
-        log_file_path = os.path.join(logs_dir, f"{name}.log")
+        log_file_path = os.path.join(logs_dir, "logs.log")
         file_handler = logging.FileHandler(log_file_path)
         file_handler.setFormatter(formatter)
         logger.addHandler(file_handler)
