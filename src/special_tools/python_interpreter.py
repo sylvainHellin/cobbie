@@ -19,6 +19,7 @@ ADDITIONAL_AUTHORIZED_IMPORTS = [
     "math",
     "numpy",
     "pandas",
+    "json",
 ]
 
 
