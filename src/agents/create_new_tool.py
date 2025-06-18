@@ -70,14 +70,15 @@ class NewToolSignature(dspy.Signature):
     Create a Python function that implements the requirements using the IfcOpenShell Python library.
     This function will be used as a "tool" by an LLM-based ReAct agent to answer some user's query related to a BIM model.
 
-    CRITICAL REQUIREMENTS - The function MUST:
-    - Accept path_ifc_file: str as the first parameter (a file path, NOT an ifcopenshell.file object)
+    ⚠️  CRITICAL REQUIREMENTS - The function MUST:
+    - Accept path_ifc_file: str as the FIRST and ONLY parameter (a file path string, NOT an ifcopenshell.file object)
     - Load the IFC file internally using: ifc_file = ifcopenshell.open(path_ifc_file)
     - Work with the loaded ifc_file object for all IFC operations
     - Return appropriate data structures (lists, dicts, etc.) not formatted strings
     - Be well-documented with docstrings and type hints
+    - Follow the EXACT pattern below
 
-    IMPLEMENTATION PATTERN:
+    🔥 MANDATORY IMPLEMENTATION PATTERN (DO NOT DEVIATE):
     ```python
     def your_function_name(path_ifc_file: str) -> List[Any]:
         '''Your docstring here'''
@@ -90,6 +91,14 @@ class NewToolSignature(dspy.Signature):
         # Return actual data, not strings
         return list(results)
     ```
+
+    ❌ DO NOT CREATE FUNCTIONS LIKE:
+    - def function_name(model): ...
+    - def function_name(ifc_file): ...
+    - def function_name(file): ...
+    
+    ✅ ONLY CREATE FUNCTIONS LIKE:
+    - def function_name(path_ifc_file: str): ...
 
     IMPORTANT:
     - Do not make assumptions about IFC schema or data structure.
@@ -171,13 +180,23 @@ class ToolAssessmentSignature(dspy.Signature):
     """
     Assess whether a generated Python function meets requirements and works correctly.
 
-    To perform the assessment, you MUST call the function, which is available to you as a tool.
-    The function's name and the path to a test IFC file are provided as inputs.
+    CRITICAL: The function being tested MUST accept path_ifc_file: str as its first parameter.
 
-    1. Call the function with the provided IFC file path.
-    2. Examine the return value or any errors.
-    3. Compare the result with the original 'function_requirements'.
-    4. Based on your findings, provide an assessment 'status' and 'details'.
+    To perform the assessment, you MUST:
+    1. Call the function DIRECTLY with the provided IFC file path (do NOT load the model first)
+    2. The function should handle loading the IFC file internally
+    3. Examine the return value or any errors
+    4. Compare the result with the original 'function_requirements'
+    5. Verify the function signature matches: function_name(path_ifc_file: str) -> ReturnType
+
+    ASSESSMENT CRITERIA:
+    - Function must accept a string file path as first parameter
+    - Function must load IFC file internally using ifcopenshell.open()
+    - Function must return appropriate data structures (not strings)
+    - Function must work without errors on the test file
+    - Function must meet the original requirements
+
+    If the function doesn't accept a file path as first parameter, mark as 'needs_improvement'.
     """
 
     # inputs
@@ -188,7 +207,7 @@ class ToolAssessmentSignature(dspy.Signature):
         desc="Original requirements and description of what the function should do"
     )
     path_ifc_model: str = dspy.InputField(
-        desc="Path to an IFC file for testing the function. Use this as an argument when calling the function."
+        desc="Path to an IFC file for testing the function. Pass this DIRECTLY to the function as the first argument."
     )
 
     # outputs
@@ -255,14 +274,15 @@ class ToolCorrectionSignature(dspy.Signature):
     Update a Python function implementation to incorporate the provided feedback.
     An assessment was conducted on the current implementation and has assessed that it is not working properly. Details regarding what needs to be changed are provided.
 
-    CRITICAL REQUIREMENTS - The corrected function MUST:
-    - Accept path_ifc_file: str as the first parameter (a file path, NOT an ifcopenshell.file object)
+    ⚠️  CRITICAL REQUIREMENTS - The corrected function MUST:
+    - Accept path_ifc_file: str as the FIRST and ONLY parameter (a file path string, NOT an ifcopenshell.file object)
     - Load the IFC file internally using: ifc_file = ifcopenshell.open(path_ifc_file)
     - Work with the loaded ifc_file object for all IFC operations
     - Return appropriate data structures (lists, dicts, etc.) not formatted strings
     - Be well-documented with docstrings and type hints
+    - Follow the EXACT pattern below
 
-    IMPLEMENTATION PATTERN:
+    🔥 MANDATORY IMPLEMENTATION PATTERN (DO NOT DEVIATE):
     ```python
     def your_function_name(path_ifc_file: str) -> List[Any]:
         '''Your docstring here'''
@@ -275,6 +295,14 @@ class ToolCorrectionSignature(dspy.Signature):
         # Return actual data, not strings
         return list(results)
     ```
+
+    ❌ DO NOT CREATE FUNCTIONS LIKE:
+    - def function_name(model): ...
+    - def function_name(ifc_file): ...
+    - def function_name(file): ...
+    
+    ✅ ONLY CREATE FUNCTIONS LIKE:
+    - def function_name(path_ifc_file: str): ...
 
     IMPORTANT:
     - Do not make assumptions about IFC schema or data structure.
@@ -610,10 +638,29 @@ def example_usage(
 
 if __name__ == "__main__":
     import mlflow
+    import os
+    from pathlib import Path
+
+    # Move content from last_log to logs
+    log_dir = Path("logs")
+    last_log_file = log_dir / "last_log"
+    logs_file = log_dir / "logs"
+
+    if last_log_file.exists():
+        with open(last_log_file, "r") as f:
+            last_log_content = f.read()
+
+        # Append to logs file
+        with open(logs_file, "a") as f:
+            f.write(last_log_content)
+
+        # Clear last_log file
+        with open(last_log_file, "w") as f:
+            f.write("")
 
     # Example 1: Simple single-parameter function
     function_name = "get_list_ifc_spaces"
-    function_requirements = "Return a list of the IfcSpace from an ifc model."
+    function_requirements = "Return a list of the IfcSpace from an ifc model. This function should accept the path to an .ifc file as an argument."
 
     # Initialize MLFlow
     mlflow.dspy.autolog()  # type: ignore
