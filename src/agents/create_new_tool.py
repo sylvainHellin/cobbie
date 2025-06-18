@@ -21,20 +21,19 @@ Key features:
 # =============== Imports and config =============== #
 import os
 import sys
-from typing import Literal, Optional, Callable
+from typing import Callable, Literal, Optional
 
 import dspy
 import mlflow
 from pydantic import BaseModel
 
 from src import FUNCTION_BOILERPLATE, LANGUAGE_MODELS, LLM, ROOT_PATH
+from src.agents import _create_function_from_source_code
 from src.special_tools import (
+    format_restrictions_info,
+    get_python_interpreter,
     query_ifcopenshell_documentation,
     web_search,
-    get_python_interpreter,
-)
-from src.agents import (
-    _create_function_from_source_code,
 )
 from src.util import get_logger
 
@@ -42,7 +41,6 @@ from src.util import get_logger
 if ROOT_PATH not in sys.path:
     sys.path.append(ROOT_PATH)
 
-# Note: LLM configuration is done per-function call in create_new_tool() to allow flexibility
 
 # Load the overview of the documentation of IfcOpenShell
 doc_path = os.path.join(ROOT_PATH, "src/special_tools/ifcopenshell_api_overview_v2.md")
@@ -79,6 +77,8 @@ class NewToolSignature(dspy.Signature):
     IMPORTANT:
     - Do not make assumptions about IFC schema or data structure.
     - Use the provided tools to research proper implementation details through documentation and web search.
+
+    {format_restrictions_info()}
 
     Below is an overview of how the structure of the IfcOpenShell Python library. For details regarding the implementation of each available method, use the `query_ifcopenshell_documentation` tool.
 
@@ -245,6 +245,8 @@ class ToolCorrectionSignature(dspy.Signature):
     IMPORTANT:
     - Do not make assumptions about IFC schema or data structure.
     - Use the provided tools to research proper implementation details through documentation and web search.
+
+    {format_restrictions_info()}
 
     Below is an overview of how the structure of the IfcOpenShell Python library. For details regarding the implementation of each available method, use the `query_ifcopenshell_documentation` tool.
 
@@ -421,7 +423,7 @@ def create_new_tool(
         # --- Step 1: Set up the system --- #
         output = ModuleOutput(status="error")
         python_interpreter = get_python_interpreter(
-            authorized_functions={
+            additional_authorized_functions={
                 "web_search": web_search,
                 "query_ifcopenshell_documentation": query_ifcopenshell_documentation,
             }
@@ -492,7 +494,7 @@ def create_new_tool(
                         }
 
                         python_interpreter = get_python_interpreter(
-                            authorized_functions=authorized_functions
+                            additional_authorized_functions=authorized_functions
                         )
                         tools = special_tools + [new_tool, python_interpreter]
                         tool_assessor = ToolAssessor(tools=tools)
