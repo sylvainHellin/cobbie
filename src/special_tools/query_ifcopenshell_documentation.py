@@ -25,7 +25,6 @@ class MetadataFilter(BaseModel):
 
 # %%
 # ==================== Define tools to query the DB ==================== #
-@tool
 def query_ifcopenshell_documentation(
     query: str,
     n_results: int = 10,

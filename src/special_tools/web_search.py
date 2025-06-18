@@ -13,7 +13,6 @@ PERPLEXITY_API_KEY = os.environ["PERPLEXITY_API_KEY"]
 
 
 # %%
-@tool
 def web_search(
     query: str,
     model: str = "sonar",
