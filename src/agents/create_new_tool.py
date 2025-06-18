@@ -1,22 +1,27 @@
 """
-MLFlow is setup correctly and the whole pipeline works.
-However, it is not yet able to create new functions properly
-Next step:
-    - Test this coumpound system for creating a couple of tools
-        -> This does not work very well yet. Need to investigate:
-            - why only python_interpreter is passed as tool for tool_creator
-            - test with other LLM (e.g. Claude)
-            - consider passing the ifc_path to the tool_creator as an argument (so that it can also do it's own test)
-            - investigate trace to see what is going wrong with the tool implementation
-    - Test how well the main CodeAgent can use this tool.
+Multi-agent tool creation system for generating and validating IFC-related functions.
 
+This module provides a complete pipeline for creating, testing, and correcting Python functions
+that work with IFC (Industry Foundation Classes) files using the IfcOpenShell library.
+
+The system uses three main agents:
+- ToolCreator: Generates initial function implementations based on requirements
+- ToolAssessor: Tests and evaluates generated functions
+- ToolCorrector: Improves functions based on assessment feedback
+
+Key features:
+- Dynamic function signature support (single or multiple parameters)
+- Iterative improvement with up to max_iter correction cycles
+- Direct testing and formal LLM-based assessment
+- Integration with MLFlow for tracking and logging
+- Support for various parameter types and default values
 """
 
 # %% Imports
 # =============== Imports and config =============== #
 import os
 import sys
-from typing import Literal, Optional
+from typing import Literal, Optional, Callable
 
 import dspy
 import mlflow
@@ -37,13 +42,7 @@ from src.util import get_logger
 if ROOT_PATH not in sys.path:
     sys.path.append(ROOT_PATH)
 
-# Set up the LLM for dspy
-llm_info = LANGUAGE_MODELS["claude"]
-lm = dspy.LM(model=llm_info.url, api_key=llm_info.api_key)
-dspy.configure(lm=lm)
-
-# Define the tools
-TOOLS = [web_search, query_ifcopenshell_documentation]
+# Note: LLM configuration is done per-function call in create_new_tool() to allow flexibility
 
 # Load the overview of the documentation of IfcOpenShell
 doc_path = os.path.join(ROOT_PATH, "src/special_tools/ifcopenshell_api_overview_v2.md")
@@ -250,7 +249,7 @@ class ToolCorrectionSignature(dspy.Signature):
     Below is an overview of how the structure of the IfcOpenShell Python library. For details regarding the implementation of each available method, use the `query_ifcopenshell_documentation` tool.
 
     Overview:
-    {IFCOPENSHELL_DOCUMENTATION_OVERVIEW}k
+    {IFCOPENSHELL_DOCUMENTATION_OVERVIEW}
     """
 
     # inputs
@@ -322,6 +321,63 @@ class ToolCorrector(dspy.Module):
             )
 
 
+def new_tool_pre_check(
+    new_tool: Callable, path_ifc_model: str, logger
+) -> tuple[bool, str]:
+    """
+    Check that a newly created tool works properly before submitting it to the ToolAssessor for further investigation.
+
+    Args:
+        new_tool: The dynamically created function to test
+        path_ifc_model: Path to IFC file for testing
+        logger: Logger instance for debug output
+
+    Returns:
+        tuple: (test_passed: bool, test_result: str)
+    """
+    try:
+        import inspect
+
+        sig = inspect.signature(new_tool)
+        params = list(sig.parameters.keys())
+
+        if len(params) == 1:
+            # Single parameter function (like the original)
+            test_result = new_tool(path_ifc_model)
+            logger.debug(f"Single-parameter function test result: {test_result}")
+        else:
+            # Multi-parameter function - provide basic test with minimal args
+            logger.debug(f"Function has {len(params)} parameters: {params}")
+            logger.debug(
+                "Multi-parameter function detected. Skipping direct test to avoid parameter mismatch."
+            )
+            test_result = f"Multi-parameter function with signature: {sig}. Formal assessment required."
+
+    except TypeError as e:
+        # If the function requires more parameters, that's okay for now
+        test_result = f"Function requires additional parameters: {str(e)}"
+        logger.debug(f"TypeError during direct test: {str(e)}")
+
+    logger.debug(f"Direct tool test result: {test_result}")
+
+    # Check if the direct test shows a successful result (for single-parameter functions)
+    test_passed = (
+        "Error executing" not in str(test_result)
+        and str(test_result) not in ["No items found", "None"]
+        and "Multi-parameter function" not in str(test_result)
+        and "Function requires additional parameters" not in str(test_result)
+    )
+
+    if test_passed:
+        logger.debug(f"Pre-check of {function_name} passed! Result: {test_result}")
+    else:
+        logger.debug(
+            f"Pre-check of {function_name} did not pass or was inconclusive. Result: {test_result}"
+        )
+
+    return test_passed, str(test_result)
+
+
 def create_new_tool(
     function_requirements: str,
     function_name: str,
@@ -332,20 +388,40 @@ def create_new_tool(
     log_level: Literal["DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"] = "DEBUG",
 ) -> ModuleOutput:
     """
-    Create a new tool using a multi-agent system with unbiased testing.
+    Create a new tool using a multi-agent system with iterative improvement.
+
+    This function implements a complete pipeline for generating, testing, and refining
+    Python functions that work with IFC files. The system uses three specialized agents:
 
     The workflow:
-    1. ToolCreator generates the function code
-    2. A new function with the source code is created in this thread
-    3. ToolAssessor tests it as a tool without seeing the code
-    4. ToolCorrector fixes issues if needed
-    5. Repeat until satisfactory or max iterations reached
+    1. ToolCreator generates initial function code based on requirements
+    2. Function is dynamically wrapped to create a testable tool
+    3. ToolAssessor evaluates the function through direct testing and LLM assessment
+    4. ToolCorrector improves the function based on assessment feedback
+    5. Process repeats until success or max_iter limit is reached
+
+    Args:
+        function_requirements: Detailed description of what the function should do
+        function_name: Name for the generated function
+        path_ifc_model: Path to IFC file used for testing the generated function
+        llm_info: Language model configuration to use for all agents
+        max_iter: Maximum number of correction iterations (default: 3)
+        function_boilerplate: Code template to include in generated functions
+        log_level: Logging verbosity level
+
+    Returns:
+        ModuleOutput containing:
+        - result.python_code: Generated function code (if successful)
+        - result.assessment_status: "ok" or "needs_improvement"
+        - result.assessment_details: Detailed assessment feedback
+        - status: "success" or "error"
+        - error_msg: Error description (if status is "error")
     """
     with mlflow.start_span(name="create_new_tool"):
         # --- Step 1: Set up the system --- #
         output = ModuleOutput(status="error")
         python_interpreter = get_python_interpreter(
-            allowed_tools={
+            authorized_functions={
                 "web_search": web_search,
                 "query_ifcopenshell_documentation": query_ifcopenshell_documentation,
             }
@@ -401,21 +477,32 @@ def create_new_tool(
                         new_tool = _create_function_from_source_code(
                             function_name=function_name, code=code
                         )
+
+                        # Test the tool directly first to ensure it works (only work if it only have ifc_file_path as a required argument)
+                        # This does not influence the control flow ; it is here to help debug the program
+                        test_passed, test_result = new_tool_pre_check(
+                            new_tool, path_ifc_model, logger
+                        )
+
+                        # Create new python interpreter with the generated tool included
+                        authorized_functions = {
+                            "web_search": web_search,
+                            "query_ifcopenshell_documentation": query_ifcopenshell_documentation,
+                            f"{function_name}": new_tool,
+                        }
+
                         python_interpreter = get_python_interpreter(
-                            allowed_tools={
-                                "web_search": web_search,
-                                "query_ifcopenshell_documentation": query_ifcopenshell_documentation,
-                                "python_interpreter": python_interpreter,
-                                f"{function_name}": new_tool,
-                            }
+                            authorized_functions=authorized_functions
                         )
                         tools = special_tools + [new_tool, python_interpreter]
                         tool_assessor = ToolAssessor(tools=tools)
                         logger.info("✓ ToolAssessor created with new tool to test.")
+
                     except Exception as e:
                         logger.error(
                             f"✗ Failed to create ToolAssessor. Error: {str(e)}"
                         )
+                        logger.error(f"Code that failed: {code}")
                         continue
 
                 # Step 3.2: Assess if the function works properly
@@ -485,42 +572,81 @@ def create_new_tool(
 # =============== Example Usage =============== #
 
 
-def example_usage():
+def example_usage(
+    function_name: str,
+    function_requirements: str,
+    path_ifc_model: str = "/Users/sylvainhellin/GitHub/ifcAnswerEngineV3/src/bim_models/duplex/arc.ifc",
+    llm_name: str = "claude",
+):
     """
     Example demonstrating how to use the multi-agent tool creation system.
+
+    Args:
+        function_name: Name for the function to create
+        function_requirements: Description of what the function should do
+        path_ifc_model: Path to test IFC file
+        llm_name: Name of language model to use (from LANGUAGE_MODELS config)
     """
-    # Define requirements for a new tool
-    function_requirements = """
-    Create a function that extracts all wall elements from an IFC file and returns
-    their basic properties including name, type, height, and thickness."""
-    function_name = "get_wall_elements_properties"
-    # Path to an IFC file for testing
-    path_ifc_model = (
-        "/Users/sylvainhellin/GitHub/ifcAnswerEngineV3/src/bim_models/duplex/arc.ifc"
-    )
-    logger = get_logger(name="test")
+    logger = get_logger(name=function_name)
 
     logger.info(f"Creating tool with requirements: {function_requirements}")
     logger.info(f"Using test IFC file: {path_ifc_model}")
+    logger.info(f"Using LLM: {llm_name}")
 
     # Create the tool
     result = create_new_tool(
         function_requirements=function_requirements,
         path_ifc_model=path_ifc_model,
         function_name=function_name,
-        llm_info=LANGUAGE_MODELS["llama4-maverick-groq"],
-        max_iter=4,
+        llm_info=LANGUAGE_MODELS[llm_name],
+        max_iter=3,
     )
+
+    # Log results
+    logger.info("=== RESULT ===")
     for key, value in result.result.model_dump().items():
-        logger.info(f"{key} : {value}")
+        if value is not None:
+            if key == "python_code" and len(str(value)) > 200:
+                logger.info(f"{key}: {str(value)[:200]}...")
+            else:
+                logger.info(f"{key}: {value}")
+
+    return result
 
 
 if __name__ == "__main__":
     import mlflow
 
+    # Example 1: Simple single-parameter function
+    function_name = "get_list_ifc_spaces"
+    function_requirements = "Return a list of the IfcSpace from an ifc model."
+
     # Initialize MLFlow
     mlflow.dspy.autolog()  # type: ignore
     mlflow.set_tracking_uri("http://localhost:5000")
-    mlflow.set_experiment("Testing the `create_new_tool` MAS.")
-    mlflow.start_run()
-    example_usage()
+    mlflow.set_experiment(function_name)
+
+    with mlflow.start_run():
+        result = example_usage(
+            function_name=function_name,
+            function_requirements=function_requirements,
+            llm_name="claude",
+        )
+        print(f"\nResult status: {result.status}")
+
+    # Example 2: Multi-parameter function (commented out for demo)
+    # function_name_2 = "get_spaces_by_min_area"
+    # function_requirements_2 = """
+    # Create a function that returns IFC spaces with net floor area above a threshold.
+    # The function should accept:
+    # - ifc_file_path: str (required) - path to the IFC file
+    # - min_nfa: float (required) - minimum net floor area in square meters
+    # """
+    #
+    # mlflow.set_experiment(function_name_2)
+    # with mlflow.start_run():
+    #     result_2 = example_usage(
+    #         function_name=function_name_2,
+    #         function_requirements=function_requirements_2,
+    #         llm_name="claude"
+    #     )

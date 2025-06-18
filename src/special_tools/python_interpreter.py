@@ -26,7 +26,7 @@ ADDITIONAL_AUTHORIZED_IMPORTS = [
 def get_python_interpreter(
     max_tokens_logs: int = 2**12,
     max_tokens_output: int = 2**12,
-    allowed_tools: Dict[str, Callable] = {"print": print},
+    authorized_functions: Dict[str, Callable] = {"print": print},
     additional_authorized_imports: List[str] = ADDITIONAL_AUTHORIZED_IMPORTS,
 ) -> Callable:
     def _truncatenate_text(text: str, max_tokens: int) -> str:
@@ -61,7 +61,7 @@ def get_python_interpreter(
             additional_authorized_imports=additional_authorized_imports
         )
         base_tools = BASE_PYTHON_TOOLS.copy()
-        static_tools = {**base_tools, **allowed_tools}
+        static_tools = {**base_tools, **authorized_functions}
         interpreter.static_tools = static_tools
         logger.debug(
             f"Authorized imports: {'; '.join(additional_authorized_imports)}\n"
@@ -109,7 +109,7 @@ if __name__ == "__main__":
     def test_basic_execution_2():
         print("Running test: basic execution with print not allowed")
         code = 'print("Hello")\n"World"'
-        interpreter = get_python_interpreter(allowed_tools={})
+        interpreter = get_python_interpreter(authorized_functions={})
         result = interpreter(code)
         assert "## Print output" in result
         # assert "Hello" not in result
@@ -125,7 +125,7 @@ if __name__ == "__main__":
         print("Running test: custom function allowed")
         code = "double = double_number(3)\nprint(double)\ndouble"
         interpreter = get_python_interpreter(
-            allowed_tools={"double_number": double_number}
+            authorized_functions={"double_number": double_number}
         )
         result = interpreter(code)
         print(result)
@@ -133,7 +133,7 @@ if __name__ == "__main__":
     def test_custom_fn_not_allowed():
         print("Running test: custom function not allowed")
         code = "double = double_number(3)\nprint(double)\ndouble"
-        interpreter = get_python_interpreter(allowed_tools={})
+        interpreter = get_python_interpreter(authorized_functions={})
         result = interpreter(code)
         print(result)
 

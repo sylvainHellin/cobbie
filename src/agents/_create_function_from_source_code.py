@@ -74,19 +74,67 @@ def _create_function_from_source_code(
         if not generated_function:
             raise ValueError(f"Function {function_name} not found in generated code")
 
-        # Create a wrapper that provides a clean interface
-        def tool_wrapper(*args, **kwargs) -> str:
-            """Dynamic tool wrapper for generated function."""
-            try:
-                result = generated_function(*args, **kwargs)
-                return str(result)
-            except Exception as e:
-                return f"Error executing {function_name}: {str(e)}"
+        # Extract function metadata to get the signature
+        metadata = _extract_function_metadata(cleaned_code, function_name)
+
+        # Create a dynamic wrapper that matches the original function signature
+        def create_dynamic_wrapper():
+            import inspect
+
+            sig = inspect.signature(generated_function)
+
+            # Create wrapper function dynamically with the same signature
+            def tool_wrapper(*args, **kwargs) -> str:
+                """Dynamic tool wrapper for generated function."""
+                try:
+                    result = generated_function(*args, **kwargs)
+                    # Convert result to a more readable string format
+                    if hasattr(result, "__iter__") and not isinstance(result, str):
+                        # If it's a list or iterable, format it nicely
+                        if len(result) == 0:
+                            return "No items found"
+                        elif len(result) <= 10:
+                            return f"Found {len(result)} items: {[str(item) for item in result]}"
+                        else:
+                            return f"Found {len(result)} items: {[str(item) for item in result[:5]]}... (showing first 5)"
+                    return str(result)
+                except Exception as e:
+                    return f"Error executing {function_name}: {str(e)}"
+
+            # Copy the signature from the original function to the wrapper
+            tool_wrapper.__signature__ = sig
+            return tool_wrapper
+
+        tool_wrapper = create_dynamic_wrapper()
 
         # Set the function name and docstring for the tool
-        metadata = _extract_function_metadata(cleaned_code, function_name)
         tool_wrapper.__name__ = function_name
-        tool_wrapper.__doc__ = metadata.docstring
+
+        # Create a more descriptive docstring for DSPy using extracted metadata
+        args_description = ""
+        if metadata.args:
+            args_list = []
+            for i, arg in enumerate(metadata.args):
+                # Check if this argument has a default value
+                default_index = i - (len(metadata.args) - len(metadata.defaults))
+                if default_index >= 0 and default_index < len(metadata.defaults):
+                    default_val = metadata.defaults[default_index]
+                    args_list.append(
+                        f"            {arg}: Parameter with default value {default_val}"
+                    )
+                else:
+                    args_list.append(f"            {arg}: Required parameter")
+            args_description = "\n".join(args_list)
+
+        tool_wrapper.__doc__ = f"""
+        {metadata.docstring or f"Tool: {function_name}"}
+        
+        Args:
+{args_description}
+            
+        Returns:
+            str: String representation of the function result
+        """
 
         return tool_wrapper
 
