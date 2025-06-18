@@ -4,7 +4,6 @@ import json
 from typing import Optional
 from chromadb import PersistentClient
 from chromadb.errors import NotFoundError
-from smolagents import tool
 from src.config import VECTORSTORE_PATH, LOG_LEVEL
 from src.util import get_logger
 
@@ -38,7 +37,7 @@ def get_db_client():
         return collection
 
     except NotFoundError as e:
-        error_msg = f"IfcOpenShell documentation collection not found. Available collections: {collection_names if 'collection_names' in locals() else 'Unable to list'}. You may need to run the vector database creation script first."
+        error_msg = "IfcOpenShell documentation collection not found. You may need to run the vector database creation script first."
         logger.error(error_msg)
         raise NotFoundError(error_msg) from e
 
