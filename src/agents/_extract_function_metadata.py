@@ -7,6 +7,7 @@ class PythonFunctionMetadata(BaseModel):
     args: list = []
     defaults: list = []
     docstring: str = ""
+    return_type: str = ""
 
 
 def _extract_function_metadata(code: str, function_name: str) -> PythonFunctionMetadata:
@@ -41,11 +42,28 @@ def _extract_function_metadata(code: str, function_name: str) -> PythonFunctionM
                     else:
                         defaults.append("...")
 
+                # Extract return type annotation
+                return_type = ""
+                if node.returns:
+                    if isinstance(node.returns, ast.Name):
+                        return_type = node.returns.id
+                    elif isinstance(node.returns, ast.Constant):
+                        return_type = str(node.returns.value)
+                    elif isinstance(node.returns, ast.Attribute):
+                        # Handle things like List[str], Dict[str, Any], etc.
+                        return_type = ast.unparse(node.returns)
+                    elif isinstance(node.returns, ast.Subscript):
+                        # Handle generic types like List[str], Dict[str, Any]
+                        return_type = ast.unparse(node.returns)
+                    else:
+                        return_type = ast.unparse(node.returns)
+
                 output = PythonFunctionMetadata(
                     name=function_name,
                     args=args,
                     defaults=defaults,
                     docstring=str(docstring),
+                    return_type=return_type,
                 )
 
     except Exception as e:
