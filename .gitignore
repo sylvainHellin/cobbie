@@ -25,3 +25,5 @@ src/datasets
 pyrightconfig.json
 sandbox.ipynb
 sandbox.py
+mlartifacts
+mlruns
