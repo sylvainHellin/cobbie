@@ -21,7 +21,7 @@ Key features:
 # =============== Imports and config =============== #
 import os
 import sys
-from typing import Callable, Literal, Optional
+from typing import Literal, Optional
 
 import dspy
 import mlflow
@@ -70,9 +70,26 @@ class NewToolSignature(dspy.Signature):
     Create a Python function that implements the requirements using the IfcOpenShell Python library.
     This function will be used as a "tool" by an LLM-based ReAct agent to answer some user's query related to a BIM model.
 
-    The generated function should:
-    - Take at least one argument: path_ifc_file: str, which is a path to the .ifc file the function should interact with. WARNING: the argument should be of type str, NOT of type ifcopenshell.file.
+    CRITICAL REQUIREMENTS - The function MUST:
+    - Accept path_ifc_file: str as the first parameter (a file path, NOT an ifcopenshell.file object)
+    - Load the IFC file internally using: ifc_file = ifcopenshell.open(path_ifc_file)
+    - Work with the loaded ifc_file object for all IFC operations
+    - Return appropriate data structures (lists, dicts, etc.) not formatted strings
     - Be well-documented with docstrings and type hints
+
+    IMPLEMENTATION PATTERN:
+    ```python
+    def your_function_name(path_ifc_file: str) -> List[Any]:
+        '''Your docstring here'''
+        # Load the IFC file from the provided path
+        ifc_file = ifcopenshell.open(path_ifc_file)
+
+        # Work with the loaded ifc_file object
+        results = ifc_file.by_type("YourEntityType")
+
+        # Return actual data, not strings
+        return list(results)
+    ```
 
     IMPORTANT:
     - Do not make assumptions about IFC schema or data structure.
@@ -238,9 +255,26 @@ class ToolCorrectionSignature(dspy.Signature):
     Update a Python function implementation to incorporate the provided feedback.
     An assessment was conducted on the current implementation and has assessed that it is not working properly. Details regarding what needs to be changed are provided.
 
-    The generated function should:
-    - Take at least one argument: path_ifc_file: str, which is a path to the .ifc file the function should interact with. WARNING: the argument should be of type str, NOT of type ifcopenshell.file.
+    CRITICAL REQUIREMENTS - The corrected function MUST:
+    - Accept path_ifc_file: str as the first parameter (a file path, NOT an ifcopenshell.file object)
+    - Load the IFC file internally using: ifc_file = ifcopenshell.open(path_ifc_file)
+    - Work with the loaded ifc_file object for all IFC operations
+    - Return appropriate data structures (lists, dicts, etc.) not formatted strings
     - Be well-documented with docstrings and type hints
+
+    IMPLEMENTATION PATTERN:
+    ```python
+    def your_function_name(path_ifc_file: str) -> List[Any]:
+        '''Your docstring here'''
+        # Load the IFC file from the provided path
+        ifc_file = ifcopenshell.open(path_ifc_file)
+
+        # Work with the loaded ifc_file object
+        results = ifc_file.by_type("YourEntityType")
+
+        # Return actual data, not strings
+        return list(results)
+    ```
 
     IMPORTANT:
     - Do not make assumptions about IFC schema or data structure.
@@ -321,81 +355,6 @@ class ToolCorrector(dspy.Module):
             return ModuleOutput(
                 status="error", error_msg="ToolCorrector failed to update the function."
             )
-
-
-def new_tool_pre_check(
-    new_tool: Callable, path_ifc_model: str, logger
-) -> tuple[bool, str]:
-    """
-    Check that a newly created tool works properly before submitting it to the ToolAssessor for further investigation.
-
-    Args:
-        new_tool: The dynamically created function to test
-        path_ifc_model: Path to IFC file for testing
-        logger: Logger instance for debug output
-
-    Returns:
-        tuple: (test_passed: bool, test_result: str)
-    """
-    try:
-        import inspect
-
-        sig = inspect.signature(new_tool)
-        params = list(sig.parameters.keys())
-
-        if len(params) == 1:
-            # Single parameter function (like the original)
-            test_result = new_tool(path_ifc_model)
-            logger.debug(f"Single-parameter function test result: {test_result}")
-            logger.debug(f"Test result type: {type(test_result)}")
-
-            # Check if we got the expected return type (not a formatted string)
-            if (
-                isinstance(test_result, str)
-                and test_result.startswith("Found ")
-                and "items:" in test_result
-            ):
-                logger.warning(
-                    "Function appears to be returning formatted string instead of actual data - possible wrapper issue"
-                )
-                test_passed = False
-                test_result = f"Wrapper issue detected: {test_result}"
-            else:
-                # Check if the direct test shows a successful result
-                test_passed = (
-                    "Error executing" not in str(test_result)
-                    and str(test_result) not in ["No items found", "None"]
-                    and not isinstance(test_result, str)
-                    or len(str(test_result)) > 0
-                )
-        else:
-            # Multi-parameter function - provide basic test with minimal args
-            logger.debug(f"Function has {len(params)} parameters: {params}")
-            logger.debug(
-                "Multi-parameter function detected. Skipping direct test to avoid parameter mismatch."
-            )
-            test_result = f"Multi-parameter function with signature: {sig}. Formal assessment required."
-            test_passed = True  # Assume multi-param functions are OK for pre-check
-
-    except TypeError as e:
-        # If the function requires more parameters, that's okay for now
-        test_result = f"Function requires additional parameters: {str(e)}"
-        logger.debug(f"TypeError during direct test: {str(e)}")
-        test_passed = True  # This is expected for multi-param functions
-
-    except Exception as e:
-        test_result = f"Unexpected error during pre-check: {str(e)}"
-        logger.error(f"Unexpected error in pre-check: {str(e)}")
-        test_passed = False
-
-    if test_passed:
-        logger.debug(f"Pre-check of {function_name} passed! Result: {test_result}")
-    else:
-        logger.debug(
-            f"Pre-check of {function_name} did not pass or was inconclusive. Result: {test_result}"
-        )
-
-    return test_passed, str(test_result)
 
 
 def create_new_tool(
@@ -502,21 +461,6 @@ def create_new_tool(
                         new_tool = _create_function_from_source_code(
                             function_name=function_name, code=code
                         )
-
-                        # Test the tool directly first to ensure it works (only work if it only have ifc_file_path as a required argument)
-                        # This does not influence the control flow ; it is here to help debug the program
-                        test_passed, test_result = new_tool_pre_check(
-                            new_tool, path_ifc_model, logger
-                        )
-
-                        # Check for wrapper issues early
-                        if "Wrapper issue detected" in test_result:
-                            logger.error(
-                                "Detected wrapper-level issue that cannot be fixed by code correction"
-                            )
-                            output.error_msg = f"System-level wrapper issue prevents proper function execution: {test_result}"
-                            output.status = "error"
-                            break
 
                         # Create new python interpreter with the generated tool included
                         authorized_functions = {
@@ -626,7 +570,7 @@ def example_usage(
     function_name: str,
     function_requirements: str,
     path_ifc_model: str = "/Users/sylvainhellin/GitHub/ifcAnswerEngineV3/src/bim_models/duplex/arc.ifc",
-    llm_name: str = "claude",
+    llm_name: str = "llama4-maverick-groq",
 ):
     """
     Example demonstrating how to use the multi-agent tool creation system.
