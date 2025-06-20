@@ -32,7 +32,7 @@ from smolagents.agents import ActionStep
 from smolagents.monitoring import LogLevel
 
 from src.config import LANGUAGE_MODELS, ROOT_PATH, LLM
-from src.db import (
+from src.experiment.db import (
     DatasetRow,
     LogRow,
     RunsRow,
@@ -42,8 +42,7 @@ from src.db import (
     insert_new_log,
     insert_new_run,
 )
-from src.tools import TOOLS
-from src.special_tools import query_ifcopenshell_documentation, web_search
+from src.engine.tools.created import TOOLS
 
 # Load secrets
 load_dotenv(find_dotenv())
@@ -149,27 +148,6 @@ def get_correct_answer() -> str:
     return ground_truth  # TODO update this to be more robust for eval pipeline
 
 
-tool_maker = CodeAgent(
-    tools=[web_search, query_ifcopenshell_documentation],
-    model=llm,
-    name="tool_maker",
-    description="Generate a new tool based on the requirements provided. Test the new tool and return a code snippet of the tool implementation if it works.",
-    additional_authorized_imports=[
-        "ifcopenshell",
-        "ifcopenshell.util.element",
-        "ifcopenshell.util.shape",
-        "ifcopenshell.util.placement",
-        "ifcopenshell.util.geolocation",
-        "ifcopenshell.util.system",
-        "ifcopenshell.geom",
-        "ifcopenshell.file",
-        "ifcopenshell.entity_instance",
-    ],
-    max_print_outputs_length=2**12,  # 4.096
-    verbosity_level=LogLevel.DEBUG,
-    step_callbacks=[log_step],
-)
-
 # %% Section::Orchestrator agent
 TASK_ORCHESTRATOR = """
 Your task is to assess if you can answer the question using the existing tools and, if not, define the requirements to create a new tool.
@@ -199,7 +177,6 @@ agent_orchestrator = CodeAgent(
         "ifcopenshell.entity_instance",
     ],
     max_print_outputs_length=2**12,  # 4.096
-    managed_agents=[tool_maker],
     verbosity_level=LogLevel.DEBUG,
     step_callbacks=[log_step],
 )

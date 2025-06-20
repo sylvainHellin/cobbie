@@ -1,10 +1,9 @@
-from smolagents import tool
 import ifcopenshell
 import ifcopenshell.util.element
-from ..config import TEST_IFC_PATH
+
+from src.config import TEST_IFC_PATH
 
 
-@tool
 def get_room_ceiling_height(ifc_file_path: str, room_identifier: str) -> dict:
     """
     Get the ceiling height of a room/space in an IFC model.
@@ -34,7 +33,7 @@ def get_room_ceiling_height(ifc_file_path: str, room_identifier: str) -> dict:
         ifc_file = ifcopenshell.open(ifc_file_path)
 
         # Get units from the file
-        units = ifc_file.by_type("IfcUnitAssignment")
+        units = ifc_file.by_type("IfcUnitAssignment")  # type:ignore
         length_unit = "meter"  # Default unit
         if units:
             for unit in units[0].Units:
@@ -54,7 +53,7 @@ def get_room_ceiling_height(ifc_file_path: str, room_identifier: str) -> dict:
         result["unit"] = length_unit
 
         # Find all spaces/rooms in the model
-        spaces = ifc_file.by_type("IfcSpace")
+        spaces = ifc_file.by_type("IfcSpace")  # type:ignore
 
         # Find the requested room
         target_room = None

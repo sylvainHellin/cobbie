@@ -5,7 +5,7 @@ This module provides a complete pipeline for creating, testing, and correcting P
 that work with IFC (Industry Foundation Classes) files using the IfcOpenShell library.
 
 The system uses three main agents:
-- ToolCreator: Generates initial function implementations based on requirements
+- ToolProgrammer: Generates initial function implementations based on requirements
 - ToolAssessor: Tests and evaluates generated functions
 - ToolCorrector: Improves functions based on assessment feedback
 
@@ -19,34 +19,32 @@ Key features:
 
 # %% Imports
 # =============== Imports and config =============== #
-import os
 import sys
-from typing import Literal, Optional
+from typing import Literal, Optional, Dict, Callable
 
 import dspy
 import mlflow
 from pydantic import BaseModel
 
-from src import FUNCTION_BOILERPLATE, LANGUAGE_MODELS, LLM, ROOT_PATH
-from src.agents import _create_function_from_source_code
-from src.special_tools import (
+from src.config import (
+    FUNCTION_BOILERPLATE,
+    LANGUAGE_MODELS,
+    LLM,
+    ROOT_PATH,
+    IFCOPENSHELL_DOCUMENTATION_OVERVIEW,
+)
+from src.engine.util import _create_function_from_source_code
+from src.engine.tools.primordial import (
     format_restrictions_info,
     get_python_interpreter,
     query_ifcopenshell_documentation,
     web_search,
 )
-from src.util import get_logger
+from src.engine.util import get_logger
 
 # Set up the path
 if ROOT_PATH not in sys.path:
     sys.path.append(ROOT_PATH)
-
-
-# Load the overview of the documentation of IfcOpenShell
-doc_path = os.path.join(ROOT_PATH, "src/special_tools/ifcopenshell_api_overview_v2.md")
-with open(doc_path, "r") as file:
-    IFCOPENSHELL_DOCUMENTATION_OVERVIEW = file.read()
-del doc_path
 
 
 # %% Types
@@ -96,7 +94,7 @@ class NewToolSignature(dspy.Signature):
     - def function_name(model): ...
     - def function_name(ifc_file): ...
     - def function_name(file): ...
-    
+
     ✅ ONLY CREATE FUNCTIONS LIKE:
     - def function_name(path_ifc_file: str): ...
 
@@ -128,7 +126,7 @@ class NewToolSignature(dspy.Signature):
     )
 
 
-class ToolCreator(dspy.Module):
+class ToolProgrammer(dspy.Module):
     """Module to create a new Python function that meets the requirements."""
 
     def __init__(
@@ -144,7 +142,7 @@ class ToolCreator(dspy.Module):
             signature=NewToolSignature, tools=tools, max_iters=self.max_iters
         )
         self.log_level = log_level
-        self.logger = get_logger(name="ToolCreator", log_level=self.log_level)
+        self.logger = get_logger(name="ToolProgrammer", log_level=self.log_level)
 
     def forward(
         self,
@@ -300,7 +298,7 @@ class ToolCorrectionSignature(dspy.Signature):
     - def function_name(model): ...
     - def function_name(ifc_file): ...
     - def function_name(file): ...
-    
+
     ✅ ONLY CREATE FUNCTIONS LIKE:
     - def function_name(path_ifc_file: str): ...
 
@@ -385,209 +383,218 @@ class ToolCorrector(dspy.Module):
             )
 
 
-def create_new_tool(
-    function_requirements: str,
-    function_name: str,
-    path_ifc_model: str,
-    llm_info: LLM = LANGUAGE_MODELS["claude"],
-    max_iter: int = 3,
-    function_boilerplate: str = FUNCTION_BOILERPLATE,
-    log_level: Literal["DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"] = "DEBUG",
-) -> ModuleOutput:
-    """
-    Create a new tool using a multi-agent system with iterative improvement.
+class ToolCreator(dspy.Module):
+    def __init__(
+        self,
+        llm_info: LLM = LANGUAGE_MODELS["claude"],
+        max_iter: int = 3,
+        max_iter_sub_agents: int = 10,
+        function_boilerplate=FUNCTION_BOILERPLATE,
+        log_level: Literal["DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"] = "DEBUG",
+        additional_authorized_functions: Dict[str, Callable] = {
+            "web_search": web_search,
+            "query_ifcopenshell_documentation": query_ifcopenshell_documentation,
+        },
+        callbacks=None,
+    ):
+        super().__init__(callbacks)
+        self.lm = dspy.LM(model=llm_info.url, api_key=llm_info.api_key)
+        dspy.configure(lm=self.lm)
+        self.log_level = log_level
+        self.logger = get_logger(name="ToolCreator", log_level=log_level)
+        self.max_iter = max_iter
+        self.max_iter_sub_agents = max_iter_sub_agents
+        self.function_boilerplate = function_boilerplate
 
-    This function implements a complete pipeline for generating, testing, and refining
-    Python functions that work with IFC files. The system uses three specialized agents:
-
-    The workflow:
-    1. ToolCreator generates initial function code based on requirements
-    2. Function is dynamically wrapped to create a testable tool
-    3. ToolAssessor evaluates the function through direct testing and LLM assessment
-    4. ToolCorrector improves the function based on assessment feedback
-    5. Process repeats until success or max_iter limit is reached
-
-    Args:
-        function_requirements: Detailed description of what the function should do
-        function_name: Name for the generated function
-        path_ifc_model: Path to IFC file used for testing the generated function
-        llm_info: Language model configuration to use for all agents
-        max_iter: Maximum number of correction iterations (default: 3)
-        function_boilerplate: Code template to include in generated functions
-        log_level: Logging verbosity level
-
-    Returns:
-        ModuleOutput containing:
-        - result.python_code: Generated function code (if successful)
-        - result.assessment_status: "ok" or "needs_improvement"
-        - result.assessment_details: Detailed assessment feedback
-        - status: "success" or "error"
-        - error_msg: Error description (if status is "error")
-    """
-    logger = get_logger(name="create_new_tool", log_level=log_level)
-
-    with mlflow.start_span(name="create_new_tool"):
-        # --- Step 1: Set up the system --- #
-        output = ModuleOutput(status="error")
-        python_interpreter = get_python_interpreter(
-            additional_authorized_functions={
-                "web_search": web_search,
-                "query_ifcopenshell_documentation": query_ifcopenshell_documentation,
-            }
-        )
-        special_tools = [
-            web_search,
-            query_ifcopenshell_documentation,
+        # Handle the special tools and the python interpreter
+        self.additional_authorized_functions = additional_authorized_functions
+        self.primordial_tools = [
+            tool for name, tool in self.additional_authorized_functions.items()
         ]
-        base_tools = special_tools + [python_interpreter]
-        lm = dspy.LM(model=llm_info.url, api_key=llm_info.api_key)
-        dspy.configure(lm=lm)
-        logger.debug(
-            f"Tools allowed for the ToolCreator: {'\n    -'.join([getattr(tool, '__name__', str(tool)) for tool in base_tools])}"
+        self.python_interpreter = get_python_interpreter(
+            additional_authorized_functions=self.additional_authorized_functions
+        )
+        self.base_tools = self.primordial_tools + [self.python_interpreter]
+
+        self.logger.debug(
+            f"Tools allowed for the ToolCreator: {'\n    -'.join([getattr(tool, '__name__', str(tool)) for tool in self.base_tools])}"
         )
 
-        tool_creator = ToolCreator(tools=base_tools)
-        tool_corrector = ToolCorrector(tools=base_tools)
+        # Instantiate the static sub agents
+        self.tool_programmer = ToolProgrammer(
+            tools=self.base_tools,
+            max_iters=self.max_iter_sub_agents,
+            log_level=self.log_level,
+        )
+        self.tool_corrector = ToolCorrector(
+            tools=self.base_tools,
+            max_iters=self.max_iter_sub_agents,
+            log_level=self.log_level,
+        )
 
-        logger.info(f"Starting the creation of the tool: {function_name}")
+    def forward(
+        self,
+        function_requirements: str,
+        function_name: str,
+        path_ifc_model: str,
+    ) -> ModuleOutput:
+        """
+        Create a new tool using a multi-agent system with iterative improvement.
 
-        # --- Step 2: Create initial function --- #
-        with mlflow.start_span(name="initial_function_creation"):
-            logger.info("Creating initial function")
-            output_tool_creator = tool_creator.forward(
-                function_requirements=function_requirements,
-                function_name=function_name,
-                function_boilerplate=function_boilerplate,
-            )
+        This function implements a complete pipeline for generating, testing, and refining
+        Python functions that work with IFC files. The system uses three specialized agents:
 
-            code: str = output_tool_creator.result.python_code or ""
-            if output_tool_creator.status == "error":
-                error_msg = (
-                    output_tool_creator.error_msg
-                    or f"Unknown error occurred  while trying to create the tool: {function_name}."
+        The workflow:
+        1. ToolProgrammer generates initial function code based on requirements
+        2. Function is dynamically wrapped to create a testable tool
+        3. ToolAssessor evaluates the function through direct testing and LLM assessment
+        4. ToolCorrector improves the function based on assessment feedback
+        5. Process repeats until success or max_iter limit is reached
+
+        Args:
+            function_requirements: Detailed description of what the function should do
+            function_name: Name for the generated function
+            path_ifc_model: Path to IFC file used for testing the generated function
+
+        Returns:
+            ModuleOutput containing:
+            - result.python_code: Generated function code (if successful)
+            - result.assessment_status: "ok" or "needs_improvement"
+            - result.assessment_details: Detailed assessment feedback
+            - status: "success" or "error"
+            - error_msg: Error description (if status is "error")
+        """
+
+        with mlflow.start_span(name="ToolCreator"):
+            # --- Step 1: Set up the system --- #
+            output = ModuleOutput(status="error")
+
+            self.logger.info(f"Starting the creation of the tool: {function_name}")
+
+            # --- Step 2: Create initial function --- #
+            with mlflow.start_span(name="ToolProgrammer"):
+                self.logger.info("Creating initial function")
+                output_tool_programmer = self.tool_programmer.forward(
+                    function_requirements=function_requirements,
+                    function_name=function_name,
+                    function_boilerplate=self.function_boilerplate,
                 )
-                logger.error(error_msg)
-                output.error_msg = error_msg
-            else:
-                logger.info("Initial function created successfully.")
-                logger.debug(f"Initial function code: \n\n---\n{code}\n\n---")
 
-        current_iteration = 0
-        identical_code_count = 0
-        previous_code = ""
-
-        # --- Step 3: Iterative improvement loop --- #
-        while current_iteration < max_iter:
-            current_iteration += 1
-            print(f"\n--- Iteration: {current_iteration} ---")
-
-            with mlflow.start_span(name=f"iteration_{current_iteration}"):
-                # Step 3.1: Create enhanced assessor with dynamic tool
-                with mlflow.start_span(name="create_assessor"):
-                    logger.info("Assessing the generated code.")
-                    try:
-                        new_tool = _create_function_from_source_code(
-                            function_name=function_name, code=code
-                        )
-
-                        # Create new python interpreter with the generated tool included
-                        authorized_functions = {
-                            "web_search": web_search,
-                            "query_ifcopenshell_documentation": query_ifcopenshell_documentation,
-                            f"{function_name}": new_tool,
-                        }
-
-                        python_interpreter = get_python_interpreter(
-                            additional_authorized_functions=authorized_functions
-                        )
-                        tools = special_tools + [new_tool, python_interpreter]
-                        tool_assessor = ToolAssessor(tools=tools)
-                        logger.info("✓ ToolAssessor created with new tool to test.")
-
-                    except Exception as e:
-                        logger.error(
-                            f"✗ Failed to create ToolAssessor. Error: {str(e)}"
-                        )
-                        logger.error(f"Code that failed: {code}")
-                        continue
-
-                # Step 3.2: Assess if the function works properly
-                with mlflow.start_span(name="assess_function"):
-                    try:
-                        logger.info("Starting the tool assessment.")
-
-                        output_tool_assessor = tool_assessor.forward(
-                            function_name=function_name,
-                            function_requirements=function_requirements,
-                            path_ifc_model=path_ifc_model,
-                        )
-                        logger.debug(
-                            f"✓ Assessment completed: {output_tool_assessor.result.assessment_status}"
-                        )
-                        logger.debug(
-                            f"Assessment details: {output_tool_assessor.result.assessment_details}"
-                        )
-                    except Exception as e:
-                        logger.error(f"✗ Assessment failed: {str(e)}")
-                        continue
-
-                # Step 3.3: If the assessment is good, update the ouput and exit the loop
-                if output_tool_assessor.result.assessment_status == "ok":
-                    logger.info(
-                        f"🎉 Function passed assessment after {current_iteration} iterations!"
+                code: str = output_tool_programmer.result.python_code or ""
+                if output_tool_programmer.status == "error":
+                    error_msg = (
+                        output_tool_programmer.error_msg
+                        or f"Unknown error occurred  while trying to create the tool: {function_name}."
                     )
-                    output.result.python_code = code
-                    output.status = "success"
-                    output.result.assessment_status = (
-                        output_tool_assessor.result.assessment_status
-                    )
-                    output.result.assessment_details = (
-                        output_tool_assessor.result.assessment_details
-                    )
-                    break
-
-                # Step 3.4: If the assessment is not satisfactory, try to correct the function
-                elif current_iteration < max_iter:
-                    with mlflow.start_span(name="correct_function"):
-                        logger.debug(
-                            "Code not good enough yet; trying to correct the function."
-                        )
-
-                        # Check if we're generating identical code (infinite loop detection)
-                        if code == previous_code:
-                            identical_code_count += 1
-                            if identical_code_count >= 2:
-                                logger.error(
-                                    "Detected infinite loop: ToolCorrector is generating identical code repeatedly"
-                                )
-                                output.error_msg = f"Infinite loop detected: Same implementation generated {identical_code_count + 1} times. Assessment: {output_tool_assessor.result.assessment_details}"
-                                output.status = "error"
-                                break
-                        else:
-                            identical_code_count = 0
-
-                        previous_code = code
-
-                        output_tool_corrector = tool_corrector.forward(
-                            function_description=function_requirements,
-                            function_name=function_name,
-                            current_function_implementation=code,
-                            detailed_function_assessment=output_tool_assessor.result.assessment_details
-                            or "No assessment available.",
-                        )
-
-                        if output_tool_corrector.status == "error":
-                            logger.error("✗ Correction failed.")
-                            continue
-                        else:
-                            code = output_tool_corrector.result.python_code or ""
-                            logger.info("✓ Function corrected")
-                            logger.debug(f"New code:\n{code}")
+                    self.logger.error(error_msg)
+                    output.error_msg = error_msg
                 else:
-                    logger.debug("⚠️  Maximum iterations reached")
+                    self.logger.info("Initial function created successfully.")
+                    self.logger.debug(f"Initial function code: \n\n---\n{code}\n\n---")
 
-        # Return the result (good or bad)
-        return output
+            # Reset iteration counter before starting the new assess/correct loop
+            self.iter = 0
+
+            # --- Step 3: Iterative improvement loop --- #
+            while self.iter < self.max_iter:
+                self.iter += 1
+                print(f"\n--- Iteration: {self.iter} ---")
+
+                with mlflow.start_span(name=f"iteration_{self.iter}"):
+                    # Step 3.1: Create enhanced assessor with dynamic tool
+                    with mlflow.start_span(name="create_assessor"):
+                        self.logger.info("Assessing the generated code.")
+                        try:
+                            new_tool = _create_function_from_source_code(
+                                function_name=function_name, code=code
+                            )
+
+                            # Create new python interpreter with the generated tool included
+                            authorized_functions = (
+                                self.additional_authorized_functions.copy()
+                            )
+                            authorized_functions[function_name] = new_tool
+                            python_interpreter = get_python_interpreter(
+                                additional_authorized_functions=authorized_functions
+                            )
+                            tools = self.primordial_tools + [
+                                new_tool,
+                                python_interpreter,
+                            ]
+                            tool_assessor = ToolAssessor(tools=tools)
+                            self.logger.info(
+                                "✓ ToolAssessor created with new tool to test."
+                            )
+
+                        except Exception as e:
+                            self.logger.error(
+                                f"✗ Failed to create ToolAssessor. Error: {str(e)}"
+                            )
+                            self.logger.error(f"Code that failed: {code}")
+                            continue
+
+                    # Step 3.2: Assess if the function works properly
+                    with mlflow.start_span(name="ToolAssessor"):
+                        try:
+                            self.logger.info("Starting the tool assessment.")
+
+                            output_tool_assessor = tool_assessor.forward(
+                                function_name=function_name,
+                                function_requirements=function_requirements,
+                                path_ifc_model=path_ifc_model,
+                            )
+                            self.logger.debug(
+                                f"✓ Assessment completed: {output_tool_assessor.result.assessment_status}"
+                            )
+                            self.logger.debug(
+                                f"Assessment details: {output_tool_assessor.result.assessment_details}"
+                            )
+                        except Exception as e:
+                            self.logger.error(f"✗ Assessment failed: {str(e)}")
+                            continue
+
+                    # Step 3.3: If the assessment is good, update the ouput and exit the loop
+                    if output_tool_assessor.result.assessment_status == "ok":
+                        self.logger.info(
+                            f"🎉 Function passed assessment after {self.iter} iterations!"
+                        )
+                        output.result.python_code = code
+                        output.status = "success"
+                        output.result.assessment_status = (
+                            output_tool_assessor.result.assessment_status
+                        )
+                        output.result.assessment_details = (
+                            output_tool_assessor.result.assessment_details
+                        )
+                        break
+
+                    # Step 3.4: If the assessment is not satisfactory, call the ToolCorrector
+                    elif self.iter < self.max_iter:
+                        with mlflow.start_span(name="ToolCorrector"):
+                            self.logger.debug(
+                                "Code not good enough yet; trying to correct the function."
+                            )
+
+                            output_tool_corrector = self.tool_corrector.forward(
+                                function_description=function_requirements,
+                                function_name=function_name,
+                                current_function_implementation=code,
+                                detailed_function_assessment=output_tool_assessor.result.assessment_details
+                                or "No assessment available.",
+                            )
+
+                            if output_tool_corrector.status == "error":
+                                self.logger.error("✗ Correction failed.")
+                                continue
+                            else:
+                                code = output_tool_corrector.result.python_code or ""
+                                self.logger.info("✓ Function corrected")
+                                self.logger.debug(f"New code:\n{code}")
+                    else:
+                        self.logger.debug("⚠️  Maximum iterations reached")
+
+            # Return the result (good or bad)
+            return output
 
 
 # %% Example Usage
@@ -597,8 +604,11 @@ def create_new_tool(
 def example_usage(
     function_name: str,
     function_requirements: str,
-    path_ifc_model: str = "/Users/sylvainhellin/GitHub/ifcAnswerEngineV3/src/bim_models/duplex/arc.ifc",
+    path_ifc_model: str,
     llm_name: str = "llama4-maverick-groq",
+    log_level: Literal["DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"] = "DEBUG",
+    max_iter: int = 3,
+    max_iter_sub_agents: int = 10,
 ):
     """
     Example demonstrating how to use the multi-agent tool creation system.
@@ -615,13 +625,31 @@ def example_usage(
     logger.info(f"Using test IFC file: {path_ifc_model}")
     logger.info(f"Using LLM: {llm_name}")
 
+    def create_new_tool(
+        function_name: str,
+        function_requirements: str,
+        path_ifc_model: str,
+        llm_info=LANGUAGE_MODELS[llm_name],
+    ):
+        tool_creator = ToolCreator(
+            log_level=log_level,
+            llm_info=llm_info,
+            max_iter=max_iter,
+            max_iter_sub_agents=max_iter_sub_agents,
+        )
+        result = tool_creator.forward(
+            function_name=function_name,
+            function_requirements=function_requirements,
+            path_ifc_model=path_ifc_model,
+        )
+        return result
+
     # Create the tool
     result = create_new_tool(
         function_requirements=function_requirements,
         path_ifc_model=path_ifc_model,
         function_name=function_name,
         llm_info=LANGUAGE_MODELS[llm_name],
-        max_iter=3,
     )
 
     # Log results
@@ -639,28 +667,28 @@ def example_usage(
 if __name__ == "__main__":
     import mlflow
     import os
-    from pathlib import Path
+    from src.config import TEST_IFC_PATH
 
     # Move content from last_log to logs
-    log_dir = Path("logs")
-    last_log_file = log_dir / "last_log"
-    logs_file = log_dir / "logs"
+    log_dir = os.path.join(ROOT_PATH, "src/experiment/logs")
+    last_log_file = os.path.join(log_dir, "last_log.log")
+    logs_file = os.path.join(log_dir, "logs.log")
 
-    if last_log_file.exists():
-        with open(last_log_file, "r") as f:
-            last_log_content = f.read()
+    with open(last_log_file, "r") as f:
+        last_log_content = f.read()
 
-        # Append to logs file
-        with open(logs_file, "a") as f:
-            f.write(last_log_content)
+    # Append to logs file
+    with open(logs_file, "a") as f:
+        f.write(last_log_content)
 
-        # Clear last_log file
-        with open(last_log_file, "w") as f:
-            f.write("")
+    # Clear last_log file
+    with open(last_log_file, "w") as f:
+        f.write("")
 
     # Example 1: Simple single-parameter function
     function_name = "get_list_ifc_spaces"
     function_requirements = "Return a list of the IfcSpace from an ifc model. This function should accept the path to an .ifc file as an argument."
+    llm_name = "llama4-maverick-groq"
 
     # Initialize MLFlow
     mlflow.dspy.autolog()  # type: ignore
@@ -671,7 +699,8 @@ if __name__ == "__main__":
         result = example_usage(
             function_name=function_name,
             function_requirements=function_requirements,
-            llm_name="claude",
+            path_ifc_model=TEST_IFC_PATH,
+            llm_name=llm_name,
         )
         print(f"\nResult status: {result.status}")
 

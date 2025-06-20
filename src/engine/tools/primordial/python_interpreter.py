@@ -12,7 +12,7 @@ from smolagents.local_python_executor import InterpreterError
 
 import tiktoken
 from smolagents.local_python_executor import BASE_PYTHON_TOOLS, LocalPythonExecutor
-from src.util import get_logger
+from src.engine.util import get_logger
 from src.config import LOG_LEVEL
 
 # =============================================================================

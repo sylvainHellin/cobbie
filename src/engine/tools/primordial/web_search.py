@@ -3,8 +3,7 @@ import os
 import requests
 import json
 from dotenv import load_dotenv, find_dotenv
-from smolagents import tool
-from src.util import get_logger
+from src.engine.util import get_logger
 from src.config import LOG_LEVEL
 
 load_dotenv(find_dotenv())

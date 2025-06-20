@@ -1,8 +1,7 @@
 from typing import Literal
 import logging
 import os
-
-SRC_PATH = os.getenv("SRC_PATH", "")
+from src.config import ROOT_PATH
 
 
 def get_logger(
@@ -32,7 +31,7 @@ def get_logger(
         logger.addHandler(stream_handler)
 
         # File handler
-        logs_dir = os.path.join(SRC_PATH, "logs")
+        logs_dir = os.path.join(ROOT_PATH, "src/experiment/logs")
 
         # Ensure logs directory exists
         os.makedirs(logs_dir, exist_ok=True)

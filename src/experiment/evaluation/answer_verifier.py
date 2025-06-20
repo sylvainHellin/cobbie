@@ -1,5 +1,5 @@
 import dspy
-from ..config import LANGUAGE_MODELS, LLM
+from src.config import LANGUAGE_MODELS, LLM
 from datetime import datetime
 import time
 from db.db import LogRow, insert_new_log

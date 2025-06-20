@@ -8,13 +8,18 @@ load_dotenv(find_dotenv())
 # Get the src directory path
 ROOT_PATH = os.environ["ROOT_PATH"]
 SRC_PATH = os.path.join(ROOT_PATH, "src")
-TEST_IFC_PATH = os.path.join(SRC_PATH, "bim_models/duplex/arc.ifc")
-
+TEST_IFC_PATH = "src/experiment/bim_models/duplex/arc.ifc"
 # PATH
-DATASET_PATH = os.path.join(SRC_PATH, "datasets", "ifc-bench-v1.csv")
-RESULTS_CHECKPOINT_PATH = os.path.join(SRC_PATH, "results", "checkpoint.json")
-OUTPUT_PATH = output_path = os.path.join(SRC_PATH, "results", "benchmark_results.xlsx")
-VECTORSTORE_PATH = os.path.join(SRC_PATH, "special_tools/vectorstore")
+DATASET_PATH = os.path.join(SRC_PATH, "experiment/datasets", "ifc-bench-v1.csv")
+VECTORSTORE_PATH = "src/engine/tools/primordial/vectorstore"
+
+# Load the overview of the documentation of IfcOpenShell
+doc_path = os.path.join(
+    ROOT_PATH, "src/engine/tools/primordial/ifcopenshell_api_overview.md"
+)
+with open(doc_path, "r") as file:
+    IFCOPENSHELL_DOCUMENTATION_OVERVIEW = file.read()
+del doc_path
 
 # loads secrets
 ANTHROPIC_API_KEY = os.environ["ANTHROPIC_API_KEY"]

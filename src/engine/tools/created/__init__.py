@@ -6,7 +6,8 @@ def load_tools(tools: list) -> list:
     import os
     import importlib
     import inspect
-    from smolagents import Tool
+    from smolagents import Tool, tool
+    from typing import Callable
 
     # Get the directory containing this __init__.py file
     tools_dir = os.path.dirname(__file__)
@@ -23,7 +24,10 @@ def load_tools(tools: list) -> list:
         # Get all objects from the module
         for name, obj in inspect.getmembers(module):
             # Check if the object is a Tool instance (from @tool decorator)
-            if isinstance(obj, Tool):
+            if isinstance(obj, Callable):
+                # convert to smolagent.Tool class
+                obj = tool(obj)
+                assert isinstance(obj, Tool)
                 # Add to global namespace and tools list
                 globals()[name] = obj
                 tools.append(obj)

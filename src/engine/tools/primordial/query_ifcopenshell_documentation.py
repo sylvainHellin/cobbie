@@ -5,7 +5,7 @@ from typing import Optional
 from chromadb import PersistentClient
 from chromadb.errors import NotFoundError
 from src.config import VECTORSTORE_PATH, LOG_LEVEL
-from src.util import get_logger
+from src.engine.util import get_logger
 
 
 # Move the client initialization into a function
