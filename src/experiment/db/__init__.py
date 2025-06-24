@@ -11,7 +11,7 @@ from .db import (
     get_run_row,
     get_ifc_model_row,
     insert_new_ifc_model,
-    insert_new_dataset,
+    insert_new_dataset_row,
     insert_new_run,
     insert_new_log,
 )
@@ -29,7 +29,7 @@ __all__ = [
     "get_run_row",
     "get_ifc_model_row",
     "insert_new_ifc_model",
-    "insert_new_dataset",
+    "insert_new_dataset_row",
     "insert_new_run",
     "insert_new_log",
 ]
