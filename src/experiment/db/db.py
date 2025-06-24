@@ -1,7 +1,7 @@
 import sqlite3
 from datetime import datetime
 from sqlite3 import Connection
-from typing import Optional
+from typing import Optional, Literal
 
 from dotenv import find_dotenv, load_dotenv
 from pydantic import BaseModel
@@ -33,7 +33,7 @@ sqlite3.register_converter("timestamp", datetime_decoder)
 class DatasetRow(BaseModel):
     id: Optional[int] = None
     question: Optional[str] = None
-    ground_truth: Optional[str] = None
+    answer: Optional[str] = None
     ifc_id: Optional[int] = None
 
 
@@ -152,7 +152,7 @@ def get_dataset_row(id: int) -> DatasetRow:
             try:
                 dataset.id = result[0]
                 dataset.question = result[1]
-                dataset.ground_truth = result[2]
+                dataset.answer = result[2]
                 dataset.ifc_id = result[3]
             except Exception as e:
                 print(
@@ -324,7 +324,7 @@ def insert_new_dataset_row(dataset: DatasetRow) -> int:
             INSERT INTO dataset (question, ground_truth, ifc_id)
             VALUES (?, ?, ?)
             """,
-            (dataset.question, dataset.ground_truth, dataset.ifc_id),
+            (dataset.question, dataset.answer, dataset.ifc_id),
         )
 
         conn.commit()
@@ -388,8 +388,152 @@ def insert_new_log(new_log: LogRow) -> int:
         return cursor.lastrowid or 0
 
 
+def empty_table(table_name: Literal["dataset", "ifc_models", "logs", "runs"]) -> None:
+    """
+    Delete all row of the selected table.
+    """
+    with connection() as conn:
+        cursor = conn.cursor()
+        # Temporarily disable foreign key constraints
+        cursor.execute("PRAGMA foreign_keys = OFF")
+        cursor.execute(f"DELETE FROM {table_name}")
+        # Re-enable foreign key constraints
+        cursor.execute("PRAGMA foreign_keys = ON")
+        conn.commit()
+
+
+def drop_and_recreate_tables() -> None:
+    """
+    Drop all tables and recreate them with the correct schema.
+    """
+    with connection() as conn:
+        cursor = conn.cursor()
+
+        # Drop tables in reverse dependency order
+        cursor.execute("DROP TABLE IF EXISTS logs")
+        cursor.execute("DROP TABLE IF EXISTS runs")
+        cursor.execute("DROP TABLE IF EXISTS dataset")
+        cursor.execute("DROP TABLE IF EXISTS ifc_models")
+
+        # Recreate tables with the same schema as init_sqlite_db
+        cursor.execute("""
+        CREATE TABLE IF NOT EXISTS ifc_models (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            project_name TEXT NOT NULL,
+            model_name TEXT NOT NULL,
+            model_path TEXT NOT NULL,
+            model_description TEXT NOT NULL
+        )
+        """)
+
+        cursor.execute("""
+        CREATE TABLE IF NOT EXISTS dataset (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            question TEXT NOT NULL,
+            ground_truth TEXT NOT NULL,
+            ifc_id INTEGER NOT NULL,
+            FOREIGN KEY (ifc_id) REFERENCES ifc_models(id)
+        )
+        """)
+
+        cursor.execute("""
+            CREATE TABLE IF NOT EXISTS runs (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                question_id INTEGER,
+                llm TEXT,
+                input_tokens INTEGER,
+                output_tokens INTEGER,
+                duration REAL,
+                timestamp timestamp,
+                FOREIGN KEY (question_id) REFERENCES dataset(id)
+                )
+        """)
+
+        cursor.execute("""
+            CREATE TABLE IF NOT EXISTS logs (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+          		run_id INTEGER,
+                agent_name TEXT,
+                step_number INTEGER,
+                timestamp timestamp,
+                model_output TEXT,
+                action_input_code TEXT,
+                action_output TEXT,
+                observations TEXT,
+                error TEXT,
+                duration REAL,
+                input_tokens INTEGER,
+                output_tokens INTEGER,
+                FOREIGN KEY (run_id) REFERENCES runs(id)
+                )
+        """)
+
+        conn.commit()
+
+
+def get_ifc_model(
+    id: Optional[int] = None,
+    project_name: Optional[str] = None,
+    model_name: Optional[str] = None,
+) -> IfcModelRow:
+    """
+    Returns an IfcModelRow pydantic object with the values of the first row from the database
+    that matches the provided criteria (id, project_name, and/or model_name).
+    If no matching row is found, returns an empty IfcModelRow object.
+    """
+    with connection() as db_conn:
+        cursor = db_conn.cursor()
+
+        # Build dynamic query based on provided parameters
+        conditions = []
+        params = []
+
+        if id is not None:
+            conditions.append("id = ?")
+            params.append(id)
+
+        if project_name is not None:
+            conditions.append("project_name = ?")
+            params.append(project_name)
+
+        if model_name is not None:
+            conditions.append("model_name = ?")
+            params.append(model_name)
+
+        # If no conditions provided, return empty IfcModelRow
+        if not conditions:
+            return IfcModelRow()
+
+        query = f"SELECT * FROM ifc_models WHERE {' AND '.join(conditions)} LIMIT 1"
+        cursor.execute(query, params)
+
+        result = cursor.fetchone()
+        ifc_model = IfcModelRow()
+        if result is not None:
+            try:
+                ifc_model.id = result[0]
+                ifc_model.project_name = result[1]
+                ifc_model.model_name = result[2]
+                ifc_model.model_path = result[3]
+                ifc_model.model_description = result[4]
+            except Exception as e:
+                print(
+                    f"Error while trying to fetch the ifc model with id: {id}, project_name: {project_name}, model_name: {model_name}\nError: {e}"
+                )
+                pass
+
+        return ifc_model
+
+
 if __name__ == "__main__":
     import json
+    import os
+    import pandas as pd
+    from src.config import (
+        DATASET_PATH,
+        CSV_IFC_MODELS_PATH,
+        DIRECTORY_IFC_MODELS_PATH,
+    )
 
     # Define a custom JSON encoder for datetime objects
     class DateTimeEncoder(json.JSONEncoder):
@@ -400,3 +544,47 @@ if __name__ == "__main__":
 
     init_sqlite_db()
     print("DB initialize successfully\n\n")
+
+    # Drop and recreate all tables to ensure a clean slate
+    drop_and_recreate_tables()
+    print("Tables dropped and recreated successfully\n")
+
+    # Populate these tables using the Excel files
+    # Ifc models
+    ifc_models = pd.read_csv(filepath_or_buffer=CSV_IFC_MODELS_PATH)
+    for row in ifc_models.itertuples(name="ifc_models"):
+        ifc_model = IfcModelRow(
+            project_name=row.project_name,  # type: ignore
+            model_name=row.model_name,  # type: ignore
+            model_path=os.path.join(
+                DIRECTORY_IFC_MODELS_PATH,
+                row.project_name,  # type: ignore
+                f"{row.model_name}.ifc",  # type: ignore
+            ),  # type: ignore
+            model_description=row.model_description,  # type: ignore
+        )
+        insert_new_ifc_model(ifc_model=ifc_model)
+
+    # Dataset
+    dataset = pd.read_csv(filepath_or_buffer=DATASET_PATH)
+    for row in dataset.itertuples(name="dataset"):
+        ifc_model = get_ifc_model(
+            project_name=row.project,  # type: ignore
+            model_name=row.ifc_model,  # type: ignore
+        )
+        if ifc_model.id is None:
+            print(
+                f"Could not find a corresponding model for project: \
+                {row.project} and model: {row.ifc_model}"  # type: ignore
+            )  # type: ignore
+            continue
+
+        new_row = DatasetRow(
+            question=row.question,  # type: ignore
+            answer=row.answer,  # type: ignore
+            ifc_id=ifc_model.id,
+        )
+
+        insert_new_dataset_row(dataset=new_row)
+
+    print("END")
