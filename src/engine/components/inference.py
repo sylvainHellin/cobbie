@@ -56,7 +56,7 @@ llm = LiteLLMModel(api_base=llm_info.url, api_key=llm_info.api_key)
 question_id = 1
 dataset_row: DatasetRow = get_dataset_row(id=question_id)
 question: str = dataset_row.question or ""
-ground_truth: str = dataset_row.ground_truth or ""
+ground_truth: str = dataset_row.answer or ""
 # If no IFC_ID exist, there is a problem: process should interrupt
 if dataset_row.ifc_id is None:
     exit()
