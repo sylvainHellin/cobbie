@@ -2,7 +2,7 @@ import dspy
 from src.config import LANGUAGE_MODELS, LLM
 from datetime import datetime
 import time
-from src.experiment.db.db import LogRow, insert_new_log
+from src.experiment.db import LogRow, insert_new_log
 from src.engine.schemas.module_output import ModuleOutput
 from src.engine.schemas.answer_similarity import AnswerSimilarity
 from src.engine.util.get_logger import get_logger
