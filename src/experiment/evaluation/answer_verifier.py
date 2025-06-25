@@ -51,27 +51,30 @@ class AnswerVerifier(dspy.Module):
         Returns:
             dspy.Prediction containing similarity_score (float).
         """
-        logger = get_logger(log_level=LOG_LEVEL)
+        logger = get_logger(name="AnswerVerifier", log_level=LOG_LEVEL)
         logger.info("Starting the AnswerVerifier.")
         logger.debug(
-            f"Question: {question}\nFirst answer: {first_answer}\nSecond answer: {second_answer}"
+            f"\nQuestion: {question}\nFirst answer: {first_answer}\nSecond answer: {second_answer}"
         )
 
         module_output = ModuleOutput(status="error")
 
-        try:
-            prediction = self.classifier(
-                question=question,
-                first_answer=first_answer,
-                second_answer=second_answer,
-            )
-            module_output.status = "success"
-            module_output.result = prediction
-        except Exception as e:
-            error_msg = f"Encounter Exception during the forward pass of the AnswerClassifier\nException:{e}\nquestion:{question}\nfirst_answer:{first_answer}\nground truth:{second_answer}"
-
-            logger.error(error_msg)
-            module_output.error_msg = error_msg
+        with mlflow.start_span(name="AnswerVerifier"):
+            try:
+                prediction = self.classifier(
+                    question=question,
+                    first_answer=first_answer,
+                    second_answer=second_answer,
+                )
+                module_output.status = "success"
+                module_output.result = prediction
+                logger.debug(
+                    f"\nSimilarity score: {prediction.similarity_score}\nReasoning: {prediction.reasoning}"
+                )
+            except Exception as e:
+                error_msg = f"Encounter Exception during the forward pass of the AnswerClassifier\nException:{e}\nquestion:{question}\nfirst_answer:{first_answer}\nground truth:{second_answer}"
+                logger.error(error_msg)
+                module_output.error_msg = error_msg
 
         return module_output
 
@@ -104,17 +107,17 @@ def verify_answer(
     dspy.configure(lm=lm)
 
     start_time = time.time()
+    logger = get_logger("verify_answer")
 
-    # Try to use MLflow span, but don't fail if MLflow is not available
     try:
-        with mlflow.start_span(name="AnswerVerifier"):
-            answer_verifier = AnswerVerifier()
-            answer_verification: ModuleOutput = answer_verifier.forward(
-                question=question,
-                first_answer=first_answer,
-                second_answer=second_answer,
-            )
+        answer_verifier = AnswerVerifier()
+        answer_verification: ModuleOutput = answer_verifier.forward(
+            question=question,
+            first_answer=first_answer,
+            second_answer=second_answer,
+        )
     except Exception as e:
+        logger.error(f"MLflow not available. Exception: {e}")
         # If MLflow is not available, run without it
         answer_verifier = AnswerVerifier()
         answer_verification: ModuleOutput = answer_verifier.forward(
