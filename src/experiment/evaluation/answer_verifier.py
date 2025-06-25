@@ -2,137 +2,195 @@ import dspy
 from src.config import LANGUAGE_MODELS, LLM
 from datetime import datetime
 import time
-from db.db import LogRow, insert_new_log
+from src.experiment.db.db import LogRow, insert_new_log
+from src.engine.schemas.module_output import ModuleOutput
+from src.engine.schemas.answer_similarity import AnswerSimilarity
+from src.engine.util.get_logger import get_logger
+from src.config import LOG_LEVEL
+import mlflow
 
 
 class AnswerVerifierSignature(dspy.Signature):
     """
-    Compare a given answer with the ground truth and assess if it is correct.
+    Compare two answers to the same question and give them a similarity score from 0 to 1 (0 meaning the answers are completely different, 1 meaning they are identical).
     Tolerance thresholds for numerical values (quantities, measurements, etc.): up to 2%.
     """
 
-    question: str = dspy.InputField(desc="A user's question related to IFC models.")
-    answer: str = dspy.InputField(desc="The answer to verify.")
-    ground_truth: str = dspy.InputField(
-        desc="The ground truth to compare the answer to."
-    )
+    question: str = dspy.InputField()
+    first_answer: str = dspy.InputField()
+    second_answer: str = dspy.InputField()
 
-    answer_is_correct: bool = dspy.OutputField(
+    similarity_score: float = dspy.OutputField(
         desc="""
-    Compare the given answer with the ground truth and judge whether it is correct:
-    - True -> The answer provided is close enough to the ground truth and doesnot contain conflicting factual information.
-    - False -> The answer provided differs too much from the ground truth or contains incorrect factual information.
+        The similarity score between the two answers to the same question. The result should be a number between 0 and 1. 0 means the answer is completely different, and 1 means they are the same. The tolerance thresholds for numerical values (quantities, measurements, etc.) are up to 2%. If the answers show more differences than this limit, the similarity score should reflect that.
+
     """
-    )
-    confidence: float = dspy.OutputField(
-        desc="Confidence score between 0 and 1 for the judgement's correctness."
     )
 
 
 class AnswerVerifier(dspy.Module):
     """
-    Check an answer to a given question against the ground truth to assess if it is correct.
+    Compare two answers with each other and compute a similarity score.
     """
 
     def __init__(self):
         super().__init__()
         self.classifier = dspy.ChainOfThought(AnswerVerifierSignature)
 
-    def forward(self, question: str, answer: str, ground_truth: str) -> dspy.Prediction:
+    def forward(
+        self, question: str, first_answer: str, second_answer: str
+    ) -> ModuleOutput:
         """
         Check an answer to a given question against the ground truth to assess if it is correct.
 
         Args:
             question: The question being answered
-            answer: The answer to verify
-            ground_truth: The ground truth for this question
+            first_answer: The first answer to the question
+            second_answer: The second answer to the question to compare
 
         Returns:
-            dspy.Prediction containing answer_is_correct and confidence
+            dspy.Prediction containing similarity_score (float).
         """
+        logger = get_logger(log_level=LOG_LEVEL)
+        logger.info("Starting the AnswerVerifier.")
+        logger.debug(
+            f"Question: {question}\nFirst answer: {first_answer}\nSecond answer: {second_answer}"
+        )
+
+        module_output = ModuleOutput(status="error")
+
         try:
-            return self.classifier(
-                question=question, answer=answer, ground_truth=ground_truth
+            prediction = self.classifier(
+                question=question,
+                first_answer=first_answer,
+                second_answer=second_answer,
             )
+            module_output.status = "success"
+            module_output.result = prediction
         except Exception as e:
-            print(
-                f"Encounter Exception during the forward pass of the AnswerClassifier\nException:{e}\nquestion:{question}\nanswe:{answer}\nground truth:{ground_truth}"
-            )
-            return dspy.Prediction(
-                answer_classification=False,
-                confidence=0.0,
-            )
+            error_msg = f"Encounter Exception during the forward pass of the AnswerClassifier\nException:{e}\nquestion:{question}\nfirst_answer:{first_answer}\nground truth:{second_answer}"
+
+            logger.error(error_msg)
+            module_output.error_msg = error_msg
+
+        return module_output
 
 
 def verify_answer(
     question: str,
-    answer: str,
-    ground_truth: str,
+    first_answer: str,
+    second_answer: str,
+    threshold: float,
     run_id: int = 0,
     llm_info: LLM = LANGUAGE_MODELS["llama4-scout-cerebras"],
-) -> tuple[bool, float]:
+) -> AnswerSimilarity:
     """
-    Verify if an answer matches the ground truth for a given question.
+    Compare two answers to the same question and compute their similarity.
 
     Args:
         question (str): The question being answered
-        answer (str): The answer to verify
-        ground_truth (str): The correct answer to compare against
+        first_answer (str): The first answer to compare
+        second_answer (str): The second answer to compare
+        threshold (float): The similarity threshold above which answers are considered correct
         run_id (int, optional): Identifier for the verification run. Defaults to 0.
-        llm_info (LLM, optional): Language model configuration. Defaults to gemini-flash.
+        llm_info (LLM, optional): Language model configuration. Defaults to llama4-scout-cerebras.
 
     Returns:
-        tuple[bool, float]: A tuple containing:
-            - bool: Whether the answer is considered correct
-            - float: Confidence score (0-1) for the verification
+        AnswerSimilarity: Object containing:
+            - correct (bool): Whether the similarity score meets or exceeds the threshold
+            - similarity (float): Similarity score (0-1) between the two answers
     """
-    start_time = time.time()
-
     lm = dspy.LM(model=llm_info.url, api_key=llm_info.api_key)
     dspy.configure(lm=lm)
 
-    answer_verifier = AnswerVerifier()
-    answer_verification: dspy.Prediction = answer_verifier.forward(
-        question=question, answer=answer, ground_truth=ground_truth
-    )
+    start_time = time.time()
 
-    answer_is_correct: bool = answer_verification.get("answer_is_correct") or False
-    verification_confidence = answer_verification.get("confidence") or 0.0
+    # Try to use MLflow span, but don't fail if MLflow is not available
+    try:
+        with mlflow.start_span(name="AnswerVerifier"):
+            answer_verifier = AnswerVerifier()
+            answer_verification: ModuleOutput = answer_verifier.forward(
+                question=question,
+                first_answer=first_answer,
+                second_answer=second_answer,
+            )
+    except Exception as e:
+        # If MLflow is not available, run without it
+        answer_verifier = AnswerVerifier()
+        answer_verification: ModuleOutput = answer_verifier.forward(
+            question=question,
+            first_answer=first_answer,
+            second_answer=second_answer,
+        )
 
-    # Calculate duration and get token counts from LM history
-    duration = time.time() - start_time
+    # Extract similarity score from the result
+    if answer_verification.status == "success" and answer_verification.result:
+        similarity_score = getattr(answer_verification.result, "similarity_score", 0.0)
+        reasoning = getattr(
+            answer_verification.result, "reasoning", "No reasoning trace available."
+        )
 
-    # Get token counts from the last LM call in history
-    history: list[dict] = lm.history or [{}]
-    input_tokens = history[-1].get("usage", {}).get("prompt_tokens", 0)
-    output_tokens = history[-1].get("usage", {}).get("completion_tokens", 0)
+        # Determine if answers are correct based on threshold
+        correct = similarity_score >= threshold
 
-    # Create and insert log entry
-    log_entry = LogRow(
-        run_id=run_id,
-        agent_name="AnswerVerifier",
-        step_number=-1,
-        timestamp=datetime.now(),
-        model_output=f"Answer verification result: {answer_is_correct} with confidence {verification_confidence}",
-        action_input_code=f"Question: {question}\nAnswer: {answer}\nGround Truth: {ground_truth}",
-        action_output=str((answer_is_correct, verification_confidence)),
-        duration=duration,
-        input_tokens=input_tokens,
-        output_tokens=output_tokens,
-    )
-    insert_new_log(log_entry)
+        # Calculate duration and get token counts from LM history
+        duration = time.time() - start_time
 
-    return (answer_is_correct, verification_confidence)
+        # Get token counts from the last LM call in history
+        history: list[dict] = lm.history or [{}]
+        input_tokens = history[-1].get("usage", {}).get("prompt_tokens", 0)
+        output_tokens = history[-1].get("usage", {}).get("completion_tokens", 0)
+
+        # Create and insert log entry
+        log_entry = LogRow(
+            run_id=run_id,
+            agent_name="AnswerVerifier",
+            step_number=-1,
+            timestamp=datetime.now(),
+            model_output=f"Answer similarity result: {correct} with similarity score {similarity_score}",
+            action_input_code=f"Question: {question}\nFirst Answer: {first_answer}\nSecond Answer: {second_answer}",
+            action_output=str(
+                AnswerSimilarity(
+                    correct=correct,
+                    similarity_score=similarity_score,
+                    reasoning=reasoning,
+                )
+            ),
+            duration=duration,
+            input_tokens=input_tokens,
+            output_tokens=output_tokens,
+        )
+        insert_new_log(log_entry)
+
+        return AnswerSimilarity(
+            correct=correct,
+            similarity_score=similarity_score,
+            reasoning=reasoning,
+        )
+    else:
+        return AnswerSimilarity(status="error", error_msg=answer_verification.error_msg)
 
 
 if __name__ == "__main__":
-    (answer_is_correct, verification_confidence) = verify_answer(
+    # Try to set up MLflow tracking, but don't fail if server is not available
+    try:
+        mlflow.dspy.autolog()  # type: ignore
+        mlflow.set_tracking_uri("http://127.0.0.1:5000")
+        mlflow.set_experiment("AnswerVerifier")
+        print("MLflow tracking enabled")
+    except Exception as e:
+        print(f"MLflow tracking not available: {e}")
+        print("Continuing without MLflow tracking...")
+
+    result = verify_answer(
         question="How many doors are there in this house ?",
-        answer="I could count 13 doors in this house.",
-        ground_truth="There are 12 doors in this house.",
+        first_answer="I could count 123 doors in this house.",
+        second_answer="There are 120 doors in this house.",
+        threshold=0.8,
         # llm_info=LANGUAGE_MODELS["qwen3-30b-ollama"],
     )
-
     print(
-        f"Answer is correct: {answer_is_correct}\nConfidence score:{verification_confidence}\n"
+        f"Answer is correct: {result.correct}\nSimilarity score: {result.similarity_score}\n"
     )
+
+    print("END")
