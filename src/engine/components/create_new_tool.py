@@ -20,45 +20,31 @@ Key features:
 # %% Imports
 # =============== Imports and config =============== #
 import sys
-from typing import Literal, Optional, Dict, Callable
+from typing import Callable, Dict, Literal
 
 import dspy
 import mlflow
-from pydantic import BaseModel
 
 from src.config import (
     FUNCTION_BOILERPLATE,
+    IFCOPENSHELL_DOCUMENTATION_OVERVIEW,
     LANGUAGE_MODELS,
     LLM,
     ROOT_PATH,
-    IFCOPENSHELL_DOCUMENTATION_OVERVIEW,
 )
-from src.engine.util import _create_function_from_source_code
+from src.engine.schemas.module_output import ModuleOutput
+from src.engine.schemas.result import Result
 from src.engine.tools.primordial import (
     format_restrictions_info,
     get_python_interpreter,
     query_ifcopenshell_documentation,
     web_search,
 )
-from src.engine.util import get_logger
+from src.engine.util import _create_function_from_source_code, get_logger
 
 # Set up the path
 if ROOT_PATH not in sys.path:
     sys.path.append(ROOT_PATH)
-
-
-# %% Types
-# =============== Define Datatypes =============== #
-class Result(BaseModel):
-    python_code: Optional[str] = None
-    assessment_status: Optional[Literal["ok", "needs_improvement"]] = None
-    assessment_details: Optional[str] = None
-
-
-class ModuleOutput(BaseModel):
-    result: Result = Result()
-    status: Literal["error", "success"]
-    error_msg: Optional[str] = None
 
 
 # %% DSPy
@@ -665,8 +651,10 @@ def example_usage(
 
 
 if __name__ == "__main__":
-    import mlflow
     import os
+
+    import mlflow
+
     from src.config import TEST_IFC_PATH
 
     # Move content from last_log to logs
