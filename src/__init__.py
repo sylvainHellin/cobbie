@@ -1,8 +1,8 @@
-from .experiment.db import db
+from . import experiment
 from .config import LANGUAGE_MODELS, LLM, ROOT_PATH, FUNCTION_BOILERPLATE, LOG_LEVEL
 
 __all__ = [
-    "db",
+    "experiment",
     "LANGUAGE_MODELS",
     "LLM",
     "ROOT_PATH",
