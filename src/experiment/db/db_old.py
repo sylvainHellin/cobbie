@@ -1,8 +1,10 @@
+import os
 import sqlite3
 from datetime import datetime
 from sqlite3 import Connection
-from typing import Optional, Literal
+from typing import Optional, Literal, List
 
+import pandas as pd
 from dotenv import find_dotenv, load_dotenv
 from pydantic import BaseModel
 
@@ -187,32 +189,6 @@ def get_run_row(id: int) -> RunsRow:
                 pass
 
         return run
-
-
-def get_ifc_model_row(id: int) -> IfcModelRow:
-    """
-    Returns an IfcModelRow pydantic object with the values of the rows from the database for the given id.
-    If the id is invalid, the IfcModelRow object will only contain the id.
-    """
-    with connection() as db_conn:
-        cursor = db_conn.cursor()
-        cursor.execute("SELECT * FROM ifc_models WHERE id = ?", (id,))
-        result = cursor.fetchone()
-        ifc_model = IfcModelRow(id=id)
-        if result is not None:
-            try:
-                ifc_model.id = result[0]
-                ifc_model.project_name = result[1]
-                ifc_model.model_name = result[2]
-                ifc_model.model_path = result[3]
-                ifc_model.model_description = result[4]
-            except Exception as e:
-                print(
-                    f"Error while trying to fetch the ifc model with id: {id}\nError: {e}"
-                )
-                pass
-
-        return ifc_model
 
 
 def get_log_row(id: int) -> LogRow:
@@ -471,15 +447,15 @@ def drop_and_recreate_tables() -> None:
         conn.commit()
 
 
-def get_ifc_model(
+def get_ifc_models(
     id: Optional[int] = None,
     project_name: Optional[str] = None,
     model_name: Optional[str] = None,
-) -> IfcModelRow:
+) -> List[IfcModelRow]:
     """
-    Returns an IfcModelRow pydantic object with the values of the first row from the database
-    that matches the provided criteria (id, project_name, and/or model_name).
-    If no matching row is found, returns an empty IfcModelRow object.
+    Returns a list of IfcModelRow pydantic objects with the values of all rows from the database
+    that match the provided criteria (id, project_name, and/or model_name).
+    If no matching rows are found, returns an empty list.
     """
     with connection() as db_conn:
         cursor = db_conn.cursor()
@@ -500,50 +476,51 @@ def get_ifc_model(
             conditions.append("model_name = ?")
             params.append(model_name)
 
-        # If no conditions provided, return empty IfcModelRow
+        # If no conditions provided, return all models
         if not conditions:
-            return IfcModelRow()
+            query = "SELECT * FROM ifc_models"
+            cursor.execute(query)
+        else:
+            query = f"SELECT * FROM ifc_models WHERE {' AND '.join(conditions)}"
+            cursor.execute(query, params)
 
-        query = f"SELECT * FROM ifc_models WHERE {' AND '.join(conditions)} LIMIT 1"
-        cursor.execute(query, params)
+        results = cursor.fetchall()
+        ifc_models = []
 
-        result = cursor.fetchone()
-        ifc_model = IfcModelRow()
-        if result is not None:
+        for result in results:
+            ifc_model = IfcModelRow()
             try:
                 ifc_model.id = result[0]
                 ifc_model.project_name = result[1]
                 ifc_model.model_name = result[2]
                 ifc_model.model_path = result[3]
                 ifc_model.model_description = result[4]
+                ifc_models.append(ifc_model)
             except Exception as e:
                 print(
                     f"Error while trying to fetch the ifc model with id: {id}, project_name: {project_name}, model_name: {model_name}\nError: {e}"
                 )
-                pass
+                continue
 
-        return ifc_model
+        return ifc_models
 
 
-if __name__ == "__main__":
-    import json
-    import os
-    import pandas as pd
-    from src.config import (
-        DATASET_PATH,
-        CSV_IFC_MODELS_PATH,
-        DIRECTORY_IFC_MODELS_PATH,
-    )
-
-    # Define a custom JSON encoder for datetime objects
-    class DateTimeEncoder(json.JSONEncoder):
-        def default(self, o):
-            if isinstance(o, datetime):
-                return o.isoformat()
-            return super().default(o)
+def main():
+    """Initialize database and populate with data."""
+    try:
+        from src.config import (
+            DATASET_PATH,
+            CSV_IFC_MODELS_PATH,
+            DIRECTORY_IFC_MODELS_PATH,
+        )
+    except ImportError:
+        print(
+            "Warning: Could not import config. Make sure you're running from the correct directory."
+        )
+        return
 
     init_sqlite_db()
-    print("DB initialize successfully\n\n")
+    print("DB initialize successfully\n")
 
     # Drop and recreate all tables to ensure a clean slate
     drop_and_recreate_tables()
@@ -560,7 +537,7 @@ if __name__ == "__main__":
                 DIRECTORY_IFC_MODELS_PATH,
                 row.project_name,  # type: ignore
                 f"{row.model_name}.ifc",  # type: ignore
-            ),  # type: ignore
+            ),
             model_description=row.model_description,  # type: ignore
         )
         insert_new_ifc_model(ifc_model=ifc_model)
@@ -568,23 +545,28 @@ if __name__ == "__main__":
     # Dataset
     dataset = pd.read_csv(filepath_or_buffer=DATASET_PATH)
     for row in dataset.itertuples(name="dataset"):
-        ifc_model = get_ifc_model(
+        ifc_models_list = get_ifc_models(
             project_name=row.project,  # type: ignore
             model_name=row.ifc_model,  # type: ignore
         )
-        if ifc_model.id is None:
-            print(
-                f"Could not find a corresponding model for project: \
-                {row.project} and model: {row.ifc_model}"  # type: ignore
-            )  # type: ignore
-            continue
+        for model in ifc_models_list:
+            if model.id is None:
+                print(
+                    f"Could not find a corresponding model for project: "
+                    f"{row.project} and model: {row.ifc_model}"  # type: ignore
+                )
+                continue
 
-        new_row = DatasetRow(
-            question=row.question,  # type: ignore
-            answer=row.answer,  # type: ignore
-            ifc_id=ifc_model.id,
-        )
+            new_row = DatasetRow(
+                question=row.question,  # type: ignore
+                answer=row.answer,  # type: ignore
+                ifc_id=model.id,
+            )
 
-        insert_new_dataset_row(dataset=new_row)
+            insert_new_dataset_row(dataset=new_row)
 
     print("END")
+
+
+if __name__ == "__main__":
+    main()
