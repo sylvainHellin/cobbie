@@ -3,7 +3,7 @@ from src.config import LANGUAGE_MODELS, LLM
 from datetime import datetime
 import time
 from src.experiment.db import LogRow, insert_new_log
-from src.engine.schemas.module_output import ModuleOutput
+from src.engine.schemas import ModuleOutput, Result
 from src.engine.schemas.answer_similarity import AnswerSimilarity
 from src.engine.util.get_logger import get_logger
 from src.config import LOG_LEVEL
@@ -67,7 +67,9 @@ class AnswerVerifier(dspy.Module):
                     second_answer=second_answer,
                 )
                 module_output.status = "success"
-                module_output.result = prediction
+                module_output.result = Result(
+                    similarity_score=prediction.similarity_score
+                )
                 logger.debug(
                     f"\nSimilarity score: {prediction.similarity_score}\nReasoning: {prediction.reasoning}"
                 )
