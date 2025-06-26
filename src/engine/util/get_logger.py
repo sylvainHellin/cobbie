@@ -1,13 +1,15 @@
-from typing import Literal
 import logging
 import os
-from src.config import ROOT_PATH
+from logging import Logger
+from typing import Literal
+
+from src.config import LOG_LEVEL, ROOT_PATH
 
 
 def get_logger(
     name: str = __name__,
-    log_level: Literal["DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"] = "DEBUG",
-):
+    log_level: Literal["DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"] = LOG_LEVEL,
+) -> Logger:
     """Configure and return a logger with the specified name and log level.
 
     Args:
