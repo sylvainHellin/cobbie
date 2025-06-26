@@ -14,6 +14,7 @@ VECTORSTORE_PATH = os.path.join(ROOT_PATH, "src/engine/tools/primordial/vectorst
 DB_PATH = os.path.join(ROOT_PATH, "src/experiment/db/db.db")
 CSV_IFC_MODELS_PATH = os.path.join(ROOT_PATH, "src/experiment/db/ifc_models.csv")
 DIRECTORY_IFC_MODELS_PATH = os.path.join(ROOT_PATH, "src/experiment/bim_models")
+CREATED_TOOLS_PATH = os.path.join(ROOT_PATH, "src/engine/tools/created")
 
 # Load the overview of the documentation of IfcOpenShell
 doc_path = os.path.join(
