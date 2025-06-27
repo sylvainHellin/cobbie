@@ -142,14 +142,19 @@ class TrainingModule(dspy.Module):
 
 
 def main(
-    lm_name: str = "claude",
+    lm_name: str = "gemini-flash",
     log_level: Literal["DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"] = "DEBUG",
     training_size: Optional[int] = 2,
     similarity_treshold: float = 0.8,
 ):
     # configure dspy
     lm_info = LANGUAGE_MODELS[lm_name]
-    lm = dspy.LM(model=lm_info.url, api_key=lm_info.api_key)
+    lm = dspy.LM(
+        model=lm_info.url,
+        api_key=lm_info.api_key,
+        max_tokens=5000,
+        max_output_tokens=5000,
+    )
     dspy.configure(lm=lm)
 
     # setup mlflow
