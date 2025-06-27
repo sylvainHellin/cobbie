@@ -47,7 +47,7 @@ LANGUAGE_MODELS["claude"] = LLM(
     url="anthropic/claude-sonnet-4-20250514", api_key=ANTHROPIC_API_KEY, name="claude"
 )
 LANGUAGE_MODELS["gemini-flash"] = LLM(
-    url="gemini/gemini-2.0-flash", api_key=GEMINI_API_KEY, name="gemini-flash"
+    url="gemini/gemini-2.5-flash", api_key=GEMINI_API_KEY, name="gemini-flash"
 )
 LANGUAGE_MODELS["gemini-pro"] = LLM(
     url="gemini/gemini-2.5-pro-preview-05-06", api_key=GEMINI_API_KEY, name="gemini-pro"
