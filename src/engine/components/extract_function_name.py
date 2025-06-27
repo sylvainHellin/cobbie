@@ -12,7 +12,8 @@ class ExtractFunctionNameSignature(dspy.Signature):
     If a name is provided in the function signature, use that. If none is provided, suggest a meaningful alternative.
     """
 
-    function_requiements: str = dspy.InputField()
+    function_requirements: str = dspy.InputField()
+    reasoning: str = dspy.OutputField()
     function_name: str = dspy.OutputField()
 
 
