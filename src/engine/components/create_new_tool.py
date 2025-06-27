@@ -52,45 +52,37 @@ if ROOT_PATH not in sys.path:
 class NewToolSignature(dspy.Signature):
     f"""
     Create a Python function that implements the requirements using the IfcOpenShell Python library.
-    This function will be used as a "tool" by an LLM-based ReAct agent to answer some user's query related to a BIM model.
+    Your goal is to be an action-oriented programmer. Write code, test it, and refine it.
 
-    ⚠️  CRITICAL REQUIREMENTS - The function MUST:
-    - Accept path_ifc_file: str as the FIRST and ONLY parameter (a file path string, NOT an ifcopenshell.file object)
-    - Load the IFC file internally using: ifc_file = ifcopenshell.open(path_ifc_file)
-    - Work with the loaded ifc_file object for all IFC operations
-    - Return appropriate data structures (lists, dicts, etc.) not formatted strings
-    - Be well-documented with docstrings and type hints
-    - Follow the EXACT pattern below
+    **Programming Strategy:**
+    1.  **Act First:** Start by writing a minimal amount of code to tackle a small part of the problem.
+    2.  **Test Incrementally:** Use the `python_interpreter` tool to execute your code snippets and verify your assumptions. This is your primary way of learning how to solve the problem.
+    3.  **Research as Needed:** If your code fails, use `query_ifcopenshell_documentation` or `web_search` to find specific answers, then go back to writing and testing code. Do not spend too much time researching upfront.
+    4.  **Build the Final Function:** Once you have working snippets, assemble them into the final function.
+
+    ⚠️  CRITICAL REQUIREMENTS - The final function MUST:
+    - Accept path_ifc_file: str as the FIRST and ONLY parameter.
+    - Load the IFC file internally: `ifc_file = ifcopenshell.open(path_ifc_file)`
+    - Return data structures (e.g., lists, dicts), not formatted strings.
+    - Be well-documented with docstrings and type hints.
 
     🔥 MANDATORY IMPLEMENTATION PATTERN (DO NOT DEVIATE):
     ```python
-    def your_function_name(path_ifc_file: str) -> List[Any]:
+    def your_function_name(path_ifc_file: str) -> list[any]:
         '''Your docstring here'''
         # Load the IFC file from the provided path
         ifc_file = ifcopenshell.open(path_ifc_file)
 
-        # Work with the loaded ifc_file object
-        results = ifc_file.by_type("YourEntityType")
+        # ... your logic here ...
+        results = ifc_file.by_type("IfcSpace")  # Example
 
         # Return actual data, not strings
         return list(results)
     ```
 
-    ❌ DO NOT CREATE FUNCTIONS LIKE:
-    - def function_name(model): ...
-    - def function_name(ifc_file): ...
-    - def function_name(file): ...
-
-    ✅ ONLY CREATE FUNCTIONS LIKE:
-    - def function_name(path_ifc_file: str): ...
-
-    IMPORTANT:
-    - Do not make assumptions about IFC schema or data structure.
-    - Use the provided tools to research proper implementation details through documentation and web search.
-
     {format_restrictions_info()}
 
-    Below is an overview of how the structure of the IfcOpenShell Python library. For details regarding the implementation of each available method, use the `query_ifcopenshell_documentation` tool.
+    Below is an overview of the IfcOpenShell library. Use it for a general understanding, but rely on testing code for specifics.
 
     Overview:
     {IFCOPENSHELL_DOCUMENTATION_OVERVIEW}
@@ -254,21 +246,27 @@ class ToolAssessor(dspy.Module):
 
 # =============== Define ToolCorrector =============== #
 class ToolCorrectionSignature(dspy.Signature):
-    f"""
-    Update a Python function implementation to incorporate the provided feedback.
+    """
+    Correct a Python function based on assessment feedback.
+
+    Your primary goal is to fix the provided code, not to rewrite it from scratch.
+    Analyze the 'current_function_implementation' and 'detailed_function_assessment' to understand the error.
+    Then, produce a 'new_function_implementation' with the necessary corrections.
+
+    ⚠️ KEY CORRECTION GUIDELINES:
+    - **Focus on the fix:** Directly address the issues described in the assessment.
+    - **Minimize changes:** Only alter the parts of the code that are broken.
+    - **Do not research:** Avoid using tools like 'web_search' or 'query_ifcopenshell_documentation'. The goal is to fix the existing code with the information at hand.
+    - **Handle syntax errors first:** If the assessment mentions a syntax error, fix that first. This is often a simple typo or mistake.
+    - **Maintain signature:** Ensure the corrected function still adheres to the required signature: `def function_name(path_ifc_file: str) -> ...:`
+
     An assessment was conducted on the current implementation and has assessed that it is not working properly. Details regarding what needs to be changed are provided.
 
-    ⚠️  CRITICAL REQUIREMENTS - The corrected function MUST:
-    - Accept path_ifc_file: str as the FIRST and ONLY parameter (a file path string, NOT an ifcopenshell.file object)
-    - Load the IFC file internally using: ifc_file = ifcopenshell.open(path_ifc_file)
-    - Work with the loaded ifc_file object for all IFC operations
-    - Return appropriate data structures (lists, dicts, etc.) not formatted strings
-    - Be well-documented with docstrings and type hints
-    - Follow the EXACT pattern below
+    Here is the implementation pattern to follow:
 
     🔥 MANDATORY IMPLEMENTATION PATTERN (DO NOT DEVIATE):
     ```python
-    def your_function_name(path_ifc_file: str) -> List[Any]:
+    def your_function_name(path_ifc_file: str) -> list[any]:
         '''Your docstring here'''
         # Load the IFC file from the provided path
         ifc_file = ifcopenshell.open(path_ifc_file)
@@ -280,24 +278,7 @@ class ToolCorrectionSignature(dspy.Signature):
         return list(results)
     ```
 
-    ❌ DO NOT CREATE FUNCTIONS LIKE:
-    - def function_name(model): ...
-    - def function_name(ifc_file): ...
-    - def function_name(file): ...
-
-    ✅ ONLY CREATE FUNCTIONS LIKE:
-    - def function_name(path_ifc_file: str): ...
-
-    IMPORTANT:
-    - Do not make assumptions about IFC schema or data structure.
-    - Use the provided tools to research proper implementation details through documentation and web search.
-
-    {format_restrictions_info()}
-
-    Below is an overview of how the structure of the IfcOpenShell Python library. For details regarding the implementation of each available method, use the `query_ifcopenshell_documentation` tool.
-
-    Overview:
-    {IFCOPENSHELL_DOCUMENTATION_OVERVIEW}
+    Now, fix the provided function.
     """
 
     # inputs
