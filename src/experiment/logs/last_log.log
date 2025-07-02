@@ -1,3 +1,773 @@
-2025-06-27 16:36:15,147 : INFO : Training run : Try to answer new question: What is the width of the emergency escape routes?
+2025-06-27 17:18:53,580 : INFO : Training run : Try to answer new question: What is the width of the emergency escape routes?
 
 
+2025-06-27 17:18:53,658 : DEBUG : ToolCreator : Tools allowed for the ToolCreator: web_search
+    -query_ifcopenshell_documentation
+    -python_interpreter
+2025-06-27 17:18:53,666 : INFO : ToolProgrammer : Agent initialized.
+2025-06-27 17:18:53,709 : INFO : ToolProgrammer : Starting forward pass.
+2025-06-27 17:18:53,709 : DEBUG : ToolProgrammer : 
+question: What is the width of the emergency escape routes?
+path_ifc_models: /Users/sylvainhellin/GitHub/ifcAnswerEngineV3/src/experiment/bim_models/duplex/arc.ifc
+available tools: 
+ -get_room_ceiling_height
+2025-06-27 17:18:54,301 : INFO : python_interpreter : tool called.
+2025-06-27 17:18:54,301 : DEBUG : python_interpreter : code to interpret:
+```python
+import ifcopenshell; ifc_file = ifcopenshell.open('/Users/sylvainhellin/GitHub/ifcAnswerEngineV3/src/experiment/bim_models/duplex/arc.ifc'); doors = ifc_file.by_type('IfcDoor'); print([door.Name for door in doors])
+```
+
+2025-06-27 17:18:54,301 : DEBUG : python_interpreter : Authorized imports: math; statistics; random; time; datetime; itertools; collections; re; unicodedata; queue; stat; numpy; pandas; json; os; sys; pathlib; glob; shutil; tempfile; typing; copy; pickle; base64; hashlib; uuid; urllib; urllib.parse; urllib.request; string; textwrap; difflib; csv; inspect; logging; warnings; traceback; pprint; zipfile; tarfile; gzip; ifcopenshell; ifcopenshell.*; ifcopenshell.util.element; ifcopenshell.util.shape; ifcopenshell.util.placement; ifcopenshell.util.geolocation; ifcopenshell.util.system; ifcopenshell.geom; ifcopenshell.file; ifcopenshell.entity_instance
+2025-06-27 17:18:54,301 : DEBUG : python_interpreter : Authorized functions: print; isinstance; range; float; int; bool; str; set; list; dict; tuple; round; ceil; floor; log; exp; sin; cos; tan; asin; acos; atan; atan2; degrees; radians; pow; sqrt; len; sum; max; min; abs; enumerate; zip; reversed; sorted; all; any; map; filter; ord; chr; next; iter; divmod; callable; getattr; hasattr; setattr; issubclass; type; complex; bytes; bytearray; memoryview; slice; delattr; vars; dir; id; hash; repr; ascii; bin; hex; oct; help; globals; locals; eval; exec; compile; open; input; BaseException; Exception; ValueError; TypeError; AttributeError; IndexError; KeyError; FileNotFoundError; RuntimeError; get_room_ceiling_height
+2025-06-27 17:18:54,359 : INFO : python_interpreter : Tool execution completed successfully.
+2025-06-27 17:18:54,359 : DEBUG : python_interpreter : Returned value: None
+2025-06-27 17:18:54,359 : DEBUG : python_interpreter : Console output (logs): ['M_Single-Flush:0762 x 2032mm:0762 x 2032mm:204034', 'M_Single-Flush:0864 x 2032mm:0864 x 2032mm:150478', 'M_Single-Flush:0864 x 2032mm:0864 x 2032mm:150378', 'M_Single-Flush:0762 x 2032mm:0762 x 2032mm:203720', 'M_Single-Flush:0762 x 2032mm:0762 x 2032mm:150173', 'M_Single-Flush:0864 x 2032mm:0864 x 2032mm:159734', 'M_Single-Flush:0762 x 2032mm:0762 x 2032mm:150257', 'M_Single-Flush:0864 x 2032mm:0864 x 2032mm:160208', 'M_Single-Flush:0864 x 2032mm:0864 x 2032mm:159834', 'M_Single-Flush:0864 x 2032mm:0864 x 2032mm:160065', 'M_Single-Glass 1:0813 x 2420mm:0813 x 2420mm:171975', 'M_Single-Flush:1250mm x 2010mm:1250mm x 2010mm:146596', 'M_Single-Flush:1250mm x 2010mm:1250mm x 2010mm:146678', 'M_Single-Glass 1:0813 x 2420mm:0813 x 2420mm:171853']
+
+2025-06-27 17:18:54,359 : DEBUG : python_interpreter : Is final: False
+2025-06-27 17:18:54,841 : INFO : python_interpreter : tool called.
+2025-06-27 17:18:54,842 : DEBUG : python_interpreter : code to interpret:
+```python
+import ifcopenshell; ifc_file = ifcopenshell.open('/Users/sylvainhellin/GitHub/ifcAnswerEngineV3/src/experiment/bim_models/duplex/arc.ifc'); doors = ifc_file.by_type('IfcDoor'); emergency_doors = [door for door in doors if 'emergency' in door.Name.lower()]; print([door.Name for door in emergency_doors])
+```
+
+2025-06-27 17:18:54,842 : DEBUG : python_interpreter : Authorized imports: math; statistics; random; time; datetime; itertools; collections; re; unicodedata; queue; stat; numpy; pandas; json; os; sys; pathlib; glob; shutil; tempfile; typing; copy; pickle; base64; hashlib; uuid; urllib; urllib.parse; urllib.request; string; textwrap; difflib; csv; inspect; logging; warnings; traceback; pprint; zipfile; tarfile; gzip; ifcopenshell; ifcopenshell.*; ifcopenshell.util.element; ifcopenshell.util.shape; ifcopenshell.util.placement; ifcopenshell.util.geolocation; ifcopenshell.util.system; ifcopenshell.geom; ifcopenshell.file; ifcopenshell.entity_instance
+2025-06-27 17:18:54,842 : DEBUG : python_interpreter : Authorized functions: print; isinstance; range; float; int; bool; str; set; list; dict; tuple; round; ceil; floor; log; exp; sin; cos; tan; asin; acos; atan; atan2; degrees; radians; pow; sqrt; len; sum; max; min; abs; enumerate; zip; reversed; sorted; all; any; map; filter; ord; chr; next; iter; divmod; callable; getattr; hasattr; setattr; issubclass; type; complex; bytes; bytearray; memoryview; slice; delattr; vars; dir; id; hash; repr; ascii; bin; hex; oct; help; globals; locals; eval; exec; compile; open; input; BaseException; Exception; ValueError; TypeError; AttributeError; IndexError; KeyError; FileNotFoundError; RuntimeError; get_room_ceiling_height
+2025-06-27 17:18:54,894 : INFO : python_interpreter : Tool execution completed successfully.
+2025-06-27 17:18:54,894 : DEBUG : python_interpreter : Returned value: None
+2025-06-27 17:18:54,894 : DEBUG : python_interpreter : Console output (logs): []
+
+2025-06-27 17:18:54,894 : DEBUG : python_interpreter : Is final: False
+2025-06-27 17:18:55,550 : INFO : python_interpreter : tool called.
+2025-06-27 17:18:55,550 : DEBUG : python_interpreter : code to interpret:
+```python
+import ifcopenshell; ifc_file = ifcopenshell.open('/Users/sylvainhellin/GitHub/ifcAnswerEngineV3/src/experiment/bim_models/duplex/arc.ifc'); doors = ifc_file.by_type('IfcDoor'); door_properties = []
+for door in doors:
+    props = {prop.Name: prop.NominalValue for prop in door.IsDefinedBy[0].RelatingPropertyDefinition.HasProperties if prop.NominalValue}
+    door_properties.append({door.Name: props});
+print(door_properties)
+```
+
+2025-06-27 17:18:55,550 : DEBUG : python_interpreter : Authorized imports: math; statistics; random; time; datetime; itertools; collections; re; unicodedata; queue; stat; numpy; pandas; json; os; sys; pathlib; glob; shutil; tempfile; typing; copy; pickle; base64; hashlib; uuid; urllib; urllib.parse; urllib.request; string; textwrap; difflib; csv; inspect; logging; warnings; traceback; pprint; zipfile; tarfile; gzip; ifcopenshell; ifcopenshell.*; ifcopenshell.util.element; ifcopenshell.util.shape; ifcopenshell.util.placement; ifcopenshell.util.geolocation; ifcopenshell.util.system; ifcopenshell.geom; ifcopenshell.file; ifcopenshell.entity_instance
+2025-06-27 17:18:55,550 : DEBUG : python_interpreter : Authorized functions: print; isinstance; range; float; int; bool; str; set; list; dict; tuple; round; ceil; floor; log; exp; sin; cos; tan; asin; acos; atan; atan2; degrees; radians; pow; sqrt; len; sum; max; min; abs; enumerate; zip; reversed; sorted; all; any; map; filter; ord; chr; next; iter; divmod; callable; getattr; hasattr; setattr; issubclass; type; complex; bytes; bytearray; memoryview; slice; delattr; vars; dir; id; hash; repr; ascii; bin; hex; oct; help; globals; locals; eval; exec; compile; open; input; BaseException; Exception; ValueError; TypeError; AttributeError; IndexError; KeyError; FileNotFoundError; RuntimeError; get_room_ceiling_height
+2025-06-27 17:18:55,606 : INFO : python_interpreter : Tool execution completed successfully.
+2025-06-27 17:18:55,606 : DEBUG : python_interpreter : Returned value: None
+2025-06-27 17:18:55,606 : DEBUG : python_interpreter : Console output (logs): [{'M_Single-Flush:0762 x 2032mm:0762 x 2032mm:204034': {'Phase Created': IfcLabel('New Construction')}}, {'M_Single-Flush:0864 x 2032mm:0864 x 2032mm:150478': {'Phase Created': IfcLabel('New Construction')}}, {'M_Single-Flush:0864 x 2032mm:0864 x 2032mm:150378': {'Phase Created': IfcLabel('New Construction')}}, {'M_Single-Flush:0762 x 2032mm:0762 x 2032mm:203720': {'Reference': IfcLabel('M_Single-Flush:0762 x 2032mm'), 'IsExternal': IfcBoolean(.F.), 'FireRating': IfcLabel('Fire Rating')}}, {'M_Single-Flush:0762 x 2032mm:0762 x 2032mm:150173': {'Mark': IfcLabel('A104')}}, {'M_Single-Flush:0864 x 2032mm:0864 x 2032mm:159734': {'Level': IfcLabel('Level 2'), 'Sill Height': IfcLengthMeasure(0.)}}, {'M_Single-Flush:0762 x 2032mm:0762 x 2032mm:150257': {'Reference': IfcLabel('M_Single-Flush:0762 x 2032mm'), 'IsExternal': IfcBoolean(.F.), 'FireRating': IfcLabel('Fire Rating')}}, {'M_Single-Flush:0864 x 2032mm:0864 x 2032mm:160208': {'Reference': IfcLabel('M_Single-Flush:0864 x 2032mm'), 'IsExternal': IfcBoolean(.F.), 'FireRating': IfcLabel('Fire Rating')}}, {'M_Single-Flush:0864 x 2032mm:0864 x 2032mm:159834': {'Head Height': IfcLengthMeasure(2.032), 'InstallationDate': IfcLabel('InstallationDate'), 'SerialNumber': IfcLabel('SerialNumber'), 'WarrantyStartDate': IfcLabel('WarrantyStartDate'), 'BarCode': IfcLabel('BarCode'), 'AssetIdentifier': IfcLabel('AssetIdentifier'), 'TagNumber': IfcLabel('TagNumber')}}, {'M_Single-Flush:0864 x 2032mm:0864 x 2032mm:160065': {'Mark': IfcLabel('B204')}}, {'M_Single-Glass 1:0813 x 2420mm:0813 x 2420mm:171975': {'Reference': IfcLabel('M_Single-Glass 1:0813 x 2420mm'), 'IsExternal': IfcBoolean(.T.), 'FireRating': IfcLabel('Fire Rating')}}, {'M_Single-Flush:1250mm x 2010mm:1250mm x 2010mm:146596': {'Reference': IfcLabel('M_Single-Flush:1250mm x 2010mm'), 'IsExternal': IfcBoolean(.T.), 'FireRating': IfcLabel('Fire Rating')}}, {'M_Single-Flush:1250mm x 2010mm:1250mm x 2010mm:146678': {'Reference': IfcLabel('M_Single-Flush:1250mm x 2010mm'), 'IsExternal': IfcBoolean(.T.), 'FireRating': IfcLabel('Fire Rating')}}, {'M_Single-Glass 1:0813 x 2420mm:0813 x 2420mm:171853': {'Level': IfcLabel('Level 1'), 'Sill Height': IfcLengthMeasure(0.)}}]
+
+2025-06-27 17:18:55,606 : DEBUG : python_interpreter : Is final: False
+2025-06-27 17:18:57,001 : INFO : python_interpreter : tool called.
+2025-06-27 17:18:57,001 : DEBUG : python_interpreter : code to interpret:
+```python
+import ifcopenshell; ifc_file = ifcopenshell.open('/Users/sylvainhellin/GitHub/ifcAnswerEngineV3/src/experiment/bim_models/duplex/arc.ifc'); doors = ifc_file.by_type('IfcDoor'); external_doors = []
+for door in doors:
+ if hasattr(door, 'IsDefinedBy'):
+ for definition in door.IsDefinedBy:
+ if definition.RelatingPropertyDefinition.is_a('IfcPropertySet'):
+ for prop in definition.RelatingPropertyDefinition.HasProperties:
+ if prop.Name == 'IsExternal' and prop.NominalValue.wrappedValue:
+ external_doors.append(door)
+print([door.Name for door in external_doors])
+```
+
+2025-06-27 17:18:57,002 : DEBUG : python_interpreter : Authorized imports: math; statistics; random; time; datetime; itertools; collections; re; unicodedata; queue; stat; numpy; pandas; json; os; sys; pathlib; glob; shutil; tempfile; typing; copy; pickle; base64; hashlib; uuid; urllib; urllib.parse; urllib.request; string; textwrap; difflib; csv; inspect; logging; warnings; traceback; pprint; zipfile; tarfile; gzip; ifcopenshell; ifcopenshell.*; ifcopenshell.util.element; ifcopenshell.util.shape; ifcopenshell.util.placement; ifcopenshell.util.geolocation; ifcopenshell.util.system; ifcopenshell.geom; ifcopenshell.file; ifcopenshell.entity_instance
+2025-06-27 17:18:57,002 : DEBUG : python_interpreter : Authorized functions: print; isinstance; range; float; int; bool; str; set; list; dict; tuple; round; ceil; floor; log; exp; sin; cos; tan; asin; acos; atan; atan2; degrees; radians; pow; sqrt; len; sum; max; min; abs; enumerate; zip; reversed; sorted; all; any; map; filter; ord; chr; next; iter; divmod; callable; getattr; hasattr; setattr; issubclass; type; complex; bytes; bytearray; memoryview; slice; delattr; vars; dir; id; hash; repr; ascii; bin; hex; oct; help; globals; locals; eval; exec; compile; open; input; BaseException; Exception; ValueError; TypeError; AttributeError; IndexError; KeyError; FileNotFoundError; RuntimeError; get_room_ceiling_height
+2025-06-27 17:18:57,002 : ERROR : python_interpreter : Error during tool execution: Code parsing failed on line 4 due to: IndentationError
+ for definition in door.IsDefinedBy:
+  ^
+Error: expected an indented block after 'if' statement on line 3 (<unknown>, line 4)
+2025-06-27 17:18:57,553 : INFO : python_interpreter : tool called.
+2025-06-27 17:18:57,553 : DEBUG : python_interpreter : code to interpret:
+```python
+import ifcopenshell; ifc_file = ifcopenshell.open('/Users/sylvainhellin/GitHub/ifcAnswerEngineV3/src/experiment/bim_models/duplex/arc.ifc'); doors = ifc_file.by_type('IfcDoor'); external_doors = []
+for door in doors:
+    if hasattr(door, 'IsDefinedBy'):
+        for definition in door.IsDefinedBy:
+            if definition.RelatingPropertyDefinition.is_a('IfcPropertySet'):
+                for prop in definition.RelatingPropertyDefinition.HasProperties:
+                    if prop.Name == 'IsExternal' and prop.NominalValue.wrappedValue:
+                        external_doors.append(door)
+print([door.Name for door in external_doors])
+```
+
+2025-06-27 17:18:57,553 : DEBUG : python_interpreter : Authorized imports: math; statistics; random; time; datetime; itertools; collections; re; unicodedata; queue; stat; numpy; pandas; json; os; sys; pathlib; glob; shutil; tempfile; typing; copy; pickle; base64; hashlib; uuid; urllib; urllib.parse; urllib.request; string; textwrap; difflib; csv; inspect; logging; warnings; traceback; pprint; zipfile; tarfile; gzip; ifcopenshell; ifcopenshell.*; ifcopenshell.util.element; ifcopenshell.util.shape; ifcopenshell.util.placement; ifcopenshell.util.geolocation; ifcopenshell.util.system; ifcopenshell.geom; ifcopenshell.file; ifcopenshell.entity_instance
+2025-06-27 17:18:57,553 : DEBUG : python_interpreter : Authorized functions: print; isinstance; range; float; int; bool; str; set; list; dict; tuple; round; ceil; floor; log; exp; sin; cos; tan; asin; acos; atan; atan2; degrees; radians; pow; sqrt; len; sum; max; min; abs; enumerate; zip; reversed; sorted; all; any; map; filter; ord; chr; next; iter; divmod; callable; getattr; hasattr; setattr; issubclass; type; complex; bytes; bytearray; memoryview; slice; delattr; vars; dir; id; hash; repr; ascii; bin; hex; oct; help; globals; locals; eval; exec; compile; open; input; BaseException; Exception; ValueError; TypeError; AttributeError; IndexError; KeyError; FileNotFoundError; RuntimeError; get_room_ceiling_height
+2025-06-27 17:18:57,613 : ERROR : python_interpreter : Error during tool execution: Code execution failed at line 'for door in doors:
+    if hasattr(door, 'IsDefinedBy'):
+        for definition in door.IsDefinedBy:
+            if definition.RelatingPropertyDefinition.is_a('IfcPropertySet'):
+                for prop in definition.RelatingPropertyDefinition.HasProperties:
+                    if prop.Name == 'IsExternal' and prop.NominalValue.wrappedValue:
+                        external_doors.append(door)' due to: AttributeError: entity instance of type 'IFC2X3.IfcRelDefinesByType' has no attribute 'RelatingPropertyDefinition'
+2025-06-27 17:18:58,555 : INFO : ToolProgrammer : Forward pass completed with status: 'success'
+2025-06-27 17:18:58,555 : DEBUG : ToolProgrammer : Answer: We need a new function that can safely retrieve the properties of doors and identify those that are likely to be emergency escape routes (e.g., external doors or doors with a fire rating). The function should handle different types of 'IsDefinedBy' relationships and extract relevant properties. Here's a possible function signature:
+
+```python
+def get_door_properties(ifc_file_path, door_identifier=None):
+    """
+    Retrieves the properties of doors in an IFC model.
+
+    Args:
+    - ifc_file_path (str): Path to the IFC file.
+    - door_identifier (str or int, optional): Identifier for a specific door. Defaults to None.
+
+    Returns:
+    - dict: Dictionary containing door names as keys and their properties as values.
+    """
+```
+
+This function would allow us to retrieve the properties of doors and then filter them based on specific conditions (e.g., 'IsExternal' or 'FireRating') to identify emergency escape routes and their widths.
+2025-06-27 17:18:58,555 : INFO : TrainingModule : A new tool is needed to answer this question.
+2025-06-27 17:18:58,556 : DEBUG : TrainingModule : Requirements for the new tool:
+We need a new function that can safely retrieve the properties of doors and identify those that are likely to be emergency escape routes (e.g., external doors or doors with a fire rating). The function should handle different types of 'IsDefinedBy' relationships and extract relevant properties. Here's a possible function signature:
+
+```python
+def get_door_properties(ifc_file_path, door_identifier=None):
+    """
+    Retrieves the properties of doors in an IFC model.
+
+    Args:
+    - ifc_file_path (str): Path to the IFC file.
+    - door_identifier (str or int, optional): Identifier for a specific door. Defaults to None.
+
+    Returns:
+    - dict: Dictionary containing door names as keys and their properties as values.
+    """
+```
+
+This function would allow us to retrieve the properties of doors and then filter them based on specific conditions (e.g., 'IsExternal' or 'FireRating') to identify emergency escape routes and their widths.
+2025-06-27 17:18:58,557 : INFO : NameExtractor : Starting forward pass
+2025-06-27 17:18:58,927 : INFO : NameExtractor : Completed forward pass
+2025-06-27 17:18:58,927 : INFO : TrainingModule : Name of the function extracted successfully.
+2025-06-27 17:18:58,927 : DEBUG : TrainingModule : Name of the function: get_door_properties
+2025-06-27 17:18:58,927 : INFO : ToolCreator : Starting the creation of the tool: get_door_properties
+2025-06-27 17:18:58,927 : INFO : ToolCreator : Creating initial function
+2025-06-27 17:18:59,478 : INFO : query_ifc_documentation : IfcOpenShell documentation query tool called
+2025-06-27 17:18:59,478 : DEBUG : query_ifc_documentation : Query: How to extract properties of doors in IFC using IfcOpenShell
+2025-06-27 17:18:59,478 : DEBUG : query_ifc_documentation : n_results: 5
+2025-06-27 17:18:59,478 : DEBUG : query_ifc_documentation : docstring_filter: None
+2025-06-27 17:18:59,478 : INFO : query_ifc_documentation : Connecting to IfcOpenShell documentation database...
+2025-06-27 17:18:59,479 : DEBUG : get_db_client : Connecting to database at: /Users/sylvainhellin/GitHub/ifcAnswerEngineV3/src/engine/tools/primordial/vectorstore
+2025-06-27 17:18:59,546 : DEBUG : get_db_client : Available collections: ['ifcopenshell']
+2025-06-27 17:18:59,547 : DEBUG : get_db_client : Successfully connected to ifcopenshell collection
+2025-06-27 17:18:59,547 : INFO : query_ifc_documentation : ✓ Database connection successful
+2025-06-27 17:18:59,547 : DEBUG : query_ifc_documentation : Database query filters - where_document: None
+2025-06-27 17:18:59,547 : INFO : query_ifc_documentation : Executing semantic search query...
+2025-06-27 17:19:00,190 : INFO : query_ifc_documentation : ✓ Database query completed successfully. Found 5 results
+2025-06-27 17:19:00,190 : DEBUG : query_ifc_documentation : Result 1 Metadata: {
+  "name": "entity_instance",
+  "type": "Class",
+  "module": "ifcopenshell.entity_instance"
+}
+2025-06-27 17:19:00,190 : DEBUG : query_ifc_documentation : Result 1 Document: Represents an entity (wall, slab, property, etc) of an IFC model
+
+An IFC model consists of entities. Examples of entities include walls,
+slabs, doors and so on. Entities can also be non-physical thing...
+2025-06-27 17:19:00,190 : DEBUG : query_ifc_documentation : Result 2 Metadata: {
+  "type": "function",
+  "name": "get_info",
+  "module": "ifcopenshell.entity_instance"
+}
+2025-06-27 17:19:00,190 : DEBUG : query_ifc_documentation : Result 2 Document: Return a dictionary of the entity_instance's properties (Python and IFC) and their values.
+
+:param include_identifier: Whether or not to include the STEP numerical identifier
+:param recursive: Whether...
+2025-06-27 17:19:00,190 : DEBUG : query_ifc_documentation : Result 3 Metadata: {
+  "module": "ifcopenshell.util.element",
+  "type": "function",
+  "name": "get_referenced_structures"
+}
+2025-06-27 17:19:00,190 : DEBUG : query_ifc_documentation : Result 3 Document: Retreives a list of referenced spatial elements
+
+Typically useful for multistorey elements, such as columns or facade
+elements, or elements that span multiple spaces or in-between spaces, such
+as stai...
+2025-06-27 17:19:00,190 : DEBUG : query_ifc_documentation : Result 4 Metadata: {
+  "name": "has_property",
+  "type": "function",
+  "module": "ifcopenshell.util.element"
+}
+2025-06-27 17:19:00,190 : DEBUG : query_ifc_documentation : Result 4 Document: Check if a product has a property with a given name.
+
+:param product: The IFC product
+:param property_name: The property name
+:return: True if the product has the property, False otherwise
+
+Example:
+
+...
+2025-06-27 17:19:00,190 : DEBUG : query_ifc_documentation : Result 5 Metadata: {
+  "name": "get_filled_void",
+  "type": "function",
+  "module": "ifcopenshell.util.element"
+}
+2025-06-27 17:19:00,190 : DEBUG : query_ifc_documentation : Result 5 Document: If the element is filling a void, get the void
+
+Examples include windows and doors which fill a opening inside a wall.
+
+:param element: The building element, typically a window or door
+:return: The If...
+2025-06-27 17:19:00,190 : INFO : query_ifc_documentation : ✓ Successfully formatted 5 results for return
+2025-06-27 17:19:00,891 : INFO : python_interpreter : tool called.
+2025-06-27 17:19:00,893 : DEBUG : python_interpreter : code to interpret:
+```python
+import ifcopenshell
+import ifcopenshell.util.element
+
+# Load a sample IFC file\model = ifcopenshell.open('path_to_sample_ifc_file.ifc')
+
+# Get all doors
+doors = model.by_type('IfcDoor')
+
+# Extract properties of the first door
+door = doors[0]
+psets = ifcopenshell.util.element.get_psets(door)
+print(psets)
+```
+
+2025-06-27 17:19:00,893 : DEBUG : python_interpreter : Authorized imports: math; statistics; random; time; datetime; itertools; collections; re; unicodedata; queue; stat; numpy; pandas; json; os; sys; pathlib; glob; shutil; tempfile; typing; copy; pickle; base64; hashlib; uuid; urllib; urllib.parse; urllib.request; string; textwrap; difflib; csv; inspect; logging; warnings; traceback; pprint; zipfile; tarfile; gzip; ifcopenshell; ifcopenshell.*; ifcopenshell.util.element; ifcopenshell.util.shape; ifcopenshell.util.placement; ifcopenshell.util.geolocation; ifcopenshell.util.system; ifcopenshell.geom; ifcopenshell.file; ifcopenshell.entity_instance
+2025-06-27 17:19:00,893 : DEBUG : python_interpreter : Authorized functions: print; isinstance; range; float; int; bool; str; set; list; dict; tuple; round; ceil; floor; log; exp; sin; cos; tan; asin; acos; atan; atan2; degrees; radians; pow; sqrt; len; sum; max; min; abs; enumerate; zip; reversed; sorted; all; any; map; filter; ord; chr; next; iter; divmod; callable; getattr; hasattr; setattr; issubclass; type; complex; bytes; bytearray; memoryview; slice; delattr; vars; dir; id; hash; repr; ascii; bin; hex; oct; help; globals; locals; eval; exec; compile; open; input; BaseException; Exception; ValueError; TypeError; AttributeError; IndexError; KeyError; FileNotFoundError; RuntimeError; web_search; query_ifcopenshell_documentation
+2025-06-27 17:19:00,910 : ERROR : python_interpreter : Error during tool execution: Code execution failed at line 'doors = model.by_type('IfcDoor')' due to: InterpreterError: The variable `model` is not defined.
+2025-06-27 17:19:02,484 : INFO : web_search : Tool called.
+2025-06-27 17:19:02,484 : DEBUG : web_search : Query: sample IFC file download
+2025-06-27 17:19:02,484 : DEBUG : web_search : Model: sonar
+2025-06-27 17:19:02,484 : DEBUG : web_search : Making request to Perplexity API with payload: {
+  "model": "sonar",
+  "messages": [
+    {
+      "role": "system",
+      "content": "You are an artificial intelligence assistant and you need to engage in a helpful, detailed, polite conversation with a user."
+    },
+    {
+      "role": "user",
+      "content": "sample IFC file download"
+    }
+  ]
+}
+2025-06-27 17:19:05,557 : INFO : web_search : Successfully received response from Perplexity API
+2025-06-27 17:19:05,557 : DEBUG : web_search : Response content: Of course If you're looking for sample IFC files to download, there are several resources available:
+
+1. **STEP Tools**: They provide a variety of IFC files, including models like `KIT-Simple-Road-Tes...
+2025-06-27 17:19:07,041 : INFO : web_search : Tool called.
+2025-06-27 17:19:07,041 : DEBUG : web_search : Query: buildingSMART IFC Examples GitHub
+2025-06-27 17:19:07,041 : DEBUG : web_search : Model: sonar
+2025-06-27 17:19:07,041 : DEBUG : web_search : Making request to Perplexity API with payload: {
+  "model": "sonar",
+  "messages": [
+    {
+      "role": "system",
+      "content": "You are an artificial intelligence assistant and you need to engage in a helpful, detailed, polite conversation with a user."
+    },
+    {
+      "role": "user",
+      "content": "buildingSMART IFC Examples GitHub"
+    }
+  ]
+}
+2025-06-27 17:19:12,957 : INFO : web_search : Successfully received response from Perplexity API
+2025-06-27 17:19:12,958 : DEBUG : web_search : Response content: The buildingSMART organization provides a variety of IFC (Industry Foundation Classes) example files on GitHub to help developers understand and implement various IFC object classes and concepts.
+
+Her...
+2025-06-27 17:19:15,738 : INFO : web_search : Tool called.
+2025-06-27 17:19:15,738 : DEBUG : web_search : Query: buildingSMART Sample-Test-Files GitHub
+2025-06-27 17:19:15,738 : DEBUG : web_search : Model: sonar
+2025-06-27 17:19:15,738 : DEBUG : web_search : Making request to Perplexity API with payload: {
+  "model": "sonar",
+  "messages": [
+    {
+      "role": "system",
+      "content": "You are an artificial intelligence assistant and you need to engage in a helpful, detailed, polite conversation with a user."
+    },
+    {
+      "role": "user",
+      "content": "buildingSMART Sample-Test-Files GitHub"
+    }
+  ]
+}
+2025-06-27 17:19:26,232 : INFO : web_search : Successfully received response from Perplexity API
+2025-06-27 17:19:26,233 : DEBUG : web_search : Response content: Certainly! Here’s a helpful overview and guidance on the **buildingSMART/Sample-Test-Files GitHub repository**:
+
+## What Is the buildingSMART Sample-Test-Files Repository?
+
+The **Sample-Test-Files** G...
+2025-06-27 17:19:29,178 : INFO : web_search : Tool called.
+2025-06-27 17:19:29,178 : DEBUG : web_search : Query: download IFC sample file with doors from buildingSMART Sample-Test-Files GitHub
+2025-06-27 17:19:29,178 : DEBUG : web_search : Model: sonar
+2025-06-27 17:19:29,178 : DEBUG : web_search : Making request to Perplexity API with payload: {
+  "model": "sonar",
+  "messages": [
+    {
+      "role": "system",
+      "content": "You are an artificial intelligence assistant and you need to engage in a helpful, detailed, polite conversation with a user."
+    },
+    {
+      "role": "user",
+      "content": "download IFC sample file with doors from buildingSMART Sample-Test-Files GitHub"
+    }
+  ]
+}
+2025-06-27 17:19:35,973 : INFO : web_search : Successfully received response from Perplexity API
+2025-06-27 17:19:35,973 : DEBUG : web_search : Response content: You can download IFC sample files with doors from the official buildingSMART Sample-Test-Files repository on GitHub. This repository contains various IFC sample and test files across different schema ...
+2025-06-27 17:19:38,724 : INFO : web_search : Tool called.
+2025-06-27 17:19:38,724 : DEBUG : web_search : Query: download AC20-FZK-Haus.ifc from buildingSMART Sample-Test-Files GitHub
+2025-06-27 17:19:38,724 : DEBUG : web_search : Model: sonar
+2025-06-27 17:19:38,724 : DEBUG : web_search : Making request to Perplexity API with payload: {
+  "model": "sonar",
+  "messages": [
+    {
+      "role": "system",
+      "content": "You are an artificial intelligence assistant and you need to engage in a helpful, detailed, polite conversation with a user."
+    },
+    {
+      "role": "user",
+      "content": "download AC20-FZK-Haus.ifc from buildingSMART Sample-Test-Files GitHub"
+    }
+  ]
+}
+2025-06-27 17:19:46,551 : INFO : web_search : Successfully received response from Perplexity API
+2025-06-27 17:19:46,551 : DEBUG : web_search : Response content: To download the file **AC20-FZK-Haus.ifc** from the buildingSMART sample test files GitHub repository, follow these steps:
+
+1. Visit the official buildingSMART Sample-Test-Files GitHub repository at:
+...
+2025-06-27 17:19:47,524 : INFO : python_interpreter : tool called.
+2025-06-27 17:19:47,524 : DEBUG : python_interpreter : code to interpret:
+```python
+import ifcopenshell
+import ifcopenshell.util.element
+
+# Load the downloaded IFC file
+ifc_file_path = 'path_to_AC20-FZK-Haus.ifc'
+model = ifcopenshell.open(ifc_file_path)
+
+# Get all doors
+doors = model.by_type('IfcDoor')
+
+# Extract properties of doors
+door_properties = {}
+for door in doors:
+    psets = ifcopenshell.util.element.get_psets(door)
+    door_properties[door.Name] = psets
+
+print(door_properties)
+```
+
+2025-06-27 17:19:47,524 : DEBUG : python_interpreter : Authorized imports: math; statistics; random; time; datetime; itertools; collections; re; unicodedata; queue; stat; numpy; pandas; json; os; sys; pathlib; glob; shutil; tempfile; typing; copy; pickle; base64; hashlib; uuid; urllib; urllib.parse; urllib.request; string; textwrap; difflib; csv; inspect; logging; warnings; traceback; pprint; zipfile; tarfile; gzip; ifcopenshell; ifcopenshell.*; ifcopenshell.util.element; ifcopenshell.util.shape; ifcopenshell.util.placement; ifcopenshell.util.geolocation; ifcopenshell.util.system; ifcopenshell.geom; ifcopenshell.file; ifcopenshell.entity_instance
+2025-06-27 17:19:47,524 : DEBUG : python_interpreter : Authorized functions: print; isinstance; range; float; int; bool; str; set; list; dict; tuple; round; ceil; floor; log; exp; sin; cos; tan; asin; acos; atan; atan2; degrees; radians; pow; sqrt; len; sum; max; min; abs; enumerate; zip; reversed; sorted; all; any; map; filter; ord; chr; next; iter; divmod; callable; getattr; hasattr; setattr; issubclass; type; complex; bytes; bytearray; memoryview; slice; delattr; vars; dir; id; hash; repr; ascii; bin; hex; oct; help; globals; locals; eval; exec; compile; open; input; BaseException; Exception; ValueError; TypeError; AttributeError; IndexError; KeyError; FileNotFoundError; RuntimeError; web_search; query_ifcopenshell_documentation
+2025-06-27 17:19:47,540 : ERROR : python_interpreter : Error during tool execution: Code execution failed at line 'model = ifcopenshell.open(ifc_file_path)' due to: FileNotFoundError: File does not exist: 'path_to_AC20-FZK-Haus.ifc'.
+2025-06-27 17:19:52,105 : INFO : web_search : Tool called.
+2025-06-27 17:19:52,105 : DEBUG : web_search : Query: download AC20-FZK-Haus.ifc from buildingSMART Sample-Test-Files GitHub
+2025-06-27 17:19:52,105 : DEBUG : web_search : Model: sonar
+2025-06-27 17:19:52,106 : DEBUG : web_search : Making request to Perplexity API with payload: {
+  "model": "sonar",
+  "messages": [
+    {
+      "role": "system",
+      "content": "You are an artificial intelligence assistant and you need to engage in a helpful, detailed, polite conversation with a user."
+    },
+    {
+      "role": "user",
+      "content": "download AC20-FZK-Haus.ifc from buildingSMART Sample-Test-Files GitHub"
+    }
+  ]
+}
+2025-06-27 17:20:01,821 : INFO : web_search : Successfully received response from Perplexity API
+2025-06-27 17:20:01,821 : DEBUG : web_search : Response content: To download the file **AC20-FZK-Haus.ifc** from the buildingSMART Sample-Test-Files GitHub repository, follow these steps:
+
+1. **Navigate to the repository**: The primary repository hosting sample IFC...
+2025-06-27 17:20:03,869 : INFO : python_interpreter : tool called.
+2025-06-27 17:20:03,869 : DEBUG : python_interpreter : code to interpret:
+```python
+import ifcopenshell
+import ifcopenshell.util.element
+
+def get_door_properties(ifc_file_path, door_identifier=None):
+ """
+ Retrieves the properties of doors in an IFC model.
+
+ Args:
+ - ifc_file_path (str): Path to the IFC file.
+ - door_identifier (str or int, optional): Identifier for a specific door. Defaults to None.
+
+ Returns:
+ - dict: Dictionary containing door names as keys and their properties as values.
+ """
+ model = ifcopenshell.open(ifc_file_path)
+ doors = model.by_type('IfcDoor')
+ door_properties = {}
+ for door in doors:
+ if door_identifier is not None:
+ if door.Name == door_identifier:
+ psets = ifcopenshell.util.element.get_psets(door)
+ door_properties[door.Name] = psets
+ break
+ else:
+ psets = ifcopenshell.util.element.get_psets(door)
+ door_properties[door.Name] = psets
+ return door_properties
+
+# Example usage
+ifc_file_path = 'path_to_AC20-FZK-Haus.ifc'
+print(get_door_properties(ifc_file_path))
+```
+
+2025-06-27 17:20:03,869 : DEBUG : python_interpreter : Authorized imports: math; statistics; random; time; datetime; itertools; collections; re; unicodedata; queue; stat; numpy; pandas; json; os; sys; pathlib; glob; shutil; tempfile; typing; copy; pickle; base64; hashlib; uuid; urllib; urllib.parse; urllib.request; string; textwrap; difflib; csv; inspect; logging; warnings; traceback; pprint; zipfile; tarfile; gzip; ifcopenshell; ifcopenshell.*; ifcopenshell.util.element; ifcopenshell.util.shape; ifcopenshell.util.placement; ifcopenshell.util.geolocation; ifcopenshell.util.system; ifcopenshell.geom; ifcopenshell.file; ifcopenshell.entity_instance
+2025-06-27 17:20:03,869 : DEBUG : python_interpreter : Authorized functions: print; isinstance; range; float; int; bool; str; set; list; dict; tuple; round; ceil; floor; log; exp; sin; cos; tan; asin; acos; atan; atan2; degrees; radians; pow; sqrt; len; sum; max; min; abs; enumerate; zip; reversed; sorted; all; any; map; filter; ord; chr; next; iter; divmod; callable; getattr; hasattr; setattr; issubclass; type; complex; bytes; bytearray; memoryview; slice; delattr; vars; dir; id; hash; repr; ascii; bin; hex; oct; help; globals; locals; eval; exec; compile; open; input; BaseException; Exception; ValueError; TypeError; AttributeError; IndexError; KeyError; FileNotFoundError; RuntimeError; web_search; query_ifcopenshell_documentation
+2025-06-27 17:20:03,870 : ERROR : python_interpreter : Error during tool execution: Code parsing failed on line 19 due to: IndentationError
+ if door_identifier is not None:
+  ^
+Error: expected an indented block after 'for' statement on line 18 (<unknown>, line 19)
+2025-06-27 17:20:04,789 : INFO : ToolProgrammer : function: get_door_properties created successfully.
+2025-06-27 17:20:04,790 : DEBUG : ToolProgrammer : function code:
+```python
+import ifcopenshell
+import ifcopenshell.util.element
+
+def get_door_properties(ifc_file_path, door_identifier=None):
+    """
+    Retrieves the properties of doors in an IFC model.
+
+    Args:
+    - ifc_file_path (str): Path to the IFC file.
+    - door_identifier (str or int, optional): Identifier for a specific door. Defaults to None.
+
+    Returns:
+    - dict: Dictionary containing door names as keys and their properties as values.
+    """
+    model = ifcopenshell.open(ifc_file_path)
+    doors = model.by_type('IfcDoor')
+    door_properties = {}
+    for door in doors:
+        if door_identifier is not None:
+            if door.Name == door_identifier:
+                psets = ifcopenshell.util.element.get_psets(door)
+                door_properties[door.Name] = psets
+                break
+        else:
+            psets = ifcopenshell.util.element.get_psets(door)
+            door_properties[door.Name] = psets
+    return door_properties
+
+# Example usage
+ifc_file_path = 'path_to_AC20-FZK-Haus.ifc'
+print(get_door_properties(ifc_file_path))
+```
+
+2025-06-27 17:20:04,790 : INFO : ToolCreator : Initial function created successfully.
+2025-06-27 17:20:04,790 : DEBUG : ToolCreator : Initial function code: 
+
+---
+```python
+import ifcopenshell
+import ifcopenshell.util.element
+
+def get_door_properties(ifc_file_path, door_identifier=None):
+    """
+    Retrieves the properties of doors in an IFC model.
+
+    Args:
+    - ifc_file_path (str): Path to the IFC file.
+    - door_identifier (str or int, optional): Identifier for a specific door. Defaults to None.
+
+    Returns:
+    - dict: Dictionary containing door names as keys and their properties as values.
+    """
+    model = ifcopenshell.open(ifc_file_path)
+    doors = model.by_type('IfcDoor')
+    door_properties = {}
+    for door in doors:
+        if door_identifier is not None:
+            if door.Name == door_identifier:
+                psets = ifcopenshell.util.element.get_psets(door)
+                door_properties[door.Name] = psets
+                break
+        else:
+            psets = ifcopenshell.util.element.get_psets(door)
+            door_properties[door.Name] = psets
+    return door_properties
+
+# Example usage
+ifc_file_path = 'path_to_AC20-FZK-Haus.ifc'
+print(get_door_properties(ifc_file_path))
+```
+
+---
+2025-06-27 17:20:04,790 : INFO : ToolCreator : Assessing the generated code.
+2025-06-27 17:20:04,795 : INFO : ToolCreator : ✓ ToolAssessor created with new tool to test.
+2025-06-27 17:20:04,795 : INFO : ToolCreator : Starting the tool assessment.
+2025-06-27 17:20:05,924 : INFO : query_ifc_documentation : IfcOpenShell documentation query tool called
+2025-06-27 17:20:05,925 : DEBUG : query_ifc_documentation : Query: Retrieve door properties in IFC model
+2025-06-27 17:20:05,925 : DEBUG : query_ifc_documentation : n_results: 10
+2025-06-27 17:20:05,925 : DEBUG : query_ifc_documentation : docstring_filter: None
+2025-06-27 17:20:05,925 : INFO : query_ifc_documentation : Connecting to IfcOpenShell documentation database...
+2025-06-27 17:20:05,925 : DEBUG : get_db_client : Connecting to database at: /Users/sylvainhellin/GitHub/ifcAnswerEngineV3/src/engine/tools/primordial/vectorstore
+2025-06-27 17:20:05,929 : DEBUG : get_db_client : Available collections: ['ifcopenshell']
+2025-06-27 17:20:05,929 : DEBUG : get_db_client : Successfully connected to ifcopenshell collection
+2025-06-27 17:20:05,929 : INFO : query_ifc_documentation : ✓ Database connection successful
+2025-06-27 17:20:05,929 : DEBUG : query_ifc_documentation : Database query filters - where_document: None
+2025-06-27 17:20:05,929 : INFO : query_ifc_documentation : Executing semantic search query...
+2025-06-27 17:20:06,565 : INFO : query_ifc_documentation : ✓ Database query completed successfully. Found 10 results
+2025-06-27 17:20:06,565 : DEBUG : query_ifc_documentation : Result 1 Metadata: {
+  "type": "Class",
+  "name": "entity_instance",
+  "module": "ifcopenshell.entity_instance"
+}
+2025-06-27 17:20:06,565 : DEBUG : query_ifc_documentation : Result 1 Document: Represents an entity (wall, slab, property, etc) of an IFC model
+
+An IFC model consists of entities. Examples of entities include walls,
+slabs, doors and so on. Entities can also be non-physical thing...
+2025-06-27 17:20:06,565 : DEBUG : query_ifc_documentation : Result 2 Metadata: {
+  "module": "ifcopenshell.util.element",
+  "type": "function",
+  "name": "get_voided_element"
+}
+2025-06-27 17:20:06,565 : DEBUG : query_ifc_documentation : Result 2 Document: For an opening, get the building element that the opening is voiding
+
+For all valid models, this should never return None.
+
+:param element: The IfcOpeningElement
+:return: The building element, such as...
+2025-06-27 17:20:06,565 : DEBUG : query_ifc_documentation : Result 3 Metadata: {
+  "type": "function",
+  "name": "get_info",
+  "module": "ifcopenshell.entity_instance"
+}
+2025-06-27 17:20:06,565 : DEBUG : query_ifc_documentation : Result 3 Document: Return a dictionary of the entity_instance's properties (Python and IFC) and their values.
+
+:param include_identifier: Whether or not to include the STEP numerical identifier
+:param recursive: Whether...
+2025-06-27 17:20:06,565 : DEBUG : query_ifc_documentation : Result 4 Metadata: {
+  "module": "ifcopenshell.util.element",
+  "name": "has_property",
+  "type": "function"
+}
+2025-06-27 17:20:06,565 : DEBUG : query_ifc_documentation : Result 4 Document: Check if a product has a property with a given name.
+
+:param product: The IFC product
+:param property_name: The property name
+:return: True if the product has the property, False otherwise
+
+Example:
+
+...
+2025-06-27 17:20:06,565 : DEBUG : query_ifc_documentation : Result 5 Metadata: {
+  "module": "ifcopenshell.file",
+  "type": "function",
+  "name": "schema"
+}
+2025-06-27 17:20:06,566 : DEBUG : query_ifc_documentation : Result 5 Document: General IFC schema version: IFC2X3, IFC4, IFC4X3.
+2025-06-27 17:20:06,566 : DEBUG : query_ifc_documentation : Result 6 Metadata: {
+  "module": "ifcopenshell.util.element",
+  "name": "get_filled_void",
+  "type": "function"
+}
+2025-06-27 17:20:06,566 : DEBUG : query_ifc_documentation : Result 6 Document: If the element is filling a void, get the void
+
+Examples include windows and doors which fill a opening inside a wall.
+
+:param element: The building element, typically a window or door
+:return: The If...
+2025-06-27 17:20:06,566 : DEBUG : query_ifc_documentation : Result 7 Metadata: {
+  "name": "get_referenced_structures",
+  "module": "ifcopenshell.util.element",
+  "type": "function"
+}
+2025-06-27 17:20:06,566 : DEBUG : query_ifc_documentation : Result 7 Document: Retreives a list of referenced spatial elements
+
+Typically useful for multistorey elements, such as columns or facade
+elements, or elements that span multiple spaces or in-between spaces, such
+as stai...
+2025-06-27 17:20:06,566 : DEBUG : query_ifc_documentation : Result 8 Metadata: {
+  "module": "ifcopenshell.file",
+  "name": "schema_identifier",
+  "type": "function"
+}
+2025-06-27 17:20:06,566 : DEBUG : query_ifc_documentation : Result 8 Document: Full IFC schema version: IFC2X3_TC1, IFC4_ADD2, IFC4X3_ADD2, etc.
+2025-06-27 17:20:06,566 : DEBUG : query_ifc_documentation : Result 9 Metadata: {
+  "type": "function",
+  "module": "ifcopenshell.util.element",
+  "name": "get_elements_by_pset"
+}
+2025-06-27 17:20:06,566 : DEBUG : query_ifc_documentation : Result 9 Document: Retrieve the elements (or element types) that are using the provided property set.
+2025-06-27 17:20:06,566 : DEBUG : query_ifc_documentation : Result 10 Metadata: {
+  "module": "ifcopenshell.util.element",
+  "type": "function",
+  "name": "get_container"
+}
+2025-06-27 17:20:06,566 : DEBUG : query_ifc_documentation : Result 10 Document: Retrieves the spatial structure container of an element.
+
+:param element: The IFC element
+:param should_get_direct: If True, a result is only returned if the element
+    is directly contained in a spa...
+2025-06-27 17:20:06,566 : INFO : query_ifc_documentation : ✓ Successfully formatted 10 results for return
+2025-06-27 17:20:09,152 : INFO : python_interpreter : tool called.
+2025-06-27 17:20:09,152 : DEBUG : python_interpreter : code to interpret:
+```python
+import ifcopenshell
+
+def get_door_properties(ifc_file_path, door_identifier=None):
+    model = ifcopenshell.open(ifc_file_path)
+    doors = model.by_type('IfcDoor')
+    door_properties = {}
+    for door in doors:
+        properties = {}
+        if door_identifier is None or door.GlobalId == door_identifier:
+            for definition in door.IsDefinedBy:
+                if definition.is_a('IfcRelDefinesByProperties'):
+                    property_set = definition.RelatingPropertyDefinition
+                    if property_set.is_a('IfcPropertySet'):
+                        for property in property_set.HasProperties:
+                            properties[property.Name] = property.NominalValue.wrappedValue if property.NominalValue else None
+            door_properties[door.GlobalId] = properties
+    return door_properties
+
+ifc_file_path = '/Users/sylvainhellin/GitHub/ifcAnswerEngineV3/src/experiment/bim_models/duplex/arc.ifc'
+print(get_door_properties(ifc_file_path))
+```
+
+2025-06-27 17:20:09,152 : DEBUG : python_interpreter : Authorized imports: math; statistics; random; time; datetime; itertools; collections; re; unicodedata; queue; stat; numpy; pandas; json; os; sys; pathlib; glob; shutil; tempfile; typing; copy; pickle; base64; hashlib; uuid; urllib; urllib.parse; urllib.request; string; textwrap; difflib; csv; inspect; logging; warnings; traceback; pprint; zipfile; tarfile; gzip; ifcopenshell; ifcopenshell.*; ifcopenshell.util.element; ifcopenshell.util.shape; ifcopenshell.util.placement; ifcopenshell.util.geolocation; ifcopenshell.util.system; ifcopenshell.geom; ifcopenshell.file; ifcopenshell.entity_instance
+2025-06-27 17:20:09,152 : DEBUG : python_interpreter : Authorized functions: print; isinstance; range; float; int; bool; str; set; list; dict; tuple; round; ceil; floor; log; exp; sin; cos; tan; asin; acos; atan; atan2; degrees; radians; pow; sqrt; len; sum; max; min; abs; enumerate; zip; reversed; sorted; all; any; map; filter; ord; chr; next; iter; divmod; callable; getattr; hasattr; setattr; issubclass; type; complex; bytes; bytearray; memoryview; slice; delattr; vars; dir; id; hash; repr; ascii; bin; hex; oct; help; globals; locals; eval; exec; compile; open; input; BaseException; Exception; ValueError; TypeError; AttributeError; IndexError; KeyError; FileNotFoundError; RuntimeError; web_search; query_ifcopenshell_documentation; get_door_properties
+2025-06-27 17:20:09,164 : INFO : python_interpreter : Tool execution completed successfully.
+2025-06-27 17:20:09,164 : DEBUG : python_interpreter : Returned value: None
+2025-06-27 17:20:09,164 : DEBUG : python_interpreter : Console output (logs): Error creating tool get_door_properties: invalid syntax (<string>, line 1)
+
+2025-06-27 17:20:09,164 : DEBUG : python_interpreter : Is final: False
+2025-06-27 17:20:10,490 : INFO : python_interpreter : tool called.
+2025-06-27 17:20:10,491 : DEBUG : python_interpreter : code to interpret:
+```python
+import ifcopenshell
+
+def get_door_properties(ifc_file_path, door_identifier=None):
+    model = ifcopenshell.open(ifc_file_path)
+    doors = model.by_type('IfcDoor')
+    door_properties = {}
+    for door in doors:
+        properties = {}
+        if door_identifier is None or door.GlobalId == door_identifier:
+            for definition in door.IsDefinedBy:
+                if definition.is_a('IfcRelDefinesByProperties'):
+                    property_set = definition.RelatingPropertyDefinition
+                    if property_set.is_a('IfcPropertySet'):
+                        for property in property_set.HasProperties:
+                            properties[property.Name] = property.NominalValue.wrappedValue if property.NominalValue else None
+            door_properties[door.GlobalId] = properties
+    return door_properties
+
+ifc_file_path = '/Users/sylvainhellin/GitHub/ifcAnswerEngineV3/src/experiment/bim_models/duplex/arc.ifc'
+print(get_door_properties(ifc_file_path))
+```
+
+2025-06-27 17:20:10,491 : DEBUG : python_interpreter : Authorized imports: math; statistics; random; time; datetime; itertools; collections; re; unicodedata; queue; stat; numpy; pandas; json; os; sys; pathlib; glob; shutil; tempfile; typing; copy; pickle; base64; hashlib; uuid; urllib; urllib.parse; urllib.request; string; textwrap; difflib; csv; inspect; logging; warnings; traceback; pprint; zipfile; tarfile; gzip; ifcopenshell; ifcopenshell.*; ifcopenshell.util.element; ifcopenshell.util.shape; ifcopenshell.util.placement; ifcopenshell.util.geolocation; ifcopenshell.util.system; ifcopenshell.geom; ifcopenshell.file; ifcopenshell.entity_instance
+2025-06-27 17:20:10,491 : DEBUG : python_interpreter : Authorized functions: print; isinstance; range; float; int; bool; str; set; list; dict; tuple; round; ceil; floor; log; exp; sin; cos; tan; asin; acos; atan; atan2; degrees; radians; pow; sqrt; len; sum; max; min; abs; enumerate; zip; reversed; sorted; all; any; map; filter; ord; chr; next; iter; divmod; callable; getattr; hasattr; setattr; issubclass; type; complex; bytes; bytearray; memoryview; slice; delattr; vars; dir; id; hash; repr; ascii; bin; hex; oct; help; globals; locals; eval; exec; compile; open; input; BaseException; Exception; ValueError; TypeError; AttributeError; IndexError; KeyError; FileNotFoundError; RuntimeError; web_search; query_ifcopenshell_documentation; get_door_properties
+2025-06-27 17:20:10,502 : INFO : python_interpreter : Tool execution completed successfully.
+2025-06-27 17:20:10,502 : DEBUG : python_interpreter : Returned value: None
+2025-06-27 17:20:10,502 : DEBUG : python_interpreter : Console output (logs): Error creating tool get_door_properties: invalid syntax (<string>, line 1)
+
+2025-06-27 17:20:10,503 : DEBUG : python_interpreter : Is final: False
+2025-06-27 17:20:11,079 : INFO : python_interpreter : tool called.
+2025-06-27 17:20:11,079 : DEBUG : python_interpreter : code to interpret:
+```python
+import ifcopenshell
+model = ifcopenshell.open('/Users/sylvainhellin/GitHub/ifcAnswerEngineV3/src/experiment/bim_models/duplex/arc.ifc')
+doors = model.by_type('IfcDoor')
+print(doors)
+```
+
+2025-06-27 17:20:11,080 : DEBUG : python_interpreter : Authorized imports: math; statistics; random; time; datetime; itertools; collections; re; unicodedata; queue; stat; numpy; pandas; json; os; sys; pathlib; glob; shutil; tempfile; typing; copy; pickle; base64; hashlib; uuid; urllib; urllib.parse; urllib.request; string; textwrap; difflib; csv; inspect; logging; warnings; traceback; pprint; zipfile; tarfile; gzip; ifcopenshell; ifcopenshell.*; ifcopenshell.util.element; ifcopenshell.util.shape; ifcopenshell.util.placement; ifcopenshell.util.geolocation; ifcopenshell.util.system; ifcopenshell.geom; ifcopenshell.file; ifcopenshell.entity_instance
+2025-06-27 17:20:11,080 : DEBUG : python_interpreter : Authorized functions: print; isinstance; range; float; int; bool; str; set; list; dict; tuple; round; ceil; floor; log; exp; sin; cos; tan; asin; acos; atan; atan2; degrees; radians; pow; sqrt; len; sum; max; min; abs; enumerate; zip; reversed; sorted; all; any; map; filter; ord; chr; next; iter; divmod; callable; getattr; hasattr; setattr; issubclass; type; complex; bytes; bytearray; memoryview; slice; delattr; vars; dir; id; hash; repr; ascii; bin; hex; oct; help; globals; locals; eval; exec; compile; open; input; BaseException; Exception; ValueError; TypeError; AttributeError; IndexError; KeyError; FileNotFoundError; RuntimeError; web_search; query_ifcopenshell_documentation; get_door_properties
+2025-06-27 17:20:11,134 : INFO : python_interpreter : Tool execution completed successfully.
+2025-06-27 17:20:11,134 : DEBUG : python_interpreter : Returned value: None
+2025-06-27 17:20:11,134 : DEBUG : python_interpreter : Console output (logs): [#125=IfcDoor('1aj$VJZFn2TxepZUBcKpac',#1,'M_Single-Flush:0762 x 2032mm:0762 x 2032mm:204034',$,'0762 x 2032mm',#17781,#18852,'204034',2.032,0.762), #180=IfcDoor('1hOSvn6df7F8_7GcBWlSDm',#1,'M_Single-Flush:0864 x 2032mm:0864 x 2032mm:150478',$,'0864 x 2032mm',#17745,#18808,'150478',2.032,0.864), #181=IfcDoor('1hOSvn6df7F8_7GcBWlSFK',#1,'M_Single-Flush:0864 x 2032mm:0864 x 2032mm:150378',$,'0864 x 2032mm',#17710,#18807,'150378',2.032,0.864), #198=IfcDoor('1aj$VJZFn2TxepZUBcKp$i',#1,'M_Single-Flush:0762 x 2032mm:0762 x 2032mm:203720',$,'0762 x 2032mm',#17789,#18851,'203720',2.032,0.762), #199=IfcDoor('1hOSvn6df7F8_7GcBWlS8Z',#1,'M_Single-Flush:0762 x 2032mm:0762 x 2032mm:150173',$,'0762 x 2032mm',#17706,#18791,'150173',2.032,0.761999999999999), #200=IfcDoor('2OBrcmyk58NupXoVOHUuXp',#1,'M_Single-Flush:0864 x 2032mm:0864 x 2032mm:159734',$,'0864 x 2032mm',#17737,#18739,'159734',2.032,0.864), #201=IfcDoor('1hOSvn6df7F8_7GcBWlS9F',#1,'M_Single-Flush:0762 x 2032mm:0762 x 2032mm:150257',$,'0762 x 2032mm',#17753,#18792,'150257',2.032,0.762), #202=IfcDoor('2OBrcmyk58NupXoVOHUvPL',#1,'M_Single-Flush:0864 x 2032mm:0864 x 2032mm:160208',$,'0864 x 2032mm',#17765,#18733,'160208',2.032,0.864), #203=IfcDoor('2OBrcmyk58NupXoVOHUvVV',#1,'M_Single-Flush:0864 x 2032mm:0864 x 2032mm:159834',$,'0864 x 2032mm',#17738,#18740,'159834',2.032,0.864), #204=IfcDoor('2OBrcmyk58NupXoVOHUvR4',#1,'M_Single-Flush:0864 x 2032mm:0864 x 2032mm:160065',$,'0864 x 2032mm',#17724,#18732,'160065',2.032,0.863999999999999), #251=IfcDoor('1s1jVhK8z0pgKYcr9jt7AB',#1,'M_Single-Glass 1:0813 x 2420mm:0813 x 2420mm:171975',$,'0813 x 2420mm',#17749,#18790,'171975',2.42,0.812999999999999), #252=IfcDoor('1hOSvn6df7F8_7GcBWlRGQ',#1,'M_Single-Flush:1250mm x 2010mm:1250mm x 2010mm:146596',$,'1250mm x 2010mm',#17742,#18744,'146596',2.01,1.25), #253=IfcDoor('1hOSvn6df7F8_7GcBWlRH8',#1,'M_Single-Flush:1250mm x 2010mm:1250mm x 2010mm:146678',$,'1250mm x 2010mm',#17721,#18745,'146678',2.01,1.25), #254=IfcDoor('1s1jVhK8z0pgKYcr9jt781',#1,'M_Single-Glass 1:0813 x 2420mm:0813 x 2420mm:171853',$,'0813 x 2420mm',#17792,#18789,'171853',2.42,0.813)]
+
+2025-06-27 17:20:11,134 : DEBUG : python_interpreter : Is final: False
+2025-06-27 17:20:12,913 : INFO : python_interpreter : tool called.
+2025-06-27 17:20:12,914 : DEBUG : python_interpreter : code to interpret:
+```python
+import ifcopenshell
+model = ifcopenshell.open('/Users/sylvainhellin/GitHub/ifcAnswerEngineV3/src/experiment/bim_models/duplex/arc.ifc')
+doors = model.by_type('IfcDoor')
+door_properties = {}
+for door in doors:
+ properties = {}
+ for definition in door.IsDefinedBy:
+ if definition.is_a('IfcRelDefinesByProperties'):
+ property_set = definition.RelatingPropertyDefinition
+ if property_set.is_a('IfcPropertySet'):
+ for property in property_set.HasProperties:
+ properties[property.Name] = property.NominalValue.wrappedValue if property.NominalValue else None
+ door_properties[door.GlobalId] = properties
+print(door_properties)
+```
+
+2025-06-27 17:20:12,914 : DEBUG : python_interpreter : Authorized imports: math; statistics; random; time; datetime; itertools; collections; re; unicodedata; queue; stat; numpy; pandas; json; os; sys; pathlib; glob; shutil; tempfile; typing; copy; pickle; base64; hashlib; uuid; urllib; urllib.parse; urllib.request; string; textwrap; difflib; csv; inspect; logging; warnings; traceback; pprint; zipfile; tarfile; gzip; ifcopenshell; ifcopenshell.*; ifcopenshell.util.element; ifcopenshell.util.shape; ifcopenshell.util.placement; ifcopenshell.util.geolocation; ifcopenshell.util.system; ifcopenshell.geom; ifcopenshell.file; ifcopenshell.entity_instance
+2025-06-27 17:20:12,914 : DEBUG : python_interpreter : Authorized functions: print; isinstance; range; float; int; bool; str; set; list; dict; tuple; round; ceil; floor; log; exp; sin; cos; tan; asin; acos; atan; atan2; degrees; radians; pow; sqrt; len; sum; max; min; abs; enumerate; zip; reversed; sorted; all; any; map; filter; ord; chr; next; iter; divmod; callable; getattr; hasattr; setattr; issubclass; type; complex; bytes; bytearray; memoryview; slice; delattr; vars; dir; id; hash; repr; ascii; bin; hex; oct; help; globals; locals; eval; exec; compile; open; input; BaseException; Exception; ValueError; TypeError; AttributeError; IndexError; KeyError; FileNotFoundError; RuntimeError; web_search; query_ifcopenshell_documentation; get_door_properties
+2025-06-27 17:20:12,914 : ERROR : python_interpreter : Error during tool execution: Code parsing failed on line 8 due to: IndentationError
+ if definition.is_a('IfcRelDefinesByProperties'):
+  ^
+Error: expected an indented block after 'for' statement on line 7 (<unknown>, line 8)
+2025-06-27 17:20:14,531 : INFO : python_interpreter : tool called.
+2025-06-27 17:20:14,531 : DEBUG : python_interpreter : code to interpret:
+```python
+import ifcopenshell
+model = ifcopenshell.open('/Users/sylvainhellin/GitHub/ifcAnswerEngineV3/src/experiment/bim_models/duplex/arc.ifc')
+doors = model.by_type('IfcDoor')
+door_properties = {}
+for door in doors:
+    properties = {}
+    for definition in door.IsDefinedBy:
+        if definition.is_a('IfcRelDefinesByProperties'):
+            property_set = definition.RelatingPropertyDefinition
+            if property_set.is_a('IfcPropertySet'):
+                for property in property_set.HasProperties:
+                    properties[property.Name] = property.NominalValue.wrappedValue if property.NominalValue else None
+    door_properties[door.GlobalId] = properties
+print(door_properties)
+```
+
+2025-06-27 17:20:14,531 : DEBUG : python_interpreter : Authorized imports: math; statistics; random; time; datetime; itertools; collections; re; unicodedata; queue; stat; numpy; pandas; json; os; sys; pathlib; glob; shutil; tempfile; typing; copy; pickle; base64; hashlib; uuid; urllib; urllib.parse; urllib.request; string; textwrap; difflib; csv; inspect; logging; warnings; traceback; pprint; zipfile; tarfile; gzip; ifcopenshell; ifcopenshell.*; ifcopenshell.util.element; ifcopenshell.util.shape; ifcopenshell.util.placement; ifcopenshell.util.geolocation; ifcopenshell.util.system; ifcopenshell.geom; ifcopenshell.file; ifcopenshell.entity_instance
+2025-06-27 17:20:14,531 : DEBUG : python_interpreter : Authorized functions: print; isinstance; range; float; int; bool; str; set; list; dict; tuple; round; ceil; floor; log; exp; sin; cos; tan; asin; acos; atan; atan2; degrees; radians; pow; sqrt; len; sum; max; min; abs; enumerate; zip; reversed; sorted; all; any; map; filter; ord; chr; next; iter; divmod; callable; getattr; hasattr; setattr; issubclass; type; complex; bytes; bytearray; memoryview; slice; delattr; vars; dir; id; hash; repr; ascii; bin; hex; oct; help; globals; locals; eval; exec; compile; open; input; BaseException; Exception; ValueError; TypeError; AttributeError; IndexError; KeyError; FileNotFoundError; RuntimeError; web_search; query_ifcopenshell_documentation; get_door_properties
+2025-06-27 17:20:14,590 : INFO : python_interpreter : Tool execution completed successfully.
+2025-06-27 17:20:14,590 : DEBUG : python_interpreter : Returned value: None
+2025-06-27 17:20:14,590 : DEBUG : python_interpreter : Console output (logs): {'1aj$VJZFn2TxepZUBcKpac': {'Phase Created': 'New Construction', 'Level': 'Level 2', 'Sill Height': 0.0, 'Reference': 'Reference', 'IsExternal': False, 'FireRating': 'Fire Rating', 'Mark': 'A205', 'Head Height': 2.032, 'InstallationDate': 'InstallationDate', 'SerialNumber': 'SerialNumber', 'WarrantyStartDate': 'WarrantyStartDate', 'BarCode': 'BarCode', 'AssetIdentifier': 'AssetIdentifier', 'TagNumber': 'TagNumber', 'Function': 0, 'Wall Closure': 0, 'Construction Type': 'Construction Type', 'Door Material': 'Door - Panel', 'Frame Material': 'Door - Frame', 'AccessibilityPerformance': 'AccessibilityPerformance', 'CodePerformance': 'CodePerformance', 'IsFireExit': 'IsFireExit', 'ConstructionType': 'ConstructionType', 'GlazingAreaFraction': 'GlazingAreaFraction', 'OperationType': 'OperationType', 'Area': 'Area', 'Color': 'Color', 'Constituents': 'Constituents', 'Features': 'Features', 'Finish': 'Finish', 'Grade': 'Grade', 'Material': 'Material', 'ModelReference': 'ModelReference', 'NominalHeight': 'NominalHeight', 'NominalLength': 'NominalLength', 'NominalWidth': 'NominalWidth', 'ProductionYear': 'ProductionYear', 'Shape': 'Shape', 'Size': 'Size', 'SustainabilityPerformance': 'SustainabilityPerformance', 'WarrantyDescription': 'WarrantyDescription', 'WarrantyDurationLabor': 'WarrantyDurationLabor', 'WarrantyDurationParts': 'WarrantyDurationParts', 'WarrantyGuarantorLabor': 'WarrantyGuarantorLabor', 'WarrantyGuarantorParts': 'WarrantyGuarantorParts', 'ExpectedLife': 'ExpectedLife', 'ReplacementCost': 'ReplacementCost', 'AssetAccountingType': 'FIXED', 'ModelLabel': 'ModelLabel', 'Thickness': 0.051, 'Height': 2.032, 'Trim Projection Ext': 0.025, 'Trim Projection Int': 0.025, 'Trim Width': 0.07599999999999998, 'Width': 0.7619999999999999, 'Manufacturer': 'Manufacturer', 'Assembly Description': '', 'Assembly Code': '', 'Type Mark': '28', 'Fire Rating': 'Fire Rating', 'OmniClass Number': '23.30.10.00', 'OmniClass Title': 'Doors'}, '1hOSvn6df7F8_7GcBWlSDm': {'Phase Created': 'New Construction', 'Reference': 'Reference', 'IsExternal': False, 'FireRating': 'Fire Rating', 'Level': 'Level 2', 'Sill Height': 0.0, 'Mark': 'A203', 'Head Height': 2.032, 'InstallationDate': 'InstallationDate', 'SerialNumber': 'SerialNumber', 'WarrantyStartDate': 'WarrantyStartDate', 'BarCode': 'BarCode', 'AssetIdentifier': 'AssetIdentifier', 'TagNumber': 'TagNumber', 'Thickness': 0.051, 'Height': 2.032, 'Trim Projection Ext': 0.025, 'Trim Projection Int': 0.025, 'Trim Width': 0.07599999999999998, 'Width': 0.8639999999999999, 'Manufacturer': 'Manufacturer', 'Assembly Description': '', 'Assembly Code': '', 'Type Mark': '32', 'Fire Rating': 'Fire Rating', 'OmniClass Number': '23.30.10.00', 'OmniClass Title': 'Doors', 'Door Material': 'Door - Panel', 'Frame Material': 'Door - Frame', 'Function': 0, 'Wall Closure': 0, 'Construction Type': 'Construction Type', 'AccessibilityPerformance': 'AccessibilityPerformance', 'CodePerformance': 'CodePerformance', 'IsFireExit': 'IsFireExit', 'ConstructionType': 'ConstructionType', 'GlazingAreaFraction': 'GlazingAreaFraction', 'OperationType': 'OperationType', 'Area': 'Area', 'Color': 'Color', 'Constituents': 'Constituents', 'Features': 'Features', 'Finish': 'Finish', 'Grade': 'Grade', 'Material': 'Material', 'ModelReference': 'ModelReference', 'NominalHeight': 'NominalHeight', 'NominalLength': 'NominalLength', 'NominalWidth': 'NominalWidth', 'ProductionYear': 'ProductionYear', 'Shape': 'Shape', 'Size': 'Size', 'SustainabilityPerformance': 'SustainabilityPerformance', 'WarrantyDescription': 'WarrantyDescription', 'WarrantyDurationLabor': 'WarrantyDurationLabor', 'WarrantyDurationParts': 'WarrantyDurationParts', 'WarrantyGuarantorLabor': 'WarrantyGuarantorLabor', 'WarrantyGuarantorParts': 'WarrantyGuarantorParts', 'ExpectedLife': 'ExpectedLife', 'ReplacementCost': 'ReplacementCost', 'AssetAccountingType': 'FIXED', 'ModelLabel': 'ModelLabel'}, '1hOSvn6df7F8_7GcBWlSFK': {'Phase Created': 'New Construction', 'Head Height': 2.032, 'InstallationDate': 'InstallationDate', 'SerialNumber': 'SerialNumber', 'WarrantyStartDate': 'WarrantyStartDate', 'BarCode': 'BarCode', 'AssetIdentifier': 'AssetIdentifier', 'TagNumber': 'TagNumber', 'Reference': 'Reference', 'IsExternal': False, 'FireRating': 'Fire Rating', 'Level': 'Level 2', 'Sill Height': 0.0, 'Mark': 'B203', 'Thickness': 0.051, 'Height': 2.032, 'Trim Projection Ext': 0.025, 'Trim Projection Int': 0.025, 'Trim Width': 0.07599999999999998, 'Width': 0.8639999999999999, 'Manufacturer': 'Manufacturer', 'Assembly Description': '', 'Assembly Code': '', 'Type Mark': '32', 'Fire Rating': 'Fire Rating', 'OmniClass Number': '23.30.10.00', 'OmniClass Title': 'Doors', 'Door Material': 'Door - Panel', 'Frame Material': 'Door - Frame', 'Function': 0, 'Wall Closure': 0, 'Construction Type': 'Construction Type', 'AccessibilityPerformance': 'AccessibilityPerformance', 'CodePerformance': 'CodePerformance', 'IsFireExit': 'IsFireExit', 'ConstructionType': 'ConstructionType', 'GlazingAreaFraction': 'GlazingAreaFraction', 'OperationType': 'OperationType', 'Area': 'Area', 'Color': 'Color', 'Constituents': 'Constituents', 'Features': 'Features', 'Finish': 'Finish', 'Grade': 'Grade', 'Material': 'Material', 'ModelReference': 'ModelReference', 'NominalHeight': 'NominalHeight', 'NominalLength': 'NominalLength', 'NominalWidth': 'NominalWidth', 'ProductionYear': 'ProductionYear', 'Shape': 'Shape', 'Size': 'Size', 'SustainabilityPerformance': 'SustainabilityPerformance', 'WarrantyDescription': 'WarrantyDescription', 'WarrantyDurationLabor': 'WarrantyDurationLabor', 'WarrantyDurationParts': 'WarrantyDurationParts', 'WarrantyGuarantorLabor': 'WarrantyGuarantorLabor', 'WarrantyGuarantorParts': 'WarrantyGuarantorParts', 'ExpectedLife': 'ExpectedLife', 'ReplacementCost': 'ReplacementCost', 'AssetAccountingType': 'FIXED', 'ModelLabel': 'ModelLabel'}, '1aj$VJZFn2TxepZUBcKp$i': {'Reference': 'Reference', 'IsExternal': False, 'FireRating': 'Fire Rating', 'Mark': 'B205', 'Level': 'Level 2', 'Sill Height': 0.0, 'Head Height': 2.032, 'InstallationDate': 'InstallationDate', 'SerialNumber': 'SerialNumber', 'WarrantyStartDate': 'WarrantyStartDate', 'BarCode': 'BarCode', 'AssetIdentifier': 'AssetIdentifier', 'TagNumber': 'TagNumber', 'Phase Created': 'New Construction', 'Function': 0, 'Wall Closure': 0, 'Construction Type': 'Construction Type', 'Door Material': 'Door - Panel', 'Frame Material': 'Door - Frame', 'AccessibilityPerformance': 'AccessibilityPerformance', 'CodePerformance': 'CodePerformance', 'IsFireExit': 'IsFireExit', 'ConstructionType': 'ConstructionType', 'GlazingAreaFraction': 'GlazingAreaFraction', 'OperationType': 'OperationType', 'Area': 'Area', 'Color': 'Color', 'Constituents': 'Constituents', 'Features': 'Features', 'Finish': 'Finish', 'Grade': 'Grade', 'Material': 'Material', 'ModelReference': 'ModelReference', 'NominalHeight': 'NominalHeight', 'NominalLength': 'NominalLength', 'NominalWidth': 'NominalWidth', 'ProductionYear': 'ProductionYear', 'Shape': 'Shape', 'Size': 'Size', 'SustainabilityPerformance': 'SustainabilityPerformance', 'WarrantyDescription': 'WarrantyDescription', 'WarrantyDurationLabor': 'WarrantyDurationLabor', 'WarrantyDurationParts': 'WarrantyDurationParts', 'WarrantyGuarantorLabor': 'WarrantyGuarantorLabor', 'WarrantyGuarantorParts': 'WarrantyGuarantorParts', 'ExpectedLife': 'ExpectedLife', 'ReplacementCost': 'ReplacementCost', 'AssetAccountingType': 'FIXED', 'ModelLabel': 'ModelLabel', 'Thickness': 0.051, 'Height': 2.032, 'Trim Projection Ext': 0.025, 'Trim Projection Int': 0.025, 'Trim Width': 0.07599999999999998, 'Width': 0.7619999999999999, 'Manufacturer': 'Manufacturer', 'Assembly Description': '', 'Assembly Code': '', 'Type Mark': '28', 'Fire Rating': 'Fire Rating', 'OmniClass Number': '23.30.10.00', 'OmniClass Title': 'Doors'}, '1hOSvn6df7F8_7GcBWlS8Z': {'Mark': 'A104', 'Head Height': 2.032, 'InstallationDate': 'InstallationDate', 'SerialNumber': 'SerialNumber', 'WarrantyStartDate': 'WarrantyStartDate', 'BarCode': 'BarCode', 'AssetIdentifier': 'AssetIdentifier', 'TagNumber': 'TagNumber', 'Phase Created': 'New Construction', 'Level': 'Level 1', 'Sill Height': 0.0, 'Reference': 'Reference', 'IsExternal': False, 'FireRating': 'Fire Rating', 'Function': 0, 'Wall Closure': 0, 'Construction Type': 'Construction Type', 'Door Material': 'Door - Panel', 'Frame Material': 'Door - Frame', 'AccessibilityPerformance': 'AccessibilityPerformance', 'CodePerformance': 'CodePerformance', 'IsFireExit': 'IsFireExit', 'ConstructionType': 'ConstructionType', 'GlazingAreaFraction': 'GlazingAreaFraction', 'OperationType': 'OperationType', 'Area': 'Area', 'Color': 'Color', 'Constituents': 'Constituents', 'Features': 'Features', 'Finish': 'Finish', 'Grade': 'Grade', 'Material': 'Material', 'ModelReference': 'ModelReference', 'NominalHeight': 'NominalHeight', 'NominalLength': 'NominalLength', 'NominalWidth': 'NominalWidth', 'ProductionYear': 'ProductionYear', 'Shape': 'Shape', 'Size': 'Size', 'SustainabilityPerformance': 'SustainabilityPerformance', 'WarrantyDescription': 'WarrantyDescription', 'WarrantyDurationLabor': 'WarrantyDurationLabor', 'WarrantyDurationParts': 'WarrantyDurationParts', 'WarrantyGuarantorLabor': 'WarrantyGuarantorLabor', 'WarrantyGuarantorParts': 'WarrantyGuarantorParts', 'ExpectedLife': 'ExpectedLife', 'ReplacementCost': 'ReplacementCost', 'AssetAccountingType': 'FIXED', 'ModelLabel': 'ModelLabel', 'Thickness': 0.051, 'Height': 2.032, 'Trim Projection Ext': 0.025, 'Trim Projection Int': 0.025, 'Trim Width': 0.07599999999999998, 'Width': 0.7619999999999999, 'Manufacturer': 'Manufacturer', 'Assembly Description': '', 'Assembly Code': '', 'Type Mark': '28', 'Fire Rating': 'Fire Rating', 'OmniClass Number': '23.30.10.00', 'OmniClass Title': 'Doors'}, '2OBrcmyk58NupXoVOHUuXp': {'Level': 'Level 2', 'Sill Height': 0.0, 'Reference': 'Reference', 'IsExternal': False, 'FireRating': 'Fire Rating', 'Head Height': 2.032, 'InstallationDate': 'InstallationDate', 'SerialNumber': 'SerialNumber', 'WarrantyStartDate': 'WarrantyStartDate', 'BarCode': 'BarCode', 'AssetIdentifier': 'AssetIdentifier', 'TagNumber': 'TagNumber', 'Mark': 'B202', 'Phase Created': 'New Construction', 'Thickness': 0.051, 'Height': 2.032, 'Trim Projection Ext': 0.025, 'Trim Projection Int': 0.025, 'Trim Width': 0.07599999999999998, 'Width': 0.8639999999999999, 'Manufacturer': 'Manufacturer', 'Assembly Description': '', 'Assembly Code': '', 'Type Mark': '32', 'Fire Rating': 'Fire Rating', 'OmniClass Number': '23.30.10.00', 'OmniClass Title': 'Doors', 'Door Material': 'Door - Panel', 'Frame Material': 'Door - Frame', 'Function': 0, 'Wall Closure': 0, 'Construction Type': 'Construction Type', 'AccessibilityPerformance': 'AccessibilityPerformance', 'CodePerformance': 'CodePerformance', 'IsFireExit': 'IsFireExit', 'ConstructionType': 'ConstructionType', 'GlazingAreaFraction': 'GlazingAreaFraction', 'OperationType': 'OperationType', 'Area': 'Area', 'Color': 'Color', 'Constituents': 'Constituents', 'Features': 'Features', 'Finish': 'Finish', 'Grade': 'Grade', 'Material': 'Material', 'ModelReference': 'ModelReference', 'NominalHeight': 'NominalHeight', 'NominalLength': 'NominalLength', 'NominalWidth': 'NominalWidth', 'ProductionYear': 'ProductionYear', 'Shape': 'Shape', 'Size': 'Size', 'SustainabilityPerformance': 'SustainabilityPerformance', 'WarrantyDescription': 'WarrantyDescription', 'WarrantyDurationLabor': 'WarrantyDurationLabor', 'WarrantyDurationParts': 'WarrantyDurationParts', 'WarrantyGuarantorLabor': 'WarrantyGuarantorLabor', 'WarrantyGuarantorParts': 'WarrantyGuarantorParts', 'ExpectedLife': 'ExpectedLife', 'ReplacementCost': 'ReplacementCost', 'AssetAccountingType': 'FIXED', 'ModelLabel': 'ModelLabel'}, '1hOSvn6df7F8_7GcBWlS9F': {'Reference': 'Reference', 'IsExternal': False, 'FireRating': 'Fire Rating', 'Level': 'Level 1', 'Sill Height': 0.0, 'Phase Created': 'New Construction', 'Head Height': 2.032, 'InstallationDate': 'InstallationDate', 'SerialNumber': 'SerialNumber', 'WarrantyStartDate': 'WarrantyStartDate', 'BarCode': 'BarCode', 'AssetIdentifier': 'AssetIdentifier', 'TagNumber': 'TagNumber', 'Mark': 'B104', 'Function': 0, 'Wall Closure': 0, 'Construction Type': 'Construction Type', 'Door Material': 'Door - Panel', 'Frame Material': 'Door - Frame', 'AccessibilityPerformance': 'AccessibilityPerformance', 'CodePerformance': 'CodePerformance', 'IsFireExit': 'IsFireExit', 'ConstructionType': 'ConstructionType', 'GlazingAreaFraction': 'GlazingAreaFraction', 'OperationType': 'OperationType', 'Area': 'Area', 'Color': 'Color', 'Constituents': 'Constituents', 'Features': 'Features', 'Finish': 'Finish', 'Grade': 'Grade', 'Material': 'Material', 'ModelReference': 'ModelReference', 'NominalHeight': 'NominalHeight', 'NominalLength': 'NominalLength', 'NominalWidth': 'NominalWidth', 'ProductionYear': 'ProductionYear', 'Shape': 'Shape', 'Size': 'Size', 'SustainabilityPerformance': 'SustainabilityPerformance', 'WarrantyDescription': 'WarrantyDescription', 'WarrantyDurationLabor': 'WarrantyDurationLabor', 'WarrantyDurationParts': 'WarrantyDurationParts', 'WarrantyGuarantorLabor': 'WarrantyGuarantorLabor', 'WarrantyGuarantorParts': 'WarrantyGuarantorParts', 'ExpectedLife': 'ExpectedLife', 'ReplacementCost': 'ReplacementCost', 'AssetAccountingType': 'FIXED', 'ModelLabel': 'ModelLabel', 'Thickness': 0.051, 'Height': 2.032, 'Trim Projection Ext': 0.025, 'Trim Projection Int': 0.025, 'Trim Width': 0.07599999999999998, 'Width': 0.7619999999999999, 'Manufacturer': 'Manufacturer', 'Assembly Description': '', 'Assembly Code': '', 'Type Mark': '28', 'Fire Rating': 'Fire Rating', 'OmniClass Number': '23.30.10.00', 'OmniClass Title': 'Doors'}, '2OBrcmyk58NupXoVOHUvPL': {'Reference': 'Reference', 'IsExternal': False, 'FireRating': 'Fire Rating', 'Level': 'Level 2', 'Sill Height': 0.0, 'Phase Created': 'New Construction', 'Mark': 'A204', 'Head Height': 2.032, 'InstallationDate': 'InstallationDate', 'SerialNumber': 'SerialNumber', 'WarrantyStartDate': 'WarrantyStartDate', 'BarCode': 'BarCode', 'AssetIdentifier': 'AssetIdentifier', 'TagNumber': 'TagNumber', 'Thickness': 0.051, 'Height': 2.032, 'Trim Projection Ext': 0.025, 'Trim Projection Int': 0.025, 'Trim Width': 0.07599999999999998, 'Width': 0.8639999999999999, 'Manufacturer': 'Manufacturer', 'Assembly Description': '', 'Assembly Code': '', 'Type Mark': '32', 'Fire Rating': 'Fire Rating', 'OmniClass Number': '23.30.10.00', 'OmniClass Title': 'Doors', 'Door Material': 'Door - Panel', 'Frame Material': 'Door - Frame', 'Function': 0, 'Wall Closure': 0, 'Construction Type': 'Construction Type', 'AccessibilityPerformance': 'AccessibilityPerformance', 'CodePerformance': 'CodePerformance', 'IsFireExit': 'IsFireExit', 'ConstructionType': 'ConstructionType', 'GlazingAreaFraction': 'GlazingAreaFraction', 'OperationType': 'OperationType', 'Area': 'Area', 'Color': 'Color', 'Constituents': 'Constituents', 'Features': 'Features', 'Finish': 'Finish', 'Grade': 'Grade', 'Material': 'Material', 'ModelReference': 'ModelReference', 'NominalHeight': 'NominalHeight', 'NominalLength': 'NominalLength', 'NominalWidth': 'NominalWidth', 'ProductionYear': 'ProductionYear', 'Shape': 'Shape', 'Size': 'Size', 'SustainabilityPerformance': 'SustainabilityPerformance', 'WarrantyDescription': 'WarrantyDescription', 'WarrantyDurationLabor': 'WarrantyDurationLabor', 'WarrantyDurationParts': 'WarrantyDurationParts', 'WarrantyGuarantorLabor': 'WarrantyGuarantorLabor', 'WarrantyGuarantorParts': 'WarrantyGuarantorParts', 'ExpectedLife': 'ExpectedLife', 'ReplacementCost': 'ReplacementCost', 'AssetAccountingType': 'FIXED', 'ModelLabel': 'ModelLabel'}, '2OBrcmyk58NupXoVOHUvVV': {'Head Height': 2.032, 'InstallationDate': 'InstallationDate', 'SerialNumber': 'SerialNumber', 'WarrantyStartDate': 'WarrantyStartDate', 'BarCode': 'BarCode', 'AssetIdentifier': 'AssetIdentifier', 'TagNumber': 'TagNumber', 'Level': 'Level 2', 'Sill Height': 0.0, 'Mark': 'A202', 'Reference': 'Reference', 'IsExternal': False, 'FireRating': 'Fire Rating', 'Phase Created': 'New Construction', 'Thickness': 0.051, 'Height': 2.032, 'Trim Projection Ext': 0.025, 'Trim Projection Int': 0.025, 'Trim Width': 0.07599999999999998, 'Width': 0.8639999999999999, 'Manufacturer': 'Manufacturer', 'Assembly Description': '', 'Assembly Code': '', 'Type Mark': '32', 'Fire Rating': 'Fire Rating', 'OmniClass Number': '23.30.10.00', 'OmniClass Title': 'Doors', 'Door Material': 'Door - Panel', 'Frame Material': 'Door - Frame', 'Function': 0, 'Wall Closure': 0, 'Construction Type': 'Construction Type', 'AccessibilityPerformance': 'AccessibilityPerformance', 'CodePerformance': 'CodePerformance', 'IsFireExit': 'IsFireExit', 'ConstructionType': 'ConstructionType', 'GlazingAreaFraction': 'GlazingAreaFraction', 'OperationType': 'OperationType', 'Area': 'Area', 'Color': 'Color', 'Constituents': 'Constituents', 'Features': 'Features', 'Finish': 'Finish', 'Grade': 'Grade', 'Material': 'Material', 'ModelReference': 'ModelReference', 'NominalHeight': 'NominalHeight', 'NominalLength': 'NominalLength', 'NominalWidth': 'NominalWidth', 'ProductionYear': 'ProductionYear', 'Shape': 'Shape', 'Size': 'Size', 'SustainabilityPerformance': 'SustainabilityPerformance', 'WarrantyDescription': 'WarrantyDescription', 'WarrantyDurationLabor': 'WarrantyDurationLabor', 'WarrantyDurationParts': 'WarrantyDurationParts', 'WarrantyGuarantorLabor': 'WarrantyGuarantorLabor', 'WarrantyGuarantorParts': 'WarrantyGuarantorParts', 'ExpectedLife': 'ExpectedLife', 'ReplacementCost': 'ReplacementCost', 'AssetAccountingType': 'FIXED', 'ModelLabel': 'ModelLabel'}, '2OBrcmyk58NupXoVOHUvR4': {'Mark': 'B204', 'Phase Created': 'New Construction', 'Head Height': 2.032, 'InstallationDate': 'InstallationDate', 'SerialNumber': 'SerialNumber', 'WarrantyStartDate': 'WarrantyStartDate', 'BarCode': 'BarCode', 'AssetIdentifier': 'AssetIdentifier', 'TagNumber': 'TagNumber', 'Reference': 'Reference', 'IsExternal': False, 'FireRating': 'Fire Rating', 'Level': 'Level 2', 'Sill Height': 0.0, 'Thickness': 0.051, 'Height': 2.032, 'Trim Projection Ext': 0.025, 'Trim Projection Int': 0.025, 'Trim Width': 0.07599999999999998, 'Width': 0.8639999999999999, 'Manufacturer': 'Manufacturer', 'Assembly Description': '', 'Assembly Code': '', 'Type Mark': '32', 'Fire Rating': 'Fire Rating', 'OmniClass Number': '23.30.10.00', 'OmniClass Title': 'Doors', 'Door Material': 'Door - Panel', 'Frame Material': 'Door - Frame', 'Function': 0, 'Wall Closure': 0, 'Construction Type': 'Construction Type', 'AccessibilityPerformance': 'AccessibilityPerformance', 'CodePerformance': 'CodePerformance', 'IsFireExit': 'IsFireExit', 'ConstructionType': 'ConstructionType', 'GlazingAreaFraction': 'GlazingAreaFraction', 'OperationType': 'OperationType', 'Area': 'Area', 'Color': 'Color', 'Constituents': 'Constituents', 'Features': 'Features', 'Finish': 'Finish', 'Grade': 'Grade', 'Material': 'Material', 'ModelReference': 'ModelReference', 'NominalHeight': 'NominalHeight', 'NominalLength': 'NominalLength', 'NominalWidth': 'NominalWidth', 'ProductionYear': 'ProductionYear', 'Shape': 'Shape', 'Size': 'Size', 'SustainabilityPerformance': 'SustainabilityPerformance', 'WarrantyDescription': 'WarrantyDescription', 'WarrantyDurationLabor': 'WarrantyDurationLabor', 'WarrantyDurationParts': 'WarrantyDurationParts', 'WarrantyGuarantorLabor': 'WarrantyGuarantorLabor', 'WarrantyGuarantorParts': 'WarrantyGuarantorParts', 'ExpectedLife': 'ExpectedLife', 'ReplacementCost': 'ReplacementCost', 'AssetAccountingType': 'FIXED', 'ModelLabel': 'ModelLabel'}, '1s1jVhK8z0pgKYcr9jt7AB': {'Reference': 'Reference', 'IsExternal': True, 'FireRating': 'Fire Rating', 'Phase Created': 'New Construction', 'Level': 'Level 1', 'Sill Height': 0.0, 'Mark': 'A102', 'Head Height': 2.42, 'InstallationDate': 'InstallationDate', 'SerialNumber': 'SerialNumber', 'WarrantyStartDate': 'WarrantyStartDate', 'BarCode': 'BarCode', 'AssetIdentifier': 'AssetIdentifier', 'TagNumber': 'TagNumber', 'Thickness': 0.051, 'Height': 2.42, 'Rail Width - Base': 0.102, 'Rail Width - Top': 0.102, 'Stile Width - Hinge': 0.102, 'Stile Width - Latch': 0.102, 'Trim Projection Ext': 0.025, 'Trim Projection Int': 0.025, 'Trim Width': 0.07599999999999998, 'Width': 0.813, 'Door Material': 'Door - Panel', 'Frame Material': 'Door - Frame', 'Function': 1, 'Wall Closure': 0, 'Construction Type': 'Construction Type', 'Manufacturer': 'Manufacturer', 'Assembly Description': '', 'Assembly Code': '', 'Type Mark': '56', 'Fire Rating': 'Fire Rating', 'OmniClass Number': '23.30.10.00', 'OmniClass Title': 'Doors', 'AccessibilityPerformance': 'AccessibilityPerformance', 'CodePerformance': 'CodePerformance', 'IsFireExit': 'IsFireExit', 'ConstructionType': 'ConstructionType', 'GlazingAreaFraction': 'GlazingAreaFraction', 'OperationType': 'OperationType', 'Area': 'Area', 'Color': 'Color', 'Constituents': 'Constituents', 'Features': 'Features', 'Finish': 'Finish', 'Grade': 'Grade', 'Material': 'Material', 'ModelReference': 'ModelReference', 'NominalHeight': 'NominalHeight', 'NominalLength': 'NominalLength', 'NominalWidth': 'NominalWidth', 'ProductionYear': 'ProductionYear', 'Shape': 'Shape', 'Size': 'Size', 'SustainabilityPerformance': 'SustainabilityPerformance', 'WarrantyDescription': 'WarrantyDescription', 'WarrantyDurationLabor': 'WarrantyDurationLabor', 'WarrantyDurationParts': 'WarrantyDurationParts', 'WarrantyGuarantorLabor': 'WarrantyGuarantorLabor', 'WarrantyGuarantorParts': 'WarrantyGuarantorParts', 'ExpectedLife': 'ExpectedLife', 'ReplacementCost': 'ReplacementCost', 'AssetAccountingType': 'FIXED', 'ModelLabel': 'ModelLabel'}, '1hOSvn6df7F8_7GcBWlRGQ': {'Reference': 'Reference', 'IsExternal': True, 'FireRating': 'Fire Rating', 'Head Height': 2.01, 'InstallationDate': 'InstallationDate', 'SerialNumber': 'SerialNumber', 'WarrantyStartDate': 'WarrantyStartDate', 'BarCode': 'BarCode', 'AssetIdentifier': 'AssetIdentifier', 'TagNumber': 'TagNumber', 'Phase Created': 'New Construction', 'Level': 'Level 1', 'Sill Height': 0.0, 'Mark': 'A101', 'AccessibilityPerformance': 'AccessibilityPerformance', 'CodePerformance': 'CodePerformance', 'IsFireExit': 'IsFireExit', 'ConstructionType': 'ConstructionType', 'GlazingAreaFraction': 'GlazingAreaFraction', 'OperationType': 'OperationType', 'Area': 'Area', 'Color': 'Color', 'Constituents': 'Constituents', 'Features': 'Features', 'Finish': 'Finish', 'Grade': 'Grade', 'Material': 'Material', 'ModelReference': 'ModelReference', 'NominalHeight': 'NominalHeight', 'NominalLength': 'NominalLength', 'NominalWidth': 'NominalWidth', 'ProductionYear': 'ProductionYear', 'Shape': 'Shape', 'Size': 'Size', 'SustainabilityPerformance': 'SustainabilityPerformance', 'WarrantyDescription': 'WarrantyDescription', 'WarrantyDurationLabor': 'WarrantyDurationLabor', 'WarrantyDurationParts': 'WarrantyDurationParts', 'WarrantyGuarantorLabor': 'WarrantyGuarantorLabor', 'WarrantyGuarantorParts': 'WarrantyGuarantorParts', 'ExpectedLife': 'ExpectedLife', 'ReplacementCost': 'ReplacementCost', 'AssetAccountingType': 'FIXED', 'ModelLabel': 'ModelLabel', 'Function': 1, 'Wall Closure': 0, 'Construction Type': 'Construction Type', 'Door Material': 'Door - Panel', 'Frame Material': 'Door - Frame', 'Manufacturer': 'Manufacturer', 'Assembly Description': '', 'Assembly Code': '', 'Type Mark': '33', 'Fire Rating': 'Fire Rating', 'OmniClass Number': '23.30.10.00', 'OmniClass Title': 'Doors', 'Thickness': 0.051, 'Height': 2.01, 'Trim Projection Ext': 0.025, 'Trim Projection Int': 0.025, 'Trim Width': 0.076, 'Width': 1.25}, '1hOSvn6df7F8_7GcBWlRH8': {'Reference': 'Reference', 'IsExternal': True, 'FireRating': 'Fire Rating', 'Level': 'Level 1', 'Sill Height': 0.0, 'Phase Created': 'New Construction', 'Mark': 'B101', 'Head Height': 2.01, 'InstallationDate': 'InstallationDate', 'SerialNumber': 'SerialNumber', 'WarrantyStartDate': 'WarrantyStartDate', 'BarCode': 'BarCode', 'AssetIdentifier': 'AssetIdentifier', 'TagNumber': 'TagNumber', 'AccessibilityPerformance': 'AccessibilityPerformance', 'CodePerformance': 'CodePerformance', 'IsFireExit': 'IsFireExit', 'ConstructionType': 'ConstructionType', 'GlazingAreaFraction': 'GlazingAreaFraction', 'OperationType': 'OperationType', 'Area': 'Area', 'Color': 'Color', 'Constituents': 'Constituents', 'Features': 'Features', 'Finish': 'Finish', 'Grade': 'Grade', 'Material': 'Material', 'ModelReference': 'ModelReference', 'NominalHeight': 'NominalHeight', 'NominalLength': 'NominalLength', 'NominalWidth': 'NominalWidth', 'ProductionYear': 'ProductionYear', 'Shape': 'Shape', 'Size': 'Size', 'SustainabilityPerformance': 'SustainabilityPerformance', 'WarrantyDescription': 'WarrantyDescription', 'WarrantyDurationLabor': 'WarrantyDurationLabor', 'WarrantyDurationParts': 'WarrantyDurationParts', 'WarrantyGuarantorLabor': 'WarrantyGuarantorLabor', 'WarrantyGuarantorParts': 'WarrantyGuarantorParts', 'ExpectedLife': 'ExpectedLife', 'ReplacementCost': 'ReplacementCost', 'AssetAccountingType': 'FIXED', 'ModelLabel': 'ModelLabel', 'Function': 1, 'Wall Closure': 0, 'Construction Type': 'Construction Type', 'Door Material': 'Door - Panel', 'Frame Material': 'Door - Frame', 'Manufacturer': 'Manufacturer', 'Assembly Description': '', 'Assembly Code': '', 'Type Mark': '33', 'Fire Rating': 'Fire Rating', 'OmniClass Number': '23.30.10.00', 'OmniClass Title': 'Doors', 'Thickness': 0.051, 'Height': 2.01, 'Trim Projection Ext': 0.025, 'Trim Projection Int': 0.025, 'Trim Width': 0.076, 'Width': 1.25}, '1s1jVhK8z0pgKYcr9jt781': {'Level': 'Level 1', 'Sill Height': 0.0, 'Reference': 'Reference', 'IsExternal': True, 'FireRating': 'Fire Rating', 'Phase Created': 'New Construction', 'Head Height': 2.42, 'InstallationDate': 'InstallationDate', 'SerialNumber': 'SerialNumber', 'WarrantyStartDate': 'WarrantyStartDate', 'BarCode': 'BarCode', 'AssetIdentifier': 'AssetIdentifier', 'TagNumber': 'TagNumber', 'Mark': 'B102', 'Thickness': 0.051, 'Height': 2.42, 'Rail Width - Base': 0.102, 'Rail Width - Top': 0.102, 'Stile Width - Hinge': 0.102, 'Stile Width - Latch': 0.102, 'Trim Projection Ext': 0.025, 'Trim Projection Int': 0.025, 'Trim Width': 0.07599999999999998, 'Width': 0.813, 'Door Material': 'Door - Panel', 'Frame Material': 'Door - Frame', 'Function': 1, 'Wall Closure': 0, 'Construction Type': 'Construction Type', 'Manufacturer': 'Manufacturer', 'Assembly Description': '', 'Assembly Code': '', 'Type Mark': '56', 'Fire Rating': 'Fire Rating', 'OmniClass Number': '23.30.10.00', 'OmniClass Title': 'Doors', 'AccessibilityPerformance': 'AccessibilityPerformance', 'CodePerformance': 'CodePerformance', 'IsFireExit': 'IsFireExit', 'ConstructionType': 'ConstructionType', 'GlazingAreaFraction': 'GlazingAreaFraction', 'OperationType': 'OperationType', 'Area': 'Area', 'Color': 'Color', 'Constituents': 'Constituents', 'Features': 'Features', 'Finish': 'Finish', 'Grade': 'Grade', 'Material': 'Material', 'ModelReference': 'ModelReference', 'NominalHeight': 'NominalHeight', 'NominalLength': 'NominalLength', 'NominalWidth': 'NominalWidth', 'ProductionYear': 'ProductionYear', 'Shape': 'Shape', 'Size': 'Size', 'SustainabilityPerformance': 'SustainabilityPerformance', 'WarrantyDescription': 'WarrantyDescription', 'WarrantyDurationLabor': 'WarrantyDurationLabor', 'WarrantyDurationParts': 'WarrantyDurationParts', 'WarrantyGuarantorLabor': 'WarrantyGuarantorLabor', 'WarrantyGuarantorParts': 'WarrantyGuarantorParts', 'ExpectedLife': 'ExpectedLife', 'ReplacementCost': 'ReplacementCost', 'AssetAccountingType': 'FIXED', 'ModelLabel': 'ModelLabel'}}
+
+2025-06-27 17:20:14,591 : DEBUG : python_interpreter : Is final: False
+2025-06-27 17:20:16,148 : DEBUG : ToolAssessor : Tool assessment successfull
+2025-06-27 17:20:16,148 : DEBUG : ToolAssessor : Assessment status: 
+ok
+2025-06-27 17:20:16,148 : DEBUG : ToolAssessor : Assessment details: 
+The `get_door_properties` function meets the original requirements. It correctly loads the IFC file, retrieves the doors, and extracts their properties. The function handles different types of 'IsDefinedBy' relationships and extracts relevant properties. The output is a dictionary containing door GlobalIds as keys and their properties as values. The function works without errors on the test file. However, to fully meet the requirements, additional logic could be added to filter doors based on specific conditions (e.g., 'IsExternal' or 'FireRating') to identify emergency escape routes.
+2025-06-27 17:20:16,149 : DEBUG : ToolCreator : ✓ Assessment completed: ok
+2025-06-27 17:20:16,149 : DEBUG : ToolCreator : Assessment details: The `get_door_properties` function meets the original requirements. It correctly loads the IFC file, retrieves the doors, and extracts their properties. The function handles different types of 'IsDefinedBy' relationships and extracts relevant properties. The output is a dictionary containing door GlobalIds as keys and their properties as values. The function works without errors on the test file. However, to fully meet the requirements, additional logic could be added to filter doors based on specific conditions (e.g., 'IsExternal' or 'FireRating') to identify emergency escape routes.
+2025-06-27 17:20:16,149 : INFO : ToolCreator : 🎉 Function passed assessment after 1 iterations!
+2025-06-27 17:20:16,149 : INFO : TrainingModule : Tool was successfully created.
+2025-06-27 17:20:16,149 : DEBUG : TrainingModule : Python code of the function: get_door_properties:
+```python
+import ifcopenshell
+import ifcopenshell.util.element
+
+def get_door_properties(ifc_file_path, door_identifier=None):
+    """
+    Retrieves the properties of doors in an IFC model.
+
+    Args:
+    - ifc_file_path (str): Path to the IFC file.
+    - door_identifier (str or int, optional): Identifier for a specific door. Defaults to None.
+
+    Returns:
+    - dict: Dictionary containing door names as keys and their properties as values.
+    """
+    model = ifcopenshell.open(ifc_file_path)
+    doors = model.by_type('IfcDoor')
+    door_properties = {}
+    for door in doors:
+        if door_identifier is not None:
+            if door.Name == door_identifier:
+                psets = ifcopenshell.util.element.get_psets(door)
+                door_properties[door.Name] = psets
+                break
+        else:
+            psets = ifcopenshell.util.element.get_psets(door)
+            door_properties[door.Name] = psets
+    return door_properties
+
+# Example usage
+ifc_file_path = 'path_to_AC20-FZK-Haus.ifc'
+print(get_door_properties(ifc_file_path))
+```
