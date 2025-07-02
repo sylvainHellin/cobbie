@@ -15,13 +15,13 @@ from .data_loader import Datapoint, load_train_dev_split
 class TrainingModule(dspy.Module):
     def __init__(
         self,
-        lm_name: str = "claude",
+        llm: dspy.LM,
         log_level: Literal["DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"] = LOG_LEVEL,
         training_size: Optional[int] = 2,
         similarity_treshold: float = 0.8,
     ):
         super().__init__()
-        self.lm_name = lm_name
+        self.llm = llm
         self.log_level = log_level
         self.logger = get_logger(name="TrainingModule", log_level=log_level)
         self.training_size = training_size
@@ -31,7 +31,7 @@ class TrainingModule(dspy.Module):
         self.function_name: Optional[str] = None
         self.function_code: Optional[str] = None
         self.function_requirements: Optional[str] = None
-        self.tool_creator = ToolCreator()
+        self.tool_creator = ToolCreator(llm=self.llm)
         self.answer_verifier = AnswerVerifier()
         self.engine = IfcAnswerEngine()
 
@@ -142,20 +142,19 @@ class TrainingModule(dspy.Module):
 
 
 def main(
-    lm_name: str = "gemini-flash",
+    lm_name: str = "llama4-maverick-groq",
     log_level: Literal["DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"] = "DEBUG",
     training_size: Optional[int] = 2,
     similarity_treshold: float = 0.8,
 ):
     # configure dspy
     lm_info = LANGUAGE_MODELS[lm_name]
-    lm = dspy.LM(
+    llm = dspy.LM(
         model=lm_info.url,
         api_key=lm_info.api_key,
         max_tokens=5000,
-        max_output_tokens=5000,
     )
-    dspy.configure(lm=lm)
+    dspy.configure(lm=llm)
 
     # setup mlflow
     mlflow.dspy.autolog()  # type: ignore
@@ -170,7 +169,7 @@ def main(
         # Log info
         logger.info(f"Try to answer new question: {datapoint.question}\n\n")
         mlflow.start_run(run_name=f"question_id_{datapoint.id}")
-        training_module = TrainingModule()
+        training_module = TrainingModule(llm=llm)
         output = training_module.forward(datapoint=datapoint)
         print(output)
 
