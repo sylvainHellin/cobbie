@@ -4,12 +4,12 @@ import ifcopenshell.util.element
 from src.config import TEST_IFC_PATH
 
 
-def get_room_ceiling_height(ifc_file_path: str, room_identifier: str) -> dict:
+def get_room_ceiling_height(path_ifc_model: str, room_identifier: str) -> dict:
     """
     Get the ceiling height of a room/space in an IFC model.
 
     Args:
-        ifc_file_path (str): Path to the IFC file
+        path_ifc_model (str): Path to the IFC file
         room_identifier (str or int): Room number, name, or ID
 
     Returns:
@@ -30,7 +30,7 @@ def get_room_ceiling_height(ifc_file_path: str, room_identifier: str) -> dict:
 
     try:
         # Load the IFC file
-        ifc_file = ifcopenshell.open(ifc_file_path)
+        ifc_file = ifcopenshell.open(path_ifc_model)
 
         # Get units from the file
         units = ifc_file.by_type("IfcUnitAssignment")  # type:ignore
@@ -167,6 +167,6 @@ def get_room_ceiling_height(ifc_file_path: str, room_identifier: str) -> dict:
 if __name__ == "__main__":
     room_name = "A203"
     result = get_room_ceiling_height(
-        ifc_file_path=TEST_IFC_PATH, room_identifier=room_name
+        path_ifc_model=TEST_IFC_PATH, room_identifier=room_name
     )
     print(result)

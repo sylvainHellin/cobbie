@@ -162,10 +162,10 @@ def _create_function_from_source_code(
 
         tool_wrapper.__doc__ = f"""
         {metadata.docstring or f"Tool: {function_name}"}
-        
+
         Args:
 {args_description}
-            
+
         Returns:
             {return_description}
         """
@@ -320,12 +320,12 @@ if __name__ == "__main__":
     print(f"Result: {os_res}")
 
     # 8. Test with a real tool created by an LLM
-    tool_code = '''def get_room_ceiling_height(ifc_file_path: str, room_identifier: str) -> dict:
+    tool_code = '''def get_room_ceiling_height(path_ifc_model: str, room_identifier: str) -> dict:
         """
         Get the ceiling height of a room/space in an IFC model.
 
         Args:
-            ifc_file_path (str): Path to the IFC file
+            path_ifc_model (str): Path to the IFC file
             room_identifier (str or int): Room number, name, or ID
 
         Returns:
@@ -346,7 +346,7 @@ if __name__ == "__main__":
 
         try:
             # Load the IFC file
-            ifc_file = ifcopenshell.open(ifc_file_path)
+            ifc_file = ifcopenshell.open(path_ifc_model)
 
             # Get units from the file
             units = ifc_file.by_type("IfcUnitAssignment")
@@ -483,7 +483,7 @@ if __name__ == "__main__":
     )
 
     result_real_tool = new_tool(
-        ifc_file_path="src/bim_models/duplex/arc.ifc", room_identifier="A203"
+        path_ifc_model="src/bim_models/duplex/arc.ifc", room_identifier="A203"
     )
     print("\n8. Testing with a real tool created by an LLM: get_room_ceiling_height")
     print(f"Result: {result_real_tool}")

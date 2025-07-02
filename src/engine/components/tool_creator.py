@@ -59,17 +59,17 @@ class NewToolSignature(dspy.Signature):
     4.  **Build the Final Function:** Once you have working snippets, assemble them into the final function.
 
     ⚠️  CRITICAL REQUIREMENTS - The final function MUST:
-    - Accept path_ifc_file: str as the FIRST and ONLY parameter.
-    - Load the IFC file internally: `ifc_file = ifcopenshell.open(path_ifc_file)`
+    - Accept path_ifc_model: str as the FIRST and ONLY parameter.
+    - Load the IFC file internally: `ifc_file = ifcopenshell.open(path_ifc_model)`
     - Return data structures (e.g., lists, dicts), not formatted strings.
     - Be well-documented with docstrings and type hints.
 
     🔥 MANDATORY IMPLEMENTATION PATTERN (DO NOT DEVIATE):
     ```python
-    def your_function_name(path_ifc_file: str) -> list[any]:
+    def your_function_name(path_ifc_model: str) -> list[any]:
         '''Your docstring here'''
         # Load the IFC file from the provided path
-        ifc_file = ifcopenshell.open(path_ifc_file)
+        ifc_file = ifcopenshell.open(path_ifc_model)
 
         # ... your logic here ...
         results = ifc_file.by_type("IfcSpace")  # Example
@@ -94,6 +94,10 @@ class NewToolSignature(dspy.Signature):
 
     function_boilerplate: str = dspy.InputField(
         desc="This boilerplate must be included at the beginning of your code; otherwise, it will not work properly."
+    )
+
+    path_ifc_model: str = dspy.InputField(
+        desc="The path to a BIM model in .ifc format to test your function."
     )
 
     # outputs
@@ -124,11 +128,13 @@ class ToolProgrammer(dspy.Module):
         self,
         function_requirements: str,
         function_name: str,
+        path_ifc_model: str,
         function_boilerplate: str = FUNCTION_BOILERPLATE,
     ) -> ModuleOutput:
         result = self.agent(
             function_requirements=function_requirements,
             function_name=function_name,
+            path_ifc_model=path_ifc_model,
             function_boilerplate=function_boilerplate,
         )
 
@@ -154,14 +160,14 @@ class ToolAssessmentSignature(dspy.Signature):
     """
     Assess whether a generated Python function meets requirements and works correctly.
 
-    CRITICAL: The function being tested MUST accept path_ifc_file: str as its first parameter.
+    CRITICAL: The function being tested MUST accept path_ifc_model: str as its first parameter.
 
     To perform the assessment, you MUST:
     1. Call the function DIRECTLY with the provided IFC file path (do NOT load the model first)
     2. The function should handle loading the IFC file internally
     3. Examine the return value or any errors
     4. Compare the result with the original 'function_requirements'
-    5. Verify the function signature matches: function_name(path_ifc_file: str) -> ReturnType
+    5. Verify the function signature matches: function_name(path_ifc_model: str) -> ReturnType
 
     ASSESSMENT CRITERIA:
     - Function must accept a string file path as first parameter
@@ -256,7 +262,7 @@ class ToolCorrectionSignature(dspy.Signature):
     - **Minimize changes:** Only alter the parts of the code that are broken.
     - **Do not research:** Avoid using tools like 'web_search' or 'query_ifcopenshell_documentation'. The goal is to fix the existing code with the information at hand.
     - **Handle syntax errors first:** If the assessment mentions a syntax error, fix that first. This is often a simple typo or mistake.
-    - **Maintain signature:** Ensure the corrected function still adheres to the required signature: `def function_name(path_ifc_file: str) -> ...:`
+    - **Maintain signature:** Ensure the corrected function still adheres to the required signature: `def function_name(path_ifc_model: str) -> ...:`
 
     An assessment was conducted on the current implementation and has assessed that it is not working properly. Details regarding what needs to be changed are provided.
 
@@ -264,10 +270,10 @@ class ToolCorrectionSignature(dspy.Signature):
 
     🔥 MANDATORY IMPLEMENTATION PATTERN (DO NOT DEVIATE):
     ```python
-    def your_function_name(path_ifc_file: str) -> list[any]:
+    def your_function_name(path_ifc_model: str) -> list[any]:
         '''Your docstring here'''
         # Load the IFC file from the provided path
-        ifc_file = ifcopenshell.open(path_ifc_file)
+        ifc_file = ifcopenshell.open(path_ifc_model)
 
         # Work with the loaded ifc_file object
         results = ifc_file.by_type("YourEntityType")
@@ -442,6 +448,7 @@ class ToolCreator(dspy.Module):
                 output_tool_programmer = self.tool_programmer.forward(
                     function_requirements=function_requirements,
                     function_name=function_name,
+                    path_ifc_model=path_ifc_model,
                     function_boilerplate=self.function_boilerplate,
                 )
 
