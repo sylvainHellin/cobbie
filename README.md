@@ -48,7 +48,7 @@ flowchart TB
     M[Start] --> A[question]
     A --> B
     H --> B
-    B --Try to answer the question. ----> D[["'Output: 
+    B --Try to answer the question. ----> D[["'Output:
 - answer (str)
 - new_tool_needed (bool)'"]]
     D -- new_tool_needed: True --> E
@@ -97,7 +97,7 @@ All tools are executed within a sandboxed Python environment for security.
 To trace and log experiments, MLflow is used. Start the MLflow server before running any training or inference tasks:
 
 ```bash
-mlflow server --backend-store-uri sqlite:///mlflow.sqlite
+mlflow server --host 127.0.0.1 --port 5000 --backend-store-uri sqlite:///mlflow.sqlite
 ```
 
 ## Project Structure
