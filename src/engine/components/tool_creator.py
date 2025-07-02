@@ -28,8 +28,6 @@ import mlflow
 from src.config import (
     FUNCTION_BOILERPLATE,
     IFCOPENSHELL_DOCUMENTATION_OVERVIEW,
-    LANGUAGE_MODELS,
-    LLM,
     ROOT_PATH,
 )
 from src.engine.schemas.module_output import ModuleOutput
@@ -353,7 +351,7 @@ class ToolCorrector(dspy.Module):
 class ToolCreator(dspy.Module):
     def __init__(
         self,
-        llm_info: LLM = LANGUAGE_MODELS["claude"],
+        llm: dspy.LM,
         max_iter: int = 3,
         max_iter_sub_agents: int = 10,
         function_boilerplate=FUNCTION_BOILERPLATE,
@@ -365,7 +363,7 @@ class ToolCreator(dspy.Module):
         callbacks=None,
     ):
         super().__init__(callbacks)
-        self.lm = dspy.LM(model=llm_info.url, api_key=llm_info.api_key)
+        self.lm = llm
         dspy.configure(lm=self.lm)
         self.log_level = log_level
         self.logger = get_logger(name="ToolCreator", log_level=log_level)
@@ -562,130 +560,3 @@ class ToolCreator(dspy.Module):
 
             # Return the result (good or bad)
             return output
-
-
-# %% Example Usage
-# =============== Example Usage =============== #
-
-
-def example_usage(
-    function_name: str,
-    function_requirements: str,
-    path_ifc_model: str,
-    llm_name: str = "llama4-maverick-groq",
-    log_level: Literal["DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"] = "DEBUG",
-    max_iter: int = 3,
-    max_iter_sub_agents: int = 10,
-):
-    """
-    Example demonstrating how to use the multi-agent tool creation system.
-
-    Args:
-        function_name: Name for the function to create
-        function_requirements: Description of what the function should do
-        path_ifc_model: Path to test IFC file
-        llm_name: Name of language model to use (from LANGUAGE_MODELS config)
-    """
-    logger = get_logger(name=function_name)
-
-    logger.info(f"Creating tool with requirements: {function_requirements}")
-    logger.info(f"Using test IFC file: {path_ifc_model}")
-    logger.info(f"Using LLM: {llm_name}")
-
-    def create_new_tool(
-        function_name: str,
-        function_requirements: str,
-        path_ifc_model: str,
-        llm_info=LANGUAGE_MODELS[llm_name],
-    ):
-        tool_creator = ToolCreator(
-            log_level=log_level,
-            llm_info=llm_info,
-            max_iter=max_iter,
-            max_iter_sub_agents=max_iter_sub_agents,
-        )
-        result = tool_creator.forward(
-            function_name=function_name,
-            function_requirements=function_requirements,
-            path_ifc_model=path_ifc_model,
-        )
-        return result
-
-    # Create the tool
-    result = create_new_tool(
-        function_requirements=function_requirements,
-        path_ifc_model=path_ifc_model,
-        function_name=function_name,
-        llm_info=LANGUAGE_MODELS[llm_name],
-    )
-
-    # Log results
-    logger.info("=== RESULT ===")
-    for key, value in result.result.model_dump().items():
-        if value is not None:
-            if key == "python_code" and len(str(value)) > 200:
-                logger.info(f"{key}: {str(value)[:200]}...")
-            else:
-                logger.info(f"{key}: {value}")
-
-    return result
-
-
-if __name__ == "__main__":
-    import os
-
-    import mlflow
-
-    from src.config import TEST_IFC_PATH
-
-    # Move content from last_log to logs
-    log_dir = os.path.join(ROOT_PATH, "src/experiment/logs")
-    last_log_file = os.path.join(log_dir, "last_log.log")
-    logs_file = os.path.join(log_dir, "logs.log")
-
-    with open(last_log_file, "r") as f:
-        last_log_content = f.read()
-
-    # Append to logs file
-    with open(logs_file, "a") as f:
-        f.write(last_log_content)
-
-    # Clear last_log file
-    with open(last_log_file, "w") as f:
-        f.write("")
-
-    # Example 1: Simple single-parameter function
-    function_name = "get_list_ifc_spaces"
-    function_requirements = "Return a list of the IfcSpace from an ifc model. This function should accept the path to an .ifc file as an argument."
-    llm_name = "llama4-maverick-groq"
-
-    # Initialize MLFlow
-    mlflow.dspy.autolog()  # type: ignore
-    mlflow.set_tracking_uri("http://localhost:5000")
-    mlflow.set_experiment(function_name)
-
-    with mlflow.start_run():
-        result = example_usage(
-            function_name=function_name,
-            function_requirements=function_requirements,
-            path_ifc_model=TEST_IFC_PATH,
-            llm_name=llm_name,
-        )
-        print(f"\nResult status: {result.status}")
-
-    # Example 2: Multi-parameter function (commented out for demo)
-    # function_name_2 = "get_spaces_by_min_area"
-    # function_requirements_2 = """
-    # Create a function that returns IFC spaces with net floor area above a threshold.
-    # The function should accept:
-    # - ifc_file_path: str (required) - path to the IFC file
-    # - min_nfa: float (required) - minimum net floor area in square meters
-    # """
-    #
-    # mlflow.set_experiment(function_name_2)
-    # with mlflow.start_run():
-    #     result_2 = example_usage(
-    #         function_name=function_name_2,
-    #         function_requirements=function_requirements_2,
-    #         llm_name="claude"
-    #     )

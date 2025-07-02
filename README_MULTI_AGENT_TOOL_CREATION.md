@@ -41,7 +41,7 @@ dynamic_tool = create_dynamic_tool(generated_code, function_name)
 
 # 3. Present to assessor as a regular tool
 enhanced_assessor = create_assessor_with_dynamic_tool(
-    base_tools=[web_search, query_docs], 
+    base_tools=[web_search, query_docs],
     generated_code=code,
     function_name=name
 )
@@ -67,16 +67,19 @@ assessment = enhanced_assessor(
 ## Usage
 
 ```python
-from src.agents.create_new_tool import create_new_tool
+from src.agents.tool_creator import ToolCreator
 
 requirements = """
-Create a function that extracts all wall elements from an IFC file and returns 
+Create a function that extracts all wall elements from an IFC file and returns
 their basic properties including name, type, height, and thickness.
 """
 
-result = create_new_tool(
-    requirements=requirements,
-    path_ifc_model="path/to/test_model.ifc"
+result = tool_creator_example(
+    function_name=function_name,
+    function_requirements=function_requirements,
+    path_ifc_model="path/to/test_model.ifc",
+    max_iter=3,
+    max_iter_sub_agents=10
 )
 
 if result['status'] == 'success':
@@ -102,4 +105,4 @@ This approach is based on research showing that test coverage increases when tes
 - More sophisticated function name extraction from requirements
 - Integration with external test databases
 - Metrics collection for assessment quality
-- Support for more complex function signatures 
+- Support for more complex function signatures
