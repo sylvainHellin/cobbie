@@ -1,5 +1,6 @@
 import ast
 from pydantic import BaseModel
+import re
 
 
 class PythonFunctionMetadata(BaseModel):
@@ -13,6 +14,8 @@ class PythonFunctionMetadata(BaseModel):
 def _extract_function_metadata(code: str, function_name: str) -> PythonFunctionMetadata:
     """
     Extract function metadata (name, signature, docstring) without executing the code.
+    Tries to use AST parsing first, and falls back to regex for the docstring
+    if the code contains syntax errors.
     """
     output = PythonFunctionMetadata(name=function_name)
 
@@ -66,6 +69,27 @@ def _extract_function_metadata(code: str, function_name: str) -> PythonFunctionM
                     return_type=return_type,
                 )
 
+    except SyntaxError:
+        # Fallback to regex if AST parsing fails
+        docstring_match = re.search(
+            rf'def\s+{function_name}\s*\(.*?\):\s*("""(.*?)"""|\'\'\'(.*?)\'\'\')',
+            code,
+            re.DOTALL | re.MULTILINE,
+        )
+        docstring = ""
+        if docstring_match:
+            docstring = (
+                docstring_match.group(2)
+                if docstring_match.group(2) is not None
+                else docstring_match.group(3)
+            )
+
+        output = PythonFunctionMetadata(
+            name=function_name,
+            docstring=docstring.strip()
+            if docstring
+            else f"Could not parse docstring for {function_name} due to syntax errors.",
+        )
     except Exception as e:
         output = PythonFunctionMetadata(
             name=function_name,
