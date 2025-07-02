@@ -27,18 +27,20 @@ import mlflow
 
 from src.config import (
     FUNCTION_BOILERPLATE,
-    IFCOPENSHELL_DOCUMENTATION_OVERVIEW,
     ROOT_PATH,
 )
 from src.engine.schemas.module_output import ModuleOutput
 from src.engine.schemas.result import Result
 from src.engine.tools.primordial import (
-    format_restrictions_info,
     get_python_interpreter,
     query_ifcopenshell_documentation,
     web_search,
 )
-from src.engine.util import _create_function_from_source_code, get_logger
+from src.engine.util._create_function_from_source_code import (
+    _create_function_from_source_code,
+)
+
+from src.engine.util import get_logger
 
 # Set up the path
 if ROOT_PATH not in sys.path:
@@ -48,43 +50,41 @@ if ROOT_PATH not in sys.path:
 # %% DSPy
 # =============== Define ToolMaker =============== #
 class NewToolSignature(dspy.Signature):
-    f"""
+    """
     Create a Python function that implements the requirements using the IfcOpenShell Python library.
     Your goal is to be an action-oriented programmer. Write code, test it, and refine it.
 
     **Programming Strategy:**
-    1.  **Act First:** Start by writing a minimal amount of code to tackle a small part of the problem.
-    2.  **Test Incrementally:** Use the `python_interpreter` tool to execute your code snippets and verify your assumptions. This is your primary way of learning how to solve the problem.
-    3.  **Research as Needed:** If your code fails, use `query_ifcopenshell_documentation` or `web_search` to find specific answers, then go back to writing and testing code. Do not spend too much time researching upfront.
-    4.  **Build the Final Function:** Once you have working snippets, assemble them into the final function.
+    1. Act First: Start by writing a minimal amount of code to tackle a small part of the problem.
+    2. Test Incrementally: Use the python_interpreter tool to execute your code snippets and verify your assumptions.
+    3. Research as Needed: If your code fails, use query_ifcopenshell_documentation or web_search to find specific answers.
+    4. Build the Final Function: Once you have working snippets, assemble them into the final function.
 
-    ⚠️  CRITICAL REQUIREMENTS - The final function MUST:
+    **CRITICAL JSON FORMATTING RULE FOR TOOL CALLS:**
+    When calling python_interpreter, format JSON arguments as single-line strings.
+    Do NOT use triple quotes in JSON. Use escaped newlines instead.
+    Example: {"python_code": "import ifcopenshell\\nprint('hello')"}
+
+    **CRITICAL REQUIREMENTS - The final function MUST:**
     - Accept path_ifc_model: str as the FIRST and ONLY parameter.
-    - Load the IFC file internally: `ifc_file = ifcopenshell.open(path_ifc_model)`
+    - Load the IFC file internally: ifc_file = ifcopenshell.open(path_ifc_model)
     - Return data structures (e.g., lists, dicts), not formatted strings.
     - Be well-documented with docstrings and type hints.
 
-    🔥 MANDATORY IMPLEMENTATION PATTERN (DO NOT DEVIATE):
-    ```python
-    def your_function_name(path_ifc_model: str) -> list[any]:
-        '''Your docstring here'''
+    **MANDATORY IMPLEMENTATION PATTERN:**
+    def your_function_name(path_ifc_model: str) -> list:
         # Load the IFC file from the provided path
         ifc_file = ifcopenshell.open(path_ifc_model)
-
         # ... your logic here ...
-        results = ifc_file.by_type("IfcSpace")  # Example
-
-        # Return actual data, not strings
         return list(results)
-    ```
 
-    {format_restrictions_info()}
-
-    Below is an overview of the IfcOpenShell library. Use it for a general understanding, but rely on testing code for specifics.
-
-    Overview:
-    {IFCOPENSHELL_DOCUMENTATION_OVERVIEW}
     """
+
+    # Below is an overview of the IfcOpenShell library. Use it for a general understanding, but rely on testing code for specifics.
+
+    # Overview:
+    # {IFCOPENSHELL_DOCUMENTATION_OVERVIEW}
+    # """
 
     # inputs
     function_requirements: str = dspy.InputField(
@@ -97,7 +97,7 @@ class NewToolSignature(dspy.Signature):
     )
 
     path_ifc_model: str = dspy.InputField(
-        desc="The path to a BIM model in .ifc format to test your function."
+        desc="Path to an IFC file for testing the function."
     )
 
     # outputs
@@ -187,7 +187,7 @@ class ToolAssessmentSignature(dspy.Signature):
         desc="Original requirements and description of what the function should do"
     )
     path_ifc_model: str = dspy.InputField(
-        desc="Path to an IFC file for testing the function. Pass this DIRECTLY to the function as the first argument."
+        desc="Path to an IFC file for testing the function."
     )
 
     # outputs
@@ -300,6 +300,10 @@ class ToolCorrectionSignature(dspy.Signature):
         desc="The detailed assessment of the current implementation of the function."
     )
 
+    path_ifc_model: str = dspy.InputField(
+        desc="Path to an IFC file for testing the function."
+    )
+
     # outputs
     new_function_implementation: str = dspy.OutputField(
         desc="The updated implementation of the required function, mitigating the issues identified in the detailed assessment."
@@ -328,12 +332,14 @@ class ToolCorrector(dspy.Module):
         self,
         function_description: str,
         function_name: str,
+        path_ifc_model: str,
         current_function_implementation: str,
         detailed_function_assessment: str,
     ) -> ModuleOutput:
         result = self.agent(
             function_description=function_description,
             function_name=function_name,
+            path_ifc_model=path_ifc_model,
             current_function_implementation=current_function_implementation,
             detailed_function_assessment=detailed_function_assessment,
         )
@@ -550,6 +556,7 @@ class ToolCreator(dspy.Module):
                             output_tool_corrector = self.tool_corrector.forward(
                                 function_description=function_requirements,
                                 function_name=function_name,
+                                path_ifc_model=path_ifc_model,
                                 current_function_implementation=code,
                                 detailed_function_assessment=output_tool_assessor.result.assessment_details
                                 or "No assessment available.",
