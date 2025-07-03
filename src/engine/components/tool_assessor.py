@@ -106,7 +106,7 @@ if __name__ == "__main__":
             api_key=lm_info.api_key,
             max_tokens=5000,
         )
-        dspy.configure(lm=llm, adapter=dspy.JSONAdapter())
+        dspy.configure(lm=llm)
 
         # setup mlflow
         mlflow.dspy.autolog()  # type: ignore
