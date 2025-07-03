@@ -2,6 +2,7 @@ from typing import Literal, List, Callable
 
 import dspy
 
+from src.engine.components.code_agent import CodeAgent
 from src.engine.schemas import ModuleOutput, Result
 from src.engine.util import get_logger, _create_function_from_source_code
 
@@ -9,24 +10,7 @@ from src.engine.util import get_logger, _create_function_from_source_code
 class ToolAssessmentSignature(dspy.Signature):
     """
     Assess whether a generated Python function meets requirements and works correctly.
-
-    CRITICAL: The function being tested MUST accept path_ifc_model: str as its first parameter.
-
-    To perform the assessment, you MUST:
-    1. Call the function DIRECTLY with the provided IFC file path (do NOT load the model first)
-    2. The function should handle loading the IFC file internally
-    3. Examine the return value or any errors
-    4. Compare the result with the original 'function_requirements'
-    5. Verify the function signature matches: function_name(path_ifc_model: str) -> ReturnType
-
-    ASSESSMENT CRITERIA:
-    - Function must accept a string file path as first parameter
-    - Function must load IFC file internally using ifcopenshell.open()
-    - Function must return appropriate data structures (not strings)
-    - Function must work without errors on the test file
-    - Function must meet the original requirements
-
-    If the function doesn't accept a file path as first parameter, mark as 'needs_improvement'.
+    Note that the path_ifc_model is not loaded as a variable in the Python interpreter. Therefore, you must instantiate the variable if you want to use it.
     """
 
     # inputs
@@ -62,7 +46,7 @@ class ToolAssessor(dspy.Module):
         # Combine base tools with the generated tool
         self.tools = tools
         self.max_iters = max_iters
-        self.agent = dspy.ReAct(
+        self.agent = CodeAgent(
             signature=ToolAssessmentSignature,
             tools=self.tools,
             max_iters=self.max_iters,
@@ -104,7 +88,6 @@ if __name__ == "__main__":
 
     from src.config import LANGUAGE_MODELS, TEST_IFC_PATH
     from src.engine.tools.primordial import (
-        get_python_interpreter,
         query_ifcopenshell_documentation,
         web_search,
     )
@@ -123,7 +106,7 @@ if __name__ == "__main__":
             api_key=lm_info.api_key,
             max_tokens=5000,
         )
-        dspy.configure(lm=llm)
+        dspy.configure(lm=llm, adapter=dspy.JSONAdapter())
 
         # setup mlflow
         mlflow.dspy.autolog()  # type: ignore
@@ -131,13 +114,7 @@ if __name__ == "__main__":
         mlflow.set_experiment("ToolAssessor")
 
         # setup the primordial tools
-        python_interpreter = get_python_interpreter(
-            additional_authorized_functions={
-                "web_search": web_search,
-                "query_ifcopenshell_documentation": query_ifcopenshell_documentation,
-            }
-        )
-        base_tools = [python_interpreter, web_search, query_ifcopenshell_documentation]
+        primordial_tools = [web_search, query_ifcopenshell_documentation]
 
         # Create the function from source code (mocking up the implementation from tool_creator.py)
         try:
@@ -149,19 +126,14 @@ if __name__ == "__main__":
             print(f"✗ Failed to create function: {str(e)}")
             return
 
-        # Create new python interpreter with the generated tool included
-        authorized_functions = {
-            "web_search": web_search,
-            "query_ifcopenshell_documentation": query_ifcopenshell_documentation,
-        }
-        authorized_functions[function_name] = new_tool
-        python_interpreter_with_tool = get_python_interpreter(
-            additional_authorized_functions=authorized_functions
-        )
-        tools = base_tools + [new_tool, python_interpreter_with_tool]
+        tools = primordial_tools + [new_tool]
 
         # setup the tool assessor
-        tool_assessor = ToolAssessor(tools=tools, max_iters=10, log_level=log_level)
+        tool_assessor = ToolAssessor(
+            tools=tools,
+            max_iters=10,
+            log_level=log_level,
+        )
 
         # assess the tool
         result = tool_assessor.forward(
@@ -180,7 +152,7 @@ if __name__ == "__main__":
         "import ifcopenshell\n"
         "import ifcopenshell.util.element\n"
         "from typing import List\n\n"
-        "def get_emergency_exit_doors(path_ifc_model: str) -> List[ifcopenshell.entity_instance.entity_instance]:\n"
+        "def get_emergency_exit_doors(path_ifc_model: str) -> List:\n"
         '    """\n'
         "    Retrieves a list of IfcDoor entities that are designated as emergency exits\n"
         "    based on the 'FireExit' property in 'Pset_DoorCommon'.\n\n"
