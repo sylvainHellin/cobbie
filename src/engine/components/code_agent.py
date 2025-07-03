@@ -3,6 +3,7 @@ import typing
 
 import dspy
 from dspy.primitives.program import Module
+from dspy.primitives.tool import Tool
 from dspy.signatures.signature import Signature, ensure_signature
 from smolagents.local_python_executor import LocalPythonExecutor, fix_final_answer_code
 from smolagents.utils import parse_code_blobs
@@ -53,6 +54,12 @@ class CodeAgent(Module):
             tool_dict.update({t.__name__: t for t in self.tools})
         executor.static_tools = tool_dict
         self.python_interpreter = executor
+
+        self.python_interpreter_tool = Tool(
+            func=self.python_interpreter,
+            name="python_interpreter",
+            desc="A tool to execute python code.",
+        )
 
         # Build the tools description for the prompt
         tools_description = ""
@@ -189,7 +196,9 @@ Now, here the task you need to perform:
                 continue
 
             try:
-                result, logs, is_final = self.python_interpreter(code_to_exec)
+                result, logs, is_final = self.python_interpreter_tool(
+                    code_action=code_to_exec
+                )
                 observation = "Execution Logs:\n" + (logs or "No logs.")
                 observation += "\n\nOutput:\n" + (repr(result) or "No output.")
 
