@@ -1,4 +1,5 @@
-from typing import Callable, List, Optional, Type, Any
+from typing import Callable, List, Optional, Type, Any, Literal
+import typing
 
 import dspy
 from dspy.primitives.program import Module
@@ -18,7 +19,6 @@ class CodeAgent(Module):
     def __init__(
         self,
         signature: str | Type[Signature],
-        python_interpreter: Optional[Callable] = None,
         tools: Optional[List[Callable]] = None,
         max_iters: int = 7,
     ):
@@ -28,9 +28,6 @@ class CodeAgent(Module):
         Args:
             signature (str | Type[Signature]): The signature for the overall task,
                 either as a string or a dspy.Signature class.
-            python_interpreter (Callable, optional): A callable Python interpreter.
-                If not provided, a default LocalPythonExecutor will be created.
-                The interpreter is expected to return a tuple: (result, logs, is_final).
             tools (List[Callable], optional): A list of tools to make available
                 to the Python interpreter.
             max_iters (int): The maximum number of code generation-execution loops.
@@ -39,35 +36,26 @@ class CodeAgent(Module):
         self.signature = ensure_signature(signature)
         self.max_iters = max_iters
 
-        def finish(answer: Any):
-            """Submits the final answer and concludes the task.
-
-            Use this function when you are confident you have the correct and complete answer.
-            The argument to this function will be returned as the final output.
+        def finish():
+            """Marks the task as complete.
+            Use this function when you are confident you have collected all the necessary information to answer the user's request.
             """
-            return answer
+            return "Execution complete. The task is finished."
 
         self.tools = tools or []
         self.tools.append(finish)
 
-        if python_interpreter:
-            self.python_interpreter = python_interpreter
-        else:
-            # Create a default interpreter if none is provided
-            executor = LocalPythonExecutor(
-                additional_authorized_imports=AUTHORIZED_IMPORTS
-            )
-            # Make provided tools available in the interpreter's scope
-            tool_dict = AUTHORIZED_FUNCTIONS.copy()
-            if self.tools:
-                tool_dict.update({t.__name__: t for t in self.tools})
-            executor.static_tools = tool_dict
-            self.python_interpreter = executor
+        # Create a default interpreter if none is provided
+        executor = LocalPythonExecutor(additional_authorized_imports=AUTHORIZED_IMPORTS)
+        # Make provided tools available in the interpreter's scope
+        tool_dict = AUTHORIZED_FUNCTIONS.copy()
+        if self.tools:
+            tool_dict.update({t.__name__: t for t in self.tools})
+        executor.static_tools = tool_dict
+        self.python_interpreter = executor
 
         # Build the tools description for the prompt
-        tools_description = (
-            "You have access to a Python interpreter to execute your code."
-        )
+        tools_description = ""
         if self.tools:
             tools_description += "\nIn addition to standard Python built-in functions, you can also use the following custom tools:\n"
             for tool in self.tools:
@@ -79,24 +67,47 @@ class CodeAgent(Module):
                 docstring = " ".join(docstring_lines)
                 tools_description += f"- `{tool.__name__}`: {docstring}\n"
 
+        # Build the output fields description
+        output_fields_desc = []
+        for name, field in self.signature.output_fields.items():
+            type_info_str = ""
+            if hasattr(field, "type") and field.type is not None:
+                # Handle Literal types for clearer descriptions
+                origin = typing.get_origin(field.type)
+                if origin is Literal:
+                    args = typing.get_args(field.type)
+                    allowed_values = ", ".join(f"'{arg}'" for arg in args)
+                    type_info_str = f" (must be one of: {allowed_values})"
+                else:
+                    # Fallback for other types
+                    type_info_str = f" (type: {repr(field.type)})"
+
+            desc_str = ""
+            if hasattr(field, "desc") and field.desc:
+                desc_str = f": {field.desc}"
+
+            output_fields_desc.append(f"- `{name}`{type_info_str}{desc_str}")
+        output_fields_str = "\n".join(output_fields_desc)
+
         # Internal signature for the generation loop
-        code_gen_instr = f"""You are a helpful and expert programmer.
-Your goal is to solve the user's task by writing and executing Python code.
+        code_gen_instr = f"""to execute a given task by writing and executing Python code.
+For this, you have access to a Python interpreter to execute your code.
 
 {tools_description}
 
-**Strategy:**
+You should always stick to the following pattern to execute the task:
 1.  **Think**: Analyze the user's request and your execution history (`trajectory`).
 2.  **Plan**: Formulate a plan to get closer to the solution.
 3.  **Code**: Write a Python code snippet to execute your plan.
 4.  **Repeat**: Repeat the process until the task is solved.
 
-**Final Answer:**
-When you have the final answer, call the `finish()` function with the final result as the only argument.
-For example: `finish("this is my final answer")` or `finish(my_variable_containing_the_answer)`
+When you have collected all the necessary information, call the `finish()` function.
 
-Follow the user's instructions carefully.
-{self.signature.instructions}"""  # type: ignore
+Your ultimate goal is to collect enough information to provide the following outputs:
+{output_fields_str}
+
+Now, here the task you need to perform:
+{self.signature.instructions}"""
 
         # The internal module for generating thought and code
         self.generate_code = dspy.Predict(
@@ -121,6 +132,19 @@ Follow the user's instructions carefully.
             )
         )
 
+        # Module to extract the final answer from the trajectory
+        extract_signature = self.signature.with_instructions(
+            f"Given the execution trajectory, answer the original question.\n"
+            f"Original Question: {self.signature.instructions}"
+        ).insert(
+            0,
+            "trajectory",
+            dspy.InputField(
+                desc="The execution history of thoughts, code, and observations."
+            ),
+        )
+        self.extract = dspy.ChainOfThought(extract_signature)
+
     def forward(self, **kwargs) -> dspy.Prediction:
         """
         Executes the CodeAgent's thought-code-execute loop.
@@ -132,7 +156,6 @@ Follow the user's instructions carefully.
             dspy.Prediction: An object containing the final answer.
         """
         trajectory: List[tuple[str, str, str]] = []
-        final_answer = None
 
         for _ in range(self.max_iters):
             # Format trajectory for the prompt
@@ -152,18 +175,9 @@ Follow the user's instructions carefully.
 
             if not python_code:
                 # If the model generates no code, assume it's stuck and break.
-                final_answer = "The agent did not produce any code to finish the task."
+                observation = "The agent did not produce any code to finish the task."
+                trajectory.append((thought, python_code, observation))
                 break
-
-            # Check if the agent wants to finish.
-            if "finish(" in python_code:
-                # Execute the final code to get the answer
-                try:
-                    result, logs, _ = self.python_interpreter(python_code)
-                    final_answer = result
-                except Exception as e:
-                    final_answer = f"Error during final execution: {e}"
-                break  # Exit the loop
 
             # Prepare and execute the code for intermediate steps
             try:
@@ -180,27 +194,24 @@ Follow the user's instructions carefully.
                 observation += "\n\nOutput:\n" + (repr(result) or "No output.")
 
                 if is_final:
-                    final_answer = result
+                    trajectory.append((thought, code_to_exec, observation))
                     break
             except Exception as e:
                 observation = f"An error occurred during execution: {e}"
 
             trajectory.append((thought, code_to_exec, observation))
 
-        # Create a dspy.Prediction object with the final answer.
-        # This mirrors how dspy.ReAct returns its results.
-        if final_answer is not None:
-            # We assume the signature has a single output field for simplicity,
-            # but this can be extended.
-            output_field_name = list(self.signature.output_fields.keys())[0]
-            return dspy.Prediction(**{output_field_name: final_answer})
-        else:
-            # If the loop finishes without a final answer, return an empty Prediction
-            # or handle the error as appropriate.
-            # Returning an empty prediction to avoid breaking dspy chains.
-            return dspy.Prediction(
-                **{k: None for k in self.signature.output_fields.keys()}
-            )
+        # Format the final trajectory for the extraction module
+        str_trajectory = ""
+        for i, (thought, code, observation) in enumerate(trajectory):
+            str_trajectory += f"---[Step {i + 1}]---\n"
+            str_trajectory += f"Thought: {thought}\n"
+            str_trajectory += f"Code:\n```python\n{code}\n```\n"
+            str_trajectory += f"Observation: {observation}\n"
+
+        # Use the extractor to produce the final answer
+        prediction = self.extract(trajectory=str_trajectory, **kwargs)
+        return prediction
 
 
 if __name__ == "__main__":
