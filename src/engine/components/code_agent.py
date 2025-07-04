@@ -1,11 +1,10 @@
-from typing import Callable, List, Optional, Type, Literal
-import typing
+from typing import Callable, List, Optional, Type
 
 import dspy
 from dspy.primitives.program import Module
 from dspy.primitives.tool import Tool
 from dspy.signatures.signature import Signature, ensure_signature
-from smolagents.local_python_executor import LocalPythonExecutor, fix_final_answer_code
+from smolagents.local_python_executor import fix_final_answer_code
 from smolagents.utils import parse_code_blobs
 
 from src.engine.tools.primordial.python_interpreter import (
@@ -18,7 +17,7 @@ from src.engine.tools.primordial.python_interpreter import (
 def final_answer(outputs: dict):
     """Marks the task as complete.
     Use this function when you are confident you have collected all the necessary information to answer the user's request.
-    You should pack all the required output fields into a dictionary and pass it as the 'outputs' argument.
+    You should pack all the required output fields into a dictionary and pass it argument to the function.
     """
     print(outputs.items())
     return outputs
@@ -76,30 +75,20 @@ class CodeAgent(Module):
                 docstring = " ".join(docstring_lines)
                 tools_description += f"- `{tool.__name__}`: {docstring}\n"
 
-        # Build the output fields description
-        output_fields_desc = []
-        for name, field in self.signature.output_fields.items():  # type: ignore
-            type_info_str = ""
-            if hasattr(field, "type") and field.type is not None:
-                # Handle Literal types for clearer descriptions
-                origin = typing.get_origin(field.type)
-                if origin is Literal:
-                    args = typing.get_args(field.type)
-                    allowed_values = ", ".join(f"'{arg}'" for arg in args)
-                    type_info_str = f" (must be one of: {allowed_values})"
-                else:
-                    # Fallback for other types
-                    type_info_str = f" (type: {repr(field.type)})"
+        # Extract useful informations from the signature
+        self.task_instructions = self.signature.instructions  # type: ignore
+        self.input_fields = self.signature.input_fields  # type: ignore
+        self.output_fields = self.signature.output_fields  # type: ignore
 
-            desc_str = ""
-            if hasattr(field, "desc") and field.desc:
-                desc_str = f": {field.desc}"
-
-            output_fields_desc.append(f"- `{name}`{type_info_str}{desc_str}")
-        output_fields_str = "\n".join(output_fields_desc)
+        output_descriptions = []
+        for name, field in self.output_fields.items():
+            type_repr = field.annotation
+            # type_repr = type_repr.replace("typing.", "")
+            output_descriptions.append(f"- {name}: {type_repr}")
+        self.output_fields_description = "\n".join(output_descriptions)
 
         # Internal signature for the generation loop
-        code_gen_instr = f"""to execute a given task by writing and executing Python code.
+        self.code_act_instructions = f"""to execute a given task by writing and executing Python code.
 For this, you have access to a Python interpreter to execute your code.
 
 {tools_description}
@@ -110,24 +99,24 @@ You should always stick to the following pattern to execute the task:
 3.  **Code**: Write a Python code snippet to execute your plan.
 4.  **Repeat**: Repeat the process until the task is solved.
 
-When you have collected all the necessary information, call the `final_answer()` function, packing the output fields into a dictionary and passing it as the `outputs` argument. You don't need to import this function.
+When you have collected all the necessary information, call the `final_answer()` function, packing the output fields into a dictionary and passing it as argument to the function. You don't need to import this function.
 
 Your ultimate goal is to collect enough information to provide the following outputs:
-{output_fields_str}
+{self.output_fields_description}
 
 Now, here the task you need to perform:
-{self.signature.instructions}"""  # type: ignore
+{self.task_instructions}"""
 
         # The internal module for generating thought and code
-        self.generate_code = dspy.Predict(
+        self.code_act_signature = (
             dspy.Signature(
                 {
-                    **self.signature.input_fields,  # type: ignore
+                    **self.input_fields,  # type: ignore
                     "trajectory": dspy.InputField(
                         desc="Your execution history, consisting of your past thoughts, the code you wrote, and the execution results."
                     ),
                 },
-                instructions=code_gen_instr,
+                instructions=self.code_act_instructions,
             )
             .append(
                 "thought",
@@ -140,11 +129,12 @@ Now, here the task you need to perform:
                 ),
             )
         )
+        self.code_act_iter = dspy.Predict(self.code_act_signature)
 
         # Module to extract the final answer from the trajectory
-        extract_signature = self.signature.with_instructions(
+        self.output_extraction_signature = self.signature.with_instructions(
             f"Given the execution trajectory, answer the original question.\n"
-            f"Original Question: {self.signature.instructions}"  # type: ignore
+            f"Original Question: {self.task_instructions}"
         ).insert(
             0,
             "trajectory",
@@ -152,7 +142,7 @@ Now, here the task you need to perform:
                 desc="The execution history of thoughts, code, and observations."
             ),
         )
-        self.extract = dspy.ChainOfThought(extract_signature)
+        self.extract = dspy.ChainOfThought(self.output_extraction_signature)
 
     def forward(self, **kwargs) -> dspy.Prediction:
         """
@@ -178,7 +168,7 @@ Now, here the task you need to perform:
                 str_trajectory = "No execution history yet. This is the first step."
 
             # Generate thought and code
-            prediction = self.generate_code(trajectory=str_trajectory, **kwargs)
+            prediction = self.code_act_iter(trajectory=str_trajectory, **kwargs)
             thought = prediction.get("thought", "")
             python_code = prediction.get("python_code", "")
 
