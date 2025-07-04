@@ -72,15 +72,22 @@ class CodeAgent(Module):
         """Builds the tools description for the prompt."""
         tools_description = ""
         if self.tools:
-            tools_description += "\nIn addition to standard Python built-in functions, you can also use the following custom tools:\n"
             for tool in self.tools:
                 docstring = getattr(tool, "__doc__", "No description available.")
-                # Clean up the docstring formatting
-                docstring_lines = [
-                    line.strip() for line in docstring.strip().split("\n")
-                ]
+                # Clean up the docstring formatting and remove code blocks
+                docstring_lines = []
+                in_code_block = False
+                for line in docstring.strip().split("\n"):
+                    line = line.strip()
+                    # Skip code block markers and content
+                    if line.startswith("```"):
+                        in_code_block = not in_code_block
+                        continue
+                    if not in_code_block:
+                        docstring_lines.append(line)
+
                 docstring = " ".join(docstring_lines)
-                tools_description += f"- `{tool.__name__}`: {docstring}\n"
+                tools_description += f"\n- `{tool.__name__}`: {docstring}"
         return tools_description
 
     def _build_output_fields_description(self) -> str:
@@ -102,24 +109,25 @@ class CodeAgent(Module):
         self.output_fields_description = self._build_output_fields_description()
 
         # Internal signature for the generation loop
-        self.code_act_instructions = f"""to execute a given task by writing and executing Python code.
-For this, you have access to a Python interpreter to execute your code.
-
+        self.code_act_instructions = f"""
+Solve a given task by writing and executing Python code.
+For this, you have access to a Python interpreter to execute your code. In addition to standard Python built-in functions, you can also use the following custom tools:
 {self.tool_desctiption}
 
-You should always stick to the following pattern to execute the task:
-1.  **Think**: Analyze the user's request and your execution history (`trajectory`).
-2.  **Plan**: Formulate a plan to get closer to the solution.
-3.  **Code**: Write a Python code snippet to execute your plan.
-4.  **Repeat**: Repeat the process until the task is solved.
+EXECUTION PATTERN:
+1. **Think**: Analyze the user's request and your execution history (`trajectory`).
+2. **Plan**: Formulate a plan to get closer to the solution.
+3. **Code**: Write a Python code snippet to execute your plan.
+4. **Repeat**: Repeat the process until the task is solved.
 
 When you have collected all the necessary information, call the `final_answer()` function, packing the output fields into a dictionary and passing it as argument to the function. You don't need to import this function.
 
-Your ultimate goal is to collect enough information to provide the following outputs:
-{self.output_fields_description}
+TASK OBJECTIVE:
+{self.task_instructions}
 
-Now, here the task you need to perform:
-{self.task_instructions}"""
+EXPECTED OUTPUTS:
+{self.output_fields_description}
+"""
 
         # The internal module for generating thought and code
         self.code_act_signature = (
