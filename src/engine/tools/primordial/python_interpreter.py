@@ -7,13 +7,17 @@ The authorization lists are designed to be imported by other modules
 to maintain consistency across the codebase.
 """
 
-from typing import Callable, List, Dict, Any, Optional
-from smolagents.local_python_executor import InterpreterError
+from typing import Any, Callable, Dict, List, Optional, Tuple
 
 import tiktoken
-from smolagents.local_python_executor import BASE_PYTHON_TOOLS, LocalPythonExecutor
-from src.engine.util import get_logger
+from smolagents.local_python_executor import (
+    BASE_PYTHON_TOOLS,
+    InterpreterError,
+    LocalPythonExecutor,
+)
+
 from src.config import LOG_LEVEL
+from src.engine.util import get_logger
 
 # =============================================================================
 # GLOBAL AUTHORIZATION LISTS - Import these in other modules for consistency
@@ -253,7 +257,7 @@ def get_python_interpreter(
 
         return f"{truncated_text}\n\n...output truncated after {max_tokens} tokens."
 
-    def python_interpreter(python_code: str) -> str:
+    def python_interpreter(python_code: str) -> Tuple[str, str, bool]:
         """
         Execute Python code and return both the result and any printed output.
         As this interpreter has no state, variables will not be carried over when this function is used again.
@@ -287,16 +291,12 @@ def get_python_interpreter(
 
         except InterpreterError as e:
             logger.error(f"Error during tool execution: {e}")
-            return f"An error occurred while trying to execute this code:\n{e}"
-
-        # Format the response to include both printed output and the return value
-        result = ""
-        if logs:
-            result += f"## Print output:\n{_truncatenate_text(logs, max_tokens=max_tokens_logs)}\n\n"
-
-        result += f"## Return value:\n{_truncatenate_text(repr(returned_value), max_tokens=max_tokens_output)}"
-
-        return result
+            return (
+                f"An error occurred while trying to execute this code:\n{e}",
+                "",
+                False,
+            )
+        return returned_value, logs, is_final
 
     return python_interpreter
 
