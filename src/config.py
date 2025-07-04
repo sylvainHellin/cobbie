@@ -108,4 +108,4 @@ from typing import Union, List, Dict, Any
 """
 
 # Configure logger
-LOG_LEVEL: Literal["DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"] = "DEBUG"
+LOG_LEVEL: Literal["DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"] = "INFO"
