@@ -37,14 +37,14 @@ class CodeAgent(Module):
         self.signature = ensure_signature(signature)
         self.max_iters = max_iters
 
-        def finish():
+        def final_answer(answer: Any):
             """Marks the task as complete.
             Use this function when you are confident you have collected all the necessary information to answer the user's request.
             """
             return "Execution complete. The task is finished."
 
         self.tools = tools or []
-        self.tools.append(finish)
+        self.tools.append(final_answer)
 
         # Create a default interpreter if none is provided
         executor = LocalPythonExecutor(additional_authorized_imports=AUTHORIZED_IMPORTS)
@@ -108,7 +108,7 @@ You should always stick to the following pattern to execute the task:
 3.  **Code**: Write a Python code snippet to execute your plan.
 4.  **Repeat**: Repeat the process until the task is solved.
 
-When you have collected all the necessary information, call the `finish()` function.
+When you have collected all the necessary information, call the `final_answer()` function. You don't need to import this function.
 
 Your ultimate goal is to collect enough information to provide the following outputs:
 {output_fields_str}
@@ -182,7 +182,7 @@ Now, here the task you need to perform:
 
             if not python_code:
                 # If the model generates no code, assume it's stuck and break.
-                observation = "The agent did not produce any code to finish the task."
+                observation = "The agent did not produce any code to complete the task."
                 trajectory.append((thought, python_code, observation))
                 break
 
