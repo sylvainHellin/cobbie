@@ -1,4 +1,4 @@
-from typing import Callable, List, Optional, Type
+from typing import Any, Callable, List, Optional, Type
 
 import dspy
 from dspy.primitives.program import Module
@@ -12,6 +12,9 @@ from src.engine.tools.primordial.python_interpreter import (
     AUTHORIZED_IMPORTS,
     get_python_interpreter,
 )
+from src.engine.util import check_final_answer
+
+from .code_act_instruction_template import CODE_AGENT_INSTRUCTION_TEMPLATE
 
 
 def final_answer(outputs: dict):
@@ -46,6 +49,7 @@ class CodeAgent(Module):
         self.signature = ensure_signature(signature)
         self.max_iters = max_iters
         self.tools = (tools or []) + [final_answer]
+        self.last_output_python_interpreter: Optional[Any] = None
 
         self._setup_interpreter()
         self._prepare_agent_signatures()
@@ -98,6 +102,14 @@ class CodeAgent(Module):
             output_descriptions.append(f"- {name}: {type_repr}")
         return "\n".join(output_descriptions)
 
+    def _build_code_act_instructions(self) -> str:
+        """Builds the instruction prompt from template with variable substitution."""
+        return CODE_AGENT_INSTRUCTION_TEMPLATE.format(
+            tool_description=self.tool_desctiption,
+            task_instructions=self.task_instructions,
+            output_fields_description=self.output_fields_description,
+        )
+
     def _prepare_agent_signatures(self):
         """Prepares the DSPy signatures for the agent's actions."""
         # Extract useful informations from the signature
@@ -109,25 +121,7 @@ class CodeAgent(Module):
         self.output_fields_description = self._build_output_fields_description()
 
         # Internal signature for the generation loop
-        self.code_act_instructions = f"""
-Solve a given task by writing and executing Python code.
-For this, you have access to a Python interpreter to execute your code. In addition to standard Python built-in functions, you can also use the following custom tools:
-{self.tool_desctiption}
-
-EXECUTION PATTERN:
-1. **Think**: Analyze the user's request and your execution history (`trajectory`).
-2. **Plan**: Formulate a plan to get closer to the solution.
-3. **Code**: Write a Python code snippet to execute your plan.
-4. **Repeat**: Repeat the process until the task is solved.
-
-When you have collected all the necessary information, call the `final_answer()` function, packing the output fields into a dictionary and passing it as argument to the function. You don't need to import this function.
-
-TASK OBJECTIVE:
-{self.task_instructions}
-
-EXPECTED OUTPUTS:
-{self.output_fields_description}
-"""
+        self.code_act_instructions = self._build_code_act_instructions()
 
         # The internal module for generating thought and code
         self.code_act_signature = (
@@ -182,16 +176,27 @@ EXPECTED OUTPUTS:
         trajectory: List[tuple[str, str, str]] = []
 
         for _ in range(self.max_iters):
-            trajectory_item, should_break = self._execute_step(trajectory, **kwargs)
+            trajectory_item, should_break = self._execute_code_act_loop(
+                trajectory, **kwargs
+            )
             trajectory.append(trajectory_item)
             if should_break:
                 break
 
         str_trajectory = self._format_trajectory(trajectory)
-        prediction = self.extract(trajectory=str_trajectory, **kwargs)
+
+        # Check if the last output from the python_interpreter matches the signature.
+        if self.last_output_python_interpreter is not None and check_final_answer(
+            self.last_output_python_interpreter, self.signature
+        ):
+            prediction = dspy.Prediction(**self.last_output_python_interpreter)
+        # If not, try to extracting using a CoT agent
+        else:
+            prediction = self.extract(trajectory=str_trajectory, **kwargs)
+
         return prediction
 
-    def _execute_step(
+    def _execute_code_act_loop(
         self, trajectory: List[tuple[str, str, str]], **kwargs
     ) -> tuple[tuple[str, str, str], bool]:
         """Executes a single step of the agent's loop."""
@@ -217,6 +222,10 @@ EXPECTED OUTPUTS:
 
         try:
             result, logs, is_final = self.python_interpreter(python_code=code_to_exec)
+
+            # Store the last output from the python interpreter
+            self.last_output_python_interpreter = result
+
             observation = "Execution Logs:\n" + (logs or "No logs.")
             observation += "\n\nOutput:\n" + (repr(result) or "No output.")
 
