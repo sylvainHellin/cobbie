@@ -20,7 +20,7 @@ Key features:
 # %% Imports
 # =============== Imports and config =============== #
 import sys
-from typing import Callable, Dict, Literal
+from typing import Callable, Dict, List, Literal
 
 import dspy
 import mlflow
@@ -39,6 +39,7 @@ from src.engine.tools.primordial import (
 from src.engine.util import _create_function_from_source_code, get_logger
 from src.engine.components.tool_programmer import ToolProgrammer
 from src.engine.components.tool_assessor import ToolAssessor
+from src.engine.components.code_act import CodeAct
 
 # Set up the path
 if ROOT_PATH not in sys.path:
@@ -50,36 +51,9 @@ class ToolCorrectionSignature(dspy.Signature):
     """
     Correct a Python function based on assessment feedback.
 
-    Your primary goal is to fix the provided code, not to rewrite it from scratch.
-    Analyze the 'current_function_implementation' and 'detailed_function_assessment' to understand the error.
-    Then, produce a 'new_function_implementation' with the necessary corrections.
+    The current implementation was tested and found to be faulty.
 
-    ⚠️ KEY CORRECTION GUIDELINES:
-    - **Focus on the fix:** Directly address the issues described in the assessment.
-    - **Minimize changes:** Only alter the parts of the code that are broken.
-    - **Do not research:** Avoid using tools like 'web_search' or 'query_ifcopenshell_documentation'. The goal is to fix the existing code with the information at hand.
-    - **Handle syntax errors first:** If the assessment mentions a syntax error, fix that first. This is often a simple typo or mistake.
-    - **Maintain signature:** Ensure the corrected function still adheres to the required signature: `def function_name(path_ifc_model: str) -> ...:`
-
-    An assessment was conducted on the current implementation and has assessed that it is not working properly. Details regarding what needs to be changed are provided.
-
-    Here is the implementation pattern to follow:
-
-    🔥 MANDATORY IMPLEMENTATION PATTERN (DO NOT DEVIATE):
-    ```python
-    def your_function_name(path_ifc_model: str) -> list[any]:
-        '''Your docstring here'''
-        # Load the IFC file from the provided path
-        ifc_file = ifcopenshell.open(path_ifc_model)
-
-        # Work with the loaded ifc_file object
-        results = ifc_file.by_type("YourEntityType")
-
-        # Return actual data, not strings
-        return list(results)
-    ```
-
-    Now, fix the provided function.
+    You are provided with the code of the current implementation, as well as a detailed assessment of the necessary improvements. Using this information, update the code of the current implementation.
     """
 
     # inputs
@@ -112,15 +86,17 @@ class ToolCorrector(dspy.Module):
 
     def __init__(
         self,
-        tools: list,
+        tools: List[Callable],
         max_iters: int = 10,
         log_level: Literal["DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"] = "DEBUG",
     ):
         super().__init__()
         self.tools = tools
         self.max_iters = max_iters
-        self.agent = dspy.ReAct(
-            signature=ToolCorrectionSignature, tools=tools, max_iters=self.max_iters
+        self.agent = CodeAct(
+            signature=ToolCorrectionSignature,
+            tools=self.tools,
+            max_iters=self.max_iters,
         )
         self.log_level = log_level
         self.logger = get_logger(name="ToolCorrector", log_level=self.log_level)
@@ -133,7 +109,7 @@ class ToolCorrector(dspy.Module):
         current_function_implementation: str,
         detailed_function_assessment: str,
     ) -> ModuleOutput:
-        result = self.agent(
+        output = self.agent(
             function_description=function_description,
             function_name=function_name,
             path_ifc_model=path_ifc_model,
@@ -141,13 +117,13 @@ class ToolCorrector(dspy.Module):
             detailed_function_assessment=detailed_function_assessment,
         )
 
-        if result.new_function_implementation:
+        if output.new_function_implementation:
             self.logger.info("ToolCorrector updated the implementation successfully")
             self.logger.debug(
-                f"New implementation: {result.new_function_implementation}"
+                f"New implementation: {output.new_function_implementation}"
             )
             return ModuleOutput(
-                result=Result(python_code=result.new_function_implementation),
+                result=Result(python_code=output.new_function_implementation),
                 status="success",
             )
         else:
