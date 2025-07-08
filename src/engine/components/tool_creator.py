@@ -4,13 +4,14 @@ Multi-agent tool creation system for generating and validating IFC-related funct
 This module provides a complete pipeline for creating, testing, and correcting Python functions
 that work with IFC (Industry Foundation Classes) files using the IfcOpenShell library.
 
-The system uses three main agents:
+The system uses three CodeAct-based agents:
 - ToolProgrammer: Generates initial function implementations based on requirements
-- ToolAssessor: Tests and evaluates generated functions
+- ToolAssessor: Tests and evaluates generated functions through code execution
 - ToolCorrector: Improves functions based on assessment feedback
 
 Key features:
-- Dynamic function signature support (single or multiple parameters)
+- CodeAct-based agents that create and execute code iteratively
+- Each agent manages its own Python interpreter internally
 - Iterative improvement with up to max_iter correction cycles
 - Direct testing and formal LLM-based assessment
 - Integration with MLFlow for tracking and logging
@@ -34,7 +35,6 @@ from src.engine.components.tool_corrector import ToolCorrector
 from src.engine.components.tool_programmer import ToolProgrammer
 from src.engine.schemas.module_output import ModuleOutput
 from src.engine.tools.primordial import (
-    get_python_interpreter,
     query_ifcopenshell_documentation,
     web_search,
 )
@@ -68,28 +68,24 @@ class ToolCreator(dspy.Module):
         self.max_iter_sub_agents = max_iter_sub_agents
         self.function_boilerplate = function_boilerplate
 
-        # Handle the special tools and the python interpreter
+        # Store authorized functions for use in assessor when needed
         self.additional_authorized_functions = additional_authorized_functions
         self.primordial_tools = [
             tool for name, tool in self.additional_authorized_functions.items()
         ]
-        self.python_interpreter = get_python_interpreter(
-            additional_authorized_functions=self.additional_authorized_functions
-        )
-        self.base_tools = self.primordial_tools + [self.python_interpreter]
 
         self.logger.debug(
-            f"Tools allowed for the ToolCreator: {'\n    -'.join([getattr(tool, '__name__', str(tool)) for tool in self.base_tools])}"
+            f"Primordial tools available for ToolCreator sub-agents: {', '.join([getattr(tool, '__name__', str(tool)) for tool in self.primordial_tools])}"
         )
 
-        # Instantiate the static sub agents
+        # Instantiate the sub agents - they create their own Python interpreters internally
         self.tool_programmer = ToolProgrammer(
-            tools=self.base_tools,
+            tools=self.primordial_tools,
             max_iters=self.max_iter_sub_agents,
             log_level=self.log_level,
         )
         self.tool_corrector = ToolCorrector(
-            tools=self.base_tools,
+            tools=self.primordial_tools,
             max_iters=self.max_iter_sub_agents,
             log_level=self.log_level,
         )
@@ -172,18 +168,9 @@ class ToolCreator(dspy.Module):
                                 function_name=function_name, code=code
                             )
 
-                            # Create new python interpreter with the generated tool included
-                            authorized_functions = (
-                                self.additional_authorized_functions.copy()
-                            )
-                            authorized_functions[function_name] = new_tool
-                            python_interpreter = get_python_interpreter(
-                                additional_authorized_functions=authorized_functions
-                            )
-                            tools = self.primordial_tools + [
-                                new_tool,
-                                python_interpreter,
-                            ]
+                            # Create ToolAssessor with primordial tools and the generated tool
+                            # The CodeAct-based assessor will create its own Python interpreter internally
+                            tools = self.primordial_tools + [new_tool]
                             tool_assessor = ToolAssessor(tools=tools)
                             self.logger.info(
                                 "✓ ToolAssessor created with new tool to test."
@@ -259,3 +246,67 @@ class ToolCreator(dspy.Module):
 
             # Return the result (good or bad)
             return output
+
+
+if __name__ == "__main__":
+    import json
+
+    from src.config import LANGUAGE_MODELS, TEST_IFC_PATH
+
+    def main(
+        function_requirements: str,
+        function_name: str,
+        lm_name: str = "llama4-maverick-groq",
+        log_level: Literal["DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"] = "DEBUG",
+        max_iter: int = 2,
+        max_iter_sub_agents: int = 4,
+    ):
+        # configure dspy
+        lm_info = LANGUAGE_MODELS[lm_name]
+        llm = dspy.LM(
+            model=lm_info.url,
+            api_key=lm_info.api_key,
+            max_tokens=5000,
+        )
+        dspy.configure(lm=llm)
+
+        # setup mlflow
+        mlflow.dspy.autolog()  # type: ignore
+        mlflow.set_tracking_uri("http://127.0.0.1:5000")
+        mlflow.set_experiment("ToolCreator")
+
+        # setup the tool creator
+        tool_creator = ToolCreator(
+            llm=llm,
+            max_iter=max_iter,
+            max_iter_sub_agents=max_iter_sub_agents,
+            log_level=log_level,
+        )
+
+        # create the tool
+        result = tool_creator.forward(
+            function_requirements=function_requirements,
+            function_name=function_name,
+            path_ifc_model=TEST_IFC_PATH,
+        )
+
+        print(f"Tool creation result: {json.dumps(result.model_dump(), indent=2)}")
+
+    ##########################################
+    # Test data - creating a simple IFC analysis function
+    function_requirements = (
+        "Create a function that calculates the total floor area of all spaces in an IFC model. "
+        "The function should iterate through all IfcSpace entities and sum up their floor areas. "
+        "It should handle cases where area information might be missing and return the total area in square meters."
+    )
+
+    function_name = "calculate_total_floor_area"
+
+    main(
+        function_requirements=function_requirements,
+        function_name=function_name,
+        log_level="INFO",
+        lm_name="gemini-flash",
+        max_iter=3,
+        max_iter_sub_agents=10,
+    )
