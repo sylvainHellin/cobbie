@@ -7,6 +7,7 @@ from src.config import (
 )
 from src.engine.schemas import ModuleOutput, Result
 from src.engine.util import get_logger
+from .code_agent import CodeAgent
 
 
 class NewToolSignature(dspy.Signature):
@@ -78,7 +79,7 @@ class ToolProgrammer(dspy.Module):
         super().__init__()
         self.tools = tools
         self.max_iters = max_iters
-        self.agent = dspy.ReAct(
+        self.agent = CodeAgent(
             signature=NewToolSignature, tools=tools, max_iters=self.max_iters
         )
         self.log_level = log_level
@@ -122,7 +123,6 @@ if __name__ == "__main__":
 
     from src.config import LANGUAGE_MODELS, TEST_IFC_PATH
     from src.engine.tools.primordial import (
-        get_python_interpreter,
         query_ifcopenshell_documentation,
         web_search,
     )
@@ -130,7 +130,7 @@ if __name__ == "__main__":
     def main(
         function_requirements: str,
         function_name: str,
-        lm_name: str = "llama4-maverick-groq",
+        lm_name: str = "gemini-flash",
         log_level: Literal["DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"] = "DEBUG",
     ):
         # configure dspy
@@ -148,13 +148,8 @@ if __name__ == "__main__":
         mlflow.set_experiment("ToolProgrammer")
 
         # setup the primordial tools
-        python_interpreter = get_python_interpreter(
-            additional_authorized_functions={
-                "web_search": web_search,
-                "query_ifcopenshell_documentation": query_ifcopenshell_documentation,
-            }
-        )
-        tools = [python_interpreter, web_search, query_ifcopenshell_documentation]
+        # Note: CodeAgent handles python_interpreter internally, so we only pass external tools
+        tools = [web_search, query_ifcopenshell_documentation]
 
         # setup the tool programmer
         tool_programmer = ToolProgrammer(tools=tools, max_iters=10, log_level=log_level)
