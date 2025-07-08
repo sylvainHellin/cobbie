@@ -26,7 +26,7 @@ def final_answer(outputs: dict):
     return outputs
 
 
-class CodeAgent(Module):
+class CodeAct(Module):
     """A dspy.Module that acts as a code-generating agent."""
 
     def __init__(
@@ -287,7 +287,7 @@ if __name__ == "__main__":
         mlflow.set_experiment("CodeAgentTest")
 
         # 4. Instantiate the CodeAgent
-        agent = CodeAgent(signature=GenerateUUIDSignature, tools=[generate_uuid])
+        agent = CodeAct(signature=GenerateUUIDSignature, tools=[generate_uuid])
 
         # 5. Run the agent
         task = "I need a new UUID."

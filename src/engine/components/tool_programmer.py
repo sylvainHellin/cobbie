@@ -7,7 +7,7 @@ from src.config import (
 )
 from src.engine.schemas import ModuleOutput, Result
 from src.engine.util import get_logger
-from .code_agent import CodeAgent
+from .code_act import CodeAct
 
 
 class NewToolSignature(dspy.Signature):
@@ -79,7 +79,7 @@ class ToolProgrammer(dspy.Module):
         super().__init__()
         self.tools = tools
         self.max_iters = max_iters
-        self.agent = CodeAgent(
+        self.agent = CodeAct(
             signature=NewToolSignature, tools=tools, max_iters=self.max_iters
         )
         self.log_level = log_level

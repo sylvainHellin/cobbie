@@ -2,7 +2,7 @@ from typing import Literal, List, Callable
 
 import dspy
 
-from src.engine.components.code_agent import CodeAgent
+from src.engine.components.code_act import CodeAct
 from src.engine.schemas import ModuleOutput, Result
 from src.engine.util import get_logger, _create_function_from_source_code
 
@@ -46,7 +46,7 @@ class ToolAssessor(dspy.Module):
         # Combine base tools with the generated tool
         self.tools = tools
         self.max_iters = max_iters
-        self.agent = CodeAgent(
+        self.agent = CodeAct(
             signature=ToolAssessmentSignature,
             tools=self.tools,
             max_iters=self.max_iters,
