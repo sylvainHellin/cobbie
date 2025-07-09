@@ -148,32 +148,70 @@ if __name__ == "__main__":
     function_requirements = "To accurately determine the width of the emergency escape routes, we need a function that can identify which doors are designated as emergency exits based on their properties or other criteria. The function should be able to query the IFC model for doors with specific properties or classifications that indicate they are emergency exits."
 
     function_name = "get_emergency_exit_doors"
-    python_code = (
-        "import ifcopenshell\n"
-        "import ifcopenshell.util.element\n"
-        "from typing import List\n\n"
-        "def get_emergency_exit_doors(path_ifc_model: str) -> List:\n"
-        '    """\n'
-        "    Retrieves a list of IfcDoor entities that are designated as emergency exits\n"
-        "    based on the 'FireExit' property in 'Pset_DoorCommon'.\n\n"
-        "    Args:\n"
-        "    path_ifc_model (str): Path to the IFC file.\n\n"
-        "    Returns:\n"
-        "    List[ifcopenshell.entity_instance.entity_instance]: A list of IfcDoor entities representing emergency exits.\n"
-        '    """\n'
-        "    ifc_file = ifcopenshell.open(path_ifc_model)\n"
-        "    all_doors = ifc_file.by_type('IfcDoor')\n"
-        "    emergency_exit_doors = []\n\n"
-        "    for door in all_doors:\n"
-        "        door_common_pset = ifcopenshell.util.element.get_pset(door, 'Pset_DoorCommon')\n"
-        "        if door_common_pset and 'FireExit' in door_common_pset:\n"
-        "            fire_exit_value = door_common_pset['FireExit']\n"
-        "            if (isinstance(fire_exit_value, bool) and fire_exit_value) or \\\n"
-        "               (isinstance(fire_exit_value, str) and fire_exit_value.lower() == 'true'):\n"
-        "                emergency_exit_doors.append(door)\n"
-        "    return emergency_exit_doors"
-    )
+    python_code = '''
+    import ifcopenshell
+    import ifcopenshell.util.element
+    import ifcopenshell.util.shape
+    import ifcopenshell.util.placement
+    import ifcopenshell.util.geolocation
+    import ifcopenshell.util.system
+    import ifcopenshell.geom
+    import math
+    import json
+    from typing import Union, List, Dict, Any
 
+    def get_emergency_exit_doors(ifc_file_path: str) -> List[ifcopenshell.entity_instance]:
+        """
+        Retrieves a list of IfcDoor entities that are designated as emergency exits.
+
+        Assumptions:
+        - An emergency exit door is identified by the presence of a property named "IsFireExit"
+          within any of its associated property sets (e.g., PSet_Revit_Type_Other).
+        - If the "IsFireExit" property exists, its value is considered to indicate an emergency exit,
+          unless it is explicitly False or "No" (case-insensitive). In the provided model,
+          the value is a placeholder string 'IsFireExit', which is treated as an affirmative
+          indication of an emergency exit.
+
+        Args:
+        ifc_file_path (str): Path to the IFC file.
+
+        Returns:
+        List[ifcopenshell.entity_instance]: A list of IfcDoor entities representing emergency exits.
+        """
+        emergency_exit_doors = []
+        try:
+            ifc_file = ifcopenshell.open(ifc_file_path)
+            doors = ifc_file.by_type('IfcDoor')
+
+            for door in doors:
+                is_emergency_exit = False
+                # Iterate through relationships to find property sets
+                for rel_def in door.IsDefinedBy:
+                    if rel_def.is_a('IfcRelDefinesByProperties'):
+                        property_set = rel_def.RelatingPropertyDefinition
+                        if property_set.is_a('IfcPropertySet'):
+                            for prop in property_set.HasProperties:
+                                if prop.is_a('IfcPropertySingleValue') and prop.Name == 'IsFireExit':
+                                    value = prop.NominalValue.wrappedValue if prop.NominalValue else None
+                                    # Check if the value indicates an emergency exit
+                                    # Treat non-False/non-"No" values as affirmative, including placeholder strings
+                                    if value is True or (isinstance(value, str) and value.lower() not in ['false', 'no']):
+                                        is_emergency_exit = True
+                                        break # Found the property, no need to check other properties in this set
+                            if is_emergency_exit:
+                                break # Found the property in this property set, no need to check other property sets
+
+                if is_emergency_exit:
+                    emergency_exit_doors.append(door)
+
+        except Exception as e:
+            # In a production environment, you might want to log this error
+            # print(f"An error occurred while processing the IFC file: {e}")
+            return [] # Return empty list on error
+
+        return emergency_exit_doors
+
+    '''
     main(
         function_requirements=function_requirements,
         function_name=function_name,
