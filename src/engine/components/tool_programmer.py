@@ -12,34 +12,34 @@ from .code_act import CodeAct
 
 class NewToolSignature(dspy.Signature):
     """
-    Create a Python function that implements the requirements using the IfcOpenShell Python library.
-    Your goal is to be an action-oriented programmer. Write code, test it, and refine it.
+    As an expert Python programmer, you have been tasked with creating a new Python function using the IfcOpenShell library.
+    You are an action-oriented programmer. You write code, test it, and refine it. You have access to a Python interpreter and tools to query information from the Internet or the IfcOpenShell documentation.
 
-    **Programming Strategy:**
-    1. Act First: Start by writing a minimal amount of code to tackle a small part of the problem.
-    2. Test Incrementally: Use the python_interpreter tool to execute your code snippets and verify your assumptions.
-    3. Research as Needed: If your code fails, use query_ifcopenshell_documentation or web_search to find specific answers.
-    4. Build the Final Function: Once you have working snippets, assemble them into the final function.
+    Programming Strategy:
+        1. Act first. Start by writing a minimal amount of code to solve a small part of the problem.
+        2. Test incrementally. Use the Python interpreter tool to execute your code snippets and verify your assumptions.
+        3. Research as needed. If your code fails, use Query IFCOPSHELL Documentation or Web Search to find specific answers.
+        4. Build the final function. Once you have working snippets, assemble them into the final function.
 
-    **CRITICAL JSON FORMATTING RULE FOR TOOL CALLS:**
-    When calling python_interpreter, format JSON arguments as single-line strings.
-    Do NOT use triple quotes in JSON. Use escaped newlines instead.
-    Example: {"python_code": "import ifcopenshell\\nprint('hello')"}
+    Your function implementation must:
+        - Return proper data structures (e.g., lists and dictionaries), not formatted strings.
+        - Be well-documented with docstrings and type hints.
+        - Be explicit regarding assumptions. For example, if your function involves using properties related to specific BIM authoring software, such as PSet_Revit_Dimensions for an IFC model exported from Revit, mention this in the docstring.
 
-    **CRITICAL REQUIREMENTS - The final function MUST:**
-    - Accept path_ifc_model: str as the FIRST and ONLY parameter.
-    - Load the IFC file internally: ifc_file = ifcopenshell.open(path_ifc_model)
-    - Return data structures (e.g., lists, dicts), not formatted strings.
-    - Be well-documented with docstrings and type hints.
-
-    **MANDATORY IMPLEMENTATION PATTERN:**
-    def your_function_name(path_ifc_model: str) -> list:
-        # Load the IFC file from the provided path
-        ifc_file = ifcopenshell.open(path_ifc_model)
-        # ... your logic here ...
-        return list(results)
-
+    Final recommendations:
+        - The provided Python interpreter does not have a state, so you need to declare all the variables you need.
+        - When calling python_interpreter, format JSON arguments as single-line strings. Do NOT use triple quotes in JSON. Use escaped newlines instead.
+        Example: {"python_code": "import ifcopenshell\\nprint('hello')"}
     """
+
+    # **MANDATORY IMPLEMENTATION PATTERN:**
+    # def your_function_name(path_ifc_model: str) -> list:
+    #     # Load the IFC file from the provided path
+    #     ifc_file = ifcopenshell.open(path_ifc_model)
+    #     # ... your logic here ...
+    #     return list(results)
+
+    # """
 
     # Below is an overview of the IfcOpenShell library. Use it for a general understanding, but rely on testing code for specifics.
 
@@ -54,7 +54,7 @@ class NewToolSignature(dspy.Signature):
     function_name: str = dspy.InputField()
 
     function_boilerplate: str = dspy.InputField(
-        desc="This boilerplate must be included at the beginning of your code; otherwise, it will not work properly."
+        desc="This boilerplate must be included at the beginning of your code. Otherwise, it will not work properly."
     )
 
     path_ifc_model: str = dspy.InputField(
@@ -62,8 +62,8 @@ class NewToolSignature(dspy.Signature):
     )
 
     # outputs
-    python_code: str = dspy.OutputField(
-        desc="Complete code implementation (including imports from the boilerplate, any necessary helper functions, etc.) of your Python function implementation."
+    function_implementation: str = dspy.OutputField(
+        desc="Python code (including imports from the boilerplate, any necessary helper functions, etc.) of your Python function implementation."
     )
 
 
@@ -92,7 +92,7 @@ class ToolProgrammer(dspy.Module):
         path_ifc_model: str,
         function_boilerplate: str = FUNCTION_BOILERPLATE,
     ) -> ModuleOutput:
-        result = self.agent(
+        prediction = self.agent(
             function_requirements=function_requirements,
             function_name=function_name,
             path_ifc_model=path_ifc_model,
@@ -100,11 +100,17 @@ class ToolProgrammer(dspy.Module):
         )
 
         # Check if we got valid python code
-        if hasattr(result, "python_code") and result.python_code:
+        if (
+            hasattr(prediction, "function_implementation")
+            and prediction.function_implementation
+        ):
             self.logger.info(f"function: {function_name} created successfully.")
-            self.logger.debug(f"function code:\n{result.python_code}\n")
+            self.logger.debug(f"function code:\n{prediction.function_implementation}\n")
             return ModuleOutput(
-                result=Result(python_code=result.python_code), status="success"
+                result=Result(
+                    function_implementation=prediction.function_implementation
+                ),
+                status="success",
             )
         else:
             self.logger.error(

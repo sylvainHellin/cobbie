@@ -139,7 +139,9 @@ class ToolCreator(dspy.Module):
                     function_boilerplate=self.function_boilerplate,
                 )
 
-                code: str = output_tool_programmer.result.python_code or ""
+                function_implementation: str = (
+                    output_tool_programmer.result.function_implementation or ""
+                )
                 if output_tool_programmer.status == "error":
                     error_msg = (
                         output_tool_programmer.error_msg
@@ -149,7 +151,9 @@ class ToolCreator(dspy.Module):
                     output.error_msg = error_msg
                 else:
                     self.logger.info("Initial function created successfully.")
-                    self.logger.debug(f"Initial function code: \n\n---\n{code}\n\n---")
+                    self.logger.debug(
+                        f"Initial function code: \n\n---\n{function_implementation}\n\n---"
+                    )
 
             # Reset iteration counter before starting the new assess/correct loop
             self.iter = 0
@@ -165,7 +169,8 @@ class ToolCreator(dspy.Module):
                         self.logger.info("Assessing the generated code.")
                         try:
                             new_tool = _create_function_from_source_code(
-                                function_name=function_name, code=code
+                                function_name=function_name,
+                                code=function_implementation,
                             )
 
                             # Create ToolAssessor with primordial tools and the generated tool
@@ -180,7 +185,9 @@ class ToolCreator(dspy.Module):
                             self.logger.error(
                                 f"✗ Failed to create ToolAssessor. Error: {str(e)}"
                             )
-                            self.logger.error(f"Code that failed: {code}")
+                            self.logger.error(
+                                f"Code that failed: {function_implementation}"
+                            )
                             continue
 
                     # Step 3.2: Assess if the function works properly
@@ -208,7 +215,7 @@ class ToolCreator(dspy.Module):
                         self.logger.info(
                             f"🎉 Function passed assessment after {self.iter} iterations!"
                         )
-                        output.result.python_code = code
+                        output.result.function_implementation = function_implementation
                         output.status = "success"
                         output.result.assessment_status = (
                             output_tool_assessor.result.assessment_status
@@ -229,7 +236,7 @@ class ToolCreator(dspy.Module):
                                 function_description=function_requirements,
                                 function_name=function_name,
                                 path_ifc_model=path_ifc_model,
-                                current_function_implementation=code,
+                                current_function_implementation=function_implementation,
                                 detailed_function_assessment=output_tool_assessor.result.assessment_details
                                 or "No assessment available.",
                             )
@@ -238,9 +245,14 @@ class ToolCreator(dspy.Module):
                                 self.logger.error("✗ Correction failed.")
                                 continue
                             else:
-                                code = output_tool_corrector.result.python_code or ""
+                                function_implementation = (
+                                    output_tool_corrector.result.function_implementation
+                                    or ""
+                                )
                                 self.logger.info("✓ Function corrected")
-                                self.logger.debug(f"New code:\n{code}")
+                                self.logger.debug(
+                                    f"New function implementation:\n{function_implementation}"
+                                )
                     else:
                         self.logger.debug("⚠️  Maximum iterations reached")
 
