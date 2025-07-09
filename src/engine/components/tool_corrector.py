@@ -84,7 +84,9 @@ class ToolCorrector(dspy.Module):
                 f"New implementation: {output.new_function_implementation}"
             )
             return ModuleOutput(
-                result=Result(python_code=output.new_function_implementation),
+                result=Result(
+                    function_implementation=output.new_function_implementation
+                ),
                 status="success",
             )
         else:
