@@ -2,6 +2,10 @@
 
 An Engine that can answer any question related to a given BIM model in .ifc format. This project uses a multi-agent system (MAS) built with the [Smol-Agents](https://github.com/smol-ai/developer) library to process natural language queries.
 
+## Roadmap
+
+- Refactor the `get_python_interpreter` to limit output and log size
+
 ## System Overview
 
 The IfcAnswerEngine operates in two distinct modes: Training and Inference.

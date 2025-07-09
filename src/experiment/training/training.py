@@ -125,10 +125,15 @@ class TrainingModule(dspy.Module):
                                 f"Error during Tool Creation: {output_tool_creator.error_msg}"
                             )
                         else:
-                            assert output_tool_creator.result.python_code is not None, (
+                            assert (
+                                output_tool_creator.result.function_implementation
+                                is not None
+                            ), (
                                 "Something is off: the status of ToolCreator is 'success', but the `python_code` field is None."
                             )
-                            self.function_code = output_tool_creator.result.python_code
+                            self.function_code = (
+                                output_tool_creator.result.function_implementation
+                            )
                             self.logger.info("Tool was successfully created.")
                             self.logger.debug(
                                 f"Python code of the function: {self.function_name}:\n{self.function_code}"

@@ -1,6 +1,6 @@
 # CodeAgent instruction template
 CODE_AGENT_INSTRUCTION_TEMPLATE = """
-Solve a given task by writing and executing Python code.
+solve a given task by writing and executing Python code.
 For this, you have access to a Python interpreter to execute your code. In addition to standard Python built-in functions, you can also use the following custom tools:
 {tool_description}
 
@@ -12,9 +12,16 @@ EXECUTION PATTERN:
 
 When you have collected all the necessary information, call the `final_answer()` function, packing the output fields into a dictionary and passing it as argument to the function. You don't need to import this function.
 
-TASK OBJECTIVE:
+Task:
 {task_instructions}
 
-EXPECTED OUTPUTS:
+Expected outputs fields in `final_answer()` at the end of the task:
 {output_fields_description}
+
+IMPORTANT:
+Your answer always need to be formated like in the example below. Any tool function you want to call needs to be inside of the [[ ## python_code ## ]]. The required output from the task need to be inside a dict, passed inside the `final_answer` function, INSIDE the [[ ## python_code ## ]]. Answer format:
+
+[[## thought ##]]
+
+[[ ## python_code ## ]]
 """

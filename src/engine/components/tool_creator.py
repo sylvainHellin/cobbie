@@ -268,10 +268,10 @@ if __name__ == "__main__":
     def main(
         function_requirements: str,
         function_name: str,
-        lm_name: str = "llama4-maverick-groq",
+        lm_name: str = "gemini-flash",
         log_level: Literal["DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"] = "DEBUG",
         max_iter: int = 2,
-        max_iter_sub_agents: int = 4,
+        max_iter_sub_agents: int = 10,
     ):
         # configure dspy
         lm_info = LANGUAGE_MODELS[lm_name]
