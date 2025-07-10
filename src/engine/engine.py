@@ -19,21 +19,25 @@ from typing import Callable, Dict, List, Literal, Optional
 import dspy
 import mlflow
 
-from src.engine.schemas import ModuleOutput, Result
+from src.engine.schemas import ModuleOutput
 from src.engine.tools import get_created_tools
-from src.engine.tools.primordial.python_interpreter import get_python_interpreter
-from src.engine.util import get_logger
-from src.engine.components import CodeAct, ToolCreator
+from src.engine.util import get_logger, _create_function_from_source_code
+from src.engine.components import CodeAct, ToolCreator, NameExtractor
+
+from src.config import LANGUAGE_MODELS
 
 
 class IfcAnwerEngineSignature(dspy.Signature):
     """
-    Answer any questions users have about a BIM model in .ifc format.
-    You have access to a Python interpreter to retrieve information from the BIM model. This interpreter allows you to call several custom-made functions that were created specifically to retrieve information from a BIM model.
+    Answer any questions users have about the BIM model in .ifc format.
+
+    You have access to a Python interpreter that can retrieve information from the model. The interpreter provides access to custom-made functions created specifically to retrieve information from BIM models. Note that the provided Python interpreter is stateless and any variable you want to use must be defined and instantiated inside the provided code. For example, the provided path_ifc_model is not loaded in the Python interpreter and would raise an error if it is not defined in the generated code snippet.
 
     If you lack a specialised function to enable you to answer the question properly, indicate this using the 'need_new_function' boolean output field and describe what the new function should be able to do in the 'answer' output field. Be as precise as possible when describing your requirements for this new tool (at a minimum, provide the function signature and a basic explanation of the expected output). This information will be passed to an expert software engineer who will implement the function for you.
 
     If you can answer the question using the interpreter and the provided tools, set 'need_new_function' to false and provide the answer in the 'answer' field.
+
+    Keep in mind that the person asking the questions may not be a BIM expert. They may not have the .ifc model open in other software, so they may ask you questions using names for entities (e.g., room, material) that don't exactly match those used in the BIM model. You will need to determine the exact name/ID of any corresponding components yourself.
     """
 
     # Inputs
@@ -61,6 +65,7 @@ class IfcAnswerEngine(dspy.Module):
 
     def __init__(
         self,
+        llm: dspy.LM,
         additional_authorized_functions: Optional[Dict[str, Callable]] = None,
         additional_authorized_imports: Optional[List[str]] = None,
         max_iters: int = 10,
@@ -68,16 +73,28 @@ class IfcAnswerEngine(dspy.Module):
         max_tokens_logs: int = 2**12,
         max_tokens_output: int = 2**12,
         import_all_created_tools: bool = True,
+        max_iter_tool_creator: Optional[int] = 3,
+        max_iter_sub_agents_tool_creator: Optional[int] = 10,
     ):
         super().__init__()
         self.max_iters = max_iters
+        self.iter: int = 0
         self.log_level = log_level
+        self.lm = llm
         self.logger = get_logger(name="IfcAnswerEngine", log_level=self.log_level)
         self.additional_authorized_functions = additional_authorized_functions or {}
         self.additional_authorized_imports = additional_authorized_imports or []
         self.max_tokens_logs = max_tokens_logs
         self.max_tokens_output = max_tokens_output
-        self.created_tools: Optional[Dict[str, Callable]] = {}
+        self.created_tools: Dict[str, Callable] = {}
+        self.tool_creator: ToolCreator = ToolCreator(
+            llm=self.lm,
+            max_iter=max_iter_tool_creator or 3,
+            max_iter_sub_agents=max_iter_sub_agents_tool_creator or 10,
+            log_level=self.log_level,
+        )
+        self.name_extractor = NameExtractor(log_level=self.log_level)
+        dspy.configure(lm=self.lm)
 
         if import_all_created_tools:
             self.created_tools = get_created_tools()
@@ -93,49 +110,122 @@ class IfcAnswerEngine(dspy.Module):
         self.logger.info("IfcAnswerEngine initialized.")
 
     def forward(self, question: str, path_ifc_model: str = "") -> ModuleOutput:
+        self.iter = 0
         self.logger.info("Starting forward pass.")
 
-        output = ModuleOutput(
+        self.output = ModuleOutput(
             status="error", error_msg="IfcAnswerEngine could not answer the question."
         )
 
         with mlflow.start_span("IfcAnswerEngine"):
-            try:
-                prediction = self.engine.forward(
-                    question=question,
-                    path_ifc_model=path_ifc_model,
-                )
-                output.result = Result(
-                    answer=prediction.answer,
-                    need_new_function=prediction.need_new_function,
-                    trajectory=prediction.trajectory,
-                )
-                output.status = "success"
-                output.error_msg = None
-                self.logger.info("Forward pass completed with status: 'success'")
-                self.logger.debug(f"Answer: {prediction.answer}")
+            # Start the loop: try to answer the question with existing tool
+            while self.iter < self.max_iters:
+                with mlflow.start_span(f"iter Nr. {self.iter + 1}"):
+                    self.logger.info(
+                        f"\n\n### Strarting iter Nr. {self.iter + 1} ###\n\n"
+                    )
+                    try:
+                        prediction = self.engine.forward(
+                            question=question,
+                            path_ifc_model=path_ifc_model,
+                        )
+                        # If no new fn is needed, extract the answer, and exit the loop to return the output
+                        if not prediction.need_new_function:
+                            self.output.result.answer = prediction.answer
+                            self.iter = self.max_iters
+                            break
 
-                # TODO Continue here: implement logic to call the ToolCreator if a new function is needed
+                        # If a new function is needed: call the toolCreator
+                        # Check if the requirements for the new function are present
+                        elif prediction.answer is None:
+                            self.output.status = "error"
+                            self.output.error_msg = "LOGICAL FLAW: New function is set to True, but no answer with the function requirements is available."
+                            self.logger.error(self.output.error_msg)
 
-            except Exception as e:
-                msg = (
-                    f"Error during the forward pass of the IfcAnswerEngine.\nError: {e}"
-                )
-                output.error_msg = msg
-                self.logger.error(msg)
+                        else:
+                            self.output.status = "success"
+                            self.output.error_msg = None
+                            self.output.result.need_new_function = True
+                            self.logger.info(
+                                "Forward pass completed with status: 'success'"
+                            )
+                            self.logger.debug(f"Answer: {prediction.answer}")
+                            self.output.result.function_requirements = (
+                                prediction.answer or ""
+                            )
+                            # Try to extract the fn name from requirements
+                            output_name_extractor = self.name_extractor.forward(
+                                function_requirements=self.output.result.function_requirements
+                            )
+                            # If fn name could be extracted, try to create the new fn
+                            if (
+                                output_name_extractor.status == "success"
+                                and output_name_extractor.result.function_name
+                                is not None
+                            ):
+                                self.output.result.function_name = (
+                                    output_name_extractor.result.function_name
+                                )
 
-            return output
+                                output_tool_creator = self.tool_creator.forward(
+                                    function_requirements=self.output.result.function_requirements,
+                                    function_name=self.output.result.function_name,
+                                    path_ifc_model=path_ifc_model,
+                                )
+
+                                # If the new fn could be created, create a new tool
+                                # and create a new instance of the engine with the new tool. TODO consider adding a method to update the tools and the python interpreter on the existing instance.
+                                if output_tool_creator.status == "success":
+                                    if (
+                                        output_tool_creator.result.function_implementation
+                                        is None
+                                    ):
+                                        self.output.error_msg = "Logical error: status of ToolCreator is 'success', but function_requirement is None"
+                                        self.logger.error(self.output.error_msg)
+                                    else:
+                                        self.function_implementation = output_tool_creator.result.function_implementation
+                                        self.output.result.new_function = _create_function_from_source_code(
+                                            function_name=self.output.result.function_name,
+                                            code=self.function_implementation,
+                                        )
+                                        self.additional_authorized_functions[
+                                            self.output.result.function_name
+                                        ] = self.output.result.new_function
+
+                                        # Re-instantiate the engine to add the new function to the allowd tools.
+                                        # TODO: consider adding a method to the CodeAct class to update the tools and the python interpreter instead of creating a new instance.
+                                        self.engine = CodeAct(
+                                            signature=IfcAnwerEngineSignature,
+                                            tools=[
+                                                fn
+                                                for _, fn in self.additional_authorized_functions.items()
+                                            ],
+                                            max_iters=self.max_iters,
+                                        )
+
+                            else:
+                                self.output.error_msg = f"An Error occured while trying to extract the function's name. Error: {output_name_extractor.error_msg}"
+                                self.logger.error(self.output.error_msg)
+
+                    except Exception as e:
+                        msg = f"Error during the forward pass of the IfcAnswerEngine.\nError: {e}"
+                        self.output.error_msg = msg
+                        self.logger.error(msg)
+
+                    finally:
+                        self.iter += 1
+
+            return self.output
 
 
 if __name__ == "__main__":
     # Test the IfcAnswerEngine
     ifc_model_path = "/Users/sylvainhellin/GitHub/ifcAnswerEngineV3/src/experiment/bim_models/duplex/arc.ifc"
     question = "What is the height of the living room?"
-    from src.config import LANGUAGE_MODELS
 
     lm_info = LANGUAGE_MODELS["gemini-flash"]
-    lm = dspy.LM(lm_info.url, api_key=lm_info.api_key)
-    dspy.configure(lm=lm)
+    lm = dspy.LM(lm_info.url, api_key=lm_info.api_key, max_tokens=2**13)
+
     mlflow.dspy.autolog()  # type: ignore
     mlflow.set_tracking_uri("http://127.0.0.1:5000")
     mlflow.set_experiment("IfcAnswerEngine")
@@ -146,12 +236,14 @@ if __name__ == "__main__":
     print("-" * 50)
 
     # Initialize the engine
-    engine = IfcAnswerEngine(log_level="INFO", import_all_created_tools=False)
+    engine = IfcAnswerEngine(
+        max_iters=2, log_level="INFO", import_all_created_tools=False, llm=lm
+    )
 
     # Run the test
     try:
-        result = engine.forward(question=question, path_ifc_model=ifc_model_path)
-        print(result.model_dump_json(indent=2))
+        output = engine.forward(question=question, path_ifc_model=ifc_model_path)
+        print(output.model_dump_json(indent=2))
     except Exception as e:
         print(f"Exception: \n{e}")
 
