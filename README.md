@@ -4,7 +4,6 @@ An Engine that can answer any question related to a given BIM model in .ifc form
 
 ## Roadmap
 
-- Refactor the `get_python_interpreter` to limit output and log size
 - Add an optional argument for each `dspy` agent: lm (to be able to granularly set which llm should be used for each agent)
 - Implement a `prefix` to the python_interpreter in `CodeAct` to import variables and the boilerplate (to limit the amount of error because of this issue.)
 - See if it would be possible to work with `**kwargs` instead of Dict for `final_answer` to reduce number of errors
