@@ -131,6 +131,8 @@ class IfcAnswerEngine(dspy.Module):
                         )
                         # If no new fn is needed, extract the answer, and exit the loop to return the output
                         if not prediction.need_new_function:
+                            self.output.status = "success"
+                            self.output.error_msg = None
                             self.output.result.answer = prediction.answer
                             self.iter = self.max_iters
                             break
@@ -143,8 +145,6 @@ class IfcAnswerEngine(dspy.Module):
                             self.logger.error(self.output.error_msg)
 
                         else:
-                            self.output.status = "success"
-                            self.output.error_msg = None
                             self.output.result.need_new_function = True
                             self.logger.info(
                                 "Forward pass completed with status: 'success'"
