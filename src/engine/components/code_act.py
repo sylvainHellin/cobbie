@@ -14,6 +14,7 @@ from src.engine.tools.primordial.python_interpreter import (
 )
 from src.engine.util import check_final_answer
 
+
 from .code_act_instruction_template import CODE_AGENT_INSTRUCTION_TEMPLATE
 
 
@@ -34,6 +35,7 @@ class CodeAct(Module):
         signature: str | Type[Signature],
         tools: Optional[List[Callable]] = None,
         max_iters: int = 4,
+        code_prefix: Optional[str] = None,
     ):
         """
         Initializes the CodeAgent.
@@ -50,10 +52,17 @@ class CodeAct(Module):
         self.max_iters = max_iters
         self.tools = (tools or []) + [final_answer]
         self.last_output_python_interpreter: Optional[Any] = None
+        self.code_prefix = code_prefix
 
         self._setup_interpreter()
         self._prepare_agent_signatures()
         self._setup_prediction_modules()
+
+    def _update_code_prefix(self, code_prefix: Optional[str]):
+        """
+        Update the code prefix (that will be added to each bloc of code before passing it to the Python Interpreter.
+        """
+        self.code_prefix = code_prefix
 
     def _setup_interpreter(self):
         """Initializes the Python interpreter and associated tool."""
@@ -216,6 +225,9 @@ class CodeAct(Module):
         try:
             code_blobs = parse_code_blobs(python_code)
             code_to_exec = fix_final_answer_code(code_blobs)
+            if self.code_prefix is not None:
+                code_to_exec = self.code_prefix + "\n" + code_to_exec
+
         except Exception as e:
             observation = f"Error parsing your code: {e}. Please make sure to format the code correctly in a ```python ... ``` block."
             return (thought, python_code, observation), False
