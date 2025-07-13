@@ -1,3 +1,4 @@
+import ast
 from typing import Any
 
 from dspy import Signature
@@ -17,7 +18,10 @@ def check_final_answer(output: Any, signature: Signature) -> bool:
         bool: True if the output matches all expected output fields, False otherwise
     """
     if not isinstance(output, dict):
-        return False
+        try:
+            output = ast.literal_eval(output)
+        except Exception:
+            return False
 
     output_fields = signature.output_fields  # type: ignore
 
@@ -40,3 +44,19 @@ def check_final_answer(output: Any, signature: Signature) -> bool:
             return False
 
     return True
+
+
+if __name__ == "__main__":
+    import dspy
+
+    class GenerateUUIDSignature(dspy.Signature):
+        """Generates a new UUID and returns it."""
+
+        task_description = dspy.InputField(
+            desc="The user's request to generate a UUID."
+        )
+        generated_uuid = dspy.OutputField(desc="The newly generated UUID.")
+
+    last_output = {"generated_uuid": "24d6d214-9d85-418e-bbce-2ec263f9c268"}
+    res = check_final_answer(output=last_output, signature=GenerateUUIDSignature())
+    print(res)

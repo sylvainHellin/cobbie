@@ -1,3 +1,4 @@
+import ast
 from typing import Any, Callable, List, Optional, Type
 
 import dspy
@@ -13,7 +14,6 @@ from src.engine.tools.primordial.python_interpreter import (
     get_python_interpreter,
 )
 from src.engine.util import check_final_answer
-
 
 from .code_act_instruction_template import CODE_AGENT_INSTRUCTION_TEMPLATE
 
@@ -201,12 +201,17 @@ class CodeAct(Module):
         str_trajectory = self._format_trajectory(trajectory)
 
         # Check if the last output from the python_interpreter matches the signature.
+        prediction = None
         if self.last_output_python_interpreter is not None and check_final_answer(
             self.last_output_python_interpreter, self.signature
         ):
-            prediction = dspy.Prediction(**self.last_output_python_interpreter)
-        # If not, try to extracting using a CoT agent
-        else:
+            if not isinstance(self.last_output_python_interpreter, dict):
+                try:
+                    output = ast.literal_eval(self.last_output_python_interpreter)
+                    prediction = dspy.Prediction(**output)
+                except Exception:
+                    prediction = self.extract(trajectory=str_trajectory, **kwargs)
+        if prediction is None:
             prediction = self.extract(trajectory=str_trajectory, **kwargs)
 
         return prediction
@@ -289,37 +294,35 @@ if __name__ == "__main__":
         )
         generated_uuid = dspy.OutputField(desc="The newly generated UUID.")
 
-    def main(lm_name: str = "gemini-flash"):
-        # 3. Configure the language model
-        lm_info = LANGUAGE_MODELS[lm_name]
-        llm = dspy.LM(
-            model=lm_info.url,
-            api_key=lm_info.api_key,
-            max_tokens=2000,
-        )
-        dspy.configure(lm=llm)
+    # 3. Configure the language model
+    lm_name = "qwen3-8b"
+    lm_info = LANGUAGE_MODELS[lm_name]
+    llm = dspy.LM(
+        model=lm_info.url,
+        api_key=lm_info.api_key,
+        max_tokens=2000,
+    )
+    dspy.configure(lm=llm)
 
-        # setup mlflow
-        mlflow.dspy.autolog()  # type: ignore
-        mlflow.set_tracking_uri("http://127.0.0.1:5000")
-        mlflow.set_experiment("CodeAgentTest")
+    # setup mlflow
+    mlflow.dspy.autolog()  # type: ignore
+    mlflow.set_tracking_uri("http://127.0.0.1:5000")
+    mlflow.set_experiment("CodeAct")
 
-        # 4. Instantiate the CodeAgent
-        agent = CodeAct(signature=GenerateUUIDSignature, tools=[generate_uuid])
+    # 4. Instantiate the CodeAgent
+    agent = CodeAct(signature=GenerateUUIDSignature, tools=[generate_uuid])
 
-        # 5. Run the agent
-        task = "I need a new UUID."
-        result = agent(task_description=task)
+    # 5. Run the agent
+    task = "I need a new UUID."
+    result = agent(task_description=task)
 
-        # 6. Print the result and validate it
-        print(f"Task: {task}")
-        print(f"Generated UUID: {result.generated_uuid}")
+    # 6. Print the result and validate it
+    print(f"Task: {task}")
+    print(f"Generated UUID: {result.generated_uuid}")
 
-        try:
-            # Validate that the output is a valid UUID
-            uuid.UUID(result.generated_uuid)
-            print("Validation successful: The output is a valid UUID.")
-        except (ValueError, TypeError, AttributeError):
-            print("Validation failed: The output is not a valid UUID.")
-
-    main()
+    try:
+        # Validate that the output is a valid UUID
+        uuid.UUID(result.generated_uuid)
+        print("Validation successful: The output is a valid UUID.")
+    except (ValueError, TypeError, AttributeError):
+        print("Validation failed: The output is not a valid UUID.")
