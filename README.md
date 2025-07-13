@@ -4,9 +4,9 @@ An Engine that can answer any question related to a given BIM model in .ifc form
 
 ## Roadmap
 
-- Add an optional argument for each `dspy` agent: lm (to be able to granularly set which llm should be used for each agent)
-- Implement a `prefix` to the python_interpreter in `CodeAct` to import variables and the boilerplate (to limit the amount of error because of this issue.)
-- See if it would be possible to work with `**kwargs` instead of Dict for `final_answer` to reduce number of errors
+- Continue the implementation of the training module: if a new tool is created, update the tool list of the agent, and try a new iter.
+- See if it would be possible to work with `**kwargs` instead of Dict for `final_answer` to reduce number of errors. Maybe add an additional function to clean the code after the `fix_final_answer_code` in the implementation of `CodeAct`.
+- Remove dependency to smolagents (Python interpreter & co.)
 
 ## System Overview
 

@@ -33,12 +33,13 @@ class TrainingModule(dspy.Module):
         self.function_requirements: Optional[str] = None
         self.tool_creator = ToolCreator(llm=self.llm)
         self.answer_verifier = AnswerVerifier()
-        self.engine = IfcAnswerEngine()
+        self.name_extractor = NameExtractor()
+        self.engine = IfcAnswerEngine(llm=self.llm)
 
     def forward(self, datapoint: Datapoint) -> ModuleOutput:
         output = ModuleOutput(status="error")
 
-        with mlflow.start_span("TrainingModule"):
+        with mlflow.start_span("Training"):
             # Init and run engine
             output_engine = self.engine.forward(
                 question=datapoint.question, path_ifc_model=datapoint.ifc_model_path
@@ -65,8 +66,7 @@ class TrainingModule(dspy.Module):
                     output_answer_verifier = self.answer_verifier.forward(
                         question=datapoint.question,
                         first_answer=datapoint.answer,
-                        second_answer=output_engine.result.answer
-                        or "No answer provided.",
+                        second_answer=output_engine.result.answer,
                     )
                     if output_answer_verifier.status == "error":
                         self.logger.error("There was an error with the AnswerVerifier")
@@ -93,11 +93,10 @@ class TrainingModule(dspy.Module):
                     self.function_requirements = output_engine.result.answer
                     self.logger.info("A new tool is needed to answer this question.")
                     self.logger.debug(
-                        f"Requirements for the new tool:\n{self.function_requirements}"
+                        f"Requirements for the new tool:\n{self.function_requirements}\n"
                     )
                     # 1. Extract the name of the function
-                    name_extractor = NameExtractor()
-                    output_name_extractor = name_extractor.forward(
+                    output_name_extractor = self.name_extractor.forward(
                         function_requirements=self.function_requirements
                     )
 
@@ -111,7 +110,9 @@ class TrainingModule(dspy.Module):
                         )
                         self.function_name = output_name_extractor.result.function_name
                         self.logger.info("Name of the function extracted successfully.")
-                        self.logger.debug(f"Name of the function: {self.function_name}")
+                        self.logger.debug(
+                            f"Name of the function: {self.function_name}\n"
+                        )
 
                         # Start the ToolCreator!
                         output_tool_creator = self.tool_creator.forward(
@@ -138,6 +139,7 @@ class TrainingModule(dspy.Module):
                             self.logger.debug(
                                 f"Python code of the function: {self.function_name}:\n{self.function_code}"
                             )
+                            # TODO Continue here
 
             else:
                 self.logger.error(

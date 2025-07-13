@@ -137,6 +137,7 @@ class IfcAnswerEngine(dspy.Module):
                             self.output.status = "success"
                             self.output.error_msg = None
                             self.output.result.answer = prediction.answer
+                            self.output.result.need_new_function = False
                             self.iter = self.max_iters
                             break
 
