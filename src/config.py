@@ -81,6 +81,11 @@ LANGUAGE_MODELS["qwen3-235b-fireworks"] = LLM(
 LANGUAGE_MODELS["qwen3-30b-ollama"] = LLM(
     url="ollama_chat/qwen3:30b", name="qwen3-30b-ollama"
 )
+LANGUAGE_MODELS["gemma3-12b"] = LLM(
+    url="ollama_chat/gemma3:12b",
+    name="gemma3-12b",
+)
+LANGUAGE_MODELS["qwen3-8b"] = LLM(url="ollama_chat/qwen3:8b", name="qwen3-8b")
 
 # Default models to test in comparisons
 MODELS_TO_TEST = [
@@ -104,7 +109,7 @@ import ifcopenshell.util.system
 import ifcopenshell.geom
 import math
 import json
-from typing import Union, List, Dict, Any
+from typing import Union, List, Dict, Any, Optional
 """
 
 # Configure logger
