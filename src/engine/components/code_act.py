@@ -50,10 +50,16 @@ class CodeAct(Module):
         super().__init__()
         self.signature = ensure_signature(signature)
         self.max_iters = max_iters
-        self.tools = (tools or []) + [final_answer]
         self.last_output_python_interpreter: Optional[Any] = None
         self.code_prefix = code_prefix
+        self._update_tools(tools=tools)
 
+    def _update_tools(self, tools: Optional[List[Callable]] = None):
+        """
+        Update the tools the agent can use. This will update the signature, setup the Python interpreter to accept these tools, and setup the prediction module.
+        """
+
+        self.tools = (tools or []) + [final_answer]
         self._setup_interpreter()
         self._prepare_agent_signatures()
         self._setup_prediction_modules()
@@ -114,7 +120,7 @@ class CodeAct(Module):
     def _build_code_act_instructions(self) -> str:
         """Builds the instruction prompt from template with variable substitution."""
         return CODE_AGENT_INSTRUCTION_TEMPLATE.format(
-            tool_description=self.tool_desctiption,
+            tool_description=self.tool_description,
             task_instructions=self.task_instructions,
             output_fields_description=self.output_fields_description,
         )
@@ -126,7 +132,7 @@ class CodeAct(Module):
         self.input_fields = self.signature.input_fields  # type: ignore
         self.output_fields = self.signature.output_fields  # type: ignore
 
-        self.tool_desctiption = self._build_tools_description()
+        self.tool_description = self._build_tools_description()
         self.output_fields_description = self._build_output_fields_description()
 
         # Internal signature for the generation loop

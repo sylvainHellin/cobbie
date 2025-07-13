@@ -75,6 +75,7 @@ class IfcAnswerEngine(dspy.Module):
         import_all_created_tools: bool = True,
         max_iter_tool_creator: Optional[int] = 3,
         max_iter_sub_agents_tool_creator: Optional[int] = 10,
+        add_boilerplate: bool = True,
     ):
         super().__init__()
         self.max_iters = max_iters
@@ -87,11 +88,13 @@ class IfcAnswerEngine(dspy.Module):
         self.max_tokens_logs = max_tokens_logs
         self.max_tokens_output = max_tokens_output
         self.created_tools: Dict[str, Callable] = {}
+        self.add_boilerplate = add_boilerplate
         self.tool_creator: ToolCreator = ToolCreator(
             llm=self.lm,
             max_iter=max_iter_tool_creator or 3,
             max_iter_sub_agents=max_iter_sub_agents_tool_creator or 10,
             log_level=self.log_level,
+            add_boilerplate=self.add_boilerplate,
         )
         self.name_extractor = NameExtractor(log_level=self.log_level)
         dspy.configure(lm=self.lm)
@@ -174,7 +177,6 @@ class IfcAnswerEngine(dspy.Module):
                                 )
 
                                 # If the new fn could be created, create a new tool
-                                # and create a new instance of the engine with the new tool. TODO consider adding a method to update the tools and the python interpreter on the existing instance.
                                 if output_tool_creator.status == "success":
                                     if (
                                         output_tool_creator.result.function_implementation
@@ -192,17 +194,13 @@ class IfcAnswerEngine(dspy.Module):
                                             self.output.result.function_name
                                         ] = self.output.result.new_function
 
-                                        # Re-instantiate the engine to add the new function to the allowd tools.
-                                        # TODO: consider adding a method to the CodeAct class to update the tools and the python interpreter instead of creating a new instance.
-                                        self.engine = CodeAct(
-                                            signature=IfcAnwerEngineSignature,
+                                        # Update the tools available to the engine to include the new one.
+                                        self.engine._update_tools(
                                             tools=[
                                                 fn
                                                 for _, fn in self.additional_authorized_functions.items()
                                             ],
-                                            max_iters=self.max_iters,
                                         )
-
                             else:
                                 self.output.error_msg = f"An Error occured while trying to extract the function's name. Error: {output_name_extractor.error_msg}"
                                 self.logger.error(self.output.error_msg)
