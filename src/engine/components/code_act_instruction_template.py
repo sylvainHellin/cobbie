@@ -15,7 +15,7 @@ When you have collected all the necessary information, call the `final_answer()`
 Task:
 {task_instructions}
 
-Expected outputs fields in `final_answer()` at the end of the task:
+Expected fields in the dict to be passed as argument to `final_answer()` at the end of the task:
 {output_fields_description}
 
 IMPORTANT:
