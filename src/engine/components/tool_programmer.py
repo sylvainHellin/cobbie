@@ -1,4 +1,4 @@
-from typing import Callable, List, Literal
+from typing import Callable, List, Literal, Optional
 
 import dspy
 
@@ -6,7 +6,7 @@ from src.config import (
     FUNCTION_BOILERPLATE,
 )
 from src.engine.schemas import ModuleOutput, Result
-from src.engine.util import get_logger
+from src.engine.util import get_logger, build_boilerplate
 from .code_act import CodeAct
 
 
@@ -75,6 +75,7 @@ class ToolProgrammer(dspy.Module):
         tools: List[Callable],
         max_iters: int = 10,
         log_level: Literal["DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"] = "DEBUG",
+        add_boilerplate: bool = True,
     ):
         super().__init__()
         self.tools = tools
@@ -84,6 +85,7 @@ class ToolProgrammer(dspy.Module):
         )
         self.log_level = log_level
         self.logger = get_logger(name="ToolProgrammer", log_level=self.log_level)
+        self.add_boilerplate = add_boilerplate
 
     def forward(
         self,
@@ -92,6 +94,15 @@ class ToolProgrammer(dspy.Module):
         path_ifc_model: str,
         function_boilerplate: str = FUNCTION_BOILERPLATE,
     ) -> ModuleOutput:
+        if self.add_boilerplate:
+            code_prefix = build_boilerplate(
+                path_ifc_model=path_ifc_model, imports_boilerplate=FUNCTION_BOILERPLATE
+            )
+        else:
+            code_prefix = None
+
+        self.agent._update_code_prefix(code_prefix=code_prefix)
+
         prediction = self.agent(
             function_requirements=function_requirements,
             function_name=function_name,
@@ -177,5 +188,5 @@ if __name__ == "__main__":
         function_requirements=function_requirements,
         function_name=function_name,
         log_level="INFO",
-        lm_name="gemini-flash",
+        lm_name="qwen3-8b",
     )

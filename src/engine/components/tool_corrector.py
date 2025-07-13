@@ -3,7 +3,7 @@ from typing import Callable, List, Literal
 import dspy
 
 from src.engine.schemas import ModuleOutput, Result
-from src.engine.util import get_logger
+from src.engine.util import get_logger, build_boilerplate
 
 from .code_act import CodeAct
 
@@ -59,6 +59,7 @@ class ToolCorrector(dspy.Module):
         tools: List[Callable],
         max_iters: int = 10,
         log_level: Literal["DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"] = "DEBUG",
+        add_boilerplate: bool = True,
     ):
         super().__init__()
         self.tools = tools
@@ -70,6 +71,7 @@ class ToolCorrector(dspy.Module):
         )
         self.log_level = log_level
         self.logger = get_logger(name="ToolCorrector", log_level=self.log_level)
+        self.add_boilerplate = add_boilerplate
 
     def forward(
         self,
@@ -79,6 +81,14 @@ class ToolCorrector(dspy.Module):
         current_function_implementation: str,
         detailed_function_assessment: str,
     ) -> ModuleOutput:
+        if self.add_boilerplate:
+            code_prefix = build_boilerplate(
+                path_ifc_model=path_ifc_model,
+            )
+        else:
+            code_prefix = None
+        self.agent._update_code_prefix(code_prefix=code_prefix)
+
         output = self.agent(
             function_description=function_description,
             function_name=function_name,

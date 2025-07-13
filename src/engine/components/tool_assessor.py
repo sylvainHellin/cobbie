@@ -1,10 +1,14 @@
-from typing import Literal, List, Callable
+from typing import Callable, List, Literal
 
 import dspy
 
 from src.engine.components.code_act import CodeAct
 from src.engine.schemas import ModuleOutput, Result
-from src.engine.util import get_logger, _create_function_from_source_code
+from src.engine.util import (
+    _create_function_from_source_code,
+    build_boilerplate,
+    get_logger,
+)
 
 
 class ToolAssessmentSignature(dspy.Signature):
@@ -41,6 +45,7 @@ class ToolAssessor(dspy.Module):
         tools: List[Callable],
         max_iters: int = 10,
         log_level: Literal["DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"] = "DEBUG",
+        add_boilerplate: bool = True,
     ):
         super().__init__()
         # Combine base tools with the generated tool
@@ -53,6 +58,7 @@ class ToolAssessor(dspy.Module):
         )
         self.log_level = log_level
         self.logger = get_logger(name="ToolAssessor", log_level=self.log_level)
+        self.add_boilerplate = add_boilerplate
 
     def forward(
         self,
@@ -60,6 +66,13 @@ class ToolAssessor(dspy.Module):
         function_requirements: str,
         path_ifc_model: str,
     ) -> ModuleOutput:
+        if self.add_boilerplate:
+            code_prefix = build_boilerplate(
+                path_ifc_model=path_ifc_model,
+            )
+        else:
+            code_prefix = None
+        self.agent._update_code_prefix(code_prefix=code_prefix)
         output = self.agent(
             function_name=function_name,
             function_requirements=function_requirements,
@@ -84,6 +97,7 @@ class ToolAssessor(dspy.Module):
 
 if __name__ == "__main__":
     import json
+
     import mlflow
 
     from src.config import LANGUAGE_MODELS, TEST_IFC_PATH
