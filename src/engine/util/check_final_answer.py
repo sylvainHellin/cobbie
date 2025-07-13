@@ -49,6 +49,12 @@ def check_final_answer(output: Any, signature: Signature) -> bool:
 if __name__ == "__main__":
     import dspy
 
+    class QA(dspy.Signature):
+        """Answer the user's question"""
+
+        question: str = dspy.InputField()
+        answer: str = dspy.OutputField()
+
     class GenerateUUIDSignature(dspy.Signature):
         """Generates a new UUID and returns it."""
 
@@ -57,6 +63,8 @@ if __name__ == "__main__":
         )
         generated_uuid = dspy.OutputField(desc="The newly generated UUID.")
 
-    last_output = {"generated_uuid": "24d6d214-9d85-418e-bbce-2ec263f9c268"}
-    res = check_final_answer(output=last_output, signature=GenerateUUIDSignature())
+    # last_output = {"generated_uuid": "24d6d214-9d85-418e-bbce-2ec263f9c268"}
+    last_output = "{'answer': \"No, you don't need to take an umbrella tomorrow. The weather forecast for Munich shows sunny conditions with no rain.\"}"
+    signature = dspy.ensure_signature(QA)
+    res = check_final_answer(output=last_output, signature=signature)
     print(res)
