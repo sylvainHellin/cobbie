@@ -58,6 +58,9 @@ LANGUAGE_MODELS["deepseek-v3"] = LLM(
 LANGUAGE_MODELS["llama3-70b-groq"] = LLM(
     url="groq/llama-3.3-70b-versatile", api_key=GROQ_API_KEY, name="llama3-70b-groq"
 )
+LANGUAGE_MODELS["kimi-k2"] = LLM(
+    url="groq/moonshotai/kimi-k2-instruct", api_key=GROQ_API_KEY, name="kimi-k2"
+)
 LANGUAGE_MODELS["llama4-maverick-groq"] = LLM(
     url="groq/meta-llama/llama-4-maverick-17b-128e-instruct",
     api_key=GROQ_API_KEY,

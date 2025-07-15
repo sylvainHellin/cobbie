@@ -147,7 +147,7 @@ if __name__ == "__main__":
     def main(
         function_requirements: str,
         function_name: str,
-        lm_name: str = "gemini-flash",
+        lm_name: str = "kimi-k2",
         log_level: Literal["DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"] = "DEBUG",
     ):
         # configure dspy
@@ -188,5 +188,5 @@ if __name__ == "__main__":
         function_requirements=function_requirements,
         function_name=function_name,
         log_level="INFO",
-        lm_name="qwen3-8b",
+        lm_name="kimi-k2",
     )
