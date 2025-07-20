@@ -4,9 +4,16 @@ An Engine that can answer any question related to a given BIM model in .ifc form
 
 ## Roadmap
 
-- Continue the implementation of the training module: if a new tool is created, update the tool list of the agent, and try a new iter.
-- See if it would be possible to work with `**kwargs` instead of Dict for `final_answer` to reduce number of errors. Maybe add an additional function to clean the code after the `fix_final_answer_code` in the implementation of `CodeAct`.
+- Test the Engine with 2-3 functions, requiring new tools or not, to see how good it currently is and if there are any bugs with the current implementation.
+- Test the current implementation of the training module.
+
+### Options / Ideas
+
+- Consider removing the Boilerplate instruction for the Engine ; maybe keep it for the ToolCreator (need to make sure this function can be loaded later on).
+- Consider making the `save_new_tool` function more robust (check if name exist, if directory exist, if the written was successfull (read the file and compare it to the passed argument, better docstring, etc)).
+- Replace the traditional LLM from the AnswerExtraction by an SLM fine-tuned/optimized for this task.
 - Remove dependency to smolagents (Python interpreter & co.)
+- See if it would be possible to work with `**kwargs` instead of Dict for `final_answer` to reduce number of errors. Maybe add an additional function to clean the code after the `fix_final_answer_code` in the implementation of `CodeAct`.
 
 ## System Overview
 
