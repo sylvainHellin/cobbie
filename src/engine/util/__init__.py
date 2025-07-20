@@ -12,4 +12,5 @@ __all__ = [
     "validate_type",
     "check_final_answer",
     "create_code_prefix",
+    "save_new_tool"
 ]
