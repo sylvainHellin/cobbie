@@ -21,10 +21,10 @@ import mlflow
 
 from src.engine.schemas import ModuleOutput
 from src.engine.tools import get_created_tools
-from src.engine.util import get_logger, _create_function_from_source_code
+from src.engine.util import get_logger, _create_function_from_source_code, create_code_prefix
 from src.engine.components import CodeAct, ToolCreator, NameExtractor
 
-from src.config import LANGUAGE_MODELS
+from src.config import LANGUAGE_MODELS, FUNCTION_BOILERPLATE
 
 
 class IfcAnwerEngineSignature(dspy.Signature):
@@ -119,6 +119,15 @@ class IfcAnswerEngine(dspy.Module):
         self.output = ModuleOutput(
             status="error", error_msg="IfcAnswerEngine could not answer the question."
         )
+        if self.add_boilerplate:
+            code_prefix = create_code_prefix(
+                path_ifc_model=path_ifc_model, imports_boilerplate=FUNCTION_BOILERPLATE
+            )
+        else:
+            code_prefix = None
+
+        self.engine._update_code_prefix(code_prefix=code_prefix)
+
 
         with mlflow.start_span("IfcAnswerEngine"):
             # Start the loop: try to answer the question with existing tool
@@ -222,7 +231,7 @@ if __name__ == "__main__":
     ifc_model_path = "/Users/sylvainhellin/GitHub/ifcAnswerEngineV3/src/experiment/bim_models/duplex/arc.ifc"
     question = "What is the height of the living room?"
 
-    lm_info = LANGUAGE_MODELS["kimi-k2"]
+    lm_info = LANGUAGE_MODELS["gemma3-4b"]
     lm = dspy.LM(lm_info.url, api_key=lm_info.api_key, max_tokens=2**13)
 
     mlflow.dspy.autolog()  # type: ignore
@@ -236,7 +245,7 @@ if __name__ == "__main__":
 
     # Initialize the engine
     engine = IfcAnswerEngine(
-        max_iters=5, log_level="INFO", import_all_created_tools=False, llm=lm
+        max_iters=5, log_level="INFO", import_all_created_tools=False, llm=lm, add_boilerplate=True
     )
 
     # Run the test
