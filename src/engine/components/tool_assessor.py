@@ -45,7 +45,7 @@ class ToolAssessor(dspy.Module):
         tools: List[Callable],
         max_iters: int = 10,
         log_level: Literal["DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"] = "DEBUG",
-        add_boilerplate: bool = True,
+        add_code_prefix: bool = True,
     ):
         super().__init__()
         # Combine base tools with the generated tool
@@ -58,7 +58,7 @@ class ToolAssessor(dspy.Module):
         )
         self.log_level = log_level
         self.logger = get_logger(name="ToolAssessor", log_level=self.log_level)
-        self.add_boilerplate = add_boilerplate
+        self.add_code_prefix = add_code_prefix
 
     def forward(
         self,
@@ -66,7 +66,7 @@ class ToolAssessor(dspy.Module):
         function_requirements: str,
         path_ifc_model: str,
     ) -> ModuleOutput:
-        if self.add_boilerplate:
+        if self.add_code_prefix:
             code_prefix = create_code_prefix(
                 path_ifc_model=path_ifc_model,
             )

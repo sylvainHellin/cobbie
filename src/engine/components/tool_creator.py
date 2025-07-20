@@ -58,7 +58,7 @@ class ToolCreator(dspy.Module):
             "query_ifcopenshell_documentation": query_ifcopenshell_documentation,
         },
         callbacks=None,
-        add_boilerplate: bool = True,
+        add_code_prefix: bool = True,
     ):
         super().__init__(callbacks)
         self.lm = llm
@@ -68,7 +68,7 @@ class ToolCreator(dspy.Module):
         self.max_iter = max_iter
         self.max_iter_sub_agents = max_iter_sub_agents
         self.function_boilerplate = function_boilerplate
-        self.add_boilerplate = add_boilerplate
+        self.add_code_prefix = add_code_prefix
 
         # Store authorized functions for use in assessor when needed
         self.additional_authorized_functions = additional_authorized_functions
@@ -85,13 +85,13 @@ class ToolCreator(dspy.Module):
             tools=self.primordial_tools,
             max_iters=self.max_iter_sub_agents,
             log_level=self.log_level,
-            add_boilerplate=self.add_boilerplate,
+            add_boilerplate=self.add_code_prefix,
         )
         self.tool_corrector = ToolCorrector(
             tools=self.primordial_tools,
             max_iters=self.max_iter_sub_agents,
             log_level=self.log_level,
-            add_boilerplate=self.add_boilerplate,
+            add_code_prefix=self.add_code_prefix,
         )
 
     def forward(
@@ -181,7 +181,7 @@ class ToolCreator(dspy.Module):
                             # The CodeAct-based assessor will create its own Python interpreter internally
                             tools = self.primordial_tools + [new_tool]
                             tool_assessor = ToolAssessor(
-                                tools=tools, add_boilerplate=self.add_boilerplate
+                                tools=tools, add_code_prefix=self.add_code_prefix
                             )
                             self.logger.info(
                                 "✓ ToolAssessor created with new tool to test."

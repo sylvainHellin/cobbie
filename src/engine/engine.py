@@ -75,7 +75,7 @@ class IfcAnswerEngine(dspy.Module):
         import_all_created_tools: bool = True,
         max_iter_tool_creator: Optional[int] = 3,
         max_iter_sub_agents_tool_creator: Optional[int] = 10,
-        add_boilerplate: bool = True,
+        add_code_prefix: bool = True,
     ):
         super().__init__()
         self.max_iters = max_iters
@@ -88,13 +88,13 @@ class IfcAnswerEngine(dspy.Module):
         self.max_tokens_logs = max_tokens_logs
         self.max_tokens_output = max_tokens_output
         self.created_tools: Dict[str, Callable] = {}
-        self.add_boilerplate = add_boilerplate
+        self.add_code_prefix= add_code_prefix
         self.tool_creator: ToolCreator = ToolCreator(
             llm=self.lm,
             max_iter=max_iter_tool_creator or 3,
             max_iter_sub_agents=max_iter_sub_agents_tool_creator or 10,
             log_level=self.log_level,
-            add_boilerplate=self.add_boilerplate,
+            add_code_prefix=self.add_code_prefix,
         )
         self.name_extractor = NameExtractor(log_level=self.log_level)
         dspy.configure(lm=self.lm)
@@ -119,7 +119,7 @@ class IfcAnswerEngine(dspy.Module):
         self.output = ModuleOutput(
             status="error", error_msg="IfcAnswerEngine could not answer the question."
         )
-        if self.add_boilerplate:
+        if self.add_code_prefix:
             code_prefix = create_code_prefix(
                 path_ifc_model=path_ifc_model, imports_boilerplate=FUNCTION_BOILERPLATE
             )
@@ -245,7 +245,7 @@ if __name__ == "__main__":
 
     # Initialize the engine
     engine = IfcAnswerEngine(
-        max_iters=5, log_level="INFO", import_all_created_tools=False, llm=lm, add_boilerplate=True
+        max_iters=5, log_level="INFO", import_all_created_tools=False, llm=lm, add_code_prefix=True
     )
 
     # Run the test

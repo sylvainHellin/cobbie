@@ -59,7 +59,7 @@ class ToolCorrector(dspy.Module):
         tools: List[Callable],
         max_iters: int = 10,
         log_level: Literal["DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"] = "DEBUG",
-        add_boilerplate: bool = True,
+        add_code_prefix: bool = True,
     ):
         super().__init__()
         self.tools = tools
@@ -71,7 +71,7 @@ class ToolCorrector(dspy.Module):
         )
         self.log_level = log_level
         self.logger = get_logger(name="ToolCorrector", log_level=self.log_level)
-        self.add_boilerplate = add_boilerplate
+        self.add_code_prefix = add_code_prefix
 
     def forward(
         self,
@@ -81,7 +81,7 @@ class ToolCorrector(dspy.Module):
         current_function_implementation: str,
         detailed_function_assessment: str,
     ) -> ModuleOutput:
-        if self.add_boilerplate:
+        if self.add_code_prefix:
             code_prefix = create_code_prefix(
                 path_ifc_model=path_ifc_model,
             )
