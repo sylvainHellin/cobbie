@@ -69,6 +69,7 @@ class IfcAnswerEngine(dspy.Module):
         additional_authorized_functions: Optional[Dict[str, Callable]] = None,
         additional_authorized_imports: Optional[List[str]] = None,
         max_iters: int = 10,
+        max_retry: int = 2,
         log_level: Literal["DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"] = "DEBUG",
         max_tokens_logs: int = 2**12,
         max_tokens_output: int = 2**12,
@@ -80,6 +81,7 @@ class IfcAnswerEngine(dspy.Module):
         super().__init__()
         self.max_iters = max_iters
         self.iter: int = 0
+        self.max_retry: int = max_retry
         self.log_level = log_level
         self.lm = llm
         self.logger = get_logger(name="IfcAnswerEngine", log_level=self.log_level)
@@ -131,7 +133,7 @@ class IfcAnswerEngine(dspy.Module):
 
         with mlflow.start_span("IfcAnswerEngine"):
             # Start the loop: try to answer the question with existing tool
-            while self.iter < self.max_iters:
+            while self.iter < self.max_retry:
                 with mlflow.start_span(f"iter Nr. {self.iter + 1}"):
                     self.logger.info(
                         f"\n\n### Strarting iter Nr. {self.iter + 1} ###\n\n"
@@ -192,7 +194,7 @@ class IfcAnswerEngine(dspy.Module):
                                         output_tool_creator.result.function_implementation
                                         is None
                                     ):
-                                        self.output.error_msg = "Logical error: status of ToolCreator is 'success', but function_requirement is None"
+                                        self.output.error_msg = "Logical error: status of ToolCreator is 'success', but function_implementation is None"
                                         self.logger.error(self.output.error_msg)
                                     else:
                                         self.function_implementation = output_tool_creator.result.function_implementation
@@ -231,21 +233,20 @@ if __name__ == "__main__":
     ifc_model_path = "/Users/sylvainhellin/GitHub/ifcAnswerEngineV3/src/experiment/bim_models/duplex/arc.ifc"
     question = "What is the height of the living room?"
 
-    lm_info = LANGUAGE_MODELS["gemma3-4b"]
+    lm_info = LANGUAGE_MODELS["gemma3n"]
     lm = dspy.LM(lm_info.url, api_key=lm_info.api_key, max_tokens=2**13)
 
     mlflow.dspy.autolog()  # type: ignore
     mlflow.set_tracking_uri("http://127.0.0.1:5000")
     mlflow.set_experiment("IfcAnswerEngine")
-
-    print("Testing IfcAnswerEngine with:")
-    print(f"IFC Model: {ifc_model_path}")
-    print(f"Question: {question}")
-    print("-" * 50)
-
     # Initialize the engine
     engine = IfcAnswerEngine(
-        max_iters=5, log_level="INFO", import_all_created_tools=False, llm=lm, add_code_prefix=True
+        max_iters=10,
+        max_retry=2,
+        log_level="INFO",
+        import_all_created_tools=False,
+        llm=lm,
+        add_code_prefix=True
     )
 
     # Run the test
