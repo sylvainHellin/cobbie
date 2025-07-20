@@ -3,7 +3,7 @@ from ._extract_function_metadata import _extract_function_metadata
 from .get_logger import get_logger
 from .validate_type import validate_type
 from .check_final_answer import check_final_answer
-from .build_boilerplate import build_boilerplate
+from .create_code_prefix import create_code_prefix
 
 __all__ = [
     "get_logger",
@@ -11,5 +11,5 @@ __all__ = [
     "_extract_function_metadata",
     "validate_type",
     "check_final_answer",
-    "build_boilerplate",
+    "create_code_prefix",
 ]

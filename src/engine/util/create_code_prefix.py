@@ -2,7 +2,7 @@ from typing import Optional
 from src.config import FUNCTION_BOILERPLATE
 
 
-def build_boilerplate(
+def create_code_prefix(
     path_ifc_model: Optional[str],
     imports_boilerplate: Optional[str] = FUNCTION_BOILERPLATE,
 ) -> str:

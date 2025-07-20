@@ -6,7 +6,7 @@ from src.config import (
     FUNCTION_BOILERPLATE,
 )
 from src.engine.schemas import ModuleOutput, Result
-from src.engine.util import get_logger, build_boilerplate
+from src.engine.util import get_logger, create_code_prefix
 from .code_act import CodeAct
 
 
@@ -95,7 +95,7 @@ class ToolProgrammer(dspy.Module):
         function_boilerplate: str = FUNCTION_BOILERPLATE,
     ) -> ModuleOutput:
         if self.add_boilerplate:
-            code_prefix = build_boilerplate(
+            code_prefix = create_code_prefix(
                 path_ifc_model=path_ifc_model, imports_boilerplate=FUNCTION_BOILERPLATE
             )
         else:

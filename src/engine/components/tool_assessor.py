@@ -6,7 +6,7 @@ from src.engine.components.code_act import CodeAct
 from src.engine.schemas import ModuleOutput, Result
 from src.engine.util import (
     _create_function_from_source_code,
-    build_boilerplate,
+    create_code_prefix,
     get_logger,
 )
 
@@ -67,7 +67,7 @@ class ToolAssessor(dspy.Module):
         path_ifc_model: str,
     ) -> ModuleOutput:
         if self.add_boilerplate:
-            code_prefix = build_boilerplate(
+            code_prefix = create_code_prefix(
                 path_ifc_model=path_ifc_model,
             )
         else:
