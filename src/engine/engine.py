@@ -80,8 +80,8 @@ class IfcAnswerEngine(dspy.Module):
     ):
         super().__init__()
         self.max_iters = max_iters
-        self.iter: int = 0
         self.max_retry: int = max_retry
+        self.iter: int = 0
         self.log_level = log_level
         self.lm = llm
         self.logger = get_logger(name="IfcAnswerEngine", log_level=self.log_level)
@@ -149,7 +149,7 @@ class IfcAnswerEngine(dspy.Module):
                             self.output.error_msg = None
                             self.output.result.answer = prediction.answer
                             self.output.result.need_new_function = False
-                            self.iter = self.max_iters
+                            self.iter = self.max_retry
                             break
 
                         # If a new function is needed: call the toolCreator
@@ -233,7 +233,7 @@ if __name__ == "__main__":
     ifc_model_path = "/Users/sylvainhellin/GitHub/ifcAnswerEngineV3/src/experiment/bim_models/duplex/arc.ifc"
     question = "What is the height of the living room?"
 
-    lm_info = LANGUAGE_MODELS["gemma3n"]
+    lm_info = LANGUAGE_MODELS["gemma3-12b"]
     lm = dspy.LM(lm_info.url, api_key=lm_info.api_key, max_tokens=2**13)
 
     mlflow.dspy.autolog()  # type: ignore
@@ -241,10 +241,10 @@ if __name__ == "__main__":
     mlflow.set_experiment("IfcAnswerEngine")
     # Initialize the engine
     engine = IfcAnswerEngine(
-        max_iters=10,
+        max_iters=5,
         max_retry=2,
         log_level="INFO",
-        import_all_created_tools=False,
+        import_all_created_tools=True,
         llm=lm,
         add_code_prefix=True
     )
