@@ -222,7 +222,7 @@ if __name__ == "__main__":
     ifc_model_path = "/Users/sylvainhellin/GitHub/ifcAnswerEngineV3/src/experiment/bim_models/duplex/arc.ifc"
     question = "What is the height of the living room?"
 
-    lm_info = LANGUAGE_MODELS["gemini-flash"]
+    lm_info = LANGUAGE_MODELS["kimi-k2"]
     lm = dspy.LM(lm_info.url, api_key=lm_info.api_key, max_tokens=2**13)
 
     mlflow.dspy.autolog()  # type: ignore
@@ -236,7 +236,7 @@ if __name__ == "__main__":
 
     # Initialize the engine
     engine = IfcAnswerEngine(
-        max_iters=2, log_level="INFO", import_all_created_tools=False, llm=lm
+        max_iters=5, log_level="INFO", import_all_created_tools=False, llm=lm
     )
 
     # Run the test
