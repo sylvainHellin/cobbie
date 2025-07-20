@@ -92,6 +92,10 @@ LANGUAGE_MODELS["qwen3-8b"] = LLM(url="ollama_chat/qwen3:8b", name="qwen3-8b")
 LANGUAGE_MODELS["gemma3-4b"] = LLM(
     url="ollama_chat/gemma3:4b", name="gemma3-4b"
 )
+LANGUAGE_MODELS["gemma3n"] = LLM(
+    url="ollama_chat/gemma3n:e4b",
+    name="gemma3n",
+)
 
 # Default models to test in comparisons
 MODELS_TO_TEST = [
