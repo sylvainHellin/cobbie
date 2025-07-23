@@ -136,6 +136,16 @@ class TrainingModule(dspy.Module):
                 self.output.error_msg = f"There was a problem with question ID: {qa_pair.id}.\n Error msg: {output_engine.error_msg or 'No error message available'}"
                 self.logger.error(self.output.error_msg)
 
+            # Calculate total tokens from LM history after all agent calls
+            total_input_tokens = 0
+            total_output_tokens = 0
+
+            if self.lm.history:
+                for call in self.lm.history:
+                    usage = call.get("usage", {})
+                    total_input_tokens += usage.get("prompt_tokens", 0)
+                    total_output_tokens += usage.get("completion_tokens", 0)
+
             span.set_inputs(
                 {
                     "question_id": qa_pair.id,
@@ -147,15 +157,21 @@ class TrainingModule(dspy.Module):
                     "correct_answer": self.output.result.correct_answer or False,
                     "answer": self.output.result.answer or "No Answer available.",
                     "need_new_tool": self.output.result.need_new_function or False,
+                    "input_tokens": total_input_tokens,
+                    "output_tokens": total_output_tokens,
                 }
             )
             span.set_attributes(self.output.result.model_dump())
+            span.set_attribute("input_tokens", total_input_tokens)
+            span.set_attribute("output_tokens", total_output_tokens)
 
             mlflow.update_current_trace(
                 tags={
                     "correct_answer": str(self.output.result.correct_answer or False),
                     "answer": self.output.result.answer or "",
                     "need_new_tool": str(self.output.result.need_new_function or False),
+                    "input_tokens": str(total_input_tokens),
+                    "output_tokens": str(total_output_tokens),
                 }
             )
             if self.output.result.need_new_function:
@@ -184,4 +200,4 @@ def main(start: int = 0, finish: int = -1):
 
 
 if __name__ == "__main__":
-    main(start=3, finish=12)
+    main(start=3, finish=20)
