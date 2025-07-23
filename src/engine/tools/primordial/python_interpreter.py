@@ -40,6 +40,12 @@ AUTHORIZED_IMPORTS = [
     # Data science and numerical computing
     "numpy",
     "pandas",
+    "scipy",
+    "scipy.spatialscipy.optimize",
+    "scipy.linalg",
+    "scipy.interpolate",
+    "scipy.constants",
+    "scipy.sparse",
     # Standard library utilities
     "json",
     "os",
