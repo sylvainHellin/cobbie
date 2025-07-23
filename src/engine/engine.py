@@ -129,10 +129,8 @@ class IfcAnswerEngine(dspy.Module):
         with mlflow.start_span("IfcAnswerEngine"):
             # Start the loop: try to answer the question with existing tool
             while self.iter < self.max_retry:
-                with mlflow.start_span(f"iter Nr. {self.iter + 1}"):
-                    self.logger.info(
-                        f"\n\n### Strarting iter Nr. {self.iter + 1} ###\n\n"
-                    )
+                with mlflow.start_span(f"{self.iter + 1}_try"):
+                    self.logger.info(f"\n\n### Strarting {self.iter + 1}. try ###\n\n")
                     try:
                         prediction = self.engine.forward(
                             question=question,
