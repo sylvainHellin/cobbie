@@ -117,7 +117,7 @@ import ifcopenshell.util.system
 import ifcopenshell.geom
 import math
 import json
-from typing import Union, List, Dict, Any, Optional
+from typing import *
 """
 
 # Configure logger
