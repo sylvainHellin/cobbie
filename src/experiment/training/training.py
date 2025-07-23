@@ -32,13 +32,13 @@ class TrainingModule(dspy.Module):
         self.engine = IfcAnswerEngine(
             config=self.config.engine,
         )
+        mlflow.set_tracking_uri(self.config.tracking_uri)
+        mlflow.set_experiment(self.config.experiment_name)
+        mlflow.start_run(run_name=datetime.now().strftime("%Y-%m-%d-%H-%M-%S"))
 
     def forward(self, qa_pair: QA_Pair) -> ModuleOutput:
         # Set-up MLflow and DSPy
         mlflow.dspy.autolog()  # type: ignore
-        mlflow.set_tracking_uri(self.config.tracking_uri)
-        mlflow.set_experiment(self.config.experiment_name)
-        mlflow.start_run(run_name=datetime.now().strftime("%Y-%m-%d-%H-%M-%S"))
         dspy.configure(lm=self.lm)
         self.lm.history.clear()
 
@@ -174,13 +174,14 @@ def main(start: int = 0, finish: int = -1):
         name="Training run", log_level=AGENT_CONFIGS.training_module.log_level
     )
 
+    training_module = TrainingModule()
+
     for qa_pair in train[start:finish]:
         # Log info
         logger.info(f"Try to answer new question: {qa_pair.question}\n\n")
-        training_module = TrainingModule()
         output = training_module.forward(qa_pair=qa_pair)
         print(output)
 
 
 if __name__ == "__main__":
-    main(start=1, finish=2)
+    main(start=3, finish=12)
