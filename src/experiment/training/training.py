@@ -1,5 +1,5 @@
-from typing import Literal, Optional
-import time
+from datetime import datetime
+from typing import Optional
 
 import dspy
 import mlflow
@@ -22,20 +22,10 @@ class TrainingModule(dspy.Module):
         super().__init__()
         # Use provided config or default config
         self.config = config or AGENT_CONFIGS.training_module
+        self.logger = get_logger(name="Training", log_level=self.config.log_level)
 
         # Use provided LLM or get from config
         self.lm = lm or self.config.llm.get_llm()
-        # self.log_level = self.config.log_level
-        self.logger = get_logger(name="Training", log_level=self.config.log_level)
-        # self.training_size = self.config.training_size
-        # self.similarity_treshold = self.config.similarity_threshold
-        # self.tracking_uri = self.config.tracking_uri
-        # self.experiment_name = self.config.experiment_name
-        # self.correct_answer: Optional[bool] = None
-        # self.new_function_created: Optional[bool] = None
-        # self.function_name: Optional[str] = None
-        # self.function_code: Optional[str] = None
-        # self.function_requirements: Optional[str] = None
 
         # Set-up the agents
         self.answer_verifier = AnswerVerifier()
@@ -48,8 +38,10 @@ class TrainingModule(dspy.Module):
         mlflow.dspy.autolog()  # type: ignore
         mlflow.set_tracking_uri(self.config.tracking_uri)
         mlflow.set_experiment(self.config.experiment_name)
-        mlflow.start_run(run_name=f"question_id_{qa_pair.id}")
+        mlflow.start_run(run_name=datetime.now().strftime("%Y-%m-%d-%H-%M-%S"))
         dspy.configure(lm=self.lm)
+        self.lm.history.clear()
+        self.lm.history.count()
 
         # Instantiate the original output
         self.output = ModuleOutput(
@@ -57,7 +49,7 @@ class TrainingModule(dspy.Module):
             error_msg="Default error message from initialization of TrainingModule.",
         )
 
-        with mlflow.start_span(str(time.time())) as span:
+        with mlflow.start_span(name=f"question_id_{qa_pair.id}") as span:
             # Init and run engine
             output_engine = self.engine.forward(
                 question=qa_pair.question, path_ifc_model=qa_pair.ifc_model_path
@@ -96,6 +88,9 @@ class TrainingModule(dspy.Module):
                         ), (
                             "Something is off: the status of AnswerVerifier is 'success', but the `similarity_score` field is None."
                         )
+                        self.output.error_msg = None
+                        self.output.status = "success"
+
                         # Set the correct_answer state according to the provided treshold
                         self.output.result.correct_answer = (
                             True
@@ -155,8 +150,14 @@ class TrainingModule(dspy.Module):
                     "need_new_tool": self.output.result.need_new_function or False,
                 }
             )
-            mlflow.set_tag(
-                key="correct_answer", value=self.output.result.answer or False
+            span.set_attributes(self.output.result.model_dump())
+
+            mlflow.update_current_trace(
+                tags={
+                    "correct_answer": str(self.output.result.correct_answer or False),
+                    "answer": self.output.result.answer or "",
+                    "need_new_tool": str(self.output.result.need_new_function or False),
+                }
             )
             if self.output.result.need_new_function:
                 mlflow.set_tag(key="new_tool_created", value=True)
@@ -164,9 +165,7 @@ class TrainingModule(dspy.Module):
             return self.output
 
 
-def main(
-    training_size: Optional[int] = 2,
-):
+def main(start: int = 0, finish: int = -1):
     # setup mlflow
     mlflow.dspy.autolog()  # type: ignore
     train, dev = load_train_dev_split()
@@ -176,7 +175,7 @@ def main(
         name="Training run", log_level=AGENT_CONFIGS.training_module.log_level
     )
 
-    for qa_pair in train[: training_size or -1]:
+    for qa_pair in train[start:finish]:
         # Log info
         logger.info(f"Try to answer new question: {qa_pair.question}\n\n")
         training_module = TrainingModule()
@@ -185,4 +184,4 @@ def main(
 
 
 if __name__ == "__main__":
-    main(training_size=1)
+    main(start=1, finish=2)
