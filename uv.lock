@@ -1553,6 +1553,7 @@ dependencies = [
     { name = "opentelemetry-sdk" },
     { name = "pydantic" },
     { name = "python-dotenv" },
+    { name = "scipy" },
     { name = "smolagents", extra = ["gradio", "telemetry", "toolkit"] },
 ]
 
@@ -1579,6 +1580,7 @@ requires-dist = [
     { name = "opentelemetry-sdk", specifier = ">=1.32.1" },
     { name = "pydantic", specifier = ">=2.11.4" },
     { name = "python-dotenv", specifier = ">=1.1.0" },
+    { name = "scipy", specifier = ">=1.15.3" },
     { name = "smolagents", extras = ["gradio", "telemetry", "toolkit"], specifier = ">=1.15.0" },
 ]
 
