@@ -1,12 +1,12 @@
 from src.experiment.db import connection
-from src.engine.schemas.datapoint import Datapoint
+from src.engine.schemas.datapoint import QA_Pair
 import pandas as pd
 from typing import List
 
 
 def load_train_dev_split(
     frac: float = 0.75, seed: int = 42
-) -> tuple[List[Datapoint], List[Datapoint]]:
+) -> tuple[List[QA_Pair], List[QA_Pair]]:
     """Load the dataset and split it into a train and dev set."""
     # Load the dataset table from SQLite database
     dataset = pd.read_sql("SELECT * FROM dataset ORDER BY id ASC", connection())
@@ -46,8 +46,8 @@ def load_train_dev_split(
         dev_records.append(record)
 
     # Batch create Datapoint objects
-    training_set = [Datapoint(**record) for record in training_records]
-    dev_set = [Datapoint(**record) for record in dev_records]
+    training_set = [QA_Pair(**record) for record in training_records]
+    dev_set = [QA_Pair(**record) for record in dev_records]
 
     return training_set, dev_set
 
