@@ -41,7 +41,6 @@ class TrainingModule(dspy.Module):
         mlflow.start_run(run_name=datetime.now().strftime("%Y-%m-%d-%H-%M-%S"))
         dspy.configure(lm=self.lm)
         self.lm.history.clear()
-        self.lm.history.count()
 
         # Instantiate the original output
         self.output = ModuleOutput(
