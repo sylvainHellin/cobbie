@@ -1,7 +1,7 @@
 from pydantic import BaseModel
 
 
-class Datapoint(BaseModel):
+class QA_Pair(BaseModel):
     id: int
     question: str
     answer: str
