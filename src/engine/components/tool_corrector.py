@@ -2,6 +2,7 @@ from typing import Callable, List, Literal
 
 import dspy
 
+from src.config import AGENT_CONFIGS
 from src.engine.schemas import ModuleOutput, Result
 from src.engine.util import get_logger, create_code_prefix
 
@@ -57,21 +58,22 @@ class ToolCorrector(dspy.Module):
     def __init__(
         self,
         tools: List[Callable],
-        max_iters: int = 10,
-        log_level: Literal["DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"] = "DEBUG",
-        add_code_prefix: bool = True,
+        config=None,
     ):
         super().__init__()
+        # Use provided config or default config
+        self.config = config or AGENT_CONFIGS.tool_corrector
+
         self.tools = tools
-        self.max_iters = max_iters
+        self.max_iters = self.config.max_iters
         self.agent = CodeAct(
             signature=ToolCorrectionSignature,
             tools=self.tools,
             max_iters=self.max_iters,
         )
-        self.log_level = log_level
+        self.log_level = self.config.log_level
         self.logger = get_logger(name="ToolCorrector", log_level=self.log_level)
-        self.add_code_prefix = add_code_prefix
+        self.add_code_prefix = self.config.add_code_prefix
 
     def forward(
         self,

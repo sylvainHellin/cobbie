@@ -2,9 +2,7 @@ from typing import Callable, List, Literal
 
 import dspy
 
-from src.config import (
-    FUNCTION_BOILERPLATE,
-)
+from src.config import AGENT_CONFIGS, FUNCTION_BOILERPLATE
 from src.engine.schemas import ModuleOutput, Result
 from src.engine.util import get_logger, create_code_prefix
 from .code_act import CodeAct
@@ -73,19 +71,20 @@ class ToolProgrammer(dspy.Module):
     def __init__(
         self,
         tools: List[Callable],
-        max_iters: int = 10,
-        log_level: Literal["DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"] = "DEBUG",
-        add_boilerplate: bool = True,
+        config=None,
     ):
         super().__init__()
+        # Use provided config or default config
+        self.config = config or AGENT_CONFIGS.tool_programmer
+
         self.tools = tools
-        self.max_iters = max_iters
+        self.max_iters = self.config.max_iters
         self.agent = CodeAct(
             signature=NewToolSignature, tools=tools, max_iters=self.max_iters
         )
-        self.log_level = log_level
+        self.log_level = self.config.log_level
         self.logger = get_logger(name="ToolProgrammer", log_level=self.log_level)
-        self.add_boilerplate = add_boilerplate
+        self.add_code_prefix = self.config.add_code_prefix
 
     def forward(
         self,
@@ -94,7 +93,7 @@ class ToolProgrammer(dspy.Module):
         path_ifc_model: str,
         function_boilerplate: str = FUNCTION_BOILERPLATE,
     ) -> ModuleOutput:
-        if self.add_boilerplate:
+        if self.add_code_prefix:
             code_prefix = create_code_prefix(
                 path_ifc_model=path_ifc_model, imports_boilerplate=FUNCTION_BOILERPLATE
             )

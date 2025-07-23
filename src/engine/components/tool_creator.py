@@ -21,13 +21,13 @@ Key features:
 # %% Imports
 # =============== Imports and config =============== #
 import sys
-from typing import Callable, Dict, Literal
+from typing import Callable, Dict, Optional
 
 import dspy
 import mlflow
 
 from src.config import (
-    FUNCTION_BOILERPLATE,
+    AGENT_CONFIGS,
     ROOT_PATH,
 )
 from src.engine.components.tool_assessor import ToolAssessor
@@ -48,27 +48,26 @@ if ROOT_PATH not in sys.path:
 class ToolCreator(dspy.Module):
     def __init__(
         self,
-        llm: dspy.LM,
-        max_iter: int = 3,
-        max_iter_sub_agents: int = 10,
-        function_boilerplate=FUNCTION_BOILERPLATE,
-        log_level: Literal["DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"] = "DEBUG",
         additional_authorized_functions: Dict[str, Callable] = {
             "web_search": web_search,
             "query_ifcopenshell_documentation": query_ifcopenshell_documentation,
         },
+        config=None,
         callbacks=None,
-        add_code_prefix: bool = True,
+        llm: Optional[dspy.LM] = None,  # Optional override
     ):
         super().__init__(callbacks)
-        self.lm = llm
+        # Use provided config or default config
+        self.config = config or AGENT_CONFIGS.tool_creator
+
+        # Use provided LLM or get from config
+        self.lm = llm or self.config.llm.get_llm()
         dspy.configure(lm=self.lm)
-        self.log_level = log_level
-        self.logger = get_logger(name="ToolCreator", log_level=log_level)
-        self.max_iter = max_iter
-        self.max_iter_sub_agents = max_iter_sub_agents
-        self.function_boilerplate = function_boilerplate
-        self.add_code_prefix = add_code_prefix
+        self.log_level = self.config.log_level
+        self.logger = get_logger(name="ToolCreator", log_level=self.log_level)
+        self.max_iter = self.config.max_iter
+        self.function_boilerplate = self.config.function_boilerplate
+        self.add_code_prefix = self.config.add_code_prefix
 
         # Store authorized functions for use in assessor when needed
         self.additional_authorized_functions = additional_authorized_functions
@@ -80,18 +79,14 @@ class ToolCreator(dspy.Module):
             f"Primordial tools available for ToolCreator sub-agents: {', '.join([getattr(tool, '__name__', str(tool)) for tool in self.primordial_tools])}"
         )
 
-        # Instantiate the sub agents - they create their own Python interpreters internally
+        # Instantiate the sub agents - they use their own configs from AGENT_CONFIGS
         self.tool_programmer = ToolProgrammer(
             tools=self.primordial_tools,
-            max_iters=self.max_iter_sub_agents,
-            log_level=self.log_level,
-            add_boilerplate=self.add_code_prefix,
+            config=self.config.tool_programmer,
         )
         self.tool_corrector = ToolCorrector(
             tools=self.primordial_tools,
-            max_iters=self.max_iter_sub_agents,
-            log_level=self.log_level,
-            add_code_prefix=self.add_code_prefix,
+            config=self.config.tool_corrector,
         )
 
     def forward(
@@ -181,7 +176,7 @@ class ToolCreator(dspy.Module):
                             # The CodeAct-based assessor will create its own Python interpreter internally
                             tools = self.primordial_tools + [new_tool]
                             tool_assessor = ToolAssessor(
-                                tools=tools, add_code_prefix=self.add_code_prefix
+                                tools=tools, config=self.config.tool_assessor
                             )
                             self.logger.info(
                                 "✓ ToolAssessor created with new tool to test."
@@ -269,37 +264,19 @@ class ToolCreator(dspy.Module):
 if __name__ == "__main__":
     import json
 
-    from src.config import LANGUAGE_MODELS, TEST_IFC_PATH
+    from src.config import TEST_IFC_PATH
 
     def main(
         function_requirements: str,
         function_name: str,
-        lm_name: str = "gemini-flash",
-        log_level: Literal["DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"] = "DEBUG",
-        max_iter: int = 2,
-        max_iter_sub_agents: int = 10,
     ):
-        # configure dspy
-        lm_info = LANGUAGE_MODELS[lm_name]
-        llm = dspy.LM(
-            model=lm_info.url,
-            api_key=lm_info.api_key,
-            max_tokens=5000,
-        )
-        dspy.configure(lm=llm)
-
         # setup mlflow
         mlflow.dspy.autolog()  # type: ignore
         mlflow.set_tracking_uri("http://127.0.0.1:5000")
         mlflow.set_experiment("ToolCreator")
 
         # setup the tool creator
-        tool_creator = ToolCreator(
-            llm=llm,
-            max_iter=max_iter,
-            max_iter_sub_agents=max_iter_sub_agents,
-            log_level=log_level,
-        )
+        tool_creator = ToolCreator()
 
         # create the tool
         result = tool_creator.forward(
@@ -313,18 +290,16 @@ if __name__ == "__main__":
     ##########################################
     # Test data - creating a simple IFC analysis function
     function_requirements = (
-        "Create a function that calculates the total floor area of all spaces in an IFC model. "
-        "The function should iterate through all IfcSpace entities and sum up their floor areas. "
-        "It should handle cases where area information might be missing and return the total area in square meters."
+        "Retrieves elements of a specified IFC type from an IFC model.\
+        def get_elements_by_type(\
+        ifc_file_path: str, ifc_type: str\
+    ) -> List[ifcopenshell.entity_instance]:\
+        def get_list_spaces(path_ifc_"
     )
 
-    function_name = "calculate_total_floor_area"
+    function_name = "get_elements_by_type"
 
     main(
         function_requirements=function_requirements,
         function_name=function_name,
-        log_level="INFO",
-        lm_name="gemini-flash",
-        max_iter=3,
-        max_iter_sub_agents=10,
     )

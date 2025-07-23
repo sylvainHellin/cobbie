@@ -21,10 +21,14 @@ import mlflow
 
 from src.engine.schemas import ModuleOutput
 from src.engine.tools import get_created_tools
-from src.engine.util import get_logger, _create_function_from_source_code, create_code_prefix
+from src.engine.util import (
+    get_logger,
+    _create_function_from_source_code,
+    create_code_prefix,
+)
 from src.engine.components import CodeAct, ToolCreator, NameExtractor
 
-from src.config import LANGUAGE_MODELS, FUNCTION_BOILERPLATE
+from src.config import AGENT_CONFIGS, LANGUAGE_MODELS, FUNCTION_BOILERPLATE
 
 
 class IfcAnwerEngineSignature(dspy.Signature):
@@ -65,43 +69,35 @@ class IfcAnswerEngine(dspy.Module):
 
     def __init__(
         self,
-        llm: dspy.LM,
         additional_authorized_functions: Optional[Dict[str, Callable]] = None,
         additional_authorized_imports: Optional[List[str]] = None,
-        max_iters: int = 10,
-        max_retry: int = 2,
-        log_level: Literal["DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"] = "DEBUG",
-        max_tokens_logs: int = 2**12,
-        max_tokens_output: int = 2**12,
-        import_all_created_tools: bool = True,
-        max_iter_tool_creator: Optional[int] = 3,
-        max_iter_sub_agents_tool_creator: Optional[int] = 10,
-        add_code_prefix: bool = True,
+        config=None,
+        llm: Optional[dspy.LM] = None,  # Optional override
     ):
         super().__init__()
-        self.max_iters = max_iters
-        self.max_retry: int = max_retry
+        # Use provided config or default config
+        self.config = config or AGENT_CONFIGS.ifc_answer_engine
+
+        self.max_iters = self.config.max_iters
+        self.max_retry: int = self.config.max_retry
         self.iter: int = 0
-        self.log_level = log_level
-        self.lm = llm
+        self.log_level = self.config.log_level
+        # Use provided LLM or get from config
+        self.lm = llm or self.config.llm.get_llm()
         self.logger = get_logger(name="IfcAnswerEngine", log_level=self.log_level)
         self.additional_authorized_functions = additional_authorized_functions or {}
         self.additional_authorized_imports = additional_authorized_imports or []
-        self.max_tokens_logs = max_tokens_logs
-        self.max_tokens_output = max_tokens_output
+        self.max_tokens_logs = self.config.max_tokens_logs
+        self.max_tokens_output = self.config.max_tokens_output
         self.created_tools: Dict[str, Callable] = {}
-        self.add_code_prefix= add_code_prefix
+        self.add_code_prefix = self.config.add_code_prefix
         self.tool_creator: ToolCreator = ToolCreator(
-            llm=self.lm,
-            max_iter=max_iter_tool_creator or 3,
-            max_iter_sub_agents=max_iter_sub_agents_tool_creator or 10,
-            log_level=self.log_level,
-            add_code_prefix=self.add_code_prefix,
+            config=self.config.tool_creator,
         )
         self.name_extractor = NameExtractor(log_level=self.log_level)
         dspy.configure(lm=self.lm)
 
-        if import_all_created_tools:
+        if self.config.import_all_created_tools:
             self.created_tools = get_created_tools()
             self.additional_authorized_functions = (
                 self.additional_authorized_functions | self.created_tools
@@ -129,7 +125,6 @@ class IfcAnswerEngine(dspy.Module):
             code_prefix = None
 
         self.engine._update_code_prefix(code_prefix=code_prefix)
-
 
         with mlflow.start_span("IfcAnswerEngine"):
             # Start the loop: try to answer the question with existing tool
@@ -233,21 +228,12 @@ if __name__ == "__main__":
     ifc_model_path = "/Users/sylvainhellin/GitHub/ifcAnswerEngineV3/src/experiment/bim_models/duplex/arc.ifc"
     question = "What is the height of the living room?"
 
-    lm_info = LANGUAGE_MODELS["gemma3-12b"]
-    lm = dspy.LM(lm_info.url, api_key=lm_info.api_key, max_tokens=2**13)
-
     mlflow.dspy.autolog()  # type: ignore
     mlflow.set_tracking_uri("http://127.0.0.1:5000")
     mlflow.set_experiment("IfcAnswerEngine")
-    # Initialize the engine
-    engine = IfcAnswerEngine(
-        max_iters=5,
-        max_retry=2,
-        log_level="INFO",
-        import_all_created_tools=True,
-        llm=lm,
-        add_code_prefix=True
-    )
+
+    # Initialize the engine - LLM comes from config now!
+    engine = IfcAnswerEngine()
 
     # Run the test
     try:
