@@ -1,7 +1,23 @@
 """Configuration package for the IFC Answer Engine."""
 
-# Re-export main config items for backward compatibility
-from .main import *
+# Import main config items individually
+from .main import (
+    ROOT_PATH,
+    SRC_PATH,
+    TEST_IFC_PATH,
+    DATASET_PATH,
+    VECTORSTORE_PATH,
+    DB_PATH,
+    CSV_IFC_MODELS_PATH,
+    DIRECTORY_IFC_MODELS_PATH,
+    CREATED_TOOLS_PATH,
+    MLFLOW_URI,
+    IFCOPENSHELL_DOCUMENTATION_OVERVIEW,
+    LANGUAGE_MODELS,
+    FUNCTION_BOILERPLATE,
+    LOG_LEVEL,
+    LLM,
+)
 from .agents import AGENT_CONFIGS, get_config, update_config
 
 __all__ = [
@@ -15,6 +31,7 @@ __all__ = [
     "CSV_IFC_MODELS_PATH",
     "DIRECTORY_IFC_MODELS_PATH",
     "CREATED_TOOLS_PATH",
+    "MLFLOW_URI",
     "IFCOPENSHELL_DOCUMENTATION_OVERVIEW",
     "LANGUAGE_MODELS",
     "FUNCTION_BOILERPLATE",
@@ -23,4 +40,5 @@ __all__ = [
     "AGENT_CONFIGS",
     "get_config",
     "update_config",
+    "LLM",
 ]
