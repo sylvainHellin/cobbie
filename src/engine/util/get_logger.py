@@ -1,19 +1,8 @@
 import logging
-import os
 from logging import Logger
 from typing import Literal
 
-from src.config import LOG_LEVEL, ROOT_PATH
-
-# Append last_log.log to logs.log and clear it when the module is imported
-logs_dir = os.path.join(ROOT_PATH, "src/experiment/logs")
-
-# Ensure logs directory exists
-os.makedirs(logs_dir, exist_ok=True)
-
-
-                history_log_file.write(content)
-                # Add a separator between different experiment logs
+from src.config import LOG_LEVEL
 
 
 def get_logger(
@@ -41,12 +30,6 @@ def get_logger(
         )
         stream_handler.setFormatter(formatter)
         logger.addHandler(stream_handler)
-
-        # File handler
-        log_file_path = os.path.join(logs_dir, "last_log.log")
-        file_handler = logging.FileHandler(log_file_path)
-        file_handler.setFormatter(formatter)
-        logger.addHandler(file_handler)
 
     if log_level == "CRITICAL":
         logger.setLevel(logging.CRITICAL)
