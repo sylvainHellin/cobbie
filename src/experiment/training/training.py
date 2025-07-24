@@ -48,7 +48,13 @@ class TrainingModule(dspy.Module):
             error_msg="Default error message from initialization of TrainingModule.",
         )
 
-        with mlflow.start_span(name=f"question_id_{qa_pair.id}") as span:
+        with mlflow.start_span(
+            name=f"question_id_{qa_pair.id}",
+            span_type="QUESTION",
+        ) as span:
+            span.set_attribute("question_id", qa_pair.id)
+            span.set_attribute("question", qa_pair.question)
+            span.set_attribute("ground_truth", qa_pair.answer)
             # Init and run engine
             output_engine = self.engine.forward(
                 question=qa_pair.question, path_ifc_model=qa_pair.ifc_model_path
@@ -200,4 +206,4 @@ def main(start: int = 0, finish: int = -1):
 
 
 if __name__ == "__main__":
-    main(start=3, finish=20)
+    main(start=3, finish=4)
