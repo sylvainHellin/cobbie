@@ -122,7 +122,7 @@ class ToolCreator(dspy.Module):
             - error_msg: Error description (if status is "error")
         """
 
-        with mlflow.start_span(name="ToolCreator"):
+        with mlflow.start_span(name="ToolCreator", span_type="MODULE"):
             # --- Step 1: Set up the system --- #
             output = ModuleOutput(status="error")
 
@@ -160,39 +160,40 @@ class ToolCreator(dspy.Module):
             # --- Step 3: Iterative improvement loop --- #
             while self.iter < self.max_iter:
                 self.iter += 1
-                print(f"\n--- Iteration: {self.iter} ---")
 
-                with mlflow.start_span(name=f"iteration_{self.iter}"):
+                with mlflow.start_span(
+                    name=f"tool_improvement_iter_{self.iter}",
+                    span_type="CHAIN",
+                ):
                     # Step 3.1: Create enhanced assessor with dynamic tool
-                    with mlflow.start_span(name="create_assessor"):
-                        self.logger.info("Assessing the generated code.")
-                        try:
-                            new_tool = _create_function_from_source_code(
-                                function_name=function_name,
-                                code=function_implementation,
-                            )
+                    self.logger.info("Assessing the generated code.")
+                    try:
+                        new_tool = _create_function_from_source_code(
+                            function_name=function_name,
+                            code=function_implementation,
+                        )
 
-                            # Create ToolAssessor with primordial tools and the generated tool
-                            # The CodeAct-based assessor will create its own Python interpreter internally
-                            tools = self.primordial_tools + [new_tool]
-                            tool_assessor = ToolAssessor(
-                                tools=tools, config=self.config.tool_assessor
-                            )
-                            self.logger.info(
-                                "✓ ToolAssessor created with new tool to test."
-                            )
+                        # Create ToolAssessor with primordial tools and the generated tool
+                        # The CodeAct-based assessor will create its own Python interpreter internally
+                        tools = self.primordial_tools + [new_tool]
+                        tool_assessor = ToolAssessor(
+                            tools=tools, config=self.config.tool_assessor
+                        )
+                        self.logger.info(
+                            "✓ ToolAssessor created with new tool to test."
+                        )
 
-                        except Exception as e:
-                            self.logger.error(
-                                f"✗ Failed to create ToolAssessor. Error: {str(e)}"
-                            )
-                            self.logger.error(
-                                f"Code that failed: {function_implementation}"
-                            )
-                            continue
+                    except Exception as e:
+                        self.logger.error(
+                            f"✗ Failed to create ToolAssessor. Error: {str(e)}"
+                        )
+                        self.logger.error(
+                            f"Code that failed: {function_implementation}"
+                        )
+                        continue
 
                     # Step 3.2: Assess if the function works properly
-                    with mlflow.start_span(name="ToolAssessor"):
+                    with mlflow.start_span(name="ToolAssessor", span_type="MODULE"):
                         try:
                             self.logger.info("Starting the tool assessment.")
 
@@ -228,7 +229,10 @@ class ToolCreator(dspy.Module):
 
                     # Step 3.4: If the assessment is not satisfactory, call the ToolCorrector
                     elif self.iter < self.max_iter:
-                        with mlflow.start_span(name="ToolCorrector"):
+                        with mlflow.start_span(
+                            name="ToolCorrector",
+                            span_type="MODULE",
+                        ):
                             self.logger.debug(
                                 "Code not good enough yet; trying to correct the function."
                             )
