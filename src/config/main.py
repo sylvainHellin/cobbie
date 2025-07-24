@@ -16,6 +16,9 @@ CSV_IFC_MODELS_PATH = os.path.join(ROOT_PATH, "src/experiment/db/ifc_models.csv"
 DIRECTORY_IFC_MODELS_PATH = os.path.join(ROOT_PATH, "src/experiment/bim_models")
 CREATED_TOOLS_PATH = os.path.join(ROOT_PATH, "src/engine/tools/created")
 
+# URI
+MLFLOW_URI = "http://127.0.0.1:5000"
+
 # Load the overview of the documentation of IfcOpenShell
 doc_path = os.path.join(
     ROOT_PATH, "src/engine/tools/primordial/ifcopenshell_api_overview.md"
@@ -33,6 +36,7 @@ GROQ_API_KEY = os.environ["GROQ_API_KEY"]
 MISTRAL_API_KEY = os.environ["MISTRAL_API_KEY"]
 FIREWORKS_API_KEY = os.environ["FIREWORKS_API_KEY"]
 CEREBRAS_API_KEY = os.environ["CEREBRAS_API_KEY"]
+OPENROUTER_API_KEY = os.environ["OPENROUTER_API_KEY"]
 
 
 # Set up language model (LiteLLM endpoints)
@@ -94,6 +98,14 @@ LANGUAGE_MODELS["gemma3n"] = LLM(
     url="ollama_chat/gemma3n:e4b",
     name="gemma3n",
 )
+
+# Qwen3-Coder models via OpenRouter
+LANGUAGE_MODELS["qwen3-coder"] = LLM(
+    url="openrouter/qwen/qwen3-coder",
+    api_key=OPENROUTER_API_KEY,
+    name="qwen3-coder",
+)
+
 
 # Default models to test in comparisons
 MODELS_TO_TEST = [
