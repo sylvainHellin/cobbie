@@ -77,6 +77,12 @@ class ToolCorrectorConfig(BaseAgentConfig, CodeActConfig):
     pass  # Inherits all defaults from parent classes
 
 
+class ToolIdentifierConfig(BaseAgentConfig):
+    """Configuration for FunctionIdentifier agent."""
+
+    pass  # Inherits all defaults from parent class
+
+
 class ToolCreatorConfig(BaseAgentConfig):
     """Configuration for ToolCreator multi-agent system."""
 
@@ -141,6 +147,9 @@ class AgentConfigs(BaseModel):
     tool_programmer: ToolProgrammerConfig = Field(default_factory=ToolProgrammerConfig)
     tool_assessor: ToolAssessorConfig = Field(default_factory=ToolAssessorConfig)
     tool_corrector: ToolCorrectorConfig = Field(default_factory=ToolCorrectorConfig)
+    function_identifier: ToolIdentifierConfig = Field(
+        default_factory=ToolIdentifierConfig
+    )
     training_module: TrainingModuleConfig = Field(default_factory=TrainingModuleConfig)
 
 
@@ -167,6 +176,7 @@ def get_config(agent_name: str) -> BaseAgentConfig:
         "tool_programmer": AGENT_CONFIGS.tool_programmer,
         "tool_assessor": AGENT_CONFIGS.tool_assessor,
         "tool_corrector": AGENT_CONFIGS.tool_corrector,
+        "function_identifier": AGENT_CONFIGS.function_identifier,
         "training_module": AGENT_CONFIGS.training_module,
     }
 
