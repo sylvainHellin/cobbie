@@ -122,14 +122,22 @@ class ToolCreator(dspy.Module):
             - error_msg: Error description (if status is "error")
         """
 
-        with mlflow.start_span(name="ToolCreator", span_type="MODULE"):
+        with mlflow.start_span(
+            name=f"tool_creation_{function_name}",
+            span_type="TOOL_CREATION",
+        ) as span:
             # --- Step 1: Set up the system --- #
             output = ModuleOutput(status="error")
+
+            # Set initial span attributes
+            span.set_attribute("function_name", function_name)
+            span.set_attribute("path_ifc_model", path_ifc_model)
+            span.set_attribute("function_requirements", function_requirements)
 
             self.logger.info(f"Starting the creation of the tool: {function_name}")
 
             # --- Step 2: Create initial function --- #
-            with mlflow.start_span(name="ToolProgrammer"):
+            with mlflow.start_span(name="ToolProgrammer", span_type="MODULE"):
                 self.logger.info("Creating initial function")
                 output_tool_programmer = self.tool_programmer.forward(
                     function_requirements=function_requirements,
@@ -261,6 +269,43 @@ class ToolCreator(dspy.Module):
                     else:
                         self.logger.debug("⚠️  Maximum iterations reached")
 
+            # Set final span outputs and attributes
+            span.set_inputs(
+                {
+                    "function_name": function_name,
+                    "function_requirements": function_requirements,
+                    "path_ifc_model": path_ifc_model,
+                }
+            )
+            span.set_outputs(
+                {
+                    "status": output.status,
+                    "function_implementation": output.result.function_implementation
+                    or "No implementation generated",
+                    "assessment_status": output.result.assessment_status or "unknown",
+                    "assessment_details": output.result.assessment_details
+                    or "No assessment details",
+                    "iterations_used": self.iter,
+                    "max_iterations": self.max_iter,
+                    "error_msg": output.error_msg or "",
+                }
+            )
+            span.set_attributes(output.result.model_dump())
+            span.set_attribute("iterations_used", self.iter)
+            span.set_attribute("max_iterations", self.max_iter)
+
+            # Set MLflow tags for easy filtering and analysis
+            mlflow.update_current_trace(
+                tags={
+                    "status": output.status,
+                    "function_name": function_name,
+                    "assessment_status": output.result.assessment_status or "unknown",
+                    "iterations_used": str(self.iter),
+                    "max_iterations": str(self.max_iter),
+                    "success": str(output.status == "success"),
+                }
+            )
+
             # Return the result (good or bad)
             return output
 
@@ -293,15 +338,9 @@ if __name__ == "__main__":
 
     ##########################################
     # Test data - creating a simple IFC analysis function
-    function_requirements = (
-        "Retrieves elements of a specified IFC type from an IFC model.\
-        def get_elements_by_type(\
-        ifc_file_path: str, ifc_type: str\
-    ) -> List[ifcopenshell.entity_instance]:\
-        def get_list_spaces(path_ifc_"
-    )
+    function_requirements = "Function signature:\n`count_elements_by_property(ifc_file_path: str, ifc_type: str, property_set_name: str, property_name: str, property_value) -> int`\n\nDescription:\nThis function retrieves all elements of a specified IFC type from an IFC model, then counts how many of those elements have a specific property value within a given property set.\n\nRequirements:\n- Use IfcOpenShell to open the IFC file and retrieve elements of the specified type.\n- For each element, extract the property sets using `ifcopenshell.util.element.get_psets`.\n- Check if the specified property set exists for the element.\n- If it exists, check if the specified property has the desired value.\n- Count and return the number of elements that match the criteria.\n- Handle cases where the property set or property might not exist for an element.\n- The function should be flexible enough to handle different data types for `property_value` (e.g., bool, str, int)."
 
-    function_name = "get_elements_by_type"
+    function_name = "count_elements_by_property"
 
     main(
         function_requirements=function_requirements,
