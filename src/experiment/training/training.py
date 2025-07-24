@@ -6,7 +6,7 @@ import mlflow
 
 from src.config import AGENT_CONFIGS
 from src.engine import IfcAnswerEngine
-from src.engine.schemas import ModuleOutput
+from src.engine.schemas import ModuleOutput, Chat
 from src.engine.util import get_logger, save_new_tool
 from src.experiment.evaluation.answer_verifier import AnswerVerifier
 
@@ -26,6 +26,7 @@ class TrainingModule(dspy.Module):
 
         # Use provided LLM or get from config
         self.lm = lm or self.config.llm.get_llm()
+        self.chat = Chat()
 
         # Set-up the agents
         self.answer_verifier = AnswerVerifier()
@@ -55,10 +56,12 @@ class TrainingModule(dspy.Module):
             span.set_attribute("question_id", qa_pair.id)
             span.set_attribute("question", qa_pair.question)
             span.set_attribute("ground_truth", qa_pair.answer)
+
             # Init and run engine
             output_engine = self.engine.forward(
                 question=qa_pair.question, path_ifc_model=qa_pair.ifc_model_path
             )
+            self.chat.import_chat_messages(self.lm.history[-1].get("messages"))
 
             # Control flow
             if output_engine.status == "success":
@@ -151,6 +154,7 @@ class TrainingModule(dspy.Module):
                     usage = call.get("usage", {})
                     total_input_tokens += usage.get("prompt_tokens", 0)
                     total_output_tokens += usage.get("completion_tokens", 0)
+            self.chat.print()
 
             span.set_inputs(
                 {
@@ -165,6 +169,7 @@ class TrainingModule(dspy.Module):
                     "need_new_tool": self.output.result.need_new_function or False,
                     "input_tokens": total_input_tokens,
                     "output_tokens": total_output_tokens,
+                    "chat": self.chat.model_dump_json(indent=2) or "",
                 }
             )
             span.set_attributes(self.output.result.model_dump())
@@ -198,12 +203,15 @@ def main(start: int = 0, finish: int = -1):
 
     training_module = TrainingModule()
 
+    output = None
     for qa_pair in train[start:finish]:
         # Log info
         logger.info(f"Try to answer new question: {qa_pair.question}\n\n")
         output = training_module.forward(qa_pair=qa_pair)
         print(output)
 
+    return output
+
 
 if __name__ == "__main__":
-    main(start=3, finish=4)
+    output = main(start=3, finish=4)
