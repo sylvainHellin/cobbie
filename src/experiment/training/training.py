@@ -5,7 +5,7 @@ import dspy
 import mlflow
 
 from src.config import AGENT_CONFIGS
-from src.engine import IfcAnswerEngine
+from src.engine import IfcAnswerEngine, ToolIdentifier, ToolCreator
 from src.engine.schemas import ModuleOutput, Chat
 from src.engine.util import get_logger, save_new_tool
 from src.experiment.evaluation.answer_verifier import AnswerVerifier
@@ -28,11 +28,11 @@ class TrainingModule(dspy.Module):
         self.lm = lm or self.config.llm.get_llm()
         self.chat = Chat()
 
-        # Set-up the agents
+        # Set-up the agents (using the default config for each agent)
         self.answer_verifier = AnswerVerifier()
-        self.engine = IfcAnswerEngine(
-            config=self.config.engine,
-        )
+        self.engine = IfcAnswerEngine()
+        self.tool_identifier = ToolIdentifier()
+        self.tool_creator = ToolCreator()
 
         # Set-up mlflow
         mlflow.dspy.autolog()  # type: ignore
@@ -117,8 +117,8 @@ class TrainingModule(dspy.Module):
                             f"Similarity score: \n{output_answer_verifier.result.similarity_score}\nCorrect answer: {self.output.result.correct_answer}"
                         )
 
-                        # If the Engine created a new function, let's see if it's correctly implemented.
                         if self.output.result.correct_answer:
+                            # If the Engine created a new function, let's see if it's correctly implemented.
                             if output_engine.result.need_new_function:
                                 self.output.result.need_new_function = True
 
@@ -142,6 +142,45 @@ class TrainingModule(dspy.Module):
                                 assert new_tool_saved, (
                                     "A new tool was created but could not be saved."
                                 )
+                            # otherwise, see if it is possible to identify a useful new tool
+                            else:
+                                output_tool_identifier = self.tool_identifier.forward(
+                                    chat_history=self.chat.to_string()
+                                )
+                                if output_tool_identifier.status == "success":
+                                    assert (
+                                        output_tool_identifier.result.need_new_function
+                                        is not None
+                                    )
+                                    if output_tool_identifier.result.need_new_function:
+                                        assert (
+                                            output_tool_identifier.result.function_name
+                                            is not None
+                                            and output_tool_identifier.result.function_requirements
+                                            is not None
+                                        )
+                                        self.output.result.need_new_function = True
+                                        self.output.result.function_name = (
+                                            output_tool_identifier.result.function_name
+                                        )
+                                        self.output.result.function_requirements = output_tool_identifier.result.function_requirements
+
+                                        # Try to generate a new tool with these requirements if a potential new tool could be identified.
+                                        output_tool_creator = self.tool_creator.forward(
+                                            function_name=self.output.result.function_name,
+                                            function_requirements=self.output.result.function_requirements,
+                                            path_ifc_model=qa_pair.ifc_model_path,
+                                        )
+                                        if output_tool_creator.status == "success":
+                                            assert output_tool_creator.result.function_implementation
+                                            self.output.result.function_implementation = output_tool_creator.result.function_implementation
+                                            new_tool_saved = save_new_tool(
+                                                function_name=self.output.result.function_name,
+                                                function_implementation=self.output.result.function_implementation,
+                                            )
+                                            assert new_tool_saved, (
+                                                "A new tool was created but could not be saved."
+                                            )
 
             else:
                 self.output.error_msg = f"There was a problem with question ID: {qa_pair.id}.\n Error msg: {output_engine.error_msg or 'No error message available'}"
