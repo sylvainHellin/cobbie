@@ -132,9 +132,6 @@ class TrainingModuleConfig(BaseAgentConfig):
         default="Training", description="MLflow experiment name"
     )
 
-    # Engine configuration for training
-    engine: IfcAnswerEngineConfig = Field(default_factory=IfcAnswerEngineConfig)
-
 
 # Global configuration instance
 class AgentConfigs(BaseModel):
