@@ -33,13 +33,15 @@ class TrainingModule(dspy.Module):
         self.engine = IfcAnswerEngine(
             config=self.config.engine,
         )
+
+        # Set-up mlflow
+        mlflow.dspy.autolog()  # type: ignore
         mlflow.set_tracking_uri(self.config.tracking_uri)
         mlflow.set_experiment(self.config.experiment_name)
         mlflow.start_run(run_name=datetime.now().strftime("%Y-%m-%d-%H-%M-%S"))
 
     def forward(self, qa_pair: QA_Pair) -> ModuleOutput:
-        # Set-up MLflow and DSPy
-        mlflow.dspy.autolog()  # type: ignore
+        # Set-up DSPy
         dspy.configure(lm=self.lm)
         self.lm.history.clear()
 
@@ -79,7 +81,7 @@ class TrainingModule(dspy.Module):
                     self.logger.debug(f"Answer: \n{output_engine.result.answer}")
                     self.logger.debug(f"Ground Truth: \n{qa_pair.answer}")
 
-                    # init AnswerVerifier
+                    # Verify if answer is correct
                     output_answer_verifier = self.answer_verifier.forward(
                         question=qa_pair.question,
                         first_answer=qa_pair.answer,
@@ -154,7 +156,6 @@ class TrainingModule(dspy.Module):
                     usage = call.get("usage", {})
                     total_input_tokens += usage.get("prompt_tokens", 0)
                     total_output_tokens += usage.get("completion_tokens", 0)
-            self.chat.print()
 
             span.set_inputs(
                 {
