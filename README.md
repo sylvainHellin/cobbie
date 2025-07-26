@@ -75,26 +75,31 @@ graph TB
 The system learns to create new tools when existing ones are insufficient:
 
 ```mermaid
-flowchart TB
-    Q[Question] --> IE[IfcAnswerEngine]
-    IE --> TT{Try with existing tools}
-    TT -->|Success| A[Answer]
-    TT -->|Need new tool| NE[NameExtractor]
-    NE --> TC[ToolCreator]
+stateDiagram-v2
+    [*] --> STARTED
+    STARTED --> ENGINE_COMPLETED: Initialize processing
+    ENGINE_COMPLETED --> ENGINE_FAILED: Engine fails
+    ENGINE_COMPLETED --> NEW_FUNCTION_READY: Engine creates new function
+    ENGINE_COMPLETED --> VERIFICATION_NEEDED: Engine answers without new function
     
-    subgraph "Tool Creation Pipeline"
-        TC --> TP[ToolProgrammer<br/>Generate Code]
-        TP --> TA[ToolAssessor<br/>Test & Evaluate]
-        TA --> TCR[ToolCorrector<br/>Improve Code]
-        TCR --> TA
-        TA -->|Success| NT[New Tool]
-    end
+    ENGINE_FAILED --> ERROR: Handle failure
     
-    NT --> IE
-    IE --> A
-    A --> AV[AnswerVerifier]
-    AV -->|Correct + New Tool| ST[Save Tool]
-    AV -->|Incorrect| TC
+    NEW_FUNCTION_READY --> COMPLETED: Save new function
+    
+    VERIFICATION_NEEDED --> ERROR: Verification fails
+    VERIFICATION_NEEDED --> VERIFICATION_COMPLETED: Verification succeeds
+    
+    VERIFICATION_COMPLETED --> COMPLETED: Answer incorrect
+    VERIFICATION_COMPLETED --> NEW_FUNCTION_READY: Answer correct + Engine created function
+    VERIFICATION_COMPLETED --> TOOL_IDENTIFICATION_NEEDED: Answer correct + No function created
+    
+    TOOL_IDENTIFICATION_NEEDED --> COMPLETED: No tool needed
+    TOOL_IDENTIFICATION_NEEDED --> TOOL_CREATION_NEEDED: Tool identified
+    
+    TOOL_CREATION_NEEDED --> COMPLETED: Tool created and saved
+    
+    COMPLETED --> [*]
+    ERROR --> [*]
 ```
 
 ### Inference Mode

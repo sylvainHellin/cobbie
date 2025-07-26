@@ -14,7 +14,7 @@
 # it should have an argument to decide which tools to include (e.g. `query_ifc_documentation` and `web_search`)
 # also an argument to decide between inference and training mode (2 different signatures -> can call the ToolCreator or not)
 
-from typing import Callable, Dict, List, Literal, Optional
+from typing import Callable, Dict, List, Optional
 
 import dspy
 import mlflow
@@ -28,7 +28,7 @@ from src.engine.util import (
 )
 from src.engine.components import CodeAct, ToolCreator, NameExtractor
 
-from src.config import AGENT_CONFIGS, LANGUAGE_MODELS, FUNCTION_BOILERPLATE
+from src.config import AGENT_CONFIGS, FUNCTION_BOILERPLATE
 
 
 class IfcAnwerEngineSignature(dspy.Signature):

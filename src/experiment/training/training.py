@@ -1,4 +1,5 @@
 from datetime import datetime
+from enum import Enum
 from typing import Optional
 
 import dspy
@@ -11,6 +12,21 @@ from src.engine.util import get_logger, save_new_tool
 from src.experiment.evaluation.answer_verifier import AnswerVerifier
 
 from .data_loader import QA_Pair, load_train_dev_split
+
+
+class TrainingState(Enum):
+    """States for the training module state machine."""
+
+    STARTED = "started"
+    ENGINE_SUCCESS = "engine_success"
+    ENGINE_FAILED = "engine_failed"
+    ANSWER_VERIFICATION = "answer_verification"
+    VERIFICATION_COMPLETED = "verification_completed"
+    TOOL_IDENTIFICATION_NEEDED = "tool_identification_needed"
+    TOOL_CREATION_NEEDED = "tool_creation_needed"
+    NEW_FUNCTION_READY = "new_function_ready"
+    COMPLETED = "completed"
+    ERROR = "error"
 
 
 class TrainingModule(dspy.Module):
@@ -40,16 +56,293 @@ class TrainingModule(dspy.Module):
         mlflow.set_experiment(self.config.experiment_name)
         mlflow.start_run(run_name=datetime.now().strftime("%Y-%m-%d-%H-%M-%S"))
 
-    def forward(self, qa_pair: QA_Pair) -> ModuleOutput:
-        # Set-up DSPy
-        dspy.configure(lm=self.lm)
-        self.lm.history.clear()
+        # State machine attributes
+        self.state = TrainingState.STARTED
+        self.context = {}  # Context to pass data between states
 
-        # Instantiate the original output
+    def _initialize_processing(self, qa_pair: QA_Pair) -> TrainingState:
+        """Initialize processing state and setup."""
+        self.context.clear()
+        self.context["qa_pair"] = qa_pair
+        self.context["span"] = None
+
+        # Initialize default output
         self.output = ModuleOutput(
             status="error",
             error_msg="Default error message from initialization of TrainingModule.",
         )
+
+        # Setup DSPy
+        dspy.configure(lm=self.lm)
+        self.lm.history.clear()
+
+        return TrainingState.ENGINE_SUCCESS
+
+    def _handle_engine_processing(self) -> TrainingState:
+        """Run the engine and determine next state."""
+        qa_pair = self.context["qa_pair"]
+
+        # Run the engine
+        output_engine = self.engine.forward(
+            question=qa_pair.question, path_ifc_model=qa_pair.ifc_model_path
+        )
+        self.chat.import_chat_messages(self.lm.history[-1].get("messages"))
+        self.context["engine_output"] = output_engine
+
+        if output_engine.status == "success":
+            # Validate engine output
+            assert output_engine.result.need_new_function is not None, (
+                "Something is off: the status is set to 'success', but the field `need_new_function` is None."
+            )
+            assert output_engine.result.answer is not None, (
+                "Something is off: the status is set to 'success', but the `answer` field is None."
+            )
+
+            if output_engine.result.need_new_function:
+                return TrainingState.NEW_FUNCTION_READY
+            else:
+                return TrainingState.ANSWER_VERIFICATION
+        else:
+            return TrainingState.ENGINE_FAILED
+
+    def _handle_engine_failure(self) -> TrainingState:
+        """Handle engine failure."""
+        qa_pair = self.context["qa_pair"]
+        engine_output = self.context["engine_output"]
+
+        self.output.error_msg = (
+            f"There was a problem with question ID: {qa_pair.id}.\n"
+            f"Error msg: {engine_output.error_msg or 'No error message available'}"
+        )
+        self.logger.error(self.output.error_msg)
+        return TrainingState.ERROR
+
+    def _handle_verification_needed(self) -> TrainingState:
+        """Handle answer verification."""
+        qa_pair = self.context["qa_pair"]
+        engine_output = self.context["engine_output"]
+
+        self.logger.info("IfcAnswerEngine could answer the question.")
+        self.logger.debug(f"Answer: \n{engine_output.result.answer}")
+        self.logger.debug(f"Ground Truth: \n{qa_pair.answer}")
+
+        # Verify if answer is correct
+        output_answer_verifier = self.answer_verifier.forward(
+            question=qa_pair.question,
+            first_answer=qa_pair.answer,
+            second_answer=engine_output.result.answer,
+        )
+        self.context["verifier_output"] = output_answer_verifier
+
+        if output_answer_verifier.status == "error":
+            self.output.error_msg = (
+                f"There was an error with the AnswerVerifier. "
+                f"Error message: {output_answer_verifier.error_msg or 'No error message provided'}"
+            )
+            self.logger.error(self.output.error_msg)
+            return TrainingState.ERROR
+        else:
+            return TrainingState.VERIFICATION_COMPLETED
+
+    def _handle_verification_completed(self) -> TrainingState:
+        """Process verification results."""
+        engine_output = self.context["engine_output"]
+        verifier_output = self.context["verifier_output"]
+
+        assert verifier_output.result.similarity_score is not None, (
+            "Something is off: the status of AnswerVerifier is 'success', but the `similarity_score` field is None."
+        )
+
+        # Update output with verification results
+        self.output.error_msg = None
+        self.output.status = "success"
+        self.output.result.correct_answer = (
+            verifier_output.result.similarity_score >= self.config.similarity_threshold
+        )
+        self.output.result.answer = engine_output.result.answer
+
+        status = "correct" if self.output.result.correct_answer else "wrong"
+        self.logger.info(f"AnswerVerifier could check the answer. Status: {status}")
+        self.logger.debug(
+            f"Similarity score: {verifier_output.result.similarity_score}\n"
+            f"Correct answer: {self.output.result.correct_answer}"
+        )
+
+        if self.output.result.correct_answer:
+            # Check if the engine already created a new function
+            if engine_output.result.need_new_function:
+                return TrainingState.NEW_FUNCTION_READY
+            else:
+                return TrainingState.TOOL_IDENTIFICATION_NEEDED
+        else:
+            return TrainingState.COMPLETED
+
+    def _handle_new_function_ready(self) -> TrainingState:
+        """Handle case where engine created a new function."""
+        engine_output = self.context["engine_output"]
+
+        self.output.result.need_new_function = True
+        self.output.result.function_name = engine_output.result.function_name
+        self.output.result.function_implementation = (
+            engine_output.result.function_implementation
+        )
+
+        assert self.output.result.function_name, (
+            "Logical Error: The output of the engine is a success, and it needs a new function, but the function name is None."
+        )
+        assert self.output.result.function_implementation, (
+            "Logical Error: the output of the engine is a success and it needed a new function, but the function implementation is None."
+        )
+
+        new_tool_saved = save_new_tool(
+            function_name=self.output.result.function_name,
+            function_implementation=self.output.result.function_implementation,
+        )
+        assert new_tool_saved, "A new tool was created but could not be saved."
+
+        return TrainingState.COMPLETED
+
+    def _handle_tool_identification_needed(self) -> TrainingState:
+        """Try to identify useful new tools."""
+        output_tool_identifier = self.tool_identifier.forward(
+            chat_history=self.chat.to_string()
+        )
+        self.context["tool_identifier_output"] = output_tool_identifier
+
+        if output_tool_identifier.status == "success":
+            assert output_tool_identifier.result.need_new_function is not None
+
+            if output_tool_identifier.result.need_new_function:
+                assert (
+                    output_tool_identifier.result.function_name is not None
+                    and output_tool_identifier.result.function_requirements is not None
+                )
+                return TrainingState.TOOL_CREATION_NEEDED
+
+        return TrainingState.COMPLETED
+
+    def _handle_tool_creation_needed(self) -> TrainingState:
+        """Create a new tool based on identified requirements."""
+        qa_pair = self.context["qa_pair"]
+        tool_identifier_output = self.context["tool_identifier_output"]
+
+        self.output.result.need_new_function = True
+        self.output.result.function_name = tool_identifier_output.result.function_name
+        self.output.result.function_requirements = (
+            tool_identifier_output.result.function_requirements
+        )
+
+        assert (
+            self.output.result.function_name
+            and self.output.result.function_requirements
+        ), "Error in the handling of tool_creation."
+
+        # Try to generate a new tool
+        output_tool_creator = self.tool_creator.forward(
+            function_name=self.output.result.function_name,
+            function_requirements=self.output.result.function_requirements,
+            path_ifc_model=qa_pair.ifc_model_path,
+        )
+
+        if output_tool_creator.status == "success":
+            assert output_tool_creator.result.function_implementation
+            self.output.result.function_implementation = (
+                output_tool_creator.result.function_implementation
+            )
+
+            new_tool_saved = save_new_tool(
+                function_name=self.output.result.function_name,
+                function_implementation=self.output.result.function_implementation,
+            )
+            assert new_tool_saved, "A new tool was created but could not be saved."
+
+        return TrainingState.COMPLETED
+
+    def _process_state(self) -> TrainingState:
+        """Process current state and return next state."""
+        if self.state == TrainingState.STARTED:
+            qa_pair = self.context["qa_pair"]
+            return self._initialize_processing(qa_pair)
+
+        elif self.state == TrainingState.ENGINE_SUCCESS:
+            return self._handle_engine_processing()
+
+        elif self.state == TrainingState.ENGINE_FAILED:
+            return self._handle_engine_failure()
+
+        elif self.state == TrainingState.ANSWER_VERIFICATION:
+            return self._handle_verification_needed()
+
+        elif self.state == TrainingState.VERIFICATION_COMPLETED:
+            return self._handle_verification_completed()
+
+        elif self.state == TrainingState.NEW_FUNCTION_READY:
+            return self._handle_new_function_ready()
+
+        elif self.state == TrainingState.TOOL_IDENTIFICATION_NEEDED:
+            return self._handle_tool_identification_needed()
+
+        elif self.state == TrainingState.TOOL_CREATION_NEEDED:
+            return self._handle_tool_creation_needed()
+
+        else:
+            return TrainingState.ERROR
+
+    def _calculate_tokens(self) -> tuple[int, int]:
+        """Calculate total input and output tokens from LM history."""
+        total_input_tokens = 0
+        total_output_tokens = 0
+
+        if self.lm.history:
+            for call in self.lm.history:
+                usage = call.get("usage", {})
+                total_input_tokens += usage.get("prompt_tokens", 0)
+                total_output_tokens += usage.get("completion_tokens", 0)
+
+        return total_input_tokens, total_output_tokens
+
+    def _finalize_span_and_tracking(self, span, qa_pair: QA_Pair):
+        """Finalize MLFlow span and tracking."""
+        total_input_tokens, total_output_tokens = self._calculate_tokens()
+
+        span.set_inputs(
+            {
+                "question_id": qa_pair.id,
+                "question": qa_pair.question,
+            }
+        )
+        span.set_outputs(
+            {
+                "correct_answer": self.output.result.correct_answer or False,
+                "answer": self.output.result.answer or "No Answer available.",
+                "need_new_tool": self.output.result.need_new_function or False,
+                "input_tokens": total_input_tokens,
+                "output_tokens": total_output_tokens,
+                "chat": self.chat.model_dump_json(indent=2) or "",
+            }
+        )
+        span.set_attributes(self.output.result.model_dump())
+        span.set_attribute("input_tokens", total_input_tokens)
+        span.set_attribute("output_tokens", total_output_tokens)
+
+        mlflow.update_current_trace(
+            tags={
+                "correct_answer": str(self.output.result.correct_answer or False),
+                "answer": self.output.result.answer or "",
+                "need_new_tool": str(self.output.result.need_new_function or False),
+                "input_tokens": str(total_input_tokens),
+                "output_tokens": str(total_output_tokens),
+            }
+        )
+
+        if self.output.result.need_new_function:
+            mlflow.set_tag(key="new_tool_created", value=True)
+
+    def forward(self, qa_pair: QA_Pair) -> ModuleOutput:
+        """Process a QA pair using the state machine."""
+        # Initialize state machine
+        self.state = TrainingState.STARTED
+        self.context["qa_pair"] = qa_pair
 
         with mlflow.start_span(
             name=f"question_id_{qa_pair.id}",
@@ -58,175 +351,15 @@ class TrainingModule(dspy.Module):
             span.set_attribute("question_id", qa_pair.id)
             span.set_attribute("question", qa_pair.question)
             span.set_attribute("ground_truth", qa_pair.answer)
+            self.context["span"] = span
 
-            # Init and run engine
-            output_engine = self.engine.forward(
-                question=qa_pair.question, path_ifc_model=qa_pair.ifc_model_path
-            )
-            self.chat.import_chat_messages(self.lm.history[-1].get("messages"))
+            # State machine loop
+            while self.state not in [TrainingState.COMPLETED, TrainingState.ERROR]:
+                next_state = self._process_state()
+                self.state = next_state
 
-            # Control flow
-            if output_engine.status == "success":
-                assert output_engine.result.need_new_function is not None, (
-                    "Something is off: the status is set to 'success', but the field `need_new_function` is None. Should be True or False."
-                )
-
-                assert output_engine.result.answer is not None, (
-                    "Something is off: the status is set to 'success', but the `answer` field is None. It should contain something."
-                )
-
-                # If the Engine could answer the question, let's check if it's correct
-                if not output_engine.result.need_new_function:
-                    self.logger.info("IfcAnswerEngine could answer the question.")
-                    self.logger.debug(f"Answer: \n{output_engine.result.answer}")
-                    self.logger.debug(f"Ground Truth: \n{qa_pair.answer}")
-
-                    # Verify if answer is correct
-                    output_answer_verifier = self.answer_verifier.forward(
-                        question=qa_pair.question,
-                        first_answer=qa_pair.answer,
-                        second_answer=output_engine.result.answer,
-                    )
-
-                    if output_answer_verifier.status == "error":
-                        self.output.error_msg = f"There was an error with the AnswerVerifier. Error message: {output_answer_verifier.error_msg or 'No error message provided'}"
-                        self.logger.error(self.output.error_msg)
-
-                    else:
-                        assert (
-                            output_answer_verifier.result.similarity_score is not None
-                        ), (
-                            "Something is off: the status of AnswerVerifier is 'success', but the `similarity_score` field is None."
-                        )
-                        self.output.error_msg = None
-                        self.output.status = "success"
-
-                        # Set the correct_answer state according to the provided treshold
-                        self.output.result.correct_answer = (
-                            True
-                            if output_answer_verifier.result.similarity_score
-                            >= self.config.similarity_threshold
-                            else False
-                        )
-                        self.output.result.answer = output_engine.result.answer
-
-                        self.logger.info(
-                            f"AnswerVerifier could check the answer. Status: {'correct' if self.output.result.correct_answer else 'wrong'}"
-                        )
-                        self.logger.debug(
-                            f"Similarity score: \n{output_answer_verifier.result.similarity_score}\nCorrect answer: {self.output.result.correct_answer}"
-                        )
-
-                        if self.output.result.correct_answer:
-                            # If the Engine created a new function, let's see if it's correctly implemented.
-                            if output_engine.result.need_new_function:
-                                self.output.result.need_new_function = True
-
-                                self.output.result.function_name = (
-                                    output_engine.result.function_name
-                                )
-                                self.output.result.function_implementation = (
-                                    output_engine.result.function_implementation
-                                )
-                                assert self.output.result.function_name, (
-                                    "Logical Error: The output of the engine is a success, and it needs a new function, but the function name is None."
-                                )
-                                assert self.output.result.function_implementation, (
-                                    "Logical Error: the output of the engine is a success and it needed a new function, but the function implementation is None."
-                                )
-
-                                new_tool_saved = save_new_tool(
-                                    function_name=self.output.result.function_name,
-                                    function_implementation=self.output.result.function_implementation,
-                                )
-                                assert new_tool_saved, (
-                                    "A new tool was created but could not be saved."
-                                )
-                            # otherwise, see if it is possible to identify a useful new tool
-                            else:
-                                output_tool_identifier = self.tool_identifier.forward(
-                                    chat_history=self.chat.to_string()
-                                )
-                                if output_tool_identifier.status == "success":
-                                    assert (
-                                        output_tool_identifier.result.need_new_function
-                                        is not None
-                                    )
-                                    if output_tool_identifier.result.need_new_function:
-                                        assert (
-                                            output_tool_identifier.result.function_name
-                                            is not None
-                                            and output_tool_identifier.result.function_requirements
-                                            is not None
-                                        )
-                                        self.output.result.need_new_function = True
-                                        self.output.result.function_name = (
-                                            output_tool_identifier.result.function_name
-                                        )
-                                        self.output.result.function_requirements = output_tool_identifier.result.function_requirements
-
-                                        # Try to generate a new tool with these requirements if a potential new tool could be identified.
-                                        output_tool_creator = self.tool_creator.forward(
-                                            function_name=self.output.result.function_name,
-                                            function_requirements=self.output.result.function_requirements,
-                                            path_ifc_model=qa_pair.ifc_model_path,
-                                        )
-                                        if output_tool_creator.status == "success":
-                                            assert output_tool_creator.result.function_implementation
-                                            self.output.result.function_implementation = output_tool_creator.result.function_implementation
-                                            new_tool_saved = save_new_tool(
-                                                function_name=self.output.result.function_name,
-                                                function_implementation=self.output.result.function_implementation,
-                                            )
-                                            assert new_tool_saved, (
-                                                "A new tool was created but could not be saved."
-                                            )
-
-            else:
-                self.output.error_msg = f"There was a problem with question ID: {qa_pair.id}.\n Error msg: {output_engine.error_msg or 'No error message available'}"
-                self.logger.error(self.output.error_msg)
-
-            # Calculate total tokens from LM history after all agent calls
-            total_input_tokens = 0
-            total_output_tokens = 0
-
-            if self.lm.history:
-                for call in self.lm.history:
-                    usage = call.get("usage", {})
-                    total_input_tokens += usage.get("prompt_tokens", 0)
-                    total_output_tokens += usage.get("completion_tokens", 0)
-
-            span.set_inputs(
-                {
-                    "question_id": qa_pair.id,
-                    "question": qa_pair.question,
-                }
-            )
-            span.set_outputs(
-                {
-                    "correct_answer": self.output.result.correct_answer or False,
-                    "answer": self.output.result.answer or "No Answer available.",
-                    "need_new_tool": self.output.result.need_new_function or False,
-                    "input_tokens": total_input_tokens,
-                    "output_tokens": total_output_tokens,
-                    "chat": self.chat.model_dump_json(indent=2) or "",
-                }
-            )
-            span.set_attributes(self.output.result.model_dump())
-            span.set_attribute("input_tokens", total_input_tokens)
-            span.set_attribute("output_tokens", total_output_tokens)
-
-            mlflow.update_current_trace(
-                tags={
-                    "correct_answer": str(self.output.result.correct_answer or False),
-                    "answer": self.output.result.answer or "",
-                    "need_new_tool": str(self.output.result.need_new_function or False),
-                    "input_tokens": str(total_input_tokens),
-                    "output_tokens": str(total_output_tokens),
-                }
-            )
-            if self.output.result.need_new_function:
-                mlflow.set_tag(key="new_tool_created", value=True)
+            # Finalize tracking and metrics
+            self._finalize_span_and_tracking(span, qa_pair)
 
             return self.output
 

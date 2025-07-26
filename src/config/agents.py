@@ -9,7 +9,7 @@ The configuration is organized by agent type and includes sensible defaults for 
 Users can override specific values as needed without affecting other components.
 """
 
-from typing import Dict, List, Literal, Optional
+from typing import Literal, Optional
 from pydantic import BaseModel, Field
 import dspy
 
