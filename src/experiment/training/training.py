@@ -254,7 +254,9 @@ class TrainingModule(dspy.Module):
                 self.output.result.function_name = (
                     output_error_analyst.result.function_name
                 )
-                pass  # TODO handle correction of faulty tool
+                return (
+                    TrainingState.COMPLETED_FORWARD_PASS
+                )  # TODO Update this state: handle the correction of faulty tools
             elif self.output.result.error_category == "missing_tool":
                 self.output.result.need_new_function = True
                 self.output.result.function_name = (
@@ -263,6 +265,7 @@ class TrainingModule(dspy.Module):
                 self.output.result.function_requirements = (
                     output_error_analyst.result.error_analysis
                 )
+                return TrainingState.TOOL_CREATION_NEEDED
 
             else:
                 self.output.status = "success"
