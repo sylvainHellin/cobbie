@@ -12,7 +12,13 @@ def load_train_dev_split(
     dataset = pd.read_sql("SELECT * FROM dataset ORDER BY id ASC", connection())
     dataset.set_index("id", inplace=True)
     ifc_models = pd.read_sql("SELECT * FROM ifc_models", connection())
-    dataset = pd.merge(left=dataset, right=ifc_models, left_on="ifc_id", right_on="id")
+    dataset = pd.merge(
+        left=dataset,
+        right=ifc_models,
+        left_on="ifc_id",
+        right_on="id",
+        suffixes=("", "_ifc"),
+    )
 
     # Split into training and dev sets
     training_df = dataset.sample(frac=frac, random_state=seed)
@@ -22,7 +28,7 @@ def load_train_dev_split(
     training_records = []
     for idx, row in training_df.iterrows():
         record = {
-            "id": row.id,
+            "id": idx,  # idx is the original dataset.id (question id)
             "question": row.question,
             "answer": row.ground_truth,
             "project_name": row.project_name,
@@ -35,7 +41,7 @@ def load_train_dev_split(
     dev_records = []
     for idx, row in dev_df.iterrows():
         record = {
-            "id": row.id,
+            "id": idx,  # idx is the original dataset.id (question id)
             "question": row.question,
             "answer": row.ground_truth,
             "project_name": row.project_name,
@@ -57,6 +63,7 @@ if __name__ == "__main__":
     TRAINING_SET, DEV_SET = load_train_dev_split()
     sample_datapoint = TRAINING_SET[0]
     print(f"Question: {sample_datapoint.question}")
+    print(f"Question id: {sample_datapoint.id}")
     print(f"Answer: {sample_datapoint.answer}")
     print(f"Project: {sample_datapoint.project_name}")
     print(f"Model: {sample_datapoint.ifc_model_name}")
