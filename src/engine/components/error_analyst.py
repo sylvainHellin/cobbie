@@ -1,0 +1,300 @@
+from typing import Callable, List, Literal, Optional
+
+import dspy
+import mlflow
+
+from src.config import AGENT_CONFIGS
+from src.engine.schemas import ModuleOutput, Result
+from src.engine.util import get_logger
+from .code_act import CodeAct
+
+
+class ErrorAnalystSignature(dspy.Signature):
+    """
+    A system specializing in analyzing errors when the IFC Answer Engine provides incorrect answers to BIM/IFC model queries.
+
+    The IFC Answer Engine is a CodeAct-based system that answers questions about BIM models by:
+    1. Using a Python interpreter with access to custom-made functions for BIM data retrieval
+    2. Dynamically creating new tools when existing functions are insufficient (training mode)
+    3. Iteratively attempting to answer questions with available tools (max retry limit)
+
+    This error analysis signature helps identify whether failures stem from:
+    - **Faulty tools**: Existing functions returning incorrect results or behaving unexpectedly
+    - **Missing tools**: Lack of necessary functions to access required BIM information
+    - **Other issues**: Context problems, prompting errors, CodeAct iteration limits, or reasoning failures
+
+    The analysis focuses on understanding tool-related failures in the CodeAct execution loop
+    to improve the system's capability for answering BIM model questions using Python code execution.
+    """
+
+    #################### Inputs ####################
+    chat_history: str = dspy.InputField(
+        desc="Complete chat history from the CodeAct-based IFC Answer Engine, including Python code execution attempts, tool calls, function outputs, and any error messages from the iterative process"
+    )
+    question: str = dspy.InputField(
+        desc="The specific BIM/IFC model question that the system attempted to answer"
+    )
+    provided_answer: str = dspy.InputField(
+        desc="The incorrect answer provided by the IFC Answer Engine"
+    )
+    correct_answer: str = dspy.InputField(
+        desc="The ground truth or expected correct answer to the BIM question"
+    )
+
+    #################### Outputs ####################
+    error_category: Literal["faulty_tool", "missing_tool", "other"] = dspy.OutputField(
+        desc="The error category is 'faulty_tool' if an existing tool returns incorrect results; 'missing_tool' if the system lacks a necessary tool to access required information, or would benefit from having access to an additional tool; or 'other' if the error is not tool-related (e.g. CodeAct iteration limits, context issues or reasoning errors)."
+    )
+    tool_name: Optional[str] = dspy.OutputField(
+        desc="If the error category is either 'faulty_tool' or 'missing_tool', provide the name of the tool that is to be created or corrected."
+    )
+    mitigation_strategy: str = dspy.OutputField(
+        desc="Detailed mitigation strategy based on error category: For 'faulty_tool' - describe the incorrect behavior in the Python function that needs correction; For 'missing_tool' - specify the function signature, parameters, and BIM data access requirements for creating a new tool; For 'other' - describe issues like CodeAct iteration limits, missing context about IFC structure, misleading prompts, or reasoning errors that could be addressed"
+    )
+
+
+class ErrorAnalyst(dspy.Module):
+    """
+    A module that analyzes errors in the CodeAct-based IFC Answer Engine to identify
+    the root cause of incorrect responses to BIM/IFC model queries.
+
+    This module helps improve the system by categorizing errors in the iterative
+    Python code execution process and providing actionable mitigation strategies
+    for tool development, system enhancement, and CodeAct optimization.
+    """
+
+    def __init__(
+        self,
+        tools: Optional[List[Callable]] = None,
+        config=None,
+    ):
+        super().__init__()
+        # Use provided config or default config
+        self.config = config or AGENT_CONFIGS.error_analyst
+
+        self.tools = tools or []
+        self.max_iters = self.config.max_iters
+        self.agent = CodeAct(
+            signature=ErrorAnalystSignature, tools=self.tools, max_iters=self.max_iters
+        )
+        self.log_level = self.config.log_level
+        self.logger = get_logger(name="ErrorAnalyst", log_level=self.log_level)
+
+    def forward(
+        self,
+        chat_history: str,
+        question: str,
+        provided_answer: str,
+        correct_answer: str,
+    ) -> ModuleOutput:
+        """
+        Analyze an error from the IFC Answer Engine to categorize the failure and provide mitigation strategies.
+
+        Args:
+            chat_history: Complete execution history from the failed CodeAct session
+            question: The original BIM/IFC question that was asked
+            provided_answer: The incorrect answer that was provided
+            correct_answer: The expected correct answer
+
+        Returns:
+            ModuleOutput containing:
+            - result.error_category: "faulty_tool", "missing_tool", or "other"
+            - result.mitigation_strategy: Detailed strategy for addressing the error
+            - status: "success" or "error"
+            - error_msg: Error description (if status is "error")
+        """
+
+        with mlflow.start_span(
+            name="ErrorAnalyst",
+            span_type="MODULE",
+        ) as span:
+            # Set initial span attributes
+            span.set_attribute("question", question)
+            span.set_attribute("provided_answer", provided_answer)
+            span.set_attribute("correct_answer", correct_answer)
+
+            self.logger.info("Starting error analysis")
+            self.logger.debug(f"Question: {question}")
+            self.logger.debug(f"Provided answer: {provided_answer}")
+            self.logger.debug(f"Correct answer: {correct_answer}")
+
+            try:
+                prediction = self.agent(
+                    chat_history=chat_history,
+                    question=question,
+                    provided_answer=provided_answer,
+                    correct_answer=correct_answer,
+                )
+
+                if (
+                    hasattr(prediction, "error_category")
+                    and hasattr(prediction, "mitigation_strategy")
+                    and prediction.error_category
+                    and prediction.mitigation_strategy
+                ):
+                    self.logger.info("Error analysis completed successfully")
+                    self.logger.info(f"Error category: {prediction.error_category}")
+                    self.logger.debug(
+                        f"Mitigation strategy: {prediction.mitigation_strategy}"
+                    )
+
+                    # Set span outputs
+                    span.set_outputs(
+                        {
+                            "error_category": prediction.error_category,
+                            "mitigation_strategy": prediction.mitigation_strategy,
+                            "status": "success",
+                        }
+                    )
+                    span.set_attribute("error_category", prediction.error_category)
+
+                    # Set MLflow tags for easy filtering
+                    mlflow.update_current_trace(
+                        tags={
+                            "status": "success",
+                            "error_category": prediction.error_category,
+                        }
+                    )
+
+                    if (
+                        prediction.error_category == "faulty_tool"
+                        and hasattr(prediction, "tool_name")
+                        and prediction.tool_name
+                    ):
+                        return ModuleOutput(
+                            result=Result(
+                                error_category=prediction.error_category,
+                                assessment_details=prediction.mitigation_strategy,
+                                function_name=prediction.tool_name,
+                            ),
+                            status="success",
+                        )
+                    elif prediction.error_category == "missing_tool" and hasattr(
+                        prediction, "tool_name" and prediction.tool_name
+                    ):
+                        return ModuleOutput(
+                            result=Result(
+                                error_category=prediction.error_category,
+                                function_requirements=prediction.mitigation_strategy,
+                                function_name=prediction.tool_name,
+                            ),
+                            status="success",
+                        )
+
+                    else:
+                        return ModuleOutput(
+                            status="success",
+                            result=Result(
+                                error_category=prediction.error_category,
+                            ),
+                        )
+                else:
+                    error_msg = "Error analysis failed: Missing required outputs"
+                    self.logger.error(error_msg)
+
+                    # Set span outputs for failure
+                    span.set_outputs({"status": "error", "error_msg": error_msg})
+
+                    mlflow.update_current_trace(
+                        tags={
+                            "status": "error",
+                            "error_category": "analysis_failed",
+                        }
+                    )
+
+                    return ModuleOutput(
+                        status="error",
+                        error_msg=error_msg,
+                    )
+
+            except Exception as e:
+                error_msg = f"Error during analysis: {str(e)}"
+                self.logger.error(error_msg)
+
+                # Set span outputs for exception
+                span.set_outputs({"status": "error", "error_msg": error_msg})
+
+                mlflow.update_current_trace(
+                    tags={
+                        "status": "error",
+                        "error_category": "exception",
+                    }
+                )
+
+                return ModuleOutput(
+                    status="error",
+                    error_msg=error_msg,
+                )
+
+
+if __name__ == "__main__":
+    import json
+
+    from src.config import LANGUAGE_MODELS
+
+    def main(
+        chat_history: str,
+        question: str,
+        provided_answer: str,
+        correct_answer: str,
+        lm_name: str = "qwen3-coder",
+        log_level: Literal["DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"] = "DEBUG",
+    ):
+        # configure dspy
+        lm_info = LANGUAGE_MODELS[lm_name]
+        llm = dspy.LM(
+            model=lm_info.url,
+            api_key=lm_info.api_key,
+            max_tokens=5000,
+        )
+        dspy.configure(lm=llm)
+
+        # setup mlflow
+        mlflow.dspy.autolog()  # type: ignore
+        mlflow.set_tracking_uri("http://127.0.0.1:5000")
+        mlflow.set_experiment("ErrorAnalyst")
+
+        # setup the error analyst
+        error_analyst = ErrorAnalyst()
+
+        # analyze the error
+        result = error_analyst.forward(
+            chat_history=chat_history,
+            question=question,
+            provided_answer=provided_answer,
+            correct_answer=correct_answer,
+        )
+
+        print(f"Error analysis result: {json.dumps(result.model_dump(), indent=2)}")
+
+    ##########################################
+    # Example usage with sample error scenario
+    sample_chat_history = """
+    ---[Step 1]---
+    Thought: I need to count the number of doors in the IFC model. Let me use the available tools to get doors and count them.
+    Code:
+    ```python
+    import ifcopenshell
+    ifc_file = ifcopenshell.open('/path/to/model.ifc')
+    doors = ifc_file.by_type('IfcDoor')
+    print(f"Number of doors: {len(doors)}")
+    final_answer({"door_count": len(doors)})
+    ```
+    Observation: Execution Logs:
+    Number of doors: 15
+
+    Output:
+    {'door_count': 15}
+    """
+
+    sample_question = "How many emergency exit doors are in the building?"
+    sample_provided_answer = "15"
+    sample_correct_answer = "3"
+
+    main(
+        chat_history=sample_chat_history,
+        question=sample_question,
+        provided_answer=sample_provided_answer,
+        correct_answer=sample_correct_answer,
+        log_level="INFO",
+    )
