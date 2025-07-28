@@ -14,7 +14,7 @@ from src.engine import (
     ToolDebugger,
 )
 from src.engine.schemas import ModuleOutput, Chat, TrainingContext
-from src.engine.util import get_logger, save_new_tool
+from src.engine.util import get_logger, save_new_tool, get_function_code
 from src.experiment.evaluation.answer_verifier import AnswerVerifier
 
 from .data_loader import QA_Pair, load_train_dev_split
@@ -23,14 +23,15 @@ from .data_loader import QA_Pair, load_train_dev_split
 class TrainingState(Enum):
     """States for the training module state machine."""
 
-    START_FORWARD_PASS = "started"
+    INITIALIZE_PROCESSING = "started"
     ENGINE_SUCCESS = "engine_success"
     ENGINE_FAILED = "engine_failed"
-    START_ANSWER_VERIFICATION = "answer_verification"
+    ANSWER_VERIFICATION = "answer_verification"
     VERIFICATION_COMPLETED = "verification_completed"
-    START_ANALYSIS_CORRECT_ANSWER = "tool_identification_needed"
-    START_ANALYSIS_WRONG_ANSWER = "error_analyst"
-    TOOL_CREATION_NEEDED = "tool_creation_needed"
+    CORRECT_ANSWER = "tool_identification_needed"
+    WRONG_ANSWER = "error_analyst"
+    TOOL_CREATION = "tool_creation_needed"
+    TOOL_CORRECTION = "tool_debugger"
     NEW_TOOL_CREATED = "new_function_ready"
     COMPLETED_FORWARD_PASS = "completed"
     ERROR = "error"
@@ -66,7 +67,7 @@ class TrainingModule(dspy.Module):
         mlflow.start_run(run_name=datetime.now().strftime("%Y-%m-%d-%H-%M-%S"))
 
         # State machine attributes
-        self.state = TrainingState.START_FORWARD_PASS
+        self.state = TrainingState.INITIALIZE_PROCESSING
         self.context = TrainingContext()  # Typed context to pass data between states
 
     def _initialize_processing(self, qa_pair: QA_Pair) -> TrainingState:
@@ -87,7 +88,7 @@ class TrainingModule(dspy.Module):
 
         return TrainingState.ENGINE_SUCCESS
 
-    def _handle_engine_processing(self) -> TrainingState:
+    def _handle_engine_success(self) -> TrainingState:
         """Run the engine and determine next state."""
         assert self.context.qa_pair
         qa_pair = self.context.qa_pair
@@ -109,9 +110,13 @@ class TrainingModule(dspy.Module):
             )
 
             if output_engine.result.need_new_function:
+                self.output.result.function_requirements = (
+                    output_engine.result.function_requirements
+                )
+                self.output.result.function_name = output_engine.result.function_name
                 return TrainingState.NEW_TOOL_CREATED
             else:
-                return TrainingState.START_ANSWER_VERIFICATION
+                return TrainingState.ANSWER_VERIFICATION
         else:
             return TrainingState.ENGINE_FAILED
 
@@ -188,9 +193,9 @@ class TrainingModule(dspy.Module):
             if engine_output.result.need_new_function:
                 return TrainingState.NEW_TOOL_CREATED
             else:
-                return TrainingState.START_ANALYSIS_CORRECT_ANSWER
+                return TrainingState.CORRECT_ANSWER
         else:
-            return TrainingState.START_ANALYSIS_WRONG_ANSWER
+            return TrainingState.WRONG_ANSWER
 
     def _handle_new_function_ready(self) -> TrainingState:
         """Handle case where engine created a new function."""
@@ -231,76 +236,75 @@ class TrainingModule(dspy.Module):
                 assert (
                     output_tool_identifier.result.function_name is not None
                     and output_tool_identifier.result.function_requirements is not None
+                ), "Error: function_name and function_requirements need to be provided."
+                self.output.result.function_name = (
+                    output_tool_identifier.result.function_name
                 )
-                return TrainingState.TOOL_CREATION_NEEDED
+                self.output.result.function_requirements = (
+                    output_tool_identifier.result.function_requirements
+                )
+                return TrainingState.TOOL_CREATION
 
         return TrainingState.COMPLETED_FORWARD_PASS
 
-    def _handle_analysis_wrong_answer(self) -> TrainingState:
+    def _handle_wrong_answer(self) -> TrainingState:
         """Analyse why the system provided a wrong answer and could we do to mitigate it."""
-        assert self.output.result.error_category, (
-            "Logical flaw: error category is None."
-        )
         assert self.output.result.answer, "Logical flaw: answer is None."
-        assert self.context.qa_pair
-        output_error_analyst = self.error_analyst.forward(
+        assert self.context.qa_pair, "Logical flaw: no QA pair for analysis."
+
+        error_analyst_output = self.error_analyst.forward(
             chat_history=self.chat.to_string(),
             question=self.context.qa_pair.question,
             provided_answer=self.output.result.answer,
             correct_answer=self.context.qa_pair.answer,
         )
+        self.context.error_analyst_output = error_analyst_output
 
-        if output_error_analyst.status == "success":
+        if error_analyst_output.status == "success":
             self.output.result.error_category = (
-                output_error_analyst.result.error_category
+                error_analyst_output.result.error_category
             )
             if self.output.result.error_category == "faulty_tool":
                 self.output.result.assessment_details = (
-                    output_error_analyst.result.error_analysis
+                    error_analyst_output.result.error_analysis
                 )
                 self.output.result.function_name = (
-                    output_error_analyst.result.function_name
+                    error_analyst_output.result.function_name
                 )
-                return (
-                    TrainingState.COMPLETED_FORWARD_PASS
-                )  # TODO Update this state: handle the correction of faulty tools
+                return TrainingState.TOOL_CORRECTION
             elif self.output.result.error_category == "missing_tool":
                 self.output.result.need_new_function = True
                 self.output.result.function_name = (
-                    output_error_analyst.result.function_name
+                    error_analyst_output.result.function_name
                 )
                 self.output.result.function_requirements = (
-                    output_error_analyst.result.error_analysis
+                    error_analyst_output.result.error_analysis
                 )
-                return TrainingState.TOOL_CREATION_NEEDED
+                return TrainingState.TOOL_CREATION
 
             else:
                 self.output.status = "success"
                 self.output.result.error_analysis = (
-                    output_error_analyst.result.error_analysis
+                    error_analyst_output.result.error_analysis
                 )
                 return TrainingState.COMPLETED_FORWARD_PASS
         else:
-            self.output.error_msg = output_error_analyst.error_msg
+            self.output.error_msg = error_analyst_output.error_msg
             self.output.status = "error"
             return TrainingState.ERROR
 
-    def _handle_tool_creation_needed(self) -> TrainingState:
+    def _handle_tool_creation(self) -> TrainingState:
         """Create a new tool based on identified requirements."""
-        tool_identifier_output = self.context.tool_identifier_output
 
         self.output.result.need_new_function = True
-        self.output.result.function_name = tool_identifier_output.result.function_name
-        self.output.result.function_requirements = (
-            tool_identifier_output.result.function_requirements
-        )
 
-        assert (
-            self.output.result.function_name
-            and self.output.result.function_requirements
-            and self.context.qa_pair
-            and self.context.qa_pair.ifc_model_path
-        ), "Error in the handling of tool_creation."
+        assert self.output.result.function_name, "ERROR: function name is missing."
+        assert self.output.result.function_requirements, (
+            "Error: function requirements is missing."
+        )
+        assert self.context.qa_pair, "Error: missing qa_pair"
+
+        assert self.context.qa_pair.ifc_model_path, "Error: ifc_model_path is missing."
 
         # Try to generate a new tool
         output_tool_creator = self.tool_creator.forward(
@@ -310,6 +314,7 @@ class TrainingModule(dspy.Module):
         )
 
         if output_tool_creator.status == "success":
+            self.output.status = "success"
             assert output_tool_creator.result.function_implementation
             self.output.result.function_implementation = (
                 output_tool_creator.result.function_implementation
@@ -323,20 +328,64 @@ class TrainingModule(dspy.Module):
 
         return TrainingState.COMPLETED_FORWARD_PASS
 
+    def _handle_tool_correction(self) -> TrainingState:
+        """Correct the faulty tool according the the assessment."""
+        assert (
+            self.output.result.function_name
+            and self.output.result.assessment_details
+            and self.context.qa_pair
+            and self.context.qa_pair.ifc_model_path
+        ), (
+            "Logical error: Tool correction required, but assessment or function name missing."
+        )
+        faulty_function_implementation = get_function_code(
+            function_name=self.output.result.function_name
+        )
+        assert faulty_function_implementation, (
+            "Error: could not load the source code of the faulty tool."
+        )
+
+        self.context.tool_debugger_output = self.tool_debugger.forward(
+            function_name=self.output.result.function_name,
+            faulty_function_implementation=faulty_function_implementation,
+            initial_assessment=self.output.result.assessment_details,
+            path_ifc_model=self.context.qa_pair.ifc_model_path,
+        )
+
+        if self.context.tool_debugger_output.status == "error":
+            self.output.error_msg = self.context.tool_debugger_output.error_msg
+            return TrainingState.ERROR
+        else:
+            assert self.context.tool_debugger_output.result.function_implementation, (
+                "Logical flaw: ToolDebugger status is `success` but the function_implementation is empty."
+            )
+            corrected_tool_saved = save_new_tool(
+                function_name=self.output.result.function_name,
+                function_implementation=self.context.tool_debugger_output.result.function_implementation,
+            )
+            assert corrected_tool_saved, (
+                "CRITICAL ERROR: the corrected tool could not be saved"
+            )
+            self.output.result.function_implementation = (
+                self.context.tool_debugger_output.result.function_implementation
+            )
+            self.output.status = "success"
+            return TrainingState.COMPLETED_FORWARD_PASS
+
     def _process_state(self) -> TrainingState:
         """Process current state and return next state."""
-        if self.state == TrainingState.START_FORWARD_PASS:
+        if self.state == TrainingState.INITIALIZE_PROCESSING:
             qa_pair = self.context.qa_pair
             assert qa_pair
             return self._initialize_processing(qa_pair)
 
         elif self.state == TrainingState.ENGINE_SUCCESS:
-            return self._handle_engine_processing()
+            return self._handle_engine_success()
 
         elif self.state == TrainingState.ENGINE_FAILED:
             return self._handle_engine_failure()
 
-        elif self.state == TrainingState.START_ANSWER_VERIFICATION:
+        elif self.state == TrainingState.ANSWER_VERIFICATION:
             return self._handle_answer_verification()
 
         elif self.state == TrainingState.VERIFICATION_COMPLETED:
@@ -345,14 +394,17 @@ class TrainingModule(dspy.Module):
         elif self.state == TrainingState.NEW_TOOL_CREATED:
             return self._handle_new_function_ready()
 
-        elif self.state == TrainingState.START_ANALYSIS_CORRECT_ANSWER:
+        elif self.state == TrainingState.CORRECT_ANSWER:
             return self._handle_correct_answer()
 
-        elif self.state == TrainingState.START_ANALYSIS_WRONG_ANSWER:
-            return self._handle_analysis_wrong_answer()
+        elif self.state == TrainingState.WRONG_ANSWER:
+            return self._handle_wrong_answer()
 
-        elif self.state == TrainingState.TOOL_CREATION_NEEDED:
-            return self._handle_tool_creation_needed()
+        elif self.state == TrainingState.TOOL_CREATION:
+            return self._handle_tool_creation()
+
+        elif self.state == TrainingState.TOOL_CORRECTION:
+            return self._handle_tool_correction()
 
         else:
             return TrainingState.ERROR
@@ -418,7 +470,7 @@ class TrainingModule(dspy.Module):
     def forward(self, qa_pair: QA_Pair) -> ModuleOutput:
         """Process a QA pair using the state machine."""
         # Initialize state machine
-        self.state = TrainingState.START_FORWARD_PASS
+        self.state = TrainingState.INITIALIZE_PROCESSING
         self.context.qa_pair = qa_pair
 
         with mlflow.start_span(
@@ -459,7 +511,7 @@ def main(start: int = 0, finish: int = -1):
     output = None
     for qa_pair in train[start:finish]:
         # Log info
-        logger.info(f"Try to answer new question: {qa_pair.question}\n\n")
+        logger.info(f"\n{'#' * 20}\nQUESTION: {qa_pair.question}\n{'#' * 20}\n")
         output = training_module.forward(qa_pair=qa_pair)
         print(output)
 
@@ -467,4 +519,4 @@ def main(start: int = 0, finish: int = -1):
 
 
 if __name__ == "__main__":
-    output = main(start=3, finish=4)
+    output = main(start=3, finish=9)
