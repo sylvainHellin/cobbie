@@ -23,7 +23,6 @@ def final_answer(outputs: dict):
     Use this function when you are confident you have collected all the necessary information to answer the user's request.
     You should pack all the required output fields into a dictionary and pass it argument to the function.
     """
-    print(outputs.items())
     return outputs
 
 
