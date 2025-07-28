@@ -3,6 +3,7 @@ from .components.tool_creator import ToolCreator
 from .components.extract_function_name import NameExtractor
 from .components.tool_identifier import ToolIdentifier
 from .components.error_analyst import ErrorAnalyst
+from .components.tool_debugger import ToolDebugger
 
 __all__ = [
     "IfcAnswerEngine",
@@ -10,4 +11,5 @@ __all__ = [
     "NameExtractor",
     "ToolIdentifier",
     "ErrorAnalyst",
+    "ToolDebugger",
 ]

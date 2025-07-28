@@ -6,7 +6,13 @@ import dspy
 import mlflow
 
 from src.config import AGENT_CONFIGS
-from src.engine import IfcAnswerEngine, ToolIdentifier, ToolCreator, ErrorAnalyst
+from src.engine import (
+    IfcAnswerEngine,
+    ToolIdentifier,
+    ToolCreator,
+    ErrorAnalyst,
+    ToolDebugger,
+)
 from src.engine.schemas import ModuleOutput, Chat, TrainingContext
 from src.engine.util import get_logger, save_new_tool
 from src.experiment.evaluation.answer_verifier import AnswerVerifier
@@ -51,6 +57,7 @@ class TrainingModule(dspy.Module):
         self.tool_identifier = ToolIdentifier()
         self.tool_creator = ToolCreator()
         self.error_analyst = ErrorAnalyst()
+        self.tool_debugger = ToolDebugger()
 
         # Set-up mlflow
         mlflow.dspy.autolog()  # type: ignore

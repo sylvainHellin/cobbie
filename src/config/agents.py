@@ -89,6 +89,21 @@ class ErrorAnalystConfig(BaseAgentConfig, CodeActConfig):
     pass  # Inherits all defaults from parent classes
 
 
+class ToolDebuggerConfig(BaseAgentConfig):
+    """Configuration for ToolDebugger multi-agent system."""
+
+    max_iter: int = Field(
+        default=3, description="Maximum iterations for ToolDebugger main loop"
+    )
+    add_code_prefix: bool = Field(
+        default=True, description="Whether to add code prefix"
+    )
+
+    # Sub-agent configurations
+    tool_assessor: ToolAssessorConfig = Field(default_factory=ToolAssessorConfig)
+    tool_corrector: ToolCorrectorConfig = Field(default_factory=ToolCorrectorConfig)
+
+
 class ToolCreatorConfig(BaseAgentConfig):
     """Configuration for ToolCreator multi-agent system."""
 
@@ -147,6 +162,7 @@ class AgentConfigs(BaseModel):
         default_factory=IfcAnswerEngineConfig
     )
     tool_creator: ToolCreatorConfig = Field(default_factory=ToolCreatorConfig)
+    tool_debugger: ToolDebuggerConfig = Field(default_factory=ToolDebuggerConfig)
     tool_programmer: ToolProgrammerConfig = Field(default_factory=ToolProgrammerConfig)
     tool_assessor: ToolAssessorConfig = Field(default_factory=ToolAssessorConfig)
     tool_corrector: ToolCorrectorConfig = Field(default_factory=ToolCorrectorConfig)
@@ -177,6 +193,7 @@ def get_config(agent_name: str) -> BaseAgentConfig:
     config_map = {
         "ifc_answer_engine": AGENT_CONFIGS.ifc_answer_engine,
         "tool_creator": AGENT_CONFIGS.tool_creator,
+        "tool_debugger": AGENT_CONFIGS.tool_debugger,
         "tool_programmer": AGENT_CONFIGS.tool_programmer,
         "tool_assessor": AGENT_CONFIGS.tool_assessor,
         "tool_corrector": AGENT_CONFIGS.tool_corrector,
