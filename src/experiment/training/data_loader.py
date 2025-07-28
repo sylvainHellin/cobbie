@@ -1,5 +1,5 @@
 from src.experiment.db import connection
-from src.engine.schemas.datapoint import QA_Pair
+from src.engine.schemas import QA_Pair
 import pandas as pd
 from typing import List
 
