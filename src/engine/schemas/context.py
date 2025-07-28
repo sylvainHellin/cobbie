@@ -18,6 +18,9 @@ class TrainingContext(BaseModel):
     engine_output: ModuleOutput = ModuleOutput(status="error")
     verifier_output: ModuleOutput = ModuleOutput(status="error")
     tool_identifier_output: ModuleOutput = ModuleOutput(status="error")
+    error_analyst_output: ModuleOutput = ModuleOutput(status="error")
+    tool_identifier_output: ModuleOutput = ModuleOutput(status="error")
+    tool_debugger_output: ModuleOutput = ModuleOutput(status="error")
 
     class Config:
         # Allow OpenTelemetry span objects which aren't Pydantic models
@@ -30,3 +33,6 @@ class TrainingContext(BaseModel):
         self.engine_output = ModuleOutput(status="error")
         self.verifier_output = ModuleOutput(status="error")
         self.tool_identifier_output = ModuleOutput(status="error")
+        self.error_analyst_output = ModuleOutput(status="error")
+        self.tool_identifier_output = ModuleOutput(status="error")
+        self.tool_debugger_output = ModuleOutput(status="error")
