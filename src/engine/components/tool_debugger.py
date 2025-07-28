@@ -124,7 +124,7 @@ class ToolDebugger(dspy.Module):
 
         # Add argument details if available
         if metadata.args:
-            requirements.append(f"\nArguments:")
+            requirements.append("\nArguments:")
             for i, arg in enumerate(metadata.args):
                 default_info = ""
                 if i >= len(metadata.args) - len(metadata.defaults):
@@ -137,6 +137,73 @@ class ToolDebugger(dspy.Module):
             requirements.append(f"\nReturn type: {metadata.return_type}")
 
         return "\n".join(requirements)
+
+    def _build_comprehensive_assessment(
+        self, original_assessment: str, all_issues_found: list, iteration: int
+    ) -> str:
+        """
+        Build a comprehensive assessment that tracks the original issue and any new issues found.
+
+        Args:
+            original_assessment: The initial assessment describing the original bug
+            all_issues_found: List of all assessment details found across iterations
+            iteration: Current iteration number
+
+        Returns:
+            Comprehensive assessment string that preserves original context
+        """
+        assessment_parts = []
+
+        # Always start with the original issue context
+        assessment_parts.append(f"ORIGINAL ISSUE TO FIX:\n{original_assessment}")
+
+        # Add any additional issues discovered during debugging
+        if len(all_issues_found) > 1:
+            assessment_parts.append("\nADDITIONAL ISSUES DISCOVERED DURING DEBUGGING:")
+            for i, issue in enumerate(all_issues_found[1:], 1):
+                assessment_parts.append(f"{i}. {issue}")
+
+        # Add iteration context
+        assessment_parts.append(
+            f"\nITERATION {iteration}: Ensure BOTH the original issue and any new issues are addressed."
+        )
+        assessment_parts.append(
+            "Priority: The original issue MUST be fixed. Additional issues should also be addressed if possible."
+        )
+
+        return "\n".join(assessment_parts)
+
+    def _build_final_assessment_summary(
+        self, original_assessment: str, all_issues_found: list, max_iterations: int
+    ) -> str:
+        """
+        Build a final assessment summary for failed debugging attempts.
+
+        Args:
+            original_assessment: The initial assessment describing the original bug
+            all_issues_found: List of all assessment details found across iterations
+            max_iterations: Maximum iterations that were attempted
+
+        Returns:
+            Final assessment summary preserving all discovered issues
+        """
+        summary_parts = []
+
+        summary_parts.append(f"DEBUGGING FAILED AFTER {max_iterations} ITERATIONS")
+        summary_parts.append(
+            f"\nORIGINAL ISSUE (still needs to be fixed):\n{original_assessment}"
+        )
+
+        if len(all_issues_found) > 1:
+            summary_parts.append("\nADDITIONAL ISSUES DISCOVERED:")
+            for i, issue in enumerate(all_issues_found[1:], 1):
+                summary_parts.append(f"{i}. {issue}")
+
+        summary_parts.append(
+            "\nNEXT STEPS: Ensure the original issue is addressed first, then tackle additional issues."
+        )
+
+        return "\n".join(summary_parts)
 
     def forward(
         self,
@@ -215,7 +282,9 @@ class ToolDebugger(dspy.Module):
 
             # Start with the faulty implementation
             current_function_implementation = faulty_function_implementation
+            original_assessment = initial_assessment
             current_assessment = initial_assessment
+            all_issues_found = [initial_assessment]  # Track all issues discovered
 
             # Reset iteration counter before starting the correction loop
             self.iter = 0
@@ -332,10 +401,17 @@ class ToolDebugger(dspy.Module):
                         self.logger.debug(
                             "Code still needs improvement; will try another correction iteration."
                         )
-                        # Update the current assessment for the next iteration
-                        current_assessment = (
+                        # Track new issues while preserving original assessment context
+                        new_issues = (
                             output_tool_assessor.result.assessment_details
                             or "No assessment available."
+                        )
+                        if new_issues not in all_issues_found:
+                            all_issues_found.append(new_issues)
+
+                        # Build comprehensive assessment that includes original issue and any new findings
+                        current_assessment = self._build_comprehensive_assessment(
+                            original_assessment, all_issues_found, self.iter
                         )
                     else:
                         self.logger.debug(
@@ -358,7 +434,11 @@ class ToolDebugger(dspy.Module):
                 )
                 output.result.function_implementation = current_function_implementation
                 output.result.assessment_status = "needs_improvement"
-                output.result.assessment_details = current_assessment
+                # Provide comprehensive assessment including original issue
+                final_assessment = self._build_final_assessment_summary(
+                    original_assessment, all_issues_found, self.max_iter
+                )
+                output.result.assessment_details = final_assessment
 
             # Set final span outputs and attributes
             span.set_inputs(
@@ -438,15 +518,15 @@ if __name__ == "__main__":
     faulty_function_implementation = '''def get_room_count(ifc_file_path: str) -> int:
     """
     Count the total number of IfcSpace entities in an IFC model that represent rooms.
-    
+
     Args:
         ifc_file_path: Path to the IFC file
-        
+
     Returns:
         Number of spaces/rooms found in the model
     """
     import ifcopenshell
-    
+
     model = ifcopenshell.open(ifc_file_path)
     # Bug: using wrong entity type - should be IfcSpace, not IfcRoom
     rooms = model.by_type("IfcRoom")
