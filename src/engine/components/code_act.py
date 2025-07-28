@@ -114,7 +114,11 @@ class CodeAct(Module):
         output_descriptions = []
         for name, field in self.output_fields.items():
             type_repr = field.annotation
-            output_descriptions.append(f"- {name}: {type_repr}")
+            # Access description from json_schema_extra
+            description = field.json_schema_extra.get(
+                "desc", "No description available."
+            )
+            output_descriptions.append(f"- {name}: {type_repr} - {description}")
         return "\n".join(output_descriptions)
 
     def _build_code_act_instructions(self) -> str:
