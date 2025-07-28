@@ -33,12 +33,14 @@ def get_created_tools(tools: List[Callable] = []) -> Dict[str, Callable]:
             module = importlib.import_module(f"src.engine.tools.created.{module_name}")
             # Get all objects from the module
             for name, fn in inspect.getmembers(module):
-                if isinstance(fn, Callable):
-                    # Add to global namespace and tools list
+                # Only include functions that are defined in this module (not imported)
+                # and exclude built-in types, classes, etc.
+                if (
+                    inspect.isfunction(fn)
+                    and fn.__module__ == module.__name__
+                    and not name.startswith("_")
+                ):
                     globals()[name] = fn
-                    fn_dict[name] = fn
-                elif inspect.isfunction(fn):
-                    globals()[fn.__name__] = fn
                     fn_dict[name] = fn
         except ImportError as e:
             print(f"Warning: Could not import module {module_name}: {e}")
@@ -50,4 +52,5 @@ def get_created_tools(tools: List[Callable] = []) -> Dict[str, Callable]:
 if __name__ == "__main__":
     tools = get_created_tools()
     for name, fn in tools.items():
-        print(f"function's name: {name}\nfunction's docstring: {fn.__doc__}\n---\n")
+        # print(f"function's name: {name}\nfunction's docstring: {fn.__doc__}\n---\n")
+        print(f"function name: {name}")
