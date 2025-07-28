@@ -18,12 +18,12 @@ class TrainingState(Enum):
     """States for the training module state machine."""
 
     START_FORWARD_PASS = "started"
-    PROCESS_QUESTION = "engine_success"
+    ENGINE_SUCCESS = "engine_success"
     ENGINE_FAILED = "engine_failed"
-    ANSWER_VERIFICATION = "answer_verification"
+    START_ANSWER_VERIFICATION = "answer_verification"
     VERIFICATION_COMPLETED = "verification_completed"
-    ANALYSIS_CORRECT_ANSWER = "tool_identification_needed"
-    ANALYSIS_WRONG_ANSWER = "error_analyst"
+    START_ANALYSIS_CORRECT_ANSWER = "tool_identification_needed"
+    START_ANALYSIS_WRONG_ANSWER = "error_analyst"
     TOOL_CREATION_NEEDED = "tool_creation_needed"
     NEW_TOOL_CREATED = "new_function_ready"
     COMPLETED_FORWARD_PASS = "completed"
@@ -78,7 +78,7 @@ class TrainingModule(dspy.Module):
         dspy.configure(lm=self.lm)
         self.lm.history.clear()
 
-        return TrainingState.PROCESS_QUESTION
+        return TrainingState.ENGINE_SUCCESS
 
     def _handle_engine_processing(self) -> TrainingState:
         """Run the engine and determine next state."""
@@ -104,7 +104,7 @@ class TrainingModule(dspy.Module):
             if output_engine.result.need_new_function:
                 return TrainingState.NEW_TOOL_CREATED
             else:
-                return TrainingState.ANSWER_VERIFICATION
+                return TrainingState.START_ANSWER_VERIFICATION
         else:
             return TrainingState.ENGINE_FAILED
 
@@ -181,9 +181,9 @@ class TrainingModule(dspy.Module):
             if engine_output.result.need_new_function:
                 return TrainingState.NEW_TOOL_CREATED
             else:
-                return TrainingState.ANALYSIS_CORRECT_ANSWER
+                return TrainingState.START_ANALYSIS_CORRECT_ANSWER
         else:
-            return TrainingState.ANALYSIS_WRONG_ANSWER
+            return TrainingState.START_ANALYSIS_WRONG_ANSWER
 
     def _handle_new_function_ready(self) -> TrainingState:
         """Handle case where engine created a new function."""
@@ -323,13 +323,13 @@ class TrainingModule(dspy.Module):
             assert qa_pair
             return self._initialize_processing(qa_pair)
 
-        elif self.state == TrainingState.PROCESS_QUESTION:
+        elif self.state == TrainingState.ENGINE_SUCCESS:
             return self._handle_engine_processing()
 
         elif self.state == TrainingState.ENGINE_FAILED:
             return self._handle_engine_failure()
 
-        elif self.state == TrainingState.ANSWER_VERIFICATION:
+        elif self.state == TrainingState.START_ANSWER_VERIFICATION:
             return self._handle_answer_verification()
 
         elif self.state == TrainingState.VERIFICATION_COMPLETED:
@@ -338,10 +338,10 @@ class TrainingModule(dspy.Module):
         elif self.state == TrainingState.NEW_TOOL_CREATED:
             return self._handle_new_function_ready()
 
-        elif self.state == TrainingState.ANALYSIS_CORRECT_ANSWER:
+        elif self.state == TrainingState.START_ANALYSIS_CORRECT_ANSWER:
             return self._handle_correct_answer()
 
-        elif self.state == TrainingState.ANALYSIS_WRONG_ANSWER:
+        elif self.state == TrainingState.START_ANALYSIS_WRONG_ANSWER:
             return self._handle_analysis_wrong_answer()
 
         elif self.state == TrainingState.TOOL_CREATION_NEEDED:
