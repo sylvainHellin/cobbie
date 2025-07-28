@@ -7,7 +7,7 @@ import mlflow
 
 from src.config import AGENT_CONFIGS
 from src.engine import IfcAnswerEngine, ToolIdentifier, ToolCreator
-from src.engine.schemas import ModuleOutput, Chat
+from src.engine.schemas import ModuleOutput, Chat, TrainingContext
 from src.engine.util import get_logger, save_new_tool
 from src.experiment.evaluation.answer_verifier import AnswerVerifier
 
@@ -58,13 +58,13 @@ class TrainingModule(dspy.Module):
 
         # State machine attributes
         self.state = TrainingState.STARTED
-        self.context = {}  # Context to pass data between states
+        self.context = TrainingContext()  # Typed context to pass data between states
 
     def _initialize_processing(self, qa_pair: QA_Pair) -> TrainingState:
         """Initialize processing state and setup."""
         self.context.clear()
-        self.context["qa_pair"] = qa_pair
-        self.context["span"] = None
+        self.context.qa_pair = qa_pair
+        self.context.span = None
 
         # Initialize default output
         self.output = ModuleOutput(
@@ -80,14 +80,15 @@ class TrainingModule(dspy.Module):
 
     def _handle_engine_processing(self) -> TrainingState:
         """Run the engine and determine next state."""
-        qa_pair = self.context["qa_pair"]
+        assert self.context.qa_pair
+        qa_pair = self.context.qa_pair
 
         # Run the engine
         output_engine = self.engine.forward(
             question=qa_pair.question, path_ifc_model=qa_pair.ifc_model_path
         )
         self.chat.import_chat_messages(self.lm.history[-1].get("messages"))
-        self.context["engine_output"] = output_engine
+        self.context.engine_output = output_engine
 
         if output_engine.status == "success":
             # Validate engine output
@@ -107,8 +108,9 @@ class TrainingModule(dspy.Module):
 
     def _handle_engine_failure(self) -> TrainingState:
         """Handle engine failure."""
-        qa_pair = self.context["qa_pair"]
-        engine_output = self.context["engine_output"]
+        assert self.context.qa_pair, "QA pair missing in context."
+        qa_pair = self.context.qa_pair
+        engine_output = self.context.engine_output
 
         self.output.error_msg = (
             f"There was a problem with question ID: {qa_pair.id}.\n"
@@ -119,20 +121,24 @@ class TrainingModule(dspy.Module):
 
     def _handle_verification_needed(self) -> TrainingState:
         """Handle answer verification."""
-        qa_pair = self.context["qa_pair"]
-        engine_output = self.context["engine_output"]
+        qa_pair = self.context.qa_pair
+        assert qa_pair, "Error: QA pair is not defined."
+        engine_output = self.context.engine_output
 
         self.logger.info("IfcAnswerEngine could answer the question.")
         self.logger.debug(f"Answer: \n{engine_output.result.answer}")
         self.logger.debug(f"Ground Truth: \n{qa_pair.answer}")
 
         # Verify if answer is correct
+        assert engine_output.result.answer, (
+            "Error: Answer in Engine Output is None. disn"
+        )
         output_answer_verifier = self.answer_verifier.forward(
             question=qa_pair.question,
             first_answer=qa_pair.answer,
             second_answer=engine_output.result.answer,
         )
-        self.context["verifier_output"] = output_answer_verifier
+        self.context.verifier_output = output_answer_verifier
 
         if output_answer_verifier.status == "error":
             self.output.error_msg = (
@@ -146,8 +152,8 @@ class TrainingModule(dspy.Module):
 
     def _handle_verification_completed(self) -> TrainingState:
         """Process verification results."""
-        engine_output = self.context["engine_output"]
-        verifier_output = self.context["verifier_output"]
+        engine_output = self.context.engine_output
+        verifier_output = self.context.verifier_output
 
         assert verifier_output.result.similarity_score is not None, (
             "Something is off: the status of AnswerVerifier is 'success', but the `similarity_score` field is None."
@@ -179,7 +185,7 @@ class TrainingModule(dspy.Module):
 
     def _handle_new_function_ready(self) -> TrainingState:
         """Handle case where engine created a new function."""
-        engine_output = self.context["engine_output"]
+        engine_output = self.context.engine_output
 
         self.output.result.need_new_function = True
         self.output.result.function_name = engine_output.result.function_name
@@ -207,7 +213,7 @@ class TrainingModule(dspy.Module):
         output_tool_identifier = self.tool_identifier.forward(
             chat_history=self.chat.to_string()
         )
-        self.context["tool_identifier_output"] = output_tool_identifier
+        self.context.tool_identifier_output = output_tool_identifier
 
         if output_tool_identifier.status == "success":
             assert output_tool_identifier.result.need_new_function is not None
@@ -223,8 +229,7 @@ class TrainingModule(dspy.Module):
 
     def _handle_tool_creation_needed(self) -> TrainingState:
         """Create a new tool based on identified requirements."""
-        qa_pair = self.context["qa_pair"]
-        tool_identifier_output = self.context["tool_identifier_output"]
+        tool_identifier_output = self.context.tool_identifier_output
 
         self.output.result.need_new_function = True
         self.output.result.function_name = tool_identifier_output.result.function_name
@@ -235,13 +240,15 @@ class TrainingModule(dspy.Module):
         assert (
             self.output.result.function_name
             and self.output.result.function_requirements
+            and self.context.qa_pair
+            and self.context.qa_pair.ifc_model_path
         ), "Error in the handling of tool_creation."
 
         # Try to generate a new tool
         output_tool_creator = self.tool_creator.forward(
             function_name=self.output.result.function_name,
             function_requirements=self.output.result.function_requirements,
-            path_ifc_model=qa_pair.ifc_model_path,
+            path_ifc_model=self.context.qa_pair.ifc_model_path,
         )
 
         if output_tool_creator.status == "success":
@@ -261,7 +268,8 @@ class TrainingModule(dspy.Module):
     def _process_state(self) -> TrainingState:
         """Process current state and return next state."""
         if self.state == TrainingState.STARTED:
-            qa_pair = self.context["qa_pair"]
+            qa_pair = self.context.qa_pair
+            assert qa_pair
             return self._initialize_processing(qa_pair)
 
         elif self.state == TrainingState.ENGINE_SUCCESS:
@@ -342,7 +350,7 @@ class TrainingModule(dspy.Module):
         """Process a QA pair using the state machine."""
         # Initialize state machine
         self.state = TrainingState.STARTED
-        self.context["qa_pair"] = qa_pair
+        self.context.qa_pair = qa_pair
 
         with mlflow.start_span(
             name=f"question_id_{qa_pair.id}",
@@ -351,7 +359,7 @@ class TrainingModule(dspy.Module):
             span.set_attribute("question_id", qa_pair.id)
             span.set_attribute("question", qa_pair.question)
             span.set_attribute("ground_truth", qa_pair.answer)
-            self.context["span"] = span
+            self.context.span = span
 
             # State machine loop
             while self.state not in [TrainingState.COMPLETED, TrainingState.ERROR]:
