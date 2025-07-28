@@ -48,8 +48,8 @@ class ErrorAnalystSignature(dspy.Signature):
     tool_name: Optional[str] = dspy.OutputField(
         desc="If the error category is either 'faulty_tool' or 'missing_tool', provide the name of the tool that is to be created or corrected."
     )
-    mitigation_strategy: str = dspy.OutputField(
-        desc="Detailed mitigation strategy based on error category: For 'faulty_tool' - describe the incorrect behavior in the Python function that needs correction; For 'missing_tool' - specify the function signature, parameters, and BIM data access requirements for creating a new tool; For 'other' - describe issues like CodeAct iteration limits, missing context about IFC structure, misleading prompts, or reasoning errors that could be addressed"
+    error_analysis: str = dspy.OutputField(
+        desc="Detailed error analysis based on error category: For 'faulty_tool' - describe the incorrect behavior in the Python function that needs correction; For 'missing_tool' - specify the function signature, parameters, and BIM data access requirements for creating a new tool; For 'other' - describe issues like CodeAct iteration limits, missing context about IFC structure, misleading prompts, or reasoning errors that could be addressed"
     )
 
 
@@ -99,7 +99,7 @@ class ErrorAnalyst(dspy.Module):
         Returns:
             ModuleOutput containing:
             - result.error_category: "faulty_tool", "missing_tool", or "other"
-            - result.mitigation_strategy: Detailed strategy for addressing the error
+            - result.error_analysis: Detailed analysis of the error
             - status: "success" or "error"
             - error_msg: Error description (if status is "error")
         """
@@ -128,21 +128,19 @@ class ErrorAnalyst(dspy.Module):
 
                 if (
                     hasattr(prediction, "error_category")
-                    and hasattr(prediction, "mitigation_strategy")
+                    and hasattr(prediction, "error_analysis")
                     and prediction.error_category
-                    and prediction.mitigation_strategy
+                    and prediction.error_analysis
                 ):
                     self.logger.info("Error analysis completed successfully")
                     self.logger.info(f"Error category: {prediction.error_category}")
-                    self.logger.debug(
-                        f"Mitigation strategy: {prediction.mitigation_strategy}"
-                    )
+                    self.logger.debug(f"Error analysis: {prediction.error_analysis}")
 
                     # Set span outputs
                     span.set_outputs(
                         {
                             "error_category": prediction.error_category,
-                            "mitigation_strategy": prediction.mitigation_strategy,
+                            "error_analysis": prediction.error_analysis,
                             "status": "success",
                         }
                     )
@@ -155,39 +153,15 @@ class ErrorAnalyst(dspy.Module):
                             "error_category": prediction.error_category,
                         }
                     )
-
-                    if (
-                        prediction.error_category == "faulty_tool"
-                        and hasattr(prediction, "tool_name")
-                        and prediction.tool_name
-                    ):
-                        return ModuleOutput(
-                            result=Result(
-                                error_category=prediction.error_category,
-                                assessment_details=prediction.mitigation_strategy,
-                                function_name=prediction.tool_name,
-                            ),
-                            status="success",
-                        )
-                    elif prediction.error_category == "missing_tool" and hasattr(
-                        prediction, "tool_name" and prediction.tool_name
-                    ):
-                        return ModuleOutput(
-                            result=Result(
-                                error_category=prediction.error_category,
-                                function_requirements=prediction.mitigation_strategy,
-                                function_name=prediction.tool_name,
-                            ),
-                            status="success",
-                        )
-
-                    else:
-                        return ModuleOutput(
-                            status="success",
-                            result=Result(
-                                error_category=prediction.error_category,
-                            ),
-                        )
+                    function_name = getattr(prediction, "tool_name", None)
+                    return ModuleOutput(
+                        status="success",
+                        result=Result(
+                            error_category=prediction.error_category,
+                            error_analysis=prediction.error_analysis,
+                            function_name=function_name,
+                        ),
+                    )
                 else:
                     error_msg = "Error analysis failed: Missing required outputs"
                     self.logger.error(error_msg)

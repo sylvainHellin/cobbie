@@ -16,3 +16,4 @@ class Result(BaseModel):
     function_implementation: Optional[str] = None
     new_function: Optional[Callable] = None
     error_category: Optional[Literal["faulty_tool", "missing_tool", "other"]] = None
+    error_analysis: Optional[str] = None

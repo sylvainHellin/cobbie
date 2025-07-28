@@ -6,7 +6,7 @@ import dspy
 import mlflow
 
 from src.config import AGENT_CONFIGS
-from src.engine import IfcAnswerEngine, ToolIdentifier, ToolCreator
+from src.engine import IfcAnswerEngine, ToolIdentifier, ToolCreator, ErrorAnalyst
 from src.engine.schemas import ModuleOutput, Chat, TrainingContext
 from src.engine.util import get_logger, save_new_tool
 from src.experiment.evaluation.answer_verifier import AnswerVerifier
@@ -17,15 +17,16 @@ from .data_loader import QA_Pair, load_train_dev_split
 class TrainingState(Enum):
     """States for the training module state machine."""
 
-    STARTED = "started"
-    ENGINE_SUCCESS = "engine_success"
+    START_FORWARD_PASS = "started"
+    PROCESS_QUESTION = "engine_success"
     ENGINE_FAILED = "engine_failed"
     ANSWER_VERIFICATION = "answer_verification"
     VERIFICATION_COMPLETED = "verification_completed"
-    TOOL_IDENTIFICATION_NEEDED = "tool_identification_needed"
+    ANALYSIS_CORRECT_ANSWER = "tool_identification_needed"
+    ANALYSIS_WRONG_ANSWER = "error_analyst"
     TOOL_CREATION_NEEDED = "tool_creation_needed"
-    NEW_FUNCTION_READY = "new_function_ready"
-    COMPLETED = "completed"
+    NEW_TOOL_CREATED = "new_function_ready"
+    COMPLETED_FORWARD_PASS = "completed"
     ERROR = "error"
 
 
@@ -49,6 +50,7 @@ class TrainingModule(dspy.Module):
         self.engine = IfcAnswerEngine()
         self.tool_identifier = ToolIdentifier()
         self.tool_creator = ToolCreator()
+        self.error_analyst = ErrorAnalyst()
 
         # Set-up mlflow
         mlflow.dspy.autolog()  # type: ignore
@@ -57,7 +59,7 @@ class TrainingModule(dspy.Module):
         mlflow.start_run(run_name=datetime.now().strftime("%Y-%m-%d-%H-%M-%S"))
 
         # State machine attributes
-        self.state = TrainingState.STARTED
+        self.state = TrainingState.START_FORWARD_PASS
         self.context = TrainingContext()  # Typed context to pass data between states
 
     def _initialize_processing(self, qa_pair: QA_Pair) -> TrainingState:
@@ -76,7 +78,7 @@ class TrainingModule(dspy.Module):
         dspy.configure(lm=self.lm)
         self.lm.history.clear()
 
-        return TrainingState.ENGINE_SUCCESS
+        return TrainingState.PROCESS_QUESTION
 
     def _handle_engine_processing(self) -> TrainingState:
         """Run the engine and determine next state."""
@@ -100,7 +102,7 @@ class TrainingModule(dspy.Module):
             )
 
             if output_engine.result.need_new_function:
-                return TrainingState.NEW_FUNCTION_READY
+                return TrainingState.NEW_TOOL_CREATED
             else:
                 return TrainingState.ANSWER_VERIFICATION
         else:
@@ -119,7 +121,7 @@ class TrainingModule(dspy.Module):
         self.logger.error(self.output.error_msg)
         return TrainingState.ERROR
 
-    def _handle_verification_needed(self) -> TrainingState:
+    def _handle_answer_verification(self) -> TrainingState:
         """Handle answer verification."""
         qa_pair = self.context.qa_pair
         assert qa_pair, "Error: QA pair is not defined."
@@ -150,7 +152,7 @@ class TrainingModule(dspy.Module):
         else:
             return TrainingState.VERIFICATION_COMPLETED
 
-    def _handle_verification_completed(self) -> TrainingState:
+    def _handle_answer_verification_completed(self) -> TrainingState:
         """Process verification results."""
         engine_output = self.context.engine_output
         verifier_output = self.context.verifier_output
@@ -177,11 +179,11 @@ class TrainingModule(dspy.Module):
         if self.output.result.correct_answer:
             # Check if the engine already created a new function
             if engine_output.result.need_new_function:
-                return TrainingState.NEW_FUNCTION_READY
+                return TrainingState.NEW_TOOL_CREATED
             else:
-                return TrainingState.TOOL_IDENTIFICATION_NEEDED
+                return TrainingState.ANALYSIS_CORRECT_ANSWER
         else:
-            return TrainingState.COMPLETED
+            return TrainingState.ANALYSIS_WRONG_ANSWER
 
     def _handle_new_function_ready(self) -> TrainingState:
         """Handle case where engine created a new function."""
@@ -206,9 +208,9 @@ class TrainingModule(dspy.Module):
         )
         assert new_tool_saved, "A new tool was created but could not be saved."
 
-        return TrainingState.COMPLETED
+        return TrainingState.COMPLETED_FORWARD_PASS
 
-    def _handle_tool_identification_needed(self) -> TrainingState:
+    def _handle_correct_answer(self) -> TrainingState:
         """Try to identify useful new tools."""
         output_tool_identifier = self.tool_identifier.forward(
             chat_history=self.chat.to_string()
@@ -225,7 +227,53 @@ class TrainingModule(dspy.Module):
                 )
                 return TrainingState.TOOL_CREATION_NEEDED
 
-        return TrainingState.COMPLETED
+        return TrainingState.COMPLETED_FORWARD_PASS
+
+    def _handle_analysis_wrong_answer(self) -> TrainingState:
+        """Analyse why the system provided a wrong answer and could we do to mitigate it."""
+        assert self.output.result.error_category, (
+            "Logical flaw: error category is None."
+        )
+        assert self.output.result.answer, "Logical flaw: answer is None."
+        assert self.context.qa_pair
+        output_error_analyst = self.error_analyst.forward(
+            chat_history=self.chat.to_string(),
+            question=self.context.qa_pair.question,
+            provided_answer=self.output.result.answer,
+            correct_answer=self.context.qa_pair.answer,
+        )
+
+        if output_error_analyst.status == "success":
+            self.output.result.error_category = (
+                output_error_analyst.result.error_category
+            )
+            if self.output.result.error_category == "faulty_tool":
+                self.output.result.assessment_details = (
+                    output_error_analyst.result.error_analysis
+                )
+                self.output.result.function_name = (
+                    output_error_analyst.result.function_name
+                )
+                pass  # TODO handle correction of faulty tool
+            elif self.output.result.error_category == "missing_tool":
+                self.output.result.need_new_function = True
+                self.output.result.function_name = (
+                    output_error_analyst.result.function_name
+                )
+                self.output.result.function_requirements = (
+                    output_error_analyst.result.error_analysis
+                )
+
+            else:
+                self.output.status = "success"
+                self.output.result.error_analysis = (
+                    output_error_analyst.result.error_analysis
+                )
+                return TrainingState.COMPLETED_FORWARD_PASS
+        else:
+            self.output.error_msg = output_error_analyst.error_msg
+            self.output.status = "error"
+            return TrainingState.ERROR
 
     def _handle_tool_creation_needed(self) -> TrainingState:
         """Create a new tool based on identified requirements."""
@@ -263,32 +311,35 @@ class TrainingModule(dspy.Module):
             )
             assert new_tool_saved, "A new tool was created but could not be saved."
 
-        return TrainingState.COMPLETED
+        return TrainingState.COMPLETED_FORWARD_PASS
 
     def _process_state(self) -> TrainingState:
         """Process current state and return next state."""
-        if self.state == TrainingState.STARTED:
+        if self.state == TrainingState.START_FORWARD_PASS:
             qa_pair = self.context.qa_pair
             assert qa_pair
             return self._initialize_processing(qa_pair)
 
-        elif self.state == TrainingState.ENGINE_SUCCESS:
+        elif self.state == TrainingState.PROCESS_QUESTION:
             return self._handle_engine_processing()
 
         elif self.state == TrainingState.ENGINE_FAILED:
             return self._handle_engine_failure()
 
         elif self.state == TrainingState.ANSWER_VERIFICATION:
-            return self._handle_verification_needed()
+            return self._handle_answer_verification()
 
         elif self.state == TrainingState.VERIFICATION_COMPLETED:
-            return self._handle_verification_completed()
+            return self._handle_answer_verification_completed()
 
-        elif self.state == TrainingState.NEW_FUNCTION_READY:
+        elif self.state == TrainingState.NEW_TOOL_CREATED:
             return self._handle_new_function_ready()
 
-        elif self.state == TrainingState.TOOL_IDENTIFICATION_NEEDED:
-            return self._handle_tool_identification_needed()
+        elif self.state == TrainingState.ANALYSIS_CORRECT_ANSWER:
+            return self._handle_correct_answer()
+
+        elif self.state == TrainingState.ANALYSIS_WRONG_ANSWER:
+            return self._handle_analysis_wrong_answer()
 
         elif self.state == TrainingState.TOOL_CREATION_NEEDED:
             return self._handle_tool_creation_needed()
@@ -329,6 +380,14 @@ class TrainingModule(dspy.Module):
                 "chat": self.chat.model_dump_json(indent=2) or "",
             }
         )
+        if not self.output.result.correct_answer:
+            span.set_outputs(
+                {
+                    "error_category": self.output.result.error_category,
+                    "error_analysis": self.output.result.error_analysis,
+                }
+            )
+
         span.set_attributes(self.output.result.model_dump())
         span.set_attribute("input_tokens", total_input_tokens)
         span.set_attribute("output_tokens", total_output_tokens)
@@ -349,7 +408,7 @@ class TrainingModule(dspy.Module):
     def forward(self, qa_pair: QA_Pair) -> ModuleOutput:
         """Process a QA pair using the state machine."""
         # Initialize state machine
-        self.state = TrainingState.STARTED
+        self.state = TrainingState.START_FORWARD_PASS
         self.context.qa_pair = qa_pair
 
         with mlflow.start_span(
@@ -362,7 +421,10 @@ class TrainingModule(dspy.Module):
             self.context.span = span
 
             # State machine loop
-            while self.state not in [TrainingState.COMPLETED, TrainingState.ERROR]:
+            while self.state not in [
+                TrainingState.COMPLETED_FORWARD_PASS,
+                TrainingState.ERROR,
+            ]:
                 next_state = self._process_state()
                 self.state = next_state
 
