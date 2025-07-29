@@ -62,7 +62,15 @@ class AnswerVerifier(dspy.Module):
 
         module_output = ModuleOutput(status="error")
 
-        with mlflow.start_span(name="AnswerVerifier"):
+        with mlflow.start_span(name="AnswerVerifier", span_type="MODULE") as span:
+            span.set_inputs(
+                {
+                    "question": question,
+                    "ground_truth": first_answer,
+                    "engine_anser": second_answer,
+                }
+            )
+
             try:
                 prediction = self.classifier(
                     question=question,
@@ -71,7 +79,8 @@ class AnswerVerifier(dspy.Module):
                 )
                 module_output.status = "success"
                 module_output.result = Result(
-                    similarity_score=prediction.similarity_score
+                    similarity_score=prediction.similarity_score,
+                    reasoning=prediction.reasoning,
                 )
                 logger.debug(
                     f"\nSimilarity score: {prediction.similarity_score}\nReasoning: {prediction.reasoning}"
@@ -80,6 +89,15 @@ class AnswerVerifier(dspy.Module):
                 error_msg = f"Encounter Exception during the forward pass of the AnswerClassifier\nException:{e}\nquestion:{question}\nfirst_answer:{first_answer}\nground truth:{second_answer}"
                 logger.error(error_msg)
                 module_output.error_msg = error_msg
+
+            finally:
+                span.set_outputs(
+                    {
+                        "status": module_output.status,
+                        "similarity_score": module_output.result.similarity_score,
+                        "reasoning": module_output.result.reasoning,
+                    }
+                )
 
         return module_output
 
