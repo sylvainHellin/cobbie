@@ -1,12 +1,9 @@
-from typing import Optional
-
 import dspy
 import mlflow
 
 from src.config import AGENT_CONFIGS
 from src.engine.schemas import ModuleOutput, Result
 from src.engine.util import get_logger
-from src.engine.util.custom_chat_adapter import CustomChatAdapter
 
 
 class ToolIdentifierSignature(dspy.Signature):
@@ -35,11 +32,11 @@ class ToolIdentifierSignature(dspy.Signature):
     new_function_identified: bool = dspy.OutputField(
         desc="Whether a potentially useful new function was identified"
     )
-    function_name: Optional[str] = dspy.OutputField(
-        desc="Suggested name for the new function, if identified"
+    function_name: str = dspy.OutputField(
+        desc="Suggested name for the new function, if identified. Else, just enter ''."
     )
-    function_requirements: Optional[str] = dspy.OutputField(
-        desc="Detailed requirements and specifications for the new function, if identified. Provide the complete function specification including signature, behavior description, and implementation details."
+    function_requirements: str = dspy.OutputField(
+        desc="Detailed requirements and specifications for the new function, if identified. Provide the complete function specification including signature, behavior description, and implementation details. Else, just enter ''."
     )
 
 
@@ -58,7 +55,6 @@ class ToolIdentifier(dspy.Module):
 
         self.predictor = dspy.ChainOfThought(ToolIdentifierSignature)
         # Use custom chat adapter to fix Optional[str] parsing issues
-        self.predictor.adapter = CustomChatAdapter()
         self.log_level = self.config.log_level
         self.logger = get_logger(name="FunctionIdentifier", log_level=self.log_level)
 
