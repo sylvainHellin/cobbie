@@ -23,6 +23,17 @@ class ErrorAnalystSignature(dspy.Signature):
     - **Missing tools**: Lack of necessary functions to access required BIM information
     - **Other issues**: Context problems, prompting errors, CodeAct iteration limits, or reasoning failures
 
+    Requirement to qualify as a missing tool:
+       In order to qualify as a missing tool, the potential tool must be:
+               - Generic enough to be used for different questions, with no model-specific assumptions or hard-coded values.
+               - Flexible, accepting appropriate parameters
+               - Simple for the AI assistant to use in future interactions.
+               - Implementable with Python and IfcOpenShell.
+
+           Function requirements should include:
+               - A function signature with type hints
+               - A clear description of the expected behaviour.
+
     The analysis focuses on understanding tool-related failures in the CodeAct execution loop
     to improve the system's capability for answering BIM model questions using Python code execution.
     """
