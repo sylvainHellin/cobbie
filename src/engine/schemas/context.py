@@ -1,8 +1,8 @@
 from typing import Optional
 from pydantic import BaseModel
 
-from src.engine.schemas import ModuleOutput
-from src.engine.schemas import QA_Pair
+from .module_output import ModuleOutput
+from .qa_pair import QA_Pair
 
 from mlflow.entities import Span
 
