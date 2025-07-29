@@ -2,7 +2,7 @@ from typing import Optional
 from pydantic import BaseModel
 
 from src.engine.schemas import ModuleOutput
-from src.engine.schemas.datapoint import QA_Pair
+from src.engine.schemas import QA_Pair
 
 from mlflow.entities import Span
 
