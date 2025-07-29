@@ -49,9 +49,9 @@ def get_created_tools(tools: List[Callable] = []) -> Dict[str, Callable]:
     return fn_dict
 
 
-def get_tools_description() -> str:
+def get_tools_description(tools: Dict[str, Callable] = {}) -> str:
     """Returns a serialised list of existing tools, along with their descriptions."""
-    tools = get_created_tools()
+    tools = tools or get_created_tools()
     tools_description = ""
     for fn_name, fn in tools.items():
         docstring = getattr(fn, "__doc__", "No description available.")
