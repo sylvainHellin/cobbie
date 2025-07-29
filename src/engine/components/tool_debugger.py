@@ -242,7 +242,7 @@ class ToolDebugger(dspy.Module):
         """
 
         with mlflow.start_span(
-            name=f"tool_debugging_{function_name}",
+            name=f"ToolDebugger_{function_name}",
             span_type="MODULE",
         ) as span:
             # --- Step 1: Set up the system --- #
