@@ -1,0 +1,2 @@
+first_answer,second_answer,similarity_score
+"The explicit lifespan of the roofing material is not specified in the BIM model. However, it is known that the roofing material is an EPDM (Ethylene Propylene Diene Monomer) membrane, typically lasting 25 to 30 years with proper maintenance.","The IFC model does not contain explicit information about the expected lifespan of the roofing materials.",0.85
