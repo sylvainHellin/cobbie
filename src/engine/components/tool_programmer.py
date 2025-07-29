@@ -172,7 +172,7 @@ if __name__ == "__main__":
         tools = [web_search, query_ifcopenshell_documentation]
 
         # setup the tool programmer
-        tool_programmer = ToolProgrammer(tools=tools, max_iters=10, log_level=log_level)
+        tool_programmer = ToolProgrammer(tools=tools)
 
         # try to create the tool
         result = tool_programmer.forward(
