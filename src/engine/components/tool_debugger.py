@@ -260,6 +260,9 @@ class ToolDebugger(dspy.Module):
                 )
 
                 self.logger.info(
+                    "The function requirements were successfully extracted."
+                )
+                self.logger.debug(
                     f"Extracted function requirements: {function_requirements}"
                 )
 
