@@ -6,6 +6,7 @@ import mlflow
 from src.config import AGENT_CONFIGS
 from src.engine.schemas import ModuleOutput, Result
 from src.engine.util import get_logger
+from src.engine.util.custom_chat_adapter import CustomChatAdapter
 
 
 class ToolIdentifierSignature(dspy.Signature):
@@ -56,6 +57,8 @@ class ToolIdentifier(dspy.Module):
         self.config = config or AGENT_CONFIGS.function_identifier
 
         self.predictor = dspy.ChainOfThought(ToolIdentifierSignature)
+        # Use custom chat adapter to fix Optional[str] parsing issues
+        self.predictor.adapter = CustomChatAdapter()
         self.log_level = self.config.log_level
         self.logger = get_logger(name="FunctionIdentifier", log_level=self.log_level)
 
