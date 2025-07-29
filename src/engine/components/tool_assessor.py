@@ -152,8 +152,6 @@ if __name__ == "__main__":
         # setup the tool assessor
         tool_assessor = ToolAssessor(
             tools=tools,
-            max_iters=4,
-            log_level=log_level,
         )
 
         # assess the tool
