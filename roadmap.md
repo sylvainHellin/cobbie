@@ -1,7 +1,7 @@
-- implement an agent to review the chat history if an error was made to identify the cause of the error:
-  - faulty tool
-  - missing tool
-  - other
-  and write a report regarding what has happened and what we should do. It should have access to the ground truth
-- add a step in `training` to try to optimize the workflow when answer is correct by implementing a new tool (with access to the ground truth)
-- update the ToolCreator to also accept additional information (e.g. question and ground truth)
+- BUG:
+  - wrong function requirements provided to ToolCreator (see: http://127.0.0.1:5000/#/experiments/5/runs/4e10a5e34b6e49d4a1b8ac2aaa37118f/traces?selectedTraceId=bafc610197cd49fbaf87078af23074bb)
+- consider passing the list of created tools to the ErrorAnalyst
+- Update the engine: 
+  - should have the same prompt in inference and training ; 
+  - access to `query_ifc_openshell` documentation and `web_search`
+  - no access to `create_new_tool`
