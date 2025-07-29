@@ -1,7 +1,7 @@
 - BUG:
   - wrong function requirements provided to ToolCreator (see: http://127.0.0.1:5000/#/experiments/5/runs/4e10a5e34b6e49d4a1b8ac2aaa37118f/traces?selectedTraceId=bafc610197cd49fbaf87078af23074bb)
-- consider passing the list of created tools to the ErrorAnalyst
-- Update the engine: 
-  - should have the same prompt in inference and training ; 
+- consider passing the list of created tools to the `ErrorAnalyst`
+- Update the engine:
+  - should have the same prompt in inference and training ;
   - access to `query_ifc_openshell` documentation and `web_search`
   - no access to `create_new_tool`
