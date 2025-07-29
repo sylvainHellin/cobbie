@@ -1,9 +1,10 @@
 import dspy
 import mlflow
+from typing import Optional
 
 from src.config import AGENT_CONFIGS
 from src.engine.schemas import ModuleOutput, Result
-from src.engine.util import get_logger
+from src.engine.util import get_logger, get_tools_description
 
 
 class ToolIdentifierSignature(dspy.Signature):
@@ -14,6 +15,7 @@ class ToolIdentifierSignature(dspy.Signature):
         - Generic enough for different questions (no model-specific assumptions or hard-coded values)
         - Flexible by accepting appropriate parameters
         - Simple to use by the AI assistant in future interactions
+        - Be distinct from already available functions
 
     Function requirements should include:
         - Function signature with type hints
@@ -23,9 +25,15 @@ class ToolIdentifierSignature(dspy.Signature):
     IMPORTANT: When providing function_requirements, give the complete detailed specification as plain text, not JSON schema or type annotations. Provide the actual requirements content, not metadata about the field type.
     """
 
+    # Input fields
     chat_history: str = dspy.InputField(
         desc="Chat history between user and AI assistant about BIM/IFC model queries"
     )
+    available_functions: str = dspy.InputField(
+        desc="The list of function already available."
+    )
+
+    # Output fields
     reasoning: str = dspy.OutputField(
         desc="Step-by-step analysis of whether a new function could be useful"
     )
@@ -54,16 +62,18 @@ class ToolIdentifier(dspy.Module):
         self.config = config or AGENT_CONFIGS.function_identifier
 
         self.predictor = dspy.ChainOfThought(ToolIdentifierSignature)
-        # Use custom chat adapter to fix Optional[str] parsing issues
         self.log_level = self.config.log_level
         self.logger = get_logger(name="FunctionIdentifier", log_level=self.log_level)
 
-    def forward(self, chat_history: str) -> ModuleOutput:
+    def forward(
+        self, chat_history: str, available_functions: Optional[str] = None
+    ) -> ModuleOutput:
         """
         Analyze a chat history to identify potentially useful new Python functions.
 
         Args:
-            chat_history: String containing the conversation between user and AI assistant
+            chat_history: A string containing the conversation between the user and the AI assistant.
+            available_functions (Optional): A serialised list of existing tools and their descriptions. If this is set to None, a description will be created for all existing tools.
 
         Returns:
             ModuleOutput containing:
@@ -83,8 +93,16 @@ class ToolIdentifier(dspy.Module):
                 self.logger.debug(
                     f"Analyzing chat history of length: {len(chat_history)}"
                 )
+                available_functions = (
+                    available_functions
+                    if available_functions
+                    else get_tools_description()
+                )
 
-                prediction = self.predictor(chat_history=chat_history)
+                prediction = self.predictor(
+                    chat_history=chat_history,
+                    available_functions=available_functions,
+                )
 
                 self.logger.info(
                     f"Function identification completed. New function identified: {prediction.new_function_identified}"
