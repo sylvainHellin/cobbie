@@ -519,4 +519,4 @@ def main(start: int = 0, finish: int = -1):
 
 
 if __name__ == "__main__":
-    output = main(start=3, finish=9)
+    output = main(start=3, finish=6)

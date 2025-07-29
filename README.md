@@ -24,25 +24,25 @@ graph TB
         TC[ToolCreator]
         NE[NameExtractor]
     end
-    
+
     subgraph "Multi-Agent Tool Creation"
         TP[ToolProgrammer]
-        TA[ToolAssessor] 
+        TA[ToolAssessor]
         TCR[ToolCorrector]
     end
-    
+
     subgraph "Configuration System"
         AC[AGENT_CONFIGS]
         LC[LLM Config]
         SC[Sub-Agent Configs]
     end
-    
+
     subgraph "Tools & Execution"
         PT[Primordial Tools]
         CT[Created Tools]
         PI[Python Interpreter]
     end
-    
+
     IE --> TC
     IE --> NE
     TC --> TP
@@ -81,23 +81,23 @@ stateDiagram-v2
     ENGINE_COMPLETED --> ENGINE_FAILED: Engine fails
     ENGINE_COMPLETED --> NEW_FUNCTION_READY: Engine creates new function
     ENGINE_COMPLETED --> VERIFICATION_NEEDED: Engine answers without new function
-    
+
     ENGINE_FAILED --> ERROR: Handle failure
-    
+
     NEW_FUNCTION_READY --> COMPLETED: Save new function
-    
+
     VERIFICATION_NEEDED --> ERROR: Verification fails
     VERIFICATION_NEEDED --> VERIFICATION_COMPLETED: Verification succeeds
-    
+
     VERIFICATION_COMPLETED --> COMPLETED: Answer incorrect
     VERIFICATION_COMPLETED --> NEW_FUNCTION_READY: Answer correct + Engine created function
     VERIFICATION_COMPLETED --> TOOL_IDENTIFICATION_NEEDED: Answer correct + No function created
-    
+
     TOOL_IDENTIFICATION_NEEDED --> COMPLETED: No tool needed
     TOOL_IDENTIFICATION_NEEDED --> TOOL_CREATION_NEEDED: Tool identified
-    
+
     TOOL_CREATION_NEEDED --> COMPLETED: Tool created and saved
-    
+
     COMPLETED --> [*]
     ERROR --> [*]
 ```
@@ -152,7 +152,7 @@ src/config/
 ├── __init__.py          # Main exports
 ├── main.py             # Paths, API keys, models
 └── agents.py           # Agent configurations
-    ├── LLMConfig       # Language model settings  
+    ├── LLMConfig       # Language model settings
     ├── BaseAgentConfig # Common agent settings
     ├── ToolCreatorConfig
     ├── IfcAnswerEngineConfig
@@ -280,7 +280,7 @@ Access the UI at: http://127.0.0.1:5000
 ### Language Models
 The system supports multiple LLM providers configured in `src/config/main.py`:
 - OpenAI (GPT models)
-- Anthropic (Claude models) 
+- Anthropic (Claude models)
 - Google (Gemini models)
 - Groq (Llama models)
 - Local models via Ollama
@@ -329,5 +329,5 @@ This project is licensed under the MIT License - see the LICENSE file for detail
 ## 🏷️ Version History
 
 - **v3.0**: DSPy-based architecture with hierarchical configuration system
-- **v2.0**: Multi-agent system with tool creation capabilities  
+- **v2.0**: Multi-agent system with tool creation capabilities
 - **v1.0**: Initial implementation with basic question answering
