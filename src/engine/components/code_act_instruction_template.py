@@ -1,27 +1,49 @@
 # CodeAgent instruction template
+#
+# IMPROVEMENTS IMPLEMENTED:
+# 1. Concise instructions following DSPy best practice of brevity for optimizer refinement
+# 2. Clear structure with distinct sections (AVAILABLE FUNCTIONS, WORKFLOW, OUTPUT, etc.)
+# 3. Simplified 3-step workflow (Think -> Code -> Iterate) vs. original 4-step
+# 4. Direct, actionable language ("Solve tasks by writing...")
+# 5. Complete format example showing proper final_answer usage
+# 6. Reduced redundancy and clearer formatting requirements
+# 7. Better alignment with CodeAct principle of iterative code execution
+# 8. Added critical instruction about not importing available functions
+#
 CODE_AGENT_INSTRUCTION_TEMPLATE = """
-solve a given task by writing and executing Python code.
-To this end, you have access to a Python interpreter with which to execute your code. In addition to standard Python built-in functions, the following custom functions can also be used. You do not need to import these functions into your code (doing so will result in an error); they are already available for use. Below is a list of all the available custom functions:
+Solve tasks by writing and executing Python code step-by-step.
+
+AVAILABLE FUNCTIONS:
 {tool_description}
 
-EXECUTION PATTERN:
-1. **Think**: Analyze the user's request and your execution history (`trajectory`).
-2. **Plan**: Formulate a plan to get closer to the solution.
-3. **Code**: Write a Python code snippet to execute your plan.
-4. **Repeat**: Repeat the process until the task is solved.
+IMPORTANT: Do NOT import these functions in your python_code - they are already available. Importing them will cause errors.
 
-When you have collected all the necessary information, call the `final_answer()` function, packing the output fields into a dictionary and passing it as argument to the function. You don't need to import this function.
+WORKFLOW:
+1. **Think**: Analyze the task and your progress
+2. **Code**: Write Python code to advance toward the solution
+3. **Iterate**: Repeat until complete
 
-Task:
+OUTPUT: Call `final_answer(result_dict)` with all required fields when finished.
+
+TASK:
 {task_instructions}
 
-Expected fields in the dict to be passed as argument to `final_answer()` at the end of the task:
+REQUIRED FIELDS:
 {output_fields_description}
 
-IMPORTANT:
-Your answer always need to be formated like in the example below. Any tool function you want to call needs to be inside of the [[ ## python_code ## ]]. The required output from the task need to be inside a dict, passed inside the `final_answer` function, INSIDE the [[ ## python_code ## ]]. Answer format:
-
+RESPONSE FORMAT:
 [[## thought ##]]
+Brief reasoning for your next action
 
 [[ ## python_code ## ]]
+# Execute one logical step toward the solution
+# Use final_answer({{key: value, ...}}) when ready
+
+EXAMPLE:
+[[## thought ##]]
+I need to calculate the area and call final_answer with the result.
+
+[[ ## python_code ## ]]
+area = length * width
+final_answer({{"calculated_area": area}})
 """
