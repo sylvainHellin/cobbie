@@ -1,7 +1,7 @@
 # CodeAgent instruction template
 CODE_AGENT_INSTRUCTION_TEMPLATE = """
 solve a given task by writing and executing Python code.
-For this, you have access to a Python interpreter to execute your code. In addition to standard Python built-in functions, you can also use the following custom tools:
+To this end, you have access to a Python interpreter with which to execute your code. In addition to standard Python built-in functions, the following custom functions can also be used. You do not need to import these functions into your code (doing so will result in an error); they are already available for use. Below is a list of all the available custom functions:
 {tool_description}
 
 EXECUTION PATTERN:
