@@ -12,8 +12,11 @@ import mlflow
 
 class AnswerVerifierSignature(dspy.Signature):
     """
-    Compare two answers to the same question and give them a similarity score from 0 to 1 (0 meaning the answers are completely different, 1 meaning they are identical).
-    Tolerance thresholds for numerical values (quantities, measurements, etc.): up to 2%.
+    Compare two answers to the same question and give them a similarity score between 0 and 1, where 0 means the answers are completely different and 1 means they are identical.
+
+    The tolerance threshold for numerical values (quantities, measurements, etc.) is up to 2%.
+
+    If both answers state that the information is not available in the BIM model, but one provides additional relevant information for answering the question that does not specifically come from the BIM model, they should still be evaluated as similar.
     """
 
     question: str = dspy.InputField()
