@@ -93,6 +93,8 @@ class ToolProgrammer(dspy.Module):
         path_ifc_model: str,
         function_boilerplate: str = FUNCTION_BOILERPLATE,
     ) -> ModuleOutput:
+        self.logger.info(f"Starting ToolProgrammer for function: {function_name}")
+
         if self.add_code_prefix:
             code_prefix = create_code_prefix(
                 path_ifc_model=path_ifc_model, imports_boilerplate=FUNCTION_BOILERPLATE
@@ -114,7 +116,9 @@ class ToolProgrammer(dspy.Module):
             hasattr(prediction, "function_implementation")
             and prediction.function_implementation
         ):
-            self.logger.info(f"function: {function_name} created successfully.")
+            self.logger.info(
+                f"ToolProgrammer result: success - function '{function_name}' created successfully"
+            )
             self.logger.debug(f"function code:\n{prediction.function_implementation}\n")
             return ModuleOutput(
                 result=Result(
@@ -123,8 +127,8 @@ class ToolProgrammer(dspy.Module):
                 status="success",
             )
         else:
-            self.logger.error(
-                f"Error when trying to generate code for function: {function_name}"
+            self.logger.info(
+                f"ToolProgrammer result: error - failed to generate code for function '{function_name}'"
             )
             return ModuleOutput(
                 status="error",

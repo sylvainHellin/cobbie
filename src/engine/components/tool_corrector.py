@@ -83,6 +83,8 @@ class ToolCorrector(dspy.Module):
         current_function_implementation: str,
         detailed_function_assessment: str,
     ) -> ModuleOutput:
+        self.logger.info(f"Starting ToolCorrector for function: {function_name}")
+
         if self.add_code_prefix:
             code_prefix = create_code_prefix(
                 path_ifc_model=path_ifc_model,
@@ -100,7 +102,9 @@ class ToolCorrector(dspy.Module):
         )
 
         if output.new_function_implementation:
-            self.logger.info("ToolCorrector updated the implementation successfully")
+            self.logger.info(
+                f"ToolCorrector result: success - function '{function_name}' updated successfully"
+            )
             self.logger.debug(
                 f"New implementation: {output.new_function_implementation}"
             )
@@ -111,7 +115,9 @@ class ToolCorrector(dspy.Module):
                 status="success",
             )
         else:
-            self.logger.info("ToolCorrector failed to update the function.")
+            self.logger.info(
+                f"ToolCorrector result: error - failed to update function '{function_name}'"
+            )
             return ModuleOutput(
                 status="error", error_msg="ToolCorrector failed to update the function."
             )

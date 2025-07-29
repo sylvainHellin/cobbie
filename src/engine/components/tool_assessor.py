@@ -68,6 +68,8 @@ class ToolAssessor(dspy.Module):
         function_requirements: str,
         path_ifc_model: str,
     ) -> ModuleOutput:
+        self.logger.info(f"Starting ToolAssessor for function: {function_name}")
+
         if self.add_code_prefix:
             code_prefix = create_code_prefix(
                 path_ifc_model=path_ifc_model,
@@ -82,8 +84,9 @@ class ToolAssessor(dspy.Module):
         )
 
         if output.assessment_status and output.assessment_details:
-            self.logger.debug("Tool assessment successfull")
-            self.logger.debug(f"Assessment status: \n{output.assessment_status}")
+            self.logger.info(
+                f"ToolAssessor result: {output.assessment_status} - assessment completed for function '{function_name}'"
+            )
             self.logger.debug(f"Assessment details: \n{output.assessment_details}")
             return ModuleOutput(
                 result=Result(
@@ -93,7 +96,9 @@ class ToolAssessor(dspy.Module):
                 status="success",
             )
         else:
-            self.logger.debug("Tool assessment failed")
+            self.logger.info(
+                f"ToolAssessor result: error - assessment failed for function '{function_name}'"
+            )
             return ModuleOutput(status="error", error_msg="Tool assessment failed")
 
 
