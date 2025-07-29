@@ -21,6 +21,8 @@ class ToolIdentifierSignature(dspy.Signature):
         - Function signature with type hints
         - Clear expected behavior description
         - Implementation feasibility with Python and IfcOpenShell library
+
+    IMPORTANT: When providing function_requirements, give the complete detailed specification as plain text, not JSON schema or type annotations. Provide the actual requirements content, not metadata about the field type.
     """
 
     chat_history: str = dspy.InputField(
@@ -36,7 +38,7 @@ class ToolIdentifierSignature(dspy.Signature):
         desc="Suggested name for the new function, if identified"
     )
     function_requirements: Optional[str] = dspy.OutputField(
-        desc="Detailed requirements and specifications for the new function, if identified"
+        desc="Detailed requirements and specifications for the new function, if identified. Provide the complete function specification including signature, behavior description, and implementation details."
     )
 
 
