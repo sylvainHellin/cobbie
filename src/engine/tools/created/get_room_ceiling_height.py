@@ -1,12 +1,16 @@
+
 import ifcopenshell
 import ifcopenshell.util.element
+from typing import Dict, Union, Any
 
-from src.config import TEST_IFC_PATH
 
-
-def get_room_ceiling_height(path_ifc_model: str, room_identifier: str) -> dict:
+def get_room_ceiling_height(path_ifc_model: str, room_identifier: Union[str, int]) -> Dict[str, Any]:
     """
     Get the ceiling height of a room/space in an IFC model.
+    
+    This function retrieves the ceiling height (typically the unbounded height) of a room from
+    property sets, particularly those created by Revit (PSet_Revit_Dimensions). For rooms exported
+    from Revit, this usually corresponds to the 'Unbounded Height' parameter.
 
     Args:
         path_ifc_model (str): Path to the IFC file
@@ -14,7 +18,7 @@ def get_room_ceiling_height(path_ifc_model: str, room_identifier: str) -> dict:
 
     Returns:
         dict: Dictionary containing:
-            - height (float): Ceiling hweight value
+            - height (float): Ceiling height value
             - unit (str): Unit of measurement
             - room_info (dict): Additional room information
             - success (bool): Whether the operation was successful
@@ -33,7 +37,7 @@ def get_room_ceiling_height(path_ifc_model: str, room_identifier: str) -> dict:
         ifc_file = ifcopenshell.open(path_ifc_model)
 
         # Get units from the file
-        units = ifc_file.by_type("IfcUnitAssignment")  # type:ignore
+        units = ifc_file.by_type("IfcUnitAssignment")
         length_unit = "meter"  # Default unit
         if units:
             for unit in units[0].Units:
@@ -53,7 +57,7 @@ def get_room_ceiling_height(path_ifc_model: str, room_identifier: str) -> dict:
         result["unit"] = length_unit
 
         # Find all spaces/rooms in the model
-        spaces = ifc_file.by_type("IfcSpace")  # type:ignore
+        spaces = ifc_file.by_type("IfcSpace")
 
         # Find the requested room
         target_room = None
@@ -74,21 +78,24 @@ def get_room_ceiling_height(path_ifc_model: str, room_identifier: str) -> dict:
         if target_room is None:
             for space in spaces:
                 # Check various properties that might contain the identifier
-                space_name = space.Name if hasattr(space, "Name") else ""
-                space_long_name = space.LongName if hasattr(space, "LongName") else ""
+                space_name = getattr(space, "Name", "")
+                space_long_name = getattr(space, "LongName", "")
 
                 # Also check property sets for room number
                 space_number = None
-                psets = ifcopenshell.util.element.get_psets(space)
-                for pset_name, properties in psets.items():
-                    if "Number" in properties:
-                        space_number = properties["Number"]
+                try:
+                    psets = ifcopenshell.util.element.get_psets(space)
+                    for pset_name, properties in psets.items():
+                        if "Number" in properties:
+                            space_number = properties["Number"]
+                except:
+                    psets = {}
 
                 # Compare with the identifier
                 if (
                     (space_name and str(room_identifier) == space_name)
                     or (space_long_name and str(room_identifier) in space_long_name)
-                    or (space_number and str(room_identifier) == space_number)
+                    or (space_number and str(room_identifier) == str(space_number))
                 ):
                     target_room = space
                     break
@@ -100,14 +107,16 @@ def get_room_ceiling_height(path_ifc_model: str, room_identifier: str) -> dict:
         # Room found, get its info
         result["room_info"] = {
             "id": target_room.id(),
-            "name": target_room.Name if hasattr(target_room, "Name") else None,
-            "long_name": target_room.LongName
-            if hasattr(target_room, "LongName")
-            else None,
+            "name": getattr(target_room, "Name", None),
+            "long_name": getattr(target_room, "LongName", None),
         }
 
         # Get property sets for the room
-        psets = ifcopenshell.util.element.get_psets(target_room)
+        try:
+            psets = ifcopenshell.util.element.get_psets(target_room)
+        except Exception as e:
+            psets = {}
+            result["message"] = f"Warning: Could not retrieve property sets for room: {str(e)}"
 
         # Look for ceiling height in property sets
         height_value = None
@@ -138,6 +147,8 @@ def get_room_ceiling_height(path_ifc_model: str, room_identifier: str) -> dict:
                         height_value = prop_value
                         height_sources.append(f"{prop_name} from {pset_name}")
                         break
+                if height_value is not None:
+                    break
 
         # If no height found in properties, try calculating from geometry
         if height_value is None and hasattr(target_room, "Representation"):
@@ -147,7 +158,7 @@ def get_room_ceiling_height(path_ifc_model: str, room_identifier: str) -> dict:
 
         # Update the result
         if height_value is not None:
-            result["height"] = height_value
+            result["height"] = float(height_value)
             result["success"] = True
             result["message"] = (
                 f"Room found and height determined from: {', '.join(height_sources)}"
@@ -160,13 +171,5 @@ def get_room_ceiling_height(path_ifc_model: str, room_identifier: str) -> dict:
         return result
 
     except Exception as e:
-        result["message"] = f"Error: {str(e)}"
+        result["message"] = f"Error processing IFC model: {str(e)}"
         return result
-
-
-if __name__ == "__main__":
-    room_name = "A203"
-    result = get_room_ceiling_height(
-        path_ifc_model=TEST_IFC_PATH, room_identifier=room_name
-    )
-    print(result)
