@@ -11,39 +11,12 @@ from .code_act import CodeAct
 class NewToolSignature(dspy.Signature):
     """
     As an expert Python programmer, you have been tasked with creating a new Python function using the IfcOpenShell library.
-    You are an action-oriented programmer. You write code, test it, and refine it. You have access to a Python interpreter and tools to query information from the Internet or the IfcOpenShell documentation.
-
-    Programming Strategy:
-        1. Act first. Start by writing a minimal amount of code to solve a small part of the problem.
-        2. Test incrementally. Use the Python interpreter tool to execute your code snippets and verify your assumptions.
-        3. Research as needed. If your code fails, use Query IFCOPSHELL Documentation or Web Search to find specific answers.
-        4. Build the final function. Once you have working snippets, assemble them into the final function.
 
     Your function implementation must:
         - Return proper data structures (e.g., lists and dictionaries), not formatted strings.
         - Be well-documented with docstrings and type hints.
         - Be explicit regarding assumptions. For example, if your function involves using properties related to specific BIM authoring software, such as PSet_Revit_Dimensions for an IFC model exported from Revit, mention this in the docstring.
-
-    Final recommendations:
-        - The provided Python interpreter does not have a state, so you need to declare all the variables you need.
-        - When calling python_interpreter, format JSON arguments as single-line strings. Do NOT use triple quotes in JSON. Use escaped newlines instead.
-        Example: {"python_code": "import ifcopenshell\\nprint('hello')"}
     """
-
-    # **MANDATORY IMPLEMENTATION PATTERN:**
-    # def your_function_name(path_ifc_model: str) -> list:
-    #     # Load the IFC file from the provided path
-    #     ifc_file = ifcopenshell.open(path_ifc_model)
-    #     # ... your logic here ...
-    #     return list(results)
-
-    # """
-
-    # Below is an overview of the IfcOpenShell library. Use it for a general understanding, but rely on testing code for specifics.
-
-    # Overview:
-    # {IFCOPENSHELL_DOCUMENTATION_OVERVIEW}
-    # """
 
     # inputs
     function_requirements: str = dspy.InputField(

@@ -14,17 +14,11 @@ class ToolCorrectionSignature(dspy.Signature):
     As an expert Python programmer, you have been tasked with correcting a given Python function implementation, which is not performing as expected.
     You are provided with the code of the current implementation, as well as a detailed assessment of the necessary improvements. Using this information, update the code of the current implementation.
 
-    You are an action-oriented programmer. You write code, test it, and refine it. You have access to a Python interpreter and tools to query information from the Internet or the IfcOpenShell documentation.
 
     Your corrected function implementation must:
         - Return proper data structures (e.g., lists and dictionaries), not formatted strings.
         - Be well-documented with docstrings and type hints.
         - Be explicit regarding assumptions. For example, if your function involves using properties related to specific BIM authoring software, such as PSet_Revit_Dimensions for an IFC model exported from Revit, mention this in the docstring.
-
-    Final recommendations:
-        - The provided Python interpreter does not have a state, so you need to declare all the variables you need (e.g. the path to the ifc model).
-        - When calling python_interpreter, format JSON arguments as single-line strings. Do NOT use triple quotes in JSON. Use escaped newlines instead.
-        Example: {"python_code": "import ifcopenshell\\nprint('hello')"}
     """
 
     # inputs

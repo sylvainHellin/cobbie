@@ -1,15 +1,3 @@
-# CodeAgent instruction template
-#
-# IMPROVEMENTS IMPLEMENTED:
-# 1. Concise instructions following DSPy best practice of brevity for optimizer refinement
-# 2. Clear structure with distinct sections (AVAILABLE FUNCTIONS, WORKFLOW, OUTPUT, etc.)
-# 3. Simplified 3-step workflow (Think -> Code -> Iterate) vs. original 4-step
-# 4. Direct, actionable language ("Solve tasks by writing...")
-# 5. Complete format example showing proper final_answer usage
-# 6. Reduced redundancy and clearer formatting requirements
-# 7. Better alignment with CodeAct principle of iterative code execution
-# 8. Added critical instruction about not importing available functions
-#
 CODE_AGENT_INSTRUCTION_TEMPLATE = """
 Solve tasks by writing and executing Python code step-by-step.
 
@@ -23,7 +11,8 @@ WORKFLOW:
 2. **Code**: Write Python code to advance toward the solution
 3. **Iterate**: Repeat until complete
 
-OUTPUT: Call `final_answer(result_dict)` with all required fields when finished.
+OUTPUT:
+Call `final_answer(result_dict)` with all required fields when finished.
 
 TASK:
 {task_instructions}
