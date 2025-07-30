@@ -80,7 +80,9 @@ class ToolProgrammer(dspy.Module):
         self.tools = tools
         self.max_iters = self.config.max_iters
         self.agent = CodeAct(
-            signature=NewToolSignature, tools=tools, max_iters=self.max_iters
+            signature=NewToolSignature,
+            tools=tools,
+            max_iters=self.max_iters,
         )
         self.log_level = self.config.log_level
         self.logger = get_logger(name="ToolProgrammer", log_level=self.log_level)
@@ -104,36 +106,43 @@ class ToolProgrammer(dspy.Module):
 
         self.agent._update_code_prefix(code_prefix=code_prefix)
 
-        prediction = self.agent(
-            function_requirements=function_requirements,
-            function_name=function_name,
-            path_ifc_model=path_ifc_model,
-            function_boilerplate=function_boilerplate,
-        )
+        try:
+            prediction = self.agent(
+                function_requirements=function_requirements,
+                function_name=function_name,
+                path_ifc_model=path_ifc_model,
+                function_boilerplate=function_boilerplate,
+            )
 
-        # Check if we got valid python code
-        if (
-            hasattr(prediction, "function_implementation")
-            and prediction.function_implementation
-        ):
-            self.logger.info(
-                f"ToolProgrammer result: success - function '{function_name}' created successfully"
-            )
-            self.logger.debug(f"function code:\n{prediction.function_implementation}\n")
-            return ModuleOutput(
-                result=Result(
-                    function_implementation=prediction.function_implementation
-                ),
-                status="success",
-            )
-        else:
-            self.logger.info(
-                f"ToolProgrammer result: error - failed to generate code for function '{function_name}'"
-            )
-            return ModuleOutput(
-                status="error",
-                error_msg=f"No valid code generated for function: {function_name}",
-            )
+            # Check if we got valid python code
+            if (
+                hasattr(prediction, "function_implementation")
+                and prediction.function_implementation
+            ):
+                self.logger.info(
+                    f"ToolProgrammer result: success - function '{function_name}' created successfully"
+                )
+                self.logger.debug(
+                    f"function code:\n{prediction.function_implementation}\n"
+                )
+                return ModuleOutput(
+                    result=Result(
+                        function_implementation=prediction.function_implementation
+                    ),
+                    status="success",
+                )
+            else:
+                self.logger.info(
+                    f"ToolProgrammer result: error - failed to generate code for function '{function_name}'"
+                )
+                return ModuleOutput(
+                    status="error",
+                    error_msg=f"No valid code generated for function: {function_name}",
+                )
+        except Exception as e:
+            error_msg = f"An Exception occured during the CodeAct forward pass of the ToolProgramme:\nError:{e}\n"
+            self.logger.error(error_msg)
+            return ModuleOutput(status="error", error_msg=error_msg)
 
 
 if __name__ == "__main__":

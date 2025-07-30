@@ -77,29 +77,35 @@ class ToolAssessor(dspy.Module):
         else:
             code_prefix = None
         self.agent._update_code_prefix(code_prefix=code_prefix)
-        output = self.agent(
-            function_name=function_name,
-            function_requirements=function_requirements,
-            path_ifc_model=path_ifc_model,
-        )
 
-        if output.assessment_status and output.assessment_details:
-            self.logger.info(
-                f"ToolAssessor result: {output.assessment_status} - assessment completed for function '{function_name}'"
+        try:
+            output = self.agent(
+                function_name=function_name,
+                function_requirements=function_requirements,
+                path_ifc_model=path_ifc_model,
             )
-            self.logger.debug(f"Assessment details: \n{output.assessment_details}")
-            return ModuleOutput(
-                result=Result(
-                    assessment_status=output.assessment_status,
-                    assessment_details=output.assessment_details,
-                ),
-                status="success",
-            )
-        else:
-            self.logger.info(
-                f"ToolAssessor result: error - assessment failed for function '{function_name}'"
-            )
-            return ModuleOutput(status="error", error_msg="Tool assessment failed")
+
+            if output.assessment_status and output.assessment_details:
+                self.logger.info(
+                    f"ToolAssessor result: {output.assessment_status} - assessment completed for function '{function_name}'"
+                )
+                self.logger.debug(f"Assessment details: \n{output.assessment_details}")
+                return ModuleOutput(
+                    result=Result(
+                        assessment_status=output.assessment_status,
+                        assessment_details=output.assessment_details,
+                    ),
+                    status="success",
+                )
+            else:
+                self.logger.info(
+                    f"ToolAssessor result: error - assessment failed for function '{function_name}'"
+                )
+                return ModuleOutput(status="error", error_msg="Tool assessment failed")
+        except Exception as e:
+            error_msg = f"An Exception occured during the CodeAct forward pass of the ToolAssessor:\nError:{e}\n"
+            self.logger.error(error_msg)
+            return ModuleOutput(status="error", error_msg=error_msg)
 
 
 if __name__ == "__main__":

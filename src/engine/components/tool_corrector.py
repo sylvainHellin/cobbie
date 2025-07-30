@@ -93,34 +93,40 @@ class ToolCorrector(dspy.Module):
             code_prefix = None
         self.agent._update_code_prefix(code_prefix=code_prefix)
 
-        output = self.agent(
-            function_description=function_description,
-            function_name=function_name,
-            path_ifc_model=path_ifc_model,
-            current_function_implementation=current_function_implementation,
-            detailed_function_assessment=detailed_function_assessment,
-        )
+        try:
+            output = self.agent(
+                function_description=function_description,
+                function_name=function_name,
+                path_ifc_model=path_ifc_model,
+                current_function_implementation=current_function_implementation,
+                detailed_function_assessment=detailed_function_assessment,
+            )
 
-        if output.new_function_implementation:
-            self.logger.info(
-                f"ToolCorrector result: success - function '{function_name}' updated successfully"
-            )
-            self.logger.debug(
-                f"New implementation: {output.new_function_implementation}"
-            )
-            return ModuleOutput(
-                result=Result(
-                    function_implementation=output.new_function_implementation
-                ),
-                status="success",
-            )
-        else:
-            self.logger.info(
-                f"ToolCorrector result: error - failed to update function '{function_name}'"
-            )
-            return ModuleOutput(
-                status="error", error_msg="ToolCorrector failed to update the function."
-            )
+            if output.new_function_implementation:
+                self.logger.info(
+                    f"ToolCorrector result: success - function '{function_name}' updated successfully"
+                )
+                self.logger.debug(
+                    f"New implementation: {output.new_function_implementation}"
+                )
+                return ModuleOutput(
+                    result=Result(
+                        function_implementation=output.new_function_implementation
+                    ),
+                    status="success",
+                )
+            else:
+                self.logger.info(
+                    f"ToolCorrector result: error - failed to update function '{function_name}'"
+                )
+                return ModuleOutput(
+                    status="error",
+                    error_msg="ToolCorrector failed to update the function.",
+                )
+        except Exception as e:
+            error_msg = f"An Exception occured during the CodeAct forward pass of the ToolCorrector:\nError:{e}\n"
+            self.logger.error(error_msg)
+            return ModuleOutput(status="error", error_msg=error_msg)
 
 
 if __name__ == "__main__":

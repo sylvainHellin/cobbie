@@ -152,10 +152,11 @@ class ToolCreator(dspy.Module):
                 if output_tool_programmer.status == "error":
                     error_msg = (
                         output_tool_programmer.error_msg
-                        or f"Unknown error occurred  while trying to create the tool: {function_name}."
+                        or f"ToolProgrammer could not create the function. An Unknown error occurred while trying to create the tool: {function_name}."
                     )
                     self.logger.error(error_msg)
                     output.error_msg = error_msg
+                    return output
                 else:
                     self.logger.info("Initial function created successfully.")
                     self.logger.debug(
