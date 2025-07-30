@@ -1,2 +1,6 @@
 - implement checkpoints to recover training run where it stopped
 - implement the evaluation pipeline
+- consider removing the output of each agents from the context in `training`
+- `Training`
+  - add a start index for the training cycle
+  - accept run name as arg.
