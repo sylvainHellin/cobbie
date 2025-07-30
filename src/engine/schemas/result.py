@@ -11,6 +11,8 @@ class Result(BaseModel):
     trajectory: Optional[Dict[str, Any]] = None
     similarity_score: Optional[float] = None
     need_new_function: Optional[bool] = None
+    new_tool_created: Optional[bool] = None
+    existing_tool_updated: Optional[bool] = None
     function_requirements: Optional[str] = None
     function_name: Optional[str] = None
     function_implementation: Optional[str] = None

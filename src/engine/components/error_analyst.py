@@ -163,13 +163,6 @@ class ErrorAnalyst(dspy.Module):
                     )
                     span.set_attribute("error_category", prediction.error_category)
 
-                    # Set MLflow tags for easy filtering
-                    mlflow.update_current_trace(
-                        tags={
-                            "status": "success",
-                            "error_category": prediction.error_category,
-                        }
-                    )
                     function_name = getattr(prediction, "tool_name", None)
                     return ModuleOutput(
                         status="success",
@@ -186,13 +179,6 @@ class ErrorAnalyst(dspy.Module):
                     # Set span outputs for failure
                     span.set_outputs({"status": "error", "error_msg": error_msg})
 
-                    mlflow.update_current_trace(
-                        tags={
-                            "status": "error",
-                            "error_category": "analysis_failed",
-                        }
-                    )
-
                     return ModuleOutput(
                         status="error",
                         error_msg=error_msg,
@@ -204,13 +190,6 @@ class ErrorAnalyst(dspy.Module):
 
                 # Set span outputs for exception
                 span.set_outputs({"status": "error", "error_msg": error_msg})
-
-                mlflow.update_current_trace(
-                    tags={
-                        "status": "error",
-                        "error_category": "exception",
-                    }
-                )
 
                 return ModuleOutput(
                     status="error",

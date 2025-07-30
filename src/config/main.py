@@ -15,6 +15,7 @@ DB_PATH = os.path.join(ROOT_PATH, "src/experiment/db/db.db")
 CSV_IFC_MODELS_PATH = os.path.join(ROOT_PATH, "src/experiment/db/ifc_models.csv")
 DIRECTORY_IFC_MODELS_PATH = os.path.join(ROOT_PATH, "src/experiment/bim_models")
 CREATED_TOOLS_PATH = os.path.join(ROOT_PATH, "src/engine/tools/created")
+CHECKPOINT_PATH = os.path.join(ROOT_PATH, "src/experiment/training/.checkpoint")
 
 # URI
 MLFLOW_URI = "http://127.0.0.1:5000"

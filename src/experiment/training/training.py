@@ -436,46 +436,23 @@ class TrainingModule(dspy.Module):
         """Finalize MLFlow span and tracking."""
         total_input_tokens, total_output_tokens = self._calculate_tokens()
 
-        span.set_inputs(
-            {
-                "question_id": qa_pair.id,
-                "question": qa_pair.question,
-            }
-        )
-        span.set_outputs(
-            {
-                "correct_answer": self.output.result.correct_answer or False,
-                "answer": self.output.result.answer or "No Answer available.",
-                "need_new_tool": self.output.result.need_new_function or False,
-                "input_tokens": total_input_tokens,
-                "output_tokens": total_output_tokens,
-                "chat": self.chat.model_dump_json(indent=2) or "",
-            }
-        )
-        if not self.output.result.correct_answer:
-            span.set_outputs(
-                {
-                    "error_category": self.output.result.error_category,
-                    "error_analysis": self.output.result.error_analysis,
-                }
-            )
-
-        span.set_attributes(self.output.result.model_dump())
-        span.set_attribute("input_tokens", total_input_tokens)
-        span.set_attribute("output_tokens", total_output_tokens)
-
         mlflow.update_current_trace(
             tags={
-                "correct_answer": str(self.output.result.correct_answer or False),
-                "answer": self.output.result.answer or "",
-                "need_new_tool": str(self.output.result.need_new_function or False),
+                "similarity_score": str(self.output.result.similarity_score),
+                "error_category": str(self.output.result.error_category or None),
+                "error_analysis": str(self.output.result.error_analysis or None),
                 "input_tokens": str(total_input_tokens),
                 "output_tokens": str(total_output_tokens),
-            }
+                "need_new_tool": str(self.output.result.need_new_function or False),
+                "new_tool_created": str(self.output.result.new_tool_created or False),
+                "existing_tool_updated": str(
+                    self.output.result.existing_tool_updated or False
+                ),
+            },
+            state="OK" if self.output.status == "success" else "ERROR",
+            request_preview=qa_pair.question,
+            response_preview=self.output.result.answer or "",
         )
-
-        if self.output.result.need_new_function:
-            mlflow.set_tag(key="new_tool_created", value=True)
 
     def forward(self, qa_pair: QA_Pair) -> ModuleOutput:
         """Process a QA pair using the state machine."""
@@ -493,12 +470,17 @@ class TrainingModule(dspy.Module):
             self.context.span = span
 
             # State machine loop
-            while self.state not in [
-                TrainingState.COMPLETED_FORWARD_PASS,
-                TrainingState.ERROR,
-            ]:
-                next_state = self._process_state()
-                self.state = next_state
+            try:
+                while self.state not in [
+                    TrainingState.COMPLETED_FORWARD_PASS,
+                    TrainingState.ERROR,
+                ]:
+                    next_state = self._process_state()
+                    self.state = next_state
+            except Exception as e:
+                self.output.error_msg = f"An error occured during the Training run for question_id: {qa_pair.id}.\nError:\n{e}"
+                self.logger.error(self.output.error_msg)
+                self.output.status = "error"
 
             # Finalize tracking and metrics
             self._finalize_span_and_tracking(span, qa_pair)
@@ -529,4 +511,4 @@ def main(start: int = 0, finish: int = -1):
 
 
 if __name__ == "__main__":
-    output = main(start=1, finish=20)
+    output = main(start=1, finish=2)

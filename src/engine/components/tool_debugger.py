@@ -469,18 +469,6 @@ class ToolDebugger(dspy.Module):
             span.set_attribute("iterations_used", self.iter)
             span.set_attribute("max_iterations", self.max_iter)
 
-            # Set MLflow tags for easy filtering and analysis
-            mlflow.update_current_trace(
-                tags={
-                    "status": output.status,
-                    "function_name": function_name,
-                    "assessment_status": output.result.assessment_status or "unknown",
-                    "iterations_used": str(self.iter),
-                    "max_iterations": str(self.max_iter),
-                    "success": str(output.status == "success"),
-                }
-            )
-
             # Return the result (good or bad)
             return output
 
