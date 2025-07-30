@@ -14,10 +14,10 @@ from src.engine import (
     ToolDebugger,
     ToolIdentifier,
 )
-from src.engine.schemas import Chat, ModuleOutput, TrainingContext
+from src.engine.schemas import Chat, ModuleOutput, TrainingContext, QA_Pair
 from src.engine.util import get_function_code, get_logger, save_new_tool
 
-from .data_loader import QA_Pair, load_train_dev_split
+from src.engine.util import load_train_dev_split
 
 
 class TrainingState(Enum):
@@ -264,10 +264,10 @@ class TrainingModule(dspy.Module):
             self.output.result.error_category = (
                 error_analyst_output.result.error_category
             )
+            self.output.result.error_analysis = (
+                error_analyst_output.result.error_analysis
+            )
             if self.output.result.error_category == "faulty_tool":
-                self.output.result.assessment_details = (
-                    error_analyst_output.result.error_analysis
-                )
                 self.output.result.function_name = (
                     error_analyst_output.result.function_name
                 )
@@ -315,6 +315,7 @@ class TrainingModule(dspy.Module):
 
         if output_tool_creator.status == "success":
             self.output.status = "success"
+            self.output.result.new_tool_created = True
             assert output_tool_creator.result.function_implementation
             self.output.result.function_implementation = (
                 output_tool_creator.result.function_implementation
@@ -373,6 +374,7 @@ class TrainingModule(dspy.Module):
                 self.output.result.function_implementation = (
                     self.context.tool_debugger_output.result.function_implementation
                 )
+                self.output.result.existing_tool_updated = True
                 self.output.status = "success"
                 return TrainingState.COMPLETED_FORWARD_PASS
 
@@ -511,4 +513,4 @@ def main(start: int = 0, finish: int = -1):
 
 
 if __name__ == "__main__":
-    output = main(start=1, finish=2)
+    output = main(start=10, finish=20)
