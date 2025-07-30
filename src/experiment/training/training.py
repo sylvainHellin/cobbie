@@ -75,6 +75,7 @@ class TrainingModule(dspy.Module):
         self.context.clear()
         self.context.qa_pair = qa_pair
         self.context.span = None
+        self.chat = Chat()
 
         # Initialize default output
         self.output = ModuleOutput(
@@ -176,6 +177,7 @@ class TrainingModule(dspy.Module):
         # Update output with verification results
         self.output.error_msg = None
         self.output.status = "success"
+        self.output.result.similarity_score = verifier_output.result.similarity_score
         self.output.result.correct_answer = (
             verifier_output.result.similarity_score >= self.config.similarity_threshold
         )
@@ -440,6 +442,7 @@ class TrainingModule(dspy.Module):
 
         mlflow.update_current_trace(
             tags={
+                "correct_answer": str(self.output.result.correct_answer),
                 "similarity_score": str(self.output.result.similarity_score),
                 "error_category": str(self.output.result.error_category or None),
                 "error_analysis": str(self.output.result.error_analysis or None),
@@ -507,7 +510,6 @@ def main(start: int = 0, finish: int = -1):
         # Log info
         logger.info(f"\n{'#' * 20}\nQUESTION: {qa_pair.question}\n{'#' * 20}\n")
         output = training_module.forward(qa_pair=qa_pair)
-        print(output)
 
     return output
 
