@@ -73,6 +73,13 @@ def get_tools_description(tools: Dict[str, Callable] = {}) -> str:
     return tools_description
 
 
+def get_tools_names(tools: Dict[str, Callable] = {}) -> str:
+    """Returns a serialized list of existing tools names."""
+    tools = tools or get_created_tools()
+    tool_names = [fn_name for (fn_name, fn) in tools.items()]
+    return ", ".join(tool_names)
+
+
 if __name__ == "__main__":
     tools = get_created_tools()
     for name, fn in tools.items():
@@ -82,3 +89,5 @@ if __name__ == "__main__":
     print("/n/n")
     tools_description = get_tools_description()
     print(tools_description)
+
+    print(get_tools_names())
