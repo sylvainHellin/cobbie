@@ -5,7 +5,7 @@ import mlflow
 
 from src.config import AGENT_CONFIGS
 from src.engine.schemas import ModuleOutput, Result
-from src.engine.util import get_logger
+from src.engine.util import get_logger, get_tools_names
 from .code_act import CodeAct
 
 
@@ -50,6 +50,9 @@ class ErrorAnalystSignature(dspy.Signature):
     )
     correct_answer: str = dspy.InputField(
         desc="The ground truth or expected correct answer to the BIM question"
+    )
+    existing_tools: str = dspy.InputField(
+        desc="A serialised list of the names of the available tools."
     )
 
     #################### Outputs ####################
@@ -97,6 +100,7 @@ class ErrorAnalyst(dspy.Module):
         question: str,
         provided_answer: str,
         correct_answer: str,
+        existing_tools: Optional[str] = None,
     ) -> ModuleOutput:
         """
         Analyze an error from the IFC Answer Engine to categorize the failure and provide mitigation strategies.
@@ -106,6 +110,7 @@ class ErrorAnalyst(dspy.Module):
             question: The original BIM/IFC question that was asked
             provided_answer: The incorrect answer that was provided
             correct_answer: The expected correct answer
+            existing_tools (optional): This is a serialised list of the available tools. If None, it will load automatically.
 
         Returns:
             ModuleOutput containing:
@@ -128,6 +133,7 @@ class ErrorAnalyst(dspy.Module):
             self.logger.debug(f"Question: {question}")
             self.logger.debug(f"Provided answer: {provided_answer}")
             self.logger.debug(f"Correct answer: {correct_answer}")
+            existing_tools = get_tools_names() if not existing_tools else existing_tools
 
             try:
                 prediction = self.agent(
