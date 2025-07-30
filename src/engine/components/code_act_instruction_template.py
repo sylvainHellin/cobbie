@@ -13,10 +13,10 @@
 CODE_AGENT_INSTRUCTION_TEMPLATE = """
 Solve tasks by writing and executing Python code step-by-step.
 
-AVAILABLE FUNCTIONS:
+AVAILABLE FUNCTIONS (do not import them):
 {tool_description}
 
-IMPORTANT: Do NOT import these functions in your python_code - they are already available. Importing them will cause errors.
+IMPORTANT: DO NOT import these functions in your python_code - they are already available. Importing them will cause errors.
 
 WORKFLOW:
 1. **Think**: Analyze the task and your progress
