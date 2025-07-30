@@ -338,39 +338,49 @@ class TrainingModule(dspy.Module):
         ), (
             "Logical error: Tool correction required, but assessment or function name missing."
         )
-        faulty_function_implementation = get_function_code(
-            function_name=self.output.result.function_name
-        )
-        assert faulty_function_implementation, (
-            "Error: could not load the source code of the faulty tool."
-        )
-
-        self.context.tool_debugger_output = self.tool_debugger.forward(
-            function_name=self.output.result.function_name,
-            faulty_function_implementation=faulty_function_implementation,
-            initial_assessment=self.output.result.assessment_details,
-            path_ifc_model=self.context.qa_pair.ifc_model_path,
-        )
-
-        if self.context.tool_debugger_output.status == "error":
-            self.output.error_msg = self.context.tool_debugger_output.error_msg
-            return TrainingState.ERROR
-        else:
-            assert self.context.tool_debugger_output.result.function_implementation, (
-                "Logical flaw: ToolDebugger status is `success` but the function_implementation is empty."
+        try:
+            faulty_function_implementation = get_function_code(
+                function_name=self.output.result.function_name
             )
-            corrected_tool_saved = save_new_tool(
+
+            assert faulty_function_implementation, (
+                "Error: could not load the source code of the faulty tool."
+            )
+
+            self.context.tool_debugger_output = self.tool_debugger.forward(
                 function_name=self.output.result.function_name,
-                function_implementation=self.context.tool_debugger_output.result.function_implementation,
+                faulty_function_implementation=faulty_function_implementation,
+                initial_assessment=self.output.result.assessment_details,
+                path_ifc_model=self.context.qa_pair.ifc_model_path,
             )
-            assert corrected_tool_saved, (
-                "CRITICAL ERROR: the corrected tool could not be saved"
-            )
-            self.output.result.function_implementation = (
-                self.context.tool_debugger_output.result.function_implementation
-            )
-            self.output.status = "success"
-            return TrainingState.COMPLETED_FORWARD_PASS
+
+            if self.context.tool_debugger_output.status == "error":
+                self.output.error_msg = self.context.tool_debugger_output.error_msg
+                return TrainingState.ERROR
+            else:
+                assert (
+                    self.context.tool_debugger_output.result.function_implementation
+                ), (
+                    "Logical flaw: ToolDebugger status is `success` but the function_implementation is empty."
+                )
+                corrected_tool_saved = save_new_tool(
+                    function_name=self.output.result.function_name,
+                    function_implementation=self.context.tool_debugger_output.result.function_implementation,
+                )
+                assert corrected_tool_saved, (
+                    "CRITICAL ERROR: the corrected tool could not be saved"
+                )
+                self.output.result.function_implementation = (
+                    self.context.tool_debugger_output.result.function_implementation
+                )
+                self.output.status = "success"
+                return TrainingState.COMPLETED_FORWARD_PASS
+
+        except FileNotFoundError:
+            self.output.error_msg = f"Could not find the file {self.output.result.function_name} to correct it."
+            self.output.status = "error"
+            self.logger.error(self.output.error_msg)
+            return TrainingState.ERROR
 
     def _process_state(self) -> TrainingState:
         """Process current state and return next state."""
@@ -519,4 +529,4 @@ def main(start: int = 0, finish: int = -1):
 
 
 if __name__ == "__main__":
-    output = main(start=0, finish=10)
+    output = main(start=1, finish=20)
