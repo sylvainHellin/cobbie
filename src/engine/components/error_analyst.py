@@ -141,6 +141,7 @@ class ErrorAnalyst(dspy.Module):
                     question=question,
                     provided_answer=provided_answer,
                     correct_answer=correct_answer,
+                    existing_tools=existing_tools,
                 )
 
                 if (
@@ -208,7 +209,6 @@ if __name__ == "__main__":
         provided_answer: str,
         correct_answer: str,
         lm_name: str = "qwen3-coder",
-        log_level: Literal["DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"] = "DEBUG",
     ):
         # configure dspy
         lm_info = LANGUAGE_MODELS[lm_name]
@@ -266,5 +266,4 @@ if __name__ == "__main__":
         question=sample_question,
         provided_answer=sample_provided_answer,
         correct_answer=sample_correct_answer,
-        log_level="INFO",
     )
