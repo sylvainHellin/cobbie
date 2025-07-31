@@ -16,6 +16,7 @@ class ToolAssessmentSignature(dspy.Signature):
     """
     Assess whether a generated Python function meets requirements and works correctly.
     Note that the path_ifc_model is not loaded as a variable in the Python interpreter. Therefore, you must instantiate the variable if you want to use it.
+    Your role is not to implement this function; it is simply to test it and assess whether it meets the requirements.
     """
 
     # inputs
