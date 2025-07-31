@@ -1,5 +1,5 @@
 from pydantic import BaseModel
-from typing import Optional, Literal, Dict, Any, Callable
+from typing import Optional, Literal, Dict, Any, Callable, List
 
 
 class Result(BaseModel):
@@ -19,3 +19,12 @@ class Result(BaseModel):
     new_function: Optional[Callable] = None
     error_category: Optional[Literal["faulty_tool", "missing_tool", "other"]] = None
     error_analysis: Optional[str] = None
+    improvement: Optional[
+        Literal[
+            "create_new_tool",
+            "merge_existing_tools",
+            "update_existing_tool",
+            "no_action_needed",
+        ]
+    ] = None
+    existing_tool_names: Optional[List[str]] = None

@@ -83,6 +83,12 @@ class ToolIdentifierConfig(BaseAgentConfig):
     pass  # Inherits all defaults from parent class
 
 
+class ToolOptimizerConfig(BaseAgentConfig):
+    """Configuration for ToolOptimizer agent."""
+
+    pass  # Inherits all defaults from parent class
+
+
 class ErrorAnalystConfig(BaseAgentConfig, CodeActConfig):
     """Configuration for ErrorAnalyst agent."""
 
@@ -169,6 +175,7 @@ class AgentConfigs(BaseModel):
     function_identifier: ToolIdentifierConfig = Field(
         default_factory=ToolIdentifierConfig
     )
+    tool_optimizer: ToolOptimizerConfig = Field(default_factory=ToolOptimizerConfig)
     error_analyst: ErrorAnalystConfig = Field(default_factory=ErrorAnalystConfig)
     training_module: TrainingModuleConfig = Field(default_factory=TrainingModuleConfig)
 
@@ -198,6 +205,7 @@ def get_config(agent_name: str) -> BaseAgentConfig:
         "tool_assessor": AGENT_CONFIGS.tool_assessor,
         "tool_corrector": AGENT_CONFIGS.tool_corrector,
         "function_identifier": AGENT_CONFIGS.function_identifier,
+        "tool_optimizer": AGENT_CONFIGS.tool_optimizer,
         "error_analyst": AGENT_CONFIGS.error_analyst,
         "training_module": AGENT_CONFIGS.training_module,
     }
