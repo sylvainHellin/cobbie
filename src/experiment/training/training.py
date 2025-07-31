@@ -269,6 +269,9 @@ class TrainingModule(dspy.Module):
             self.output.result.error_analysis = (
                 error_analyst_output.result.error_analysis
             )
+            self.output.result.assessment_details = (
+                error_analyst_output.result.error_analysis
+            )
             if self.output.result.error_category == "faulty_tool":
                 self.output.result.function_name = (
                     error_analyst_output.result.function_name
@@ -515,4 +518,7 @@ def main(start: int = 0, finish: int = -1):
 
 
 if __name__ == "__main__":
-    output = main(start=10, finish=20)
+    output = main(
+        start=-10,
+        finish=-1,
+    )
