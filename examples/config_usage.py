@@ -23,7 +23,7 @@ def example_default_configuration():
 
     print(f"Engine max_iters: {engine.max_iters}")
     print(f"Engine log_level: {engine.log_level}")
-    print(f"Tool creator max_iter: {engine.tool_creator.max_iter}")
+    print(f"Tool creator max_iter: {engine.tool_creator.max_iters}")
     print(f"Tool programmer max_iters: {engine.tool_creator.tool_programmer.max_iters}")
 
 
@@ -48,7 +48,7 @@ def example_override_specific_parameters():
 
     print(f"Engine max_retry: {engine.max_retry}")  # Should be 5
     print(f"Engine log_level: {engine.log_level}")  # Should be INFO
-    print(f"Tool creator max_iter: {engine.tool_creator.max_iter}")  # Should be 5
+    print(f"Tool creator max_iter: {engine.tool_creator.max_iters}")  # Should be 5
     print(
         f"Tool programmer max_iters: {engine.tool_creator.tool_programmer.max_iters}"
     )  # Should be 15
@@ -70,7 +70,7 @@ def example_custom_configuration():
     )
 
     custom_tool_creator_config = ToolCreatorConfig(
-        max_iter=2, log_level="INFO", tool_programmer=custom_programmer_config
+        max_iters=3, log_level="INFO", tool_programmer=custom_programmer_config
     )
 
     custom_engine_config = IfcAnswerEngineConfig(
@@ -85,7 +85,7 @@ def example_custom_configuration():
 
     print(f"Engine max_iters: {engine.max_iters}")  # Should be 15
     print(f"Engine log_level: {engine.log_level}")  # Should be WARNING
-    print(f"Tool creator max_iter: {engine.tool_creator.max_iter}")  # Should be 2
+    print(f"Tool creator max_iter: {engine.tool_creator.max_iters}")  # Should be 2
     print(
         f"Tool programmer max_iters: {engine.tool_creator.tool_programmer.max_iters}"
     )  # Should be 20

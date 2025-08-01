@@ -95,6 +95,27 @@ class ErrorAnalystConfig(BaseAgentConfig, CodeActConfig):
     pass  # Inherits all defaults from parent classes
 
 
+class ToolMergerConfig(BaseAgentConfig, CodeActConfig):
+    """Configuration for the ToolMerger agent"""
+
+    pass  # Inherits all defaults from parent classes
+
+
+class TestAndImproveConfig(BaseAgentConfig, CodeActConfig):
+    """Configuration for the TestAndImprove agent"""
+
+    max_iter: int = Field(
+        default=3, description="Maximum iterations for ToolCreator main loop"
+    )
+    add_code_prefix: bool = Field(
+        default=True, description="Whether to add code prefix"
+    )
+
+    # Sub-agent configurations
+    tool_assessor: ToolAssessorConfig = Field(default_factory=ToolAssessorConfig)
+    tool_corrector: ToolCorrectorConfig = Field(default_factory=ToolCorrectorConfig)
+
+
 class ToolDebuggerConfig(BaseAgentConfig):
     """Configuration for ToolDebugger multi-agent system."""
 
@@ -113,7 +134,7 @@ class ToolDebuggerConfig(BaseAgentConfig):
 class ToolCreatorConfig(BaseAgentConfig):
     """Configuration for ToolCreator multi-agent system."""
 
-    max_iter: int = Field(
+    max_iters: int = Field(
         default=3, description="Maximum iterations for ToolCreator main loop"
     )
     function_boilerplate: str = FUNCTION_BOILERPLATE
@@ -178,6 +199,8 @@ class AgentConfigs(BaseModel):
     tool_optimizer: ToolOptimizerConfig = Field(default_factory=ToolOptimizerConfig)
     error_analyst: ErrorAnalystConfig = Field(default_factory=ErrorAnalystConfig)
     training_module: TrainingModuleConfig = Field(default_factory=TrainingModuleConfig)
+    tool_merger: ToolMergerConfig = Field(default_factory=ToolMergerConfig)
+    test_and_improve: TestAndImproveConfig = Field(default_factory=TestAndImproveConfig)
 
 
 # Global instance - this is what gets imported and used

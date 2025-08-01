@@ -1,3 +1,5 @@
+- Implement the logic for adding the `ToolOptimizer` in the `TrainingModule`
+- Refactor the `ToolDebugger` to be like the `ToolCreator` and the `ToolMerger`
 - implement checkpoints to recover training run where it stopped
 - implement the evaluation pipeline
 - consider removing the output of each agents from the context in `training`

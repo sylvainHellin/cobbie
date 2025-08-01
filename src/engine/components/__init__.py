@@ -4,6 +4,10 @@ from .extract_function_name import NameExtractor
 from .tool_identifier import ToolIdentifier
 from .tool_optimizer import ToolOptimizer
 from .answer_verifier import AnswerVerifier
+from .tool_assessor import ToolAssessor
+from .tool_corrector import ToolCorrector
+from .tool_programmer import ToolProgrammer
+from .test_and_improve import TestAndImprove
 
 __all__ = [
     "CodeAct",
@@ -12,4 +16,8 @@ __all__ = [
     "ToolIdentifier",
     "ToolOptimizer",
     "AnswerVerifier",
+    "ToolAssessor",
+    "ToolCorrector",
+    "ToolProgrammer",
+    "TestAndImprove",
 ]
