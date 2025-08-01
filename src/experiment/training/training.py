@@ -12,8 +12,8 @@ from src.engine import (
     IfcAnswerEngine,
     ToolCreator,
     ToolDebugger,
-    ToolIdentifier,
     ToolsMerger,
+    ToolOptimizer,
 )
 from src.engine.schemas import Chat, ModuleOutput, TrainingContext, QA_Pair
 from src.engine.util import (
@@ -59,11 +59,11 @@ class TrainingModule(dspy.Module):
         # Set-up the agents (using the default config for each agent)
         self.answer_verifier = AnswerVerifier()
         self.engine = IfcAnswerEngine()
-        self.tool_identifier = ToolIdentifier()
         self.tool_creator = ToolCreator()
         self.error_analyst = ErrorAnalyst()
         self.tool_debugger = ToolDebugger()
         self.tool_merger = ToolsMerger()
+        self.tool_optimizer = ToolOptimizer()
 
         # Set-up mlflow
         mlflow.dspy.autolog()  # type: ignore
@@ -77,7 +77,7 @@ class TrainingModule(dspy.Module):
 
     def _initialize_system(self, qa_pair: QA_Pair) -> TrainingState:
         """Initialize processing state and setup."""
-        self.context.clear()
+        self.context = TrainingContext()
         self.context.qa_pair = qa_pair
         self.context.span = None
         self.chat = Chat()
@@ -172,29 +172,68 @@ class TrainingModule(dspy.Module):
             return TrainingState.WRONG_ANSWER
 
     def _handle_correct_answer(self) -> TrainingState:
-        """Try to identify useful new tools."""
-        output_tool_identifier = self.tool_identifier.forward(
+        """Try to identify optimization potential for existing tools."""
+        self.context.tool_optimizer_output = self.tool_optimizer.forward(
             chat_history=self.chat.to_string()
         )
-        self.context.tool_identifier_output = output_tool_identifier
+        if self.context.tool_optimizer_output.status == "error":
+            self.output.error_msg = self.context.tool_optimizer_output.error_msg
+            self.logger.error(self.output.error_msg)
+            return TrainingState.ERROR
 
-        if output_tool_identifier.status == "success":
-            assert output_tool_identifier.result.need_new_function is not None
+        assert self.context.tool_optimizer_output.result.improvement, (
+            "Logical Error: the status of ToolOptimizer is success, but the improvement field is None."
+        )
 
-            if output_tool_identifier.result.need_new_function:
-                assert (
-                    output_tool_identifier.result.function_name is not None
-                    and output_tool_identifier.result.function_requirements is not None
-                ), "Error: function_name and function_requirements need to be provided."
-                self.output.result.function_name = (
-                    output_tool_identifier.result.function_name
-                )
-                self.output.result.function_requirements = (
-                    output_tool_identifier.result.function_requirements
-                )
-                return TrainingState.TOOL_CREATION
+        # Update the output with the ouput of the ToolOptimizer
+        self.output.result.function_name = (
+            self.context.tool_optimizer_output.result.function_name
+        )
 
-        return TrainingState.END
+        self.output.result.function_requirements = (
+            self.context.tool_optimizer_output.result.function_requirements
+        )
+
+        self.output.result.existing_tool_names = (
+            self.context.tool_optimizer_output.result.existing_tool_names
+        )
+
+        if self.context.tool_optimizer_output.result.improvement == "create_new_tool":
+            self.output.result.function_name = (
+                self.context.tool_optimizer_output.result.function_name
+            )
+            self.output.result.function_requirements = (
+                self.context.tool_optimizer_output.result.function_requirements
+            )
+            self.logger.info(
+                f"Result assessment: new tool needed ({self.output.result.function_name}"
+            )
+            return TrainingState.TOOL_CREATION
+
+        elif (
+            self.context.tool_optimizer_output.result.improvement
+            == "merge_existing_tools"
+        ):
+            self.logger.info(
+                f"Existing tools needs to be merged.\nExisting tools: {self.output.result.existing_tool_names}\nNew tool: {self.output.result.function_name}"
+            )
+            return TrainingState.TOOL_MERGER
+
+        elif (
+            self.context.tool_optimizer_output.result.improvement
+            == "update_existing_tool"
+        ):
+            assert self.output.result.existing_tool_names, (
+                "Result of assessment of ToolOptimizer is `update_existing_tool`, but the field `existing_tool_name` is None."
+            )
+            self.output.result.function_name = self.output.result.existing_tool_names[0]
+            self.logger.info(
+                f"Existing tool needs to be updated.\nExisting tool: {self.output.result.existing_tool_names}."
+            )
+            return TrainingState.TOOL_CORRECTION
+        else:
+            self.logger.info("No improvement needed.")
+            return TrainingState.END
 
     def _handle_wrong_answer(self) -> TrainingState:
         """Analyse why the system provided a wrong answer and could we do to mitigate it."""
