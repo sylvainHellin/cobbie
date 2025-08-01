@@ -1,4 +1,5 @@
 from typing import Callable, List
+import re
 
 import dspy
 import mlflow
@@ -78,6 +79,33 @@ class ToolCreator(dspy.Module):
         )
         self.test_and_improve = TestAndImprove()
 
+    def _clean_code_blocks(self, code: str) -> str:
+        """
+        Remove code blocks wrapped in ```python ... ``` or ``` ... ``` from the code.
+
+        Args:
+            code: The code string that may contain code block markers
+
+        Returns:
+            Cleaned code string without code block markers
+        """
+        # Pattern to match code blocks with optional language specification
+        # Matches ```python\n...``` or ```\n...``` patterns
+        pattern = r"```(?:python)?\s*\n(.*?)\n```"
+
+        # Find all code blocks
+        matches = re.findall(pattern, code, re.DOTALL)
+
+        if matches:
+            # If code blocks are found, extract the content from the first/main block
+            # Usually there's just one main code block containing the function
+            cleaned_code = matches[0].strip()
+            self.logger.info("Removed code block markers from function implementation")
+            return cleaned_code
+
+        # If no code blocks found, return original code
+        return code
+
     def forward(
         self,
         function_requirements: str,
@@ -150,6 +178,11 @@ class ToolCreator(dspy.Module):
 
             # Test and debug the new tool if necessary
             if output.result.function_implementation:
+                # Clean the function implementation to remove any code block markers
+                output.result.function_implementation = self._clean_code_blocks(
+                    output.result.function_implementation
+                )
+
                 output = self.test_and_improve.forward(
                     function_implementation=output.result.function_implementation,
                     function_requirements=function_requirements,
