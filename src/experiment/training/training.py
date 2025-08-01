@@ -16,7 +16,12 @@ from src.engine import (
     ToolsMerger,
 )
 from src.engine.schemas import Chat, ModuleOutput, TrainingContext, QA_Pair
-from src.engine.util import get_function_code, get_logger, save_new_tool
+from src.engine.util import (
+    get_function_code,
+    get_logger,
+    save_new_tool,
+    delete_tools,
+)
 
 from src.engine.util import load_train_dev_split
 
@@ -24,17 +29,15 @@ from src.engine.util import load_train_dev_split
 class TrainingState(Enum):
     """States for the training module state machine."""
 
-    INITIALIZE_PROCESSING = "started"
-    ENGINE_SUCCESS = "engine_success"
-    ENGINE_FAILED = "engine_failed"
+    START = "Start the agentic workflow"
+    ENGINE = "IfcAnswerEngine"
     ANSWER_VERIFICATION = "AnswerVerifier"
     CORRECT_ANSWER = "ToolOptimizer"
     WRONG_ANSWER = "ErrorAnalyst"
     TOOL_CREATION = "ToolCreator"
     TOOL_CORRECTION = "ToolDebugger"
     TOOL_MERGER = "ToolMerger"
-    NEW_TOOL_CREATED = "new_function_ready"
-    COMPLETED_FORWARD_PASS = "completed"
+    END = "Agentic workflow completed"
     ERROR = "error"
 
 
@@ -60,6 +63,7 @@ class TrainingModule(dspy.Module):
         self.tool_creator = ToolCreator()
         self.error_analyst = ErrorAnalyst()
         self.tool_debugger = ToolDebugger()
+        self.tool_merger = ToolsMerger()
 
         # Set-up mlflow
         mlflow.dspy.autolog()  # type: ignore
@@ -68,10 +72,10 @@ class TrainingModule(dspy.Module):
         mlflow.start_run(run_name=datetime.now().strftime("%Y-%m-%d-%H-%M-%S"))
 
         # State machine attributes
-        self.state = TrainingState.INITIALIZE_PROCESSING
+        self.state = TrainingState.START
         self.context = TrainingContext()  # Typed context to pass data between states
 
-    def _initialize_processing(self, qa_pair: QA_Pair) -> TrainingState:
+    def _initialize_system(self, qa_pair: QA_Pair) -> TrainingState:
         """Initialize processing state and setup."""
         self.context.clear()
         self.context.qa_pair = qa_pair
@@ -88,9 +92,9 @@ class TrainingModule(dspy.Module):
         dspy.configure(lm=self.lm)
         self.lm.history.clear()
 
-        return TrainingState.ENGINE_SUCCESS
+        return TrainingState.ENGINE
 
-    def _handle_engine_success(self) -> TrainingState:
+    def _handle_engine(self) -> TrainingState:
         """Run the engine and determine next state."""
         assert self.context.qa_pair
         qa_pair = self.context.qa_pair
@@ -103,37 +107,11 @@ class TrainingModule(dspy.Module):
         self.context.engine_output = output_engine
 
         if output_engine.status == "success":
-            # Validate engine output
-            assert output_engine.result.need_new_function is not None, (
-                "Something is off: the status is set to 'success', but the field `need_new_function` is None."
-            )
-            assert output_engine.result.answer is not None, (
-                "Something is off: the status is set to 'success', but the `answer` field is None."
-            )
-
-            if output_engine.result.need_new_function:
-                self.output.result.function_requirements = (
-                    output_engine.result.function_requirements
-                )
-                self.output.result.function_name = output_engine.result.function_name
-                return TrainingState.NEW_TOOL_CREATED
-            else:
-                return TrainingState.ANSWER_VERIFICATION
+            return TrainingState.ANSWER_VERIFICATION
         else:
-            return TrainingState.ENGINE_FAILED
-
-    def _handle_engine_failure(self) -> TrainingState:
-        """Handle engine failure."""
-        assert self.context.qa_pair, "QA pair missing in context."
-        qa_pair = self.context.qa_pair
-        engine_output = self.context.engine_output
-
-        self.output.error_msg = (
-            f"There was a problem with question ID: {qa_pair.id}.\n"
-            f"Error msg: {engine_output.error_msg or 'No error message available'}"
-        )
-        self.logger.error(self.output.error_msg)
-        return TrainingState.ERROR
+            self.output.status = "error"
+            self.output.error_msg = output_engine.error_msg
+            return TrainingState.ERROR
 
     def _handle_answer_verification(self) -> TrainingState:
         """Handle answer verification."""
@@ -193,31 +171,6 @@ class TrainingModule(dspy.Module):
         else:
             return TrainingState.WRONG_ANSWER
 
-    def _handle_new_function_ready(self) -> TrainingState:
-        """Handle case where engine created a new function."""
-        engine_output = self.context.engine_output
-
-        self.output.result.need_new_function = True
-        self.output.result.function_name = engine_output.result.function_name
-        self.output.result.function_implementation = (
-            engine_output.result.function_implementation
-        )
-
-        assert self.output.result.function_name, (
-            "Logical Error: The output of the engine is a success, and it needs a new function, but the function name is None."
-        )
-        assert self.output.result.function_implementation, (
-            "Logical Error: the output of the engine is a success and it needed a new function, but the function implementation is None."
-        )
-
-        new_tool_saved = save_new_tool(
-            function_name=self.output.result.function_name,
-            function_implementation=self.output.result.function_implementation,
-        )
-        assert new_tool_saved, "A new tool was created but could not be saved."
-
-        return TrainingState.COMPLETED_FORWARD_PASS
-
     def _handle_correct_answer(self) -> TrainingState:
         """Try to identify useful new tools."""
         output_tool_identifier = self.tool_identifier.forward(
@@ -241,7 +194,7 @@ class TrainingModule(dspy.Module):
                 )
                 return TrainingState.TOOL_CREATION
 
-        return TrainingState.COMPLETED_FORWARD_PASS
+        return TrainingState.END
 
     def _handle_wrong_answer(self) -> TrainingState:
         """Analyse why the system provided a wrong answer and could we do to mitigate it."""
@@ -286,7 +239,7 @@ class TrainingModule(dspy.Module):
                 self.output.result.error_analysis = (
                     error_analyst_output.result.error_analysis
                 )
-                return TrainingState.COMPLETED_FORWARD_PASS
+                return TrainingState.END
         else:
             self.output.error_msg = error_analyst_output.error_msg
             self.output.status = "error"
@@ -297,12 +250,12 @@ class TrainingModule(dspy.Module):
 
         self.output.result.need_new_function = True
 
+        # Ensure all needed information exist
         assert self.output.result.function_name, "ERROR: function name is missing."
         assert self.output.result.function_requirements, (
             "Error: function requirements is missing."
         )
         assert self.context.qa_pair, "Error: missing qa_pair"
-
         assert self.context.qa_pair.ifc_model_path, "Error: ifc_model_path is missing."
 
         # Try to generate a new tool
@@ -313,9 +266,9 @@ class TrainingModule(dspy.Module):
         )
 
         if output_tool_creator.status == "success":
-            self.output.status = "success"
-            self.output.result.new_tool_created = True
             assert output_tool_creator.result.function_implementation
+
+            self.output.result.new_tool_created = True
             self.output.result.function_implementation = (
                 output_tool_creator.result.function_implementation
             )
@@ -324,9 +277,20 @@ class TrainingModule(dspy.Module):
                 function_name=self.output.result.function_name,
                 function_implementation=self.output.result.function_implementation,
             )
-            assert new_tool_saved, "A new tool was created but could not be saved."
 
-        return TrainingState.COMPLETED_FORWARD_PASS
+            if not new_tool_saved:
+                self.output.error_msg = f"New tool named: {self.output.result.function_name} could not be saved"
+                self.output.status = "error"
+                return TrainingState.ERROR
+            else:
+                return TrainingState.END
+        else:
+            self.output.status = "error"
+            self.output.error_msg = output_tool_creator.error_msg
+            self.logger.error(
+                f"ToolCreator could not create a new tool. Error msg: \n{self.output.error_msg}"
+            )
+            return TrainingState.ERROR
 
     def _handle_tool_correction(self) -> TrainingState:
         """Correct the faulty tool according the the assessment."""
@@ -375,7 +339,7 @@ class TrainingModule(dspy.Module):
                 )
                 self.output.result.existing_tool_updated = True
                 self.output.status = "success"
-                return TrainingState.COMPLETED_FORWARD_PASS
+                return TrainingState.END
 
         except FileNotFoundError:
             self.output.error_msg = f"Could not find the file {self.output.result.function_name} to correct it."
@@ -383,24 +347,77 @@ class TrainingModule(dspy.Module):
             self.logger.error(self.output.error_msg)
             return TrainingState.ERROR
 
+    def handle_tools_merger(self) -> TrainingState:
+        """Merge two existing tools if required"""
+        assert (
+            self.output.result.existing_tool_names
+            and self.output.result.function_name
+            and self.output.result.function_requirements
+            and self.context.qa_pair
+            and self.context.qa_pair.ifc_model_path
+        ), "Logical Error in _handle_tool_merger: missing information."
+
+        source_code_first_function = get_function_code(
+            function_name=self.output.result.existing_tool_names[0]
+        )
+
+        source_code_second_function = get_function_code(
+            function_name=self.output.result.existing_tool_names[1]
+        )
+
+        if source_code_first_function and source_code_second_function:
+            self.context.tool_merger_output = self.tool_merger.forward(
+                function_name=self.output.result.function_name,
+                function_requirements=self.output.result.function_requirements,
+                path_ifc_model=self.context.qa_pair.ifc_model_path,
+                source_code_first_function=source_code_first_function,
+                source_code_second_function=source_code_second_function,
+            )
+            self.context.tool_merger_output = self.context.tool_merger_output
+        else:
+            self.output.status = "error"
+            self.output.error_msg = f"Could not retrieve the source codes for functions: {self.output.result.existing_tool_names}."
+            self.logger.error(self.output.error_msg)
+
+        if self.context.tool_merger_output.status == "success":
+            self.output.result.new_tool_created = True
+            self.output.result.function_implementation = (
+                self.context.tool_merger_output.result.function_implementation
+            )
+            self.output.result.existing_tool_updated = True
+            assert self.output.result.function_implementation, (
+                "Logical Error: status of ToolMerger is 'success', but function_implementation is empty."
+            )
+            new_tool_saved = save_new_tool(
+                function_name=self.output.result.function_name,
+                function_implementation=self.output.result.function_implementation,
+            )
+            old_tools_deleted = delete_tools(
+                first_function_name=self.output.result.existing_tool_names[0],
+                second_function_name=self.output.result.existing_tool_names[1],
+            )
+            if new_tool_saved and old_tools_deleted:
+                self.output.status = "success"
+                return TrainingState.END
+            else:
+                self.output.error_msg = "Either new tool could not be saved of existing tools could not be deleted."
+                self.logger.error(self.output.error_msg)
+                return TrainingState.ERROR
+        else:
+            return TrainingState.ERROR
+
     def _process_state(self) -> TrainingState:
         """Process current state and return next state."""
-        if self.state == TrainingState.INITIALIZE_PROCESSING:
+        if self.state == TrainingState.START:
             qa_pair = self.context.qa_pair
             assert qa_pair
-            return self._initialize_processing(qa_pair)
+            return self._initialize_system(qa_pair)
 
-        elif self.state == TrainingState.ENGINE_SUCCESS:
-            return self._handle_engine_success()
-
-        elif self.state == TrainingState.ENGINE_FAILED:
-            return self._handle_engine_failure()
+        elif self.state == TrainingState.ENGINE:
+            return self._handle_engine()
 
         elif self.state == TrainingState.ANSWER_VERIFICATION:
             return self._handle_answer_verification()
-
-        elif self.state == TrainingState.NEW_TOOL_CREATED:
-            return self._handle_new_function_ready()
 
         elif self.state == TrainingState.CORRECT_ANSWER:
             return self._handle_correct_answer()
@@ -413,6 +430,9 @@ class TrainingModule(dspy.Module):
 
         elif self.state == TrainingState.TOOL_CORRECTION:
             return self._handle_tool_correction()
+
+        elif self.state == TrainingState.TOOL_MERGER:
+            return self.handle_tools_merger()
 
         else:
             return TrainingState.ERROR
@@ -456,7 +476,7 @@ class TrainingModule(dspy.Module):
     def forward(self, qa_pair: QA_Pair) -> ModuleOutput:
         """Process a QA pair using the state machine."""
         # Initialize state machine
-        self.state = TrainingState.INITIALIZE_PROCESSING
+        self.state = TrainingState.START
         self.context.qa_pair = qa_pair
 
         with mlflow.start_span(
@@ -471,7 +491,7 @@ class TrainingModule(dspy.Module):
             # State machine loop
             try:
                 while self.state not in [
-                    TrainingState.COMPLETED_FORWARD_PASS,
+                    TrainingState.END,
                     TrainingState.ERROR,
                 ]:
                     next_state = self._process_state()
