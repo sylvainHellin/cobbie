@@ -1,32 +1,3 @@
-"""
-Multi-agent tool debugging system for fixing and validating faulty IFC-related functions.
-
-This module provides a complete pipeline for debugging, correcting, and testing Python functions
-that work with IFC (Industry Foundation Classes) files using the IfcOpenShell library.
-
-The system uses two CodeAct-based agents:
-- ToolCorrector: Improves faulty functions based on assessment feedback
-- ToolAssessor: Tests and evaluates corrected functions through code execution
-
-Key features:
-- CodeAct-based agents that analyze and execute code iteratively
-- Each agent manages its own Python interpreter internally
-- Iterative improvement with up to max_iter correction cycles
-- Direct testing and formal LLM-based assessment
-- Integration with MLFlow for tracking and logging
-- Takes existing faulty implementation and assessment as input
-
-The workflow:
-1. Takes a faulty function implementation and initial assessment
-2. ToolCorrector attempts to fix the function based on the assessment
-3. Function is dynamically wrapped to create a testable tool
-4. ToolAssessor evaluates the corrected function through direct testing and LLM assessment
-5. Process repeats until success or max_iter limit is reached
-"""
-
-# %% Imports
-# =============== Imports and config =============== #
-import sys
 from typing import Callable, Dict, Optional
 
 import dspy
@@ -49,10 +20,6 @@ from src.engine.util import (
     get_logger,
 )
 
-# Set up the path
-if ROOT_PATH not in sys.path:
-    sys.path.append(ROOT_PATH)
-
 
 class ToolDebugger(dspy.Module):
     def __init__(
@@ -62,15 +29,13 @@ class ToolDebugger(dspy.Module):
             "query_ifcopenshell_documentation": query_ifcopenshell_documentation,
         },
         config=None,
-        callbacks=None,
-        llm: Optional[dspy.LM] = None,  # Optional override
     ):
-        super().__init__(callbacks)
+        super().__init__()
         # Use provided config or default config
         self.config = config or AGENT_CONFIGS.tool_debugger
 
         # Use provided LLM or get from config
-        self.lm = llm or self.config.llm.get_llm()
+        self.lm = self.config.llm.get_llm()
         dspy.configure(lm=self.lm)
         self.log_level = self.config.log_level
         self.logger = get_logger(name="ToolDebugger", log_level=self.log_level)

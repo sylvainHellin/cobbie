@@ -4,7 +4,7 @@ import dspy
 
 from src.config import AGENT_CONFIGS
 from src.engine.schemas import ModuleOutput, Result
-from src.engine.util import get_logger, create_code_prefix
+from src.engine.util import create_code_prefix, get_logger
 
 from .code_act import CodeAct
 
@@ -125,6 +125,7 @@ class ToolCorrector(dspy.Module):
 
 if __name__ == "__main__":
     import json
+
     import mlflow
 
     from src.config import LANGUAGE_MODELS, TEST_IFC_PATH
@@ -161,8 +162,6 @@ if __name__ == "__main__":
         # setup the tool corrector
         tool_corrector = ToolCorrector(
             tools=primordial_tools,
-            max_iters=10,
-            log_level=log_level,
         )
 
         # correct the tool
