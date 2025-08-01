@@ -1545,6 +1545,7 @@ dependencies = [
     { name = "ifcopenshell" },
     { name = "ipykernel" },
     { name = "jupyter" },
+    { name = "mermaid-magic" },
     { name = "mlflow" },
     { name = "mypy" },
     { name = "ollama" },
@@ -1572,6 +1573,7 @@ requires-dist = [
     { name = "ifcopenshell", specifier = ">=0.8.2" },
     { name = "ipykernel", specifier = ">=6.29.5" },
     { name = "jupyter", specifier = ">=1.1.1" },
+    { name = "mermaid-magic", specifier = ">=0.1.4" },
     { name = "mlflow", specifier = ">=3.1.0" },
     { name = "mypy", specifier = ">=1.16.1" },
     { name = "ollama", specifier = ">=0.4.8" },
@@ -2361,6 +2363,18 @@ source = { registry = "https://pypi.org/simple" }
 sdist = { url = "https://files.pythonhosted.org/packages/d6/54/cfe61301667036ec958cb99bd3efefba235e65cdeb9c84d24a8293ba1d90/mdurl-0.1.2.tar.gz", hash = "sha256:bb413d29f5eea38f31dd4754dd7377d4465116fb207585f97bf925588687c1ba", size = 8729, upload-time = "2022-08-14T12:40:10.846Z" }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/b3/38/89ba8ad64ae25be8de66a6d463314cf1eb366222074cfda9ee839c56a4b4/mdurl-0.1.2-py3-none-any.whl", hash = "sha256:84008a41e51615a49fc9966191ff91509e3c40b939176e643fd50a5c2196b8f8", size = 9979, upload-time = "2022-08-14T12:40:09.779Z" },
+]
+
+[[package]]
+name = "mermaid-magic"
+version = "0.1.4"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "ipython" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/64/cf/01ef44a12e769c58405e0f56c2b74498a05024655bb5a33e77960f00433e/mermaid_magic-0.1.4.tar.gz", hash = "sha256:f65b3095312fb42aa6d064be3e6f642df62da0cd1fd7024de57389627b308513", size = 3827, upload-time = "2025-05-04T04:04:56.404Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/1c/d8/006d4980a8d4e8b6dcae13aae932e351d7e4c39f3eba2f4f8943981de179/mermaid_magic-0.1.4-py3-none-any.whl", hash = "sha256:43ad15cdf7241ddb19d6349953fabe067e0458866a972d9b0605bd78437a2b25", size = 3855, upload-time = "2025-05-04T04:04:53.993Z" },
 ]
 
 [[package]]
