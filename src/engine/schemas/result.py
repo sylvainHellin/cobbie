@@ -28,3 +28,4 @@ class Result(BaseModel):
         ]
     ] = None
     existing_tool_names: Optional[List[str]] = None
+    tools_merged: Optional[bool] = None

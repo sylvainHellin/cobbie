@@ -21,6 +21,7 @@ from src.engine.util import (
     get_logger,
     save_new_tool,
     delete_tools,
+    get_usage_openrouter,
 )
 
 from src.engine.util import load_train_dev_split
@@ -55,6 +56,7 @@ class TrainingModule(dspy.Module):
         # Use provided LLM or get from config
         self.lm = lm or self.config.llm.get_llm()
         self.chat = Chat()
+        self.current_usage = get_usage_openrouter()
 
         # Set-up the agents (using the default config for each agent)
         self.answer_verifier = AnswerVerifier()
@@ -492,6 +494,7 @@ class TrainingModule(dspy.Module):
     def _finalize_span_and_tracking(self, span, qa_pair: QA_Pair):
         """Finalize MLFlow span and tracking."""
         total_input_tokens, total_output_tokens = self._calculate_tokens()
+        cost_of_run = get_usage_openrouter() - self.current_usage
 
         mlflow.update_current_trace(
             tags={
@@ -506,6 +509,8 @@ class TrainingModule(dspy.Module):
                 "existing_tool_updated": str(
                     self.output.result.existing_tool_updated or False
                 ),
+                "tools_merged": str(self.output.result.tools_merged),
+                "cost": str(cost_of_run),
             },
             state="OK" if self.output.status == "success" else "ERROR",
             request_preview=qa_pair.question,
