@@ -18,103 +18,200 @@ An intelligent engine that answers questions about BIM models in .ifc format usi
 The system is built around several specialized agents that work together:
 
 ```mermaid
-graph TB
-    subgraph "IfcAnswerEngine"
-        IE[Main Engine]
-        TC[ToolCreator]
-        NE[NameExtractor]
-    end
+stateDiagram-v2
+    classDef input fill:#1a535c,stroke:#333,stroke-width:2px,color:#fff
+    classDef module fill:#4ecdc4,stroke:#333,stroke-width:2px  
+    classDef condition fill:#f7fff7,stroke:#333,stroke-width:2px
+    classDef output fill:#ff6b6b,stroke:#333,stroke-width:2px,color:#fff
+    classDef state fill:#ffe66d,stroke:#333,stroke-width:2px
 
-    subgraph "Multi-Agent Tool Creation"
-        TP[ToolProgrammer]
-        TA[ToolAssessor]
-        TCR[ToolCorrector]
-    end
+    state "Training Module" as TM {
+        state "TrainingModule<br/>State Machine" as TSM
+        state "AnswerVerifier" as AV
+        state "ErrorAnalyst" as EA
+        state "ToolOptimizer" as TO
+        state "ToolDebugger" as TD
+        state "ToolsMerger" as TMR
+    }
 
-    subgraph "Configuration System"
-        AC[AGENT_CONFIGS]
-        LC[LLM Config]
-        SC[Sub-Agent Configs]
-    end
+    state "IfcAnswerEngine" as IE {
+        state "Main Engine" as ME
+        state "ToolCreator" as TC
+        state "NameExtractor" as NE
+    }
 
-    subgraph "Tools & Execution"
-        PT[Primordial Tools]
-        CT[Created Tools]
-        PI[Python Interpreter]
-    end
+    state "Multi-Agent Tool Creation" as MATC {
+        state "ToolProgrammer" as TP
+        state "ToolAssessor" as TA
+        state "ToolCorrector" as TCR
+    }
 
-    IE --> TC
-    IE --> NE
+    state "Configuration System" as CS {
+        state "AGENT_CONFIGS" as AC
+        state "LLM Config" as LC
+        state "Sub-Agent Configs" as SC
+    }
+
+    state "Tools & Execution" as TE {
+        state "Primordial Tools" as PT
+        state "Created Tools" as CT
+        state "Python Interpreter" as PI
+    }
+
+    TSM --> ME
+    TSM --> AV
+    TSM --> EA
+    TSM --> TO
+    TSM --> TD
+    TSM --> TMR
+    TSM --> TC
+    
+    ME --> TC
+    ME --> NE
     TC --> TP
     TC --> TA
     TC --> TCR
-    AC --> IE
+    TD --> TA
+    TD --> TCR
+    
+    AC --> TSM
+    AC --> ME
     AC --> TC
     LC --> AC
     SC --> AC
     PT --> TP
-    CT --> IE
+    CT --> ME
     PI --> TP
     PI --> TA
     PI --> TCR
+
+    class TSM,ME,TC,NE,TP,TA,TCR,AV,EA,TO,TD,TMR module
+    class AC,LC,SC state
+    class PT,CT,PI output
+    class TM,IE,MATC,CS,TE condition
 ```
 
 ### Agent Responsibilities
 
+#### Core Engine
 - **IfcAnswerEngine**: Main orchestrator that processes questions and coordinates other agents
+
+#### Tool Creation & Management
 - **ToolCreator**: Multi-agent system that creates new tools through iterative improvement
 - **ToolProgrammer**: Generates initial function implementations using CodeAct
 - **ToolAssessor**: Tests and evaluates generated functions through code execution
 - **ToolCorrector**: Improves functions based on assessment feedback
 - **NameExtractor**: Extracts function names from requirements
 
+#### Training & Quality Assurance
+- **AnswerVerifier**: Compares generated answers with ground truth using similarity scoring
+- **ErrorAnalyst**: Analyzes incorrect answers to categorize errors and identify root causes
+- **ToolOptimizer**: Identifies optimization opportunities for existing tools
+- **ToolDebugger**: Multi-agent system that corrects faulty tools through iterative improvement
+- **ToolsMerger**: Combines multiple existing tools into a single, more efficient tool
+
 ## 🔄 Training vs Inference Modes
 
 ### Training Mode
 
-The system learns to create new tools when existing ones are insufficient:
+The system uses a sophisticated state machine to learn and improve through multi-agent collaboration:
 
 ```mermaid
 stateDiagram-v2
-    [*] --> STARTED
-    STARTED --> ENGINE_COMPLETED: Initialize processing
-    ENGINE_COMPLETED --> ENGINE_FAILED: Engine fails
-    ENGINE_COMPLETED --> NEW_FUNCTION_READY: Engine creates new function
-    ENGINE_COMPLETED --> VERIFICATION_NEEDED: Engine answers without new function
+    classDef input fill:#1a535c,stroke:#333,stroke-width:2px,color:#fff
+    classDef module fill:#4ecdc4,stroke:#333,stroke-width:2px  
+    classDef condition fill:#f7fff7,stroke:#333,stroke-width:2px
+    classDef output fill:#ff6b6b,stroke:#333,stroke-width:2px,color:#fff
+    classDef state fill:#ffe66d,stroke:#333,stroke-width:2px
 
-    ENGINE_FAILED --> ERROR: Handle failure
-
-    NEW_FUNCTION_READY --> COMPLETED: Save new function
-
-    VERIFICATION_NEEDED --> ERROR: Verification fails
-    VERIFICATION_NEEDED --> VERIFICATION_COMPLETED: Verification succeeds
-
-    VERIFICATION_COMPLETED --> COMPLETED: Answer incorrect
-    VERIFICATION_COMPLETED --> NEW_FUNCTION_READY: Answer correct + Engine created function
-    VERIFICATION_COMPLETED --> TOOL_IDENTIFICATION_NEEDED: Answer correct + No function created
-
-    TOOL_IDENTIFICATION_NEEDED --> COMPLETED: No tool needed
-    TOOL_IDENTIFICATION_NEEDED --> TOOL_CREATION_NEEDED: Tool identified
-
-    TOOL_CREATION_NEEDED --> COMPLETED: Tool created and saved
-
-    COMPLETED --> [*]
+    [*] --> START
+    START --> ENGINE: Initialize system
+    
+    ENGINE --> ANSWER_VERIFICATION: Engine succeeds
+    ENGINE --> ERROR: Engine fails
+    
+    ANSWER_VERIFICATION --> CORRECT_ANSWER: Answer is correct
+    ANSWER_VERIFICATION --> WRONG_ANSWER: Answer is incorrect
+    ANSWER_VERIFICATION --> ERROR: Verification fails
+    
+    CORRECT_ANSWER --> TOOL_CREATION: Create new tool
+    CORRECT_ANSWER --> TOOL_MERGER: Merge existing tools
+    CORRECT_ANSWER --> TOOL_CORRECTION: Update existing tool
+    CORRECT_ANSWER --> END: No improvement needed
+    
+    WRONG_ANSWER --> TOOL_CREATION: Missing tool identified
+    WRONG_ANSWER --> TOOL_CORRECTION: Faulty tool identified
+    WRONG_ANSWER --> END: Other error category
+    
+    TOOL_CREATION --> FILE_SAVED: New .py file created
+    TOOL_CREATION --> ERROR: Tool creation failed
+    
+    TOOL_CORRECTION --> FILE_UPDATED: Existing .py file modified
+    TOOL_CORRECTION --> ERROR: Tool correction failed
+    
+    TOOL_MERGER --> FILE_UPDATED: Combined tool saved
+    TOOL_MERGER --> FILE_DELETED: Old tools removed
+    TOOL_MERGER --> ERROR: Tool merger failed
+    
+    FILE_SAVED --> MLF_LOGGED: MLflow experiment logged
+    FILE_UPDATED --> MLF_LOGGED: MLflow experiment logged
+    FILE_DELETED --> MLF_LOGGED: MLflow experiment logged
+    
+    MLF_LOGGED --> END: Process completed
+    
+    END --> [*]
     ERROR --> [*]
+
+    class START,ENGINE input
+    class ANSWER_VERIFICATION,TOOL_CREATION,TOOL_CORRECTION,TOOL_MERGER module
+    class CORRECT_ANSWER,WRONG_ANSWER condition
+    class FILE_SAVED,FILE_UPDATED,FILE_DELETED,MLF_LOGGED state
+    class END,ERROR output
 ```
+
+#### Training Agents
+
+The training module orchestrates multiple specialized agents:
+
+- **AnswerVerifier**: Compares generated answers with ground truth using similarity scoring
+- **ErrorAnalyst**: Analyzes incorrect answers to categorize errors and identify root causes
+- **ToolOptimizer**: Identifies optimization opportunities for existing tools when answers are correct
+- **ToolDebugger**: Multi-agent system that corrects faulty tools through iterative improvement
+- **ToolsMerger**: Combines multiple existing tools into a single, more efficient tool
+- **ToolCreator**: Creates entirely new tools when missing functionality is identified
 
 ### Inference Mode
 
 The system uses its trained toolset to answer questions efficiently:
 
 ```mermaid
-flowchart TB
-    Q[Question] --> IE[IfcAnswerEngine]
-    IE --> ET[Existing Tools]
-    IE --> PT[Primordial Tools<br/>• web_search<br/>• query_ifcopenshell_documentation]
-    ET --> CA[CodeAct Agent]
-    PT --> CA
-    CA --> PI[Python Interpreter]
-    PI --> A[Answer]
+stateDiagram-v2
+    classDef input fill:#1a535c,stroke:#333,stroke-width:2px,color:#fff
+    classDef module fill:#4ecdc4,stroke:#333,stroke-width:2px  
+    classDef condition fill:#f7fff7,stroke:#333,stroke-width:2px
+    classDef output fill:#ff6b6b,stroke:#333,stroke-width:2px,color:#fff
+    classDef state fill:#ffe66d,stroke:#333,stroke-width:2px
+
+    [*] --> Question
+    Question --> IfcAnswerEngine
+    IfcAnswerEngine --> ExistingTools
+    IfcAnswerEngine --> PrimordialTools
+    ExistingTools --> CodeActAgent
+    PrimordialTools --> CodeActAgent
+    CodeActAgent --> PythonInterpreter
+    PythonInterpreter --> Answer
+    Answer --> [*]
+
+    state PrimordialTools {
+        state "web_search" as WS
+        state "query_ifcopenshell_documentation" as QID
+    }
+
+    class Question input
+    class IfcAnswerEngine,CodeActAgent,ExistingTools module
+    class PrimordialTools,PythonInterpreter condition
+    class Answer output
+    class WS,QID state
 ```
 
 ## ⚙️ Configuration System
@@ -178,9 +275,15 @@ ifcAnswerEngineV3/
 │   │   │   ├── tool_programmer.py
 │   │   │   ├── tool_assessor.py
 │   │   │   ├── tool_corrector.py
+│   │   │   ├── tool_debugger.py  # Multi-agent tool debugging
+│   │   │   ├── tool_merger.py    # Tool combination system
+│   │   │   ├── tool_optimizer.py # Tool optimization analysis
+│   │   │   ├── answer_verifier.py # Answer similarity verification
+│   │   │   ├── error_analyst.py  # Error categorization and analysis
 │   │   │   └── extract_function_name.py
 │   │   ├── schemas/              # Data models
-│   │   │   ├── datapoint.py
+│   │   │   ├── context.py        # Training context schema
+│   │   │   ├── qa_pair.py        # Question-answer pair schema
 │   │   │   ├── module_output.py
 │   │   │   └── result.py
 │   │   ├── tools/               # Tool management
@@ -191,10 +294,8 @@ ifcAnswerEngineV3/
 │   │
 │   └── experiment/              # Training and evaluation
 │       ├── training/
-│       │   ├── training.py      # Training pipeline
-│       │   └── data_loader.py
+│       │   └── training.py      # State machine-based training pipeline
 │       ├── evaluation/
-│       │   └── answer_verifier.py
 │       └── db/                  # Database and datasets
 │
 ├── examples/                    # Usage examples
@@ -253,18 +354,34 @@ print(result.result.answer)
 #### Training Mode
 ```python
 from src.experiment.training.training import TrainingModule
+from src.engine.util import load_train_dev_split
 
-# Initialize training module
+# Initialize training module with state machine
 training = TrainingModule()
 
-# Train on a dataset
-from src.experiment.training.data_loader import load_train_dev_split
+# Load training data
 train, dev = load_train_dev_split()
 
-for datapoint in train:
-    result = training.forward(datapoint)
+# Process each QA pair through the state machine
+for qa_pair in train:
+    result = training.forward(qa_pair)
     print(f"Status: {result.status}")
+    print(f"Correct Answer: {result.result.correct_answer}")
+    print(f"Similarity Score: {result.result.similarity_score}")
+    if result.result.new_tool_created:
+        print(f"New Tool Created: {result.result.function_name}")
 ```
+
+#### Training State Machine
+
+The `TrainingModule` implements a sophisticated state machine that:
+
+1. **Processes QA pairs** through the main engine
+2. **Verifies answers** against ground truth using similarity scoring  
+3. **Analyzes correct answers** for optimization opportunities
+4. **Diagnoses incorrect answers** to identify missing or faulty tools
+5. **Creates, corrects, or merges tools** based on analysis results
+6. **Tracks everything** in MLflow with detailed metrics and spans
 
 ### MLflow Tracking
 
@@ -328,6 +445,11 @@ This project is licensed under the MIT License - see the LICENSE file for detail
 
 ## 🏷️ Version History
 
-- **v3.0**: DSPy-based architecture with hierarchical configuration system
+- **v3.0**: DSPy-based architecture with state machine training system
+  - Advanced state machine-based training module with multi-agent orchestration
+  - Sophisticated answer verification, error analysis, and tool optimization
+  - Automated tool creation, correction, and merging capabilities
+  - Hierarchical configuration system with complete type safety
+  - Comprehensive MLflow integration with detailed tracking and metrics
 - **v2.0**: Multi-agent system with tool creation capabilities
 - **v1.0**: Initial implementation with basic question answering
