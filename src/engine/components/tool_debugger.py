@@ -1,11 +1,10 @@
-from typing import Callable, Dict, Optional
+from typing import Callable, Dict
 
 import dspy
 import mlflow
 
 from src.config import (
     AGENT_CONFIGS,
-    ROOT_PATH,
 )
 from src.engine.components.tool_assessor import ToolAssessor
 from src.engine.components.tool_corrector import ToolCorrector
