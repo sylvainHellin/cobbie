@@ -8,8 +8,11 @@ from src.config import (
     FUNCTION_BOILERPLATE,
 )
 from src.engine.components import CodeAct
-from src.engine.schemas import ModuleOutput, Result
+from src.engine.schemas import ModuleOutput
+from src.engine.tools.primordial import query_ifcopenshell_documentation, web_search
 from src.engine.util import create_code_prefix, get_logger
+
+from .test_and_improve import TestAndImprove
 
 
 class SignatureMergeTools(dspy.Signature):
@@ -46,12 +49,15 @@ class SignatureMergeTools(dspy.Signature):
     )
 
 
-class ToolMerger(dspy.Module):
+class ToolsMerger(dspy.Module):
     """Module to merge two existing Python functions into one."""
 
     def __init__(
         self,
-        tools: List[Callable],
+        tools: List[Callable] = [
+            query_ifcopenshell_documentation,
+            web_search,
+        ],
         config=None,
     ):
         super().__init__()
@@ -62,11 +68,12 @@ class ToolMerger(dspy.Module):
 
         self.tools = tools
         self.max_iters = self.config.max_iters
-        self.predictor = CodeAct(
+        self.tools_merger = CodeAct(
             signature=SignatureMergeTools,
             tools=tools,
             max_iters=self.max_iters,
         )
+        self.test_and_improve = TestAndImprove()
         self.log_level = self.config.log_level
         self.logger = get_logger(name="ToolMerger", log_level=self.log_level)
         self.add_code_prefix = self.config.add_code_prefix
@@ -94,10 +101,10 @@ class ToolMerger(dspy.Module):
             else:
                 code_prefix = None
 
-            self.predictor._update_code_prefix(code_prefix=code_prefix)
+            self.tools_merger._update_code_prefix(code_prefix=code_prefix)
 
             try:
-                prediction = self.predictor(
+                prediction = self.tools_merger(
                     function_name=function_name,
                     function_requirements=function_requirements,
                     path_ifc_model=path_ifc_model,
@@ -113,12 +120,10 @@ class ToolMerger(dspy.Module):
                     self.logger.debug(
                         f"function code:\n{prediction.function_implementation}\n"
                     )
-                    return ModuleOutput(
-                        result=Result(
-                            function_implementation=prediction.function_implementation
-                        ),
-                        status="success",
+                    output.result.function_implementation = (
+                        prediction.function_implementation
                     )
+
                 else:
                     output.error_msg = (
                         f"No valid code generated for function: {function_name}"
@@ -129,13 +134,21 @@ class ToolMerger(dspy.Module):
                 output.error_msg = f"An Exception occured during the CodeAct forward pass:\nError:\n{e}"
                 self.logger.error(output.error_msg)
 
+            # Test and debug the new tool if necessary
+            if output.result.function_implementation:
+                output = self.test_and_improve.forward(
+                    function_implementation=output.result.function_implementation,
+                    function_requirements=function_requirements,
+                    function_name=function_name,
+                    path_ifc_model=path_ifc_model,
+                )
         return output
 
 
 if __name__ == "__main__":
     import json
+
     from src.config import TEST_IFC_PATH
-    from src.engine.util import get_created_tools
 
     def main():
         """Test the ToolMerger with sample functions."""
@@ -144,11 +157,8 @@ if __name__ == "__main__":
         mlflow.set_tracking_uri("http://127.0.0.1:5000")
         mlflow.set_experiment("ToolMerger")
 
-        # Get available tools
-        available_tools = list(get_created_tools().values())
-
         # Initialize the ToolMerger
-        tool_merger = ToolMerger(tools=available_tools)
+        tool_merger = ToolsMerger()
 
         # Sample function implementations to merge
         function_name = "get_element_dimensions_by_type"
