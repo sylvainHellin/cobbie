@@ -13,6 +13,7 @@ from src.engine import (
     ToolCreator,
     ToolDebugger,
     ToolIdentifier,
+    ToolsMerger,
 )
 from src.engine.schemas import Chat, ModuleOutput, TrainingContext, QA_Pair
 from src.engine.util import get_function_code, get_logger, save_new_tool
@@ -26,12 +27,12 @@ class TrainingState(Enum):
     INITIALIZE_PROCESSING = "started"
     ENGINE_SUCCESS = "engine_success"
     ENGINE_FAILED = "engine_failed"
-    ANSWER_VERIFICATION = "answer_verification"
-    VERIFICATION_COMPLETED = "verification_completed"
-    CORRECT_ANSWER = "tool_identification_needed"
-    WRONG_ANSWER = "error_analyst"
-    TOOL_CREATION = "tool_creation_needed"
-    TOOL_CORRECTION = "tool_debugger"
+    ANSWER_VERIFICATION = "AnswerVerifier"
+    CORRECT_ANSWER = "ToolOptimizer"
+    WRONG_ANSWER = "ErrorAnalyst"
+    TOOL_CREATION = "ToolCreator"
+    TOOL_CORRECTION = "ToolDebugger"
+    TOOL_MERGER = "ToolMerger"
     NEW_TOOL_CREATED = "new_function_ready"
     COMPLETED_FORWARD_PASS = "completed"
     ERROR = "error"
@@ -138,64 +139,57 @@ class TrainingModule(dspy.Module):
         """Handle answer verification."""
         qa_pair = self.context.qa_pair
         assert qa_pair, "Error: QA pair is not defined."
-        engine_output = self.context.engine_output
+        self.context.engine_output = self.context.engine_output
 
         self.logger.info("IfcAnswerEngine could answer the question.")
-        self.logger.debug(f"Answer: \n{engine_output.result.answer}")
+        self.logger.debug(f"Answer: \n{self.context.engine_output.result.answer}")
         self.logger.debug(f"Ground Truth: \n{qa_pair.answer}")
 
         # Verify if answer is correct
-        assert engine_output.result.answer, (
+        assert self.context.engine_output.result.answer, (
             "Error: Answer in Engine Output is None. disn"
         )
-        output_answer_verifier = self.answer_verifier.forward(
+        self.context.verifier_output = self.answer_verifier.forward(
             question=qa_pair.question,
             first_answer=qa_pair.answer,
-            second_answer=engine_output.result.answer,
+            second_answer=self.context.engine_output.result.answer,
         )
-        self.context.verifier_output = output_answer_verifier
 
-        if output_answer_verifier.status == "error":
+        # Handle errors
+        if self.context.verifier_output.status == "error":
             self.output.error_msg = (
                 f"There was an error with the AnswerVerifier. "
-                f"Error message: {output_answer_verifier.error_msg or 'No error message provided'}"
+                f"Error message: {self.context.verifier_output.error_msg or 'No error message provided'}"
             )
             self.logger.error(self.output.error_msg)
             return TrainingState.ERROR
-        else:
-            return TrainingState.VERIFICATION_COMPLETED
 
-    def _handle_answer_verification_completed(self) -> TrainingState:
-        """Process verification results."""
-        engine_output = self.context.engine_output
-        verifier_output = self.context.verifier_output
+        # Define next step depending on eval result
+        self.context.engine_output = self.context.engine_output
 
-        assert verifier_output.result.similarity_score is not None, (
+        assert self.context.verifier_output.result.similarity_score is not None, (
             "Something is off: the status of AnswerVerifier is 'success', but the `similarity_score` field is None."
         )
 
         # Update output with verification results
         self.output.error_msg = None
         self.output.status = "success"
-        self.output.result.similarity_score = verifier_output.result.similarity_score
+        self.output.result.similarity_score = (
+            self.context.verifier_output.result.similarity_score
+        )
         self.output.result.correct_answer = (
-            verifier_output.result.similarity_score >= self.config.similarity_threshold
+            self.context.verifier_output.result.similarity_score
+            >= self.config.similarity_threshold
         )
-        self.output.result.answer = engine_output.result.answer
+        self.output.result.answer = self.context.engine_output.result.answer
 
-        status = "correct" if self.output.result.correct_answer else "wrong"
-        self.logger.info(f"AnswerVerifier could check the answer. Status: {status}")
-        self.logger.debug(
-            f"Similarity score: {verifier_output.result.similarity_score}\n"
-            f"Correct answer: {self.output.result.correct_answer}"
+        self.logger.info(
+            f"AnswerVerifier could check the answer. Correct answer: {self.output.result.correct_answer}"
         )
 
+        # Define the next step depending on whether the answer is correct or not.
         if self.output.result.correct_answer:
-            # Check if the engine already created a new function
-            if engine_output.result.need_new_function:
-                return TrainingState.NEW_TOOL_CREATED
-            else:
-                return TrainingState.CORRECT_ANSWER
+            return TrainingState.CORRECT_ANSWER
         else:
             return TrainingState.WRONG_ANSWER
 
@@ -404,9 +398,6 @@ class TrainingModule(dspy.Module):
 
         elif self.state == TrainingState.ANSWER_VERIFICATION:
             return self._handle_answer_verification()
-
-        elif self.state == TrainingState.VERIFICATION_COMPLETED:
-            return self._handle_answer_verification_completed()
 
         elif self.state == TrainingState.NEW_TOOL_CREATED:
             return self._handle_new_function_ready()
