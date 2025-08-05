@@ -3,7 +3,7 @@ name = "ifcanswerenginev3"
 version = "0.1.0"
 description = "An Engine that can answer any question related to a given BIM model in .ifc format."
 readme = "README.md"
-requires-python = ">=3.12"
+requires-python = ">=3.12, <3.13"
 dependencies = [
     "arize-phoenix==8.24.0",
     "chromadb>=1.0.8",
@@ -36,7 +36,7 @@ where = ["src"]
 [tool.pytest.ini_options]
 pythonpath = ["."]
 
-[dependency-groups]
+[project.optional-dependencies]
 dev = [
     "ty>=0.0.1a6",
 ]
