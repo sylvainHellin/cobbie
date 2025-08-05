@@ -9,3 +9,6 @@ class ModuleOutput(BaseModel):
     result: Result = Result()
     status: Literal["error", "success"]
     error_msg: Optional[str] = None
+    input_tokens: Optional[int] = None
+    output_tokens: Optional[int] = None
+    llm: Optional[str] = None
