@@ -179,6 +179,10 @@ class TrainingModuleConfig(BaseAgentConfig):
     experiment_name: str = Field(
         default="Training", description="MLflow experiment name"
     )
+    evaluate: bool = Field(
+        default=True,
+        description="Evaluate the performance of the system, before and after the training run.",
+    )
 
 
 # Global configuration instance
