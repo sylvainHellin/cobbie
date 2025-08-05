@@ -97,8 +97,22 @@ class IfcAnswerEngine(dspy.Module):
         )
         self.logger.info("IfcAnswerEngine initialized.")
 
+    def _calculate_tokens(self) -> tuple[int, int]:
+        """Calculate total input and output tokens from LM history."""
+        total_input_tokens = 0
+        total_output_tokens = 0
+
+        if self.lm.history:
+            for call in self.lm.history:
+                usage = call.get("usage", {})
+                total_input_tokens += usage.get("prompt_tokens", 0)
+                total_output_tokens += usage.get("completion_tokens", 0)
+
+        return total_input_tokens, total_output_tokens
+
     def forward(self, question: str, path_ifc_model: str = "") -> ModuleOutput:
         self.logger.info("Starting forward pass.")
+        self.lm.history.clear()
 
         self.output = ModuleOutput(
             status="error", error_msg="IfcAnswerEngine could not answer the question."
@@ -147,6 +161,7 @@ class IfcAnswerEngine(dspy.Module):
                     }
                 )
 
+        self.output.input_tokens, self.output.output_tokens = self._calculate_tokens()
         return self.output
 
 
