@@ -12,19 +12,19 @@ from src.engine import (
     IfcAnswerEngine,
     ToolCreator,
     ToolDebugger,
-    ToolsMerger,
     ToolOptimizer,
+    ToolsMerger,
 )
-from src.engine.schemas import Chat, ModuleOutput, TrainingContext, QA_Pair
+from src.engine.schemas import Chat, ModuleOutput, QA_Pair, TrainingContext
 from src.engine.util import (
+    delete_tools,
     get_function_code,
     get_logger,
-    save_new_tool,
-    delete_tools,
     get_usage_openrouter,
+    load_train_dev_split,
+    save_new_tool,
 )
-
-from src.engine.util import load_train_dev_split
+from src.experiment.evaluation.evaluation import evaluate
 
 
 class TrainingState(Enum):
@@ -52,6 +52,7 @@ class TrainingModule(dspy.Module):
         # Use provided config or default config
         self.config = config or AGENT_CONFIGS.training_module
         self.logger = get_logger(name="Training", log_level=self.config.log_level)
+        self.evaluate = self.config.evaluate
 
         # Use provided LLM or get from config
         self.lm = lm or self.config.llm.get_llm()
@@ -519,6 +520,24 @@ class TrainingModule(dspy.Module):
 
     def forward(self, qa_pair: QA_Pair) -> ModuleOutput:
         """Process a QA pair using the state machine."""
+        # If evaluate set to true, run an evaluation befor beginning
+        if self.evaluate:
+            with mlflow.start_span(
+                name="start_evaluation",
+                span_type="CHAIN",
+            ):
+                start_eval = evaluate(
+                    llm=self.lm,
+                    dataset_type="dev",
+                    start_run=False,
+                )
+                mlflow.log_metrics(
+                    metrics={
+                        "start_mean_accuracy": start_eval.mean_accuracy(),
+                        "start_nb_errors": len(start_eval.errors),
+                        "start_mean_duration": start_eval.mean_duration(),
+                    }
+                )
         # Initialize state machine
         self.state = TrainingState.START
         self.context.qa_pair = qa_pair
@@ -545,9 +564,25 @@ class TrainingModule(dspy.Module):
                 self.logger.error(self.output.error_msg)
                 self.output.status = "error"
 
-            # Finalize tracking and metrics
-            self._finalize_span_and_tracking(span, qa_pair)
-
+        # Finalize tracking and metrics
+        self._finalize_span_and_tracking(span, qa_pair)
+        with mlflow.start_span(
+            name="start_evaluation",
+            span_type="CHAIN",
+        ):
+            if self.evaluate:
+                end_eval = evaluate(
+                    llm=self.lm,
+                    dataset_type="dev",
+                    start_run=True,
+                )
+                mlflow.log_metrics(
+                    metrics={
+                        "end_mean_accuracy": end_eval.mean_accuracy(),
+                        "end_nb_errors": len(end_eval.errors),
+                        "end_mean_duration": end_eval.mean_duration(),
+                    }
+                )
             return self.output
 
 
