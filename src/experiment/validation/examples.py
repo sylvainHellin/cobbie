@@ -4,16 +4,24 @@ from src.engine.util import load_train_dev_split
 from dspy import Example
 
 
-def create_examples(qa_pairs: List[QA_Pair]) -> List[Example]:
+class QA_Example(Example):
+    question: str
+    answer: str
+    path_ifc_model: str
+    question_id: int
+
+
+def create_examples(qa_pairs: List[QA_Pair]) -> List[QA_Example]:
     """
     transform the custom type into example for dspy optimization.
     """
-    examples: List[Example] = []
+    examples: List[QA_Example] = []
     for qa in qa_pairs:
-        example = Example(
+        example = QA_Example(
             question=qa.question,
             answer=qa.answer,
             path_ifc_model=qa.ifc_model_path,
+            question_id=qa.id,
         ).with_inputs(
             "question",
             "path_ifc_model",
