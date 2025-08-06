@@ -1,9 +1,10 @@
 from datetime import datetime
 from enum import Enum
-from typing import Optional
+from typing import List, Literal, Optional
 
 import dspy
 import mlflow
+from pydantic import BaseModel
 
 from src.config import AGENT_CONFIGS
 from src.engine import (
@@ -15,7 +16,12 @@ from src.engine import (
     ToolOptimizer,
     ToolsMerger,
 )
-from src.engine.schemas import Chat, ModuleOutput, QA_Pair, TrainingContext
+from src.engine.schemas import (
+    Chat,
+    ModuleOutput,
+    QA_Pair,
+    TrainingContext,
+)
 from src.engine.util import (
     delete_tools,
     get_function_code,
@@ -25,6 +31,12 @@ from src.engine.util import (
     save_new_tool,
 )
 from src.experiment.evaluation.evaluation import evaluate
+
+
+class ToolsMetrics(BaseModel):
+    nb_tools_created: float = 0
+    nb_tools_updated: float = 0
+    nb_tools_merged: float = 0
 
 
 class TrainingState(Enum):
@@ -53,6 +65,7 @@ class TrainingModule(dspy.Module):
         self.config = config or AGENT_CONFIGS.training_module
         self.logger = get_logger(name="Training", log_level=self.config.log_level)
         self.evaluate = self.config.evaluate
+        self.tools_metrics = ToolsMetrics()
 
         # Use provided LLM or get from config
         self.lm = lm or self.config.llm.get_llm()
@@ -77,6 +90,7 @@ class TrainingModule(dspy.Module):
         # State machine attributes
         self.state = TrainingState.START
         self.context = TrainingContext()  # Typed context to pass data between states
+        self.outputs: List[ModuleOutput] = []
 
     def _initialize_system(self, qa_pair: QA_Pair) -> TrainingState:
         """Initialize processing state and setup."""
@@ -325,6 +339,7 @@ class TrainingModule(dspy.Module):
                 self.output.status = "error"
                 return TrainingState.ERROR
             else:
+                self.tools_metrics.nb_tools_created += 1
                 return TrainingState.END
         else:
             self.output.status = "error"
@@ -381,6 +396,7 @@ class TrainingModule(dspy.Module):
                 )
                 self.output.result.existing_tool_updated = True
                 self.output.status = "success"
+                self.tools_metrics.nb_tools_updated += 1
                 return TrainingState.END
 
         except FileNotFoundError:
@@ -440,6 +456,7 @@ class TrainingModule(dspy.Module):
             )
             if new_tool_saved and old_tools_deleted:
                 self.output.status = "success"
+                self.tools_metrics.nb_tools_merged += 1
                 return TrainingState.END
             else:
                 self.output.error_msg = "Either new tool could not be saved of existing tools could not be deleted."
@@ -517,79 +534,92 @@ class TrainingModule(dspy.Module):
             request_preview=qa_pair.question,
             response_preview=self.output.result.answer or "",
         )
+        mlflow.log_metrics(metrics=self.tools_metrics.model_dump())
 
-    def forward(self, qa_pair: QA_Pair) -> ModuleOutput:
-        """Process a QA pair using the state machine."""
-        # If evaluate set to true, run an evaluation befor beginning
+    def _evaluation(
+        self,
+        mode: Literal["before", "after"],
+        devset: List[QA_Pair],
+    ):
         if self.evaluate:
             with mlflow.start_span(
                 name="start_evaluation",
                 span_type="CHAIN",
             ):
-                start_eval = evaluate(
+                # run eval
+                eval = evaluate(
                     llm=self.lm,
-                    dataset_type="dev",
                     start_run=False,
+                    dataset=devset,
                 )
-                mlflow.log_metrics(
-                    metrics={
-                        "start_mean_accuracy": start_eval.mean_accuracy(),
-                        "start_nb_errors": len(start_eval.errors),
-                        "start_mean_duration": start_eval.mean_duration(),
-                    }
-                )
-        # Initialize state machine
-        self.state = TrainingState.START
-        self.context.qa_pair = qa_pair
+            # Log the metrics
+            mlflow.log_metrics(
+                metrics={
+                    f"mean_accuracy_{mode}_training": eval.mean_accuracy(),
+                    f"nb_errors_{mode}_training": len(eval.errors),
+                    f"mean_duration_{mode}_training": eval.mean_duration(),
+                },
+            )
+            mlflow.log_param(key="model", value=self.lm.model)
 
-        with mlflow.start_span(
-            name=f"question_id_{qa_pair.id}",
-            span_type="QUESTION",
-        ) as span:
-            span.set_attribute("question_id", qa_pair.id)
-            span.set_attribute("question", qa_pair.question)
-            span.set_attribute("ground_truth", qa_pair.answer)
-            self.context.span = span
+        return
 
-            # State machine loop
-            try:
-                while self.state not in [
-                    TrainingState.END,
-                    TrainingState.ERROR,
-                ]:
-                    next_state = self._process_state()
-                    self.state = next_state
-            except Exception as e:
-                self.output.error_msg = f"An error occured during the Training run for question_id: {qa_pair.id}.\nError:\n{e}"
-                self.logger.error(self.output.error_msg)
-                self.output.status = "error"
+    def forward(
+        self,
+        devset: List[QA_Pair],
+        trainset: List[QA_Pair],
+    ) -> List[ModuleOutput]:
+        """Process a QA pair using the state machine."""
 
-        # Finalize tracking and metrics
-        self._finalize_span_and_tracking(span, qa_pair)
-        with mlflow.start_span(
-            name="start_evaluation",
-            span_type="CHAIN",
-        ):
-            if self.evaluate:
-                end_eval = evaluate(
-                    llm=self.lm,
-                    dataset_type="dev",
-                    start_run=True,
-                )
-                mlflow.log_metrics(
-                    metrics={
-                        "end_mean_accuracy": end_eval.mean_accuracy(),
-                        "end_nb_errors": len(end_eval.errors),
-                        "end_mean_duration": end_eval.mean_duration(),
-                    }
-                )
-            return self.output
+        # Evaluate the accuracy of the engine before the training round.
+        self._evaluation(mode="before", devset=devset)
+
+        # Go through each examples in the training set
+        for qa_pair in trainset:
+            # Initialize state machine
+            self.state = TrainingState.START
+            self.context.qa_pair = qa_pair
+
+            with mlflow.start_span(
+                name=f"question_id_{qa_pair.id}",
+                span_type="QUESTION",
+            ) as span:
+                span.set_attribute("question_id", qa_pair.id)
+                span.set_attribute("question", qa_pair.question)
+                span.set_attribute("ground_truth", qa_pair.answer)
+                self.context.span = span
+
+                # State machine loop
+                try:
+                    while self.state not in [
+                        TrainingState.END,
+                        TrainingState.ERROR,
+                    ]:
+                        next_state = self._process_state()
+                        self.state = next_state
+                except Exception as e:
+                    self.output.error_msg = f"An error occured during the Training run for question_id: {qa_pair.id}.\nError:\n{e}"
+                    self.logger.error(self.output.error_msg)
+                    self.output.status = "error"
+
+                # Finalize tracking and metrics
+                self._finalize_span_and_tracking(span, qa_pair)
+
+                # add the output to the final outputs
+                self.outputs.append(self.output)
+
+        # Evaluate the accuracy of the engine after the training round.
+        self._evaluation(mode="after", devset=devset)
+
+        return self.outputs
 
 
-def main(start: int = 0, finish: int = -1):
+def main(
+    trainset: List[QA_Pair],
+    devset: List[QA_Pair],
+):
     # setup mlflow
     mlflow.dspy.autolog()  # type: ignore
-    train, dev = load_train_dev_split()
 
     # setup the logger
     logger = get_logger(
@@ -598,17 +628,17 @@ def main(start: int = 0, finish: int = -1):
 
     training_module = TrainingModule()
 
-    output = None
-    for qa_pair in train[start:finish]:
-        # Log info
-        logger.info(f"\n{'#' * 20}\nQUESTION: {qa_pair.question}\n{'#' * 20}\n")
-        output = training_module.forward(qa_pair=qa_pair)
+    logger.info("Starting the TrainingModule")
+
+    output = training_module.forward(
+        devset=devset,
+        trainset=trainset,
+    )
 
     return output
 
 
 if __name__ == "__main__":
-    output = main(
-        start=-10,
-        finish=-1,
-    )
+    devset, trainset = load_train_dev_split()
+
+    outputs = main(devset=devset[:5], trainset=trainset[:5])
