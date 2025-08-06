@@ -1,6 +1,12 @@
 # Roadmap
 
 ## Engine
+- fix the issue with the `query_ifcopenshell_doc`
+- Pass two additional args to the `TrainingModule`: trainset and devset.
+  - add cost metrics in mlflow
+  - add improvement metric
+  - add an option to run the optimizer before the final eval? Or on a dedicated function?
+- merge the QApair and qa examples into one file (qa.py)
 - Refactor the `ToolDebugger` to be like the `ToolCreator` and the `ToolMerger`
 - implement checkpoints to recover training run where it stopped
 - implement the evaluation pipeline
