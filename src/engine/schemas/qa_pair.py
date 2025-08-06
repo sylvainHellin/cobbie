@@ -1,7 +1,7 @@
-from pydantic import BaseModel
+from dspy import Example
 
 
-class QA_Pair(BaseModel):
+class QA_Pair(Example):
     id: int
     question: str
     answer: str
