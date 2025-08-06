@@ -1,11 +1,20 @@
 # %%
 # ==================== Set up ==================== #
 import json
-from typing import Optional
+import os
+import sys
+
 from chromadb import PersistentClient
 from chromadb.errors import NotFoundError
-from src.config import VECTORSTORE_PATH, LOG_LEVEL
-from src.engine.util import get_logger
+from dotenv import find_dotenv, load_dotenv
+
+_ = load_dotenv(find_dotenv())
+ROOT_PATH = os.getenv("ROOT_PATH")
+assert ROOT_PATH is not None
+
+sys.path.insert(0, ROOT_PATH)
+from src.config import LOG_LEVEL, VECTORSTORE_PATH  # noqa: E402
+from src.engine.util import get_logger  # noqa: E402
 
 
 # Move the client initialization into a function
@@ -54,12 +63,10 @@ def get_db_client():
 def query_ifcopenshell_documentation(
     query: str,
     n_results: int = 10,
-    docstring_filter: Optional[str] = None,
 ) -> str:
     """Queries the documentation vector database to find semantically similar documentation entries.
 
-    This function performs semantic similarity search to find relevant IfcOpenShell documentation
-    based on a natural language description. For best results, the query should:
+    This function performs semantic similarity search to find relevant IfcOpenShell documentation based on a natural language description. For best results, the query should:
     - Describe the desired functionality in simple, clear terms
     - Focus on the core operation (e.g., "get entity attributes" rather than "how do I get attributes?")
     - Use terminology similar to the documentation (e.g., "entity", "property", "attribute")
@@ -73,7 +80,6 @@ def query_ifcopenshell_documentation(
     Args:
         query (str): Natural language description of the desired functionality.
         n_results (int, optional): The maximum number of results to return. Defaults to 10.
-        docstring_filter (str, optional): A string to filter results based on whether the docstring contains this expression. Defaults to None.
 
     Returns:
         str: A JSON-serialized string containing either:
@@ -95,17 +101,10 @@ def query_ifcopenshell_documentation(
     logger.info("IfcOpenShell documentation query tool called")
     logger.debug(f"Query: {query}")
     logger.debug(f"n_results: {n_results}")
-    logger.debug(f"docstring_filter: {docstring_filter}")
 
     # Add input validation for query
     if not query or not query.strip():
         error_msg = "Query string cannot be empty"
-        logger.error(f"INPUT VALIDATION ERROR: {error_msg}")
-        return json.dumps({"error": error_msg})
-
-    # Add input validation for docstring_filter
-    if docstring_filter is not None and not isinstance(docstring_filter, str):
-        error_msg = "docstring_filter must be a string"
         logger.error(f"INPUT VALIDATION ERROR: {error_msg}")
         return json.dumps({"error": error_msg})
 
@@ -129,18 +128,12 @@ def query_ifcopenshell_documentation(
         logger.error(f"DATABASE ERROR: {error_msg}")
         return json.dumps({"error": error_msg})
 
-    # Structure the db query to include docstring filter if provided
-    where_document = {"$contains": docstring_filter} if docstring_filter else None
-
-    logger.debug(f"Database query filters - where_document: {where_document}")
-
     # query the similar elements from the db
     try:
         logger.info("Executing semantic search query...")
         results = collection.query(
             query_texts=[query],  # Add the query text for semantic search
             n_results=n_results,
-            where_document=where_document,  # type:ignore
         )
         logger.info(
             f"✓ Database query completed successfully. Found {len(results['ids'][0]) if results['ids'] else 0} results"
@@ -199,7 +192,6 @@ if __name__ == "__main__":
     # Example usage with docstring filter
     res1 = query_ifcopenshell_documentation(
         query=query,
-        docstring_filter="instance",
     )
 
     print("\n", "=" * 50, "\n")
