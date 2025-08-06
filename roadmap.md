@@ -1,21 +1,10 @@
 # Roadmap
 
 ## Engine
-- fix the issue with the `query_ifcopenshell_doc`
-- Pass two additional args to the `TrainingModule`: trainset and devset.
-  - add cost metrics in mlflow
-  - add improvement metric
-  - add an option to run the optimizer before the final eval? Or on a dedicated function?
-- merge the QApair and qa examples into one file (qa.py)
 - Refactor the `ToolDebugger` to be like the `ToolCreator` and the `ToolMerger`
 - implement checkpoints to recover training run where it stopped
-- implement the evaluation pipeline
 - consider removing the output of each agents from the context in `training`
-- `Training`
-  - add a start index for the training cycle
-  - accept run name as arg.
 - Set-up the optimizer and run it
-- log in cost info in the `run` in `mlflow` for the `TrainingModule`
 
 ## Experiment
 
