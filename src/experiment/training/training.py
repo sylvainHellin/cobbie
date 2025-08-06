@@ -37,6 +37,7 @@ class ToolsMetrics(BaseModel):
     nb_tools_created: float = 0
     nb_tools_updated: float = 0
     nb_tools_merged: float = 0
+    cost: float = 0
 
 
 class TrainingState(Enum):
@@ -535,6 +536,7 @@ class TrainingModule(dspy.Module):
             response_preview=self.output.result.answer or "",
         )
         mlflow.log_metrics(metrics=self.tools_metrics.model_dump())
+        self.tools_metrics.cost += cost_of_run
 
     def _evaluation(
         self,
@@ -610,6 +612,7 @@ class TrainingModule(dspy.Module):
 
         # Evaluate the accuracy of the engine after the training round.
         self._evaluation(mode="after", devset=devset)
+        mlflow.log_metric(key="cost", value=self.tools_metrics.cost)
 
         return self.outputs
 
@@ -641,4 +644,4 @@ def main(
 if __name__ == "__main__":
     devset, trainset = load_train_dev_split()
 
-    outputs = main(devset=devset[:5], trainset=trainset[:5])
+    outputs = main(devset=devset[10:20], trainset=trainset[15:35])
