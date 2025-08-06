@@ -6,6 +6,9 @@ import os
 from typing import Callable, Dict, List
 
 from src.config import CREATED_TOOLS_PATH
+from src.engine.util.get_logger import get_logger
+
+logger = get_logger(__name__)
 
 
 # Import all functions from each file
@@ -42,8 +45,16 @@ def get_created_tools(tools: List[Callable] = []) -> Dict[str, Callable]:
                 ):
                     globals()[name] = fn
                     fn_dict[name] = fn
-        except ImportError as e:
-            print(f"Warning: Could not import module {module_name}: {e}")
+        except Exception as e:
+            file_path = os.path.join(CREATED_TOOLS_PATH, f"{module_name}.py")
+            logger.warning(
+                f"Could not import module '{module_name}'. Deleting it. Error: {e}"
+            )
+            try:
+                os.remove(file_path)
+                logger.info(f"Successfully deleted problematic tool file: {file_path}")
+            except OSError as remove_error:
+                logger.error(f"Error deleting file {file_path}: {remove_error}")
             continue
 
     return fn_dict
@@ -84,10 +95,10 @@ if __name__ == "__main__":
     tools = get_created_tools()
     for name, fn in tools.items():
         # print(f"function's name: {name}\nfunction's docstring: {fn.__doc__}\n---\n")
-        print(f"function name: {name}")
+        logger.info(f"function name: {name}")
 
-    print("/n/n")
+    logger.info("/n/n")
     tools_description = get_tools_description()
-    print(tools_description)
+    logger.info(tools_description)
 
-    print(get_tools_names())
+    logger.info(get_tools_names())
