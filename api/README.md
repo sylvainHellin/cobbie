@@ -58,6 +58,29 @@ Get a list of all available BIM models.
 }
 ```
 
+### GET `/models/{model_id}/ifc`
+
+Download the IFC file for a specific model.
+
+**Parameters:**
+- `model_id` (path parameter): The ID of the model to download
+
+**Response:**
+Returns the IFC file as a binary download with appropriate headers for file download.
+
+**Example:**
+```bash
+curl -O http://127.0.0.1:8000/models/1/ifc
+# Downloads the IFC file for model with ID 1
+```
+
+The downloaded file will be named using the pattern: `{project_name}_{model_name}_{model_id}.ifc`
+
+**Error Responses:**
+- `404 Not Found`: Model with the specified ID doesn't exist
+- `404 Not Found`: Model file not found at the stored path
+- `500 Internal Server Error`: Unexpected server error
+
 ### GET `/`
 
 Health check endpoint.

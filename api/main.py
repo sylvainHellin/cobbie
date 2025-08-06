@@ -6,6 +6,7 @@ import traceback
 from datetime import datetime
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import FileResponse
 import mlflow
 
 # Add the project root directory to the Python path
@@ -226,6 +227,115 @@ async def list_models():
                     "exception": str(e),
                 }
             )
+
+            raise HTTPException(status_code=500, detail=error_msg)
+
+
+@app.get("/models/{model_id}/ifc")
+async def get_ifc_file(model_id: int):
+    """
+    Download the IFC file for a specific model.
+
+    Args:
+        model_id: The ID of the model to download
+
+    Returns:
+        FileResponse: The IFC file as a download
+    """
+    start_time = datetime.now()
+
+    with mlflow.start_span(name="API_get_ifc_file", span_type="API") as span:
+        # Log the inputs
+        span.set_inputs(
+            {
+                "model_id": model_id,
+                "timestamp": start_time.isoformat(),
+            }
+        )
+
+        try:
+            # Get the IFC model information from the database
+            ifc_models = get_ifc_models(id=model_id)
+
+            if not ifc_models:
+                error_msg = f"BIM model with ID {model_id} not found"
+                span.set_outputs(
+                    {
+                        "status": "error",
+                        "error_msg": error_msg,
+                        "duration_seconds": (
+                            datetime.now() - start_time
+                        ).total_seconds(),
+                    }
+                )
+                raise HTTPException(status_code=404, detail=error_msg)
+
+            ifc_model = ifc_models[0]  # Get the first (and should be only) result
+
+            if not ifc_model.model_path or not os.path.exists(ifc_model.model_path):
+                error_msg = f"BIM model file not found at path: {ifc_model.model_path}"
+                span.set_outputs(
+                    {
+                        "status": "error",
+                        "error_msg": error_msg,
+                        "duration_seconds": (
+                            datetime.now() - start_time
+                        ).total_seconds(),
+                    }
+                )
+                raise HTTPException(status_code=404, detail=error_msg)
+
+            # Log model information
+            span.set_attributes(
+                {
+                    "model_path": ifc_model.model_path,
+                    "project_name": ifc_model.project_name,
+                    "model_name": ifc_model.model_name,
+                }
+            )
+
+            duration = (datetime.now() - start_time).total_seconds()
+
+            # Log the outputs
+            span.set_outputs(
+                {
+                    "status": "success",
+                    "model_path": ifc_model.model_path,
+                    "duration_seconds": duration,
+                }
+            )
+
+            # Generate a filename for the download
+            filename = f"{ifc_model.project_name}_{ifc_model.model_name}_{model_id}.ifc"
+            # Clean filename of any invalid characters
+            filename = "".join(c for c in filename if c.isalnum() or c in "._-")
+
+            return FileResponse(
+                path=ifc_model.model_path,
+                filename=filename,
+                media_type="application/octet-stream",
+                headers={"Content-Disposition": f"attachment; filename={filename}"},
+            )
+
+        except HTTPException:
+            # Re-raise HTTP exceptions
+            raise
+        except Exception as e:
+            # Handle any other unexpected errors
+            error_msg = f"An unexpected error occurred: {str(e)}"
+            duration = (datetime.now() - start_time).total_seconds()
+
+            span.set_outputs(
+                {
+                    "status": "error",
+                    "error_msg": error_msg,
+                    "duration_seconds": duration,
+                    "exception": str(e),
+                }
+            )
+
+            print(f"Error in get_ifc_file: {error_msg}")
+            print(f"Traceback: {traceback.format_exc()}")
 
             raise HTTPException(status_code=500, detail=error_msg)
 
