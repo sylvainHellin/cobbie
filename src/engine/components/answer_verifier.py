@@ -16,7 +16,7 @@ class AnswerVerifierSignature(dspy.Signature):
 
     The tolerance threshold for numerical values (quantities, measurements, etc.) is up to 2%.
 
-    If both answers state that the information is not available in the BIM model, but one provides additional relevant information for answering the question that does not specifically come from the BIM model, they should still be evaluated as similar.
+    If both answers state that the information is not available in the BIM model, the similarity score should be high (at least 0.85). This applies even if one answer provides additional relevant information that does not come directly from the BIM model. A lower score is only acceptable if the additional relevant information provided by the two answers completely diverges.
     """
 
     question: str = dspy.InputField()
