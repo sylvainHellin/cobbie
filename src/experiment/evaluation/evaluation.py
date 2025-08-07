@@ -9,7 +9,8 @@ from tqdm import tqdm
 from src.engine import IfcAnswerEngine
 from src.engine.schemas import QA_Pair, EvaluationResult
 from src.engine.util import get_logger
-from src.experiment.validation import DEVSET, metric
+from src.experiment.validation import metric
+from src.experiment.datasets import DEVSET
 
 
 def evaluate(
@@ -88,7 +89,7 @@ def evaluate(
                 )
                 continue
 
-            acc = metric(example=qa_pair, output=engine_output)
+            acc = metric(example=qa_pair.to_example(), output=engine_output)
             result.accuracy.append(acc)
 
     # Log final summary
@@ -122,7 +123,7 @@ if __name__ == "__main__":
     # Run evaluation with error handling
     from src.config import LANGUAGE_MODELS
 
-    llm = LANGUAGE_MODELS["qwen3-coder"]
+    llm = LANGUAGE_MODELS["gpt-oss-120b"]
     llm = LM(
         model=llm.url,
         api_key=llm.api_key,
