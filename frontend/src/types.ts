@@ -4,13 +4,7 @@ export interface BIMModel {
     model_name: string;
     model_description: string;
     model_path: string;
-}
-
-export interface ChatMessage {
-    id: string;
-    type: 'user' | 'assistant';
-    content: string;
-    timestamp: Date;
+    supabase_url?: string;
 }
 
 export interface QuestionRequest {
@@ -20,18 +14,21 @@ export interface QuestionRequest {
 
 export interface QuestionResponse {
     status: 'success' | 'error';
-    answer: string | null;
-    error_msg: string | null;
-    model_info: {
+    answer?: string;
+    error_msg?: string;
+    model_info?: {
         id: number;
         project_name: string;
         model_name: string;
         model_description: string;
-    } | null;
+    };
+}
+
+export interface Project {
+    name: string;
+    models: BIMModel[];
 }
 
 export interface LoadingState {
-    isLoading: boolean;
-    stage: 'loading' | 'fetching' | 'processing' | null;
-    message: string;
+    stage: 'loading' | 'fetching' | 'processing';
 }

@@ -1,100 +1,173 @@
-import React from 'react';
-import { BIMModel } from '../types';
+import React, { useState, useEffect } from 'react';
+import { BIMModel, Project } from '../types';
+import { apiService } from '../services/api';
 
 interface ModelSelectorProps {
-    models: BIMModel[];
-    onModelSelect: (model: BIMModel) => void;
-    isLoading: boolean;
+    onModelSelected: (model: BIMModel) => void;
+    className?: string;
 }
 
-const ModelSelector: React.FC<ModelSelectorProps> = ({ models, onModelSelect, isLoading }) => {
-    // Group models by project
-    const groupedModels = models.reduce((acc, model) => {
-        if (!acc[model.project_name]) {
-            acc[model.project_name] = [];
+const ModelSelector: React.FC<ModelSelectorProps> = ({ onModelSelected, className = '' }) => {
+    const [projects, setProjects] = useState<Project[]>([]);
+    const [selectedProject, setSelectedProject] = useState<string>('');
+    const [selectedModel, setSelectedModel] = useState<BIMModel | null>(null);
+    const [isLoading, setIsLoading] = useState(true);
+    const [error, setError] = useState<string>('');
+
+    useEffect(() => {
+        loadModels();
+    }, []);
+
+    const loadModels = async () => {
+        try {
+            setIsLoading(true);
+            setError('');
+            const models = await apiService.getModels();
+
+            // Group models by project
+            const projectMap = new Map<string, BIMModel[]>();
+            models.forEach(model => {
+                if (!projectMap.has(model.project_name)) {
+                    projectMap.set(model.project_name, []);
+                }
+                projectMap.get(model.project_name)!.push(model);
+            });
+
+            const projectsList: Project[] = Array.from(projectMap.entries()).map(([name, models]) => ({
+                name,
+                models
+            }));
+
+            setProjects(projectsList);
+        } catch (err) {
+            console.error('Error loading models:', err);
+            setError('Failed to load available models. Please check if the API server is running.');
+        } finally {
+            setIsLoading(false);
         }
-        acc[model.project_name].push(model);
-        return acc;
-    }, {} as Record<string, BIMModel[]>);
+    };
+
+    const handleProjectChange = (projectName: string) => {
+        setSelectedProject(projectName);
+        setSelectedModel(null);
+    };
+
+    const handleModelSelect = (model: BIMModel) => {
+        setSelectedModel(model);
+        onModelSelected(model);
+    };
+
+    const currentProject = projects.find(p => p.name === selectedProject);
 
     if (isLoading) {
         return (
-            <div className="max-w-2xl mx-auto p-8">
-                <div className="text-center">
-                    <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-600 mx-auto mb-4"></div>
-                    <p className="text-slate-600 loading-text">Loading available models...</p>
+            <div className={`bg-white rounded-lg shadow-sm p-6 ${className}`}>
+                <div className="flex items-center justify-center">
+                    <div className="inline-block animate-spin rounded-full h-6 w-6 border-b-2 border-blue-600 mr-3"></div>
+                    <span className="text-gray-600">Loading available models...</span>
                 </div>
             </div>
         );
     }
 
-    if (models.length === 0) {
+    if (error) {
         return (
-            <div className="max-w-2xl mx-auto p-8">
+            <div className={`bg-white rounded-lg shadow-sm p-6 ${className}`}>
                 <div className="text-center">
-                    <div className="w-16 h-16 mx-auto mb-4 bg-slate-200 rounded-full flex items-center justify-center">
-                        <svg className="w-8 h-8 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
+                    <div className="text-red-600 mb-4">
+                        <svg className="mx-auto h-12 w-12 mb-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.962-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z" />
                         </svg>
                     </div>
-                    <h3 className="text-lg font-medium text-slate-900 mb-2">No Models Available</h3>
-                    <p className="text-slate-600">No BIM models are currently available. Please check your server configuration.</p>
+                    <h3 className="text-lg font-medium text-gray-900 mb-2">Connection Error</h3>
+                    <p className="text-gray-600 mb-4">{error}</p>
+                    <button
+                        onClick={loadModels}
+                        className="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 transition-colors"
+                    >
+                        Retry
+                    </button>
                 </div>
             </div>
         );
     }
 
     return (
-        <div className="max-w-4xl mx-auto p-8">
-            <div className="text-center mb-8">
-                <h2 className="text-3xl font-bold text-slate-900 mb-2">Select a BIM Model</h2>
-                <p className="text-slate-600">Choose a project and model to start asking questions</p>
+        <div className={`bg-white rounded-lg shadow-sm p-6 ${className}`}>
+            <h2 className="text-xl font-semibold text-gray-800 mb-6">Select BIM Model</h2>
+
+            {/* Project Selection */}
+            <div className="mb-6">
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Project
+                </label>
+                <select
+                    value={selectedProject}
+                    onChange={(e) => handleProjectChange(e.target.value)}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                >
+                    <option value="">Select a project...</option>
+                    {projects.map((project) => (
+                        <option key={project.name} value={project.name}>
+                            {project.name} ({project.models.length} model{project.models.length !== 1 ? 's' : ''})
+                        </option>
+                    ))}
+                </select>
             </div>
 
-            <div className="space-y-6">
-                {Object.entries(groupedModels).map(([projectName, projectModels]) => (
-                    <div key={projectName} className="bg-white rounded-lg shadow-sm border border-slate-200 overflow-hidden">
-                        <div className="bg-slate-50 px-6 py-4 border-b border-slate-200">
-                            <h3 className="text-lg font-semibold text-slate-800">{projectName}</h3>
-                            <p className="text-sm text-slate-600">{projectModels.length} model{projectModels.length !== 1 ? 's' : ''} available</p>
+            {/* Model Selection */}
+            {selectedProject && currentProject && (
+                <div className="mb-6">
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                        Model
+                    </label>
+                    <div className="space-y-2">
+                        {currentProject.models.map((model) => (
+                            <div
+                                key={model.id}
+                                className={`p-4 border rounded-lg cursor-pointer transition-colors ${selectedModel?.id === model.id
+                                        ? 'border-blue-500 bg-blue-50'
+                                        : 'border-gray-200 hover:border-gray-300 hover:bg-gray-50'
+                                    }`}
+                                onClick={() => handleModelSelect(model)}
+                            >
+                                <div className="flex justify-between items-start">
+                                    <div className="flex-1">
+                                        <h3 className="font-medium text-gray-900">{model.model_name}</h3>
+                                        {model.model_description && (
+                                            <p className="text-sm text-gray-600 mt-1">{model.model_description}</p>
+                                        )}
+                                    </div>
+                                    <div className="ml-4">
+                                        <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800">
+                                            ID: {model.id}
+                                        </span>
+                                    </div>
+                                </div>
+                            </div>
+                        ))}
+                    </div>
+                </div>
+            )}
+
+            {selectedModel && (
+                <div className="bg-green-50 border border-green-200 rounded-md p-4">
+                    <div className="flex">
+                        <div className="flex-shrink-0">
+                            <svg className="h-5 w-5 text-green-400" fill="currentColor" viewBox="0 0 20 20">
+                                <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+                            </svg>
                         </div>
-
-                        <div className="p-6">
-                            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                                {projectModels.map((model) => (
-                                    <button
-                                        key={model.id}
-                                        onClick={() => onModelSelect(model)}
-                                        className="group relative bg-white border border-slate-200 rounded-lg p-4 hover:border-primary-300 hover:shadow-md transition-all duration-200 text-left focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent"
-                                    >
-                                        <div className="flex items-start space-x-3">
-                                            <div className="flex-shrink-0">
-                                                <div className="w-10 h-10 bg-primary-100 rounded-lg flex items-center justify-center group-hover:bg-primary-200 transition-colors">
-                                                    <svg className="w-6 h-6 text-primary-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
-                                                    </svg>
-                                                </div>
-                                            </div>
-                                            <div className="flex-1 min-w-0">
-                                                <h4 className="text-sm font-medium text-slate-900 truncate">{model.model_name}</h4>
-                                                <p className="text-xs text-slate-500 mt-1 line-clamp-2">{model.model_description}</p>
-                                                <div className="mt-2">
-                                                    <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-slate-100 text-slate-800">
-                                                        ID: {model.id}
-                                                    </span>
-                                                </div>
-                                            </div>
-                                        </div>
-
-                                        {/* Hover effect */}
-                                        <div className="absolute inset-0 rounded-lg bg-primary-50 opacity-0 group-hover:opacity-50 transition-opacity pointer-events-none"></div>
-                                    </button>
-                                ))}
+                        <div className="ml-3">
+                            <h3 className="text-sm font-medium text-green-800">Model Selected</h3>
+                            <div className="text-sm text-green-700 mt-1">
+                                <p><strong>{selectedModel.model_name}</strong> from project <strong>{selectedModel.project_name}</strong></p>
+                                <p className="text-xs mt-1">The BIM viewer will now load this model...</p>
                             </div>
                         </div>
                     </div>
-                ))}
-            </div>
+                </div>
+            )}
         </div>
     );
 };
