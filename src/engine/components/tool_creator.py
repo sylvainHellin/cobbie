@@ -115,12 +115,12 @@ class ToolCreator(dspy.Module):
         with mlflow.start_span(
             name="ToolCreator",
             span_type="MODULE",
-        ) as span:
+        ) as creator_span:
             # --- Set up the system --- #
             output = ModuleOutput(status="error")
 
-            # Set initial span inputs
-            span.set_inputs(
+            # Set initial creator_span inputs
+            creator_span.set_inputs(
                 {
                     "function_name": function_name,
                     "path_ifc_model": path_ifc_model,
@@ -133,8 +133,8 @@ class ToolCreator(dspy.Module):
             # --- Create initial function --- #
             with mlflow.start_span(
                 name="InitialCodeGeneration", span_type="MODULE"
-            ) as span:
-                span.set_inputs(
+            ) as code_generation_span:
+                code_generation_span.set_inputs(
                     {
                         "function_name": function_name,
                         "path_ifc_model": path_ifc_model,
@@ -168,7 +168,7 @@ class ToolCreator(dspy.Module):
                     self.logger.error(output.error_msg)
 
                 finally:
-                    span.set_outputs(
+                    code_generation_span.set_outputs(
                         {
                             "function_implementation": output.result.function_implementation,
                             "status": output.status,
@@ -189,14 +189,16 @@ class ToolCreator(dspy.Module):
                     function_name=function_name,
                     path_ifc_model=path_ifc_model,
                 )
-            span.set_outputs(
+
+            creator_span.set_outputs(
                 {
                     "status": output.status,
                     "error_msg": output.error_msg,
                     "function_implementation": output.result.function_implementation,
                 }
             )
-        return output
+
+            return output
 
 
 if __name__ == "__main__":
