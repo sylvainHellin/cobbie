@@ -39,7 +39,7 @@ mlflow.set_tracking_uri(MLFLOW_URI)
 mlflow.set_experiment("API")
 
 # Initialize the IFC Answer Engine
-llm = LANGUAGE_MODELS["qwen3-coder-cerebras"]
+llm = LANGUAGE_MODELS["claude"]
 llm = LM(
     model=llm.url,
     api_key=llm.api_key,
