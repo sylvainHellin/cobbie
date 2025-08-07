@@ -12,3 +12,7 @@ def get_usage_openrouter() -> float:
         headers={"Authorization": f"Bearer {openrouter_api_key}"},
     )
     return float(response.json()["data"]["usage"])
+
+
+if __name__ == "__main__":
+    print(f"current balance: {get_usage_openrouter()}")
