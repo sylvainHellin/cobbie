@@ -27,10 +27,10 @@ from src.engine.util import (
     get_function_code,
     get_logger,
     get_usage_openrouter,
-    load_train_dev_split,
     save_new_tool,
 )
 from src.experiment.evaluation.evaluation import evaluate
+from src.experiment.datasets import load_train_dev_split
 
 
 class ToolsMetrics(BaseModel):
@@ -72,6 +72,7 @@ class TrainingModule(dspy.Module):
         self.lm = lm or self.config.llm.get_llm()
         self.chat = Chat()
         self.current_usage = get_usage_openrouter()
+        self.previous_usage = self.current_usage
 
         # Set-up the agents (using the default config for each agent)
         self.answer_verifier = AnswerVerifier()
@@ -99,6 +100,7 @@ class TrainingModule(dspy.Module):
         self.context.qa_pair = qa_pair
         self.context.span = None
         self.chat = Chat()
+        self.previous_usage = self.current_usage
 
         # Initialize default output
         self.output = ModuleOutput(
@@ -513,7 +515,8 @@ class TrainingModule(dspy.Module):
     def _finalize_span_and_tracking(self, span, qa_pair: QA_Pair):
         """Finalize MLFlow span and tracking."""
         total_input_tokens, total_output_tokens = self._calculate_tokens()
-        cost_of_run = get_usage_openrouter() - self.current_usage
+        self.current_usage = get_usage_openrouter()
+        cost_of_span = self.current_usage - self.previous_usage
 
         mlflow.update_current_trace(
             tags={
@@ -529,14 +532,14 @@ class TrainingModule(dspy.Module):
                     self.output.result.existing_tool_updated or False
                 ),
                 "tools_merged": str(self.output.result.tools_merged),
-                "cost": str(cost_of_run),
+                "cost": str(cost_of_span),
             },
             state="OK" if self.output.status == "success" else "ERROR",
             request_preview=qa_pair.question,
             response_preview=self.output.result.answer or "",
         )
         mlflow.log_metrics(metrics=self.tools_metrics.model_dump())
-        self.tools_metrics.cost += cost_of_run
+        self.tools_metrics.cost += cost_of_span
 
     def _evaluation(
         self,
