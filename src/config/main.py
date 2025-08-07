@@ -100,13 +100,22 @@ LANGUAGE_MODELS["gemma3n"] = LLM(
     name="gemma3n",
 )
 
-# Qwen3-Coder models via OpenRouter
+# OpenRouter models
 LANGUAGE_MODELS["qwen3-coder"] = LLM(
     url="openrouter/qwen/qwen3-coder",
     api_key=OPENROUTER_API_KEY,
     name="qwen3-coder",
 )
-
+LANGUAGE_MODELS["gpt-oss-120b"] = LLM(
+    url="openrouter/openai/gpt-oss-120b",
+    api_key=OPENROUTER_API_KEY,
+    name="gpt-oss-120b",
+)
+LANGUAGE_MODELS["gemini-flash-lite"] = LLM(
+    url="openrouter/google/gemini-2.5-flash-lite",
+    api_key=OPENROUTER_API_KEY,
+    name="gemini-flash-lite",
+)
 
 # Default models to test in comparisons
 MODELS_TO_TEST = [
