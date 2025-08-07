@@ -5,6 +5,8 @@
 - implement checkpoints to recover training run where it stopped
 - consider removing the output of each agents from the context in `training`
 - Set-up the optimizer and run it
+- check the logic of the engine: new tools don't seem to be saved anymore
+
 
 ## Experiment
 

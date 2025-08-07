@@ -15,15 +15,15 @@ class IfcAnswerEngine(dspy.Module):
         config: Optional[IfcAnswerEngineConfig] = None,
         llm: Optional[dspy.LM] = None,  # Optional override
     )
-    
+
     def forward(self, question: str, path_ifc_model: str = "") -> ModuleOutput:
         """
         Process a question about an IFC model.
-        
+
         Args:
             question: Natural language question about the BIM model
             path_ifc_model: Path to the .ifc file
-            
+
         Returns:
             ModuleOutput with result containing answer or tool requirements
         """
@@ -42,7 +42,7 @@ class ToolCreator(dspy.Module):
         callbacks=None,
         llm: Optional[dspy.LM] = None,  # Optional override
     )
-    
+
     def forward(
         self,
         function_requirements: str,
@@ -51,12 +51,12 @@ class ToolCreator(dspy.Module):
     ) -> ModuleOutput:
         """
         Create a new tool based on requirements.
-        
+
         Args:
             function_requirements: Description of what the function should do
             function_name: Name for the new function
             path_ifc_model: Path to IFC file for testing
-            
+
         Returns:
             ModuleOutput with function implementation if successful
         """
@@ -73,14 +73,14 @@ class TrainingModule(dspy.Module):
         config: Optional[TrainingModuleConfig] = None,
         lm: Optional[dspy.LM] = None,  # Optional override
     )
-    
+
     def forward(self, datapoint: Datapoint) -> ModuleOutput:
         """
         Train on a single datapoint.
-        
+
         Args:
             datapoint: Training example with question, answer, and model path
-            
+
         Returns:
             ModuleOutput with training results
         """
@@ -105,7 +105,7 @@ class IfcAnswerEngineConfig(BaseAgentConfig):
 class LLMConfig(BaseModel):
     model_name: str = "kimi-k2"  # From LANGUAGE_MODELS
     max_tokens: int = 2**13
-    
+
     def get_llm(self) -> dspy.LM:
         """Get configured dspy.LM instance."""
 ```
@@ -219,7 +219,7 @@ engine = IfcAnswerEngine(config=config)
 
 ```python
 from src.experiment.training.training import TrainingModule
-from src.experiment.training.data_loader import load_train_dev_split
+from src.experiment.datasets import load_train_dev_split
 
 training = TrainingModule()
 train, dev = load_train_dev_split()
@@ -228,4 +228,4 @@ for datapoint in train[:5]:  # Train on first 5 examples
     result = training.forward(datapoint)
     print(f"Question: {datapoint.question}")
     print(f"Status: {result.status}")
-``` 
+```

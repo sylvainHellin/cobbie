@@ -20,7 +20,7 @@ The system is built around several specialized agents that work together:
 ```mermaid
 stateDiagram-v2
     classDef input fill:#1a535c,stroke:#333,stroke-width:2px,color:#fff
-    classDef module fill:#4ecdc4,stroke:#333,stroke-width:2px  
+    classDef module fill:#4ecdc4,stroke:#333,stroke-width:2px
     classDef condition fill:#f7fff7,stroke:#333,stroke-width:2px
     classDef output fill:#ff6b6b,stroke:#333,stroke-width:2px,color:#fff
     classDef state fill:#ffe66d,stroke:#333,stroke-width:2px
@@ -65,7 +65,7 @@ stateDiagram-v2
     TSM --> TD
     TSM --> TMR
     TSM --> TC
-    
+
     ME --> TC
     ME --> NE
     TC --> TP
@@ -73,7 +73,7 @@ stateDiagram-v2
     TC --> TCR
     TD --> TA
     TD --> TCR
-    
+
     AC --> TSM
     AC --> ME
     AC --> TC
@@ -119,46 +119,46 @@ The system uses a sophisticated state machine to learn and improve through multi
 ```mermaid
 stateDiagram-v2
     classDef input fill:#1a535c,stroke:#333,stroke-width:2px,color:#fff
-    classDef module fill:#4ecdc4,stroke:#333,stroke-width:2px  
+    classDef module fill:#4ecdc4,stroke:#333,stroke-width:2px
     classDef condition fill:#f7fff7,stroke:#333,stroke-width:2px
     classDef output fill:#ff6b6b,stroke:#333,stroke-width:2px,color:#fff
     classDef state fill:#ffe66d,stroke:#333,stroke-width:2px
 
     [*] --> START
     START --> ENGINE: Initialize system
-    
+
     ENGINE --> ANSWER_VERIFICATION: Engine succeeds
     ENGINE --> ERROR: Engine fails
-    
+
     ANSWER_VERIFICATION --> CORRECT_ANSWER: Answer is correct
     ANSWER_VERIFICATION --> WRONG_ANSWER: Answer is incorrect
     ANSWER_VERIFICATION --> ERROR: Verification fails
-    
+
     CORRECT_ANSWER --> TOOL_CREATION: Create new tool
     CORRECT_ANSWER --> TOOL_MERGER: Merge existing tools
     CORRECT_ANSWER --> TOOL_CORRECTION: Update existing tool
     CORRECT_ANSWER --> END: No improvement needed
-    
+
     WRONG_ANSWER --> TOOL_CREATION: Missing tool identified
     WRONG_ANSWER --> TOOL_CORRECTION: Faulty tool identified
     WRONG_ANSWER --> END: Other error category
-    
+
     TOOL_CREATION --> FILE_SAVED: New .py file created
     TOOL_CREATION --> ERROR: Tool creation failed
-    
+
     TOOL_CORRECTION --> FILE_UPDATED: Existing .py file modified
     TOOL_CORRECTION --> ERROR: Tool correction failed
-    
+
     TOOL_MERGER --> FILE_UPDATED: Combined tool saved
     TOOL_MERGER --> FILE_DELETED: Old tools removed
     TOOL_MERGER --> ERROR: Tool merger failed
-    
+
     FILE_SAVED --> MLF_LOGGED: MLflow experiment logged
     FILE_UPDATED --> MLF_LOGGED: MLflow experiment logged
     FILE_DELETED --> MLF_LOGGED: MLflow experiment logged
-    
+
     MLF_LOGGED --> END: Process completed
-    
+
     END --> [*]
     ERROR --> [*]
 
@@ -187,7 +187,7 @@ The system uses its trained toolset to answer questions efficiently:
 ```mermaid
 stateDiagram-v2
     classDef input fill:#1a535c,stroke:#333,stroke-width:2px,color:#fff
-    classDef module fill:#4ecdc4,stroke:#333,stroke-width:2px  
+    classDef module fill:#4ecdc4,stroke:#333,stroke-width:2px
     classDef condition fill:#f7fff7,stroke:#333,stroke-width:2px
     classDef output fill:#ff6b6b,stroke:#333,stroke-width:2px,color:#fff
     classDef state fill:#ffe66d,stroke:#333,stroke-width:2px
@@ -354,7 +354,7 @@ print(result.result.answer)
 #### Training Mode
 ```python
 from src.experiment.training.training import TrainingModule
-from src.engine.util import load_train_dev_split
+from src.experiment.datasets import load_train_dev_split
 
 # Initialize training module with state machine
 training = TrainingModule()
@@ -377,7 +377,7 @@ for qa_pair in train:
 The `TrainingModule` implements a sophisticated state machine that:
 
 1. **Processes QA pairs** through the main engine
-2. **Verifies answers** against ground truth using similarity scoring  
+2. **Verifies answers** against ground truth using similarity scoring
 3. **Analyzes correct answers** for optimization opportunities
 4. **Diagnoses incorrect answers** to identify missing or faulty tools
 5. **Creates, corrects, or merges tools** based on analysis results
