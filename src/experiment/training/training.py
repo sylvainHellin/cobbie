@@ -60,7 +60,7 @@ class TrainingModule(dspy.Module):
         self,
         config=None,
         lm: Optional[dspy.LM] = None,  # Optional override
-        load_compiled: bool = True,
+        load_optimized_model: bool = True,
     ):
         super().__init__()
         # Use provided config or default config
@@ -68,6 +68,7 @@ class TrainingModule(dspy.Module):
         self.logger = get_logger(name="Training", log_level=self.config.log_level)
         self.evaluate = self.config.evaluate
         self.tools_metrics = ToolsMetrics()
+        self.load_optimized_model = load_optimized_model
 
         # Use provided LLM or get from config
         self.lm = lm or self.config.llm.get_llm()
@@ -78,7 +79,7 @@ class TrainingModule(dspy.Module):
         # Set-up the agents (using the default config for each agent)
         self.answer_verifier = AnswerVerifier()
         self.engine = IfcAnswerEngine()
-        if load_compiled:
+        if self.load_optimized_model:
             self.engine.load(path=OPTIMIZED_MODEL_PATH)
         self.tool_creator = ToolCreator()
         self.error_analyst = ErrorAnalyst()
@@ -559,6 +560,7 @@ class TrainingModule(dspy.Module):
                     llm=self.lm,
                     start_run=False,
                     dataset=devset,
+                    load_optimized_model=self.load_optimized_model,
                 )
             # Log the metrics
             mlflow.log_metrics(
@@ -580,7 +582,10 @@ class TrainingModule(dspy.Module):
         """Process a QA pair using the state machine."""
 
         # Evaluate the accuracy of the engine before the training round.
-        self._evaluation(mode="before", devset=devset)
+        self._evaluation(
+            mode="before",
+            devset=devset,
+        )
 
         # Go through each examples in the training set
         for qa_pair in trainset:
