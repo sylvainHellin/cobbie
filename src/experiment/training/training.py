@@ -6,7 +6,7 @@ import dspy
 import mlflow
 from pydantic import BaseModel
 
-from src.config import AGENT_CONFIGS
+from src.config import AGENT_CONFIGS, OPTIMIZED_MODEL_PATH
 from src.engine import (
     AnswerVerifier,
     ErrorAnalyst,
@@ -60,6 +60,7 @@ class TrainingModule(dspy.Module):
         self,
         config=None,
         lm: Optional[dspy.LM] = None,  # Optional override
+        load_compiled: bool = True,
     ):
         super().__init__()
         # Use provided config or default config
@@ -77,6 +78,8 @@ class TrainingModule(dspy.Module):
         # Set-up the agents (using the default config for each agent)
         self.answer_verifier = AnswerVerifier()
         self.engine = IfcAnswerEngine()
+        if load_compiled:
+            self.engine.load(path=OPTIMIZED_MODEL_PATH)
         self.tool_creator = ToolCreator()
         self.error_analyst = ErrorAnalyst()
         self.tool_debugger = ToolDebugger()

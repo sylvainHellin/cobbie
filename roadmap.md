@@ -22,5 +22,7 @@
 
 ## Frontend
 
+- URGENT: connect to Chat endpoint from fastapi
 - Update the code for displaying the models to use the list from the fastapi endpoint
 - Add a button/function to refresh the models
+- Fix bug with toggled visibility component

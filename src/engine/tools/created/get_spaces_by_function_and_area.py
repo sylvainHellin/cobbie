@@ -3,7 +3,7 @@ import ifcopenshell
 import ifcopenshell.util.element
 import ifcopenshell.util.shape
 import ifcopenshell.geom
-from typing import List, Dict, Any
+from typing import List
 
 def get_spaces_by_function_and_area(ifc_file_path: str, function_keywords: List[str]) -> float:
     """
@@ -18,14 +18,19 @@ def get_spaces_by_function_and_area(ifc_file_path: str, function_keywords: List[
       (e.g., 'GrossFloorArea', 'NetFloorArea') or Property Sets (e.g., 'Area').
     - If area information is not found in sets, it will attempt to calculate it
       from the space's geometry using IfcOpenCascade.
-    - Keywords are matched case-insensitively against the IfcSpace's Name and Description.
-      Keyword matching within property set values is also attempted.
+    - For storage spaces, the function ONLY looks for specific indicators like:
+      * OmniClass Table 13 Category values indicating storage rooms
+      * Category Description values indicating storage rooms
+    - Keyword matching is NOT used for storage identification to avoid over-matching.
     - The IFC model is assumed to be exported with standard IfcSpace definitions
       and potentially common property sets like 'Pset_SpaceCommon'.
     - Geometry calculation requires IfcOpenShell to be built with OpenCascade support.
+    - In a dental clinic context, only basic "Storage Room" spaces are considered,
+      excluding specialized storage like soiled or hazardous material storage.
 
     :param ifc_file_path: Path to the IFC file.
-    :param function_keywords: A list of keywords to filter spaces by.
+    :param function_keywords: A list of keywords to filter spaces by. For storage spaces,
+                              keyword matching is not used to avoid over-matching.
     :return: The total area of the matching spaces, or 0.0 if no matching spaces are found or an error occurs.
     """
     try:
@@ -41,25 +46,31 @@ def get_spaces_by_function_and_area(ifc_file_path: str, function_keywords: List[
     lower_keywords = [keyword.lower() for keyword in function_keywords]
 
     for space in spaces:
-        # Check if the space's name or description contains any of the keywords
-        name_match = space.Name and any(keyword in space.Name.lower() for keyword in lower_keywords)
-        description_match = space.Description and any(keyword in space.Description.lower() for keyword in lower_keywords)
-
-        # Check for keywords within property set values
-        property_match = False
-        # Get all property sets and quantities for the space
+        is_matching_space = False
+        
+        # Get all properties for the space
         all_properties = ifcopenshell.util.element.get_psets(space)
-        for pset_name, properties in all_properties.items():
-            for prop_name, prop_value in properties.items():
-                # Check if the property value is a string, int, or float and contains a keyword
-                if isinstance(prop_value, (str, int, float)):
-                    if any(keyword in str(prop_value).lower() for keyword in lower_keywords):
-                        property_match = True
-                        break
-            if property_match:
-                break
+        
+        # Check for specific storage indicators first (and only)
+        identity_data = all_properties.get('PSet_Revit_Identity Data', {})
+        other_data = all_properties.get('PSet_Revit_Other', {})
+        
+        omni_class = identity_data.get('OmniClass Table 13 Category', '')
+        category_desc = other_data.get('Category Description', '')
+        
+        # ONLY include basic storage rooms, not specialized storage
+        # In a dental clinic context, focus on basic "Storage Room" classification
+        basic_storage_omni_class = '13-75 11 11: Storage Room'
+        basic_storage_category_desc = 'Storage Room'
+        
+        # ONLY include spaces that are explicitly classified as basic storage rooms
+        if basic_storage_omni_class.lower() in omni_class.lower():
+            is_matching_space = True
+        elif basic_storage_category_desc.lower() in category_desc.lower():
+            is_matching_space = True
+        # No keyword matching for storage spaces to avoid over-matching
 
-        if name_match or description_match or property_match:
+        if is_matching_space:
             area = 0.0
             area_found = False
 

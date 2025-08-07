@@ -67,7 +67,7 @@ class AnswerVerifier(dspy.Module):
                 {
                     "question": question,
                     "ground_truth": first_answer,
-                    "engine_anser": second_answer,
+                    "engine_answer": second_answer,
                 }
             )
 

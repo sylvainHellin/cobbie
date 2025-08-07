@@ -23,6 +23,7 @@ def find_space_by_function(model: ifcopenshell.file, keywords: str, building_sto
     - Handling partial matches (e.g., finding "TECH. OFFICE" when searching for "tech office")
     - Supporting multi-word keyword searches
     - Allowing optional building storey filtering
+    - Better distinguishing between actual laboratory spaces and related spaces
     
     Args:
         model (ifcopenshell.file): The IFC model to search in
@@ -121,12 +122,54 @@ def find_space_by_function(model: ifcopenshell.file, keywords: str, building_sto
         # Combine all search fields into one string for matching
         combined_text = " ".join(search_fields).lower()
         
+        # Special handling for laboratory searches to avoid false positives
+        is_lab_search = "lab" in keywords_lower
+        is_actual_lab = False
+        
+        # If searching for labs, check if this is actually a laboratory space
+        if is_lab_search:
+            # Check for definitive laboratory indicators in property sets
+            if "PSet_Revit_Other" in properties:
+                other_props = properties["PSet_Revit_Other"]
+                if "Category Description" in other_props and "laboratory" in str(other_props["Category Description"]).lower():
+                    is_actual_lab = True
+            
+            if "PSet_Revit_Identity Data" in properties:
+                identity_props = properties["PSet_Revit_Identity Data"]
+                if "OmniClass Table 13 Category" in identity_props:
+                    omni_class = str(identity_props["OmniClass Table 13 Category"]).lower()
+                    if "laboratory" in omni_class:
+                        is_actual_lab = True
+            
+            # If we're specifically looking for labs, only include actual labs
+            if not is_actual_lab and "lab" in space_info["name"].lower():
+                # Check if it's a lab-related office that shouldn't be counted as a true lab
+                name_lower = space_info["name"].lower()
+                if "office" in name_lower or "storage" in name_lower or "prep" in name_lower:
+                    # This is likely not a true laboratory requiring specialty flooring
+                    is_actual_lab = False
+                else:
+                    # It's a lab by name and not explicitly an office/storage/prep area
+                    is_actual_lab = True
+        
         # Check if all keywords are present (supporting multi-word searches like "tech office")
         keyword_matches = True
         for keyword in keywords_lower.split():
-            if keyword not in combined_text:
-                keyword_matches = False
-                break
+            # Special handling for lab searches
+            if keyword == "lab" and is_lab_search:
+                # For lab searches, we need to match actual labs, not just any space with "lab" in the name
+                if is_lab_search and not is_actual_lab:
+                    keyword_matches = False
+                    break
+            else:
+                # Normal keyword matching for other terms
+                if keyword not in combined_text:
+                    keyword_matches = False
+                    break
+        
+        # If no specific keywords were provided, we still want to check for lab status
+        if not keywords_lower.strip():
+            keyword_matches = True
         
         # Check if building storey filter matches (if specified)
         storey_matches = True

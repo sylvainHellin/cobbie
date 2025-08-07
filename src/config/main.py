@@ -16,6 +16,7 @@ CSV_IFC_MODELS_PATH = os.path.join(ROOT_PATH, "src/experiment/db/ifc_models.csv"
 DIRECTORY_IFC_MODELS_PATH = os.path.join(ROOT_PATH, "src/experiment/bim_models")
 CREATED_TOOLS_PATH = os.path.join(ROOT_PATH, "src/engine/tools/created")
 CHECKPOINT_PATH = os.path.join(ROOT_PATH, "src/experiment/training/.checkpoint")
+OPTIMIZED_MODEL_PATH = os.path.join(ROOT_PATH, "src/engine/optimizer/engine.json")
 
 # URI
 MLFLOW_URI = "http://127.0.0.1:5000"
@@ -115,6 +116,11 @@ LANGUAGE_MODELS["gemini-flash-lite"] = LLM(
     url="openrouter/google/gemini-2.5-flash-lite",
     api_key=OPENROUTER_API_KEY,
     name="gemini-flash-lite",
+)
+LANGUAGE_MODELS["qwen3-coder-cerebras"] = LLM(
+    url="openrouter/cerebras/qwen3-coder",
+    api_key=OPENROUTER_API_KEY,
+    name="qwen3-coder-cerebras",
 )
 
 # Default models to test in comparisons
