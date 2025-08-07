@@ -1,7 +1,6 @@
 
 import ifcopenshell
 import ifcopenshell.util.element
-import ifcopenshell.util.shape
 import ifcopenshell.geom
 from typing import List
 
@@ -42,33 +41,76 @@ def get_spaces_by_function_and_area(ifc_file_path: str, function_keywords: List[
     total_area = 0.0
     spaces = ifc_file.by_type("IfcSpace")
 
-    # Prepare keywords for case-insensitive matching
-    lower_keywords = [keyword.lower() for keyword in function_keywords]
-
     for space in spaces:
         is_matching_space = False
         
         # Get all properties for the space
         all_properties = ifcopenshell.util.element.get_psets(space)
         
-        # Check for specific storage indicators first (and only)
+        # Get space name and description
+        space_name = (space.Name or "").lower()
+        space_description = (space.Description or "").lower()
+        
+        # Check for storage spaces first (special handling)
+        is_storage_space = False
         identity_data = all_properties.get('PSet_Revit_Identity Data', {})
         other_data = all_properties.get('PSet_Revit_Other', {})
         
         omni_class = identity_data.get('OmniClass Table 13 Category', '')
         category_desc = other_data.get('Category Description', '')
         
-        # ONLY include basic storage rooms, not specialized storage
-        # In a dental clinic context, focus on basic "Storage Room" classification
-        basic_storage_omni_class = '13-75 11 11: Storage Room'
-        basic_storage_category_desc = 'Storage Room'
-        
-        # ONLY include spaces that are explicitly classified as basic storage rooms
-        if basic_storage_omni_class.lower() in omni_class.lower():
-            is_matching_space = True
-        elif basic_storage_category_desc.lower() in category_desc.lower():
-            is_matching_space = True
-        # No keyword matching for storage spaces to avoid over-matching
+        # Check for storage classification (case-insensitive)
+        if '13-75 11 11: storage room' in str(omni_class).lower() and "soiled" not in str(omni_class).lower():
+            is_storage_space = True
+        elif 'storage room' in str(category_desc).lower() and "soiled" not in str(category_desc).lower():
+            is_storage_space = True
+            
+        # Handle storage spaces (no keyword matching)
+        if is_storage_space:
+            # Only include if "storage" is in the function_keywords
+            if "storage" in [kw.lower() for kw in function_keywords]:
+                is_matching_space = True
+        else:
+            # Handle non-storage spaces with keyword matching
+            # Check space name and description
+            for keyword in function_keywords:
+                keyword_lower = keyword.lower()
+                if keyword_lower in space_name or keyword_lower in space_description:
+                    is_matching_space = True
+                    break
+            
+            # If not found in name/description, check property sets
+            if not is_matching_space:
+                for pset_name, properties in all_properties.items():
+                    # Check identity data for classification
+                    if 'Name' in properties and isinstance(properties['Name'], str):
+                        space_type = properties['Name'].lower()
+                        for keyword in function_keywords:
+                            if keyword.lower() in space_type:
+                                is_matching_space = True
+                                break
+                        if is_matching_space:
+                            break
+                    
+                    # Check OmniClass category
+                    if 'OmniClass Table 13 Category' in properties:
+                        omni_category = str(properties['OmniClass Table 13 Category']).lower()
+                        for keyword in function_keywords:
+                            if keyword.lower() in omni_category:
+                                is_matching_space = True
+                                break
+                        if is_matching_space:
+                            break
+                    
+                    # Check Category Description
+                    if 'Category Description' in properties:
+                        category_description = str(properties['Category Description']).lower()
+                        for keyword in function_keywords:
+                            if keyword.lower() in category_description:
+                                is_matching_space = True
+                                break
+                        if is_matching_space:
+                            break
 
         if is_matching_space:
             area = 0.0
@@ -77,48 +119,47 @@ def get_spaces_by_function_and_area(ifc_file_path: str, function_keywords: List[
             # Prioritize Quantity Sets for area (e.g., GrossFloorArea, NetFloorArea)
             qtos = ifcopenshell.util.element.get_psets(space, qtos_only=True)
             for qto_name, properties in qtos.items():
-                if 'GrossFloorArea' in properties and isinstance(properties['GrossFloorArea'], (int, float)):
-                    area += properties['GrossFloorArea']
-                    area_found = True
-                    break # Found GrossFloorArea, assume this is the primary area
-                elif 'NetFloorArea' in properties and isinstance(properties['NetFloorArea'], (int, float)):
-                    area += properties['NetFloorArea']
-                    area_found = True
-                    break # Found NetFloorArea, assume this is the primary area
+                for prop_name, prop_value in properties.items():
+                    if 'area' in prop_name.lower() and isinstance(prop_value, (int, float)):
+                        area += prop_value
+                        area_found = True
+                        break
+                if area_found:
+                    break
 
             # If not found in Quantity Sets, check common Property Sets for 'Area'
             if not area_found:
                 psets = ifcopenshell.util.element.get_psets(space, psets_only=True)
                 for pset_name, properties in psets.items():
-                    if 'Area' in properties and isinstance(properties['Area'], (int, float)):
-                        area += properties['Area']
-                        area_found = True
-                        break # Found Area in a PSet
+                    for prop_name, prop_value in properties.items():
+                        if 'area' in prop_name.lower() and isinstance(prop_value, (int, float)):
+                            area += prop_value
+                            area_found = True
+                            break
+                    if area_found:
+                        break
 
             # Fallback: Calculate area from geometry if not found in sets
             if not area_found:
                 try:
                     # Use ifcopenshell.geom for geometry processing
                     settings = ifcopenshell.geom.settings()
-                    # Ensure OpenCascade is used if available, otherwise this might fail or be slow
+                    # Ensure OpenCascade is used if available
                     settings.set(settings.USE_PYTHON_OPENCASCADE, True)
                     
                     # Create shape from the space element
                     shape = ifcopenshell.geom.create_shape(settings, space)
                     
                     if shape and shape.geometry:
-                        # The .Area() method is typically for planar surfaces.
-                        # If the geometry is a polygon, its area can be calculated.
-                        # If it's a complex 3D shape, this might be an approximation.
+                        # Try to get area from the geometry
                         area_from_geom = shape.geometry.Area()
-                        if isinstance(area_from_geom, (int, float)):
+                        if isinstance(area_from_geom, (int, float)) and area_from_geom > 0:
                             area += area_from_geom
                             area_found = True
-                        else:
-                            print(f"Warning: Geometry area calculation for space {space.GlobalId} returned non-numeric value: {area_from_geom}")
                             
                 except Exception as e:
-                    print(f"Could not compute area from geometry for space {space.GlobalId}: {e}")
+                    # Geometry calculation failed, which is acceptable
+                    pass
 
             if area_found:
                 total_area += area

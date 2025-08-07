@@ -650,4 +650,4 @@ def main(
 if __name__ == "__main__":
     devset, trainset = load_train_dev_split()
 
-    outputs = main(devset=devset[10:20], trainset=trainset[15:35])
+    outputs = main(devset=devset, trainset=trainset)

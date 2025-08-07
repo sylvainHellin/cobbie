@@ -1,80 +1,63 @@
+
 import ifcopenshell
 import ifcopenshell.util.element
-import ifcopenshell.util.shape
-import ifcopenshell.util.placement
-import ifcopenshell.util.geolocation
-import ifcopenshell.util.system
-import ifcopenshell.geom
-import math
-import json
-from typing import *
+from typing import Union
 
-def calculate_usable_floor_area(ifc_file_path: str) -> float:
+def calculate_usable_floor_area(model: Union[str, ifcopenshell.file]) -> float:
     """
-    Calculate the Usable Floor Area (UFA) from IfcSpace elements in an IFC model.
+    Calculate the Usable Floor Area (UFA) by aggregating space areas from an IFC model.
     
-    This function extracts area properties from IfcSpace elements and sums them to
-    determine the total usable floor area. It handles different property set
-    conventions across various BIM authoring software.
-    
-    The function looks for area information in the following property sets (in order of preference):
-    1. PSet_Revit_Dimensions.Area (for Revit-exported IFC models)
-    2. GSA Space Areas.GSA BIM Area (for models following GSA standards)
-    3. BaseQuantities.Area (from quantity sets)
+    This function extracts area properties from IfcSpace elements, typically found in 
+    property sets like 'PSet_Revit_Dimensions.Area' or 'GSA Space Areas.GSA BIM Area'.
+    It is primarily designed for IFC models exported from Revit software.
     
     Args:
-        ifc_file_path (str): Path to the IFC file
+        model: Path to an IFC file or an already loaded ifcopenshell.file object
         
     Returns:
-        float: Total usable floor area in square meters (or the units used in the IFC model)
+        float: Total usable floor area in square meters (or the model's units)
         
-    Assumptions:
-        - The IFC model contains IfcSpace elements with area properties in recognized property sets
-        - Area values are in consistent units (typically square meters)
-        - If multiple area properties exist for a space, the first available one is used
-        - PSet_Revit_Dimensions is specific to IFC models exported from Revit
-        
-    Example:
-        >>> ufa = calculate_usable_floor_area("path/to/model.ifc")
-        >>> print(f"Usable Floor Area: {ufa:.2f} m²")
+    Raises:
+        ValueError: If the model is invalid or no spaces are found
+        FileNotFoundError: If a file path is provided but the file doesn't exist
     """
-    # Open the IFC file
-    model = ifcopenshell.open(ifc_file_path)
+    # Load the model if a path is provided
+    if isinstance(model, str):
+        try:
+            model = ifcopenshell.open(model)
+        except Exception as e:
+            raise FileNotFoundError(f"Could not open IFC file at {model}: {str(e)}")
     
     # Get all IfcSpace elements
     spaces = model.by_type("IfcSpace")
     
-    total_ufa = 0.0
+    if not spaces:
+        raise ValueError("No IfcSpace elements found in the model")
     
-    # Define the priority order for property sets and properties
-    area_property_priorities = [
-        ("PSet_Revit_Dimensions", "Area"),
-        ("GSA Space Areas", "GSA BIM Area"),
-        ("BaseQuantities", "Area")
-    ]
+    total_area = 0.0
     
+    # Iterate through all spaces and extract area properties
     for space in spaces:
-        # Get all property sets for this space
-        psets = ifcopenshell.util.element.get_psets(space)
+        # Get property sets for this space
+        property_sets = ifcopenshell.util.element.get_psets(space)
         
-        # Try to find area in the priority order
-        area_found = False
-        for pset_name, prop_name in area_property_priorities:
-            if pset_name in psets and prop_name in psets[pset_name]:
-                area_value = psets[pset_name][prop_name]
-                if isinstance(area_value, (int, float)):
-                    total_ufa += area_value
-                    area_found = True
-                    break
+        # Try to get area from PSet_Revit_Dimensions first (primary source)
+        area = None
+        if "PSet_Revit_Dimensions" in property_sets:
+            dimensions_pset = property_sets["PSet_Revit_Dimensions"]
+            if "Area" in dimensions_pset:
+                area = dimensions_pset["Area"]
         
-        # If no area property was found in priority sets, check any pset for an "Area" property
-        if not area_found:
-            for pset_name, pset_data in psets.items():
-                if isinstance(pset_data, dict) and "Area" in pset_data:
-                    area_value = pset_data["Area"]
-                    if isinstance(area_value, (int, float)):
-                        total_ufa += area_value
-                        area_found = True
-                        break
+        # Fallback to GSA Space Areas if Revit dimensions not available
+        if area is None and "GSA Space Areas" in property_sets:
+            gsa_pset = property_sets["GSA Space Areas"]
+            if "GSA BIM Area" in gsa_pset:
+                area = gsa_pset["GSA BIM Area"]
+        
+        # Add to total if area was found
+        if area is not None:
+            total_area += float(area)
+        else:
+            print(f"Warning: No area property found for space {space.GlobalId} ({space.Name})")
     
-    return total_ufa
+    return total_area

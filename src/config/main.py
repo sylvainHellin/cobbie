@@ -49,9 +49,7 @@ class LLM(BaseModel):
 
 
 LANGUAGE_MODELS: dict[str, LLM] = {}
-LANGUAGE_MODELS["claude"] = LLM(
-    url="anthropic/claude-sonnet-4-20250514", api_key=ANTHROPIC_API_KEY, name="claude"
-)
+
 LANGUAGE_MODELS["gemini-flash"] = LLM(
     url="gemini/gemini-2.5-flash", api_key=GEMINI_API_KEY, name="gemini-flash"
 )
@@ -122,7 +120,11 @@ LANGUAGE_MODELS["qwen3-coder-cerebras"] = LLM(
     api_key=OPENROUTER_API_KEY,
     name="qwen3-coder-cerebras",
 )
-
+LANGUAGE_MODELS["claude"] = LLM(
+    url="openrouter/anthropic/claude-sonnet-4",
+    api_key=OPENROUTER_API_KEY,
+    name="claude",
+)
 # Default models to test in comparisons
 MODELS_TO_TEST = [
     "deepseek",

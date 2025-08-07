@@ -1,14 +1,6 @@
-
 import ifcopenshell
 import ifcopenshell.util.element
-import ifcopenshell.util.shape
-import ifcopenshell.util.placement
-import ifcopenshell.util.geolocation
-import ifcopenshell.util.system
-import ifcopenshell.geom
-import math
-import json
-from typing import *
+from typing import List, Dict, Any, Optional
 
 def find_space_by_function(model: ifcopenshell.file, keywords: str, building_storey: Optional[str] = None) -> List[Dict[str, Any]]:
     """
@@ -51,7 +43,7 @@ def find_space_by_function(model: ifcopenshell.file, keywords: str, building_sto
         >>> tech_spaces = find_space_by_function(model, "tech office")
     """
     # Normalize keywords for case-insensitive search
-    keywords_lower = keywords.lower()
+    keywords_lower = keywords.lower().strip()
     
     # Get all spaces in the model
     all_spaces = model.by_type("IfcSpace")
@@ -71,6 +63,10 @@ def find_space_by_function(model: ifcopenshell.file, keywords: str, building_sto
             "properties": {}
         }
         
+        # Get properties
+        properties = ifcopenshell.util.element.get_psets(space)
+        space_info["properties"] = properties
+        
         # Get building storey information
         # First try the ContainedInStructure relationship
         if hasattr(space, 'ContainedInStructure') and space.ContainedInStructure:
@@ -80,17 +76,10 @@ def find_space_by_function(model: ifcopenshell.file, keywords: str, building_sto
                     break
         
         # If that didn't work, try getting it from PSet_Revit_Constraints
-        if not space_info["building_storey"]:
-            properties = ifcopenshell.util.element.get_psets(space)
-            if "PSet_Revit_Constraints" in properties:
-                constraints = properties["PSet_Revit_Constraints"]
-                if "Level" in constraints:
-                    space_info["building_storey"] = constraints["Level"]
-        else:
-            # Still get properties for later use
-            properties = ifcopenshell.util.element.get_psets(space)
-        
-        space_info["properties"] = properties
+        if not space_info["building_storey"] and "PSet_Revit_Constraints" in properties:
+            constraints = properties["PSet_Revit_Constraints"]
+            if "Level" in constraints:
+                space_info["building_storey"] = constraints["Level"]
         
         # Extract number and area/volume from properties if available
         if "PSet_Revit_Identity Data" in properties:
@@ -122,27 +111,22 @@ def find_space_by_function(model: ifcopenshell.file, keywords: str, building_sto
         # Combine all search fields into one string for matching
         combined_text = " ".join(search_fields).lower()
         
-        # Special handling for laboratory searches to avoid false positives
+        # Special handling for laboratory searches
         is_lab_search = "lab" in keywords_lower
         is_actual_lab = False
         
-        # If searching for labs, check if this is actually a laboratory space
-        if is_lab_search:
-            # Check for definitive laboratory indicators in property sets
-            if "PSet_Revit_Other" in properties:
-                other_props = properties["PSet_Revit_Other"]
-                if "Category Description" in other_props and "laboratory" in str(other_props["Category Description"]).lower():
+        # Check if this is actually a laboratory space by checking OmniClass category
+        if "PSet_Revit_Identity Data" in properties:
+            identity_props = properties["PSet_Revit_Identity Data"]
+            if "OmniClass Table 13 Category" in identity_props:
+                omni_class = str(identity_props["OmniClass Table 13 Category"]).lower()
+                if "laboratory" in omni_class:
                     is_actual_lab = True
-            
-            if "PSet_Revit_Identity Data" in properties:
-                identity_props = properties["PSet_Revit_Identity Data"]
-                if "OmniClass Table 13 Category" in identity_props:
-                    omni_class = str(identity_props["OmniClass Table 13 Category"]).lower()
-                    if "laboratory" in omni_class:
-                        is_actual_lab = True
-            
-            # If we're specifically looking for labs, only include actual labs
-            if not is_actual_lab and "lab" in space_info["name"].lower():
+        
+        # If we're searching for labs, only include actual labs
+        if is_lab_search and not is_actual_lab:
+            # Also check if "lab" is in the name for additional verification
+            if "lab" in space_info["name"].lower():
                 # Check if it's a lab-related office that shouldn't be counted as a true lab
                 name_lower = space_info["name"].lower()
                 if "office" in name_lower or "storage" in name_lower or "prep" in name_lower:
@@ -152,23 +136,19 @@ def find_space_by_function(model: ifcopenshell.file, keywords: str, building_sto
                     # It's a lab by name and not explicitly an office/storage/prep area
                     is_actual_lab = True
         
-        # Check if all keywords are present (supporting multi-word searches like "tech office")
+        # Check if keywords match (supporting multi-word searches)
         keyword_matches = True
-        for keyword in keywords_lower.split():
-            # Special handling for lab searches
-            if keyword == "lab" and is_lab_search:
-                # For lab searches, we need to match actual labs, not just any space with "lab" in the name
-                if is_lab_search and not is_actual_lab:
-                    keyword_matches = False
-                    break
-            else:
-                # Normal keyword matching for other terms
-                if keyword not in combined_text:
-                    keyword_matches = False
-                    break
         
-        # If no specific keywords were provided, we still want to check for lab status
-        if not keywords_lower.strip():
+        # If keywords were provided, check if they match
+        if keywords_lower:
+            # For lab searches, we need to match actual labs
+            if is_lab_search:
+                keyword_matches = is_actual_lab
+            else:
+                # For other searches, check if all keywords are present
+                keyword_matches = all(keyword in combined_text for keyword in keywords_lower.split())
+        else:
+            # If no keywords provided, include all spaces (but still apply storey filter)
             keyword_matches = True
         
         # Check if building storey filter matches (if specified)
