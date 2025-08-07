@@ -8,6 +8,7 @@ from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse
 import mlflow
+from dspy import LM
 
 # Add the project root directory to the Python path
 project_root = os.path.join(os.path.dirname(__file__), "..")
@@ -16,7 +17,7 @@ sys.path.append(project_root)
 from src.engine.engine import IfcAnswerEngine
 from src.experiment.db.query_db import get_ifc_models
 from api.models import QuestionRequest, QuestionResponse
-from src.config import MLFLOW_URI
+from src.config import MLFLOW_URI, LANGUAGE_MODELS
 
 app = FastAPI(
     title="IFC Answer Engine API",
@@ -38,6 +39,12 @@ mlflow.set_tracking_uri(MLFLOW_URI)
 mlflow.set_experiment("API")
 
 # Initialize the IFC Answer Engine
+llm = LANGUAGE_MODELS["qwen3-coder-cerebras"]
+llm = LM(
+    model=llm.url,
+    api_key=llm.api_key,
+    max_tokens=2**14,
+)
 engine = IfcAnswerEngine()
 
 
