@@ -1,0 +1,553 @@
+{
+  "tool_creator.tool_creator.code_act_iter": {
+    "traces": [],
+    "train": [],
+    "demos": [
+      {
+        "question": "What is the total gross floor area of the building?",
+        "answer": "The information is not directly available in the BIM model and cannot be exactly calculated. However, it is estimated that the total gross floor area of the building is around 350 sqm.",
+        "path_ifc_model": "\/Users\/sylvainhellin\/GitHub\/4_phd\/ifcAnswerEngineV3\/src\/experiment\/bim_models\/duplex\/arc.ifc",
+        "question_id": 0
+      },
+      {
+        "question": "Where are the main electrical panels located?",
+        "answer": "The main electrical panels are located in rooms A101 and B101.",
+        "path_ifc_model": "\/Users\/sylvainhellin\/GitHub\/4_phd\/ifcAnswerEngineV3\/src\/experiment\/bim_models\/duplex\/mep.ifc",
+        "question_id": 10
+      },
+      {
+        "question": "What is the width of the main entrance door?",
+        "answer": "The width of the main entrance door is 1.8 m.",
+        "path_ifc_model": "\/Users\/sylvainhellin\/GitHub\/4_phd\/ifcAnswerEngineV3\/src\/experiment\/bim_models\/dental_clinic\/arc.ifc",
+        "question_id": 65
+      },
+      {
+        "question": "How many interior doors are there in this building?",
+        "answer": "There are 10 interior doors in this building.",
+        "path_ifc_model": "\/Users\/sylvainhellin\/GitHub\/4_phd\/ifcAnswerEngineV3\/src\/experiment\/bim_models\/duplex\/arc.ifc",
+        "question_id": 53
+      }
+    ],
+    "signature": {
+      "instructions": "Solve tasks by writing and executing Python code step-by-step.\n\nAVAILABLE FUNCTIONS (do not import them):\n\n- `query_ifcopenshell_documentation`: Queries the documentation vector database to find semantically similar documentation entries.  This function performs semantic similarity search to find relevant IfcOpenShell documentation based on a natural language description. For best results, the query should: - Describe the desired functionality in simple, clear terms - Focus on the core operation (e.g., \"get entity attributes\" rather than \"how do I get attributes?\") - Use terminology similar to the documentation (e.g., \"entity\", \"property\", \"attribute\") - Avoid implementation details or specific use cases  Example queries: - \"Get properties of an IFC entity\" - \"Create new IFC entity\" - \"Convert geometry to shape\"  Args: query (str): Natural language description of the desired functionality. n_results (int, optional): The maximum number of results to return. Defaults to 10.  Returns: str: A JSON-serialized string containing either: - A list of matching documentation entries, where each entry is a dictionary with keys: \"module\", \"type\", \"name\", \"docstring\" - An error message in the format: {\"error\": \"error description\"}  Example Response: [ { \"module\": \"ifcopenshell.util.element\", \"type\": \"function\", \"name\": \"get_properties\", \"docstring\": \"Gets all properties of an IFC entity...\" } ]\n- `web_search`: Performs an AI-powered web search using Perplexity's Sonar API, which provides real-time search results with natural language responses. The function is designed to help find and explain technical information, particularly about programming and libraries.  Args: query (str): The search query. For best results, make queries specific and include relevant technical terms (e.g., \"IfcOpenShell\", \"Python\", specific function names). model (str, optional): The model to use for the search. Defaults to \"sonar\". Available models are: \"sonar\", \"sonar-pro\", \"sonar-reasoning\", \"sonar-reasoning-pro\". - sonar: Base model for general queries - sonar-pro: Enhanced version with better accuracy - sonar-reasoning: Optimized for complex analytical queries - sonar-reasoning-pro: Most capable model for technical analysis  Returns: str: A natural language response synthesized from web search results. On success (status code 200), returns a detailed explanation or answer. On failure, returns an error message string containing the status code and error details.\n- `final_answer`: Marks the task as complete. Use this function when you are confident you have collected all the necessary information to answer the user's request. You should pack all the required output fields into a dictionary and pass it argument to the function.\n\nIMPORTANT: DO NOT import these functions in your python_code - they are already available. Importing them will cause errors.\n\nWORKFLOW:\n1. **Think**: Analyze the task and your progress\n2. **Code**: Write Python code to advance toward the solution\n3. **Iterate**: Repeat until complete\n\nOUTPUT:\nCall `final_answer(result_dict)` with all required fields when finished.\n\nTASK:\nAs an expert Python programmer, you have been tasked with creating a new Python function using the IfcOpenShell library.\n\nYour function implementation must:\n    - Return proper data structures (e.g., lists and dictionaries), not formatted strings.\n    - Be well-documented with docstrings and type hints.\n    - Be explicit regarding assumptions. For example, if your function involves using properties related to specific BIM authoring software, such as PSet_Revit_Dimensions for an IFC model exported from Revit, mention this in the docstring.\n\nREQUIRED FIELDS:\n- function_implementation: <class 'str'> - Python code (including imports from the boilerplate, any necessary helper functions, etc.) of your Python function implementation.\n\nRESPONSE FORMAT:\n[[## thought ##]]\nBrief reasoning for your next action\n\n[[ ## python_code ## ]]\n# Execute one logical step toward the solution\n# Use final_answer({key: value, ...}) when ready\n\nEXAMPLE:\n[[## thought ##]]\nI need to calculate the area and call final_answer with the result.\n\n[[ ## python_code ## ]]\narea = length * width\nfinal_answer({\"calculated_area\": area})",
+      "fields": [
+        {
+          "prefix": "Function Requirements:",
+          "description": "Detailed description of what the function should do and its requirements."
+        },
+        {
+          "prefix": "Function Name:",
+          "description": "${function_name}"
+        },
+        {
+          "prefix": "Function Boilerplate:",
+          "description": "This boilerplate must be included at the beginning of your code. Otherwise, it will not work properly."
+        },
+        {
+          "prefix": "Path Ifc Model:",
+          "description": "Path to an IFC file for testing the function."
+        },
+        {
+          "prefix": "Trajectory:",
+          "description": "Your execution history, consisting of your past thoughts, the code you wrote, and the execution results."
+        },
+        {
+          "prefix": "Thought:",
+          "description": "Your reasoning and plan for the next step."
+        },
+        {
+          "prefix": "Python Code:",
+          "description": "The Python code to execute to make progress on the task."
+        }
+      ]
+    },
+    "lm": null
+  },
+  "tool_creator.tool_creator.extract.predict": {
+    "traces": [],
+    "train": [],
+    "demos": [
+      {
+        "question": "How many interior doors are there in this building?",
+        "answer": "There are 10 interior doors in this building.",
+        "path_ifc_model": "\/Users\/sylvainhellin\/GitHub\/4_phd\/ifcAnswerEngineV3\/src\/experiment\/bim_models\/duplex\/arc.ifc",
+        "question_id": 53
+      },
+      {
+        "question": "Where are the main electrical panels located?",
+        "answer": "The main electrical panels are located in rooms A101 and B101.",
+        "path_ifc_model": "\/Users\/sylvainhellin\/GitHub\/4_phd\/ifcAnswerEngineV3\/src\/experiment\/bim_models\/duplex\/mep.ifc",
+        "question_id": 10
+      },
+      {
+        "question": "What is the width of the main entrance door?",
+        "answer": "The width of the main entrance door is 1.8 m.",
+        "path_ifc_model": "\/Users\/sylvainhellin\/GitHub\/4_phd\/ifcAnswerEngineV3\/src\/experiment\/bim_models\/dental_clinic\/arc.ifc",
+        "question_id": 65
+      },
+      {
+        "question": "What is the total gross floor area of the building?",
+        "answer": "The information is not directly available in the BIM model and cannot be exactly calculated. However, it is estimated that the total gross floor area of the building is around 350 sqm.",
+        "path_ifc_model": "\/Users\/sylvainhellin\/GitHub\/4_phd\/ifcAnswerEngineV3\/src\/experiment\/bim_models\/duplex\/arc.ifc",
+        "question_id": 0
+      }
+    ],
+    "signature": {
+      "instructions": "Given the execution trajectory, answer the original question.\nOriginal Question: As an expert Python programmer, you have been tasked with creating a new Python function using the IfcOpenShell library.\n\nYour function implementation must:\n    - Return proper data structures (e.g., lists and dictionaries), not formatted strings.\n    - Be well-documented with docstrings and type hints.\n    - Be explicit regarding assumptions. For example, if your function involves using properties related to specific BIM authoring software, such as PSet_Revit_Dimensions for an IFC model exported from Revit, mention this in the docstring.",
+      "fields": [
+        {
+          "prefix": "Trajectory:",
+          "description": "The execution history of thoughts, code, and observations."
+        },
+        {
+          "prefix": "Function Requirements:",
+          "description": "Detailed description of what the function should do and its requirements."
+        },
+        {
+          "prefix": "Function Name:",
+          "description": "${function_name}"
+        },
+        {
+          "prefix": "Function Boilerplate:",
+          "description": "This boilerplate must be included at the beginning of your code. Otherwise, it will not work properly."
+        },
+        {
+          "prefix": "Path Ifc Model:",
+          "description": "Path to an IFC file for testing the function."
+        },
+        {
+          "prefix": "Reasoning: Let's think step by step in order to",
+          "description": "${reasoning}"
+        },
+        {
+          "prefix": "Function Implementation:",
+          "description": "Python code (including imports from the boilerplate, any necessary helper functions, etc.) of your Python function implementation."
+        }
+      ]
+    },
+    "lm": null
+  },
+  "tool_creator.test_and_improve.tool_corrector.agent.code_act_iter": {
+    "traces": [],
+    "train": [],
+    "demos": [
+      {
+        "question": "What is the width of the main entrance door?",
+        "answer": "The width of the main entrance door is 1.8 m.",
+        "path_ifc_model": "\/Users\/sylvainhellin\/GitHub\/4_phd\/ifcAnswerEngineV3\/src\/experiment\/bim_models\/dental_clinic\/arc.ifc",
+        "question_id": 65
+      },
+      {
+        "question": "What is the total gross floor area of the building?",
+        "answer": "The information is not directly available in the BIM model and cannot be exactly calculated. However, it is estimated that the total gross floor area of the building is around 350 sqm.",
+        "path_ifc_model": "\/Users\/sylvainhellin\/GitHub\/4_phd\/ifcAnswerEngineV3\/src\/experiment\/bim_models\/duplex\/arc.ifc",
+        "question_id": 0
+      },
+      {
+        "question": "How many interior doors are there in this building?",
+        "answer": "There are 10 interior doors in this building.",
+        "path_ifc_model": "\/Users\/sylvainhellin\/GitHub\/4_phd\/ifcAnswerEngineV3\/src\/experiment\/bim_models\/duplex\/arc.ifc",
+        "question_id": 53
+      },
+      {
+        "question": "Where are the main electrical panels located?",
+        "answer": "The main electrical panels are located in rooms A101 and B101.",
+        "path_ifc_model": "\/Users\/sylvainhellin\/GitHub\/4_phd\/ifcAnswerEngineV3\/src\/experiment\/bim_models\/duplex\/mep.ifc",
+        "question_id": 10
+      }
+    ],
+    "signature": {
+      "instructions": "Solve tasks by writing and executing Python code step-by-step.\n\nAVAILABLE FUNCTIONS (do not import them):\n\n- `web_search`: Performs an AI-powered web search using Perplexity's Sonar API, which provides real-time search results with natural language responses. The function is designed to help find and explain technical information, particularly about programming and libraries.  Args: query (str): The search query. For best results, make queries specific and include relevant technical terms (e.g., \"IfcOpenShell\", \"Python\", specific function names). model (str, optional): The model to use for the search. Defaults to \"sonar\". Available models are: \"sonar\", \"sonar-pro\", \"sonar-reasoning\", \"sonar-reasoning-pro\". - sonar: Base model for general queries - sonar-pro: Enhanced version with better accuracy - sonar-reasoning: Optimized for complex analytical queries - sonar-reasoning-pro: Most capable model for technical analysis  Returns: str: A natural language response synthesized from web search results. On success (status code 200), returns a detailed explanation or answer. On failure, returns an error message string containing the status code and error details.\n- `query_ifcopenshell_documentation`: Queries the documentation vector database to find semantically similar documentation entries.  This function performs semantic similarity search to find relevant IfcOpenShell documentation based on a natural language description. For best results, the query should: - Describe the desired functionality in simple, clear terms - Focus on the core operation (e.g., \"get entity attributes\" rather than \"how do I get attributes?\") - Use terminology similar to the documentation (e.g., \"entity\", \"property\", \"attribute\") - Avoid implementation details or specific use cases  Example queries: - \"Get properties of an IFC entity\" - \"Create new IFC entity\" - \"Convert geometry to shape\"  Args: query (str): Natural language description of the desired functionality. n_results (int, optional): The maximum number of results to return. Defaults to 10.  Returns: str: A JSON-serialized string containing either: - A list of matching documentation entries, where each entry is a dictionary with keys: \"module\", \"type\", \"name\", \"docstring\" - An error message in the format: {\"error\": \"error description\"}  Example Response: [ { \"module\": \"ifcopenshell.util.element\", \"type\": \"function\", \"name\": \"get_properties\", \"docstring\": \"Gets all properties of an IFC entity...\" } ]\n- `final_answer`: Marks the task as complete. Use this function when you are confident you have collected all the necessary information to answer the user's request. You should pack all the required output fields into a dictionary and pass it argument to the function.\n\nIMPORTANT: DO NOT import these functions in your python_code - they are already available. Importing them will cause errors.\n\nWORKFLOW:\n1. **Think**: Analyze the task and your progress\n2. **Code**: Write Python code to advance toward the solution\n3. **Iterate**: Repeat until complete\n\nOUTPUT:\nCall `final_answer(result_dict)` with all required fields when finished.\n\nTASK:\nAs an expert Python programmer, you have been tasked with correcting a given Python function implementation, which is not performing as expected.\nYou are provided with the code of the current implementation, as well as a detailed assessment of the necessary improvements. Using this information, update the code of the current implementation.\n\n\nYour corrected function implementation must:\n    - Return proper data structures (e.g., lists and dictionaries), not formatted strings.\n    - Be well-documented with docstrings and type hints.\n    - Be explicit regarding assumptions. For example, if your function involves using properties related to specific BIM authoring software, such as PSet_Revit_Dimensions for an IFC model exported from Revit, mention this in the docstring.\n\nREQUIRED FIELDS:\n- new_function_implementation: <class 'str'> - The updated implementation of the required function, mitigating the issues identified in the detailed assessment.\n\nRESPONSE FORMAT:\n[[## thought ##]]\nBrief reasoning for your next action\n\n[[ ## python_code ## ]]\n# Execute one logical step toward the solution\n# Use final_answer({key: value, ...}) when ready\n\nEXAMPLE:\n[[## thought ##]]\nI need to calculate the area and call final_answer with the result.\n\n[[ ## python_code ## ]]\narea = length * width\nfinal_answer({\"calculated_area\": area})",
+      "fields": [
+        {
+          "prefix": "Function Description:",
+          "description": "Detailed description of what the function should do and its requirements."
+        },
+        {
+          "prefix": "Function Name:",
+          "description": "Name of the function."
+        },
+        {
+          "prefix": "Current Function Implementation:",
+          "description": "Current implementation of the function that needs to be updated."
+        },
+        {
+          "prefix": "Detailed Function Assessment:",
+          "description": "The detailed assessment of the current implementation of the function."
+        },
+        {
+          "prefix": "Path Ifc Model:",
+          "description": "Path to an IFC file for testing the function."
+        },
+        {
+          "prefix": "Trajectory:",
+          "description": "Your execution history, consisting of your past thoughts, the code you wrote, and the execution results."
+        },
+        {
+          "prefix": "Thought:",
+          "description": "Your reasoning and plan for the next step."
+        },
+        {
+          "prefix": "Python Code:",
+          "description": "The Python code to execute to make progress on the task."
+        }
+      ]
+    },
+    "lm": null
+  },
+  "tool_creator.test_and_improve.tool_corrector.agent.extract.predict": {
+    "traces": [],
+    "train": [],
+    "demos": [
+      {
+        "question": "How many interior doors are there in this building?",
+        "answer": "There are 10 interior doors in this building.",
+        "path_ifc_model": "\/Users\/sylvainhellin\/GitHub\/4_phd\/ifcAnswerEngineV3\/src\/experiment\/bim_models\/duplex\/arc.ifc",
+        "question_id": 53
+      },
+      {
+        "question": "What is the width of the main entrance door?",
+        "answer": "The width of the main entrance door is 1.8 m.",
+        "path_ifc_model": "\/Users\/sylvainhellin\/GitHub\/4_phd\/ifcAnswerEngineV3\/src\/experiment\/bim_models\/dental_clinic\/arc.ifc",
+        "question_id": 65
+      },
+      {
+        "question": "Where are the main electrical panels located?",
+        "answer": "The main electrical panels are located in rooms A101 and B101.",
+        "path_ifc_model": "\/Users\/sylvainhellin\/GitHub\/4_phd\/ifcAnswerEngineV3\/src\/experiment\/bim_models\/duplex\/mep.ifc",
+        "question_id": 10
+      },
+      {
+        "question": "What is the total gross floor area of the building?",
+        "answer": "The information is not directly available in the BIM model and cannot be exactly calculated. However, it is estimated that the total gross floor area of the building is around 350 sqm.",
+        "path_ifc_model": "\/Users\/sylvainhellin\/GitHub\/4_phd\/ifcAnswerEngineV3\/src\/experiment\/bim_models\/duplex\/arc.ifc",
+        "question_id": 0
+      }
+    ],
+    "signature": {
+      "instructions": "Given the execution trajectory, answer the original question.\nOriginal Question: As an expert Python programmer, you have been tasked with correcting a given Python function implementation, which is not performing as expected.\nYou are provided with the code of the current implementation, as well as a detailed assessment of the necessary improvements. Using this information, update the code of the current implementation.\n\n\nYour corrected function implementation must:\n    - Return proper data structures (e.g., lists and dictionaries), not formatted strings.\n    - Be well-documented with docstrings and type hints.\n    - Be explicit regarding assumptions. For example, if your function involves using properties related to specific BIM authoring software, such as PSet_Revit_Dimensions for an IFC model exported from Revit, mention this in the docstring.",
+      "fields": [
+        {
+          "prefix": "Trajectory:",
+          "description": "The execution history of thoughts, code, and observations."
+        },
+        {
+          "prefix": "Function Description:",
+          "description": "Detailed description of what the function should do and its requirements."
+        },
+        {
+          "prefix": "Function Name:",
+          "description": "Name of the function."
+        },
+        {
+          "prefix": "Current Function Implementation:",
+          "description": "Current implementation of the function that needs to be updated."
+        },
+        {
+          "prefix": "Detailed Function Assessment:",
+          "description": "The detailed assessment of the current implementation of the function."
+        },
+        {
+          "prefix": "Path Ifc Model:",
+          "description": "Path to an IFC file for testing the function."
+        },
+        {
+          "prefix": "Reasoning: Let's think step by step in order to",
+          "description": "${reasoning}"
+        },
+        {
+          "prefix": "New Function Implementation:",
+          "description": "The updated implementation of the required function, mitigating the issues identified in the detailed assessment."
+        }
+      ]
+    },
+    "lm": null
+  },
+  "tool_creator.test_and_improve.tool_assessor.agent.code_act_iter": {
+    "traces": [],
+    "train": [],
+    "demos": [
+      {
+        "question": "What is the width of the main entrance door?",
+        "answer": "The width of the main entrance door is 1.8 m.",
+        "path_ifc_model": "\/Users\/sylvainhellin\/GitHub\/4_phd\/ifcAnswerEngineV3\/src\/experiment\/bim_models\/dental_clinic\/arc.ifc",
+        "question_id": 65
+      },
+      {
+        "question": "What is the total gross floor area of the building?",
+        "answer": "The information is not directly available in the BIM model and cannot be exactly calculated. However, it is estimated that the total gross floor area of the building is around 350 sqm.",
+        "path_ifc_model": "\/Users\/sylvainhellin\/GitHub\/4_phd\/ifcAnswerEngineV3\/src\/experiment\/bim_models\/duplex\/arc.ifc",
+        "question_id": 0
+      },
+      {
+        "question": "How many interior doors are there in this building?",
+        "answer": "There are 10 interior doors in this building.",
+        "path_ifc_model": "\/Users\/sylvainhellin\/GitHub\/4_phd\/ifcAnswerEngineV3\/src\/experiment\/bim_models\/duplex\/arc.ifc",
+        "question_id": 53
+      },
+      {
+        "question": "Where are the main electrical panels located?",
+        "answer": "The main electrical panels are located in rooms A101 and B101.",
+        "path_ifc_model": "\/Users\/sylvainhellin\/GitHub\/4_phd\/ifcAnswerEngineV3\/src\/experiment\/bim_models\/duplex\/mep.ifc",
+        "question_id": 10
+      }
+    ],
+    "signature": {
+      "instructions": "Solve tasks by writing and executing Python code step-by-step.\n\nAVAILABLE FUNCTIONS (do not import them):\n\n- `web_search`: Performs an AI-powered web search using Perplexity's Sonar API, which provides real-time search results with natural language responses. The function is designed to help find and explain technical information, particularly about programming and libraries.  Args: query (str): The search query. For best results, make queries specific and include relevant technical terms (e.g., \"IfcOpenShell\", \"Python\", specific function names). model (str, optional): The model to use for the search. Defaults to \"sonar\". Available models are: \"sonar\", \"sonar-pro\", \"sonar-reasoning\", \"sonar-reasoning-pro\". - sonar: Base model for general queries - sonar-pro: Enhanced version with better accuracy - sonar-reasoning: Optimized for complex analytical queries - sonar-reasoning-pro: Most capable model for technical analysis  Returns: str: A natural language response synthesized from web search results. On success (status code 200), returns a detailed explanation or answer. On failure, returns an error message string containing the status code and error details.\n- `query_ifcopenshell_documentation`: Queries the documentation vector database to find semantically similar documentation entries.  This function performs semantic similarity search to find relevant IfcOpenShell documentation based on a natural language description. For best results, the query should: - Describe the desired functionality in simple, clear terms - Focus on the core operation (e.g., \"get entity attributes\" rather than \"how do I get attributes?\") - Use terminology similar to the documentation (e.g., \"entity\", \"property\", \"attribute\") - Avoid implementation details or specific use cases  Example queries: - \"Get properties of an IFC entity\" - \"Create new IFC entity\" - \"Convert geometry to shape\"  Args: query (str): Natural language description of the desired functionality. n_results (int, optional): The maximum number of results to return. Defaults to 10.  Returns: str: A JSON-serialized string containing either: - A list of matching documentation entries, where each entry is a dictionary with keys: \"module\", \"type\", \"name\", \"docstring\" - An error message in the format: {\"error\": \"error description\"}  Example Response: [ { \"module\": \"ifcopenshell.util.element\", \"type\": \"function\", \"name\": \"get_properties\", \"docstring\": \"Gets all properties of an IFC entity...\" } ]\n- `final_answer`: Marks the task as complete. Use this function when you are confident you have collected all the necessary information to answer the user's request. You should pack all the required output fields into a dictionary and pass it argument to the function.\n\nIMPORTANT: DO NOT import these functions in your python_code - they are already available. Importing them will cause errors.\n\nWORKFLOW:\n1. **Think**: Analyze the task and your progress\n2. **Code**: Write Python code to advance toward the solution\n3. **Iterate**: Repeat until complete\n\nOUTPUT:\nCall `final_answer(result_dict)` with all required fields when finished.\n\nTASK:\nAssess whether a generated Python function meets requirements and works correctly.\nNote that the path_ifc_model is not loaded as a variable in the Python interpreter. Therefore, you must instantiate the variable if you want to use it.\nYour role is not to implement this function; it is simply to test it and assess whether it meets the requirements.\n\nREQUIRED FIELDS:\n- assessment_status: typing.Literal['ok', 'needs_improvement'] - 'ok' if the tool works as expected, 'needs_improvement' if issues were found\n- assessment_details: <class 'str'> - Detailed explanation of the assessment. If the function crashed, include the error. If the output is wrong, explain why. Provide suggestions for correction.\n\nRESPONSE FORMAT:\n[[## thought ##]]\nBrief reasoning for your next action\n\n[[ ## python_code ## ]]\n# Execute one logical step toward the solution\n# Use final_answer({key: value, ...}) when ready\n\nEXAMPLE:\n[[## thought ##]]\nI need to calculate the area and call final_answer with the result.\n\n[[ ## python_code ## ]]\narea = length * width\nfinal_answer({\"calculated_area\": area})",
+      "fields": [
+        {
+          "prefix": "Function Name:",
+          "description": "Name of the function to assess. This function is available as a tool."
+        },
+        {
+          "prefix": "Function Requirements:",
+          "description": "Original requirements and description of what the function should do"
+        },
+        {
+          "prefix": "Path Ifc Model:",
+          "description": "Path to an IFC file for testing the function."
+        },
+        {
+          "prefix": "Trajectory:",
+          "description": "Your execution history, consisting of your past thoughts, the code you wrote, and the execution results."
+        },
+        {
+          "prefix": "Thought:",
+          "description": "Your reasoning and plan for the next step."
+        },
+        {
+          "prefix": "Python Code:",
+          "description": "The Python code to execute to make progress on the task."
+        }
+      ]
+    },
+    "lm": null
+  },
+  "tool_creator.test_and_improve.tool_assessor.agent.extract.predict": {
+    "traces": [],
+    "train": [],
+    "demos": [
+      {
+        "question": "How many interior doors are there in this building?",
+        "answer": "There are 10 interior doors in this building.",
+        "path_ifc_model": "\/Users\/sylvainhellin\/GitHub\/4_phd\/ifcAnswerEngineV3\/src\/experiment\/bim_models\/duplex\/arc.ifc",
+        "question_id": 53
+      },
+      {
+        "question": "What is the total gross floor area of the building?",
+        "answer": "The information is not directly available in the BIM model and cannot be exactly calculated. However, it is estimated that the total gross floor area of the building is around 350 sqm.",
+        "path_ifc_model": "\/Users\/sylvainhellin\/GitHub\/4_phd\/ifcAnswerEngineV3\/src\/experiment\/bim_models\/duplex\/arc.ifc",
+        "question_id": 0
+      },
+      {
+        "question": "What is the width of the main entrance door?",
+        "answer": "The width of the main entrance door is 1.8 m.",
+        "path_ifc_model": "\/Users\/sylvainhellin\/GitHub\/4_phd\/ifcAnswerEngineV3\/src\/experiment\/bim_models\/dental_clinic\/arc.ifc",
+        "question_id": 65
+      },
+      {
+        "question": "Where are the main electrical panels located?",
+        "answer": "The main electrical panels are located in rooms A101 and B101.",
+        "path_ifc_model": "\/Users\/sylvainhellin\/GitHub\/4_phd\/ifcAnswerEngineV3\/src\/experiment\/bim_models\/duplex\/mep.ifc",
+        "question_id": 10
+      }
+    ],
+    "signature": {
+      "instructions": "Given the execution trajectory, answer the original question.\nOriginal Question: Assess whether a generated Python function meets requirements and works correctly.\nNote that the path_ifc_model is not loaded as a variable in the Python interpreter. Therefore, you must instantiate the variable if you want to use it.\nYour role is not to implement this function; it is simply to test it and assess whether it meets the requirements.",
+      "fields": [
+        {
+          "prefix": "Trajectory:",
+          "description": "The execution history of thoughts, code, and observations."
+        },
+        {
+          "prefix": "Function Name:",
+          "description": "Name of the function to assess. This function is available as a tool."
+        },
+        {
+          "prefix": "Function Requirements:",
+          "description": "Original requirements and description of what the function should do"
+        },
+        {
+          "prefix": "Path Ifc Model:",
+          "description": "Path to an IFC file for testing the function."
+        },
+        {
+          "prefix": "Reasoning: Let's think step by step in order to",
+          "description": "${reasoning}"
+        },
+        {
+          "prefix": "Assessment Status:",
+          "description": "'ok' if the tool works as expected, 'needs_improvement' if issues were found"
+        },
+        {
+          "prefix": "Assessment Details:",
+          "description": "Detailed explanation of the assessment. If the function crashed, include the error. If the output is wrong, explain why. Provide suggestions for correction."
+        }
+      ]
+    },
+    "lm": null
+  },
+  "name_extractor.extractor.predict": {
+    "traces": [],
+    "train": [],
+    "demos": [
+      {
+        "question": "Where are the main electrical panels located?",
+        "answer": "The main electrical panels are located in rooms A101 and B101.",
+        "path_ifc_model": "\/Users\/sylvainhellin\/GitHub\/4_phd\/ifcAnswerEngineV3\/src\/experiment\/bim_models\/duplex\/mep.ifc",
+        "question_id": 10
+      },
+      {
+        "question": "What is the total gross floor area of the building?",
+        "answer": "The information is not directly available in the BIM model and cannot be exactly calculated. However, it is estimated that the total gross floor area of the building is around 350 sqm.",
+        "path_ifc_model": "\/Users\/sylvainhellin\/GitHub\/4_phd\/ifcAnswerEngineV3\/src\/experiment\/bim_models\/duplex\/arc.ifc",
+        "question_id": 0
+      },
+      {
+        "question": "How many interior doors are there in this building?",
+        "answer": "There are 10 interior doors in this building.",
+        "path_ifc_model": "\/Users\/sylvainhellin\/GitHub\/4_phd\/ifcAnswerEngineV3\/src\/experiment\/bim_models\/duplex\/arc.ifc",
+        "question_id": 53
+      },
+      {
+        "question": "What is the width of the main entrance door?",
+        "answer": "The width of the main entrance door is 1.8 m.",
+        "path_ifc_model": "\/Users\/sylvainhellin\/GitHub\/4_phd\/ifcAnswerEngineV3\/src\/experiment\/bim_models\/dental_clinic\/arc.ifc",
+        "question_id": 65
+      }
+    ],
+    "signature": {
+      "instructions": "Based on the requirements for a new Python function, determine what the function should be called.\nIf a name is provided in the function signature, use that. If none is provided, suggest a meaningful alternative.",
+      "fields": [
+        {
+          "prefix": "Function Requirements:",
+          "description": "${function_requirements}"
+        },
+        {
+          "prefix": "Reasoning:",
+          "description": "${reasoning}"
+        },
+        {
+          "prefix": "Function Name:",
+          "description": "${function_name}"
+        }
+      ]
+    },
+    "lm": null
+  },
+  "engine.code_act_iter": {
+    "traces": [],
+    "train": [],
+    "demos": [
+      {
+        "augmented": true,
+        "trajectory": "No execution history yet. This is the first step.",
+        "question": "What is the floor to floor height between the first and the second floor?",
+        "path_ifc_model": "\/Users\/sylvainhellin\/GitHub\/4_phd\/ifcAnswerEngineV3\/src\/experiment\/bim_models\/dental_clinic\/arc.ifc",
+        "thought": "I need to calculate the floor-to-floor height between the first and second floors. I'll use the `get_specific_floor_to_floor_height` function which is designed for this purpose. I need to identify the correct storey names for \"first floor\" and \"second floor\" in the IFC model.",
+        "python_code": "# First, let's try to get the floor-to-floor height with common naming conventions\nresult = get_specific_floor_to_floor_height(\n    ifc_file_path=\"\/Users\/sylvainhellin\/GitHub\/4_phd\/ifcAnswerEngineV3\/src\/experiment\/bim_models\/dental_clinic\/arc.ifc\",\n    from_storey_name=\"Level 1\",\n    to_storey_name=\"Level 2\"\n)\n\nprint(result)"
+      },
+      {
+        "question": "What is the width of the main entrance door?",
+        "answer": "The width of the main entrance door is 1.8 m.",
+        "path_ifc_model": "\/Users\/sylvainhellin\/GitHub\/4_phd\/ifcAnswerEngineV3\/src\/experiment\/bim_models\/dental_clinic\/arc.ifc",
+        "question_id": 65
+      },
+      {
+        "question": "How many interior doors are there in this building?",
+        "answer": "There are 10 interior doors in this building.",
+        "path_ifc_model": "\/Users\/sylvainhellin\/GitHub\/4_phd\/ifcAnswerEngineV3\/src\/experiment\/bim_models\/duplex\/arc.ifc",
+        "question_id": 53
+      },
+      {
+        "question": "What is the total gross floor area of the building?",
+        "answer": "The information is not directly available in the BIM model and cannot be exactly calculated. However, it is estimated that the total gross floor area of the building is around 350 sqm.",
+        "path_ifc_model": "\/Users\/sylvainhellin\/GitHub\/4_phd\/ifcAnswerEngineV3\/src\/experiment\/bim_models\/duplex\/arc.ifc",
+        "question_id": 0
+      }
+    ],
+    "signature": {
+      "instructions": "Solve tasks by writing and executing Python code step-by-step.\n\nAVAILABLE FUNCTIONS (do not import them):\n\n- `web_search`: Performs an AI-powered web search using Perplexity's Sonar API, which provides real-time search results with natural language responses. The function is designed to help find and explain technical information, particularly about programming and libraries.  Args: query (str): The search query. For best results, make queries specific and include relevant technical terms (e.g., \"IfcOpenShell\", \"Python\", specific function names). model (str, optional): The model to use for the search. Defaults to \"sonar\". Available models are: \"sonar\", \"sonar-pro\", \"sonar-reasoning\", \"sonar-reasoning-pro\". - sonar: Base model for general queries - sonar-pro: Enhanced version with better accuracy - sonar-reasoning: Optimized for complex analytical queries - sonar-reasoning-pro: Most capable model for technical analysis  Returns: str: A natural language response synthesized from web search results. On success (status code 200), returns a detailed explanation or answer. On failure, returns an error message string containing the status code and error details.\n- `query_ifcopenshell_documentation`: Queries the documentation vector database to find semantically similar documentation entries.  This function performs semantic similarity search to find relevant IfcOpenShell documentation based on a natural language description. For best results, the query should: - Describe the desired functionality in simple, clear terms - Focus on the core operation (e.g., \"get entity attributes\" rather than \"how do I get attributes?\") - Use terminology similar to the documentation (e.g., \"entity\", \"property\", \"attribute\") - Avoid implementation details or specific use cases  Example queries: - \"Get properties of an IFC entity\" - \"Create new IFC entity\" - \"Convert geometry to shape\"  Args: query (str): Natural language description of the desired functionality. n_results (int, optional): The maximum number of results to return. Defaults to 10.  Returns: str: A JSON-serialized string containing either: - A list of matching documentation entries, where each entry is a dictionary with keys: \"module\", \"type\", \"name\", \"docstring\" - An error message in the format: {\"error\": \"error description\"}  Example Response: [ { \"module\": \"ifcopenshell.util.element\", \"type\": \"function\", \"name\": \"get_properties\", \"docstring\": \"Gets all properties of an IFC entity...\" } ]\n- `calculate_gross_floor_area`: Calculate gross floor area by computing the footprint area of each building storey.  This follows the standard definition of gross floor area measured to the outer surface of exterior walls, rather than simply summing individual slab areas.  Args: model: Opened IFC model  Returns: float: Total gross floor area\n- `calculate_element_volume_from_geometry`: Calculate the volume of an IFC element based on its geometric representation.  This function computes volume directly from the element's geometry (SweptSolid, SurfaceModel, etc.) rather than relying on pre-computed volume properties. It uses IfcOpenShell's geometry processing capabilities to create a mesh or solid geometry and then calculates the volume directly from that representation.  Args: ifc_file_path (str): Path to the IFC file element_guid (str): GlobalId of the IFC element  Returns: float: Volume of the element in cubic meters. Returns 0.0 if no volume can be calculated.  Raises: ValueError: If element not found or has no geometry FileNotFoundError: If the IFC file cannot be found Exception: If geometry processing fails\n- `get_material_info_from_element`: Extract material names and properties from various material representations.  This function handles different types of material associations in IFC models: - IfcMaterialLayerSetUsage: Extracts materials from layered constructions - IfcMaterial: Simple material associations - IfcMaterialList: Lists of materials  Args: ifc_file_path (str): Path to the IFC file element_or_material_association: Either an IFC element or a material association (IfcMaterialLayerSetUsage, IfcMaterial, or IfcMaterialList)  Returns: List[Dict[str, str]]: List of dictionaries containing material information. Each dictionary contains: - name: Material name - description: Material description (if available) - thickness: Layer thickness (for IfcMaterialLayerSetUsage) - layerSetName: Name of the layer set (for IfcMaterialLayerSetUsage) - type: Type of material representation  Example: >>> materials = get_material_info_from_element(\"model.ifc\", element) >>> print(materials[0][\"name\"]) \"Roofing - EPDM Membrane\"\n- `get_material_properties`: Retrieve specific property values directly from a material entity in an IFC model.  This function searches for properties in material-specific property sets, which may contain information not available through element-level property extraction.  Args: ifc_file_path (str): Path to the IFC file material_name_or_entity: Either a material name (str) or a material entity instance from IfcOpenShell property_names (List[str]): List of property names to look for (e.g., ['ExpectedLife', 'ThermalTransmittance', 'Density']) property_set_names (Optional[List[str]]): Optional list of property set names to search within (e.g., ['Pset_MaterialCommon', 'Pset_ConcreteMaterial'])  Returns: Dict[str, Any]: Dictionary mapping property names to their values. If a property is not found, its value will be None.\n- `get_floor_to_floor_heights`: Calculate floor-to-floor heights between consecutive building storeys in an IFC model.  Parameters: - ifc_file_path (str): Path to the IFC file  Returns: - List[Dict[str, Any]]: A list of dictionaries containing floor-to-floor height information. Each dictionary includes: - \"from_storey\": Name of the lower storey - \"to_storey\": Name of the upper storey - \"height\": Vertical distance between the storeys (float) - \"from_elevation\": Elevation of the lower storey (float) - \"to_elevation\": Elevation of the upper storey (float) - \"unit\": Unit of measurement (typically meters)\n- `get_foundation_material_info`: Extract foundation material information from an IFC file.  This function identifies foundation elements (IfcFooting and IfcSlab with PredefinedType.BASESLAB) and extracts their associated material properties.  Args: ifc_file_path (str): Path to the IFC file  Returns: List[Dict[str, Any]]: A list of dictionaries containing foundation material information. Each dictionary contains: - element_guid: GlobalId of the foundation element - element_name: Name of the foundation element - element_type: Type of foundation element (IfcFooting or IfcSlab) - materials: List of material dictionaries with properties\n- `get_room_ceiling_height`: Get the ceiling height of a room\/space in an IFC model.  This function retrieves the ceiling height (typically the unbounded height) of a room from property sets, particularly those created by Revit (PSet_Revit_Dimensions). For rooms exported from Revit, this usually corresponds to the 'Unbounded Height' parameter.  Args: path_ifc_model (str): Path to the IFC file room_identifier (str or int): Room number, name, or ID  Returns: dict: Dictionary containing: - height (float): Ceiling height value - unit (str): Unit of measurement - room_info (dict): Additional room information - success (bool): Whether the operation was successful - message (str): Informative message about the result\n- `get_structural_material_type`: Identifies the material type of a structural element in an IFC file.  This function is designed to help distinguish between different structural systems such as steel frame vs. concrete frame structures by identifying the specific material type of structural elements like columns, beams, and other framing members.  Args: ifc_file_path (str): Path to the IFC file element_guid (str): GUID of the structural element  Returns: str: The material type of the structural element (e.g., 'Steel', 'Concrete', 'Timber')  Raises: ValueError: If the element with the specified GUID is not found Exception: If no material association is found for the element or if material type cannot be determined\n- `get_stair_dimensions`: Retrieve dimensional properties of stair elements from an IFC model.  Args: ifc_file_path (str): Path to the IFC file stair_identifier (Optional[str]): Name, GlobalId, or identifier of specific stair to query (if None, return all stairs) dimension_names (List[str], optional): Specific dimension names to extract  Returns: List[Dict[str, Any]]: List of dictionaries containing stair information: - stair_name: Name of the stair element - stair_guid: GlobalId of the stair element - stair_type: IFC type (IfcStair or IfcStairFlight) - dimensions: Dictionary mapping dimension names to their values - property_sets: Dictionary of relevant property sets containing dimensional information\n- `count_light_fixtures`: Count light fixtures in an IFC model by searching for elements with lighting-related names.  This function is designed to work with IFC2X3 schema where IfcLightFixture entity type may not be available. It searches for elements by name patterns related to lighting.  Args: ifc_file_path (str): Path to the IFC file include_types (List[str], optional): IFC types to include in search. Defaults to ['IfcLightFixture', 'IfcLamp']. name_patterns (List[str], optional): Name patterns to search for. Defaults to ['light', 'lamp', 'pendant', 'sconce'].  Returns: Dict[str, Any]: Dictionary containing: - total_count: Total number of light fixtures found - by_pattern: Dictionary with counts for each pattern - by_type: Dictionary with counts for each IFC type (if found) - elements: List of found elements with their names and types  Note: For IFC2X3 models, this function primarily relies on name-based searches as IfcLightFixture entity may not be available in this schema version.\n- `get_elements_by_type`: Retrieves elements of a specified IFC type from an IFC model.  Args: ifc_file_path (str): The path to the IFC file. ifc_type (str): The IFC entity type to retrieve (e.g., 'IfcWall', 'IfcBeam', 'IfcDoor').  Returns: List[ifcopenshell.entity_instance]: A list of IfcOpenShell entity instances of the specified type. Each entity has accessible attributes like 'Name' and 'GlobalId'. Returns an empty list if the file cannot be opened or no elements of the specified type are found.\n- `get_acoustic_properties`: Retrieve acoustic properties from IFC models, focusing on STC ratings and other acoustic performance metrics.  This function searches for acoustic properties in building elements such as walls, doors, floors, and ceilings. It looks for properties like Sound Transmission Class (STC) ratings, sound insulation values, and other acoustic performance metrics in element property sets.  The function handles various IFC schema versions and different BIM authoring software conventions for storing acoustic properties. Common property set names that may contain acoustic information include: - Pset_WallCommon - Pset_DoorCommon - Pset_WindowCommon - Pset_Flooring - Pset_Ceiling - Pset_Acoustic - Pset_AcousticalCeiling - Pset_AcousticalFurniture - Pset_AudioVisual  Assumptions: - Acoustic properties are stored in property sets rather than as explicit IFC attributes - Property names follow common naming conventions (e.g., STC, AcousticRating, SoundTransmissionClass) - The IFC file contains building elements with associated property sets  Args: ifc_file_path (str): Path to the IFC file element_types (List[str], optional): List of IFC element types to search within (e.g., ['IfcWall', 'IfcDoor', 'IfcSlab']). If None, search common building element types. acoustic_property_names (List[str], optional): List of specific acoustic property names to look for (e.g., ['STC', 'SoundTransmissionClass', 'AcousticInsulation']). If None, search for common acoustic property names. search_property_sets (bool): Whether to search within property sets for acoustic properties. Defaults to True.  Returns: Dict[str, Any]: A dictionary containing: - 'found_properties': List of dictionaries with acoustic properties found - 'elements_without_acoustic_data': List of element GUIDs that were checked but had no acoustic properties - 'summary': Summary statistics - 'recommendations': Suggestions for finding acoustic information  Example: >>> result = get_acoustic_properties(\"model.ifc\") >>> print(f\"Found {len(result['found_properties'])} acoustic properties\")\n- `count_spaces_by_function`: Count the number of spaces\/rooms in an IFC model that match specific functional keywords.  This function searches for matches in: 1. Space Name attribute 2. Space LongName attribute 3. Space Description attribute 4. All property set names, property names, and property values  For IFC models exported from Revit, this includes checking: - PSet_Revit_Identity Data.Name - PSet_Revit_Identity Data.OmniClass Table 13 Category  Args: ifc_file_path (str): Path to the IFC file function_keywords (List[str]): List of keywords to match against space names, descriptions, and properties case_sensitive (bool): Whether to perform case-sensitive matching (default: False)  Returns: int: Number of spaces matching any of the keywords  Example: >>> # Count bedrooms >>> bedroom_count = count_spaces_by_function(\"model.ifc\", [\"bedroom\", \"bed room\", \"master bedroom\"]) >>> # Count bathrooms (case sensitive) >>> bathroom_count = count_spaces_by_function(\"model.ifc\", [\"BATH\", \"SHOWER\"], case_sensitive=True)\n- `validate_property_values`: Validates property values in an IFC model to distinguish between placeholder values and real data.  This function checks if property values are identical to their property names, which indicates they are placeholders rather than actual data. This is a common issue in IFC models where property values equal their property names when actual data is not available.  Args: ifc_file_path (str): Path to the IFC file to analyze  Returns: dict: A dictionary containing: - 'placeholder_properties': List of properties where value equals name (placeholders) - 'valid_properties': List of properties with meaningful values - 'empty_properties': List of properties with empty\/null values - 'summary': Summary statistics of the validation\n- `find_equipment_by_function`: Searches for equipment elements in an IFC model based on their functional role or type.  This function is designed to work with equipment from various BIM authoring software, particularly Revit-exported IFC models which use PSet_Revit_* property sets.  Args: ifc_file_path (str): Path to the IFC file equipment_function (str): The functional role of the equipment (e.g., \"fire extinguisher\", \"fire alarm\") equipment_keywords (List[str], optional): Custom keywords to search for. Defaults to None. element_types (List[str], optional): Custom element types to search. Defaults to None.  Returns: List[Dict[str, Any]]: List of dictionaries containing information about found equipment elements. Each dictionary contains: - name: Element name - type: IFC entity type - global_id: Element GlobalId - location: Spatial container name - location_type: Spatial container type\n- `get_element_warranty_info`: Systematically search for warranty and guarantee-related information across all instances of a specified element type in an IFC model.  This function identifies elements with warranty properties, determines if those properties contain actual data or placeholder values, and provides a comprehensive summary of warranty information availability.  Args: ifc_file_path (str): Path to the IFC file element_type (str): The IFC element type to analyze (e.g., \"IfcWall\", \"IfcSlab\")  Returns: Dict[str, Any]: A structured dictionary containing warranty information summary\n- `get_room_heights_by_function`: Identifies rooms\/spaces by functional role and extracts their height properties from an IFC model.  This function searches for elements in an IFC model that match functional keywords and extracts height information from those elements. It's designed to work with models that may not have explicit IfcSpace elements, which is common in some IFC exports.  Args: ifc_file_path (str): Path to the IFC file function_keywords (List[str]): List of keywords to match for identifying functional rooms (e.g., ['reception', 'waiting', 'consultation', 'interaction']) height_property_names (List[str]): List of property names to check for height values (e.g., ['Height', 'Elevation at Bottom', 'Elevation at Top'])  Returns: Dict[str, Union[float, List[float]]]: A dictionary where keys are the function keywords and values are either a single height (float) or list of heights (List[float]) for elements matching that function. If no elements are found for a keyword, the key will not be present in the dictionary.  Note: This function is designed for IFC models exported from Revit or similar BIM software. It looks for elements with properties that indicate room functions and height information. In models without explicit IfcSpace elements, it searches building elements for functional indicators.\n- `get_material_property_by_type_from_elements`: Retrieves specific properties of materials matching certain types from elements of a specified type in an IFC model.  Args: ifc_file_path (str): Path to the IFC file element_type (str): The IFC element type to search within (e.g., 'IfcWall', 'IfcSlab') material_type_keywords (List[str]): Keywords to identify the material type of interest (e.g., ['insulation', 'insul']) property_name (str): The material property to extract (e.g., 'thickness', 'thermal_conductivity') element_name_pattern (Optional[str]): Optional pattern to filter elements by name (e.g., 'exterior')  Returns: List[Dict[str, Any]]: A list of dictionaries containing element and material information\n- `get_door_dimensions_by_function`: Identifies doors by their functional role and extracts their dimensional properties.  Args: ifc_file_path (str): Path to the IFC file door_function (str): Door function type ('main entrance', 'emergency exit', 'interior', 'exterior') dimension_names (List[str]): List of dimension names to extract ('Width', 'Height', 'Thickness')  Returns: List[Dict[str, Any]]: List of dictionaries containing door information and requested dimensions  Note: This function is designed for IFC models exported from Revit with PSet_Revit property sets. Door function identification is based on name patterns and property analysis.\n- `get_element_material_specification`: Provides a comprehensive material specification for a given IFC element by combining multiple sources of information.  This function extracts material information from the element, attempts to retrieve specific material properties from the IFC model, falls back to general material information when specific properties aren't available, and includes relevant property set information from the element.  Args: ifc_file_path (str): Path to the IFC file element (Union[ifcopenshell.entity_instance, str]): Either an IFC element entity instance or the GlobalId of the element to investigate  Returns: Dict[str, Any]: A dictionary containing: - element_info: Basic information about the element (name, type, GlobalId) - materials: List of material information dictionaries, each containing: - name: Material name - description: Material description if available - type: Type of material representation - specific_properties: Dictionary of specific material properties found in the model - general_info: General information about the material type when specific properties aren't available - layer_info: Thickness and layer set information for layered materials - element_property_sets: Dictionary of relevant property sets from the element that might contain material information - summary: A human-readable summary of the material specification\n- `estimate_spatial_distances`: Estimate spatial distances between two spaces in an IFC model.  This function estimates distances based on spatial relationships and geometric properties of spaces in a BIM model. It calculates: - Direct 3D distance between space centroids - Horizontal distance (ignoring Z-axis differences) - Vertical distance (Z-axis difference only)  Args: start_space (str): Name or GlobalId of the starting space end_space (str): Name or GlobalId of the ending space model_path (str): Path to the IFC model file  Returns: Dict[str, Any]: A dictionary containing: - direct_distance: Direct 3D distance between space centroids - horizontal_distance: Horizontal distance between spaces - vertical_distance: Vertical distance between spaces - start_space_info: Information about the start space - end_space_info: Information about the end space  Note: This function provides estimations based on space centroids and bounding boxes. For precise measurements, specialized 3D analysis software should be used.\n- `get_specific_floor_to_floor_height`: Calculate the floor-to-floor height between two specifically named building storeys.  Args: ifc_file_path (str): Path to the IFC file from_storey_name (str): Name of the lower storey to_storey_name (str): Name of the upper storey  Returns: Dict[str, Any]: Dictionary containing height information: - height: The vertical distance between the storeys (float) - from_storey: Name of the lower storey - to_storey: Name of the upper storey - from_elevation: Elevation of the lower storey (float) - to_elevation: Elevation of the upper storey (float) - unit: Unit of measurement (typically meters) - success: Boolean indicating if the operation was successful - message: Informative message about the result or any errors\n- `find_connected_rooms`: Identifies rooms\/spaces that are directly connected to a specified room through doors or other openings.  This function works by: 1. Finding the specified room in the IFC model by matching Name or LongName 2. Identifying all doors connected to that room through IfcRelSpaceBoundary relationships 3. For each connected door, finding the other rooms it connects to 4. Returning information about all connected rooms  Args: ifc_file_path (str): Path to the IFC file. room_identifier (str): Name, number, or identifier of the room to find connections for.  Returns: List[Dict[str, Any]]: List of dictionaries containing information about connected rooms. Each dictionary contains: - room_name: Name of the connected room - room_long_name: Long name of the connected room (if available) - connection_type: Type of connection (e.g., \"door\") - connecting_element_guid: GlobalId of the connecting element - connecting_element_name: Name of the connecting element Returns empty list if no connections found or room not found.  Assumptions: - The IFC file is valid and accessible. - The IFC model contains IfcSpace elements with 'Name' or 'LongName' attributes. - The IFC model contains IfcDoor elements. - IfcRelSpaceBoundary elements correctly define relationships between spaces and doors. - The execution environment allows access to IfcOpenShell functionalities, including file opening. (Note: The assessment indicates an 'InterpreterError: Forbidden function evaluation', suggesting this assumption may not hold in the execution environment, preventing the core logic from running.)\n- `get_structural_room_heights_by_function`: Identifies functional areas in structural IFC models and extracts their height properties. This function works with structural models where explicit IfcSpace elements are not present.  The function analyzes: 1. Storey elevations to determine vertical boundaries 2. Element relationships and groupings 3. Property sets that indicate functional areas  Args: ifc_file_path (str): Path to the IFC file function_keywords (List[str]): Keywords to identify functional areas (e.g., [\"dental\", \"operatory\", \"reception\"]) height_property_names (List[str]): Property names that contain height information (e.g., [\"Unconnected Height\", \"Height Offset From Level\"])  Returns: Dict[str, Dict[str, Any]]: A dictionary where keys are functional area names and values are dictionaries containing height information and related elements.  Example: >>> result = get_structural_room_heights_by_function( ...     \"model.ifc\", ...     [\"dental\", \"operatory\"], ...     [\"Unconnected Height\", \"Height Offset From Level\"] ... ) >>> print(result) { \"Dental Operatory\": { \"elements\": [\"#12345\", \"#12346\"], \"height_from_property\": 3.0, \"height_from_storey\": 4.57, \"storey_range\": (\"First Floor\", \"Second Floor\") } }\n- `get_energy_performance_data_availability`: Systematically searches an IFC model for all available energy performance-related data and provides a comprehensive report on what information is available and what is missing.  This function works with IFC models exported from various BIM authoring software, with special attention to Revit's energy analysis property sets (PSet_Revit_Energy Analysis).  Args: ifc_file_path (str): Path to the IFC file to analyze  Returns: Dict[str, Any]: A structured dictionary containing: - available_data: Energy data found in the model with values and sources - missing_data: Energy data that was searched for but not found - recommendations: Suggestions for obtaining missing data - element_summary: Summary of energy-related elements found - property_sets: List of all energy-related property sets identified\n- `find_emergency_exits`: Identifies emergency exits in an IFC model based on common IFC conventions.  This function looks for emergency exits by checking: 1. Doors with specific property values (e.g., 'IsEmergencyExit' = True) 2. Doors in specific property sets (e.g., 'Pset_DoorCommon' with 'Function' = 'emergency') 3. Doors with specific naming conventions  Note: This implementation is based on common IFC conventions. Different BIM authoring software may use different property sets or conventions.  Args: ifc_file_path (str): Path to the IFC file  Returns: List[Dict[str, Any]]: List of emergency exits, each represented as a dictionary with: - guid: GlobalId of the door - name: Name of the door - type: IfcType of the element - criteria_matched: List of criteria that identified this as an emergency exit - properties: Relevant properties of the door\n- `get_interior_doors_count`: Retrieve all IfcDoor entities from the specified IFC model and return the count of doors identified as interior. A door is considered interior if its Pset_DoorCommon property set has IsExternal set to False.  Args: ifc_file_path (str): Path to the IFC file  Returns: int: Count of interior doors (doors with Pset_DoorCommon.IsExternal = False)\n- `calculate_element_footprint_area`: Calculate the footprint area of an element from its geometry.  Args: shape: IfcOpenShell shape representation  Returns: float: Footprint area of the element\n- `get_elements_in_storey`: Get all elements contained in a building storey.  Args: model: Opened IFC model storey: IfcBuildingStorey entity  Returns: List of elements in the storey\n- `get_property_values_from_elements_by_type`: Extract property values from IFC elements of a specific type.  Args: file_path (str): Path to the IFC file element_type (str): Type of IFC elements to query (e.g., 'IfcWall', 'IfcSlab') property_names (List[str]): List of property names to extract pset_names (List[str]): List of property set names to search in  Returns: Dict[str, Any]: Dictionary with structure: { \"elements\": { element_guid: { pset_name: { property_name: property_value } } }, \"aggregated\": { property_name: total_value } }  Note: For gross floor area calculation, this function properly calculates the footprint area of building storeys rather than simply summing individual slab areas. This follows standard definitions of gross floor area measured to the outer surface of exterior walls. This function is designed to work with Revit-exported IFC files where property sets typically follow naming conventions like 'PSet_Revit_Dimensions', 'Pset_WallCommon', etc.\n- `get_element_dimensions`: Extracts dimensional properties from IFC elements of a specified type, with intelligent fallback mechanisms for cases where formal properties are not available.  Args: ifc_file_path: Path to the IFC file element_type: IFC element type (e.g., 'IfcDoor', 'IfcWindow', 'IfcSpace', 'IfcWall') dimension_names: List of dimension names to extract (default: ['Width', 'Height', 'Length']). For steel elements, consider including 'OverallWidth', 'OverallDepth', 'WebThickness', 'FlangeThickness'. property_set_names: List of property set names to check for dimensions. Defaults to common property sets. filter_criteria: Dictionary of criteria to filter elements by their property values. Example: {'IsExternal': False} name_pattern: Regex pattern to extract dimensions from element names when properties are unavailable. Example: r\"(\\d+)x(\\d+)mm\"  Returns: List of dictionaries, each containing: - element_name: The element's name - element_guid: The element's GlobalId - dimensions: Dictionary mapping dimension names to their values - source: Indicates whether the value came from 'property', 'geometry', or 'name_parsing'. 'none' if no value found. - confidence: A score indicating the reliability of the extracted value (1.0 for property, 0.9 for geometry, 0.7 for name_parsing, 0.0 if none found).  Example: # Get width of interior doors results = get_element_dimensions( \"model.ifc\", \"IfcDoor\", dimension_names=['Width'], filter_criteria={'IsExternal': False} )  # Get dimensions of spaces with name parsing fallback results = get_element_dimensions( \"model.ifc\", \"IfcSpace\", dimension_names=['Width', 'Length'], name_pattern=r\"(\\d+)x(\\d+)mm\" )  # Get dimensions of steel columns, including geometric properties results = get_element_dimensions( \"steel_columns.ifc\", \"IfcColumn\", dimension_names=['OverallWidth', 'OverallDepth', 'WebThickness', 'FlangeThickness', 'Height'], property_set_names=['Pset_ColumnCommon', 'Pset_SteelColumnCommon'] # Example property sets )\n- `get_space_areas_by_function`: Extract area properties from IfcSpace elements based on functional keywords.  This function searches for IfcSpace elements in an IFC model that match the provided functional keywords and extracts their area properties. It handles various property set conventions including PSet_Revit_Dimensions.Area and GSA Space Areas.GSA BIM Area.  Args: ifc_file_path (str): Path to the IFC file function_keywords (List[str]): List of keywords to match against space functions  Returns: Dict[str, Any]: A dictionary containing: - 'spaces': List of dictionaries with space information (name, area, function) - 'total_area': Total area of all matching spaces - 'count': Number of matching spaces  Note: This function assumes the IFC model follows common property set conventions: - PSet_Revit_Dimensions.Area (for Revit-exported IFCs) - GSA Space Areas.GSA BIM Area (for GSA-compliant models) - Pset_SpaceCommon.Area (for standard IFC property sets)\n- `check_element_characteristics`: Check if elements of a specified type have specific properties with certain values.  Args: ifc_file_path (str): Path to the IFC file element_type (str): IFC element type to check (e.g., 'IfcWall', 'IfcDoor', 'IfcSlab') property_names (List[str]): List of property names to check expected_values (Optional[List[Any]]): List of expected values for the properties. If provided, only elements matching these values will be returned. If None, all elements with the properties will be returned. filter_criteria (Optional[Dict[str, Any]]): Additional criteria to filter elements by their property values before checking characteristics  Returns: List[Dict[str, Any]]: List of dictionaries, each containing: - element_name: The element's name - element_guid: The element's GlobalId - element_type: The IFC type of the element - properties_found: Dictionary mapping property names to their actual values - matches_expected: Boolean indicating if the element's properties match the expected values (only included if expected_values is provided) - spatial_info: Dictionary with spatial relationship information (storey, space if available)\n- `get_spaces_by_function_and_area`: Identifies IFC spaces by functional keywords and calculates their total area.  This function parses IfcSpace elements, filters them based on provided keywords (checking names, descriptions, and property sets), and sums their associated area properties.  Assumptions: - The area of an IfcSpace is primarily sought from its associated Quantity Sets (e.g., 'GrossFloorArea', 'NetFloorArea') or Property Sets (e.g., 'Area'). - If area information is not found in sets, it will attempt to calculate it from the space's geometry using IfcOpenCascade. - Keywords are matched case-insensitively against the IfcSpace's Name and Description. Keyword matching within property set values is also attempted. - The IFC model is assumed to be exported with standard IfcSpace definitions and potentially common property sets like 'Pset_SpaceCommon'. - Geometry calculation requires IfcOpenShell to be built with OpenCascade support.  :param ifc_file_path: Path to the IFC file. :param function_keywords: A list of keywords to filter spaces by. :return: The total area of the matching spaces, or 0.0 if no matching spaces are found or an error occurs.\n- `count_interior_doors`: Count the number of interior doors in an IFC model.  This function identifies interior doors by checking the Pset_DoorCommon property set and looking for the IsExternal property. If IsExternal is False, the door is considered an interior door.  This approach works well with IFC models exported from Revit, which typically include the Pset_DoorCommon property set with the IsExternal property.  Args: ifc_file_path (str): Path to the IFC file  Returns: int: Number of interior doors in the model\n- `get_element_dimension_by_guid`: Retrieve a dimensional property of an IFC element by its GlobalId.  This function searches for a specified dimension (e.g., Width, Height) in both direct attributes and property sets of an IFC element.  Args: ifc_file_path (str): Path to the IFC file element_guid (str): GlobalId of the element to search for dimension_name (str): Name of the dimension to retrieve (e.g., 'Width', 'Height')  Returns: Dict[str, Any]: Dictionary containing: - 'value': The dimension value (float) or None if not found - 'unit': The unit of the dimension (str) or None if not available - 'source': Where the value was found ('direct_attribute', 'property_set', or None) - 'property_set_name': Name of the property set if found there, else None\n- `find_elements_with_properties`: Find IFC elements based on multiple criteria and extract their properties.  Args: ifc_file_path (str): Path to the IFC file element_type (Optional[str]): IFC element type to filter by (e.g., 'IfcDoor', 'IfcWall', 'IfcSpace') property_names (Optional[List[str]]): List of property names to extract from found elements pset_names (Optional[List[str]]): List of property set names to search within for property extraction filter_criteria (Optional[Dict[str, Any]]): Dictionary of property name-value pairs to filter elements by. Elements must match all specified criteria. spatial_constraints (Optional[Dict[str, Any]]): Dictionary specifying spatial relationships, such as: - \"in_storey\": Name or entity of IfcBuildingStorey - \"in_space\": Name or entity of IfcSpace - \"on_level\": Level name function_role (Optional[str]): Functional role for certain element types (e.g., 'main entrance' for doors, 'exterior' for walls) name_patterns (Optional[List[str]]): List of regex patterns to match against element names limit_results (Optional[int]): Maximum number of results to return  Returns: List[Dict[str, Any]]: List of dictionaries, each containing: - element_name: The element's name - element_guid: The element's GlobalId - element_type: The IFC type of the element - properties: Dictionary mapping property names to their values (for requested properties) - spatial_info: Dictionary with spatial relationship information - function_role: Functional role if specified and applicable\n- `find_materials_with_sustainability_properties`: Systematically searches through all material representations in an IFC model to identify materials with sustainability-related properties.  This function handles various IFC material entity types and searches across all property sets associated with materials using pattern matching to identify sustainability-related properties.  Assumptions: - Works with IFC2X3, IFC4, and IFC4X3 schemas - Handles materials from various BIM authoring software including Revit, ArchiCAD, Tekla, etc. - Looks for properties in standard property sets as well as software-specific ones (e.g., PSet_Revit_Dimensions)  Args: ifc_file_path (str): Path to the IFC file to analyze sustainability_keywords (List[str], optional): Custom keywords to search for sustainability properties. If not provided, defaults to common sustainability terms.  Returns: List[Dict[str, Any]]: A list of dictionaries, each containing information about a material with sustainability properties: - material_name (str): Name of the material - material_type (str): Type of material representation (IfcMaterial, IfcMaterialLayer, etc.) - element_type (str, optional): If material is associated with specific elements, the element type - property_name (str): Name of the sustainability property found - property_value (Any): Value of the sustainability property - property_set_name (str): Name of the property set containing the property - element_guid (str, optional): GUID of associated element if applicable - confidence_score (float): Confidence score (0-1) indicating how well the property matches sustainability keywords\n- `get_material_general_info`: Provides general knowledge about building materials when specific properties are not available in the IFC model.  Args: material_name (str): The name of the material to get information for  Returns: Dict[str, Any]: A dictionary containing general information about the material\n- `get_elements_in_space`: Retrieves all elements contained within a specific space or spatial structure element.  This function is a wrapper around ifcopenshell.util.element.get_contained() to provide a more intuitive name for finding elements within a space. It returns all elements that are directly contained in the specified space, such as furniture, equipment, or fixtures.  Args: space_element (ifcopenshell.entity_instance): An IFC space or spatial structure element (IfcSpace, IfcBuildingStorey, etc.) to find contained elements within.  Returns: List[ifcopenshell.entity_instance]: A list of elements contained within the space. This may include furniture, equipment, fixtures, and other elements that are directly contained in the space.  Example: >>> import ifcopenshell >>> model = ifcopenshell.open(\"model.ifc\") >>> space = model.by_type(\"IfcSpace\")[0] >>> elements = get_elements_in_space(space) >>> print([e.Name for e in elements])  Note: This function finds elements that are directly contained in a space. For elements that reference a space (like multistorey columns), use ifcopenshell.util.element.get_referenced_structures() instead.\n- `get_all_room_names`: Retrieves the names of all rooms\/spaces in an IFC model.  This function extracts all IfcSpace elements from the IFC model and returns their names. If a space doesn't have a name, it will use the GlobalId as fallback.  Args: ifc_file_path (str): Path to the IFC file  Returns: List[str]: A list of room\/space names from the IFC model. Returns an empty list if no spaces are found or if the model cannot be opened.  Note: This function assumes the IFC model follows standard IFC schema where spaces are represented as IfcSpace entities with Name attributes.\n- `get_foundation_volume`: Calculate the total volume of main foundation elements in an IFC model.  This function identifies and calculates volume only for main structural foundation elements, specifically excluding equipment footings and other non-structural footings.  Main foundation elements considered: - IfcFooting elements with PredefinedType = 'STRIP_FOOTING' (wall foundations) - IfcSlab elements with PredefinedType = 'BASESLAB' (base slabs)  Assumptions: - STRIP_FOOTING elements represent main wall foundations - BASESLAB elements represent main foundation slabs - Other footing types (NOTDEFINED, etc.) are considered equipment\/column footings and excluded  Args: path_ifc_model (str): Path to the IFC model file  Returns: float: Total volume of main foundation elements in cubic meters (m\u00b3)\n- `get_element_lifespan_properties`: Search for lifespan-related properties associated with an IFC element.  This function looks for various common property names related to lifespan\/expected life across different property sets that might contain this information, including Revit-specific property sets.  Args: ifc_file_path (str or ifcopenshell.file): Path to the IFC file or the IFC model object element (ifcopenshell.entity_instance): The IFC element to search properties for  Returns: Dict[str, Any]: Dictionary mapping found property names to their actual values\n- `get_element_property_values`: Retrieve specific property values from an IFC element.  Args: element: The IFC element to extract properties from property_names: List of property names to look for (e.g., ['ExpectedLife', 'ThermalTransmittance']) property_set_names: Optional list of property set names to search within (e.g., ['Pset_MaterialCommon', 'Pset_WallCommon'])  Returns: Dictionary mapping property names to their values. If a property is not found, its value will be None.  Note: This function works with IFC models from various BIM authoring software. For Revit-exported IFC models, property sets may have names like 'PSet_Revit_Type_Other'. Property set name matching is case-insensitive and handles variations in naming conventions.  Some IFC models may contain placeholder values (where the property value equals the property name) rather than actual data values.\n- `get_element_property_by_guid`: Retrieves a specific property value from an IFC element identified by its GlobalId.  Args: ifc_file_path (str): Path to the IFC file element_guid (str): GlobalId of the element to search for the property property_name (str): Name of the property to retrieve property_set_names (Optional[List[str]]): Optional list of property set names to search within  Returns: Dict[str, Any]: Dictionary containing property information\n- `search_elements_by_name_pattern`: Search for IFC elements whose names match a given pattern.  Args: ifc_file_path: Path to the IFC file to search in name_pattern: The text pattern to search for in element names element_types: List of IFC element types to search within. If None, searches all element types. case_sensitive: Whether the search should be case-sensitive include_spatial_info: Whether to include spatial container information  Returns: List of dictionaries containing information about matching elements: - element_name (str): The element's name - element_type (str): The IFC type of the element - element_guid (str): The element's GlobalId - spatial_info (Dict[str, str], optional): Spatial container information if include_spatial_info is True - element_object (ifcopenshell.entity_instance): The actual IFC element object\n- `find_space_by_function`: Find spaces in an IFC model based on functional descriptions or keywords.  This function searches across space names, numbers, and property sets to find spaces that match the given keywords. It handles partial matches and case-insensitive search. Results can be filtered by building storey\/level.  The function addresses issues with rigid search logic by: - Searching across all property set values, not just space names - Handling partial matches (e.g., finding \"TECH. OFFICE\" when searching for \"tech office\") - Supporting multi-word keyword searches - Allowing optional building storey filtering  Args: model (ifcopenshell.file): The IFC model to search in keywords (str): Keywords to search for (e.g., \"tech office\") building_storey (Optional[str]): Optional building storey name to filter results  Returns: List[Dict[str, Any]]: List of matching spaces with their information including: - global_id: Space GlobalId - name: Space name - number: Space number - description: Space description - building_storey: Associated building storey - area: Space area (if available, typically from PSet_Revit_Dimensions) - volume: Space volume (if available, typically from PSet_Revit_Dimensions) - properties: All property sets of the space  Example: >>> model = ifcopenshell.open(\"model.ifc\") >>> spaces = find_space_by_function(model, \"waiting room\", \"First Floor\") >>> print(spaces[0]['name']) 'CENTRAL WAITING'  >>> # This will find spaces like \"TECH. OFFICE\" that previous rigid search missed >>> tech_spaces = find_space_by_function(model, \"tech office\")\n- `final_answer`: Marks the task as complete. Use this function when you are confident you have collected all the necessary information to answer the user's request. You should pack all the required output fields into a dictionary and pass it argument to the function.\n\nIMPORTANT: DO NOT import these functions in your python_code - they are already available. Importing them will cause errors.\n\nWORKFLOW:\n1. **Think**: Analyze the task and your progress\n2. **Code**: Write Python code to advance toward the solution\n3. **Iterate**: Repeat until complete\n\nOUTPUT:\nCall `final_answer(result_dict)` with all required fields when finished.\n\nTASK:\nAnswer any questions users have about a given BIM model.\n\nKeep in mind that the person asking the questions may not be a BIM expert. They may not have the .ifc model open in other software, so they may ask you questions using names for entities (e.g., room, material) that don't exactly match those used in the BIM model. You will need to determine the exact name\/ID of any corresponding components yourself.\n\nWhen the information is not available in the BIM model:\n- Start with \"This information is not available in the BIM model.\"\n- The missing information should be indicated when possible. For example, \"The number of windows on the north fa\u00e7ade cannot be determined because the BIM model is not georeferenced.\"\n\nWhen the answer is not definitive or calculations involve approximations:\n- Start with \"The information is not directly available in the BIM model and cannot be calculated exactly.\"\n- If an estimation is possible, provide it, formulated like, \"However, we can estimate...\"\n\nREQUIRED FIELDS:\n- answer: <class 'str'> - The answer to the user's question.\n\nRESPONSE FORMAT:\n[[## thought ##]]\nBrief reasoning for your next action\n\n[[ ## python_code ## ]]\n# Execute one logical step toward the solution\n# Use final_answer({key: value, ...}) when ready\n\nEXAMPLE:\n[[## thought ##]]\nI need to calculate the area and call final_answer with the result.\n\n[[ ## python_code ## ]]\narea = length * width\nfinal_answer({\"calculated_area\": area})",
+      "fields": [
+        {
+          "prefix": "Question:",
+          "description": "${question}"
+        },
+        {
+          "prefix": "Path Ifc Model:",
+          "description": "The path to the .ifc file of the BIM model."
+        },
+        {
+          "prefix": "Trajectory:",
+          "description": "Your execution history, consisting of your past thoughts, the code you wrote, and the execution results."
+        },
+        {
+          "prefix": "Thought:",
+          "description": "Your reasoning and plan for the next step."
+        },
+        {
+          "prefix": "Python Code:",
+          "description": "The Python code to execute to make progress on the task."
+        }
+      ]
+    },
+    "lm": null
+  },
+  "engine.extract.predict": {
+    "traces": [],
+    "train": [],
+    "demos": [
+      {
+        "question": "What is the width of the main entrance door?",
+        "answer": "The width of the main entrance door is 1.8 m.",
+        "path_ifc_model": "\/Users\/sylvainhellin\/GitHub\/4_phd\/ifcAnswerEngineV3\/src\/experiment\/bim_models\/dental_clinic\/arc.ifc",
+        "question_id": 65
+      },
+      {
+        "question": "What is the total gross floor area of the building?",
+        "answer": "The information is not directly available in the BIM model and cannot be exactly calculated. However, it is estimated that the total gross floor area of the building is around 350 sqm.",
+        "path_ifc_model": "\/Users\/sylvainhellin\/GitHub\/4_phd\/ifcAnswerEngineV3\/src\/experiment\/bim_models\/duplex\/arc.ifc",
+        "question_id": 0
+      },
+      {
+        "question": "How many interior doors are there in this building?",
+        "answer": "There are 10 interior doors in this building.",
+        "path_ifc_model": "\/Users\/sylvainhellin\/GitHub\/4_phd\/ifcAnswerEngineV3\/src\/experiment\/bim_models\/duplex\/arc.ifc",
+        "question_id": 53
+      }
+    ],
+    "signature": {
+      "instructions": "Given the execution trajectory, answer the original question.\nOriginal Question: Answer any questions users have about a given BIM model.\n\nKeep in mind that the person asking the questions may not be a BIM expert. They may not have the .ifc model open in other software, so they may ask you questions using names for entities (e.g., room, material) that don't exactly match those used in the BIM model. You will need to determine the exact name\/ID of any corresponding components yourself.\n\nWhen the information is not available in the BIM model:\n- Start with \"This information is not available in the BIM model.\"\n- The missing information should be indicated when possible. For example, \"The number of windows on the north fa\u00e7ade cannot be determined because the BIM model is not georeferenced.\"\n\nWhen the answer is not definitive or calculations involve approximations:\n- Start with \"The information is not directly available in the BIM model and cannot be calculated exactly.\"\n- If an estimation is possible, provide it, formulated like, \"However, we can estimate...\"",
+      "fields": [
+        {
+          "prefix": "Trajectory:",
+          "description": "The execution history of thoughts, code, and observations."
+        },
+        {
+          "prefix": "Question:",
+          "description": "${question}"
+        },
+        {
+          "prefix": "Path Ifc Model:",
+          "description": "The path to the .ifc file of the BIM model."
+        },
+        {
+          "prefix": "Reasoning: Let's think step by step in order to",
+          "description": "${reasoning}"
+        },
+        {
+          "prefix": "Answer:",
+          "description": "The answer to the user's question."
+        }
+      ]
+    },
+    "lm": null
+  },
+  "metadata": {
+    "dependency_versions": {
+      "python": "3.12",
+      "dspy": "2.6.23",
+      "cloudpickle": "3.1"
+    }
+  }
+}
