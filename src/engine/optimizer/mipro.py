@@ -9,6 +9,8 @@ from src.engine.schemas import QA_Pair
 
 optimizer = MIPROv2(
     metric=metric,
+    auto=None,
+    num_candidates=3,
 )
 
 
@@ -19,6 +21,7 @@ def mipro_engine_optimizer(
 ) -> IfcAnswerEngine:
     trainset = [qa.to_example() for qa in dataset]
     optimized_engine = optimizer.compile(
+        num_trials=7,
         student=engine,
         trainset=trainset,
     )
