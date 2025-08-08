@@ -1,8 +1,39 @@
 
 import ifcopenshell
 import ifcopenshell.util.element
+import ifcopenshell.util.shape
+import ifcopenshell.geom
 import re
 from typing import List, Dict, Any, Optional
+
+def is_valid_dimension_value(value: Any) -> bool:
+    """
+    Check if a value is a valid dimension value (numeric) rather than a string literal.
+    
+    Args:
+        value: The value to check
+        
+    Returns:
+        bool: True if the value is a valid numeric dimension, False otherwise
+    """
+    if value is None:
+        return False
+    
+    # If it's already a number, it's valid
+    if isinstance(value, (int, float)):
+        return True
+    
+    # If it's a string, check if it's a numeric string
+    if isinstance(value, str):
+        # Check if it's a string representation of a number
+        try:
+            float(value)
+            return True
+        except ValueError:
+            # It's a string but not a number
+            return False
+    
+    return False
 
 def get_element_dimensions(
     ifc_file_path: str,
@@ -37,31 +68,6 @@ def get_element_dimensions(
         - dimensions: Dictionary mapping dimension names to their values
         - source: Indicates whether the value came from 'property', 'geometry', or 'name_parsing'. 'none' if no value found.
         - confidence: A score indicating the reliability of the extracted value (1.0 for property, 0.9 for geometry, 0.7 for name_parsing, 0.0 if none found).
-
-    Example:
-        # Get width of interior doors
-        results = get_element_dimensions(
-            "model.ifc", 
-            "IfcDoor", 
-            dimension_names=['Width'], 
-            filter_criteria={'IsExternal': False}
-        )
-
-        # Get dimensions of spaces with name parsing fallback
-        results = get_element_dimensions(
-            "model.ifc", 
-            "IfcSpace", 
-            dimension_names=['Width', 'Length'], 
-            name_pattern=r"(\d+)x(\d+)mm"
-        )
-        
-        # Get dimensions of steel columns, including geometric properties
-        results = get_element_dimensions(
-            "steel_columns.ifc",
-            "IfcColumn",
-            dimension_names=['OverallWidth', 'OverallDepth', 'WebThickness', 'FlangeThickness', 'Height'],
-            property_set_names=['Pset_ColumnCommon', 'Pset_SteelColumnCommon'] # Example property sets
-        )
     """
     # Set default values
     if dimension_names is None:
@@ -73,8 +79,21 @@ def get_element_dimensions(
             'Pset_SpaceCommon', 'Pset_ColumnCommon', 'Pset_WallCommon', 
             'Pset_BeamCommon', 'Pset_SlabCommon', 'Pset_RoofCommon', 
             'Pset_StairCommon', 'Pset_StairFlightCommon', 'Pset_StairLandingCommon',
-            'PSet_Revit_Dimensions'  # Adding Revit-specific property set
+            'PSet_Revit_Dimensions', 'PSet_Revit_Type_Dimensions',  # Adding more Revit-specific property sets
+            'PSet_Revit_Type_Structural', 'PSet_Revit_Structural', 'PSet_Revit_Structural Analysis'
         ]
+    
+    # Mapping of common dimension names to their possible actual names in different software
+    dimension_name_mapping = {
+        'Width': ['Width', 'b', 'NominalWidth', 'OverallWidth'],
+        'Height': ['Height', 'h', 'NominalHeight', 'OverallHeight', 'Length'],
+        'Length': ['Length', 'l', 'NominalLength', 'OverallLength'],
+        'OverallWidth': ['OverallWidth', 'Width', 'b', 'NominalWidth'],
+        'OverallDepth': ['OverallDepth', 'Depth', 'h', 'NominalDepth'],
+        'WebThickness': ['WebThickness', 'tw', 'Web Thickness'],
+        'FlangeThickness': ['FlangeThickness', 'tf', 'Flange Thickness'],
+        'Depth': ['Depth', 'd', 'h', 'OverallDepth']
+    }
     
     # Load IFC file
     try:
@@ -123,28 +142,89 @@ def get_element_dimensions(
             all_psets = ifcopenshell.util.element.get_psets(element)
             
             for dim_name in dimension_names:
+                # Get possible actual names for this dimension
+                possible_names = dimension_name_mapping.get(dim_name, [dim_name])
+                
                 # Check in specified property sets first
                 for pset_name in property_set_names:
-                    if pset_name in all_psets and dim_name in all_psets[pset_name]:
-                        dim_value = all_psets[pset_name][dim_name]
-                        if dim_value is not None:
-                            extracted_dimensions[dim_name] = dim_value
-                            sources[dim_name] = 'property'
-                            confidences[dim_name] = 1.0
+                    if pset_name in all_psets:
+                        pset_dict = all_psets[pset_name]
+                        # Check for any of the possible names
+                        for possible_name in possible_names:
+                            if possible_name in pset_dict:
+                                dim_value = pset_dict[possible_name]
+                                # Only accept valid dimension values (not string literals)
+                                if is_valid_dimension_value(dim_value):
+                                    extracted_dimensions[dim_name] = float(dim_value) if isinstance(dim_value, str) else dim_value
+                                    sources[dim_name] = 'property'
+                                    confidences[dim_name] = 1.0
+                                    break
+                        if extracted_dimensions[dim_name] is not None:
                             break
                 
                 # If not found in specified psets, try all available psets
                 if extracted_dimensions[dim_name] is None:
                     for pset_name, pset_dict in all_psets.items():
-                        if dim_name in pset_dict and pset_dict[dim_name] is not None:
-                            extracted_dimensions[dim_name] = pset_dict[dim_name]
-                            sources[dim_name] = 'property'
-                            confidences[dim_name] = 1.0
+                        # Check for any of the possible names
+                        for possible_name in possible_names:
+                            if possible_name in pset_dict:
+                                dim_value = pset_dict[possible_name]
+                                # Only accept valid dimension values (not string literals)
+                                if is_valid_dimension_value(dim_value):
+                                    extracted_dimensions[dim_name] = float(dim_value) if isinstance(dim_value, str) else dim_value
+                                    sources[dim_name] = 'property'
+                                    confidences[dim_name] = 1.0
+                                    break
+                        if extracted_dimensions[dim_name] is not None:
                             break
         except Exception:
             pass  # Continue if property extraction fails
 
-        # 2. If dimensions still not fully found and name_pattern is provided, try parsing from name
+        # 2. If dimensions still not fully found, try to extract from geometry
+        missing_dims = [dim for dim in dimension_names if extracted_dimensions[dim] is None]
+        if missing_dims:
+            try:
+                # Try to get geometry information
+                settings = ifcopenshell.geom.settings()
+                settings.set(settings.USE_WORLD_COORDS, True)
+                
+                shape = ifcopenshell.geom.create_shape(settings, element)
+                if shape:
+                    geometry = shape.geometry
+                    # Calculate bounding box as a fallback for dimensions
+                    verts = geometry.verts
+                    if verts:
+                        # Extract x, y, z coordinates
+                        x_coords = [verts[i] for i in range(0, len(verts), 3)]
+                        y_coords = [verts[i+1] for i in range(0, len(verts), 3)]
+                        z_coords = [verts[i+2] for i in range(0, len(verts), 3)]
+                        
+                        # Calculate dimensions from bounding box
+                        if x_coords and y_coords and z_coords:
+                            width = max(x_coords) - min(x_coords)
+                            depth = max(y_coords) - min(y_coords)
+                            height = max(z_coords) - min(z_coords)
+                            
+                            # Map to requested dimensions based on what's missing
+                            for dim_name in missing_dims:
+                                if extracted_dimensions[dim_name] is None:
+                                    # Simple mapping - could be improved with more sophisticated logic
+                                    if dim_name in ['Width', 'OverallWidth'] and width > 0:
+                                        extracted_dimensions[dim_name] = width
+                                        sources[dim_name] = 'geometry'
+                                        confidences[dim_name] = 0.9
+                                    elif dim_name in ['Height', 'Length', 'OverallDepth', 'Depth'] and height > 0:
+                                        extracted_dimensions[dim_name] = height
+                                        sources[dim_name] = 'geometry'
+                                        confidences[dim_name] = 0.9
+                                    elif dim_name in ['Length', 'Depth'] and depth > 0:
+                                        extracted_dimensions[dim_name] = depth
+                                        sources[dim_name] = 'geometry'
+                                        confidences[dim_name] = 0.9
+            except Exception:
+                pass  # Continue if geometry extraction fails
+
+        # 3. If dimensions still not fully found and name_pattern is provided, try parsing from name
         missing_dims = [dim for dim in dimension_names if extracted_dimensions[dim] is None]
         if name_pattern and missing_dims and element_name:
             try:

@@ -5,7 +5,8 @@
 - implement checkpoints to recover training run where it stopped
 - consider removing the output of each agents from the context in `training`
 - Set-up the optimizer and run it
-- check the logic of the engine: new tools don't seem to be saved anymore
+- implement this `load_optimized_model` for each instance of the engine.
+- TBD: optimize the `TrainingModule` and not just the engine? But on which metric? Or potential optimize the individual agents, using the `status` of the output?
 
 
 ## Experiment
