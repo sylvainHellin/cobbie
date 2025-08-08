@@ -50,6 +50,9 @@ class BaseAgentConfig(BaseModel):
         default=True,
         description="Whether to load the optimized model or not.",
     )
+    tracking_uri: str = Field(
+        default="http://127.0.0.1:5000", description="MLflow tracking URI"
+    )
 
 
 class CodeActConfig(BaseModel):
@@ -178,9 +181,15 @@ class TrainingModuleConfig(BaseAgentConfig):
     similarity_threshold: float = Field(
         default=0.8, description="Similarity threshold for answer verification"
     )
-    tracking_uri: str = Field(
-        default="http://127.0.0.1:5000", description="MLflow tracking URI"
+
+    experiment_name: str = Field(
+        default="Training", description="MLflow experiment name"
     )
+
+
+class TrainingPipelineConfig(BaseAgentConfig):
+    """Configuration for the training pipeline"""
+
     experiment_name: str = Field(
         default="Training", description="MLflow experiment name"
     )
@@ -188,6 +197,8 @@ class TrainingModuleConfig(BaseAgentConfig):
         default=True,
         description="Evaluate the performance of the system, before and after the training run.",
     )
+
+    pass
 
 
 # Global configuration instance
@@ -210,6 +221,9 @@ class AgentConfigs(BaseModel):
     training_module: TrainingModuleConfig = Field(default_factory=TrainingModuleConfig)
     tool_merger: ToolMergerConfig = Field(default_factory=ToolMergerConfig)
     test_and_improve: TestAndImproveConfig = Field(default_factory=TestAndImproveConfig)
+    training_pipeline: TrainingPipelineConfig = Field(
+        default_factory=TrainingPipelineConfig
+    )
 
 
 # Global instance - this is what gets imported and used
