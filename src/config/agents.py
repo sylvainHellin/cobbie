@@ -47,7 +47,7 @@ class BaseAgentConfig(BaseModel):
         default_factory=LLMConfig, description="Language model configuration"
     )
     load_optimized_model: bool = Field(
-        default=True,
+        default=False,
         description="Whether to load the optimized model or not.",
     )
     tracking_uri: str = Field(
@@ -113,7 +113,7 @@ class TestAndImproveConfig(BaseAgentConfig, CodeActConfig):
     """Configuration for the TestAndImprove agent"""
 
     max_iter: int = Field(
-        default=3, description="Maximum iterations for ToolCreator main loop"
+        default=3, description="Maximum number of loops of testing and improving."
     )
     add_code_prefix: bool = Field(
         default=True, description="Whether to add code prefix"
@@ -143,7 +143,7 @@ class ToolCreatorConfig(BaseAgentConfig):
     """Configuration for ToolCreator multi-agent system."""
 
     max_iters: int = Field(
-        default=3, description="Maximum iterations for ToolCreator main loop"
+        default=10, description="Maximum iterations for ToolCreator main loop"
     )
     function_boilerplate: str = FUNCTION_BOILERPLATE
     add_code_prefix: bool = Field(
