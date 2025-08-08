@@ -20,7 +20,6 @@ def evaluate(
     experiment_name: Optional[str] = "Evaluation",
     start_run: bool = False,
     log_metris: bool = False,
-    load_optimized_model=True,
 ) -> EvaluationResult:
     """
     Compute the accuracy of the IfcAnswerEngine with comprehensive error handling and logging.
@@ -53,7 +52,7 @@ def evaluate(
     # Initialize engine
     engine = IfcAnswerEngine(llm=llm)
     logger.info("IfcAnswerEngine initialized successfully")
-    if load_optimized_model:
+    if engine.config.load_optimized_model:
         engine.load(path=OPTIMIZED_MODEL_PATH)
         logger.info("Optimized model loaded.")
 
@@ -137,7 +136,6 @@ if __name__ == "__main__":
         llm=llm,
         start_run=True,
         dataset=DEVSET,
-        load_optimized_model=True,
     )
 
     # Check your tracking attributes
