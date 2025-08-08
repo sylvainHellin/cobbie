@@ -10,6 +10,8 @@ from dspy import LM
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse
+from starlette.concurrency import run_in_threadpool
+from functools import partial
 
 # Add the project root directory to the Python path
 project_root = os.path.join(os.path.dirname(__file__), "..")
@@ -80,8 +82,10 @@ async def ask_question(request: QuestionRequest) -> QuestionResponse:
         )
 
         try:
-            # Get the IFC model information from the database
-            ifc_models = get_ifc_models(id=request.model_id)
+            # Get the IFC model information from the database (run in threadpool)
+            ifc_models = await run_in_threadpool(
+                partial(get_ifc_models, id=request.model_id)
+            )
 
             if not ifc_models:
                 error_msg = f"BIM model with ID {request.model_id} not found"
@@ -120,9 +124,13 @@ async def ask_question(request: QuestionRequest) -> QuestionResponse:
                 }
             )
 
-            # Use the engine to answer the question
-            result = engine.forward(
-                question=request.question, path_ifc_model=ifc_model.model_path
+            # Use the engine to answer the question (run in threadpool)
+            result = await run_in_threadpool(
+                partial(
+                    engine.forward,
+                    question=request.question,
+                    path_ifc_model=ifc_model.model_path,
+                )
             )
 
             # Prepare model information
@@ -193,7 +201,8 @@ async def list_models():
         span.set_inputs({"timestamp": start_time.isoformat()})
 
         try:
-            ifc_models = get_ifc_models()
+            # Query models from DB in threadpool
+            ifc_models = await run_in_threadpool(get_ifc_models)
 
             models = []
             for model in ifc_models:
@@ -263,8 +272,8 @@ async def get_ifc_file(model_id: int):
         )
 
         try:
-            # Get the IFC model information from the database
-            ifc_models = get_ifc_models(id=model_id)
+            # Get the IFC model information from the database (run in threadpool)
+            ifc_models = await run_in_threadpool(partial(get_ifc_models, id=model_id))
 
             if not ifc_models:
                 error_msg = f"BIM model with ID {model_id} not found"
