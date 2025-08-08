@@ -129,10 +129,11 @@ def main(
 if __name__ == "__main__":
     devset, trainset = load_train_dev_split()
     dspy.configure_cache(
-        enable_disk_cache=False
+        enable_disk_cache=True,
+        enable_memory_cache=True,
     )
 
     outputs = main(
-        devset=devset[:2],
-        trainset=trainset[:2],
+        devset=devset[:1],
+        trainset=trainset[:1],
     )

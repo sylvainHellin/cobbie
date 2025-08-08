@@ -1,13 +1,6 @@
 import ifcopenshell
 import ifcopenshell.util.element
-import ifcopenshell.util.shape
-import ifcopenshell.util.placement
-import ifcopenshell.util.geolocation
-import ifcopenshell.util.system
-import ifcopenshell.geom
-import math
-import json
-from typing import *
+from typing import List, Dict, Any
 
 def get_space_areas_by_function(ifc_file_path: str, function_keywords: List[str]) -> Dict[str, Any]:
     """
@@ -90,13 +83,22 @@ def get_space_areas_by_function(ifc_file_path: str, function_keywords: List[str]
             # Look for area in various property sets
             # Common Revit property set
             if 'PSet_Revit_Dimensions' in psets and 'Area' in psets['PSet_Revit_Dimensions']:
-                area = float(psets['PSet_Revit_Dimensions']['Area'])
+                try:
+                    area = float(psets['PSet_Revit_Dimensions']['Area'])
+                except (ValueError, TypeError):
+                    pass
             # GSA property set
             elif 'GSA Space Areas' in psets and 'GSA BIM Area' in psets['GSA Space Areas']:
-                area = float(psets['GSA Space Areas']['GSA BIM Area'])
+                try:
+                    area = float(psets['GSA Space Areas']['GSA BIM Area'])
+                except (ValueError, TypeError):
+                    pass
             # Standard IFC property set
             elif 'Pset_SpaceCommon' in psets and 'Area' in psets['Pset_SpaceCommon']:
-                area = float(psets['Pset_SpaceCommon']['Area'])
+                try:
+                    area = float(psets['Pset_SpaceCommon']['Area'])
+                except (ValueError, TypeError):
+                    pass
             # Check for any property set containing 'Area'
             else:
                 for pset_name, pset_dict in psets.items():
