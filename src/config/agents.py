@@ -46,6 +46,10 @@ class BaseAgentConfig(BaseModel):
     llm: LLMConfig = Field(
         default_factory=LLMConfig, description="Language model configuration"
     )
+    load_optimized_model: bool = Field(
+        default=True,
+        description="Whether to load the optimized model or not.",
+    )
 
 
 class CodeActConfig(BaseModel):
@@ -159,10 +163,6 @@ class IfcAnswerEngineConfig(BaseAgentConfig):
     )
     add_code_prefix: bool = Field(
         default=True, description="Whether to add code prefix"
-    )
-    load_optimized_model: bool = Field(
-        default=True,
-        description="Whether to load the optimized model or not.",
     )
 
     # Tool creator configuration
