@@ -15,4 +15,4 @@ def get_usage_openrouter() -> float:
 
 
 if __name__ == "__main__":
-    print(f"current balance: {get_usage_openrouter()}")
+    print(f"current usage: {get_usage_openrouter()}")
