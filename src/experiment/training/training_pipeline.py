@@ -13,9 +13,7 @@ from src.engine.schemas import (
     QA_Pair,
     ToolsMetrics,
 )
-from src.engine.util import (
-    get_logger,
-)
+from src.engine.util import get_logger, get_usage_openrouter
 from src.experiment.evaluation.evaluation import evaluate
 from src.experiment.datasets import load_train_dev_split
 
@@ -32,6 +30,7 @@ class TrainingPipeline(dspy.Module):
         self.logger = get_logger(name="Training", log_level=self.config.log_level)
         self.evaluate = self.config.evaluate
         self.training = TrainingModule()
+        self.current_api_usage = get_usage_openrouter()
 
         # Use provided LLM or get from config
         self.lm = lm or self.config.llm.get_llm()
@@ -86,27 +85,22 @@ class TrainingPipeline(dspy.Module):
             mode="before",
             devset=devset,
         )
+        initial_usage = get_usage_openrouter()
 
         # Go through each examples in the training set
         for qa_pair in trainset:
-            with mlflow.start_span(
-                name=f"question_id_{qa_pair.id}",
-                span_type="QUESTION",
-            ) as span:
-                span.set_attribute("question_id", qa_pair.id)
-                span.set_attribute("question", qa_pair.question)
-                span.set_attribute("ground_truth", qa_pair.answer)
+            output, metrics = self.training.forward(qa_pair=qa_pair)
+            self.tools_metrics.update(metrics=metrics)
+            self.outputs.append(output)
 
-                output, metrics = self.training.forward(qa_pair=qa_pair)
-                self.tools_metrics.update(metrics=metrics)
-                self.outputs.append(output)
+            # add the output to the final outputs
+            self.outputs.append(output)
 
-                # add the output to the final outputs
-                self.outputs.append(output)
+        self.tools_metrics.cost = get_usage_openrouter() - initial_usage
+        mlflow.log_metrics(metrics=self.tools_metrics.model_dump())
 
         # Evaluate the accuracy of the engine after the training round.
         self._evaluation(mode="after", devset=devset)
-        mlflow.log_metrics(metrics=self.tools_metrics.model_dump())
 
         return (self.outputs, self.tools_metrics)
 
@@ -134,8 +128,11 @@ def main(
 
 if __name__ == "__main__":
     devset, trainset = load_train_dev_split()
+    dspy.configure_cache(
+        enable_disk_cache=False
+    )
 
     outputs = main(
-        devset=devset[:10],
-        trainset=trainset[:10],
+        devset=devset[:2],
+        trainset=trainset[:2],
     )

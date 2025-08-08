@@ -79,8 +79,9 @@ def get_element_dimensions(
             'Pset_SpaceCommon', 'Pset_ColumnCommon', 'Pset_WallCommon', 
             'Pset_BeamCommon', 'Pset_SlabCommon', 'Pset_RoofCommon', 
             'Pset_StairCommon', 'Pset_StairFlightCommon', 'Pset_StairLandingCommon',
-            'PSet_Revit_Dimensions', 'PSet_Revit_Type_Dimensions',  # Adding more Revit-specific property sets
-            'PSet_Revit_Type_Structural', 'PSet_Revit_Structural', 'PSet_Revit_Structural Analysis'
+            'PSet_Revit_Dimensions', 'PSet_Revit_Type_Dimensions',
+            'PSet_Revit_Type_Structural', 'PSet_Revit_Structural', 'PSet_Revit_Structural Analysis',
+            'PSet_Revit_Type_Construction'  # This is where wall thickness is often stored
         ]
     
     # Mapping of common dimension names to their possible actual names in different software

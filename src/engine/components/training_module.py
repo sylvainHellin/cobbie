@@ -3,6 +3,7 @@ from typing import Optional, Tuple
 
 import dspy
 import mlflow
+from mlflow.entities import LiveSpan
 
 from src.config import AGENT_CONFIGS, OPTIMIZED_MODEL_PATH
 from src.engine import (
@@ -502,33 +503,34 @@ class TrainingModule(dspy.Module):
 
         return total_input_tokens, total_output_tokens
 
-    def _finalize_span_and_tracking(self, span, qa_pair: QA_Pair):
+    def _finalize_span_and_tracking(self, span: LiveSpan, qa_pair: QA_Pair):
         """Finalize MLFlow span and tracking."""
         total_input_tokens, total_output_tokens = self._calculate_tokens()
         self.current_usage = get_usage_openrouter()
         cost_of_span = self.current_usage - self.previous_usage
 
-        mlflow.update_current_trace(
-            tags={
-                "correct_answer": str(self.output.result.correct_answer),
-                "similarity_score": str(self.output.result.similarity_score),
-                "error_category": str(self.output.result.error_category or None),
-                "error_analysis": str(self.output.result.error_analysis or None),
-                "input_tokens": str(total_input_tokens),
-                "output_tokens": str(total_output_tokens),
-                "need_new_tool": str(self.output.result.need_new_function or False),
-                "new_tool_created": str(self.output.result.new_tool_created or False),
-                "existing_tool_updated": str(
-                    self.output.result.existing_tool_updated or False
-                ),
-                "tools_merged": str(self.output.result.tools_merged),
-                "cost": str(cost_of_span),
-            },
-            state="OK" if self.output.status == "success" else "ERROR",
-            request_preview=qa_pair.question,
-            response_preview=self.output.result.answer or "",
-        )
-        mlflow.log_metrics(metrics=self.tools_metrics.model_dump())
+        attributes = {
+            "correct_answer": str(self.output.result.correct_answer),
+            "similarity_score": str(self.output.result.similarity_score),
+            "error_category": str(self.output.result.error_category or None),
+            "input_tokens": str(total_input_tokens),
+            "output_tokens": str(total_output_tokens),
+            "cost": str(cost_of_span),
+        }
+
+        if span is not None:
+            span.set_attributes(attributes=attributes)
+            span.set_status("OK" if self.output.status == "success" else "ERROR")
+
+        trace_id = mlflow.get_last_active_trace_id()
+        if trace_id is not None:
+            for key, value in attributes.items():
+                mlflow.set_trace_tag(
+                    trace_id=trace_id,
+                    key=key,
+                    value=value,
+                )
+
         self.tools_metrics.cost += cost_of_span
 
     def forward(
@@ -540,6 +542,7 @@ class TrainingModule(dspy.Module):
         # Initialize state machine
         self.state = TrainingState.START
         self.context.qa_pair = qa_pair
+        self.tools_metrics = ToolsMetrics()
 
         with mlflow.start_span(
             name=f"question_id_{qa_pair.id}",
@@ -562,7 +565,7 @@ class TrainingModule(dspy.Module):
                 self.output.error_msg = f"An error occured during the Training run for question_id: {qa_pair.id}.\nError:\n{e}"
                 self.logger.error(self.output.error_msg)
                 self.output.status = "error"
-
+            finally:
                 # Finalize tracking and metrics
                 self._finalize_span_and_tracking(span, qa_pair)
 
