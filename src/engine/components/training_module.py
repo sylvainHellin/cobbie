@@ -507,31 +507,22 @@ class TrainingModule(dspy.Module):
         """Finalize MLFlow span and tracking."""
         total_input_tokens, total_output_tokens = self._calculate_tokens()
         self.current_usage = get_usage_openrouter()
-        cost_of_span = self.current_usage - self.previous_usage
+        self.tools_metrics.cost = self.current_usage - self.previous_usage
 
-        attributes = {
+        span_info = {
             "correct_answer": str(self.output.result.correct_answer),
             "similarity_score": str(self.output.result.similarity_score),
             "error_category": str(self.output.result.error_category or None),
             "input_tokens": str(total_input_tokens),
             "output_tokens": str(total_output_tokens),
-            "cost": str(cost_of_span),
+            "cost": str(self.tools_metrics.cost),
         }
 
         if span is not None:
-            span.set_attributes(attributes=attributes)
+            span.set_attributes(attributes=span_info)
             span.set_status("OK" if self.output.status == "success" else "ERROR")
 
-        trace_id = mlflow.get_last_active_trace_id()
-        if trace_id is not None:
-            for key, value in attributes.items():
-                mlflow.set_trace_tag(
-                    trace_id=trace_id,
-                    key=key,
-                    value=value,
-                )
-
-        self.tools_metrics.cost += cost_of_span
+        mlflow.update_current_trace(tags=span_info)
 
     def forward(
         self,
