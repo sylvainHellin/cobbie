@@ -98,6 +98,16 @@ LANGUAGE_MODELS["gemma3n"] = LLM(
     url="ollama_chat/gemma3n:e4b",
     name="gemma3n",
 )
+LANGUAGE_MODELS["devstral-medium"] = LLM(
+    url="mistral/devstral-medium-2507",
+    api_key=MISTRAL_API_KEY,
+    name="devstral-medium",
+)
+LANGUAGE_MODELS["codestral"] = LLM(
+    url="mistral/codestral-2508",
+    api_key=MISTRAL_API_KEY,
+    name="codestral",
+)
 
 # OpenRouter models
 LANGUAGE_MODELS["qwen3-coder"] = LLM(
@@ -124,6 +134,11 @@ LANGUAGE_MODELS["claude"] = LLM(
     url="openrouter/anthropic/claude-sonnet-4",
     api_key=OPENROUTER_API_KEY,
     name="claude",
+)
+LANGUAGE_MODELS["openrouter-devstral-medium"] = LLM(
+    url="openrouter/mistralai/devstral-medium",
+    api_key=OPENROUTER_API_KEY,
+    name="devstral=medium",
 )
 # Default models to test in comparisons
 MODELS_TO_TEST = [

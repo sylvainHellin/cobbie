@@ -52,22 +52,24 @@ class TrainingPipeline(dspy.Module):
     ):
         if self.evaluate:
             with mlflow.start_span(
-                name="start_evaluation",
+                name="evaluation",
                 span_type="CHAIN",
-            ):
+            ) as span:
                 # run eval
                 eval = evaluate(
                     llm=self.lm,
                     start_run=False,
                     dataset=devset,
                 )
-            # Log the metrics
-            mlflow.log_metrics(
-                metrics={
+                metrics = {
                     f"mean_accuracy_{mode}_training": eval.mean_accuracy(),
                     f"nb_errors_{mode}_training": len(eval.errors),
                     f"mean_duration_{mode}_training": eval.mean_duration(),
-                },
+                }
+                span.set_attributes(attributes=metrics)
+            # Log the metrics
+            mlflow.log_metrics(
+                metrics=metrics,
             )
             mlflow.log_param(key="model", value=self.lm.model)
 
@@ -114,11 +116,11 @@ def main(
         name="Training run", log_level=AGENT_CONFIGS.training_module.log_level
     )
 
-    training_module = TrainingPipeline()
+    training_pipeline = TrainingPipeline()
 
     logger.info("Starting the TrainingModule")
 
-    output = training_module.forward(
+    output = training_pipeline.forward(
         devset=devset,
         trainset=trainset,
     )

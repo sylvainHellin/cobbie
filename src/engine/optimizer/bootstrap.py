@@ -16,6 +16,7 @@ bootstrap_optimizer = BootstrapFewShotWithRandomSearch(
     num_threads=2,
     metric=metric,
 )
+# llm = LANGUAGE_MODELS["devstral-medium"]
 llm = LANGUAGE_MODELS["qwen3-coder"]
 llm = LM(
     model=llm.url,
@@ -25,7 +26,7 @@ llm = LM(
 
 engine = IfcAnswerEngine()
 
-trainset = [qa.to_example() for qa in TRAINSET][:10]
+trainset = [qa.to_example() for qa in TRAINSET][:]
 optimized_engine = bootstrap_optimizer.compile(
     student=engine,
     trainset=trainset,
