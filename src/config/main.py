@@ -108,6 +108,12 @@ LANGUAGE_MODELS["codestral"] = LLM(
     api_key=MISTRAL_API_KEY,
     name="codestral",
 )
+LANGUAGE_MODELS["claude"] = LLM(
+    url="anthropic/claude-sonnet-4-20250514",
+    api_key=ANTHROPIC_API_KEY,
+    name="claude",
+)
+
 
 # OpenRouter models
 LANGUAGE_MODELS["qwen3-coder"] = LLM(
@@ -130,7 +136,7 @@ LANGUAGE_MODELS["qwen3-coder-cerebras"] = LLM(
     api_key=OPENROUTER_API_KEY,
     name="qwen3-coder-cerebras",
 )
-LANGUAGE_MODELS["claude"] = LLM(
+LANGUAGE_MODELS["openrouter-claude"] = LLM(
     url="openrouter/anthropic/claude-sonnet-4",
     api_key=OPENROUTER_API_KEY,
     name="claude",
