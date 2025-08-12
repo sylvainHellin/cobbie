@@ -14,9 +14,11 @@ bootstrap_optimizer = BootstrapFewShot(
     max_labeled_demos=2**4,
     metric=metric,
     metric_threshold=0.9,
+    max_rounds=3,
+    max_errors=5,
 )
 
-teacher_llm = LANGUAGE_MODELS["qwen3-coder"]
+teacher_llm = LANGUAGE_MODELS["openrouter-claude"]
 teacher_llm = LM(
     model=teacher_llm.url,
     api_key=teacher_llm.api_key,
