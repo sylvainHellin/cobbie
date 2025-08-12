@@ -52,19 +52,23 @@ def evaluate(
     # Initialize result
     result = EvaluationResult(llm=llm.model)
 
-    # Initialize engine
-    engine = IfcAnswerEngine()
+    # Initialize engine with provided LLM so compiled few-shot engine uses same model
+    engine = IfcAnswerEngine(llm=llm)
     if engine.config.load_optimized_model:
         try:
-            engine.load(path=OPTIMIZED_MODEL_PATH)
+            # Load the compiled engine produced by DSPy
+            engine.load(OPTIMIZED_MODEL_PATH)  # type: ignore[assignment]
+            # Ensure evaluation uses the provided LLM
+            dspy.configure(lm=llm)
             logger.info("Optimized model loaded")
-        except (KeyError, FileNotFoundError) as e:
+        except (
+            KeyError,
+            FileNotFoundError,
+            AttributeError,
+            TypeError,
+            ValueError,
+        ) as e:
             logger.warning(f"Could not load optimized model: {e}. Using base engine.")
-            engine.config.load_optimized_model = False
-
-    if few_shots:
-        engine = add_fewshot_examples(engine=engine, k=few_shots)
-        logger.info(f"Added {few_shots} fewshot examples to the IfcAnswerEngine.")
 
     # Process examples
     for _, qa_pair in enumerate(tqdm(dataset, desc="Evaluating examples")):
@@ -146,7 +150,7 @@ if __name__ == "__main__":
     result = evaluate(
         llm=llm,
         start_run=True,
-        dataset=DEVSET[10:12],
+        dataset=DEVSET[12:14],
         log_metris=True,
     )
 
