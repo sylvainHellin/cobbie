@@ -4,7 +4,7 @@ from typing import List, Literal, Optional, Tuple
 import dspy
 import mlflow
 
-from src.config import AGENT_CONFIGS, PATH_COMPILED_MODEL
+from src.config import AGENT_CONFIGS
 from src.engine.components.training_module import (
     TrainingModule,
 )
@@ -13,6 +13,7 @@ from src.engine.schemas import (
     QA_Pair,
     ToolsMetrics,
 )
+from src.engine.optimizer import bootstrap_engine
 from src.engine.util import get_logger, get_usage_openrouter
 from src.experiment.evaluation.evaluation import evaluate
 from src.experiment.datasets import load_train_dev_split
@@ -31,6 +32,7 @@ class TrainingPipeline(dspy.Module):
         self.evaluate = self.config.evaluate
         self.training = TrainingModule()
         self.current_api_usage = get_usage_openrouter()
+        self.load_optimized_engine = False
 
         # Use provided LLM or get from config
         self.lm = lm or self.config.llm.get_llm()
@@ -49,6 +51,7 @@ class TrainingPipeline(dspy.Module):
         self,
         mode: Literal["before", "after"],
         devset: List[QA_Pair],
+        load_optimized_engine: bool = False,
     ):
         if self.evaluate:
             with mlflow.start_span(
@@ -60,6 +63,7 @@ class TrainingPipeline(dspy.Module):
                     llm=self.lm,
                     start_run=False,
                     dataset=devset,
+                    load_optimized_engine=load_optimized_engine,
                 )
                 metrics = {
                     f"mean_accuracy_{mode}_training": eval.mean_accuracy(),
@@ -82,6 +86,11 @@ class TrainingPipeline(dspy.Module):
             mlflow.log_param(key="model", value=self.lm.model)
 
         return
+
+    def _optimize(self):
+        if self.config.optimizer == "BootStrapFewShot":
+            bootstrap_engine()
+            self.load_optimized_engine = True
 
     def forward(
         self,
@@ -109,8 +118,15 @@ class TrainingPipeline(dspy.Module):
         self.tools_metrics.cost = get_usage_openrouter() - initial_usage
         mlflow.log_metrics(metrics=self.tools_metrics.model_dump())
 
+        # Compile the program before the final evaluation
+        self._optimize()
+
         # Evaluate the accuracy of the engine after the training round.
-        self._evaluation(mode="after", devset=devset)
+        self._evaluation(
+            mode="after",
+            devset=devset,
+            load_optimized_engine=self.load_optimized_engine,
+        )
 
         return (self.outputs, self.tools_metrics)
 
@@ -144,6 +160,6 @@ if __name__ == "__main__":
     )
 
     outputs = main(
-        devset=devset[7:15],
-        trainset=trainset[7:15],
+        devset=devset[:2],
+        trainset=trainset[:2],
     )

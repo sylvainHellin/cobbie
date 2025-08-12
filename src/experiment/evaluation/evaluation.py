@@ -21,7 +21,7 @@ def evaluate(
     experiment_name: Optional[str] = "Evaluation",
     start_run: bool = False,
     log_metris: bool = False,
-    few_shots: int = 2**5,
+    load_optimized_engine: bool = False,
 ) -> EvaluationResult:
     """
     Compute the accuracy of the IfcAnswerEngine with comprehensive error handling and logging.
@@ -53,7 +53,7 @@ def evaluate(
 
     # Initialize engine with provided LLM so compiled few-shot engine uses same model
     engine = IfcAnswerEngine(llm=llm)
-    if engine.config.load_optimized_model:
+    if load_optimized_engine:
         try:
             # Load the compiled engine produced by DSPy
             engine.load(PATH_COMPILED_MODEL)  # type: ignore[assignment]
