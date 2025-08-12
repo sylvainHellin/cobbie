@@ -146,7 +146,7 @@ if __name__ == "__main__":
     result = evaluate(
         llm=llm,
         start_run=True,
-        dataset=DEVSET[:10],
+        dataset=DEVSET[10:12],
         log_metris=True,
     )
 
