@@ -67,6 +67,7 @@ class TrainingPipeline(dspy.Module):
                     f"mean_duration_{mode}_training": eval.mean_duration(),
                     f"input_tokens_{mode}_training": eval.total_input_tokens(),
                     f"output_tokens_{mode}_training": eval.total_output_tokens(),
+                    f"cost_{mode}_training": eval.total_cost(),
                 }
                 span.set_attributes(attributes=metrics)
 
@@ -143,6 +144,6 @@ if __name__ == "__main__":
     )
 
     outputs = main(
-        devset=devset[:1],
-        trainset=trainset[:1],
+        devset=devset[7:15],
+        trainset=trainset[7:15],
     )
