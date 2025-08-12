@@ -145,41 +145,35 @@ class CodeAct(Module):
         self.code_act_signature = (
             dspy.Signature(
                 {
-                    **self.input_fields,  # type: ignore
-                    "trajectory": dspy.InputField(
-                        desc="Your execution history, consisting of your past thoughts, the code you wrote, and the execution results."
-                    ),
+                    **self.input_fields  # type: ignore
                 },
                 instructions=self.code_act_instructions,
             )
             .append(
+                "trajectory",
+                dspy.InputField(
+                    desc="Your execution history, consisting of your past thoughts, the code you wrote, and the execution results."
+                ),
+                type_=str,
+            )
+            .append(
                 "thought",
                 dspy.OutputField(desc="Your reasoning and plan for the next step."),
+                type_=str,
             )
             .append(
                 "python_code",
                 dspy.OutputField(
                     desc="The Python code to execute to make progress on the task."
                 ),
+                type_=str,
             )
-        )
-
-        # Module to extract the final answer from the trajectory
-        self.output_extraction_signature = self.signature.with_instructions(
-            f"Given the execution trajectory, answer the original question.\n"
-            f"Original Question: {self.task_instructions}"
-        ).insert(
-            0,
-            "trajectory",
-            dspy.InputField(
-                desc="The execution history of thoughts, code, and observations."
-            ),
         )
 
     def _setup_prediction_modules(self):
         """Sets up the DSPy prediction modules."""
-        self.code_act_iter = dspy.Predict(self.code_act_signature)
-        self.extract = dspy.ChainOfThought(self.output_extraction_signature)
+        # Set up the iterative code generation module
+        self.code_act = dspy.Predict(self.code_act_signature)
 
     def forward(self, **kwargs) -> dspy.Prediction:
         """
@@ -201,21 +195,14 @@ class CodeAct(Module):
             if should_break:
                 break
 
-        str_trajectory = self._format_trajectory(trajectory)
-
         # Check if the last output from the python_interpreter matches the signature.
-        prediction = None
+        prediction = dspy.Prediction()
         if self.last_output_python_interpreter is not None and check_final_answer(
             self.last_output_python_interpreter, self.signature
         ):
             if not isinstance(self.last_output_python_interpreter, dict):
-                try:
-                    output = ast.literal_eval(self.last_output_python_interpreter)
-                    prediction = dspy.Prediction(**output)
-                except Exception:
-                    prediction = self.extract(trajectory=str_trajectory, **kwargs)
-        if prediction is None:
-            prediction = self.extract(trajectory=str_trajectory, **kwargs)
+                output = ast.literal_eval(self.last_output_python_interpreter)
+                prediction = dspy.Prediction(**output)
 
         return prediction
 
@@ -226,7 +213,7 @@ class CodeAct(Module):
         str_trajectory = self._format_trajectory(trajectory)
 
         # Generate thought and code
-        prediction = self.code_act_iter(trajectory=str_trajectory, **kwargs)
+        prediction = self.code_act(trajectory=str_trajectory, **kwargs)
         thought = prediction.get("thought", "")
         python_code = prediction.get("python_code", "")
 
