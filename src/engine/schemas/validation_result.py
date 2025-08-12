@@ -7,6 +7,7 @@ class EvaluationResult(BaseModel):
     accuracy: List[float] = []
     duration: List[float] = []
     tokens: List[Tuple[int, int]] = []
+    cost: List[float] = []
     question_ids: List[int] = []
     llm: str
     nb_eval: int = 0
@@ -55,6 +56,9 @@ class EvaluationResult(BaseModel):
         """Calculate the failure rate (percentage of examples with accuracy = 0)."""
         return 1.0 - self.success_rate()
 
+    def total_cost(self) -> float:
+        return sum(self.cost)
+
     def add_error(
         self,
         question_id: int,
@@ -94,6 +98,7 @@ class EvaluationResult(BaseModel):
             "total_input_tokens": self.total_input_tokens(),
             "total_output_tokens": self.total_output_tokens(),
             "total_tokens": self.total_tokens(),
+            "total_cost": self.total_cost(),
             "mean_input_tokens": self.mean_input_tokens(),
             "mean_output_tokens": self.mean_output_tokens(),
             "success_rate": self.success_rate(),
