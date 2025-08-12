@@ -1,7 +1,7 @@
 import os
 from dotenv import load_dotenv, find_dotenv
 from pydantic import BaseModel
-from typing import Literal
+from typing import Literal, Optional
 
 load_dotenv(find_dotenv())
 
@@ -46,6 +46,8 @@ class LLM(BaseModel):
     url: str
     name: str
     api_key: str = ""
+    cost_input_token: Optional[float] = None
+    cost_output_token: Optional[float] = None
 
 
 LANGUAGE_MODELS: dict[str, LLM] = {}
@@ -102,11 +104,15 @@ LANGUAGE_MODELS["devstral-medium"] = LLM(
     url="mistral/devstral-medium-2507",
     api_key=MISTRAL_API_KEY,
     name="devstral-medium",
+    cost_input_token=0.4,
+    cost_output_token=2.0,
 )
 LANGUAGE_MODELS["codestral"] = LLM(
     url="mistral/codestral-2508",
     api_key=MISTRAL_API_KEY,
     name="codestral",
+    cost_input_token=0.3,
+    cost_output_token=0.9,
 )
 LANGUAGE_MODELS["claude"] = LLM(
     url="anthropic/claude-sonnet-4-20250514",
@@ -120,7 +126,10 @@ LANGUAGE_MODELS["qwen3-coder"] = LLM(
     url="openrouter/qwen/qwen3-coder",
     api_key=OPENROUTER_API_KEY,
     name="qwen3-coder",
+    cost_input_token=0.3,
+    cost_output_token=1.2,
 )
+
 LANGUAGE_MODELS["gpt-oss-120b"] = LLM(
     url="openrouter/openai/gpt-oss-120b",
     api_key=OPENROUTER_API_KEY,
@@ -130,22 +139,39 @@ LANGUAGE_MODELS["gemini-flash-lite"] = LLM(
     url="openrouter/google/gemini-2.5-flash-lite",
     api_key=OPENROUTER_API_KEY,
     name="gemini-flash-lite",
+    cost_input_token=0.1,
+    cost_output_token=0.4,
 )
 LANGUAGE_MODELS["qwen3-coder-cerebras"] = LLM(
     url="openrouter/cerebras/qwen3-coder",
     api_key=OPENROUTER_API_KEY,
     name="qwen3-coder-cerebras",
+    cost_input_token=2.0,
+    cost_output_token=2.0,
 )
 LANGUAGE_MODELS["openrouter-claude"] = LLM(
     url="openrouter/anthropic/claude-sonnet-4",
     api_key=OPENROUTER_API_KEY,
     name="claude",
+    cost_input_token=3.0,
+    cost_output_token=15.0,
 )
+
 LANGUAGE_MODELS["openrouter-devstral-medium"] = LLM(
     url="openrouter/mistralai/devstral-medium",
     api_key=OPENROUTER_API_KEY,
-    name="devstral=medium",
+    name="devstral-medium",
+    cost_input_token=0.4,
+    cost_output_token=2.0,
 )
+LANGUAGE_MODELS["openrouter-gpt-oss-120b"] = LLM(
+    url="openrouter/openai/gpt-oss-120b",
+    api_key=OPENROUTER_API_KEY,
+    name="gpt-oss-120b",
+    cost_input_token=0.1,
+    cost_output_token=0.5,
+)
+
 # Default models to test in comparisons
 MODELS_TO_TEST = [
     "deepseek",
