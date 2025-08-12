@@ -31,12 +31,13 @@ student_llm = LM(
 teacher = IfcAnswerEngine(llm=teacher_llm)
 student = IfcAnswerEngine(llm=student_llm)
 
-trainset = [qa.to_example() for qa in TRAINSET][:10]
+trainset = [qa.to_example() for qa in TRAINSET][10:20]
 
-optimized_engine = bootstrap_optimizer.compile(
-    student=student,
-    teacher=teacher,
-    trainset=trainset,
-)
+with mlflow.start_span(name="BootstrapFewShort"):
+    optimized_engine = bootstrap_optimizer.compile(
+        student=student,
+        teacher=teacher,
+        trainset=trainset,
+    )
 
-optimized_engine.save(OPTIMIZED_MODEL_PATH)
+    optimized_engine.save(OPTIMIZED_MODEL_PATH)
