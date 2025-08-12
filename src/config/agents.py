@@ -10,10 +10,11 @@ Users can override specific values as needed without affecting other components.
 """
 
 from typing import Literal, Optional
-from pydantic import BaseModel, Field
-import dspy
 
-from .main import LOG_LEVEL, FUNCTION_BOILERPLATE, LANGUAGE_MODELS
+import dspy
+from pydantic import BaseModel, Field, model_validator
+
+from .main import FUNCTION_BOILERPLATE, LANGUAGE_MODELS, LOG_LEVEL
 
 
 # LLM configuration
@@ -21,11 +22,27 @@ class LLMConfig(BaseModel):
     """Configuration for Language Model."""
 
     model_name: str = Field(
-        default="openrouter-devstral-medium",
+        # default="openrouter-devstral-medium",
         # default="qwen3-coder",
+        default="openrouter-gpt-oss-120b",
         description="Name of the model from LANGUAGE_MODELS",
     )
     max_tokens: int = Field(default=2**14, description="Maximum tokens for LLM")
+
+    # Derived cost fields populated after initialization from LANGUAGE_MODELS
+    cost_input_token: float = 0
+    cost_output_token: float = 0
+
+    @model_validator(mode="after")
+    def set_costs_from_language_models(self):
+        lm_info = LANGUAGE_MODELS.get(self.model_name)
+        if lm_info is not None:
+            self.cost_input_token = lm_info.cost_input_token or 0
+            self.cost_output_token = lm_info.cost_output_token or 0
+        else:
+            self.cost_input_token = 0
+            self.cost_output_token = 0
+        return self
 
     def get_llm(self) -> dspy.LM:
         """Get configured dspy.LM instance."""
@@ -48,7 +65,7 @@ class BaseAgentConfig(BaseModel):
         default_factory=LLMConfig, description="Language model configuration"
     )
     load_optimized_model: bool = Field(
-        default=False,
+        default=True,
         description="Whether to load the optimized model or not.",
     )
     tracking_uri: str = Field(
