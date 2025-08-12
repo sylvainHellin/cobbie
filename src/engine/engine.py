@@ -9,7 +9,7 @@ from src.engine.util import (
     get_created_tools,
     create_code_prefix,
 )
-from src.engine.components import CodeAct, ToolCreator, NameExtractor
+from src.engine.components import CodeAct
 from src.engine.tools.primordial import (
     query_ifcopenshell_documentation,
     web_search,
@@ -78,10 +78,6 @@ class IfcAnswerEngine(dspy.Module):
         self.max_tokens_output = self.config.max_tokens_output
         self.created_tools: Dict[str, Callable] = {}
         self.add_code_prefix = self.config.add_code_prefix
-        self.tool_creator: ToolCreator = ToolCreator(
-            config=self.config.tool_creator,
-        )
-        self.name_extractor = NameExtractor(log_level=self.log_level)
         dspy.configure(lm=self.lm)
 
         if self.config.import_all_created_tools:
@@ -162,6 +158,11 @@ class IfcAnswerEngine(dspy.Module):
                 )
 
         self.output.input_tokens, self.output.output_tokens = self._calculate_tokens()
+        self.output.cost = (
+            self.output.input_tokens * self.config.llm.cost_input_token
+            + self.output.output_tokens * self.config.llm.cost_output_token
+        ) / 10**6
+
         return self.output
 
 
