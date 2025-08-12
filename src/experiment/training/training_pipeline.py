@@ -69,7 +69,11 @@ class TrainingPipeline(dspy.Module):
                     f"output_tokens_{mode}_training": eval.total_output_tokens(),
                 }
                 span.set_attributes(attributes=metrics)
-                mlflow.update_current_trace(tags=metrics)
+
+                # Convert metrics to str for tags
+                mlflow.update_current_trace(
+                    tags={k: str(v) for k, v in metrics.items()}
+                )
             # Log the metrics
             mlflow.log_metrics(
                 metrics=metrics,
@@ -139,6 +143,6 @@ if __name__ == "__main__":
     )
 
     outputs = main(
-        devset=devset[:5],
-        trainset=trainset[:5],
+        devset=devset[:1],
+        trainset=trainset[:1],
     )

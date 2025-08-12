@@ -21,7 +21,8 @@ class LLMConfig(BaseModel):
     """Configuration for Language Model."""
 
     model_name: str = Field(
-        default="qwen3-coder",
+        default="openrouter-devstral-medium",
+        # default="qwen3-coder",
         description="Name of the model from LANGUAGE_MODELS",
     )
     max_tokens: int = Field(default=2**14, description="Maximum tokens for LLM")

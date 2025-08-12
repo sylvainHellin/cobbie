@@ -18,12 +18,19 @@ An intelligent engine that answers questions about BIM models in .ifc format usi
 The system is built around several specialized agents that work together:
 
 ```mermaid
+---
+title: Core Architecture Overview
+config:
+  theme: neutral
+---
+
 stateDiagram-v2
-    classDef input fill:#1a535c,stroke:#333,stroke-width:2px,color:#fff
-    classDef module fill:#4ecdc4,stroke:#333,stroke-width:2px
-    classDef condition fill:#f7fff7,stroke:#333,stroke-width:2px
+    direction LR
+    classDef input fill:#8d99ae,stroke:#333,stroke-width:2px,color:#fff
+    classDef module fill:#2b2d42,stroke:#333,stroke-width:2px,color:#fff
+    classDef condition fill:#ef233c,stroke:#333,stroke-width:2px,color:#fff
     classDef output fill:#ff6b6b,stroke:#333,stroke-width:2px,color:#fff
-    classDef state fill:#ffe66d,stroke:#333,stroke-width:2px
+    classDef state fill:#edf2f4,stroke:#333,stroke-width:2px
 
     state "Training Module" as TM {
         state "TrainingModule<br/>State Machine" as TSM
@@ -117,48 +124,55 @@ stateDiagram-v2
 The system uses a sophisticated state machine to learn and improve through multi-agent collaboration:
 
 ```mermaid
+---
+title: Flowchart of the Training Module
+config:
+  theme: neutral
+---
+
 stateDiagram-v2
-    classDef input fill:#1a535c,stroke:#333,stroke-width:2px,color:#fff
-    classDef module fill:#4ecdc4,stroke:#333,stroke-width:2px
-    classDef condition fill:#f7fff7,stroke:#333,stroke-width:2px
+    direction LR
+    classDef input fill:#8d99ae,stroke:#333,stroke-width:2px,color:#fff
+    classDef module fill:#2b2d42,stroke:#333,stroke-width:2px,color:#fff  
+    classDef condition fill:#ef233c,stroke:#333,stroke-width:2px,color:#fff
     classDef output fill:#ff6b6b,stroke:#333,stroke-width:2px,color:#fff
-    classDef state fill:#ffe66d,stroke:#333,stroke-width:2px
+    classDef state fill:#edf2f4,stroke:#333,stroke-width:2px
 
     [*] --> START
     START --> ENGINE: Initialize system
-
+    
     ENGINE --> ANSWER_VERIFICATION: Engine succeeds
     ENGINE --> ERROR: Engine fails
-
+    
     ANSWER_VERIFICATION --> CORRECT_ANSWER: Answer is correct
     ANSWER_VERIFICATION --> WRONG_ANSWER: Answer is incorrect
     ANSWER_VERIFICATION --> ERROR: Verification fails
-
+    
     CORRECT_ANSWER --> TOOL_CREATION: Create new tool
     CORRECT_ANSWER --> TOOL_MERGER: Merge existing tools
     CORRECT_ANSWER --> TOOL_CORRECTION: Update existing tool
     CORRECT_ANSWER --> END: No improvement needed
-
+    
     WRONG_ANSWER --> TOOL_CREATION: Missing tool identified
     WRONG_ANSWER --> TOOL_CORRECTION: Faulty tool identified
     WRONG_ANSWER --> END: Other error category
-
+    
     TOOL_CREATION --> FILE_SAVED: New .py file created
     TOOL_CREATION --> ERROR: Tool creation failed
-
+    
     TOOL_CORRECTION --> FILE_UPDATED: Existing .py file modified
     TOOL_CORRECTION --> ERROR: Tool correction failed
-
+    
     TOOL_MERGER --> FILE_UPDATED: Combined tool saved
     TOOL_MERGER --> FILE_DELETED: Old tools removed
     TOOL_MERGER --> ERROR: Tool merger failed
-
+    
     FILE_SAVED --> MLF_LOGGED: MLflow experiment logged
     FILE_UPDATED --> MLF_LOGGED: MLflow experiment logged
     FILE_DELETED --> MLF_LOGGED: MLflow experiment logged
-
+    
     MLF_LOGGED --> END: Process completed
-
+    
     END --> [*]
     ERROR --> [*]
 
@@ -185,12 +199,19 @@ The training module orchestrates multiple specialized agents:
 The system uses its trained toolset to answer questions efficiently:
 
 ```mermaid
+---
+title: Inference Flow
+config:
+  theme: neutral
+---
+
 stateDiagram-v2
-    classDef input fill:#1a535c,stroke:#333,stroke-width:2px,color:#fff
-    classDef module fill:#4ecdc4,stroke:#333,stroke-width:2px
-    classDef condition fill:#f7fff7,stroke:#333,stroke-width:2px
+    direction LR
+    classDef input fill:#8d99ae,stroke:#333,stroke-width:2px,color:#fff
+    classDef module fill:#2b2d42,stroke:#333,stroke-width:2px,color:#fff
+    classDef condition fill:#ef233c,stroke:#333,stroke-width:2px,color:#fff
     classDef output fill:#ff6b6b,stroke:#333,stroke-width:2px,color:#fff
-    classDef state fill:#ffe66d,stroke:#333,stroke-width:2px
+    classDef state fill:#edf2f4,stroke:#333,stroke-width:2px
 
     [*] --> Question
     Question --> IfcAnswerEngine
