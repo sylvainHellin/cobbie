@@ -10,7 +10,6 @@ from tqdm import tqdm
 from src.engine import IfcAnswerEngine
 from src.engine.schemas import QA_Pair, EvaluationResult
 from src.engine.util import get_logger
-from src.engine.optimizer.fewshots import add_fewshot_examples
 from src.experiment.validation import metric
 from src.experiment.datasets import DEVSET
 from src.config import PATH_COMPILED_MODEL
