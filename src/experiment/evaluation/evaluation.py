@@ -55,12 +55,16 @@ def evaluate(
     # Initialize engine
     engine = IfcAnswerEngine()
     if engine.config.load_optimized_model:
-        engine.load(path=OPTIMIZED_MODEL_PATH)
-        logger.info("Optimized model loaded")
+        try:
+            engine.load(path=OPTIMIZED_MODEL_PATH)
+            logger.info("Optimized model loaded")
+        except (KeyError, FileNotFoundError) as e:
+            logger.warning(f"Could not load optimized model: {e}. Using base engine.")
+            engine.config.load_optimized_model = False
 
     if few_shots:
         engine = add_fewshot_examples(engine=engine, k=few_shots)
-        logger.info("Added fewshot examples to the Engine.")
+        logger.info(f"Added {few_shots} fewshot examples to the IfcAnswerEngine.")
 
     # Process examples
     for _, qa_pair in enumerate(tqdm(dataset, desc="Evaluating examples")):

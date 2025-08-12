@@ -4,100 +4,22 @@
     "train": [],
     "demos": [
       {
-        "question": "Can you give me the list of each room available in house A?",
-        "answer": "House A includes the following rooms: Foyer (A101), Living Room (A102), Kitchen (A103), Bathroom 1 (A104), Bedroom 1 (A202), Hallway (A201), Bedroom 2 (A203), Bathroom 2 (A204), and Utility (A205).",
-        "path_ifc_model": "\/Users\/sylvainhellin\/GitHub\/4_phd\/ifcAnswerEngineV3\/src\/experiment\/bim_models\/duplex\/arc.ifc",
-        "question_id": 67
-      },
-      {
-        "question": "What is the sound transmission class (STC) rating between treatment rooms?",
-        "answer": "The information is not directly available in the BIM model and cannot be exactly calculated, as the BIM model does not provide a direct measurement of the sound transmission class (STC) rating between treatment rooms. \n\nHowever, typical partition walls consisting of two 16-mm plasterboard panels and a 92-mm metal stud usually achieve an STC of 38 to 40 dB assuming the cavity is not filled with acoustic material.",
-        "path_ifc_model": "\/Users\/sylvainhellin\/GitHub\/4_phd\/ifcAnswerEngineV3\/src\/experiment\/bim_models\/dental_clinic\/arc.ifc",
-        "question_id": 89
-      },
-      {
-        "question": "How many rooms are there in the clinic ?",
-        "answer": "There are 269 rooms in the clinic.",
-        "path_ifc_model": "\/Users\/sylvainhellin\/GitHub\/4_phd\/ifcAnswerEngineV3\/src\/experiment\/bim_models\/dental_clinic\/arc.ifc",
-        "question_id": 69
-      },
-      {
-        "question": "What is the thickness of the insulation of the external walls?",
-        "answer": "The external wall insulation is 42 mm thick.",
-        "path_ifc_model": "\/Users\/sylvainhellin\/GitHub\/4_phd\/ifcAnswerEngineV3\/src\/experiment\/bim_models\/dental_clinic\/arc.ifc",
-        "question_id": 34
-      },
-      {
-        "question": "What type of ceiling system is installed in office areas?",
-        "answer": "The office areas are equipped with an acoustic ceiling tile (ACT) system featuring 600 mm x 600 mm grid panels.",
-        "path_ifc_model": "\/Users\/sylvainhellin\/GitHub\/4_phd\/ifcAnswerEngineV3\/src\/experiment\/bim_models\/dental_clinic\/arc.ifc",
-        "question_id": 86
-      },
-      {
-        "question": "How many windows are there on the north facade?",
-        "answer": "Information not available in the BIM model.\nThe number of windows on the north facade cannot be determined because the BIM model is not georeferenced.",
-        "path_ifc_model": "\/Users\/sylvainhellin\/GitHub\/4_phd\/ifcAnswerEngineV3\/src\/experiment\/bim_models\/duplex\/arc.ifc",
-        "question_id": 4
-      },
-      {
-        "question": "Where are the smoke detectors located?",
-        "answer": "There are several smoke detectors are located in rooms A101, A202, A203, B101, B202, and B203.",
+        "question": "Where are the main electrical panels located?",
         "path_ifc_model": "\/Users\/sylvainhellin\/GitHub\/4_phd\/ifcAnswerEngineV3\/src\/experiment\/bim_models\/duplex\/mep.ifc",
-        "question_id": 28
+        "trajectory": "Example execution trajectory showing code and results.",
+        "answer": "The main electrical panels are located in rooms A101 and B101."
       },
       {
-        "question": "Are all internal doors compliant with accessibility requirements?",
-        "answer": "No, not all internal doors are compliant with accessibility requirements.\n",
+        "question": "What is the width of the door 1hOSvn6df7F8_7GcBWlRGQ ?",
         "path_ifc_model": "\/Users\/sylvainhellin\/GitHub\/4_phd\/ifcAnswerEngineV3\/src\/experiment\/bim_models\/duplex\/arc.ifc",
-        "question_id": 6
+        "trajectory": "Example execution trajectory showing code and results.",
+        "answer": "The width of the door with uuid 1hOSvn6df7F8_7GcBWlRGQ is 1.25 m."
       },
       {
-        "question": "What is the fire rating of the internal doors?",
-        "answer": "This information is not available in the BIM model.",
-        "path_ifc_model": "\/Users\/sylvainhellin\/GitHub\/4_phd\/ifcAnswerEngineV3\/src\/experiment\/bim_models\/duplex\/arc.ifc",
-        "question_id": 25
-      },
-      {
-        "question": "Which type of glazing is used in the windows?",
-        "answer": "This information is not available in the BIM model.",
-        "path_ifc_model": "\/Users\/sylvainhellin\/GitHub\/4_phd\/ifcAnswerEngineV3\/src\/experiment\/bim_models\/duplex\/arc.ifc",
-        "question_id": 35
-      },
-      {
-        "question": "What is the ratio of clinical to non-clinical space?",
-        "answer": "The information is not directly available in the BIM model and cannot be exactly calculated.\n\nHowever, the ratio of clinical to non-clinical space, based on usable area (excluding corridors, waiting areas, and offices), is estimated to be around 0.22.",
-        "path_ifc_model": "\/Users\/sylvainhellin\/GitHub\/4_phd\/ifcAnswerEngineV3\/src\/experiment\/bim_models\/dental_clinic\/arc.ifc",
-        "question_id": 77
-      },
-      {
-        "question": "Are there any thermal bridges identified in the model?",
-        "answer": "This information is not available in the BIM model.",
-        "path_ifc_model": "\/Users\/sylvainhellin\/GitHub\/4_phd\/ifcAnswerEngineV3\/src\/experiment\/bim_models\/duplex\/arc.ifc",
-        "question_id": 39
-      },
-      {
-        "question": "What is the GFA ?",
-        "answer": "The information is not directly available in the BIM model and cannot be exactly calculated.\n\nHowever, the total gross floor area (GFA) is estimated to be around 5,077 sqm.",
+        "question": "What is the fire rating of the walls between treatment rooms?",
         "path_ifc_model": "\/Users\/sylvainhellin\/GitHub\/4_phd\/ifcAnswerEngineV3\/src\/experiment\/bim_models\/dental_clinic\/str.ifc",
-        "question_id": 73
-      },
-      {
-        "question": "What type of fire suppression system is installed?",
-        "answer": "There is no fire suppression system installed in the building.",
-        "path_ifc_model": "\/Users\/sylvainhellin\/GitHub\/4_phd\/ifcAnswerEngineV3\/src\/experiment\/bim_models\/duplex\/mep.ifc",
-        "question_id": 29
-      },
-      {
-        "question": "What is the total area of wall surfaces requiring painting?",
-        "answer": "The information is not directly available in the BIM model and cannot be exactly calculated. However, the total area of interior wall surfaces requiring painting can be estimated at around 398 sqm.",
-        "path_ifc_model": "\/Users\/sylvainhellin\/GitHub\/4_phd\/ifcAnswerEngineV3\/src\/experiment\/bim_models\/duplex\/arc.ifc",
-        "question_id": 55
-      },
-      {
-        "question": "What is the total gross floor area of the building?",
-        "answer": "The information is not directly available in the BIM model and cannot be exactly calculated. However, it is estimated that the total gross floor area of the building is around 350 sqm.",
-        "path_ifc_model": "\/Users\/sylvainhellin\/GitHub\/4_phd\/ifcAnswerEngineV3\/src\/experiment\/bim_models\/duplex\/arc.ifc",
-        "question_id": 1
+        "trajectory": "Example execution trajectory showing code and results.",
+        "answer": "This information is not available in the BIM model."
       }
     ],
     "signature": {
@@ -132,100 +54,22 @@
     "train": [],
     "demos": [
       {
-        "question": "Which materials have recycled content?",
-        "answer": "This information is not available in the BIM model.",
+        "question": "Where are the main electrical panels located?",
         "path_ifc_model": "\/Users\/sylvainhellin\/GitHub\/4_phd\/ifcAnswerEngineV3\/src\/experiment\/bim_models\/duplex\/mep.ifc",
-        "question_id": 59
+        "trajectory": "Example execution trajectory showing code and results.",
+        "answer": "The main electrical panels are located in rooms A101 and B101."
       },
       {
-        "question": "What is the total length of water supply piping in the building?",
-        "answer": "The total length of water supply piping in the building is 1,747.29 m.",
-        "path_ifc_model": "\/Users\/sylvainhellin\/GitHub\/4_phd\/ifcAnswerEngineV3\/src\/experiment\/bim_models\/duplex\/mep.ifc",
-        "question_id": 10
+        "question": "What is the width of the door 1hOSvn6df7F8_7GcBWlRGQ ?",
+        "path_ifc_model": "\/Users\/sylvainhellin\/GitHub\/4_phd\/ifcAnswerEngineV3\/src\/experiment\/bim_models\/duplex\/arc.ifc",
+        "trajectory": "Example execution trajectory showing code and results.",
+        "answer": "The width of the door with uuid 1hOSvn6df7F8_7GcBWlRGQ is 1.25 m."
       },
       {
-        "question": "What are the dimensions of the window with guid 0otfaO0qPDAhynjJ6DmgH8?",
-        "answer": "The window with GUID 0otfaO0qPDAhynjJ6DmgH8 has a height of 1.735 m and a width of 1.0 m.",
-        "path_ifc_model": "\/Users\/sylvainhellin\/GitHub\/4_phd\/ifcAnswerEngineV3\/src\/experiment\/bim_models\/dental_clinic\/arc.ifc",
-        "question_id": 96
-      },
-      {
-        "question": "What is the volume of concrete required for the foundation?",
-        "answer": "The volume of concrete required for the foundation is 167.61 m\u00b3.",
+        "question": "What is the fire rating of the walls between treatment rooms?",
         "path_ifc_model": "\/Users\/sylvainhellin\/GitHub\/4_phd\/ifcAnswerEngineV3\/src\/experiment\/bim_models\/dental_clinic\/str.ifc",
-        "question_id": 101
-      },
-      {
-        "question": "How much tiling will I need to redo the flooring in all the bathrooms?",
-        "answer": "To redo the flooring of all bathrooms, you will need approximately 18.85 square meters of tiling. This includes tiling for 4 bathrooms with the following areas: A204 (5.42 sqm), B104 (4.00 sqm), B204 (5.44 sqm), and A104 (4.00 sqm).",
-        "path_ifc_model": "\/Users\/sylvainhellin\/GitHub\/4_phd\/ifcAnswerEngineV3\/src\/experiment\/bim_models\/duplex\/arc.ifc",
-        "question_id": 110
-      },
-      {
-        "question": "How many interior doors are there in this building?",
-        "answer": "There are 10 interior doors in this building.",
-        "path_ifc_model": "\/Users\/sylvainhellin\/GitHub\/4_phd\/ifcAnswerEngineV3\/src\/experiment\/bim_models\/duplex\/arc.ifc",
-        "question_id": 54
-      },
-      {
-        "question": "What is the total gross floor area of the building?",
-        "answer": "The information is not directly available in the BIM model and cannot be exactly calculated. However, it is estimated that the total gross floor area of the building is around 350 sqm.",
-        "path_ifc_model": "\/Users\/sylvainhellin\/GitHub\/4_phd\/ifcAnswerEngineV3\/src\/experiment\/bim_models\/duplex\/arc.ifc",
-        "question_id": 1
-      },
-      {
-        "question": "How many radiator are there in room A202?",
-        "answer": "There are two radiators in room A202.",
-        "path_ifc_model": "\/Users\/sylvainhellin\/GitHub\/4_phd\/ifcAnswerEngineV3\/src\/experiment\/bim_models\/duplex\/mep.ifc",
-        "question_id": 12
-      },
-      {
-        "question": "Is there a vapor barrier in the roof construction?",
-        "answer": "Yes, the roof construction includes two vapor barriers.",
-        "path_ifc_model": "\/Users\/sylvainhellin\/GitHub\/4_phd\/ifcAnswerEngineV3\/src\/experiment\/bim_models\/duplex\/arc.ifc",
-        "question_id": 36
-      },
-      {
-        "question": "What is the average room height for the interation stations?",
-        "answer": "The average room height for the interaction stations is 2.8 m.",
-        "path_ifc_model": "\/Users\/sylvainhellin\/GitHub\/4_phd\/ifcAnswerEngineV3\/src\/experiment\/bim_models\/dental_clinic\/arc.ifc",
-        "question_id": 78
-      },
-      {
-        "question": "What is the total length of skirting boards needed?",
-        "answer": "This information is not available in the BIM model.",
-        "path_ifc_model": "\/Users\/sylvainhellin\/GitHub\/4_phd\/ifcAnswerEngineV3\/src\/experiment\/bim_models\/duplex\/arc.ifc",
-        "question_id": 51
-      },
-      {
-        "question": "How many doors are there in this building?",
-        "answer": "There are 254 doors in the building",
-        "path_ifc_model": "\/Users\/sylvainhellin\/GitHub\/4_phd\/ifcAnswerEngineV3\/src\/experiment\/bim_models\/dental_clinic\/arc.ifc",
-        "question_id": 108
-      },
-      {
-        "question": "Which type of glazing is used in the windows?",
-        "answer": "This information is not available in the BIM model.",
-        "path_ifc_model": "\/Users\/sylvainhellin\/GitHub\/4_phd\/ifcAnswerEngineV3\/src\/experiment\/bim_models\/duplex\/arc.ifc",
-        "question_id": 35
-      },
-      {
-        "question": "How many fire exits are there on each floor?",
-        "answer": "The information is not directly available in the BIM model and cannot be exactly calculated. There are four exterior doors on the ground floor that could serve as fire exits, but their fire resistance is not specified.",
-        "path_ifc_model": "\/Users\/sylvainhellin\/GitHub\/4_phd\/ifcAnswerEngineV3\/src\/experiment\/bim_models\/duplex\/arc.ifc",
-        "question_id": 26
-      },
-      {
-        "question": "How many X-RAY rooms are there in total?",
-        "answer": "There is 1 X-ray room (room 2A12).",
-        "path_ifc_model": "\/Users\/sylvainhellin\/GitHub\/4_phd\/ifcAnswerEngineV3\/src\/experiment\/bim_models\/dental_clinic\/arc.ifc",
-        "question_id": 63
-      },
-      {
-        "question": "What is the total surface area of the fa\u00e7ade?",
-        "answer": "The information is not directly available in the BIM model and cannot be exactly calculated. However, the total surface area of the fa\u00e7ade can be estimated to be around 275 sqm.",
-        "path_ifc_model": "\/Users\/sylvainhellin\/GitHub\/4_phd\/ifcAnswerEngineV3\/src\/experiment\/bim_models\/duplex\/arc.ifc",
-        "question_id": 48
+        "trajectory": "Example execution trajectory showing code and results.",
+        "answer": "This information is not available in the BIM model."
       }
     ],
     "signature": {
