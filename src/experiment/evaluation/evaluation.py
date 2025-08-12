@@ -3,12 +3,14 @@ from time import time
 from typing import List, Optional
 
 import mlflow
+import dspy
 from dspy import LM
 from tqdm import tqdm
 
 from src.engine import IfcAnswerEngine
 from src.engine.schemas import QA_Pair, EvaluationResult
 from src.engine.util import get_logger
+from src.engine.optimizer.fewshots import add_fewshot_examples
 from src.experiment.validation import metric
 from src.experiment.datasets import DEVSET
 from src.config import OPTIMIZED_MODEL_PATH
@@ -20,6 +22,7 @@ def evaluate(
     experiment_name: Optional[str] = "Evaluation",
     start_run: bool = False,
     log_metris: bool = False,
+    few_shots: int = 2**5,
 ) -> EvaluationResult:
     """
     Compute the accuracy of the IfcAnswerEngine with comprehensive error handling and logging.
@@ -50,11 +53,14 @@ def evaluate(
     result = EvaluationResult(llm=llm.model)
 
     # Initialize engine
-    engine = IfcAnswerEngine(llm=llm)
-    logger.info("IfcAnswerEngine initialized successfully")
+    engine = IfcAnswerEngine()
     if engine.config.load_optimized_model:
         engine.load(path=OPTIMIZED_MODEL_PATH)
-        logger.info("Optimized model loaded.")
+        logger.info("Optimized model loaded")
+
+    if few_shots:
+        engine = add_fewshot_examples(engine=engine, k=few_shots)
+        logger.info("Added fewshot examples to the Engine.")
 
     # Process examples
     for _, qa_pair in enumerate(tqdm(dataset, desc="Evaluating examples")):
@@ -80,7 +86,7 @@ def evaluate(
                 (engine_output.input_tokens or 0, engine_output.output_tokens or 0)
             )
             result.question_ids.append(qa_pair.id)
-            result.duration.append(duration)
+            result.cost.append(engine_output.cost or 0)
 
             if engine_output.status == "error":
                 result.add_error(
@@ -112,6 +118,7 @@ def evaluate(
                 "mean_accuracy": result.mean_accuracy(),
                 "nb_errors": float(len(result.errors)),
                 "mean_duration": result.mean_duration(),
+                "cost": result.total_cost(),
             },
         )
         logger.info("Logged metrics to MLflow.")
@@ -123,7 +130,7 @@ if __name__ == "__main__":
     # Run evaluation with error handling
     from src.config import LANGUAGE_MODELS
 
-    llm = LANGUAGE_MODELS["claude"]
+    llm = LANGUAGE_MODELS["openrouter-gpt-oss-120b"]
     llm = LM(
         model=llm.url,
         api_key=llm.api_key,
@@ -135,7 +142,8 @@ if __name__ == "__main__":
     result = evaluate(
         llm=llm,
         start_run=True,
-        dataset=DEVSET,
+        dataset=DEVSET[:10],
+        log_metris=True,
     )
 
     # Check your tracking attributes
