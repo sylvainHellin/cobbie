@@ -1,7 +1,7 @@
 import mlflow
 from dspy import LM, BootstrapFewShot
 
-from src.config import LANGUAGE_MODELS, OPTIMIZED_MODEL_PATH
+from src.config import LANGUAGE_MODELS, PATH_COMPILED_MODEL
 from src.engine import IfcAnswerEngine
 from src.experiment import TRAINSET, DEVSET, metric
 
@@ -42,4 +42,4 @@ with mlflow.start_span(name="BootstrapFewShort"):
         trainset=trainset,
     )
 
-    optimized_engine.save(OPTIMIZED_MODEL_PATH)
+    optimized_engine.save(PATH_COMPILED_MODEL)

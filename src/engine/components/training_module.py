@@ -5,7 +5,7 @@ import dspy
 import mlflow
 from mlflow.entities import LiveSpan
 
-from src.config import AGENT_CONFIGS, OPTIMIZED_MODEL_PATH
+from src.config import AGENT_CONFIGS, PATH_COMPILED_MODEL
 from src.engine import (
     AnswerVerifier,
     ErrorAnalyst,
@@ -69,7 +69,7 @@ class TrainingModule(dspy.Module):
         self.answer_verifier = AnswerVerifier()
         self.engine = IfcAnswerEngine()
         if self.config.load_optimized_model:
-            self.engine.load(path=OPTIMIZED_MODEL_PATH)
+            self.engine.load(path=PATH_COMPILED_MODEL)
         self.tool_creator = ToolCreator()
         self.error_analyst = ErrorAnalyst()
         self.tool_debugger = ToolDebugger()

@@ -4,7 +4,7 @@ from typing import List, Literal, Optional, Tuple
 import dspy
 import mlflow
 
-from src.config import AGENT_CONFIGS
+from src.config import AGENT_CONFIGS, PATH_COMPILED_MODEL
 from src.engine.components.training_module import (
     TrainingModule,
 )

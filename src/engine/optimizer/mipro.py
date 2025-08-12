@@ -2,7 +2,7 @@ from typing import List
 import mlflow
 from dspy import LM, MIPROv2
 
-from src.config import LANGUAGE_MODELS, OPTIMIZED_MODEL_PATH
+from src.config import LANGUAGE_MODELS, PATH_COMPILED_MODEL
 from src.engine import IfcAnswerEngine
 from src.experiment import TRAINSET, metric
 from src.engine.schemas import QA_Pair
@@ -26,7 +26,7 @@ def mipro_engine_optimizer(
         trainset=trainset,
     )
     if save:
-        optimized_engine.save(OPTIMIZED_MODEL_PATH)
+        optimized_engine.save(PATH_COMPILED_MODEL)
 
     return optimized_engine
 
@@ -47,7 +47,7 @@ if __name__ == "__main__":
         engine = IfcAnswerEngine()
 
         if engine.config.load_optimized_model:
-            engine.load(path=OPTIMIZED_MODEL_PATH)
+            engine.load(path=PATH_COMPILED_MODEL)
 
         mipro_engine_optimizer(
             dataset=TRAINSET,

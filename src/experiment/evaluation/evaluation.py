@@ -13,7 +13,7 @@ from src.engine.util import get_logger
 from src.engine.optimizer.fewshots import add_fewshot_examples
 from src.experiment.validation import metric
 from src.experiment.datasets import DEVSET
-from src.config import OPTIMIZED_MODEL_PATH
+from src.config import PATH_COMPILED_MODEL
 
 
 def evaluate(
@@ -57,7 +57,7 @@ def evaluate(
     if engine.config.load_optimized_model:
         try:
             # Load the compiled engine produced by DSPy
-            engine.load(OPTIMIZED_MODEL_PATH)  # type: ignore[assignment]
+            engine.load(PATH_COMPILED_MODEL)  # type: ignore[assignment]
             # Ensure evaluation uses the provided LLM
             dspy.configure(lm=llm)
             logger.info("Optimized model loaded")
