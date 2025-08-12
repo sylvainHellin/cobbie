@@ -12,3 +12,4 @@ class ModuleOutput(BaseModel):
     input_tokens: Optional[int] = None
     output_tokens: Optional[int] = None
     llm: Optional[str] = None
+    cost: Optional[float] = None
