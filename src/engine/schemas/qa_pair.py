@@ -19,7 +19,6 @@ class QA_Pair(BaseModel):
             question=self.question,
             answer=self.answer,
             path_ifc_model=self.ifc_model_path,
-            question_id=self.id,
         ).with_inputs(
             "question",
             "path_ifc_model",
