@@ -43,7 +43,7 @@ mlflow.set_experiment("API")
 mlflow.dspy.autolog()  # type: ignore
 
 # Initialize the IFC Answer Engine
-llm = LANGUAGE_MODELS["qwen3-coder"]
+llm = LANGUAGE_MODELS["openrouter-claude"]
 llm = LM(
     model=llm.url,
     api_key=llm.api_key,
