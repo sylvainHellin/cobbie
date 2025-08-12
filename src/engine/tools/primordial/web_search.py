@@ -17,25 +17,14 @@ def web_search(
     model: str = "sonar",
 ) -> str:
     """
-    Performs an AI-powered web search using Perplexity's Sonar API, which provides real-time
-    search results with natural language responses. The function is designed to help find
-    and explain technical information, particularly about programming and libraries.
+    Performs an AI-powered web search.
 
     Args:
         query (str): The search query. For best results, make queries specific and include
             relevant technical terms (e.g., "IfcOpenShell", "Python", specific function names).
-        model (str, optional): The model to use for the search.
-            Defaults to "sonar".
-            Available models are: "sonar", "sonar-pro", "sonar-reasoning", "sonar-reasoning-pro".
-            - sonar: Base model for general queries
-            - sonar-pro: Enhanced version with better accuracy
-            - sonar-reasoning: Optimized for complex analytical queries
-            - sonar-reasoning-pro: Most capable model for technical analysis
 
     Returns:
         str: A natural language response synthesized from web search results.
-             On success (status code 200), returns a detailed explanation or answer.
-             On failure, returns an error message string containing the status code and error details.
     """
     logger = get_logger("web_search", log_level=LOG_LEVEL)
     logger.info("Tool called.")

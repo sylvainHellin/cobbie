@@ -64,38 +64,13 @@ def query_ifcopenshell_documentation(
     query: str,
     n_results: int = 10,
 ) -> str:
-    """Queries the documentation vector database to find semantically similar documentation entries.
-
-    This function performs semantic similarity search to find relevant IfcOpenShell documentation based on a natural language description. For best results, the query should:
-    - Describe the desired functionality in simple, clear terms
-    - Focus on the core operation (e.g., "get entity attributes" rather than "how do I get attributes?")
-    - Use terminology similar to the documentation (e.g., "entity", "property", "attribute")
-    - Avoid implementation details or specific use cases
-
-    Example queries:
-    - "Get properties of an IFC entity"
-    - "Create new IFC entity"
-    - "Convert geometry to shape"
+    """Queries the documentation from the IfcOpenShell library using natural language.
 
     Args:
         query (str): Natural language description of the desired functionality.
-        n_results (int, optional): The maximum number of results to return. Defaults to 10.
 
     Returns:
-        str: A JSON-serialized string containing either:
-             - A list of matching documentation entries, where each entry is a dictionary with
-               keys: "module", "type", "name", "docstring"
-             - An error message in the format: {"error": "error description"}
-
-    Example Response:
-        [
-            {
-                "module": "ifcopenshell.util.element",
-                "type": "function",
-                "name": "get_properties",
-                "docstring": "Gets all properties of an IFC entity..."
-            }
-        ]
+        str: A JSON-serialized string containing a list of matching documentation entries, where each entry is a dictionary with keys: "module", "type", "name", "docstring"
     """
     logger = get_logger("query_ifc_documentation", log_level=LOG_LEVEL)
     logger.info("IfcOpenShell documentation query tool called")
