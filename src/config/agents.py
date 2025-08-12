@@ -24,7 +24,7 @@ class LLMConfig(BaseModel):
     model_name: str = Field(
         # default="openrouter-devstral-medium",
         # default="qwen3-coder",
-        default="openrouter-gpt-oss-120b",
+        default="openrouter-qwen3-coder",
         description="Name of the model from LANGUAGE_MODELS",
     )
     max_tokens: int = Field(default=2**14, description="Maximum tokens for LLM")
@@ -219,7 +219,7 @@ class TrainingPipelineConfig(BaseAgentConfig):
         None,
         "BootStrapFewShot",
     ] = Field(
-        default=None,
+        default="BootStrapFewShot",
         description="Which Dspy optimizer to use after the training and before the final evaluation.",
     )
 

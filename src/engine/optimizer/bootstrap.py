@@ -7,7 +7,7 @@ from src.experiment import TRAINSET, metric
 
 
 def bootstrap_engine(
-    engine: IfcAnswerEngine,
+    engine: IfcAnswerEngine = IfcAnswerEngine(),
     save: bool = True,
 ) -> IfcAnswerEngine:
     bootstrap_optimizer = BootstrapFewShot(

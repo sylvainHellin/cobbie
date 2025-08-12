@@ -122,7 +122,7 @@ LANGUAGE_MODELS["claude"] = LLM(
 
 
 # OpenRouter models
-LANGUAGE_MODELS["qwen3-coder"] = LLM(
+LANGUAGE_MODELS["openrouter-qwen3-coder"] = LLM(
     url="openrouter/qwen/qwen3-coder",
     api_key=OPENROUTER_API_KEY,
     name="qwen3-coder",
