@@ -1,5 +1,6 @@
 import time
 from datetime import datetime
+from typing import cast
 
 import dspy
 import mlflow
@@ -86,11 +87,11 @@ class AnswerVerifier(dspy.Module):
                     )
                 module_output.status = "success"
                 module_output.result = Result(
-                    similarity_score=prediction.similarity_score,
-                    reasoning=prediction.reasoning,
+                    similarity_score=getattr(prediction, "similarity_score"),
+                    reasoning=getattr(prediction, "reasoning"),
                 )
                 logger.debug(
-                    f"\nSimilarity score: {prediction.similarity_score}\nReasoning: {prediction.reasoning}"
+                    f"\nSimilarity score: {module_output.result.similarity_score}\nReasoning: {module_output.result.reasoning}"
                 )
             except Exception as e:
                 error_msg = f"Encounter Exception during the forward pass of the AnswerClassifier\nException:{e}\nquestion:{question}\nfirst_answer:{first_answer}\nground truth:{second_answer}"
@@ -149,10 +150,13 @@ def verify_answer(
     try:
         answer_verifier = AnswerVerifier(config=config)
         with dspy.context(lm=lm):
-            answer_verification: ModuleOutput = answer_verifier.forward(
-                question=question,
-                first_answer=first_answer,
-                second_answer=second_answer,
+            answer_verification: ModuleOutput = cast(
+                ModuleOutput,
+                answer_verifier(
+                    question=question,
+                    first_answer=first_answer,
+                    second_answer=second_answer,
+                ),
             )
     except Exception as e:
         logger.error(f"MLflow not available. Exception: {e}")
