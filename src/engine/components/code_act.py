@@ -192,7 +192,6 @@ class CodeAct(dspy.Module):
             lm = cast(dspy.LM, dspy.settings.lm)
             lm.model
             span.set_attributes({"llm": dspy.settings.lm.model})
-            print(dspy.settings.lm.model)
 
         for _ in range(self.max_iters):
             trajectory_item, should_break = self._execute_code_act_loop(
