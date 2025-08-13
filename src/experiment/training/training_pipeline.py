@@ -8,6 +8,7 @@ from src.config import AGENT_CONFIGS
 from src.engine.components.training_module import (
     TrainingModule,
 )
+from src.engine import IfcAnswerEngine
 from src.engine.schemas import (
     ModuleOutput,
     QA_Pair,
@@ -31,11 +32,10 @@ class TrainingPipeline(dspy.Module):
         self.logger = get_logger(name="Training", log_level=self.config.log_level)
         self.evaluate = self.config.evaluate
         self.training = TrainingModule()
-        self.current_api_usage = get_usage_openrouter()
-        self.load_optimized_engine = False
 
         # Use provided LLM or get from config
         self.lm = lm or self.config.llm.get_llm()
+        self.engine = IfcAnswerEngine(llm=self.lm)
 
         # Set-up mlflow
         mlflow.dspy.autolog()  # type: ignore
@@ -51,7 +51,6 @@ class TrainingPipeline(dspy.Module):
         self,
         mode: Literal["before", "after"],
         devset: List[QA_Pair],
-        load_optimized_engine: bool = False,
     ):
         if self.evaluate:
             with mlflow.start_span(
@@ -63,7 +62,7 @@ class TrainingPipeline(dspy.Module):
                     llm=self.lm,
                     start_run=False,
                     dataset=devset,
-                    load_optimized_engine=load_optimized_engine,
+                    engine=self.engine,
                 )
                 metrics = {
                     f"mean_accuracy_{mode}_training": eval.mean_accuracy(),
@@ -89,8 +88,8 @@ class TrainingPipeline(dspy.Module):
 
     def _optimize(self):
         if self.config.optimizer == "BootStrapFewShot":
-            bootstrap_engine()
-            self.load_optimized_engine = True
+            self.engine = IfcAnswerEngine(llm=self.lm)
+            self.engine = bootstrap_engine(engine=self.engine)
 
     def forward(
         self,
@@ -125,7 +124,6 @@ class TrainingPipeline(dspy.Module):
         self._evaluation(
             mode="after",
             devset=devset,
-            load_optimized_engine=self.load_optimized_engine,
         )
 
         return (self.outputs, self.tools_metrics)
@@ -160,6 +158,6 @@ if __name__ == "__main__":
     )
 
     outputs = main(
-        devset=devset[:2],
-        trainset=trainset[:2],
+        devset=devset[:1],
+        trainset=trainset[:1],
     )
