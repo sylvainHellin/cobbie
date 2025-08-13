@@ -8,7 +8,7 @@ List of custom functions:
 
 IMPORTANT:
 You can use custom functions in your code without importing them. Importing them will cause errors.
-The Python interpreter does not have states, so you need to define all variables used in each block of generated code.
+The Python interpreter is stateless. This means that you need to define all the variables used in each block of generated code.
 
 WORKFLOW:
 1. **Think**: Analyze the task and your progress
