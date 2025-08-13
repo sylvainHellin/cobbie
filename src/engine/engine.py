@@ -167,8 +167,6 @@ class IfcAnswerEngine(dspy.Module):
 
 
 if __name__ == "__main__":
-    import json
-
     # Test the IfcAnswerEngine
     ifc_model_path = "/Users/sylvainhellin/GitHub/4_phd/ifcAnswerEngineV3/src/experiment/bim_models/duplex/arc.ifc"
     question = "What is the height of the living room?"

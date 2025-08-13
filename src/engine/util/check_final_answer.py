@@ -3,7 +3,7 @@ from typing import Any
 
 from dspy import Signature
 
-from .validate_type import validate_type
+from src.engine.util.validate_type import validate_type
 
 
 def check_final_answer(output: Any, signature: Signature) -> bool:
@@ -48,6 +48,7 @@ def check_final_answer(output: Any, signature: Signature) -> bool:
 
 if __name__ == "__main__":
     import dspy
+    from typing import cast
 
     class QA(dspy.Signature):
         """Answer the user's question"""
@@ -65,6 +66,6 @@ if __name__ == "__main__":
 
     # last_output = {"generated_uuid": "24d6d214-9d85-418e-bbce-2ec263f9c268"}
     last_output = "{'answer': \"No, you don't need to take an umbrella tomorrow. The weather forecast for Munich shows sunny conditions with no rain.\"}"
-    signature = dspy.ensure_signature(QA)
+    signature = cast(Signature, dspy.ensure_signature(QA))
     res = check_final_answer(output=last_output, signature=signature)
     print(res)
