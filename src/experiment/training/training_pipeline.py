@@ -88,8 +88,10 @@ class TrainingPipeline(dspy.Module):
 
     def _optimize(self):
         if self.config.optimizer == "BootStrapFewShot":
-            self.engine = IfcAnswerEngine(llm=self.lm)
-            self.engine = bootstrap_engine(engine=self.engine)
+            with mlflow.start_span(name="optimization", span_type="CHAIN") as span:
+                self.engine = IfcAnswerEngine(llm=self.lm)
+                self.engine = bootstrap_engine(engine=self.engine)
+                span.set_status(status="OK")
 
     def forward(
         self,

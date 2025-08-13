@@ -10,15 +10,16 @@ def bootstrap_engine(
     engine: IfcAnswerEngine = IfcAnswerEngine(),
     save: bool = True,
 ) -> IfcAnswerEngine:
-    bootstrap_optimizer = BootstrapFewShotWithRandomSearch(
+    # bootstrap_optimizer = BootstrapFewShotWithRandomSearch(
+    bootstrap_optimizer = BootstrapFewShot(
         max_bootstrapped_demos=3,
         max_labeled_demos=2**4,
         metric=metric,
         metric_threshold=0.9,
         max_rounds=3,
         max_errors=5,
-        num_threads=1,
-        num_candidate_programs=4,
+        # num_threads=1,
+        # num_candidate_programs=4,
     )
 
     teacher_llm = LANGUAGE_MODELS["openrouter-claude"]

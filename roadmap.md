@@ -2,7 +2,8 @@
 
 ## Engine
 - Upgrade dspy to 3.0 -- workout all the breaking changes -- kill the fastapi server first
-- Debug the `optimizer` with the memory leak
+- Add more tracing data in `mlflow` for the `optimizer`
+
 
 ## Experiment
 

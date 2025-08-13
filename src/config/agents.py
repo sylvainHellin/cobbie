@@ -78,7 +78,7 @@ class CodeActConfig(BaseModel):
     """Configuration for CodeAct-based agents."""
 
     max_iters: int = Field(
-        default=10, description="Maximum iterations for CodeAct agents"
+        default=15, description="Maximum iterations for CodeAct agents"
     )
     add_code_prefix: bool = Field(
         default=True, description="Whether to add code prefix"
