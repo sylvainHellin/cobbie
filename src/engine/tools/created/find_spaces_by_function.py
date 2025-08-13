@@ -1,4 +1,3 @@
-
 import ifcopenshell
 import ifcopenshell.util.element
 from typing import List, Dict, Optional
@@ -46,32 +45,6 @@ def find_spaces_by_function(
         - name: The space name
         - matching_criteria: List of criteria that matched
         - classification_info: Dictionary of relevant property set information
-    
-    Example:
-        # Find all storage rooms by classification code
-        storage_spaces = find_spaces_by_function(
-            ifc_file, 
-            classification_types=["13-75 11 11: Storage Room"]
-        )
-        
-        # Find spaces by category description
-        storage_spaces = find_spaces_by_function(
-            ifc_file, 
-            category_descriptions=["Storage Room", "Soiled Storage Room Space"]
-        )
-        
-        # Find spaces by keywords
-        storage_spaces = find_spaces_by_function(
-            ifc_file, 
-            keywords=["storage", "stock"]
-        )
-        
-        # Find general office spaces, excluding specialized ones
-        office_spaces = find_spaces_by_function(
-            ifc_file,
-            category_descriptions=["Office"],
-            exclude_keywords=["TECH", "DENTAL", "PHARM", "BMET", "PROVIDER", "SYS", "RMO", "OPT"]
-        )
     """
     # Get all spaces
     spaces = ifc_file.by_type("IfcSpace")
@@ -109,22 +82,14 @@ def find_spaces_by_function(
             if any(exclude_keyword in name_lower for exclude_keyword in exclude_keywords_lower):
                 continue  # Skip this space
         
-        # Check if space name contains keywords (only for default search)
-        if keywords_lower and use_default_search:
-            name_lower = space_name.lower()
-            for keyword in keywords_lower:
-                if exact_match:
-                    if keyword == name_lower:
-                        matching_criteria.append(f"Name exactly matches '{keyword}'")
-                else:
-                    if keyword in name_lower:
-                        matching_criteria.append(f"Name contains '{keyword}'")
-        
         # Get property sets for this space
         psets = ifcopenshell.util.element.get_psets(space)
         
         # Check specified property sets and properties
         exclude_space = False
+        
+        # For default search, prioritize property set matching over name matching
+        property_match_found = False
         
         for pset_name, property_names in property_sets_to_check.items():
             if pset_name in psets:
@@ -147,52 +112,73 @@ def find_spaces_by_function(
                         if classification_types_lower and use_default_search:
                             prop_value_lower = prop_value_str.lower()
                             for classification in classification_types_lower:
+                                match_found = False
                                 if exact_match:
                                     if classification == prop_value_lower:
                                         matching_criteria.append(f"{pset_name}.{prop_name} exactly matches '{classification}'")
+                                        match_found = True
+                                        property_match_found = True
                                 else:
                                     if classification in prop_value_lower:
                                         matching_criteria.append(f"{pset_name}.{prop_name} contains '{classification}'")
-                                        
-                                # Check if this match contains exclude keywords
-                                if any(exclude_keyword in prop_value_lower for exclude_keyword in exclude_keywords_lower):
-                                    exclude_space = True
-                                    matching_criteria = []  # Clear matching criteria
-                                    break
+                                        match_found = True
+                                        property_match_found = True
+                                
+                                # If a match was found, check if it contains exclude keywords
+                                if match_found:
+                                    if any(exclude_keyword in prop_value_lower for exclude_keyword in exclude_keywords_lower):
+                                        exclude_space = True
+                                        matching_criteria = []  # Clear matching criteria
+                                        property_match_found = False
+                                        break
                         
                         # Check for matching category descriptions (only for default search)
                         if category_descriptions_lower and use_default_search:
                             prop_value_lower = prop_value_str.lower()
                             for category in category_descriptions_lower:
+                                match_found = False
                                 if exact_match:
                                     if category == prop_value_lower:
                                         matching_criteria.append(f"{pset_name}.{prop_name} exactly matches '{category}'")
+                                        match_found = True
+                                        property_match_found = True
                                 else:
                                     if category in prop_value_lower:
                                         matching_criteria.append(f"{pset_name}.{prop_name} contains '{category}'")
-                                        
-                                # Check if this match contains exclude keywords
-                                if any(exclude_keyword in prop_value_lower for exclude_keyword in exclude_keywords_lower):
-                                    exclude_space = True
-                                    matching_criteria = []  # Clear matching criteria
-                                    break
+                                        match_found = True
+                                        property_match_found = True
+                                
+                                # If a match was found, check if it contains exclude keywords
+                                if match_found:
+                                    if any(exclude_keyword in prop_value_lower for exclude_keyword in exclude_keywords_lower):
+                                        exclude_space = True
+                                        matching_criteria = []  # Clear matching criteria
+                                        property_match_found = False
+                                        break
                         
                         # Check for keywords in property values (only for default search)
                         if keywords_lower and use_default_search:
                             prop_value_lower = prop_value_str.lower()
                             for keyword in keywords_lower:
+                                match_found = False
                                 if exact_match:
                                     if keyword == prop_value_lower:
                                         matching_criteria.append(f"{pset_name}.{prop_name} exactly matches '{keyword}'")
+                                        match_found = True
+                                        property_match_found = True
                                 else:
                                     if keyword in prop_value_lower:
                                         matching_criteria.append(f"{pset_name}.{prop_name} contains '{keyword}'")
-                                        
-                                # Check if this match contains exclude keywords
-                                if any(exclude_keyword in prop_value_lower for exclude_keyword in exclude_keywords_lower):
-                                    exclude_space = True
-                                    matching_criteria = []  # Clear matching criteria
-                                    break
+                                        match_found = True
+                                        property_match_found = True
+                                
+                                # If a match was found, check if it contains exclude keywords
+                                if match_found:
+                                    if any(exclude_keyword in prop_value_lower for exclude_keyword in exclude_keywords_lower):
+                                        exclude_space = True
+                                        matching_criteria = []  # Clear matching criteria
+                                        property_match_found = False
+                                        break
                         
                         # Check if property value contains exclude keywords (only for default search)
                         if exclude_keywords_lower and use_default_search:
@@ -200,11 +186,30 @@ def find_spaces_by_function(
                             if any(exclude_keyword in prop_value_lower for exclude_keyword in exclude_keywords_lower):
                                 exclude_space = True
                                 matching_criteria = []  # Clear matching criteria
+                                property_match_found = False
                                 break  # Break inner loop to check next property
                 
                 # If space is marked for exclusion, break out of property set loop
                 if exclude_space:
                     break
+        
+        # For default search, only check name keywords if no property matches were found
+        if keywords_lower and use_default_search and not property_match_found:
+            name_lower = space_name.lower()
+            for keyword in keywords_lower:
+                if exact_match:
+                    if keyword == name_lower:
+                        matching_criteria.append(f"Name exactly matches '{keyword}'")
+                else:
+                    if keyword in name_lower:
+                        matching_criteria.append(f"Name contains '{keyword}'")
+        
+        # Check if space name contains exclude keywords (if no property matches were found)
+        if exclude_keywords_lower and use_default_search and not property_match_found:
+            name_lower = space_name.lower()
+            if any(exclude_keyword in name_lower for exclude_keyword in exclude_keywords_lower):
+                exclude_space = True
+                matching_criteria = []  # Clear matching criteria
         
         # Determine if this space should be included in results
         should_include = False
@@ -214,7 +219,9 @@ def find_spaces_by_function(
             should_include = len(matching_criteria) > 0 and not exclude_space
         else:
             # For default search, include if any matching criteria were found and not excluded
-            should_include = len(matching_criteria) > 0 and not exclude_space
+            # But prioritize property matches over name matches
+            should_include = (len(matching_criteria) > 0 and not exclude_space and 
+                            (property_match_found or (keywords_lower and not property_match_found)))
         
         # If criteria matched and space is not excluded, add to results
         if should_include:

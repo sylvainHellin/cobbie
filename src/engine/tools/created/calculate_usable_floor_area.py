@@ -1,13 +1,12 @@
 import ifcopenshell
-import ifcopenshell.geom
-import ifcopenshell.util.shape
+import ifcopenshell.util.element
 
 def calculate_usable_floor_area(ifc_model_path: str) -> float:
     """
     Calculate the total usable floor area from an IFC model.
     
     This function identifies all IfcSlab entities with PredefinedType='FLOOR',
-    calculates their geometric footprint areas (projected on the XY plane), 
+    retrieves their area values from the PSet_Revit_Dimensions property set,
     and returns the sum as the total usable floor area.
     
     Args:
@@ -22,12 +21,13 @@ def calculate_usable_floor_area(ifc_model_path: str) -> float:
         
     Note:
         This function assumes that usable floor area corresponds to IfcSlab entities
-        with PredefinedType='FLOOR' in the IFC model. The area calculation is based
-        on the footprint area (XY plane projection) of these slabs, which represents 
-        the usable floor area.
+        with PredefinedType='FLOOR' in the IFC model. The area values are retrieved
+        from the PSet_Revit_Dimensions property set, which contains area values 
+        calculated by the BIM authoring software (Revit).
         
-        This function uses IfcOpenShell's get_footprint_area utility with Z-axis 
-        projection to calculate the top-down projected area of floor slabs.
+        This approach is more reliable than geometric calculations as it uses the
+        same values that would be displayed in the authoring software.
+        This function is specifically designed for IFC models exported from Revit.
     """
     # Load the IFC model
     try:
@@ -44,23 +44,22 @@ def calculate_usable_floor_area(ifc_model_path: str) -> float:
     if not floor_slabs:
         return 0.0
     
-    # Configure geometry settings
-    settings = ifcopenshell.geom.settings()
-    settings.set(settings.USE_WORLD_COORDS, True)
-    
     total_area = 0.0
     
-    # Calculate footprint area for each floor slab
+    # Calculate total area from property sets
     for slab in floor_slabs:
         try:
-            shape = ifcopenshell.geom.create_shape(settings, slab)
-            geometry = shape.geometry
+            # Get property sets for the slab
+            psets = ifcopenshell.util.element.get_psets(slab)
             
-            # Calculate footprint area using IfcOpenShell utility
-            # This calculates the area projected on the XY plane (Z-axis projection)
-            area = ifcopenshell.util.shape.get_footprint_area(geometry)
-            total_area += area
-            
+            # Try to get area from PSet_Revit_Dimensions
+            if 'PSet_Revit_Dimensions' in psets and 'Area' in psets['PSet_Revit_Dimensions']:
+                area = psets['PSet_Revit_Dimensions']['Area']
+                total_area += area
+            else:
+                # If no area found in PSet_Revit_Dimensions, skip this slab
+                continue
+                
         except Exception as e:
             # Skip slabs that cannot be processed
             continue

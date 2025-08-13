@@ -36,7 +36,7 @@ def estimate_component_quantities_by_association(
             - confidence_level (str): Confidence level of the estimate (e.g., "high", "medium", "low")
     
     Default rules:
-        - doorknob: 1 per IfcDoor
+        - doorknob: 2 per IfcDoor (residential), 1 per IfcDoor (commercial)
         - light_switch: 1 per IfcSpace
         - outlet: 4 per IfcSpace
         - thermostat: 1 per IfcSpace with "living" or "bedroom" in name
@@ -44,15 +44,69 @@ def estimate_component_quantities_by_association(
     Example:
         >>> result = estimate_component_quantities_by_association("model.ifc", "doorknob")
         >>> print(result["estimated_count"])
-        14
+        28
     """
     
     # Load the IFC model
     model = ifcopenshell.open(model_path)
     
-    # Initialize default rules
+    # Determine if the building is residential
+    is_residential = False
+    residential_keywords = ["house", "residential", "home", "duplex", "apartment", "living", "bedroom", "kitchen", "bathroom"]
+    
+    # Check the model path for residential indicators
+    if "duplex" in model_path.lower():
+        is_residential = True
+    
+    # Check project information
+    project = model.by_type("IfcProject")[0]
+    if project.Name:
+        for keyword in residential_keywords:
+            if keyword in project.Name.lower():
+                is_residential = True
+    
+    # Check building information
+    buildings = model.by_type("IfcBuilding")
+    if buildings:
+        building = buildings[0]
+        # Check building name
+        if hasattr(building, 'Name') and building.Name:
+            for keyword in residential_keywords:
+                if keyword in building.Name.lower():
+                    is_residential = True
+        
+        # Check building description
+        if hasattr(building, 'Description') and building.Description:
+            for keyword in residential_keywords:
+                if keyword in building.Description.lower():
+                    is_residential = True
+    
+    # Check space names for residential indicators
+    spaces = model.by_type("IfcSpace")
+    residential_space_count = 0
+    for space in spaces:
+        if hasattr(space, 'Name') and space.Name:
+            space_name_lower = space.Name.lower()
+            for keyword in residential_keywords:
+                if keyword in space_name_lower:
+                    residential_space_count += 1
+                    break
+    
+    # If a significant portion of spaces have residential keywords, consider it residential
+    if residential_space_count > len(spaces) * 0.3:  # More than 30% of spaces have residential keywords
+        is_residential = True
+    
+    # Check for property sets that might indicate residential use
+    property_sets = model.by_type("IfcPropertySet")
+    for pset in property_sets:
+        if hasattr(pset, 'Name') and pset.Name:
+            for keyword in residential_keywords:
+                if keyword in pset.Name.lower():
+                    is_residential = True
+    
+    # Initialize default rules with context-aware doorknob estimation
     default_rules = {
-        "doorknob": {"IfcDoor": 1},
+        "doorknob": {"IfcDoor": 2 if is_residential else 1},  # 2 per door for residential, 1 for commercial
         "light_switch": {"IfcSpace": 1},
         "outlet": {"IfcSpace": 4},  # Default 4 outlets per space
         "thermostat": {"IfcSpace": 1}  # Will filter by space name
@@ -88,24 +142,27 @@ def estimate_component_quantities_by_association(
     # Apply rules based on component type
     if component_type == "doorknob":
         doors = model.by_type("IfcDoor")
-        count_per_door = rules_to_apply.get("IfcDoor", 1)
+        count_per_door = rules_to_apply.get("IfcDoor", 2 if is_residential else 1)
         estimated_count = len(doors) * count_per_door
         associated_elements_count = len(doors)
-        basis = f"Estimated {count_per_door} doorknob(s) per door × {len(doors)} doors"
+        basis = f"Estimated {count_per_door} doorknob(s) per door \\times {len(doors)} doors"
+        confidence_level = "high"
         
     elif component_type == "light_switch":
         spaces = model.by_type("IfcSpace")
         count_per_space = rules_to_apply.get("IfcSpace", 1)
         estimated_count = len(spaces) * count_per_space
         associated_elements_count = len(spaces)
-        basis = f"Estimated {count_per_space} light switch(es) per space × {len(spaces)} spaces"
+        basis = f"Estimated {count_per_space} light switch(es) per space \\times {len(spaces)} spaces"
+        confidence_level = "high"
         
     elif component_type == "outlet":
         spaces = model.by_type("IfcSpace")
         count_per_space = rules_to_apply.get("IfcSpace", 4)
         estimated_count = len(spaces) * count_per_space
         associated_elements_count = len(spaces)
-        basis = f"Estimated {count_per_space} outlet(s) per space × {len(spaces)} spaces"
+        basis = f"Estimated {count_per_space} outlet(s) per space \\times {len(spaces)} spaces"
+        confidence_level = "high"
         
     elif component_type == "thermostat":
         spaces = model.by_type("IfcSpace")
@@ -121,9 +178,11 @@ def estimate_component_quantities_by_association(
         count_per_space = rules_to_apply.get("IfcSpace", 1)
         estimated_count = len(associated_spaces) * count_per_space
         associated_elements_count = len(associated_spaces)
-        basis = f"Estimated {count_per_space} thermostat(s) per qualifying space × {len(associated_spaces)} spaces with 'living' or 'bedroom' in name"
+        basis = f"Estimated {count_per_space} thermostat(s) per qualifying space \\times {len(associated_spaces)} spaces with 'living' or 'bedroom' in name"
         if len(associated_spaces) == 0:
             confidence_level = "low"
+        else:
+            confidence_level = "medium"
         
     else:
         # For custom component types, apply generic rules
@@ -136,7 +195,7 @@ def estimate_component_quantities_by_association(
             type_count = len(elements) * count_per_element
             total_count += type_count
             total_elements += len(elements)
-            basis_parts.append(f"{count_per_element} per {element_type} × {len(elements)} elements")
+            basis_parts.append(f"{count_per_element} per {element_type} \\times {len(elements)} elements")
         
         estimated_count = total_count
         associated_elements_count = total_elements

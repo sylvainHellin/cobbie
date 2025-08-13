@@ -27,7 +27,7 @@ def calculate_insulation_material_volume(element: ifcopenshell.entity_instance, 
     Raises:
         ValueError: If the insulation material is not found in the element's construction
         ValueError: If the thickness of the insulation material cannot be determined
-        ValueError: If geometry cannot be created for the element
+        ValueError: If geometry cannot be created for the element and no fallback is available
         ValueError: If area calculations fail
     """
     # Get the material representation of the element
@@ -100,25 +100,77 @@ def calculate_insulation_material_volume(element: ifcopenshell.entity_instance, 
     
     # Calculate the geometry for area calculations
     settings = ifcopenshell.geom.settings()
+    geometry = None
     try:
         shape = ifcopenshell.geom.create_shape(settings, element)
         geometry = shape.geometry
     except Exception as e:
-        raise ValueError(f"Could not create geometry for element {element.GlobalId}: {str(e)}")
+        # If geometry creation fails, we'll try to get area from properties if available
+        pass
     
     # Calculate the appropriate surface area based on element type
-    try:
-        if element.is_a("IfcWall") or element.is_a("IfcWallStandardCase"):
-            # For walls, calculate the side area (elevation area)
-            area = ifcopenshell.util.shape.get_side_area(geometry, axis="Y")
-        elif element.is_a("IfcSlab"):
-            # For slabs, calculate the footprint area
-            area = ifcopenshell.util.shape.get_footprint_area(geometry, axis="Z")
-        else:
-            # For other elements, calculate total surface area
-            area = ifcopenshell.util.shape.get_area(geometry)
-    except Exception as e:
-        raise ValueError(f"Could not calculate area for element {element.GlobalId}: {str(e)}")
+    area = None
+    if geometry:
+        try:
+            if element.is_a("IfcWall") or element.is_a("IfcWallStandardCase"):
+                # For walls, calculate the side area (elevation area)
+                area = ifcopenshell.util.shape.get_side_area(geometry, axis="Y")
+            elif element.is_a("IfcSlab"):
+                # For slabs, calculate the footprint area
+                area = ifcopenshell.util.shape.get_footprint_area(geometry, axis="Z")
+            elif element.is_a("IfcRoof"):
+                # For roofs, calculate the footprint area
+                area = ifcopenshell.util.shape.get_footprint_area(geometry, axis="Z")
+            else:
+                # For other elements, calculate total surface area
+                area = ifcopenshell.util.shape.get_area(geometry)
+        except Exception as e:
+            # If area calculation from geometry fails, continue to fallback
+            pass
+    
+    # If we still don't have an area, try to get it from properties
+    if area is None:
+        # Try to get area from BaseQuantities
+        for rel in element.IsDefinedBy:
+            if rel.is_a("IfcRelDefinesByProperties"):
+                prop_set = rel.RelatingPropertyDefinition
+                if prop_set.is_a("IfcElementQuantity"):
+                    for quantity in prop_set.Quantities:
+                        if quantity.is_a("IfcQuantityArea") and "Area" in quantity.Name:
+                            area = quantity.AreaValue
+                            break
+                if area is not None:
+                    break
+        
+        # If still no area, try to calculate from dimensions for simple shapes
+        if area is None and geometry is None:
+            # Try to get dimensions from properties
+            length = width = height = None
+            
+            for rel in element.IsDefinedBy:
+                if rel.is_a("IfcRelDefinesByProperties"):
+                    prop_set = rel.RelatingPropertyDefinition
+                    if prop_set.is_a("IfcPropertySet"):
+                        for prop in prop_set.HasProperties:
+                            if prop.is_a("IfcPropertySingleValue"):
+                                if "Length" in prop.Name and prop.NominalValue:
+                                    length = prop.NominalValue.wrappedValue
+                                elif "Width" in prop.Name and prop.NominalValue:
+                                    width = prop.NominalValue.wrappedValue
+                                elif "Height" in prop.Name and prop.NominalValue:
+                                    height = prop.NominalValue.wrappedValue
+            
+            # Calculate area based on element type and available dimensions
+            if element.is_a("IfcWall") and length and height:
+                area = length * height
+            elif element.is_a("IfcSlab") and length and width:
+                area = length * width
+            elif element.is_a("IfcRoof") and length and width:
+                area = length * width
+    
+    # If we still can't determine area, raise an error
+    if area is None:
+        raise ValueError(f"Could not calculate area for element {element.GlobalId}")
     
     # Calculate volume as thickness * area
     try:
