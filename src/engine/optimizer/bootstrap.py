@@ -1,5 +1,5 @@
 import mlflow
-from dspy import LM, BootstrapFewShot
+from dspy import LM, BootstrapFewShot, BootstrapFewShotWithRandomSearch
 
 from src.config import LANGUAGE_MODELS, PATH_COMPILED_MODEL
 from src.engine import IfcAnswerEngine
@@ -10,13 +10,15 @@ def bootstrap_engine(
     engine: IfcAnswerEngine = IfcAnswerEngine(),
     save: bool = True,
 ) -> IfcAnswerEngine:
-    bootstrap_optimizer = BootstrapFewShot(
+    bootstrap_optimizer = BootstrapFewShotWithRandomSearch(
         max_bootstrapped_demos=3,
         max_labeled_demos=2**4,
         metric=metric,
         metric_threshold=0.9,
         max_rounds=3,
         max_errors=5,
+        num_threads=1,
+        num_candidate_programs=4,
     )
 
     teacher_llm = LANGUAGE_MODELS["openrouter-claude"]
@@ -25,15 +27,8 @@ def bootstrap_engine(
         api_key=teacher_llm.api_key,
         max_tokens=2**14,
     )
-    student_llm = LANGUAGE_MODELS["openrouter-gpt-oss-120b"]
-    student_llm = LM(
-        model=student_llm.url,
-        api_key=student_llm.api_key,
-        max_tokens=2**14,
-    )
 
     teacher = IfcAnswerEngine(llm=teacher_llm)
-
     trainset = [qa.to_example() for qa in TRAINSET]
 
     optimized_engine = bootstrap_optimizer.compile(
