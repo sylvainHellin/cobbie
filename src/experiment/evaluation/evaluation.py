@@ -3,16 +3,14 @@ from time import time
 from typing import List, Optional
 
 import mlflow
-import dspy
 from dspy import LM
 from tqdm import tqdm
 
 from src.engine import IfcAnswerEngine
-from src.engine.schemas import QA_Pair, EvaluationResult
+from src.engine.schemas import EvaluationResult, QA_Pair
 from src.engine.util import get_logger
-from src.experiment.validation import metric
 from src.experiment.datasets import DEVSET
-from src.config import PATH_COMPILED_MODEL
+from src.experiment.validation import metric
 
 
 def evaluate(
@@ -21,18 +19,10 @@ def evaluate(
     experiment_name: Optional[str] = "Evaluation",
     start_run: bool = False,
     log_metris: bool = False,
-    load_optimized_engine: bool = False,
+    engine: Optional[IfcAnswerEngine] = None,
 ) -> EvaluationResult:
     """
-    Compute the accuracy of the IfcAnswerEngine with comprehensive error handling and logging.
-
-    Args:
-        llm: The language model to use for evaluation
-        dataset_type: Which dataset to use ("dev" or "train")
-        max_examples: Maximum number of examples to evaluate (-1 for all)
-        experiment_name: MLflow experiment name
-        continue_on_error: If True, continue evaluation even when individual examples fail
-        log_detailed_errors: If True, log full tracebacks for debugging
+    Compute the accuracy of the IfcAnswerEngine.
 
     Returns:
         ValidationResult: Comprehensive evaluation results with error tracking
@@ -52,22 +42,8 @@ def evaluate(
     result = EvaluationResult(llm=llm.model)
 
     # Initialize engine with provided LLM so compiled few-shot engine uses same model
-    engine = IfcAnswerEngine(llm=llm)
-    if load_optimized_engine:
-        try:
-            # Load the compiled engine produced by DSPy
-            engine.load(PATH_COMPILED_MODEL)  # type: ignore[assignment]
-            # Ensure evaluation uses the provided LLM
-            dspy.configure(lm=llm)
-            logger.info("Optimized model loaded")
-        except (
-            KeyError,
-            FileNotFoundError,
-            AttributeError,
-            TypeError,
-            ValueError,
-        ) as e:
-            logger.warning(f"Could not load optimized model: {e}. Using base engine.")
+    if engine is None:
+        engine = IfcAnswerEngine(llm=llm)
 
     # Process examples
     for _, qa_pair in enumerate(tqdm(dataset, desc="Evaluating examples")):
