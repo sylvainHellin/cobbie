@@ -8,7 +8,6 @@ dependencies = [
     "arize-phoenix==8.24.0",
     "chromadb>=1.0.8",
     "dspy>=2.6.23",
-    "duckduckgo-search>=8.0.1",
     "fastapi[standard]>=0.115.9",
     "gradio>=5.29.0",
     "ifcopenshell>=0.8.2",
