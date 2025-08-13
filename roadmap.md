@@ -1,12 +1,8 @@
 # Roadmap
 
 ## Engine
-- Optional: implement checkpoints to recover training run where it stopped
-- Set-up the optimizer and run it
-- implement this `load_optimized_model` for each instance of the engine.
-- TBD: optimize the `TrainingModule` and not just the engine? But on which metric? Or potential optimize the individual agents, using the `status` of the output?
-- Refactor `TrainingModule` -> split between `TrainingModule` (to process one `qa_pair`, and one to do )
-
+- Upgrade dspy to 3.0 -- workout all the breaking changes -- kill the fastapi server first
+- Debug the `optimizer` with the memory leak
 
 ## Experiment
 
