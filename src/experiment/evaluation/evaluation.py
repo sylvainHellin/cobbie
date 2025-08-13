@@ -1,13 +1,13 @@
 from datetime import datetime
 from time import time
-from typing import List, Optional
+from typing import List, Optional, cast
 
 import mlflow
 from dspy import LM
 from tqdm import tqdm
 
 from src.engine import IfcAnswerEngine
-from src.engine.schemas import EvaluationResult, QA_Pair
+from src.engine.schemas import EvaluationResult, QA_Pair, ModuleOutput
 from src.engine.util import get_logger
 from src.experiment.datasets import DEVSET
 from src.experiment.validation import metric
@@ -56,9 +56,12 @@ def evaluate(
 
             # Execute engine
             start = time()
-            engine_output = engine.forward(
-                question=qa_pair.question,
-                path_ifc_model=qa_pair.ifc_model_path,
+            engine_output = cast(
+                ModuleOutput,
+                engine(
+                    question=qa_pair.question,
+                    path_ifc_model=qa_pair.ifc_model_path,
+                ),
             )
             end = time()
             duration = end - start
