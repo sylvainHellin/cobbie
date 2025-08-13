@@ -1,13 +1,14 @@
-import dspy
-from src.config import LANGUAGE_MODELS, LLM
-from datetime import datetime
 import time
-from src.experiment.db import LogRow, insert_new_log
+from datetime import datetime
+
+import dspy
+import mlflow
+
+from src.config import AGENT_CONFIGS, LLM, LOG_LEVEL
 from src.engine.schemas import ModuleOutput, Result
 from src.engine.schemas.answer_similarity import AnswerSimilarity
 from src.engine.util.get_logger import get_logger
-from src.config import LOG_LEVEL
-import mlflow
+from src.experiment.db import LogRow, insert_new_log
 
 
 class AnswerVerifierSignature(dspy.Signature):
@@ -36,8 +37,12 @@ class AnswerVerifier(dspy.Module):
     Compare two answers with each other and compute a similarity score.
     """
 
-    def __init__(self):
+    def __init__(self, config=None):
         super().__init__()
+        # Use provided config or default to AGENT_CONFIGS.answer_verifier
+        self.config = config or AGENT_CONFIGS.answer_verifier
+        # Set up LLM from config
+        self.lm = self.config.llm.get_llm()
         self.classifier = dspy.ChainOfThought(AnswerVerifierSignature)
 
     def forward(
@@ -72,11 +77,13 @@ class AnswerVerifier(dspy.Module):
             )
 
             try:
-                prediction = self.classifier(
-                    question=question,
-                    first_answer=first_answer,
-                    second_answer=second_answer,
-                )
+                # Use dspy context manager to ensure correct LLM is used for this module
+                with dspy.context(lm=self.lm):
+                    prediction = self.classifier(
+                        question=question,
+                        first_answer=first_answer,
+                        second_answer=second_answer,
+                    )
                 module_output.status = "success"
                 module_output.result = Result(
                     similarity_score=prediction.similarity_score,
@@ -106,9 +113,9 @@ def verify_answer(
     question: str,
     first_answer: str,
     second_answer: str,
-    threshold: float,
+    threshold: float | None = None,
     run_id: int = 0,
-    llm_info: LLM = LANGUAGE_MODELS["llama4-scout-cerebras"],
+    llm_info: LLM | None = None,
 ) -> AnswerSimilarity:
     """
     Compare two answers to the same question and compute their similarity.
@@ -126,28 +133,37 @@ def verify_answer(
             - correct (bool): Whether the similarity score meets or exceeds the threshold
             - similarity (float): Similarity score (0-1) between the two answers
     """
-    lm = dspy.LM(model=llm_info.url, api_key=llm_info.api_key)
-    dspy.configure(lm=lm)
+    # Get config and LLM
+    config = AGENT_CONFIGS.answer_verifier
+    if threshold is None:
+        threshold = config.similarity_threshold
+    lm = (
+        config.llm.get_llm()
+        if llm_info is None
+        else dspy.LM(model=llm_info.url, api_key=llm_info.api_key)
+    )
 
     start_time = time.time()
     logger = get_logger("verify_answer")
 
     try:
-        answer_verifier = AnswerVerifier()
-        answer_verification: ModuleOutput = answer_verifier.forward(
-            question=question,
-            first_answer=first_answer,
-            second_answer=second_answer,
-        )
+        answer_verifier = AnswerVerifier(config=config)
+        with dspy.context(lm=lm):
+            answer_verification: ModuleOutput = answer_verifier.forward(
+                question=question,
+                first_answer=first_answer,
+                second_answer=second_answer,
+            )
     except Exception as e:
         logger.error(f"MLflow not available. Exception: {e}")
         # If MLflow is not available, run without it
-        answer_verifier = AnswerVerifier()
-        answer_verification: ModuleOutput = answer_verifier.forward(
-            question=question,
-            first_answer=first_answer,
-            second_answer=second_answer,
-        )
+        answer_verifier = AnswerVerifier(config=config)
+        with dspy.context(lm=lm):
+            answer_verification: ModuleOutput = answer_verifier.forward(
+                question=question,
+                first_answer=first_answer,
+                second_answer=second_answer,
+            )
 
     # Extract similarity score from the result
     if answer_verification.status == "success" and answer_verification.result:

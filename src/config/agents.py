@@ -25,6 +25,7 @@ class LLMConfig(BaseModel):
         # default="openrouter-devstral-medium",
         # default="qwen3-coder",
         default="openrouter-qwen3-coder",
+        # default="openrouter-gpt-oss-120b",
         description="Name of the model from LANGUAGE_MODELS",
     )
     max_tokens: int = Field(default=2**14, description="Maximum tokens for LLM")
@@ -226,6 +227,19 @@ class TrainingPipelineConfig(BaseAgentConfig):
     pass
 
 
+class AnswerVerifierConfig(BaseAgentConfig):
+    """Configuration for AnswerVerifier agent."""
+
+    similarity_threshold: float = Field(
+        default=0.8, description="Similarity threshold for answer verification"
+    )
+    # Override LLM default to be consistent with other agents (use default_factory)
+    llm: LLMConfig = Field(
+        default_factory=lambda: LLMConfig(model_name="openrouter-claude"),
+        description="Language model configuration",
+    )
+
+
 # Global configuration instance
 class AgentConfigs(BaseModel):
     """Main configuration container for all agents."""
@@ -249,6 +263,7 @@ class AgentConfigs(BaseModel):
     training_pipeline: TrainingPipelineConfig = Field(
         default_factory=TrainingPipelineConfig
     )
+    answer_verifier: AnswerVerifierConfig = Field(default_factory=AnswerVerifierConfig)
 
 
 # Global instance - this is what gets imported and used
@@ -279,6 +294,7 @@ def get_config(agent_name: str) -> BaseAgentConfig:
         "tool_optimizer": AGENT_CONFIGS.tool_optimizer,
         "error_analyst": AGENT_CONFIGS.error_analyst,
         "training_module": AGENT_CONFIGS.training_module,
+        "answer_verifier": AGENT_CONFIGS.answer_verifier,
     }
 
     if agent_name not in config_map:
