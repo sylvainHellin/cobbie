@@ -1,4 +1,4 @@
-from typing import Callable, Dict, List, Optional
+from typing import Callable, Dict, List, Optional, cast
 
 import dspy
 import mlflow
@@ -132,13 +132,13 @@ class IfcAnswerEngine(dspy.Module):
             )
             # Start the loop: try to answer the question with existing tool
             try:
-                prediction = self.engine.forward(
+                prediction = self.engine(
                     question=question,
                     path_ifc_model=path_ifc_model,
                 )
                 self.output.status = "success"
                 self.output.error_msg = None
-                self.output.result.answer = prediction.answer
+                self.output.result.answer = getattr(prediction, "answer")
                 self.output.result.need_new_function = False
                 self.iter = self.max_retry
 
@@ -167,8 +167,10 @@ class IfcAnswerEngine(dspy.Module):
 
 
 if __name__ == "__main__":
+    import json
+
     # Test the IfcAnswerEngine
-    ifc_model_path = "/Users/sylvainhellin/GitHub/ifcAnswerEngineV3/src/experiment/bim_models/duplex/arc.ifc"
+    ifc_model_path = "/Users/sylvainhellin/GitHub/4_phd/ifcAnswerEngineV3/src/experiment/bim_models/duplex/arc.ifc"
     question = "What is the height of the living room?"
 
     mlflow.dspy.autolog()  # type: ignore
@@ -180,7 +182,9 @@ if __name__ == "__main__":
 
     # Run the test
     try:
-        output = engine.forward(question=question, path_ifc_model=ifc_model_path)
+        output = cast(
+            ModuleOutput, engine(question=question, path_ifc_model=ifc_model_path)
+        )
         print(output.model_dump_json(indent=2))
     except Exception as e:
         print(f"Exception: \n{e}")
