@@ -135,7 +135,7 @@ LANGUAGE_MODELS["gpt-oss-120b"] = LLM(
     api_key=OPENROUTER_API_KEY,
     name="gpt-oss-120b",
 )
-LANGUAGE_MODELS["gemini-flash-lite"] = LLM(
+LANGUAGE_MODELS["openrouter-gemini-flash-lite"] = LLM(
     url="openrouter/google/gemini-2.5-flash-lite",
     api_key=OPENROUTER_API_KEY,
     name="gemini-flash-lite",
