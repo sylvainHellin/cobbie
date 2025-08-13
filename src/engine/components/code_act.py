@@ -2,6 +2,7 @@ import ast
 from typing import Any, Callable, List, Optional, Type, cast
 
 import dspy
+import mlflow
 from dspy.signatures.signature import Signature, ensure_signature
 from smolagents.local_python_executor import fix_final_answer_code
 from smolagents.utils import parse_code_blobs

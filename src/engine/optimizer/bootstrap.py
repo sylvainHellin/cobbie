@@ -44,10 +44,17 @@ def bootstrap_engine(
 
 
 if __name__ == "__main__":
+    import dspy
+
     mlflow.dspy.autolog(log_evals=True, log_compiles=True)  # type: ignore
     mlflow.set_tracking_uri("http://127.0.0.1:5000")
     mlflow.set_experiment(experiment_name="Optimizer")
 
+    dspy.configure_cache(
+        enable_memory_cache=False,
+        enable_disk_cache=False,
+        enable_litellm_cache=False,
+    )
     with mlflow.start_span(name="BootstrapFewShort"):
         student_llm = LANGUAGE_MODELS["openrouter-gpt-oss-120b"]
         student_llm = LM(
