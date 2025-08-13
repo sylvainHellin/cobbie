@@ -22,9 +22,9 @@ class LLMConfig(BaseModel):
     """Configuration for Language Model."""
 
     model_name: str = Field(
-        # default="openrouter-devstral-medium",
+        default="openrouter-devstral-medium",
         # default="qwen3-coder",
-        default="openrouter-qwen3-coder",
+        # default="openrouter-qwen3-coder",
         # default="openrouter-gpt-oss-120b",
         description="Name of the model from LANGUAGE_MODELS",
     )
