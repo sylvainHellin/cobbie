@@ -100,6 +100,9 @@ LANGUAGE_MODELS["gemma3n"] = LLM(
     url="ollama_chat/gemma3n:e4b",
     name="gemma3n",
 )
+LANGUAGE_MODELS["ollama-qwen3-coder"] = LLM(
+    url="ollama_chat/qwen3-coder", name="ollama-qwen3-coder"
+)
 LANGUAGE_MODELS["devstral-medium"] = LLM(
     url="mistral/devstral-medium-2507",
     api_key=MISTRAL_API_KEY,
