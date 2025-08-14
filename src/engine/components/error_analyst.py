@@ -3,10 +3,10 @@ from typing import Callable, List, Literal, Optional
 import dspy
 import mlflow
 
-from src.config import AGENT_CONFIGS
+from src.config import AGENT_CONFIGS, LLM
 from src.engine.schemas import ModuleOutput, Result
 from src.engine.util import get_logger, get_tools_names
-from .code_act import CodeAct
+from src.engine.components.code_act import CodeAct
 
 
 class ErrorAnalystSignature(dspy.Signature):
@@ -144,32 +144,32 @@ class ErrorAnalyst(dspy.Module):
                     existing_tools=existing_tools,
                 )
 
-                if (
-                    hasattr(prediction, "error_category")
-                    and hasattr(prediction, "error_analysis")
-                    and prediction.error_category
-                    and prediction.error_analysis
+                if hasattr(prediction, "error_category") and hasattr(
+                    prediction, "error_analysis"
                 ):
+                    error_category = getattr(prediction, "error_category")
+                    error_analysis = getattr(prediction, "error_analysis")
+
                     self.logger.info("Error analysis completed successfully")
-                    self.logger.info(f"Error category: {prediction.error_category}")
-                    self.logger.debug(f"Error analysis: {prediction.error_analysis}")
+                    self.logger.info(f"Error category: {error_category}")
+                    self.logger.debug(f"Error analysis: {error_analysis}")
 
                     # Set span outputs
                     span.set_outputs(
                         {
-                            "error_category": prediction.error_category,
-                            "error_analysis": prediction.error_analysis,
+                            "error_category": error_category,
+                            "error_analysis": error_analysis,
                             "status": "success",
                         }
                     )
-                    span.set_attribute("error_category", prediction.error_category)
+                    span.set_attribute("error_category", error_category)
 
                     function_name = getattr(prediction, "tool_name", None)
                     return ModuleOutput(
                         status="success",
                         result=Result(
-                            error_category=prediction.error_category,
-                            error_analysis=prediction.error_analysis,
+                            error_category=error_category,
+                            error_analysis=error_analysis,
                             function_name=function_name,
                         ),
                     )
@@ -201,23 +201,20 @@ class ErrorAnalyst(dspy.Module):
 if __name__ == "__main__":
     import json
 
-    from src.config import LANGUAGE_MODELS
-
     def main(
         chat_history: str,
         question: str,
         provided_answer: str,
         correct_answer: str,
-        lm_name: str = "qwen3-coder",
+        lm_name: str = "gemma3-4b",
+        provider_name: str = "ollama",
     ):
         # configure dspy
-        lm_info = LANGUAGE_MODELS[lm_name]
-        llm = dspy.LM(
-            model=lm_info.url,
-            api_key=lm_info.api_key,
-            max_tokens=5000,
-        )
-        dspy.configure(lm=llm)
+        lm = LLM(
+            model_name=lm_name,
+            provider_name=provider_name,
+        ).get_llm()
+        dspy.configure(lm=lm)
 
         # setup mlflow
         mlflow.dspy.autolog()  # type: ignore
