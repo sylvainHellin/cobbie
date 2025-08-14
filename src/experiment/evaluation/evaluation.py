@@ -114,14 +114,13 @@ def evaluate(
 
 if __name__ == "__main__":
     # Run evaluation with error handling
-    from src.config import LANGUAGE_MODELS
+    from src.config import LLM
 
-    llm = LANGUAGE_MODELS["openrouter-gpt-oss-120b"]
-    llm = LM(
-        model=llm.url,
-        api_key=llm.api_key,
-        max_tokens=2**14,
-    )
+    llm = LLM(
+        model_name="gpt-oss-120b",
+        provider_name="openrouter",
+    ).get_llm()
+
     mlflow.dspy.autolog(log_evals=True)  # type: ignore
     mlflow.set_tracking_uri("http://127.0.0.1:5000")
 

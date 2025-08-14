@@ -273,8 +273,7 @@ if __name__ == "__main__":
     import uuid
 
     import mlflow
-
-    from src.config import LANGUAGE_MODELS
+    from src.config import LLM
 
     # 1. Define a simple tool
     def generate_uuid() -> str:
@@ -291,14 +290,8 @@ if __name__ == "__main__":
         generated_uuid = dspy.OutputField(desc="The newly generated UUID.")
 
     # 3. Configure the language model
-    lm_name = "openrouter-gemini-flash-lite"
-    lm_info = LANGUAGE_MODELS[lm_name]
-    llm = dspy.LM(
-        model=lm_info.url,
-        api_key=lm_info.api_key,
-        max_tokens=2000,
-    )
-    dspy.configure(lm=llm)
+    lm = LLM(model_name="gemini-flash-lite", provider_name="openrouter").get_llm()
+    dspy.configure(lm=lm)
 
     # setup mlflow
     mlflow.dspy.autolog()  # type: ignore

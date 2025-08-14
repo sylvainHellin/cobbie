@@ -14,12 +14,11 @@ from .main import (
     PATH_COMPILED_MODEL,
     MLFLOW_URI,
     IFCOPENSHELL_DOCUMENTATION_OVERVIEW,
-    LANGUAGE_MODELS,
     FUNCTION_BOILERPLATE,
     LOG_LEVEL,
-    LLM,
 )
 from .agents import AGENT_CONFIGS, get_config, update_config
+from .llm import LLM, LLM_REGISTRY
 
 __all__ = [
     # From main config
@@ -35,12 +34,13 @@ __all__ = [
     "PATH_COMPILED_MODEL",
     "MLFLOW_URI",
     "IFCOPENSHELL_DOCUMENTATION_OVERVIEW",
-    "LANGUAGE_MODELS",
     "FUNCTION_BOILERPLATE",
     "LOG_LEVEL",
     # From agents config
     "AGENT_CONFIGS",
     "get_config",
     "update_config",
+    # From llm config
     "LLM",
+    "LLM_REGISTRY",
 ]

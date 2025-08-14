@@ -68,7 +68,7 @@ class TrainingModule(dspy.Module):
         # Set-up the agents (using the default config for each agent)
         self.answer_verifier = AnswerVerifier()
         self.engine = IfcAnswerEngine()
-        if self.config.load_optimized_model:
+        if self.config.load_optimized_module:
             self.engine.load(path=PATH_COMPILED_MODEL)
         self.tool_creator = ToolCreator()
         self.error_analyst = ErrorAnalyst()

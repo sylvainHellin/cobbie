@@ -1,11 +1,12 @@
 from typing import List
-import mlflow
-from dspy import LM, MIPROv2
 
-from src.config import LANGUAGE_MODELS, PATH_COMPILED_MODEL
+import mlflow
+from dspy import MIPROv2
+
+from src.config import PATH_COMPILED_MODEL
 from src.engine import IfcAnswerEngine
-from src.experiment import TRAINSET, metric
 from src.engine.schemas import QA_Pair
+from src.experiment import TRAINSET, metric
 
 optimizer = MIPROv2(
     metric=metric,
@@ -36,17 +37,23 @@ if __name__ == "__main__":
     mlflow.set_tracking_uri("http://127.0.0.1:5000")
     mlflow.set_experiment(experiment_name="Optimizer")
 
-    llm = LANGUAGE_MODELS["qwen3-coder"]
-    llm = LM(
-        model=llm.url,
-        api_key=llm.api_key,
+    # Using the new LLM configuration system
+    from src.config.llm import LLM
+
+    # Create LLM config - you can specify both model and provider
+    llm_config = LLM(
+        model_name="qwen3-coder",
+        provider_name="openrouter",  # or "ollama" for free usage
         max_tokens=2**14,
     )
+
+    # Get the dspy.LM instance
+    llm = llm_config.get_llm()
 
     with mlflow.start_run(run_name="MiproV2") as run:
         engine = IfcAnswerEngine()
 
-        if engine.config.load_optimized_model:
+        if engine.config.load_optimized_module:
             engine.load(path=PATH_COMPILED_MODEL)
 
         mipro_engine_optimizer(

@@ -231,7 +231,7 @@ if __name__ == "__main__":
     """
     import os
 
-    from src.config.agents import AGENT_CONFIGS, LLMConfig
+    from src.config.agents import AGENT_CONFIGS, LLM
     from src.config.main import TEST_IFC_PATH
 
     def main():
@@ -287,7 +287,7 @@ def count_doors(ifc_file_path: str) -> int:
             print("\n📋 Initializing TestAndImprove module...")
 
             # Use a lightweight LLM config for testing
-            test_llm_config = LLMConfig(model_name="qwen3-coder", max_tokens=4096)
+            test_llm_config = LLM(model_name="qwen3-coder", max_tokens=4096)
             test_agent_config = AGENT_CONFIGS.test_and_improve
             test_agent_config.llm = test_llm_config
             test_agent_config.max_iter = 2  # Limit iterations for testing

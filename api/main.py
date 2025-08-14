@@ -18,7 +18,7 @@ project_root = os.path.join(os.path.dirname(__file__), "..")
 sys.path.append(project_root)
 
 from api.models import QuestionRequest, QuestionResponse
-from src.config import LANGUAGE_MODELS, MLFLOW_URI
+from src.config import MLFLOW_URI, LLM
 from src.engine.engine import IfcAnswerEngine
 from src.experiment.db.query_db import get_ifc_models
 
@@ -43,12 +43,8 @@ mlflow.set_experiment("API")
 mlflow.dspy.autolog()  # type: ignore
 
 # Initialize the IFC Answer Engine
-llm = LANGUAGE_MODELS["openrouter-claude"]
-llm = LM(
-    model=llm.url,
-    api_key=llm.api_key,
-    max_tokens=2**14,
-)
+llm = LLM(model_name="claude", provider_name="openrouter").get_llm()
+
 engine = IfcAnswerEngine()
 
 

@@ -1,56 +1,13 @@
 """
 Agent Configuration Module
-
-This module contains all hyperparameters and configuration settings for the various agents
-in the IFC Answer Engine system. It provides a centralized, hierarchical configuration
-structure that eliminates the need to pass numerous parameters through initialization chains.
-
-The configuration is organized by agent type and includes sensible defaults for all parameters.
-Users can override specific values as needed without affecting other components.
 """
 
 from typing import Literal, Optional
 
-import dspy
-from pydantic import BaseModel, Field, model_validator
+from pydantic import BaseModel, Field
 
-from .main import FUNCTION_BOILERPLATE, LANGUAGE_MODELS, LOG_LEVEL
-
-
-# LLM configuration
-class LLMConfig(BaseModel):
-    """Configuration for Language Model."""
-
-    model_name: str = Field(
-        default="openrouter-devstral-medium",
-        # default="qwen3-coder",
-        # default="openrouter-qwen3-coder",
-        # default="openrouter-gpt-oss-120b",
-        description="Name of the model from LANGUAGE_MODELS",
-    )
-    max_tokens: int = Field(default=2**14, description="Maximum tokens for LLM")
-
-    # Derived cost fields populated after initialization from LANGUAGE_MODELS
-    cost_input_token: float = 0
-    cost_output_token: float = 0
-
-    @model_validator(mode="after")
-    def set_costs_from_language_models(self):
-        lm_info = LANGUAGE_MODELS.get(self.model_name)
-        if lm_info is not None:
-            self.cost_input_token = lm_info.cost_input_token or 0
-            self.cost_output_token = lm_info.cost_output_token or 0
-        else:
-            self.cost_input_token = 0
-            self.cost_output_token = 0
-        return self
-
-    def get_llm(self) -> dspy.LM:
-        """Get configured dspy.LM instance."""
-        lm_info = LANGUAGE_MODELS[self.model_name]
-        return dspy.LM(
-            model=lm_info.url, api_key=lm_info.api_key, max_tokens=self.max_tokens
-        )
+from .llm import LLM
+from .main import FUNCTION_BOILERPLATE, LOG_LEVEL
 
 
 # Base configuration classes
@@ -62,12 +19,12 @@ class BaseAgentConfig(BaseModel):
     max_tokens_output: int = Field(
         default=2**12, description="Maximum tokens for output"
     )
-    llm: LLMConfig = Field(
-        default_factory=LLMConfig, description="Language model configuration"
+    llm: LLM = Field(
+        default_factory=LLM, description="Language model to use with this agent."
     )
-    load_optimized_model: bool = Field(
+    load_optimized_module: bool = Field(
         default=True,
-        description="Whether to load the optimized model or not.",
+        description="Whether to load the optimized Module wor not.",
     )
     tracking_uri: str = Field(
         default="http://127.0.0.1:5000", description="MLflow tracking URI"
@@ -234,8 +191,8 @@ class AnswerVerifierConfig(BaseAgentConfig):
         default=0.8, description="Similarity threshold for answer verification"
     )
     # Override LLM default to be consistent with other agents (use default_factory)
-    llm: LLMConfig = Field(
-        default_factory=lambda: LLMConfig(model_name="openrouter-claude"),
+    llm: LLM = Field(
+        default=LLM(model_name="claude-sonnet-4", provider_name="openrouter"),
         description="Language model configuration",
     )
 

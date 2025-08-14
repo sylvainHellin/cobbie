@@ -99,16 +99,9 @@ class IfcAnswerEngineConfig(BaseAgentConfig):
     tool_creator: ToolCreatorConfig = Field(default_factory=ToolCreatorConfig)
 ```
 
-### LLMConfig
+### LLM config
 
-```python
-class LLMConfig(BaseModel):
-    model_name: str = "kimi-k2"  # From LANGUAGE_MODELS
-    max_tokens: int = 2**13
-
-    def get_llm(self) -> dspy.LM:
-        """Get configured dspy.LM instance."""
-```
+see src/config/llm.py
 
 ## Utility Functions
 

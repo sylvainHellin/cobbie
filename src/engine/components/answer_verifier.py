@@ -138,12 +138,7 @@ def verify_answer(
     config = AGENT_CONFIGS.answer_verifier
     if threshold is None:
         threshold = config.similarity_threshold
-    lm = (
-        config.llm.get_llm()
-        if llm_info is None
-        else dspy.LM(model=llm_info.url, api_key=llm_info.api_key)
-    )
-
+    lm = config.llm.get_llm()
     start_time = time.time()
     logger = get_logger("verify_answer")
 
@@ -233,7 +228,6 @@ if __name__ == "__main__":
         first_answer="I could count 123 doors in this house.",
         second_answer="There are 120 doors in this house.",
         threshold=0.8,
-        # llm_info=LANGUAGE_MODELS["qwen3-30b-ollama"],
     )
     print(
         f"Answer is correct: {result.correct}\nSimilarity score: {result.similarity_score}\n"
