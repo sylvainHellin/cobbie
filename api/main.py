@@ -4,21 +4,21 @@ import os
 import sys
 import traceback
 from datetime import datetime
+from functools import partial
 
 import mlflow
-from dspy import LM
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse
 from starlette.concurrency import run_in_threadpool
-from functools import partial
 
 # Add the project root directory to the Python path
 project_root = os.path.join(os.path.dirname(__file__), "..")
 sys.path.append(project_root)
 
 from api.models import QuestionRequest, QuestionResponse
-from src.config import MLFLOW_URI, LLM
+from src.config import LLM, MLFLOW_URI
+from src.config.llm import LLM
 from src.engine.engine import IfcAnswerEngine
 from src.experiment.db.query_db import get_ifc_models
 
@@ -43,9 +43,9 @@ mlflow.set_experiment("API")
 mlflow.dspy.autolog()  # type: ignore
 
 # Initialize the IFC Answer Engine
-llm = LLM(model_name="claude", provider_name="openrouter").get_llm()
+llm = LLM(model_name="qwen3-coder", provider_name="openrouter").get_llm()
 
-engine = IfcAnswerEngine()
+engine = IfcAnswerEngine(llm=llm)
 
 
 @app.get("/")
