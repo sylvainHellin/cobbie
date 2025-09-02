@@ -1,12 +1,12 @@
-from typing import Callable, List, Literal
+from typing import Callable, List, Optional
 
 import dspy
 
-from src.config import AGENT_CONFIGS
+from src.config.agents import AGENT_CONFIGS, ToolCorrectorConfig
 from src.engine.schemas import ModuleOutput, Result
 from src.engine.util import create_code_prefix, get_logger
 
-from .code_act import CodeAct
+from src.engine.components.code_act import CodeAct
 
 
 class ToolCorrectionSignature(dspy.Signature):
@@ -52,11 +52,14 @@ class ToolCorrector(dspy.Module):
     def __init__(
         self,
         tools: List[Callable],
-        config=None,
+        config: Optional[ToolCorrectorConfig] = None,
+        lm: Optional[dspy.LM] = None,
     ):
         super().__init__()
         # Use provided config or default config
         self.config = config or AGENT_CONFIGS.tool_corrector
+        self.lm = lm or self.config.llm.get_llm()
+        dspy.configure(lm=self.lm)
 
         self.tools = tools
         self.max_iters = self.config.max_iters
@@ -88,7 +91,7 @@ class ToolCorrector(dspy.Module):
         self.agent._update_code_prefix(code_prefix=code_prefix)
 
         try:
-            output = self.agent(
+            prediction = self.agent(
                 function_description=function_description,
                 function_name=function_name,
                 path_ifc_model=path_ifc_model,
@@ -96,17 +99,17 @@ class ToolCorrector(dspy.Module):
                 detailed_function_assessment=detailed_function_assessment,
             )
 
-            if output.new_function_implementation:
+            new_function_implementation = getattr(
+                prediction, "new_function_implementation", None
+            )
+
+            if new_function_implementation:
                 self.logger.info(
                     f"ToolCorrector result: success - function '{function_name}' updated successfully"
                 )
-                self.logger.debug(
-                    f"New implementation: {output.new_function_implementation}"
-                )
+                self.logger.debug(f"New implementation: {new_function_implementation}")
                 return ModuleOutput(
-                    result=Result(
-                        function_implementation=output.new_function_implementation
-                    ),
+                    result=Result(function_implementation=new_function_implementation),
                     status="success",
                 )
             else:
@@ -124,11 +127,9 @@ class ToolCorrector(dspy.Module):
 
 
 if __name__ == "__main__":
-    import json
-
     import mlflow
 
-    from src.config import LANGUAGE_MODELS, TEST_IFC_PATH
+    from src.config import TEST_IFC_PATH
     from src.engine.tools.primordial import (
         query_ifcopenshell_documentation,
         web_search,
@@ -139,18 +140,8 @@ if __name__ == "__main__":
         function_name: str,
         current_function_implementation: str,
         detailed_function_assessment: str,
-        lm_name: str = "llama4-maverick-groq",
-        log_level: Literal["DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"] = "DEBUG",
+        lm=None,
     ):
-        # configure dspy
-        lm_info = LANGUAGE_MODELS[lm_name]
-        llm = dspy.LM(
-            model=lm_info.url,
-            api_key=lm_info.api_key,
-            max_tokens=5000,
-        )
-        dspy.configure(lm=llm)
-
         # setup mlflow
         mlflow.dspy.autolog()  # type: ignore
         mlflow.set_tracking_uri("http://127.0.0.1:5000")
@@ -162,10 +153,11 @@ if __name__ == "__main__":
         # setup the tool corrector
         tool_corrector = ToolCorrector(
             tools=primordial_tools,
+            lm=lm,
         )
 
         # correct the tool
-        result = tool_corrector.forward(
+        result = tool_corrector(
             function_description=function_description,
             function_name=function_name,
             path_ifc_model=TEST_IFC_PATH,
@@ -173,7 +165,7 @@ if __name__ == "__main__":
             detailed_function_assessment=detailed_function_assessment,
         )
 
-        print(f"Correction result: {json.dumps(result.model_dump(), indent=2)}")
+        print(f"Correction result: {result}")
 
     ##########################################
     # Test data - using similar example as in tool_assessor.py
@@ -191,6 +183,5 @@ if __name__ == "__main__":
         function_name=function_name,
         current_function_implementation=current_function_implementation,
         detailed_function_assessment=detailed_function_assessment,
-        log_level="INFO",
-        lm_name="gemini-flash",
+        # lm="gemini-flash",
     )
