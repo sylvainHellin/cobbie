@@ -273,7 +273,7 @@ class ToolDebugger(dspy.Module):
                             f"Iteration {self.iter}: Correcting the function based on assessment"
                         )
 
-                        output_tool_corrector = self.tool_corrector.forward(
+                        prediction = self.tool_corrector(
                             function_description=function_requirements,
                             function_name=function_name,
                             path_ifc_model=path_ifc_model,
@@ -281,9 +281,12 @@ class ToolDebugger(dspy.Module):
                             detailed_function_assessment=current_assessment,
                         )
 
-                        if output_tool_corrector.status == "error":
+                        status = getattr(prediction, "status", None)
+                        error_msg = getattr(prediction, "error_msg", None)
+
+                        if status == "error":
                             error_msg = (
-                                output_tool_corrector.error_msg
+                                error_msg
                                 or f"ToolCorrector failed during iteration {self.iter}."
                             )
                             self.logger.error(error_msg)
@@ -291,13 +294,20 @@ class ToolDebugger(dspy.Module):
                             continue
                         else:
                             current_function_implementation = (
-                                output_tool_corrector.result.function_implementation
-                                or ""
+                                result.function_implementation
+                                if (result := getattr(prediction, "result", None))
+                                else None
                             )
-                            self.logger.info("✓ Function corrected")
-                            self.logger.debug(
-                                f"Corrected function implementation:\n{current_function_implementation}"
-                            )
+                            if current_function_implementation is None:
+                                output.status = "error"
+                                output.error_msg = "Could not extract the current function implementation from the output."
+                                self.logger.error(output.error_msg)
+                                continue
+                            else:
+                                self.logger.info("✓ Function corrected")
+                                self.logger.debug(
+                                    f"Corrected function implementation:\n{current_function_implementation}"
+                                )
 
                     # Step 2.2: Create enhanced assessor with dynamic tool
                     self.logger.info("Assessing the corrected code.")
@@ -438,8 +448,6 @@ class ToolDebugger(dspy.Module):
 
 
 if __name__ == "__main__":
-    import json
-
     from src.config import TEST_IFC_PATH
 
     def main(
@@ -456,14 +464,14 @@ if __name__ == "__main__":
         tool_debugger = ToolDebugger()
 
         # debug the tool
-        result = tool_debugger.forward(
+        result = tool_debugger(
             function_name=function_name,
             faulty_function_implementation=faulty_function_implementation,
             initial_assessment=initial_assessment,
             path_ifc_model=TEST_IFC_PATH,
         )
 
-        print(f"Tool debugging result: {json.dumps(result.model_dump(), indent=2)}")
+        print(f"Tool debugging result: {result}")
 
         ##########################################
 
