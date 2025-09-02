@@ -310,9 +310,9 @@ LLM_REGISTRY = LLMRegistry()
 class LLM(BaseModel):
     """LLM configuration for agents."""
 
-    model_name: str = Field(default="devstral-medium", description="Name of the model")
+    model_name: str = Field(default="qwen3-coder", description="Name of the model")
     provider_name: str = Field(
-        default="mistral", description="Provider to use (auto-selected if None)"
+        default="openrouter", description="Provider to use (auto-selected if None)"
     )
     max_tokens: int = Field(default=2**14, description="Maximum tokens for LLM")
 

@@ -1,8 +1,8 @@
-from typing import Callable, List, Literal
+from typing import Callable, List, Literal, Optional
 
 import dspy
 
-from src.config import AGENT_CONFIGS
+from src.config.agents import ToolAssessorConfig, AGENT_CONFIGS
 from src.engine.components.code_act import CodeAct
 from src.engine.schemas import ModuleOutput, Result
 from src.engine.util import (
@@ -45,11 +45,14 @@ class ToolAssessor(dspy.Module):
     def __init__(
         self,
         tools: List[Callable],
-        config=None,
+        config: Optional[ToolAssessorConfig] = None,
+        lm: Optional[dspy.LM] = None,
     ):
         super().__init__()
         # Use provided config or default config
         self.config = config or AGENT_CONFIGS.tool_assessor
+        self.lm = lm or self.config.llm.get_llm()
+        dspy.configure(lm=self.lm)
 
         # Combine base tools with the generated tool
         self.tools = tools
@@ -80,21 +83,23 @@ class ToolAssessor(dspy.Module):
         self.agent._update_code_prefix(code_prefix=code_prefix)
 
         try:
-            output = self.agent(
+            prediction = self.agent(
                 function_name=function_name,
                 function_requirements=function_requirements,
                 path_ifc_model=path_ifc_model,
             )
+            assessment_status = getattr(prediction, "assessment_status", None)
+            assessment_details = getattr(prediction, "assessment_details", None)
 
-            if output.assessment_status and output.assessment_details:
+            if assessment_status and assessment_details:
                 self.logger.info(
-                    f"ToolAssessor result: {output.assessment_status} - assessment completed for function '{function_name}'"
+                    f"ToolAssessor result: {assessment_status} - assessment completed for function '{function_name}'"
                 )
-                self.logger.debug(f"Assessment details: \n{output.assessment_details}")
+                self.logger.debug(f"Assessment details: \n{assessment_details}")
                 return ModuleOutput(
                     result=Result(
-                        assessment_status=output.assessment_status,
-                        assessment_details=output.assessment_details,
+                        assessment_status=assessment_status,
+                        assessment_details=assessment_details,
                     ),
                     status="success",
                 )
@@ -114,7 +119,7 @@ if __name__ == "__main__":
 
     import mlflow
 
-    from src.config import LANGUAGE_MODELS, TEST_IFC_PATH
+    from src.config import TEST_IFC_PATH
     from src.engine.tools.primordial import (
         query_ifcopenshell_documentation,
         web_search,
@@ -124,18 +129,7 @@ if __name__ == "__main__":
         function_requirements: str,
         function_name: str,
         python_code: str,
-        lm_name: str = "llama4-maverick-groq",
-        log_level: Literal["DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"] = "DEBUG",
     ):
-        # configure dspy
-        lm_info = LANGUAGE_MODELS[lm_name]
-        llm = dspy.LM(
-            model=lm_info.url,
-            api_key=lm_info.api_key,
-            max_tokens=5000,
-        )
-        dspy.configure(lm=llm)
-
         # setup mlflow
         mlflow.dspy.autolog()  # type: ignore
         mlflow.set_tracking_uri("http://127.0.0.1:5000")
@@ -162,13 +156,12 @@ if __name__ == "__main__":
         )
 
         # assess the tool
-        result = tool_assessor.forward(
+        result = tool_assessor(
             function_name=function_name,
             function_requirements=function_requirements,
             path_ifc_model=TEST_IFC_PATH,
         )
-
-        print(f"Assessment result: {json.dumps(result.model_dump(), indent=2)}")
+        print(f"Result:\n{result}")
 
     ##########################################
     function_requirements = "To accurately determine the width of the emergency escape routes, we need a function that can identify which doors are designated as emergency exits based on their properties or other criteria. The function should be able to query the IFC model for doors with specific properties or classifications that indicate they are emergency exits."
@@ -211,7 +204,6 @@ if __name__ == "__main__":
 
             for door in doors:
                 is_emergency_exit = False
-                # Iterate through relationships to find property sets
                 for rel_def in door.IsDefinedBy:
                     if rel_def.is_a('IfcRelDefinesByProperties'):
                         property_set = rel_def.RelatingPropertyDefinition
@@ -242,6 +234,4 @@ if __name__ == "__main__":
         function_requirements=function_requirements,
         function_name=function_name,
         python_code=python_code,
-        log_level="INFO",
-        lm_name="gemini-flash",
     )
