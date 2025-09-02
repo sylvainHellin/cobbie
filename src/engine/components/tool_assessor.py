@@ -2,7 +2,7 @@ from typing import Callable, List, Literal, Optional
 
 import dspy
 
-from src.config.agents import ToolAssessorConfig, AGENT_CONFIGS
+from src.config.agents import AGENT_CONFIGS, ToolAssessorConfig
 from src.engine.components.code_act import CodeAct
 from src.engine.schemas import ModuleOutput, Result
 from src.engine.util import (
@@ -115,8 +115,6 @@ class ToolAssessor(dspy.Module):
 
 
 if __name__ == "__main__":
-    import json
-
     import mlflow
 
     from src.config import TEST_IFC_PATH
