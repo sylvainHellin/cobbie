@@ -1,11 +1,9 @@
-from typing import Callable, Dict
+from typing import Callable, Dict, cast, Optional
 
 import dspy
 import mlflow
 
-from src.config import (
-    AGENT_CONFIGS,
-)
+from src.config.agents import AGENT_CONFIGS, ToolDebuggerConfig
 from src.engine.components.tool_assessor import ToolAssessor
 from src.engine.components.tool_corrector import ToolCorrector
 from src.engine.schemas.module_output import ModuleOutput
@@ -27,14 +25,15 @@ class ToolDebugger(dspy.Module):
             "web_search": web_search,
             "query_ifcopenshell_documentation": query_ifcopenshell_documentation,
         },
-        config=None,
+        config: Optional[ToolDebuggerConfig] = None,
+        lm: Optional[dspy.LM] = None,
     ):
         super().__init__()
         # Use provided config or default config
         self.config = config or AGENT_CONFIGS.tool_debugger
 
         # Use provided LLM or get from config
-        self.lm = self.config.llm.get_llm()
+        self.lm = lm or self.config.llm.get_llm()
         dspy.configure(lm=self.lm)
         self.log_level = self.config.log_level
         self.logger = get_logger(name="ToolDebugger", log_level=self.log_level)
@@ -341,10 +340,13 @@ class ToolDebugger(dspy.Module):
                         try:
                             self.logger.info("Starting the tool assessment.")
 
-                            output_tool_assessor = tool_assessor.forward(
+                            output_tool_assessor = tool_assessor(
                                 function_name=function_name,
                                 function_requirements=function_requirements,
                                 path_ifc_model=path_ifc_model,
+                            )
+                            output_tool_assessor = cast(
+                                ModuleOutput, output_tool_assessor
                             )
                             self.logger.debug(
                                 f"✓ Assessment completed: {output_tool_assessor.result.assessment_status}"

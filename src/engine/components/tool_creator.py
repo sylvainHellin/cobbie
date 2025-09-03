@@ -1,21 +1,21 @@
-from typing import Callable, List
 import re
+from typing import Callable, List, Optional, cast
 
 import dspy
 import mlflow
 
-from src.config import (
+from src.config.agents import (
     AGENT_CONFIGS,
+    ToolCreatorConfig,
 )
-from src.engine.components import CodeAct
+from src.engine.components.code_act import CodeAct
+from src.engine.components.test_and_improve import TestAndImprove
 from src.engine.schemas.module_output import ModuleOutput
 from src.engine.tools.primordial import (
     query_ifcopenshell_documentation,
     web_search,
 )
 from src.engine.util import get_logger
-
-from .test_and_improve import TestAndImprove
 
 
 class SignatureToolCreator(dspy.Signature):
@@ -55,15 +55,16 @@ class ToolCreator(dspy.Module):
             query_ifcopenshell_documentation,
             web_search,
         ],
-        config=None,
+        config: Optional[ToolCreatorConfig] = None,
+        lm: Optional[dspy.LM] = None,
     ):
         super().__init__()
         # Use provided config or default config
         self.config = config or AGENT_CONFIGS.tool_creator
+        self.lm = lm or self.config.llm.get_llm()
         self.tools = tools
 
         # Use provided LLM or get from config
-        self.lm = self.config.llm.get_llm()
         dspy.configure(lm=self.lm)
         self.log_level = self.config.log_level
         self.logger = get_logger(name="ToolCreator", log_level=self.log_level)
@@ -127,6 +128,7 @@ class ToolCreator(dspy.Module):
                     "function_requirements": function_requirements,
                 }
             )
+            creator_span.set_attribute("llm", self.lm)
 
             self.logger.info(f"Starting the creation of the tool: {function_name}")
 
@@ -143,20 +145,18 @@ class ToolCreator(dspy.Module):
                 )
                 try:
                     self.logger.info("Creating initial function")
-                    prediction = self.tool_creator.forward(
+                    prediction = self.tool_creator(
                         function_requirements=function_requirements,
                         function_name=function_name,
                         path_ifc_model=path_ifc_model,
                         function_boilerplate=self.function_boilerplate,
                     )
+                    function_implementation = getattr(
+                        prediction, "function_implementation", None
+                    )
 
-                    if (
-                        hasattr(prediction, "function_implementation")
-                        and prediction.function_implementation
-                    ):
-                        output.result.function_implementation = (
-                            prediction.function_implementation
-                        )
+                    if function_implementation is not None:
+                        output.result.function_implementation = function_implementation
                     else:
                         output.error_msg = (
                             f"No valid code generated for function: {function_name}"
@@ -183,12 +183,13 @@ class ToolCreator(dspy.Module):
                     output.result.function_implementation
                 )
 
-                output = self.test_and_improve.forward(
+                prediction_test_and_improve = self.test_and_improve(
                     function_implementation=output.result.function_implementation,
                     function_requirements=function_requirements,
                     function_name=function_name,
                     path_ifc_model=path_ifc_model,
                 )
+                output = cast(ModuleOutput, prediction_test_and_improve)
 
             creator_span.set_outputs(
                 {
@@ -202,8 +203,6 @@ class ToolCreator(dspy.Module):
 
 
 if __name__ == "__main__":
-    import json
-
     from src.config import TEST_IFC_PATH
 
     def main(
@@ -219,13 +218,13 @@ if __name__ == "__main__":
         tool_creator = ToolCreator()
 
         # create the tool
-        result = tool_creator.forward(
+        result = tool_creator(
             function_requirements=function_requirements,
             function_name=function_name,
             path_ifc_model=TEST_IFC_PATH,
         )
 
-        print(f"Tool creation result: {json.dumps(result.model_dump(), indent=2)}")
+        print(f"Tool creation result: {result}")
 
     ##########################################
     # Test data - creating a simple IFC analysis function
