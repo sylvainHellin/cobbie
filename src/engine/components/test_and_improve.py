@@ -1,14 +1,15 @@
-from typing import Callable, Dict
+from typing import Callable, Dict, Optional
 
 import dspy
 import mlflow
 
-from src.config import (
+from src.config.agents import (
     AGENT_CONFIGS,
+    TestAndImproveConfig,
 )
 from src.engine.components.tool_assessor import ToolAssessor
 from src.engine.components.tool_corrector import ToolCorrector
-from src.engine.schemas.module_output import ModuleOutput
+from src.engine.schemas import ModuleOutput, Result
 from src.engine.tools.primordial import (
     query_ifcopenshell_documentation,
     web_search,
@@ -23,15 +24,16 @@ class TestAndImprove(dspy.Module):
             "web_search": web_search,
             "query_ifcopenshell_documentation": query_ifcopenshell_documentation,
         },
-        config=None,
+        config: Optional[TestAndImproveConfig] = None,
+        lm: Optional[dspy.LM] = None,
     ):
         super().__init__()
 
         # Use provided config or default config
         self.config = config or AGENT_CONFIGS.test_and_improve
+        self.lm = lm or self.config.llm.get_llm()
 
         # Use provided LLM or get from config
-        self.lm = self.config.llm.get_llm()
         dspy.configure(lm=self.lm)
         self.log_level = self.config.log_level
         self.logger = get_logger(name="TestAndImprove", log_level=self.log_level)
@@ -141,33 +143,36 @@ class TestAndImprove(dspy.Module):
                         try:
                             self.logger.info("Starting the tool assessment.")
 
-                            output_tool_assessor = self.tool_assessor.forward(
+                            prediction_tool_assessor = self.tool_assessor(
                                 function_name=function_name,
                                 function_requirements=function_requirements,
                                 path_ifc_model=path_ifc_model,
                             )
-                            self.logger.debug(
-                                f"✓ Assessment completed: {output_tool_assessor.result.assessment_status}"
+                            assessment_result: Result = getattr(
+                                prediction_tool_assessor, "result", Result()
                             )
                             self.logger.debug(
-                                f"Assessment details: {output_tool_assessor.result.assessment_details}"
+                                f"✓ Assessment completed: {assessment_result.assessment_status}"
+                            )
+                            self.logger.debug(
+                                f"Assessment details: {assessment_result.assessment_details}"
                             )
                         except Exception as e:
                             self.logger.error(f"✗ Assessment failed: {str(e)}")
                             continue
 
                     # If the assessment is good, update the ouput and exit the loop
-                    if output_tool_assessor.result.assessment_status == "ok":
+                    if assessment_result.assessment_status == "ok":
                         self.logger.info(
                             f"🎉 Function passed assessment after {self.iter} iterations!"
                         )
                         output.result.function_implementation = function_implementation
                         output.status = "success"
                         output.result.assessment_status = (
-                            output_tool_assessor.result.assessment_status
+                            assessment_result.assessment_status
                         )
                         output.result.assessment_details = (
-                            output_tool_assessor.result.assessment_details
+                            assessment_result.assessment_details
                         )
                         break
 
@@ -179,22 +184,27 @@ class TestAndImprove(dspy.Module):
                         ):
                             self.logger.info("Starting the ToolCorrector")
 
-                            output_tool_corrector = self.tool_corrector.forward(
+                            prediction_tool_corrector = self.tool_corrector(
                                 function_description=function_requirements,
                                 function_name=function_name,
                                 path_ifc_model=path_ifc_model,
                                 current_function_implementation=function_implementation,
-                                detailed_function_assessment=output_tool_assessor.result.assessment_details
+                                detailed_function_assessment=assessment_result.assessment_details
                                 or "No assessment available.",
                             )
+                            status_tool_corrector = getattr(
+                                prediction_tool_corrector, "status", "error"
+                            )
 
-                            if output_tool_corrector.status == "error":
+                            if status_tool_corrector == "error":
                                 self.logger.error("✗ Correction failed.")
                                 continue
                             else:
+                                result_tool_corrector: Result = getattr(
+                                    prediction_tool_corrector, "result", Result()
+                                )
                                 function_implementation = (
-                                    output_tool_corrector.result.function_implementation
-                                    or ""
+                                    result_tool_corrector.function_implementation or ""
                                 )
                                 self.logger.info("✓ Function corrected")
                                 self.logger.debug(
@@ -223,6 +233,8 @@ class TestAndImprove(dspy.Module):
 
 
 if __name__ == "__main__":
+    from typing import cast
+
     """
     Test module for TestAndImprove component.
 
@@ -303,39 +315,40 @@ def count_doors(ifc_file_path: str) -> int:
             print("🏗️  Initial implementation has intentional bugs for testing")
 
             print("\n🚀 Starting test and improvement process...")
-            result = test_and_improve.forward(
+            output = test_and_improve(
                 function_requirements=test_config["function_requirements"],
                 function_name=test_config["function_name"],
                 path_ifc_model=test_config["path_ifc_model"],
                 function_implementation=test_config["function_implementation"],
             )
+            output = cast(ModuleOutput, output)
 
             # Analyze results
             print("\n" + "=" * 60)
             print("TEST RESULTS")
             print("=" * 60)
 
-            print(f"Status: {result.status}")
-            if result.error_msg:
-                print(f"Error: {result.error_msg}")
+            print(f"Status: {output.status}")
+            if output.error_msg:
+                print(f"Error: {output.error_msg}")
 
-            if hasattr(result.result, "assessment_status"):
-                print(f"Assessment Status: {result.result.assessment_status}")
+            if hasattr(output.result, "assessment_status"):
+                print(f"Assessment Status: {output.result.assessment_status}")
 
-            if hasattr(result.result, "assessment_details"):
-                print(f"Assessment Details: {result.result.assessment_details}")
+            if hasattr(output.result, "assessment_details"):
+                print(f"Assessment Details: {output.result.assessment_details}")
 
             if (
-                hasattr(result.result, "function_implementation")
-                and result.result.function_implementation
+                hasattr(output.result, "function_implementation")
+                and output.result.function_implementation
             ):
                 print("\nImproved Function Implementation:")
                 print("-" * 40)
-                print(result.result.function_implementation)
+                print(output.result.function_implementation)
                 print("-" * 40)
 
             # Test success criteria
-            if result.status == "success":
+            if output.status == "success":
                 print(
                     "\n✅ TEST PASSED: Function was successfully tested and improved!"
                 )
