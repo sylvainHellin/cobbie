@@ -1,6 +1,5 @@
 import time
 from datetime import datetime
-from typing import cast
 
 import dspy
 import mlflow
@@ -140,36 +139,22 @@ def verify_answer(
         threshold = config.similarity_threshold
     lm = config.llm.get_llm()
     start_time = time.time()
-    logger = get_logger("verify_answer")
 
-    try:
-        answer_verifier = AnswerVerifier(config=config)
-        with dspy.context(lm=lm):
-            answer_verification: ModuleOutput = cast(
-                ModuleOutput,
-                answer_verifier(
-                    question=question,
-                    first_answer=first_answer,
-                    second_answer=second_answer,
-                ),
-            )
-    except Exception as e:
-        logger.error(f"MLflow not available. Exception: {e}")
-        # If MLflow is not available, run without it
-        answer_verifier = AnswerVerifier(config=config)
-        with dspy.context(lm=lm):
-            answer_verification: ModuleOutput = answer_verifier.forward(
-                question=question,
-                first_answer=first_answer,
-                second_answer=second_answer,
-            )
+    answer_verifier = AnswerVerifier(config=config)
+    with dspy.context(lm=lm):
+        prediction = answer_verifier(
+            question=question,
+            first_answer=first_answer,
+            second_answer=second_answer,
+        )
 
     # Extract similarity score from the result
-    if answer_verification.status == "success" and answer_verification.result:
-        similarity_score = getattr(answer_verification.result, "similarity_score", 0.0)
-        reasoning = getattr(
-            answer_verification.result, "reasoning", "No reasoning trace available."
-        )
+    status = getattr(prediction, "status", "error")
+    result: Result = getattr(prediction, "result", Result())
+
+    if status == "success" and result:
+        similarity_score = getattr(result, "similarity_score", 0.0)
+        reasoning = getattr(result, "reasoning", "No reasoning trace available.")
 
         # Determine if answers are correct based on threshold
         correct = similarity_score >= threshold
@@ -209,7 +194,10 @@ def verify_answer(
             reasoning=reasoning,
         )
     else:
-        return AnswerSimilarity(status="error", error_msg=answer_verification.error_msg)
+        return AnswerSimilarity(
+            status="error",
+            error_msg=getattr(prediction, "error_msg", "No error msg available."),
+        )
 
 
 if __name__ == "__main__":

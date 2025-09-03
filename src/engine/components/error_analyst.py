@@ -3,10 +3,10 @@ from typing import Callable, List, Literal, Optional
 import dspy
 import mlflow
 
-from src.config import AGENT_CONFIGS, LLM
+from src.config.agents import AGENT_CONFIGS, ErrorAnalystConfig
+from src.engine.components.code_act import CodeAct
 from src.engine.schemas import ModuleOutput, Result
 from src.engine.util import get_logger, get_tools_names
-from src.engine.components.code_act import CodeAct
 
 
 class ErrorAnalystSignature(dspy.Signature):
@@ -80,11 +80,14 @@ class ErrorAnalyst(dspy.Module):
     def __init__(
         self,
         tools: Optional[List[Callable]] = None,
-        config=None,
+        config: Optional[ErrorAnalystConfig] = None,
+        lm: Optional[dspy.LM] = None,
     ):
         super().__init__()
         # Use provided config or default config
         self.config = config or AGENT_CONFIGS.error_analyst
+        self.lm = lm or self.config.llm.get_llm()
+        dspy.configure(lm=self.lm)
 
         self.tools = tools or []
         self.max_iters = self.config.max_iters
@@ -199,23 +202,13 @@ class ErrorAnalyst(dspy.Module):
 
 
 if __name__ == "__main__":
-    import json
 
     def main(
         chat_history: str,
         question: str,
         provided_answer: str,
         correct_answer: str,
-        lm_name: str = "gemma3-4b",
-        provider_name: str = "ollama",
     ):
-        # configure dspy
-        lm = LLM(
-            model_name=lm_name,
-            provider_name=provider_name,
-        ).get_llm()
-        dspy.configure(lm=lm)
-
         # setup mlflow
         mlflow.dspy.autolog()  # type: ignore
         mlflow.set_tracking_uri("http://127.0.0.1:5000")
@@ -225,14 +218,14 @@ if __name__ == "__main__":
         error_analyst = ErrorAnalyst()
 
         # analyze the error
-        result = error_analyst.forward(
+        result = error_analyst(
             chat_history=chat_history,
             question=question,
             provided_answer=provided_answer,
             correct_answer=correct_answer,
         )
 
-        print(f"Error analysis result: {json.dumps(result.model_dump(), indent=2)}")
+        print(f"Error analysis result: {result}")
 
     ##########################################
     # Example usage with sample error scenario
