@@ -2,7 +2,7 @@ import dspy
 import mlflow
 from typing import Optional
 
-from src.config import AGENT_CONFIGS
+from src.config.agents import AGENT_CONFIGS, ToolIdentifierConfig
 from src.engine.schemas import ModuleOutput, Result
 from src.engine.util import get_logger, get_tools_description
 
@@ -55,18 +55,23 @@ class ToolIdentifier(dspy.Module):
 
     def __init__(
         self,
-        config=None,
+        config: Optional[ToolIdentifierConfig] = None,
+        lm: Optional[dspy.LM] = None,
     ):
         super().__init__()
         # Use provided config or default config
         self.config = config or AGENT_CONFIGS.function_identifier
+        self.lm = lm or self.config.llm.get_llm()
+        dspy.configure(lm=self.lm)
 
-        self.predictor = dspy.ChainOfThought(ToolIdentifierSignature)
+        self.tool_identifier = dspy.ChainOfThought(ToolIdentifierSignature)
         self.log_level = self.config.log_level
         self.logger = get_logger(name="FunctionIdentifier", log_level=self.log_level)
 
     def forward(
-        self, chat_history: str, available_functions: Optional[str] = None
+        self,
+        chat_history: str,
+        available_functions: Optional[str] = None,
     ) -> ModuleOutput:
         """
         Analyze a chat history to identify potentially useful new Python functions.
@@ -99,28 +104,34 @@ class ToolIdentifier(dspy.Module):
                     else get_tools_description()
                 )
 
-                prediction = self.predictor(
+                prediction = self.tool_identifier(
                     chat_history=chat_history,
                     available_functions=available_functions,
                 )
 
+                # Extract fields from the prediction if available
+                new_function_identified = getattr(
+                    prediction, "new_function_identified", False
+                )
+                function_name = getattr(prediction, "function_name", None)
+                function_requirements = getattr(
+                    prediction, "function_requirements", None
+                )
+                reasoning = getattr(prediction, "reasoning", None)
+
                 self.logger.info(
-                    f"Function identification completed. New function identified: {prediction.new_function_identified}"
+                    f"Function identification completed. New function identified: {new_function_identified}"
                 )
 
-                if prediction.new_function_identified:
-                    self.logger.info(
-                        f"Suggested function name: {prediction.function_name}"
-                    )
-                    self.logger.debug(
-                        f"Function requirements: {prediction.function_requirements}"
-                    )
+                if new_function_identified:
+                    self.logger.info(f"Suggested function name: {function_name}")
+                    self.logger.debug(f"Function requirements: {function_requirements}")
 
                 output.result = Result(
-                    reasoning=prediction.reasoning,
-                    need_new_function=prediction.new_function_identified,
-                    function_name=prediction.function_name,
-                    function_requirements=prediction.function_requirements,
+                    reasoning=reasoning,
+                    need_new_function=new_function_identified,
+                    function_name=function_name,
+                    function_requirements=function_requirements,
                 )
                 output.status = "success"
 
@@ -137,23 +148,11 @@ class ToolIdentifier(dspy.Module):
 
 
 if __name__ == "__main__":
-    import json
-
-    from src.config import LANGUAGE_MODELS
 
     def main(
         chat_history: str,
         lm_name: str = "qwen3-coder",
     ):
-        # configure dspy
-        lm_info = LANGUAGE_MODELS[lm_name]
-        llm = dspy.LM(
-            model=lm_info.url,
-            api_key=lm_info.api_key,
-            max_tokens=5000,
-        )
-        dspy.configure(lm=llm)
-
         # setup mlflow
         mlflow.dspy.autolog()  # type: ignore
         mlflow.set_tracking_uri("http://127.0.0.1:5000")
@@ -165,9 +164,7 @@ if __name__ == "__main__":
         # analyze the chat history
         result = function_identifier.forward(chat_history=chat_history)
 
-        print(
-            f"Function identification result: {json.dumps(result.model_dump(), indent=2)}"
-        )
+        print(f"Function identification result: {result}")
 
     ##########################################
     # Test data - example chat history
