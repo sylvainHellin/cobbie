@@ -1,8 +1,8 @@
 import dspy
 import mlflow
-from typing import Literal, List, Optional
+from typing import Literal, List, Optional, cast
 
-from src.config import AGENT_CONFIGS
+from src.config.agents import AGENT_CONFIGS, ToolOptimizerConfig
 from src.engine.schemas import ModuleOutput, Result
 from src.engine.util import get_logger, get_tools_description
 
@@ -76,13 +76,16 @@ class ToolOptimizer(dspy.Module):
 
     def __init__(
         self,
-        config=None,
+        config: Optional[ToolOptimizerConfig] = None,
+        lm: Optional[dspy.LM] = None,
     ):
         super().__init__()
         # Use provided config or default config
         self.config = config or AGENT_CONFIGS.tool_optimizer
+        self.lm = lm or self.config.llm.get_llm()
+        dspy.configure(lm=self.lm)
 
-        self.predictor = dspy.ChainOfThought(SignatureToolOptimizer)
+        self.tool_optimizer = dspy.ChainOfThought(SignatureToolOptimizer)
         self.log_level = self.config.log_level
         self.logger = get_logger(name="ToolOptimizer", log_level=self.log_level)
 
@@ -109,9 +112,12 @@ class ToolOptimizer(dspy.Module):
             - error_msg: Error description (if status is "error")
         """
 
-        with mlflow.start_span(name="ToolOptimizer", span_type="MODULE"):
+        with mlflow.start_span(
+            name="ToolOptimizer", span_type="MODULE"
+        ) as optimizer_span:
             self.logger.info("Starting tool optimization analysis")
             output = ModuleOutput(status="error")
+            optimizer_span.set_attribute("llm", self.lm.model)
 
             try:
                 self.logger.debug(
@@ -121,21 +127,25 @@ class ToolOptimizer(dspy.Module):
                     available_tools if available_tools else get_tools_description()
                 )
 
-                prediction = self.predictor(
+                prediction = self.tool_optimizer(
                     chat_history=chat_history,
                     available_tools=available_tools,
                 )
 
                 self.logger.info(
-                    f"Tool optimization completed. Improvement type: {prediction.improvement}"
+                    f"Tool optimization completed. Improvement type: {getattr(prediction, 'improvement', None)}"
                 )
 
                 output.result = Result(
-                    reasoning=prediction.reasoning,
-                    improvement=prediction.improvement,
-                    function_name=prediction.new_tool_name,
-                    existing_tool_names=prediction.existing_tool_names,
-                    function_requirements=prediction.requirements,
+                    reasoning=getattr(prediction, "reasoning", None),
+                    improvement=getattr(prediction, "improvement", None),
+                    function_name=getattr(prediction, "function_name", None),
+                    existing_tool_names=getattr(
+                        prediction, "existing_tool_names", None
+                    ),
+                    function_requirements=getattr(
+                        prediction, "function_requirements", None
+                    ),
                 )
                 output.status = "success"
 
@@ -150,23 +160,11 @@ class ToolOptimizer(dspy.Module):
 
 
 if __name__ == "__main__":
-    import json
-
-    from src.config import LANGUAGE_MODELS
 
     def main(
         chat_history: str,
         lm_name: str = "qwen3-coder",
     ):
-        # configure dspy
-        lm_info = LANGUAGE_MODELS[lm_name]
-        llm = dspy.LM(
-            model=lm_info.url,
-            api_key=lm_info.api_key,
-            max_tokens=5000,
-        )
-        dspy.configure(lm=llm)
-
         # setup mlflow
         mlflow.dspy.autolog()  # type: ignore
         mlflow.set_tracking_uri("http://127.0.0.1:5000")
@@ -176,9 +174,9 @@ if __name__ == "__main__":
         tool_optimizer = ToolOptimizer()
 
         # analyze the chat history
-        result = tool_optimizer.forward(chat_history=chat_history)
+        result = tool_optimizer(chat_history=chat_history)
 
-        print(f"Tool optimization result: {json.dumps(result.model_dump(), indent=2)}")
+        print(f"Tool optimization result: {result}")
 
     ##########################################
     # Test data - example chat history
