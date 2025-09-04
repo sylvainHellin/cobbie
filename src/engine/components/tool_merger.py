@@ -124,6 +124,8 @@ class ToolsMerger(dspy.Module):
                     self.logger.info(f"Function '{function_name}' created successfully")
                     self.logger.debug(f"function code:\n{function_implementation}\n")
                     output.result.function_implementation = function_implementation
+                    output.result.function_name = function_name
+                    output.result.function_requirements = function_requirements
 
                 else:
                     output.error_msg = (

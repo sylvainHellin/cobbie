@@ -1,11 +1,12 @@
-from typing import Callable, List, Literal
+from typing import Callable, List, Optional
 
 import dspy
 
-from src.config import AGENT_CONFIGS, FUNCTION_BOILERPLATE
+from src.config.agents import AGENT_CONFIGS, FUNCTION_BOILERPLATE, ToolProgrammerConfig
 from src.engine.schemas import ModuleOutput, Result
-from src.engine.util import get_logger, create_code_prefix
-from .code_act import CodeAct
+from src.engine.util import create_code_prefix, get_logger
+
+from src.engine.components.code_act import CodeAct
 
 
 class NewToolSignature(dspy.Signature):
@@ -44,15 +45,18 @@ class ToolProgrammer(dspy.Module):
     def __init__(
         self,
         tools: List[Callable],
-        config=None,
+        config: Optional[ToolProgrammerConfig] = None,
+        lm: Optional[dspy.LM] = None,
     ):
         super().__init__()
         # Use provided config or default config
         self.config = config or AGENT_CONFIGS.tool_programmer
+        self.lm = lm or self.config.llm.get_llm()
+        dspy.configure(lm=self.lm)
 
         self.tools = tools
         self.max_iters = self.config.max_iters
-        self.agent = CodeAct(
+        self.tool_programmer = CodeAct(
             signature=NewToolSignature,
             tools=tools,
             max_iters=self.max_iters,
@@ -77,31 +81,28 @@ class ToolProgrammer(dspy.Module):
         else:
             code_prefix = None
 
-        self.agent._update_code_prefix(code_prefix=code_prefix)
+        self.tool_programmer._update_code_prefix(code_prefix=code_prefix)
 
         try:
-            prediction = self.agent(
+            prediction = self.tool_programmer(
                 function_requirements=function_requirements,
                 function_name=function_name,
                 path_ifc_model=path_ifc_model,
                 function_boilerplate=function_boilerplate,
             )
 
-            # Check if we got valid python code
-            if (
-                hasattr(prediction, "function_implementation")
-                and prediction.function_implementation
-            ):
+            # Extract python code
+            function_implementation = getattr(
+                prediction, "function_implementation", None
+            )
+
+            if function_implementation is not None:
                 self.logger.info(
                     f"ToolProgrammer result: success - function '{function_name}' created successfully"
                 )
-                self.logger.debug(
-                    f"function code:\n{prediction.function_implementation}\n"
-                )
+                self.logger.debug(f"function code:\n{function_implementation}\n")
                 return ModuleOutput(
-                    result=Result(
-                        function_implementation=prediction.function_implementation
-                    ),
+                    result=Result(function_implementation=function_implementation),
                     status="success",
                 )
             else:
@@ -119,11 +120,9 @@ class ToolProgrammer(dspy.Module):
 
 
 if __name__ == "__main__":
-    import json
-
     import mlflow
 
-    from src.config import LANGUAGE_MODELS, TEST_IFC_PATH
+    from src.config import TEST_IFC_PATH
     from src.engine.tools.primordial import (
         query_ifcopenshell_documentation,
         web_search,
@@ -132,18 +131,7 @@ if __name__ == "__main__":
     def main(
         function_requirements: str,
         function_name: str,
-        lm_name: str = "kimi-k2",
-        log_level: Literal["DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"] = "DEBUG",
     ):
-        # configure dspy
-        lm_info = LANGUAGE_MODELS[lm_name]
-        llm = dspy.LM(
-            model=lm_info.url,
-            api_key=lm_info.api_key,
-            max_tokens=5000,
-        )
-        dspy.configure(lm=llm)
-
         # setup mlflow
         mlflow.dspy.autolog()  # type: ignore
         mlflow.set_tracking_uri("http://127.0.0.1:5000")
@@ -157,13 +145,13 @@ if __name__ == "__main__":
         tool_programmer = ToolProgrammer(tools=tools)
 
         # try to create the tool
-        result = tool_programmer.forward(
+        result = tool_programmer(
             function_name=function_name,
             function_requirements=function_requirements,
             path_ifc_model=TEST_IFC_PATH,
         )
 
-        print(f"results: {json.dumps(result.model_dump_json(), indent=2)}")
+        print(f"results: {result}")
 
     ##########################################
     function_requirements = """To accurately determine the width of the emergency escape routes, we need a function that can identify which doors are designated as emergency exits based on their properties or other criteria. The function should be able to query the IFC model for doors with specific properties or classifications that indicate they are emergency exits. \n\nThe required function signature could be:\n```python\ndef get_emergency_exit_doors(ifc_file_path: str) -> List[IfcDoor]:\n    \"\"\"\n    Retrieves a list of IfcDoor entities that are designated as emergency exits.\n\n    Args:\n    ifc_file_path (str): Path to the IFC file.\n\n    Returns:\n    List[IfcDoor]: A list of IfcDoor entities representing emergency exits.\n    \"\"\"\n```\n\nThis function would allow us to identify the emergency exit doors and then extract their widths."""
@@ -172,6 +160,4 @@ if __name__ == "__main__":
     main(
         function_requirements=function_requirements,
         function_name=function_name,
-        log_level="INFO",
-        lm_name="kimi-k2",
     )

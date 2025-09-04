@@ -1,7 +1,7 @@
 import mlflow
-from dspy import LM, BootstrapFewShot, BootstrapFewShotWithRandomSearch
+from dspy import BootstrapFewShot
 
-from src.config import LANGUAGE_MODELS, PATH_COMPILED_MODEL
+from src.config import LLM_REGISTRY, PATH_COMPILED_MODEL
 from src.engine import IfcAnswerEngine
 from src.experiment import TRAINSET, metric
 
@@ -22,11 +22,8 @@ def bootstrap_engine(
         # num_candidate_programs=4,
     )
 
-    teacher_llm = LANGUAGE_MODELS["openrouter-claude"]
-    teacher_llm = LM(
-        model=teacher_llm.url,
-        api_key=teacher_llm.api_key,
-        max_tokens=2**14,
+    teacher_llm = LLM_REGISTRY.create_dspy_llm(
+        model_name="qwen3-coder", max_tokens=2**14
     )
 
     teacher = IfcAnswerEngine(llm=teacher_llm)
@@ -57,12 +54,8 @@ if __name__ == "__main__":
         enable_litellm_cache=False,
     )
     with mlflow.start_span(name="BootstrapFewShort"):
-        student_llm = LANGUAGE_MODELS["openrouter-gpt-oss-120b"]
-        student_llm = LM(
-            model=student_llm.url,
-            api_key=student_llm.api_key,
-            max_tokens=2**14,
-        )
+        student_llm = LLM_REGISTRY.create_dspy_llm(model_name="gpt-oss-120b")
+
         engine = IfcAnswerEngine(llm=student_llm)
 
         bootstrap_engine(engine=engine)

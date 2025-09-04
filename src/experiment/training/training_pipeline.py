@@ -5,19 +5,19 @@ import dspy
 import mlflow
 
 from src.config import AGENT_CONFIGS
+from src.engine import IfcAnswerEngine
 from src.engine.components.training_module import (
     TrainingModule,
 )
-from src.engine import IfcAnswerEngine
+from src.engine.optimizer import bootstrap_engine
 from src.engine.schemas import (
     ModuleOutput,
     QA_Pair,
     ToolsMetrics,
 )
-from src.engine.optimizer import bootstrap_engine
 from src.engine.util import get_logger, get_usage_openrouter
-from src.experiment.evaluation.evaluation import evaluate
 from src.experiment.datasets import load_train_dev_split
+from src.experiment.evaluation.evaluation import evaluate
 
 
 class TrainingPipeline(dspy.Module):
@@ -109,7 +109,7 @@ class TrainingPipeline(dspy.Module):
 
         # Go through each examples in the training set
         for qa_pair in trainset:
-            output, metrics = self.training.forward(qa_pair=qa_pair)
+            output, metrics = self.training(qa_pair=qa_pair)  # type: ignore
             self.tools_metrics.update(metrics=metrics)
             self.outputs.append(output)
 
@@ -144,7 +144,7 @@ def main(
 
     logger.info("Starting the TrainingModule")
 
-    output = training_pipeline.forward(
+    output = training_pipeline(
         devset=devset,
         trainset=trainset,
     )

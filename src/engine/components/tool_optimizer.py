@@ -1,6 +1,6 @@
 import dspy
 import mlflow
-from typing import Literal, List, Optional, cast
+from typing import Literal, List, Optional
 
 from src.config.agents import AGENT_CONFIGS, ToolOptimizerConfig
 from src.engine.schemas import ModuleOutput, Result
@@ -139,13 +139,11 @@ class ToolOptimizer(dspy.Module):
                 output.result = Result(
                     reasoning=getattr(prediction, "reasoning", None),
                     improvement=getattr(prediction, "improvement", None),
-                    function_name=getattr(prediction, "function_name", None),
+                    function_name=getattr(prediction, "new_tool_name", None),
                     existing_tool_names=getattr(
                         prediction, "existing_tool_names", None
                     ),
-                    function_requirements=getattr(
-                        prediction, "function_requirements", None
-                    ),
+                    function_requirements=getattr(prediction, "requirements", None),
                 )
                 output.status = "success"
 

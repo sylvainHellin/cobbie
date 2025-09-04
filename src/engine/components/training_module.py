@@ -1,5 +1,5 @@
 from enum import Enum
-from typing import Optional, Tuple
+from typing import Optional, Tuple, cast
 
 import dspy
 import mlflow
@@ -111,10 +111,16 @@ class TrainingModule(dspy.Module):
         qa_pair = self.context.qa_pair
 
         # Run the engine
-        output_engine = self.engine.forward(
-            question=qa_pair.question, path_ifc_model=qa_pair.ifc_model_path
+        output_engine = cast(
+            ModuleOutput,
+            self.engine(
+                question=qa_pair.question, path_ifc_model=qa_pair.ifc_model_path
+            ),
         )
-        self.chat.import_chat_messages(self.lm.history[-1].get("messages"))
+        if self.lm.history:
+            self.chat.import_chat_messages(self.lm.history[-1].get("messages"))
+        else:
+            self.logger.error("Something is off: no chat history was found.")
         self.context.engine_output = output_engine
 
         if output_engine.status == "success":
@@ -138,10 +144,13 @@ class TrainingModule(dspy.Module):
         assert self.context.engine_output.result.answer, (
             "Error: Answer in Engine Output is None. disn"
         )
-        self.context.verifier_output = self.answer_verifier.forward(
-            question=qa_pair.question,
-            first_answer=qa_pair.answer,
-            second_answer=self.context.engine_output.result.answer,
+        self.context.verifier_output = cast(
+            ModuleOutput,
+            self.answer_verifier(
+                question=qa_pair.question,
+                first_answer=qa_pair.answer,
+                second_answer=self.context.engine_output.result.answer,
+            ),
         )
 
         # Handle errors
@@ -184,8 +193,8 @@ class TrainingModule(dspy.Module):
 
     def _handle_correct_answer(self) -> TrainingState:
         """Try to identify optimization potential for existing tools."""
-        self.context.tool_optimizer_output = self.tool_optimizer.forward(
-            chat_history=self.chat.to_string()
+        self.context.tool_optimizer_output = cast(
+            ModuleOutput, self.tool_optimizer(chat_history=self.chat.to_string())
         )
         if self.context.tool_optimizer_output.status == "error":
             self.output.error_msg = self.context.tool_optimizer_output.error_msg
@@ -251,11 +260,14 @@ class TrainingModule(dspy.Module):
         assert self.output.result.answer, "Logical flaw: answer is None."
         assert self.context.qa_pair, "Logical flaw: no QA pair for analysis."
 
-        error_analyst_output = self.error_analyst.forward(
-            chat_history=self.chat.to_string(),
-            question=self.context.qa_pair.question,
-            provided_answer=self.output.result.answer,
-            correct_answer=self.context.qa_pair.answer,
+        error_analyst_output = cast(
+            ModuleOutput,
+            self.error_analyst(
+                chat_history=self.chat.to_string(),
+                question=self.context.qa_pair.question,
+                provided_answer=self.output.result.answer,
+                correct_answer=self.context.qa_pair.answer,
+            ),
         )
         self.context.error_analyst_output = error_analyst_output
 
@@ -309,10 +321,13 @@ class TrainingModule(dspy.Module):
         assert self.context.qa_pair.ifc_model_path, "Error: ifc_model_path is missing."
 
         # Try to generate a new tool
-        output_tool_creator = self.tool_creator.forward(
-            function_name=self.output.result.function_name,
-            function_requirements=self.output.result.function_requirements,
-            path_ifc_model=self.context.qa_pair.ifc_model_path,
+        output_tool_creator = cast(
+            ModuleOutput,
+            self.tool_creator(
+                function_name=self.output.result.function_name,
+                function_requirements=self.output.result.function_requirements,
+                path_ifc_model=self.context.qa_pair.ifc_model_path,
+            ),
         )
 
         if output_tool_creator.status == "success":
@@ -362,11 +377,14 @@ class TrainingModule(dspy.Module):
                 "Error: could not load the source code of the faulty tool."
             )
 
-            self.context.tool_debugger_output = self.tool_debugger.forward(
-                function_name=self.output.result.function_name,
-                faulty_function_implementation=faulty_function_implementation,
-                initial_assessment=self.output.result.assessment_details,
-                path_ifc_model=self.context.qa_pair.ifc_model_path,
+            self.context.tool_debugger_output = cast(
+                ModuleOutput,
+                self.tool_debugger(
+                    function_name=self.output.result.function_name,
+                    faulty_function_implementation=faulty_function_implementation,
+                    initial_assessment=self.output.result.assessment_details,
+                    path_ifc_model=self.context.qa_pair.ifc_model_path,
+                ),
             )
 
             if self.context.tool_debugger_output.status == "error":
@@ -418,12 +436,15 @@ class TrainingModule(dspy.Module):
         )
 
         if source_code_first_function and source_code_second_function:
-            self.context.tool_merger_output = self.tool_merger.forward(
-                function_name=self.output.result.function_name,
-                function_requirements=self.output.result.function_requirements,
-                path_ifc_model=self.context.qa_pair.ifc_model_path,
-                source_code_first_function=source_code_first_function,
-                source_code_second_function=source_code_second_function,
+            self.context.tool_merger_output = cast(
+                ModuleOutput,
+                self.tool_merger(
+                    function_name=self.output.result.function_name,
+                    function_requirements=self.output.result.function_requirements,
+                    path_ifc_model=self.context.qa_pair.ifc_model_path,
+                    source_code_first_function=source_code_first_function,
+                    source_code_second_function=source_code_second_function,
+                ),
             )
             self.context.tool_merger_output = self.context.tool_merger_output
         else:
@@ -573,10 +594,10 @@ def main(qa_pair: QA_Pair):
 
     logger.info("Starting the TrainingModule")
 
-    output, metrics = training_module.forward(
+    res = training_module(
         qa_pair=qa_pair,
     )
-
+    output, metrics = res[0], res[1]  # type: ignore
     return output, metrics
 
 
