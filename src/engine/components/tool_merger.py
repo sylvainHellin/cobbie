@@ -1,18 +1,19 @@
-from typing import Callable, List
+from typing import Callable, List, Optional, cast
 
 import dspy
 import mlflow
 
-from src.config import (
+from src.config.agents import (
     AGENT_CONFIGS,
     FUNCTION_BOILERPLATE,
+    ToolMergerConfig,
 )
 from src.engine.components import CodeAct
 from src.engine.schemas import ModuleOutput
 from src.engine.tools.primordial import query_ifcopenshell_documentation, web_search
 from src.engine.util import create_code_prefix, get_logger
 
-from .test_and_improve import TestAndImprove
+from src.engine.components.test_and_improve import TestAndImprove
 
 
 class SignatureMergeTools(dspy.Signature):
@@ -58,12 +59,13 @@ class ToolsMerger(dspy.Module):
             query_ifcopenshell_documentation,
             web_search,
         ],
-        config=None,
+        config: Optional[ToolMergerConfig] = None,
+        lm: Optional[dspy.LM] = None,
     ):
         super().__init__()
         # Use provided config or default config
         self.config = config or AGENT_CONFIGS.tool_merger
-        self.lm = self.config.llm.get_llm()
+        self.lm = lm or self.config.llm.get_llm()
         dspy.configure(lm=self.lm)
 
         self.tools = tools
@@ -89,9 +91,11 @@ class ToolsMerger(dspy.Module):
         with mlflow.start_span(
             name="ToolMerger",
             span_type="MODULE",
-        ):
+        ) as merger_span:
             self.logger.info(f"Starting ToolMerger for function: {function_name}")
             output = ModuleOutput(status="error")
+
+            merger_span.set_attributes({"llm": self.lm.model})
 
             if self.add_code_prefix:
                 code_prefix = create_code_prefix(
@@ -112,17 +116,14 @@ class ToolsMerger(dspy.Module):
                     source_code_second_function=source_code_second_function,
                 )
                 # Check if we got valid python code
-                if (
-                    hasattr(prediction, "function_implementation")
-                    and prediction.function_implementation
-                ):
+                function_implementation = getattr(
+                    prediction, "function_implementation", None
+                )
+
+                if function_implementation is not None:
                     self.logger.info(f"Function '{function_name}' created successfully")
-                    self.logger.debug(
-                        f"function code:\n{prediction.function_implementation}\n"
-                    )
-                    output.result.function_implementation = (
-                        prediction.function_implementation
-                    )
+                    self.logger.debug(f"function code:\n{function_implementation}\n")
+                    output.result.function_implementation = function_implementation
 
                 else:
                     output.error_msg = (
@@ -136,11 +137,14 @@ class ToolsMerger(dspy.Module):
 
             # Test and debug the new tool if necessary
             if output.result.function_implementation:
-                output = self.test_and_improve.forward(
-                    function_implementation=output.result.function_implementation,
-                    function_requirements=function_requirements,
-                    function_name=function_name,
-                    path_ifc_model=path_ifc_model,
+                output = cast(
+                    ModuleOutput,
+                    self.test_and_improve(
+                        function_implementation=output.result.function_implementation,
+                        function_requirements=function_requirements,
+                        function_name=function_name,
+                        path_ifc_model=path_ifc_model,
+                    ),
                 )
         return output
 
@@ -251,12 +255,15 @@ if __name__ == "__main__":
         print("=" * 60)
 
         try:
-            result = tool_merger.forward(
-                function_name=function_name,
-                function_requirements=function_requirements,
-                path_ifc_model=TEST_IFC_PATH,
-                source_code_first_function=source_code_first_function,
-                source_code_second_function=source_code_second_function,
+            result = cast(
+                ModuleOutput,
+                tool_merger(
+                    function_name=function_name,
+                    function_requirements=function_requirements,
+                    path_ifc_model=TEST_IFC_PATH,
+                    source_code_first_function=source_code_first_function,
+                    source_code_second_function=source_code_second_function,
+                ),
             )
 
             print(f"Tool merger result: {json.dumps(result.model_dump(), indent=2)}")

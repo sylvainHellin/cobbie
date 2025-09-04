@@ -162,7 +162,7 @@ if __name__ == "__main__":
         function_identifier = ToolIdentifier()
 
         # analyze the chat history
-        result = function_identifier.forward(chat_history=chat_history)
+        result = function_identifier(chat_history=chat_history)
 
         print(f"Function identification result: {result}")
 
