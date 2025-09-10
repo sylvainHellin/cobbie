@@ -9,6 +9,7 @@ from src.engine.schemas import ModuleOutput, Result
 from src.engine.schemas.answer_similarity import AnswerSimilarity
 from src.engine.util.get_logger import get_logger
 from src.experiment.db import LogRow, insert_new_log
+from src.engine.util import calculate_tokens
 
 
 class AnswerVerifierSignature(dspy.Signature):
@@ -41,12 +42,17 @@ class AnswerVerifier(dspy.Module):
         super().__init__()
         # Use provided config or default to AGENT_CONFIGS.answer_verifier
         self.config = config or AGENT_CONFIGS.answer_verifier
+
         # Set up LLM from config
         self.lm = self.config.llm.get_llm()
         self.classifier = dspy.ChainOfThought(AnswerVerifierSignature)
+        dspy.configure(lm=self.lm)
 
     def forward(
-        self, question: str, first_answer: str, second_answer: str
+        self,
+        question: str,
+        first_answer: str,
+        second_answer: str,
     ) -> ModuleOutput:
         """
         Check an answer to a given question against the ground truth to assess if it is correct.
@@ -65,7 +71,7 @@ class AnswerVerifier(dspy.Module):
             f"\nQuestion: {question}\nFirst answer: {first_answer}\nSecond answer: {second_answer}"
         )
 
-        module_output = ModuleOutput(status="error")
+        self.output = ModuleOutput(status="error")
 
         with mlflow.start_span(name="AnswerVerifier", span_type="MODULE") as span:
             span.set_inputs(
@@ -84,141 +90,48 @@ class AnswerVerifier(dspy.Module):
                         first_answer=first_answer,
                         second_answer=second_answer,
                     )
-                module_output.status = "success"
-                module_output.result = Result(
+                self.output.status = "success"
+                self.output.result = Result(
                     similarity_score=getattr(prediction, "similarity_score"),
                     reasoning=getattr(prediction, "reasoning"),
                 )
                 logger.debug(
-                    f"\nSimilarity score: {module_output.result.similarity_score}\nReasoning: {module_output.result.reasoning}"
+                    f"\nSimilarity score: {self.output.result.similarity_score}\nReasoning: {self.output.result.reasoning}"
                 )
             except Exception as e:
                 error_msg = f"Encounter Exception during the forward pass of the AnswerClassifier\nException:{e}\nquestion:{question}\nfirst_answer:{first_answer}\nground truth:{second_answer}"
                 logger.error(error_msg)
-                module_output.error_msg = error_msg
+                self.output.error_msg = error_msg
 
             finally:
-                span.set_outputs(
-                    {
-                        "status": module_output.status,
-                        "similarity_score": module_output.result.similarity_score,
-                        "reasoning": module_output.result.reasoning,
-                    }
+                self.output.update_cost(
+                    lm=self.lm,
+                    cost_input_tokens=self.config.llm.cost_input_token,
+                    cost_output_tokens=self.config.llm.cost_output_token,
                 )
 
-        return module_output
-
-
-def verify_answer(
-    question: str,
-    first_answer: str,
-    second_answer: str,
-    threshold: float | None = None,
-    run_id: int = 0,
-    llm_info: LLM | None = None,
-) -> AnswerSimilarity:
-    """
-    Compare two answers to the same question and compute their similarity.
-
-    Args:
-        question (str): The question being answered
-        first_answer (str): The first answer to compare
-        second_answer (str): The second answer to compare
-        threshold (float): The similarity threshold above which answers are considered correct
-        run_id (int, optional): Identifier for the verification run. Defaults to 0.
-        llm_info (LLM, optional): Language model configuration. Defaults to llama4-scout-cerebras.
-
-    Returns:
-        AnswerSimilarity: Object containing:
-            - correct (bool): Whether the similarity score meets or exceeds the threshold
-            - similarity (float): Similarity score (0-1) between the two answers
-    """
-    # Get config and LLM
-    config = AGENT_CONFIGS.answer_verifier
-    if threshold is None:
-        threshold = config.similarity_threshold
-    lm = config.llm.get_llm()
-    start_time = time.time()
-
-    answer_verifier = AnswerVerifier(config=config)
-    with dspy.context(lm=lm):
-        prediction = answer_verifier(
-            question=question,
-            first_answer=first_answer,
-            second_answer=second_answer,
-        )
-
-    # Extract similarity score from the result
-    status = getattr(prediction, "status", "error")
-    result: Result = getattr(prediction, "result", Result())
-
-    if status == "success" and result:
-        similarity_score = getattr(result, "similarity_score", 0.0)
-        reasoning = getattr(result, "reasoning", "No reasoning trace available.")
-
-        # Determine if answers are correct based on threshold
-        correct = similarity_score >= threshold
-
-        # Calculate duration and get token counts from LM history
-        duration = time.time() - start_time
-
-        # Get token counts from the last LM call in history
-        history: list[dict] = lm.history or [{}]
-        input_tokens = history[-1].get("usage", {}).get("prompt_tokens", 0)
-        output_tokens = history[-1].get("usage", {}).get("completion_tokens", 0)
-
-        # Create and insert log entry
-        log_entry = LogRow(
-            run_id=run_id,
-            agent_name="AnswerVerifier",
-            step_number=-1,
-            timestamp=datetime.now(),
-            model_output=f"Answer similarity result: {correct} with similarity score {similarity_score}",
-            action_input_code=f"Question: {question}\nFirst Answer: {first_answer}\nSecond Answer: {second_answer}",
-            action_output=str(
-                AnswerSimilarity(
-                    correct=correct,
-                    similarity_score=similarity_score,
-                    reasoning=reasoning,
-                )
-            ),
-            duration=duration,
-            input_tokens=input_tokens,
-            output_tokens=output_tokens,
-        )
-        insert_new_log(log_entry)
-
-        return AnswerSimilarity(
-            correct=correct,
-            similarity_score=similarity_score,
-            reasoning=reasoning,
-        )
-    else:
-        return AnswerSimilarity(
-            status="error",
-            error_msg=getattr(prediction, "error_msg", "No error msg available."),
-        )
+        return self.output
 
 
 if __name__ == "__main__":
+    from typing import cast
+
     # Try to set up MLflow tracking, but don't fail if server is not available
-    try:
-        mlflow.dspy.autolog()  # type: ignore
-        mlflow.set_tracking_uri("http://127.0.0.1:5000")
-        mlflow.set_experiment("AnswerVerifier")
-        print("MLflow tracking enabled")
-    except Exception as e:
-        print(f"MLflow tracking not available: {e}")
-        print("Continuing without MLflow tracking...")
+    mlflow.dspy.autolog()  # type: ignore
+    mlflow.set_tracking_uri("http://127.0.0.1:5000")
+    mlflow.set_experiment("AnswerVerifier")
 
-    result = verify_answer(
-        question="How many doors are there in this house ?",
-        first_answer="I could count 123 doors in this house.",
-        second_answer="There are 120 doors in this house.",
-        threshold=0.8,
-    )
-    print(
-        f"Answer is correct: {result.correct}\nSimilarity score: {result.similarity_score}\n"
+    dspy.configure_cache(enable_disk_cache=False)
+
+    answer_verifier = AnswerVerifier()
+
+    output = cast(
+        ModuleOutput,
+        answer_verifier(
+            question="How many doors are there in this house ?",
+            first_answer="I could count 123 doors.",
+            second_answer="There are 120 doors in this house.",
+        ),
     )
 
-    print("END")
+    print(output.model_dump_json())
