@@ -8,7 +8,6 @@ from src.engine.util import (
     get_logger,
     get_created_tools,
     create_code_prefix,
-    calculate_tokens,
 )
 from src.engine.components import CodeAct
 from src.engine.tools.primordial import (
@@ -69,7 +68,6 @@ class IfcAnswerEngine(dspy.Module):
 
         self.max_iters = self.config.max_iters
         self.max_retry: int = self.config.max_retry
-        self.iter: int = 0
         self.log_level = self.config.log_level
         # Use provided LLM or get from config
         self.logger = get_logger(name="IfcAnswerEngine", log_level=self.log_level)
@@ -79,7 +77,6 @@ class IfcAnswerEngine(dspy.Module):
         self.max_tokens_output = self.config.max_tokens_output
         self.created_tools: Dict[str, Callable] = {}
         self.add_code_prefix = self.config.add_code_prefix
-        dspy.configure(lm=self.lm)
 
         if self.config.import_all_created_tools:
             self.created_tools = get_created_tools()
@@ -97,9 +94,7 @@ class IfcAnswerEngine(dspy.Module):
     def forward(self, question: str, path_ifc_model: str = "") -> ModuleOutput:
         self.logger.info("Starting forward pass.")
 
-        self.output = ModuleOutput(
-            status="error", error_msg="IfcAnswerEngine could not answer the question."
-        )
+        self.output = ModuleOutput()
         if self.add_code_prefix:
             code_prefix = create_code_prefix(
                 path_ifc_model=path_ifc_model, imports_boilerplate=FUNCTION_BOILERPLATE
@@ -109,32 +104,22 @@ class IfcAnswerEngine(dspy.Module):
 
         self.engine._update_code_prefix(code_prefix=code_prefix)
 
-        with mlflow.start_span(name="IfcAnswerEngine", span_type="MODULE") as span:
-            # Log the inputs
-            span.set_inputs(
-                {
-                    "question": question,
-                    "path_ifc_model": path_ifc_model,
-                }
-            )
+        with dspy.context(lm=self.lm):
             # Start the loop: try to answer the question with existing tool
             try:
                 prediction = self.engine(
                     question=question,
                     path_ifc_model=path_ifc_model,
                 )
-                self.output.status = "success"
-                self.output.error_msg = None
-                self.output.result.answer = getattr(prediction, "answer")
-                self.output.result.need_new_function = False
-                self.iter = self.max_retry
+                self.output.result.answer = getattr(prediction, "answer", None)
+                if self.output.result.answer is not None:
+                    self.output.status = "success"
 
             except Exception as e:
-                msg = (
+                self.output.error_msg = (
                     f"Error during the forward pass of the IfcAnswerEngine.\nError: {e}"
                 )
-                self.output.error_msg = msg
-                self.logger.error(msg)
+                self.logger.error(self.output.error_msg)
 
             finally:
                 self.output.update_cost(
@@ -161,12 +146,7 @@ if __name__ == "__main__":
     engine = IfcAnswerEngine()
 
     # Run the test
-    try:
-        output = cast(
-            ModuleOutput, engine(question=question, path_ifc_model=ifc_model_path)
-        )
-        print(output.model_dump_json(indent=2))
-    except Exception as e:
-        print(f"Exception: \n{e}")
-
-    print("END")
+    output = cast(
+        ModuleOutput, engine(question=question, path_ifc_model=ifc_model_path)
+    )
+    print(output.model_dump_json(indent=2))
