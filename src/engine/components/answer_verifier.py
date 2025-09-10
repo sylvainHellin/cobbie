@@ -1,15 +1,9 @@
-import time
-from datetime import datetime
-
 import dspy
 import mlflow
 
-from src.config import AGENT_CONFIGS, LLM, LOG_LEVEL
-from src.engine.schemas import ModuleOutput, Result
-from src.engine.schemas.answer_similarity import AnswerSimilarity
+from src.config import AGENT_CONFIGS, LOG_LEVEL
+from src.engine.schemas import ModuleOutput
 from src.engine.util.get_logger import get_logger
-from src.experiment.db import LogRow, insert_new_log
-from src.engine.util import calculate_tokens
 
 
 class AnswerVerifierSignature(dspy.Signature):
@@ -73,31 +67,25 @@ class AnswerVerifier(dspy.Module):
 
         self.output = ModuleOutput(status="error")
 
-        with mlflow.start_span(name="AnswerVerifier", span_type="MODULE") as span:
-            span.set_inputs(
-                {
-                    "question": question,
-                    "ground_truth": first_answer,
-                    "engine_answer": second_answer,
-                }
-            )
-
+        with dspy.context(lm=self.lm):
             try:
-                # Use dspy context manager to ensure correct LLM is used for this module
-                with dspy.context(lm=self.lm):
-                    prediction = self.classifier(
-                        question=question,
-                        first_answer=first_answer,
-                        second_answer=second_answer,
+                prediction = self.classifier(
+                    question=question,
+                    first_answer=first_answer,
+                    second_answer=second_answer,
+                )
+                self.output.result.similarity_score = getattr(
+                    prediction, "similarity_score", None
+                )
+                self.output.result.reasoning = getattr(prediction, "reasoning", None)
+                if (
+                    self.output.result.similarity_score is not None
+                    and self.output.result.reasoning is not None
+                ):
+                    self.output.status = "success"
+                    logger.debug(
+                        f"\nSimilarity score: {self.output.result.similarity_score}\nReasoning: {self.output.result.reasoning}"
                     )
-                self.output.status = "success"
-                self.output.result = Result(
-                    similarity_score=getattr(prediction, "similarity_score"),
-                    reasoning=getattr(prediction, "reasoning"),
-                )
-                logger.debug(
-                    f"\nSimilarity score: {self.output.result.similarity_score}\nReasoning: {self.output.result.reasoning}"
-                )
             except Exception as e:
                 error_msg = f"Encounter Exception during the forward pass of the AnswerClassifier\nException:{e}\nquestion:{question}\nfirst_answer:{first_answer}\nground truth:{second_answer}"
                 logger.error(error_msg)
@@ -134,4 +122,4 @@ if __name__ == "__main__":
         ),
     )
 
-    print(output.model_dump_json())
+    print(output.model_dump_json(indent=2))
