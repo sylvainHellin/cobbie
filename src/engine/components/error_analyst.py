@@ -5,8 +5,8 @@ import mlflow
 
 from src.config.agents import AGENT_CONFIGS, ErrorAnalystConfig
 from src.engine.components.code_act import CodeAct
-from src.engine.schemas import ModuleOutput, Result
-from src.engine.util import get_logger, get_tools_names
+from src.engine.schemas import ModuleOutput
+from src.engine.util import calculate_tokens, get_logger, get_tools_names
 
 
 class ErrorAnalystSignature(dspy.Signature):
@@ -91,7 +91,7 @@ class ErrorAnalyst(dspy.Module):
 
         self.tools = tools or []
         self.max_iters = self.config.max_iters
-        self.agent = CodeAct(
+        self.error_analyst = CodeAct(
             signature=ErrorAnalystSignature, tools=self.tools, max_iters=self.max_iters
         )
         self.log_level = self.config.log_level
@@ -122,6 +122,7 @@ class ErrorAnalyst(dspy.Module):
             - status: "success" or "error"
             - error_msg: Error description (if status is "error")
         """
+        self.output = ModuleOutput(status="error")
 
         with mlflow.start_span(
             name="ErrorAnalyst",
@@ -139,7 +140,7 @@ class ErrorAnalyst(dspy.Module):
             existing_tools = get_tools_names() if not existing_tools else existing_tools
 
             try:
-                prediction = self.agent(
+                prediction = self.error_analyst(
                     chat_history=chat_history,
                     question=question,
                     provided_answer=provided_answer,
@@ -147,58 +148,39 @@ class ErrorAnalyst(dspy.Module):
                     existing_tools=existing_tools,
                 )
 
-                if hasattr(prediction, "error_category") and hasattr(
-                    prediction, "error_analysis"
-                ):
-                    error_category = getattr(prediction, "error_category")
-                    error_analysis = getattr(prediction, "error_analysis")
+                # Extract results
+                error_category = getattr(prediction, "error_category", None)
+                error_analysis = getattr(prediction, "error_analysis", None)
+                tool_name = getattr(prediction, "tool_name", None)
 
-                    self.logger.info("Error analysis completed successfully")
-                    self.logger.info(f"Error category: {error_category}")
-                    self.logger.debug(f"Error analysis: {error_analysis}")
+                # Log results
+                self.logger.info("Error analysis completed successfully")
+                self.logger.info(f"Error category: {error_category}")
+                self.logger.debug(f"Error analysis: {error_analysis}")
 
-                    # Set span outputs
-                    span.set_outputs(
-                        {
-                            "error_category": error_category,
-                            "error_analysis": error_analysis,
-                            "status": "success",
-                        }
-                    )
-                    span.set_attribute("error_category", error_category)
-
-                    function_name = getattr(prediction, "tool_name", None)
-                    return ModuleOutput(
-                        status="success",
-                        result=Result(
-                            error_category=error_category,
-                            error_analysis=error_analysis,
-                            function_name=function_name,
-                        ),
-                    )
+                # Update the output
+                self.output.result.error_analysis = error_analysis
+                self.output.result.error_category = error_category
+                self.output.result.function_name = tool_name
+                if error_analysis and error_category and tool_name:
+                    self.output.status = "success"
                 else:
-                    error_msg = "Error analysis failed: Missing required outputs"
-                    self.logger.error(error_msg)
-
-                    # Set span outputs for failure
-                    span.set_outputs({"status": "error", "error_msg": error_msg})
-
-                    return ModuleOutput(
-                        status="error",
-                        error_msg=error_msg,
+                    self.output.error_msg = (
+                        "Error analysis failed: Missing required outputs"
                     )
+                    self.logger.error(self.output.error_msg)
 
             except Exception as e:
-                error_msg = f"Error during analysis: {str(e)}"
-                self.logger.error(error_msg)
+                self.output.error_msg = f"Error during analysis: {str(e)}"
+                self.logger.error(self.output.error_msg)
 
-                # Set span outputs for exception
-                span.set_outputs({"status": "error", "error_msg": error_msg})
-
-                return ModuleOutput(
-                    status="error",
-                    error_msg=error_msg,
+            finally:
+                self.output.update_cost(
+                    lm=self.lm,
+                    cost_input_tokens=self.config.llm.cost_input_token,
+                    cost_output_tokens=self.config.llm.cost_output_token,
                 )
+                return self.output
 
 
 if __name__ == "__main__":
@@ -213,6 +195,10 @@ if __name__ == "__main__":
         mlflow.dspy.autolog()  # type: ignore
         mlflow.set_tracking_uri("http://127.0.0.1:5000")
         mlflow.set_experiment("ErrorAnalyst")
+
+        dspy.configure_cache(
+            enable_disk_cache=False,
+        )
 
         # setup the error analyst
         error_analyst = ErrorAnalyst()
