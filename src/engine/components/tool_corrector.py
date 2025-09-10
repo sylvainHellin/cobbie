@@ -3,10 +3,9 @@ from typing import Callable, List, Optional
 import dspy
 
 from src.config.agents import AGENT_CONFIGS, ToolCorrectorConfig
-from src.engine.schemas import ModuleOutput, Result
-from src.engine.util import create_code_prefix, get_logger
-
 from src.engine.components.code_act import CodeAct
+from src.engine.schemas import ModuleOutput
+from src.engine.util import create_code_prefix, get_logger
 
 
 class ToolCorrectionSignature(dspy.Signature):
@@ -63,7 +62,7 @@ class ToolCorrector(dspy.Module):
 
         self.tools = tools
         self.max_iters = self.config.max_iters
-        self.agent = CodeAct(
+        self.tool_corrector = CodeAct(
             signature=ToolCorrectionSignature,
             tools=self.tools,
             max_iters=self.max_iters,
@@ -81,6 +80,7 @@ class ToolCorrector(dspy.Module):
         detailed_function_assessment: str,
     ) -> ModuleOutput:
         self.logger.info(f"Starting ToolCorrector for function: {function_name}")
+        self.output = ModuleOutput()
 
         if self.add_code_prefix:
             code_prefix = create_code_prefix(
@@ -88,10 +88,10 @@ class ToolCorrector(dspy.Module):
             )
         else:
             code_prefix = None
-        self.agent._update_code_prefix(code_prefix=code_prefix)
+        self.tool_corrector._update_code_prefix(code_prefix=code_prefix)
 
         try:
-            prediction = self.agent(
+            prediction = self.tool_corrector(
                 function_description=function_description,
                 function_name=function_name,
                 path_ifc_model=path_ifc_model,
@@ -99,31 +99,31 @@ class ToolCorrector(dspy.Module):
                 detailed_function_assessment=detailed_function_assessment,
             )
 
-            new_function_implementation = getattr(
+            self.output.result.function_implementation = getattr(
                 prediction, "new_function_implementation", None
             )
 
-            if new_function_implementation:
+            if self.output.result.function_implementation:
                 self.logger.info(
                     f"ToolCorrector result: success - function '{function_name}' updated successfully"
                 )
-                self.logger.debug(f"New implementation: {new_function_implementation}")
-                return ModuleOutput(
-                    result=Result(function_implementation=new_function_implementation),
-                    status="success",
-                )
+                self.output.status = "success"
+
             else:
-                self.logger.info(
-                    f"ToolCorrector result: error - failed to update function '{function_name}'"
+                self.output.error_msg = (
+                    f"Failed to update the function: {function_name}"
                 )
-                return ModuleOutput(
-                    status="error",
-                    error_msg="ToolCorrector failed to update the function.",
-                )
+                self.logger.info(self.output.error_msg)
         except Exception as e:
             error_msg = f"An Exception occured during the CodeAct forward pass of the ToolCorrector:\nError:{e}\n"
             self.logger.error(error_msg)
-            return ModuleOutput(status="error", error_msg=error_msg)
+        finally:
+            self.output.update_cost(
+                lm=self.lm,
+                cost_input_tokens=self.config.llm.cost_input_token,
+                cost_output_tokens=self.config.llm.cost_output_token,
+            )
+            return self.output
 
 
 if __name__ == "__main__":
@@ -147,6 +147,8 @@ if __name__ == "__main__":
         mlflow.set_tracking_uri("http://127.0.0.1:5000")
         mlflow.set_experiment("ToolCorrector")
 
+        dspy.configure_cache(enable_disk_cache=False, enable_memory_cache=False)
+
         # setup the primordial tools
         primordial_tools = [web_search, query_ifcopenshell_documentation]
 
@@ -169,19 +171,17 @@ if __name__ == "__main__":
 
     ##########################################
     # Test data - using similar example as in tool_assessor.py
-    function_description = "Create a function that calculates the total floor area of all spaces in an IFC model. The function should iterate through all IfcSpace entities and sum up their floor areas. It should handle cases where area information might be missing and return the total area in square meters."
+    function_description = "\n            Create a function that counts the total number of doors in an IFC model.\n            The function should:\n            1. Take an IFC file path as input\n            2. Open the IFC model using ifcopenshell\n            3. Find all door elements (IfcDoor)\n            4. Return the count as an integer (not as a string)\n\n            The function should handle errors gracefully and return accurate counts.\n            "
 
-    function_name = "calculate_total_floor_area"
+    function_name = "count_doors"
 
-    # A deliberately flawed implementation that needs correction
-    current_function_implementation = "\nimport ifcopenshell\nimport ifcopenshell.util.element\nimport ifcopenshell.util.shape\nimport ifcopenshell.util.placement\nimport ifcopenshell.util.geolocation\nimport ifcopenshell.util.system\nimport ifcopenshell.geom\nimport math\nimport json\nfrom typing import Union, List, Dict, Any\n\ndef calculate_total_floor_area(path_ifc_model: str) -> float:\n    \"\"\"\n    Calculates the total floor area of all IfcSpace entities in an IFC model.\n\n    The function iterates through all IfcSpace entities, attempts to retrieve their\n    area from associated quantity sets (specifically 'BaseQuantities' or 'PSet_SpaceCommon'),\n    and sums them up. It handles cases where area information might be missing\n    by treating the area as 0 for that specific space.\n\n    Args:\n        path_ifc_model (str): The file path to the IFC model.\n\n    Returns:\n        float: The total floor area of all spaces in square meters.\n\n    Assumptions:\n        - Area information for IfcSpace entities is typically stored as 'IfcQuantityArea'\n          within a 'IfcQuantitySet' named 'BaseQuantities' or 'PSet_SpaceCommon'.\n        - The specific quantity names for area are commonly 'NetPlannedArea' or 'GrossPlannedArea'.\n          If these are not found, the function will attempt to find any 'IfcQuantityArea'\n          within the associated quantity sets.\n        - If no area quantity is found for a space, its area is considered 0.\n    \"\"\"\n    try:\n        ifc_file = ifcopenshell.open(path_ifc_model)\n    except Exception as e:\n        # Log the error and return 0.0 if the file cannot be opened\n        print(f\"Error opening IFC file: {e}\")\n        return 0.0\n\n    total_area = 0.0\n    spaces = ifc_file.by_type('IfcSpace')\n\n    if not spaces:\n        # No IfcSpace entities found, return 0.0\n        return 0.0\n\n    for space in spaces:\n        space_area = 0.0\n        \n        # Retrieve quantities associated with the space\n        quantities = ifcopenshell.util.element.get_quantities(space)\n        \n        # Prioritize 'BaseQuantities' as it's a common location for space areas\n        if 'BaseQuantities' in quantities:\n            for q_name, q_value in quantities['BaseQuantities'].items():\n                # Check if the quantity is an IfcQuantityArea and has a value\n                if isinstance(q_value, dict) and q_value.get('type') == 'IfcQuantityArea':\n                    # Prioritize specific area names like NetPlannedArea or GrossPlannedArea\n                    if q_name in ['NetPlannedArea', 'GrossPlannedArea']:\n                        space_area = q_value.get('value', 0.0)\n                        break # Found a specific area, no need to check others in this set\n                    elif space_area == 0.0: \n                        # If no specific area name found yet, take the first IfcQuantityArea\n                        space_area = q_value.get('value', 0.0)\n\n        # If area not found in 'BaseQuantities' or specific names,\n        # iterate through all other quantity sets to find any IfcQuantityArea\n        if space_area == 0.0:\n            for q_set_name, q_set_values in quantities.items():\n                if q_set_name == 'BaseQuantities': # Skip BaseQuantities as it was already checked\n                    continue\n                for q_name, q_value in q_set_values.items():\n                    if isinstance(q_value, dict) and q_value.get('type') == 'IfcQuantityArea':\n                        space_area = q_value.get('value', 0.0)\n                        break # Found an area in another quantity set\n                if space_area != 0.0:\n                    break # Stop searching if area is found\n\n        total_area += space_area\n\n    return total_area\n"
+    current_function_implementation = '\n    import ifcopenshell\n    def count_doors(ifc_file_path: str) -> int:\n        """Count all doors in an IFC model."""\n        model = ifcopenshell.open(ifc_file_path)\n        doors = model.by_type("IfcDoor")\n        return str(len(doors))\n    '
 
-    detailed_function_assessment = "The function did not return a valid float for the total area. Received: Error executing calculate_total_floor_area: 'str' object has no attribute 'is_a'. This indicates a potential issue with calculation or return type."
+    detailed_function_assessment = "The function correctly counts the number of doors (14) in the IFC model, but it returns the count as a string instead of an integer, which violates requirement #4. The function signature indicates it should return an integer, and returning a string breaks type expectations. This could cause issues for code that consumes this function and expects an integer. The function should be modified to return an integer type instead of a string."
 
     main(
         function_description=function_description,
         function_name=function_name,
         current_function_implementation=current_function_implementation,
         detailed_function_assessment=detailed_function_assessment,
-        # lm="gemini-flash",
     )

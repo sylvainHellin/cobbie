@@ -1,4 +1,4 @@
-from typing import Callable, Dict, Optional
+from typing import Callable, Dict, Optional, cast
 
 import dspy
 import mlflow
@@ -9,12 +9,15 @@ from src.config.agents import (
 )
 from src.engine.components.tool_assessor import ToolAssessor
 from src.engine.components.tool_corrector import ToolCorrector
-from src.engine.schemas import ModuleOutput, Result
+from src.engine.schemas import ModuleOutput
 from src.engine.tools.primordial import (
     query_ifcopenshell_documentation,
     web_search,
 )
-from src.engine.util import _create_function_from_source_code, get_logger
+from src.engine.util import (
+    _create_function_from_source_code,
+    get_logger,
+)
 
 
 class TestAndImprove(dspy.Module):
@@ -52,10 +55,12 @@ class TestAndImprove(dspy.Module):
         self.tool_corrector = ToolCorrector(
             tools=self.primordial_tools,
             config=self.config.tool_corrector,
+            lm=self.lm,
         )
         self.tool_assessor = ToolAssessor(
             tools=self.primordial_tools,
             config=self.config.tool_assessor,
+            lm=self.lm,
         )
 
     def forward(
@@ -87,285 +92,167 @@ class TestAndImprove(dspy.Module):
         # Reset iteration counter before starting the new assess/correct loop
         self.iter = 0
 
-        with mlflow.start_span(
-            name="TestAndImprove",
-            span_type="MODULE",
-        ) as span:
-            output = ModuleOutput(status="error")
-
-            # Set initial span attributes
-            span.set_attribute("function_name", function_name)
-            span.set_attribute("path_ifc_model", path_ifc_model)
-            span.set_attribute("function_requirements", function_requirements)
-            span.set_attribute("function_implementation", function_implementation)
+        # with mlflow.start_span(
+        #     name="TestAndImprove",
+        #     span_type="MODULE",
+        # ) as span:
+        if True:
+            self.output = ModuleOutput(status="error")
+            self.output.llm = self.lm.model
+            self.output.result.function_implementation = function_implementation
 
             self.logger.info(
                 f"Starting the testing and improvement of the tool: {function_name}"
             )
 
-            # --- Iterative improvement loop --- #
-            while self.iter < self.max_iter:
-                self.iter += 1
+            try:
+                # --- Iterative improvement loop --- #
+                while self.iter < self.max_iter:
+                    self.iter += 1
 
-                with mlflow.start_span(
-                    name=f"iter_{self.iter}",
-                    span_type="CHAIN",
-                ):
-                    # Create enhanced assessor with dynamic tool
-                    self.logger.info("Assessing the generated code.")
-                    try:
-                        new_tool = _create_function_from_source_code(
-                            function_name=function_name,
-                            code=function_implementation,
-                        )
-
-                        # Create ToolAssessor with primordial tools and the generated tool
-                        # The CodeAct-based assessor will create its own Python interpreter internally
-                        tools = self.primordial_tools + [new_tool]
-                        self.tool_assessor = ToolAssessor(
-                            tools=tools, config=self.config.tool_assessor
-                        )
-                        self.logger.info(
-                            "✓ ToolAssessor created with new tool to test."
-                        )
-
-                    except Exception as e:
-                        self.logger.error(
-                            f"✗ Failed to create ToolAssessor. Error: {str(e)}"
-                        )
-                        self.logger.debug(
-                            f"Code that failed: {function_implementation}"
-                        )
-                        continue
-
-                    # Assess if the function works properly
-                    with mlflow.start_span(name="ToolAssessor", span_type="MODULE"):
+                    with mlflow.start_span(
+                        name=f"iter_{self.iter}",
+                        span_type="CHAIN",
+                    ):
+                        # Create enhanced assessor with dynamic tool
+                        self.logger.info("Assessing the generated code.")
                         try:
-                            self.logger.info("Starting the tool assessment.")
-
-                            prediction_tool_assessor = self.tool_assessor(
+                            new_tool = _create_function_from_source_code(
                                 function_name=function_name,
-                                function_requirements=function_requirements,
-                                path_ifc_model=path_ifc_model,
+                                code=function_implementation,
                             )
-                            assessment_result: Result = getattr(
-                                prediction_tool_assessor, "result", Result()
+
+                            # Create ToolAssessor with primordial tools and the generated tool
+                            # The CodeAct-based assessor will create its own Python interpreter internally
+                            tools = self.primordial_tools + [new_tool]
+                            self.tool_assessor = ToolAssessor(
+                                tools=tools,
+                                config=self.config.tool_assessor,
+                                lm=self.lm,
                             )
-                            self.logger.debug(
-                                f"✓ Assessment completed: {assessment_result.assessment_status}"
+                            self.logger.info(
+                                "✓ ToolAssessor created with new tool to test."
                             )
-                            self.logger.debug(
-                                f"Assessment details: {assessment_result.assessment_details}"
-                            )
+
                         except Exception as e:
-                            self.logger.error(f"✗ Assessment failed: {str(e)}")
+                            self.output.error_msg = (
+                                f"✗ Failed to create ToolAssessor. Error: {str(e)}"
+                            )
+                            self.logger.error(self.output.error_msg)
+                            self.logger.debug(
+                                f"Code that failed: {function_implementation}"
+                            )
                             continue
 
-                    # If the assessment is good, update the ouput and exit the loop
-                    if assessment_result.assessment_status == "ok":
-                        self.logger.info(
-                            f"🎉 Function passed assessment after {self.iter} iterations!"
-                        )
-                        output.result.function_implementation = function_implementation
-                        output.status = "success"
-                        output.result.assessment_status = (
-                            assessment_result.assessment_status
-                        )
-                        output.result.assessment_details = (
-                            assessment_result.assessment_details
-                        )
-                        break
+                        # Assess if the function works properly
+                        with mlflow.start_span(name="ToolAssessor", span_type="MODULE"):
+                            try:
+                                output_tool_assessor = cast(
+                                    ModuleOutput,
+                                    self.tool_assessor(
+                                        function_name=function_name,
+                                        function_requirements=function_requirements,
+                                        path_ifc_model=path_ifc_model,
+                                    ),
+                                )
+                                self.output.combine_cost(output=output_tool_assessor)
+                                self.output.result.assessment_status = (
+                                    output_tool_assessor.result.assessment_status
+                                )
+                                self.output.result.assessment_details = (
+                                    output_tool_assessor.result.assessment_details
+                                )
 
-                    # If the assessment is not satisfactory, call the ToolCorrector
-                    else:
-                        with mlflow.start_span(
-                            name="ToolCorrector",
-                            span_type="MODULE",
-                        ):
-                            self.logger.info("Starting the ToolCorrector")
-
-                            prediction_tool_corrector = self.tool_corrector(
-                                function_description=function_requirements,
-                                function_name=function_name,
-                                path_ifc_model=path_ifc_model,
-                                current_function_implementation=function_implementation,
-                                detailed_function_assessment=assessment_result.assessment_details
-                                or "No assessment available.",
-                            )
-                            status_tool_corrector = getattr(
-                                prediction_tool_corrector, "status", "error"
-                            )
-
-                            if status_tool_corrector == "error":
-                                self.logger.error("✗ Correction failed.")
+                            except Exception as e:
+                                self.logger.error(f"✗ Assessment failed: {str(e)}")
                                 continue
-                            else:
-                                result_tool_corrector: Result = getattr(
-                                    prediction_tool_corrector, "result", Result()
-                                )
-                                function_implementation = (
-                                    result_tool_corrector.function_implementation or ""
-                                )
-                                self.logger.info("✓ Function corrected")
-                                self.logger.debug(
-                                    f"New function implementation:\n{function_implementation}"
-                                )
-            # Set final span outputs and attributes
-            span.set_inputs(
-                {
-                    "function_name": function_name,
-                    "function_requirements": function_requirements,
-                    "path_ifc_model": path_ifc_model,
-                }
-            )
-            span.set_outputs(
-                {
-                    "status": output.status,
-                    "error_msg": output.error_msg or "",
-                    "function_implementation": output.result.function_implementation,
-                    "assessment_status": output.result.assessment_status,
-                    "assessment_details": output.result.assessment_details,
-                }
-            )
 
-            # Return the result (good or bad)
-            return output
+                        # If the assessment is good, update the ouput and exit the loop
+                        if output_tool_assessor.result.assessment_status == "ok":
+                            self.logger.info(
+                                f"🎉 Function passed assessment after {self.iter} iterations!"
+                            )
+                            self.output.status = "success"
+                            break
+
+                        # If the assessment is not satisfactory, call the ToolCorrector
+                        else:
+                            with mlflow.start_span(
+                                name="ToolCorrector",
+                                span_type="MODULE",
+                            ):
+                                output_tool_corrector = cast(
+                                    ModuleOutput,
+                                    self.tool_corrector(
+                                        function_description=function_requirements,
+                                        function_name=function_name,
+                                        path_ifc_model=path_ifc_model,
+                                        current_function_implementation=function_implementation,
+                                        detailed_function_assessment=output_tool_assessor.result.assessment_details
+                                        or "No assessment available.",
+                                    ),
+                                )
+                                self.output.combine_cost(output=output_tool_corrector)
+
+                                if output_tool_corrector.status == "success":
+                                    self.output.result.function_implementation = output_tool_corrector.result.function_implementation
+                                else:
+                                    self.output.error_msg = (
+                                        output_tool_corrector.error_msg
+                                    )
+
+            except Exception as e:
+                self.output.error_msg = f"An Exception occured during the TestAndImprove forward pass:\nError:{e}\n"
+                self.logger.error(self.output.error_msg)
+
+            finally:
+                # Return the result (good or bad)
+                return self.output
 
 
 if __name__ == "__main__":
+    from src.config.main import TEST_IFC_PATH
     from typing import cast
 
-    """
-    Test module for TestAndImprove component.
+    # setup mlflow
+    mlflow.dspy.autolog()  # type: ignore
+    mlflow.set_tracking_uri("http://127.0.0.1:5000")
+    mlflow.set_experiment("TestAndImprove")
 
-    This test demonstrates the complete pipeline for testing and improving
-    a Python function implementation.
-    """
-    import os
+    # deactivate cache for dspy
+    dspy.configure_cache(
+        enable_disk_cache=False,
+        enable_memory_cache=False,
+    )
 
-    from src.config.agents import AGENT_CONFIGS, LLM
-    from src.config.main import TEST_IFC_PATH
+    function_requirements = """
+            Create a function that counts the total number of doors in an IFC model.
+            The function should:
+            1. Take an IFC file path as input
+            2. Open the IFC model using ifcopenshell
+            3. Find all door elements (IfcDoor)
+            4. Return the count as an integer (not as a string)
 
-    def main():
-        """Test the TestAndImprove module with a sample function."""
-        # Setup MLflow
-        mlflow.dspy.autolog()  # type: ignore
-        mlflow.set_tracking_uri("http://127.0.0.1:5000")
-        mlflow.set_experiment("TestAndImprove")
-
-        # Test function implementation that needs improvement
-        test_function_implementation = '''
-def count_doors(ifc_file_path: str) -> int:
-    """Count all doors in an IFC model."""
-    # This is an intentionally flawed implementation for testing
+            The function should handle errors gracefully and return accurate counts.
+            """
+    function_name = "count_doors"
+    path_ifc_model = TEST_IFC_PATH
+    function_implementation = '''
     import ifcopenshell
-    model = ifcopenshell.open(ifc_file_path)
-    doors = model.by_type("IfcDoor")
-    # Bug: returning a string instead of int
-    return str(len(doors))
-'''
-
-        # Test configuration
-        test_config = {
-            "function_requirements": """
-        Create a function that counts the total number of doors in an IFC model.
-        The function should:
-        1. Take an IFC file path as input
-        2. Open the IFC model using ifcopenshell
-        3. Find all door elements (IfcDoor)
-        4. Return the count as an integer
-
-        The function should handle errors gracefully and return accurate counts.
-        """,
-            "function_name": "count_doors",
-            "path_ifc_model": TEST_IFC_PATH,
-            "function_implementation": test_function_implementation.strip(),
-        }
-
-        print("=" * 80)
-        print("TESTING TestAndImprove MODULE")
-        print("=" * 80)
-
-        # Check if IFC file exists
-        if not os.path.exists(test_config["path_ifc_model"]):
-            print(f"❌ Test IFC file not found: {test_config['path_ifc_model']}")
-            print("Please ensure the test IFC file exists before running tests.")
-            exit(1)
-
-        print(f"✅ Test IFC file found: {test_config['path_ifc_model']}")
-
-        try:
-            # Initialize TestAndImprove with test configuration
-            print("\n📋 Initializing TestAndImprove module...")
-
-            # Use a lightweight LLM config for testing
-            test_llm_config = LLM(model_name="qwen3-coder", max_tokens=4096)
-            test_agent_config = AGENT_CONFIGS.test_and_improve
-            test_agent_config.llm = test_llm_config
-            test_agent_config.max_iter = 2  # Limit iterations for testing
-
-            test_and_improve = TestAndImprove(config=test_agent_config)
-            print("✅ TestAndImprove module initialized successfully")
-
-            # Test the forward method
-            print(f"\n🔧 Testing function: {test_config['function_name']}")
-            print(
-                f"📝 Function requirements: {test_config['function_requirements'][:100]}..."
-            )
-            print("🏗️  Initial implementation has intentional bugs for testing")
-
-            print("\n🚀 Starting test and improvement process...")
-            output = test_and_improve(
-                function_requirements=test_config["function_requirements"],
-                function_name=test_config["function_name"],
-                path_ifc_model=test_config["path_ifc_model"],
-                function_implementation=test_config["function_implementation"],
-            )
-            output = cast(ModuleOutput, output)
-
-            # Analyze results
-            print("\n" + "=" * 60)
-            print("TEST RESULTS")
-            print("=" * 60)
-
-            print(f"Status: {output.status}")
-            if output.error_msg:
-                print(f"Error: {output.error_msg}")
-
-            if hasattr(output.result, "assessment_status"):
-                print(f"Assessment Status: {output.result.assessment_status}")
-
-            if hasattr(output.result, "assessment_details"):
-                print(f"Assessment Details: {output.result.assessment_details}")
-
-            if (
-                hasattr(output.result, "function_implementation")
-                and output.result.function_implementation
-            ):
-                print("\nImproved Function Implementation:")
-                print("-" * 40)
-                print(output.result.function_implementation)
-                print("-" * 40)
-
-            # Test success criteria
-            if output.status == "success":
-                print(
-                    "\n✅ TEST PASSED: Function was successfully tested and improved!"
-                )
-            else:
-                print(
-                    "\n⚠️  TEST COMPLETED: Function improvement process completed with issues"
-                )
-
-        except Exception as e:
-            print(f"\n❌ TEST FAILED: {str(e)}")
-            import traceback
-
-            traceback.print_exc()
-
-        print("\n" + "=" * 80)
-        print("TEST COMPLETED")
-        print("=" * 80)
-
-    # Run the test
-    main()
+    def count_doors(ifc_file_path: str) -> int:
+        """Count all doors in an IFC model."""
+        model = ifcopenshell.open(ifc_file_path)
+        doors = model.by_type("IfcDoor")
+        return str(len(doors))
+    '''
+    test_and_improve = TestAndImprove()
+    output = cast(
+        ModuleOutput,
+        test_and_improve(
+            function_name=function_name,
+            function_requirements=function_requirements,
+            path_ifc_model=path_ifc_model,
+            function_implementation=function_implementation,
+        ),
+    )
+    print(output.model_dump())

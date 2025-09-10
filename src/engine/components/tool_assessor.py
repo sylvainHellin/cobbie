@@ -4,7 +4,7 @@ import dspy
 
 from src.config.agents import AGENT_CONFIGS, ToolAssessorConfig
 from src.engine.components.code_act import CodeAct
-from src.engine.schemas import ModuleOutput, Result
+from src.engine.schemas import ModuleOutput
 from src.engine.util import (
     _create_function_from_source_code,
     create_code_prefix,
@@ -14,9 +14,9 @@ from src.engine.util import (
 
 class ToolAssessmentSignature(dspy.Signature):
     """
-    Assess whether a generated Python function meets requirements and works correctly.
-    Note that the path_ifc_model is not loaded as a variable in the Python interpreter. Therefore, you must instantiate the variable if you want to use it.
-    Your role is not to implement this function; it is simply to test it and assess whether it meets the requirements.
+    Assess whether a Python function meets its requirements and works correctly.
+    Your role is simply to test the function and assess whether it works as intended — you are not responsible for implementing it.
+    Make sure you check that the type hints in the function signature are accurate.
     """
 
     # inputs
@@ -57,7 +57,7 @@ class ToolAssessor(dspy.Module):
         # Combine base tools with the generated tool
         self.tools = tools
         self.max_iters = self.config.max_iters
-        self.agent = CodeAct(
+        self.tool_assessor = CodeAct(
             signature=ToolAssessmentSignature,
             tools=self.tools,
             max_iters=self.max_iters,
@@ -72,6 +72,7 @@ class ToolAssessor(dspy.Module):
         function_requirements: str,
         path_ifc_model: str,
     ) -> ModuleOutput:
+        self.output = ModuleOutput()
         self.logger.info(f"Starting ToolAssessor for function: {function_name}")
 
         if self.add_code_prefix:
@@ -80,38 +81,43 @@ class ToolAssessor(dspy.Module):
             )
         else:
             code_prefix = None
-        self.agent._update_code_prefix(code_prefix=code_prefix)
+        self.tool_assessor._update_code_prefix(code_prefix=code_prefix)
 
         try:
-            prediction = self.agent(
+            prediction = self.tool_assessor(
                 function_name=function_name,
                 function_requirements=function_requirements,
                 path_ifc_model=path_ifc_model,
             )
-            assessment_status = getattr(prediction, "assessment_status", None)
-            assessment_details = getattr(prediction, "assessment_details", None)
+            self.output.result.assessment_status = getattr(
+                prediction, "assessment_status", None
+            )
+            self.output.result.assessment_details = getattr(
+                prediction, "assessment_details", None
+            )
 
-            if assessment_status and assessment_details:
-                self.logger.info(
-                    f"ToolAssessor result: {assessment_status} - assessment completed for function '{function_name}'"
-                )
-                self.logger.debug(f"Assessment details: \n{assessment_details}")
-                return ModuleOutput(
-                    result=Result(
-                        assessment_status=assessment_status,
-                        assessment_details=assessment_details,
-                    ),
-                    status="success",
-                )
+            if (
+                self.output.result.assessment_status
+                and self.output.result.assessment_details
+            ):
+                self.output.status = "success"
+
             else:
-                self.logger.info(
-                    f"ToolAssessor result: error - assessment failed for function '{function_name}'"
+                self.output.error_msg = (
+                    f"Tool assessment failed for funtion: {function_name}"
                 )
-                return ModuleOutput(status="error", error_msg="Tool assessment failed")
+                self.logger.error(self.output.error_msg)
         except Exception as e:
-            error_msg = f"An Exception occured during the CodeAct forward pass of the ToolAssessor:\nError:{e}\n"
-            self.logger.error(error_msg)
-            return ModuleOutput(status="error", error_msg=error_msg)
+            self.output.error_msg = f"An Exception occured during the CodeAct forward pass of the ToolAssessor:\nError:{e}\n"
+            self.logger.error(self.output.error_msg)
+
+        finally:
+            self.output.update_cost(
+                lm=self.lm,
+                cost_input_tokens=self.config.llm.cost_input_token,
+                cost_output_tokens=self.config.llm.cost_output_token,
+            )
+            return self.output
 
 
 if __name__ == "__main__":
