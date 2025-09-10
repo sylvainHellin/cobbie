@@ -9,6 +9,7 @@ List of custom functions:
 IMPORTANT:
 You can use custom functions in your code without importing them. Importing them will cause errors.
 The Python interpreter is stateless. This means that you need to define all the variables used in each block of generated code.
+Check your result before returning your final answer with `final_answer`.
 
 WORKFLOW:
 1. **Think**: Analyze the task and your progress
