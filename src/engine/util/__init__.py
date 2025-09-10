@@ -9,7 +9,6 @@ from .get_function_code import get_function_code
 from .get_created_tools import get_created_tools, get_tools_description, get_tools_names
 from .get_usage_openrouter import get_usage_openrouter
 from .delete_tools import delete_tools
-from .calculate_tokens import calculate_tokens
 
 __all__ = [
     "get_logger",
@@ -25,5 +24,4 @@ __all__ = [
     "get_tools_names",
     "get_usage_openrouter",
     "delete_tools",
-    "calculate_tokens",
 ]

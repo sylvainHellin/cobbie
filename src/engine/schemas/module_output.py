@@ -4,7 +4,6 @@ import dspy
 from pydantic import BaseModel
 
 from src.engine.schemas.result import Result
-from src.engine.util import calculate_tokens
 
 
 class ModuleOutput(BaseModel):
@@ -32,11 +31,20 @@ class ModuleOutput(BaseModel):
             cost_input_tokens: Cost per input token
             cost_output_tokens: Cost per output token
         """
-        self.input_tokens, self.output_tokens = calculate_tokens(lm=lm)
+        self.input_tokens = 0
+        self.output_tokens = 0
+
+        if hasattr(lm, "history") and lm.history:
+            for call in lm.history:
+                usage = call.get("usage", {})
+                self.input_tokens += usage.get("prompt_tokens", 0)
+                self.output_tokens += usage.get("completion_tokens", 0)
+
         self.cost = (
-            self.input_tokens * cost_input_tokens
-            + self.output_tokens * cost_output_tokens
+            (self.input_tokens or 0) * cost_input_tokens
+            + (self.output_tokens or 0) * cost_output_tokens
         ) / 1000000
+
         self.llm = lm.model
 
     def combine_cost(self, output: Self):
