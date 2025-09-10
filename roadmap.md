@@ -1,5 +1,10 @@
 # Roadmap
 
+URGENT:
+1. change the behaviour of `_create_function_from_source_code`: not if there is an error, it still returns a function that is total Nonsense!!! We need to catch the error and include this into the control flow. Might for example return Optional[Callable]
+2. Continue refactoring the agents starting with the `tool_debugger`
+
+
 ## Engine
 
 - Understand why this weird behaviour keep happening: the LLM output the same code over and over. Double check the trajectory mechanism.
