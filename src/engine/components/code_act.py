@@ -3,6 +3,7 @@ from typing import Any, Callable, List, Optional, Type, cast
 
 import dspy
 import mlflow
+import tiktoken
 from dspy.signatures.signature import Signature, ensure_signature
 from smolagents.local_python_executor import fix_final_answer_code
 from smolagents.utils import parse_code_blobs
@@ -176,6 +177,21 @@ class CodeAct(dspy.Module):
         # Set up the iterative code generation module
         self.code_act = dspy.Predict(self.code_act_signature)
 
+    def _estimate_nb_tokens(self, text: str) -> int:
+        """
+        Estimates the number of tokens for a given string using tiktoken.
+
+        Args:
+            text (str): The text to tokenize and count tokens for.
+
+        Returns:
+            int: The estimated number of tokens.
+        """
+        # Use the cl100k_base encoding which is used by GPT-4 and GPT-3.5-turbo
+        encoding = tiktoken.get_encoding("cl100k_base")
+        tokens = encoding.encode(text)
+        return len(tokens)
+
     def forward(self, **kwargs) -> dspy.Prediction:
         """
         Executes the CodeAgent's thought-code-execute loop.
@@ -187,11 +203,11 @@ class CodeAct(dspy.Module):
             dspy.Prediction: An object containing the final answer.
         """
         trajectory: List[tuple[str, str, str]] = []
-        span = mlflow.get_current_active_span()
-        if span is not None:
-            lm = cast(dspy.LM, dspy.settings.lm)
-            lm.model
-            span.set_attributes({"llm": dspy.settings.lm.model})
+        # span = mlflow.get_current_active_span()
+        # if span is not None:
+        #     lm = cast(dspy.LM, dspy.settings.lm)
+        #     lm.model
+        #     span.set_attributes({"llm": dspy.settings.lm.model})
 
         for _ in range(self.max_iters):
             trajectory_item, should_break = self._execute_code_act_loop(
@@ -266,6 +282,11 @@ class CodeAct(dspy.Module):
             str_trajectory += f"Thought: {thought}\n"
             str_trajectory += f"Code:\n```python\n{code}\n```\n"
             str_trajectory += f"Observation: {observation}\n"
+
+        if self._estimate_nb_tokens(str_trajectory) > 2**15:
+            str_trajectory += "Remeber: if you think you have completed the task, you need to call `final_answer(result_dict)` with all required fields when finished.\n"
+            str_trajectory += f"REQUIRED FIELDS:{self.output_fields_description}\n"
+
         return str_trajectory
 
 
