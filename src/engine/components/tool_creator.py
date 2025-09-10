@@ -64,8 +64,6 @@ class ToolCreator(dspy.Module):
         self.lm = lm or self.config.llm.get_llm()
         self.tools = tools
 
-        # Use provided LLM or get from config
-        dspy.configure(lm=self.lm)
         self.log_level = self.config.log_level
         self.logger = get_logger(name="ToolCreator", log_level=self.log_level)
         self.max_iters = self.config.max_iters
@@ -113,93 +111,64 @@ class ToolCreator(dspy.Module):
         function_name: str,
         path_ifc_model: str,
     ) -> ModuleOutput:
-        with mlflow.start_span(
-            name="ToolCreator",
-            span_type="MODULE",
-        ) as creator_span:
-            # --- Set up the system --- #
-            output = ModuleOutput(status="error")
+        # Init the output
+        self.output = ModuleOutput()
 
-            # Set initial creator_span inputs
-            creator_span.set_inputs(
-                {
-                    "function_name": function_name,
-                    "path_ifc_model": path_ifc_model,
-                    "function_requirements": function_requirements,
-                }
-            )
-            creator_span.set_attribute("llm", self.lm)
-
+        with dspy.context(lm=self.lm):
             self.logger.info(f"Starting the creation of the tool: {function_name}")
 
-            # --- Create initial function --- #
-            with mlflow.start_span(
-                name="InitialCodeGeneration", span_type="MODULE"
-            ) as code_generation_span:
-                code_generation_span.set_inputs(
-                    {
-                        "function_name": function_name,
-                        "path_ifc_model": path_ifc_model,
-                        "function_requirements": function_requirements,
-                    }
-                )
-                try:
-                    self.logger.info("Creating initial function")
-                    prediction = self.tool_creator(
-                        function_requirements=function_requirements,
-                        function_name=function_name,
-                        path_ifc_model=path_ifc_model,
-                        function_boilerplate=self.function_boilerplate,
-                    )
-                    function_implementation = getattr(
-                        prediction, "function_implementation", None
-                    )
-
-                    if function_implementation is not None:
-                        output.result.function_implementation = function_implementation
-                    else:
-                        output.error_msg = (
-                            f"No valid code generated for function: {function_name}"
-                        )
-                        self.logger.error(output.error_msg)
-
-                except Exception as e:
-                    output.error_msg = f"An Exception occured during the CodeAct forward pass:\nError:\n{e}"
-                    self.logger.error(output.error_msg)
-
-                finally:
-                    code_generation_span.set_outputs(
-                        {
-                            "function_implementation": output.result.function_implementation,
-                            "status": output.status,
-                            "error_msg": output.error_msg,
-                        }
-                    )
-
-            # Test and debug the new tool if necessary
-            if output.result.function_implementation:
-                # Clean the function implementation to remove any code block markers
-                output.result.function_implementation = self._clean_code_blocks(
-                    output.result.function_implementation
-                )
-
-                prediction_test_and_improve = self.test_and_improve(
-                    function_implementation=output.result.function_implementation,
+            try:
+                self.logger.info("Creating initial function")
+                prediction = self.tool_creator(
                     function_requirements=function_requirements,
                     function_name=function_name,
                     path_ifc_model=path_ifc_model,
+                    function_boilerplate=self.function_boilerplate,
                 )
-                output = cast(ModuleOutput, prediction_test_and_improve)
 
-            creator_span.set_outputs(
-                {
-                    "status": output.status,
-                    "error_msg": output.error_msg,
-                    "function_implementation": output.result.function_implementation,
-                }
-            )
+                self.output.result.function_implementation = getattr(
+                    prediction, "function_implementation", None
+                )
 
-            return output
+                if self.output.result.function_implementation is None:
+                    self.output.error_msg = (
+                        f"No valid code generated for function: {function_name}"
+                    )
+                    self.logger.error(self.output.error_msg)
+
+            except Exception as e:
+                self.output.error_msg = f"An Exception occured during the CodeAct forward pass:\nError:\n{e}"
+                self.logger.error(self.output.error_msg)
+
+            finally:
+                self.output.update_cost(
+                    lm=self.lm,
+                    cost_input_tokens=self.config.llm.cost_input_token,
+                    cost_output_tokens=self.config.llm.cost_output_token,
+                )
+
+            # Test and debug the new tool if necessary
+            if self.output.result.function_implementation:
+                # Clean the function implementation to remove any code block markers
+                self.output.result.function_implementation = self._clean_code_blocks(
+                    self.output.result.function_implementation
+                )
+
+                output_test_and_improve = cast(
+                    ModuleOutput,
+                    self.test_and_improve(
+                        function_implementation=self.output.result.function_implementation,
+                        function_requirements=function_requirements,
+                        function_name=function_name,
+                        path_ifc_model=path_ifc_model,
+                    ),
+                )
+                if output_test_and_improve.status == "success":
+                    self.output.status = "success"
+                    self.output.result = output_test_and_improve.result
+                    self.output.combine_cost(output=output_test_and_improve)
+
+            return self.output
 
 
 if __name__ == "__main__":
@@ -218,13 +187,16 @@ if __name__ == "__main__":
         tool_creator = ToolCreator()
 
         # create the tool
-        result = tool_creator(
-            function_requirements=function_requirements,
-            function_name=function_name,
-            path_ifc_model=TEST_IFC_PATH,
+        output = cast(
+            ModuleOutput,
+            tool_creator(
+                function_requirements=function_requirements,
+                function_name=function_name,
+                path_ifc_model=TEST_IFC_PATH,
+            ),
         )
 
-        print(f"Tool creation result: {result}")
+        print(f"Tool creation result: {output.model_dump_json(indent=2)}")
 
     ##########################################
     # Test data - creating a simple IFC analysis function
