@@ -47,14 +47,13 @@ class NameExtractor(dspy.Module):
             try:
                 prediction = self.extractor(function_requirements=function_requirements)
                 output.result = Result(
-                    function_name=prediction.function_name,
-                    reasoning=prediction.reasoning,
+                    function_name=getattr(prediction, "function_name", None),
+                    reasoning=getattr(prediction, "reasoning", None),
                 )
                 output.status = "success"
             except Exception as e:
-                error_msg = f"Error when trying to extract the name of the function. Error:\n{e}"
-                output.error_msg = error_msg
-                self.logger.error(error_msg)
+                output.error_msg = f"Error when trying to extract the name of the function. Error:\n{e}"
+                self.logger.error(output.error_msg)
 
         self.logger.info("Completed forward pass")
 
