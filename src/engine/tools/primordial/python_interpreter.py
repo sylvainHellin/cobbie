@@ -290,7 +290,7 @@ def get_python_interpreter(
 
         try:
             returned_value, logs, is_final = interpreter(code_action=python_code)
-            logger.info("Tool execution completed successfully.")
+            logger.debug("Tool execution completed successfully.")
             logger.debug(f"Returned value: {returned_value}")
             logger.debug(f"Console output (logs): {logs}")
             logger.debug(f"Is final: {is_final}")
