@@ -1,7 +1,39 @@
 """
 LLM Configuration and Registry Module
 
-Centralized management of language models, their configurations, and providers.
+This module provides centralized management of language models, their configurations, and providers.
+It supports multiple LLM providers (Anthropic, OpenAI, Gemini, DeepSeek, Groq, etc.) and models,
+with automatic cost tracking and dspy integration.
+
+Available Classes:
+- LLMProvider: Configuration for an LLM provider (name, base_url, API key)
+- LLMModel: Configuration for a specific model (name, model_path, default max_tokens)
+- ModelAvailability: Maps models to providers with pricing information
+- LLMRegistry: Central registry managing all providers, models, and availability
+- LLM: High-level configuration class for agents with cost and provider properties
+
+Usage Examples:
+    # Basic usage with default provider
+    llm_config = LLM(model_name="qwen3-coder")
+    dspy_llm = llm_config.get_llm()
+
+    # Specify provider explicitly
+    llm_config = LLM(model_name="claude-sonnet-4", provider_name="anthropic")
+
+    # Access cost information
+    input_cost = llm_config.cost_input_token
+    output_cost = llm_config.cost_output_token
+
+    # List available models and providers
+    all_models = LLM_REGISTRY.list_models()
+    providers_for_model = LLM_REGISTRY.list_providers_for_model("qwen3-coder")
+
+    # Direct registry usage
+    model, provider, availability = LLM_REGISTRY.get_model_info("gemini-flash", "gemini")
+    dspy_llm = LLM_REGISTRY.create_dspy_llm("deepseek-chat", "deepseek")
+
+The module automatically loads API keys from environment variables and provides
+cost-aware model selection for different providers.
 """
 
 import os
@@ -92,6 +124,11 @@ class LLMRegistry:
                 api_key_env_var="OPENROUTER_API_KEY",
             ),
             LLMProvider(name="ollama", base_url="ollama_chat", api_key_env_var=""),
+            LLMProvider(
+                name="deepinfra",
+                base_url="deepinfra",
+                api_key_env_var="DEEPINFRA_API_KEY",
+            ),
         ]
 
         for provider in providers:
@@ -128,6 +165,10 @@ class LLMRegistry:
             LLMModel(name="qwen3-8b", model_path="qwen3:8b"),
             LLMModel(name="gemma3-4b", model_path="gemma3:4b"),
             LLMModel(name="gemma3n", model_path="gemma3n:e4b"),
+            LLMModel(
+                name="qwen3-coder-turbo",
+                model_path="Qwen/Qwen3-Coder-480B-A35B-Instruct-Turbo",
+            ),
         ]
 
         for model in models:
@@ -204,7 +245,17 @@ class LLMRegistry:
                 cost_input_token=2.0,
                 cost_output_token=2.0,
             ),
-            ModelAvailability(model_name="qwen3-coder", provider_name="ollama"),
+            ModelAvailability(
+                model_name="qwen3-coder",
+                provider_name="ollama",
+            ),
+            ModelAvailability(
+                model_name="qwen3-coder",
+                provider_name="deepinfra",
+                model_path_override="Qwen/Qwen3-Coder-480B-A35B-Instruct-Turbo",
+                cost_input_token=0.3,
+                cost_output_token=1.2,
+            ),
             ModelAvailability(
                 model_name="devstral-medium",
                 provider_name="openrouter",
@@ -263,7 +314,10 @@ class LLMRegistry:
         return model, provider, availability
 
     def create_dspy_llm(
-        self, model_name: str, provider_name: str = "", max_tokens: Optional[int] = None
+        self,
+        model_name: str,
+        provider_name: str = "",
+        max_tokens: Optional[int] = None,
     ) -> dspy.LM:
         """Create a dspy.LM instance for the specified model and provider."""
         model, provider, availability = self.get_model_info(model_name, provider_name)
@@ -312,7 +366,8 @@ class LLM(BaseModel):
 
     model_name: str = Field(default="qwen3-coder", description="Name of the model")
     provider_name: str = Field(
-        default="openrouter", description="Provider to use (auto-selected if None)"
+        default="deepinfra",
+        description="Provider to use (auto-selected if None)",
     )
     max_tokens: int = Field(default=2**14, description="Maximum tokens for LLM")
 
