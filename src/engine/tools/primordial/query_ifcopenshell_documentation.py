@@ -73,8 +73,7 @@ def query_ifcopenshell_documentation(
         str: A JSON-serialized string containing a list of matching documentation entries, where each entry is a dictionary with keys: "module", "type", "name", "docstring"
     """
     logger = get_logger("query_ifc_documentation", log_level=LOG_LEVEL)
-    logger.info("IfcOpenShell documentation query tool called")
-    logger.debug(f"Query: {query}")
+    logger.info(f"Query: {query}")
     logger.debug(f"n_results: {n_results}")
 
     # Add input validation for query
@@ -91,9 +90,9 @@ def query_ifcopenshell_documentation(
 
     # Get database connection with proper error handling
     try:
-        logger.info("Connecting to IfcOpenShell documentation database...")
+        logger.debug("Connecting to IfcOpenShell documentation database...")
         collection = get_db_client()
-        logger.info("✓ Database connection successful")
+        logger.debug("✓ Database connection successful")
     except NotFoundError as e:
         error_msg = f"Database setup issue: {str(e)}"
         logger.error(f"DATABASE ERROR: {error_msg}")
@@ -105,12 +104,11 @@ def query_ifcopenshell_documentation(
 
     # query the similar elements from the db
     try:
-        logger.info("Executing semantic search query...")
         results = collection.query(
             query_texts=[query],  # Add the query text for semantic search
             n_results=n_results,
         )
-        logger.info(
+        logger.debug(
             f"✓ Database query completed successfully. Found {len(results['ids'][0]) if results['ids'] else 0} results"
         )
 
@@ -149,7 +147,7 @@ def query_ifcopenshell_documentation(
             }
             response.append(elt)
 
-        logger.info(f"✓ Successfully formatted {len(response)} results for return")
+        logger.debug(f"✓ Successfully formatted {len(response)} results for return")
         # serialize and return the output
         return json.dumps(response, indent=2)
 
