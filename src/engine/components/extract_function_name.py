@@ -1,9 +1,10 @@
-import dspy
 from typing import Literal
-import mlflow
+
+import dspy
+
+from src.config import LOG_LEVEL
 from src.engine.schemas import ModuleOutput, Result
 from src.engine.util import get_logger
-from src.config import LOG_LEVEL
 
 
 class ExtractFunctionNameSignature(dspy.Signature):
@@ -42,19 +43,26 @@ class NameExtractor(dspy.Module):
             ModuleOutput: An object containing the extracted or suggested function name, reasoning, and status.
         """
         self.logger.info("Starting forward pass")
-        with mlflow.start_span("Extract function's name"):
-            output = ModuleOutput(status="error")
-            try:
-                prediction = self.extractor(function_requirements=function_requirements)
-                output.result = Result(
-                    function_name=getattr(prediction, "function_name", None),
-                    reasoning=getattr(prediction, "reasoning", None),
-                )
-                output.status = "success"
-            except Exception as e:
-                output.error_msg = f"Error when trying to extract the name of the function. Error:\n{e}"
-                self.logger.error(output.error_msg)
+        self.output = ModuleOutput()
+
+        try:
+            prediction = self.extractor(function_requirements=function_requirements)
+            self.output.result = Result(
+                function_name=getattr(prediction, "function_name", None),
+                reasoning=getattr(prediction, "reasoning", None),
+            )
+            if (
+                self.output.result.function_name is not None
+                and self.output.result.reasoning is not None
+            ):
+                self.output.status = "success"
+
+        except Exception as e:
+            self.output.error_msg = (
+                f"Error when trying to extract the name of the function. Error:\n{e}"
+            )
+            self.logger.error(self.output.error_msg)
 
         self.logger.info("Completed forward pass")
 
-        return output
+        return self.output
