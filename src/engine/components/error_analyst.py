@@ -6,7 +6,7 @@ import mlflow
 from src.config.agents import AGENT_CONFIGS, ErrorAnalystConfig
 from src.engine.components.code_act import CodeAct
 from src.engine.schemas import ModuleOutput
-from src.engine.util import calculate_tokens, get_logger, get_tools_names
+from src.engine.util import get_logger, get_tools_names
 
 
 class ErrorAnalystSignature(dspy.Signature):
@@ -87,7 +87,6 @@ class ErrorAnalyst(dspy.Module):
         # Use provided config or default config
         self.config = config or AGENT_CONFIGS.error_analyst
         self.lm = lm or self.config.llm.get_llm()
-        dspy.configure(lm=self.lm)
 
         self.tools = tools or []
         self.max_iters = self.config.max_iters
@@ -124,19 +123,8 @@ class ErrorAnalyst(dspy.Module):
         """
         self.output = ModuleOutput(status="error")
 
-        with mlflow.start_span(
-            name="ErrorAnalyst",
-            span_type="MODULE",
-        ) as span:
-            # Set initial span attributes
-            span.set_attribute("question", question)
-            span.set_attribute("provided_answer", provided_answer)
-            span.set_attribute("correct_answer", correct_answer)
-
+        with dspy.context(lm=self.lm):
             self.logger.info("Starting error analysis")
-            self.logger.debug(f"Question: {question}")
-            self.logger.debug(f"Provided answer: {provided_answer}")
-            self.logger.debug(f"Correct answer: {correct_answer}")
             existing_tools = get_tools_names() if not existing_tools else existing_tools
 
             try:
@@ -149,20 +137,25 @@ class ErrorAnalyst(dspy.Module):
                 )
 
                 # Extract results
-                error_category = getattr(prediction, "error_category", None)
-                error_analysis = getattr(prediction, "error_analysis", None)
-                tool_name = getattr(prediction, "tool_name", None)
+                self.output.result.error_category = getattr(
+                    prediction, "error_category", None
+                )
+                self.output.result.error_analysis = getattr(
+                    prediction, "error_analysis", None
+                )
+                self.output.result.function_name = getattr(
+                    prediction, "tool_name", None
+                )
 
                 # Log results
                 self.logger.info("Error analysis completed successfully")
-                self.logger.info(f"Error category: {error_category}")
-                self.logger.debug(f"Error analysis: {error_analysis}")
+                self.logger.info(f"Error category: {self.output.result.error_category}")
 
-                # Update the output
-                self.output.result.error_analysis = error_analysis
-                self.output.result.error_category = error_category
-                self.output.result.function_name = tool_name
-                if error_analysis and error_category and tool_name:
+                if (
+                    self.output.result.error_analysis is not None
+                    and self.output.result.error_category is not None
+                    and self.output.result.function_name is not None
+                ):
                     self.output.status = "success"
                 else:
                     self.output.error_msg = (
@@ -180,7 +173,7 @@ class ErrorAnalyst(dspy.Module):
                     cost_input_tokens=self.config.llm.cost_input_token,
                     cost_output_tokens=self.config.llm.cost_output_token,
                 )
-                return self.output
+            return self.output
 
 
 if __name__ == "__main__":
@@ -204,14 +197,19 @@ if __name__ == "__main__":
         error_analyst = ErrorAnalyst()
 
         # analyze the error
-        result = error_analyst(
-            chat_history=chat_history,
-            question=question,
-            provided_answer=provided_answer,
-            correct_answer=correct_answer,
+        from typing import cast
+
+        output = cast(
+            ModuleOutput,
+            error_analyst(
+                chat_history=chat_history,
+                question=question,
+                provided_answer=provided_answer,
+                correct_answer=correct_answer,
+            ),
         )
 
-        print(f"Error analysis result: {result}")
+        print(f"Error analysis result: {output.model_dump_json(indent=2)}")
 
     ##########################################
     # Example usage with sample error scenario
