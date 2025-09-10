@@ -63,6 +63,7 @@ class TestAndImprove(dspy.Module):
         function_name: str,
         path_ifc_model: str,
         function_implementation: str,
+        initial_assessment: Optional[str] = None,
     ) -> ModuleOutput:
         """
         This function implements a complete pipeline for testing, and refining
@@ -73,6 +74,7 @@ class TestAndImprove(dspy.Module):
             function_name: Name for the generated function
             path_ifc_model: Path to IFC file used for testing the generated function
             function_implementation: The source code of this function
+            initial_assessment: Optional initial assessment describing known issues to fix
 
         Returns:
             ModuleOutput containing:
@@ -95,6 +97,42 @@ class TestAndImprove(dspy.Module):
             f"Starting the testing and improvement of the tool: {function_name}"
         )
 
+        # --- Handle initial assessment if provided --- #
+        # If we have an initial assessment, start with correction
+        if initial_assessment:
+            self.logger.info(
+                "Initial assessment provided, starting with correction phase"
+            )
+            self.iter += 1
+
+            with mlflow.start_span(
+                name=f"{self.iter}_initial_correction",
+                span_type="CHAIN",
+            ):
+                self.logger.info("Correcting function based on initial assessment")
+                output_tool_corrector = cast(
+                    ModuleOutput,
+                    self.tool_corrector(
+                        function_description=function_requirements,
+                        function_name=function_name,
+                        path_ifc_model=path_ifc_model,
+                        current_function_implementation=function_implementation,
+                        detailed_function_assessment=initial_assessment,
+                    ),
+                )
+                self.output.combine_cost(output=output_tool_corrector)
+
+                if output_tool_corrector.status == "success":
+                    self.output.result.function_implementation = (
+                        output_tool_corrector.result.function_implementation
+                    )
+                    self.logger.info("✓ Initial correction completed")
+                else:
+                    self.output.error_msg = output_tool_corrector.error_msg
+                    self.logger.error(
+                        f"✗ Initial correction failed: {self.output.error_msg}"
+                    )
+
         # --- Iterative improvement loop --- #
         while self.iter < self.max_iter:
             self.iter += 1
@@ -104,7 +142,7 @@ class TestAndImprove(dspy.Module):
                 span_type="CHAIN",
             ):
                 # Create enhanced assessor with dynamic tool
-                self.logger.info("Assessing the generated code.")
+                self.logger.info("Assessing the function code.")
                 try:
                     assert self.output.result.function_implementation is not None, (
                         f"Logical Error during {self.iter} pass of the test_and_improve block: source code for creating the function to assess is None."
@@ -120,14 +158,16 @@ class TestAndImprove(dspy.Module):
                         tools=tools,
                         config=self.config.tool_assessor,
                     )
-                    self.logger.info("✓ ToolAssessor created with new tool to test.")
+                    self.logger.info("✓ ToolAssessor created with function to test.")
 
                 except Exception as e:
                     self.output.error_msg = (
                         f"✗ Failed to create ToolAssessor. Error: {str(e)}"
                     )
                     self.logger.error(self.output.error_msg)
-                    self.logger.debug(f"Code that failed: {function_implementation}")
+                    self.logger.debug(
+                        f"Code that failed: {self.output.result.function_implementation}"
+                    )
                     continue
 
                 # Assess if the function works properly
@@ -153,7 +193,7 @@ class TestAndImprove(dspy.Module):
                     self.output.error_msg = output_tool_assessor.error_msg
                     continue
 
-                # If the assessment is good, update the ouput and exit the loop
+                # If the assessment is good, update the output and exit the loop
                 if output_tool_assessor.result.assessment_status == "ok":
                     self.logger.info(
                         f"🎉 Function passed assessment after {self.iter} iterations!"
@@ -163,15 +203,26 @@ class TestAndImprove(dspy.Module):
 
                 # If the assessment is not satisfactory, call the ToolCorrector
                 else:
+                    # Build comprehensive assessment for subsequent corrections
+                    assessment_for_correction = (
+                        output_tool_assessor.result.assessment_details
+                        or "No assessment available."
+                    )
+
+                    # If we had an initial assessment, ensure it's still addressed
+                    if initial_assessment and self.iter <= 2:  # First few iterations
+                        assessment_for_correction = f"ORIGINAL ISSUE TO FIX:\n{initial_assessment}\
+                        CURRENT ASSESSMENT FINDINGS:\n{assessment_for_correction}\
+                        PRIORITY: Ensure the original issue is addressed while also fixing any new issues discovered."
+
                     output_tool_corrector = cast(
                         ModuleOutput,
                         self.tool_corrector(
                             function_description=function_requirements,
                             function_name=function_name,
                             path_ifc_model=path_ifc_model,
-                            current_function_implementation=function_implementation,
-                            detailed_function_assessment=output_tool_assessor.result.assessment_details
-                            or "No assessment available.",
+                            current_function_implementation=self.output.result.function_implementation,
+                            detailed_function_assessment=assessment_for_correction,
                         ),
                     )
                     self.output.combine_cost(output=output_tool_corrector)
