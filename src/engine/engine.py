@@ -8,6 +8,7 @@ from src.engine.util import (
     get_logger,
     get_created_tools,
     create_code_prefix,
+    calculate_tokens,
 )
 from src.engine.components import CodeAct
 from src.engine.tools.primordial import (
@@ -15,7 +16,7 @@ from src.engine.tools.primordial import (
     web_search,
 )
 
-from src.config import AGENT_CONFIGS, FUNCTION_BOILERPLATE
+from src.config.agents import AGENT_CONFIGS, FUNCTION_BOILERPLATE, IfcAnswerEngineConfig
 
 
 class IfcAnwerEngineSignature(dspy.Signature):
@@ -58,19 +59,19 @@ class IfcAnswerEngine(dspy.Module):
             "query_ifcopenshell_documentation": query_ifcopenshell_documentation,
         },
         additional_authorized_imports: Optional[List[str]] = None,
-        config=None,
+        config: Optional[IfcAnswerEngineConfig] = None,
         llm: Optional[dspy.LM] = None,  # Optional override
     ):
         super().__init__()
         # Use provided config or default config
         self.config = config or AGENT_CONFIGS.ifc_answer_engine
+        self.lm = llm or self.config.llm.get_llm()
 
         self.max_iters = self.config.max_iters
         self.max_retry: int = self.config.max_retry
         self.iter: int = 0
         self.log_level = self.config.log_level
         # Use provided LLM or get from config
-        self.lm = llm or self.config.llm.get_llm()
         self.logger = get_logger(name="IfcAnswerEngine", log_level=self.log_level)
         self.additional_authorized_functions = additional_authorized_functions or {}
         self.additional_authorized_imports = additional_authorized_imports or []
@@ -93,22 +94,8 @@ class IfcAnswerEngine(dspy.Module):
         )
         self.logger.info("IfcAnswerEngine initialized.")
 
-    def _calculate_tokens(self) -> tuple[int, int]:
-        """Calculate total input and output tokens from LM history."""
-        total_input_tokens = 0
-        total_output_tokens = 0
-
-        if self.lm.history:
-            for call in self.lm.history:
-                usage = call.get("usage", {})
-                total_input_tokens += usage.get("prompt_tokens", 0)
-                total_output_tokens += usage.get("completion_tokens", 0)
-
-        return total_input_tokens, total_output_tokens
-
     def forward(self, question: str, path_ifc_model: str = "") -> ModuleOutput:
         self.logger.info("Starting forward pass.")
-        self.lm.history.clear()
 
         self.output = ModuleOutput(
             status="error", error_msg="IfcAnswerEngine could not answer the question."
@@ -150,18 +137,11 @@ class IfcAnswerEngine(dspy.Module):
                 self.logger.error(msg)
 
             finally:
-                span.set_outputs(
-                    {
-                        "status": self.output.status,
-                        "answer": self.output.result.answer,
-                    }
+                self.output.update_cost(
+                    lm=self.lm,
+                    cost_input_tokens=self.config.llm.cost_input_token,
+                    cost_output_tokens=self.config.llm.cost_output_token,
                 )
-
-        self.output.input_tokens, self.output.output_tokens = self._calculate_tokens()
-        self.output.cost = (
-            self.output.input_tokens * self.config.llm.cost_input_token
-            + self.output.output_tokens * self.config.llm.cost_output_token
-        ) / 10**6
 
         return self.output
 
@@ -169,11 +149,13 @@ class IfcAnswerEngine(dspy.Module):
 if __name__ == "__main__":
     # Test the IfcAnswerEngine
     ifc_model_path = "/Users/sylvainhellin/GitHub/4_phd/ifcAnswerEngineV3/src/experiment/bim_models/duplex/arc.ifc"
-    question = "What is the height of the living room?"
+    question = "What is the height of the bedroomns?"
 
     mlflow.dspy.autolog()  # type: ignore
     mlflow.set_tracking_uri("http://127.0.0.1:5000")
     mlflow.set_experiment("IfcAnswerEngine")
+
+    dspy.configure_cache(disk_cache_dir=False)
 
     # Initialize the engine - LLM comes from config now!
     engine = IfcAnswerEngine()
