@@ -4,15 +4,13 @@ import dspy
 import mlflow
 
 from src.config.agents import AGENT_CONFIGS, ToolDebuggerConfig
-from src.engine.components.tool_assessor import ToolAssessor
-from src.engine.components.tool_corrector import ToolCorrector
+from src.engine.components.test_and_improve import TestAndImprove
 from src.engine.schemas.module_output import ModuleOutput
 from src.engine.tools.primordial import (
     query_ifcopenshell_documentation,
     web_search,
 )
 from src.engine.util import (
-    _create_function_from_source_code,
     _extract_function_metadata,
     get_logger,
 )
@@ -34,26 +32,21 @@ class ToolDebugger(dspy.Module):
 
         # Use provided LLM or get from config
         self.lm = lm or self.config.llm.get_llm()
-        dspy.configure(lm=self.lm)
         self.log_level = self.config.log_level
         self.logger = get_logger(name="ToolDebugger", log_level=self.log_level)
         self.max_iter = self.config.max_iter
         self.add_code_prefix = self.config.add_code_prefix
 
-        # Store authorized functions for use in assessor when needed
+        # Store authorized functions for use in TestAndImprove
         self.additional_authorized_functions = additional_authorized_functions
-        self.primordial_tools = [
-            tool for name, tool in self.additional_authorized_functions.items()
-        ]
 
         self.logger.debug(
-            f"Primordial tools available for ToolDebugger sub-agents: {', '.join([getattr(tool, '__name__', str(tool)) for tool in self.primordial_tools])}"
+            f"Primordial tools available for ToolDebugger sub-agents: {', '.join([getattr(tool, '__name__', str(tool)) for tool in self.additional_authorized_functions.values()])}"
         )
 
-        # Instantiate the sub agents - they use their own configs from AGENT_CONFIGS
-        self.tool_corrector = ToolCorrector(
-            tools=self.primordial_tools,
-            config=self.config.tool_corrector,
+        # Instantiate the TestAndImprove module
+        self.test_and_improve = TestAndImprove(
+            additional_authorized_functions=self.additional_authorized_functions,
         )
 
     def _build_function_requirements(self, metadata) -> str:
@@ -101,73 +94,6 @@ class ToolDebugger(dspy.Module):
 
         return "\n".join(requirements)
 
-    def _build_comprehensive_assessment(
-        self, original_assessment: str, all_issues_found: list, iteration: int
-    ) -> str:
-        """
-        Build a comprehensive assessment that tracks the original issue and any new issues found.
-
-        Args:
-            original_assessment: The initial assessment describing the original bug
-            all_issues_found: List of all assessment details found across iterations
-            iteration: Current iteration number
-
-        Returns:
-            Comprehensive assessment string that preserves original context
-        """
-        assessment_parts = []
-
-        # Always start with the original issue context
-        assessment_parts.append(f"ORIGINAL ISSUE TO FIX:\n{original_assessment}")
-
-        # Add any additional issues discovered during debugging
-        if len(all_issues_found) > 1:
-            assessment_parts.append("\nADDITIONAL ISSUES DISCOVERED DURING DEBUGGING:")
-            for i, issue in enumerate(all_issues_found[1:], 1):
-                assessment_parts.append(f"{i}. {issue}")
-
-        # Add iteration context
-        assessment_parts.append(
-            f"\nITERATION {iteration}: Ensure BOTH the original issue and any new issues are addressed."
-        )
-        assessment_parts.append(
-            "Priority: The original issue MUST be fixed. Additional issues should also be addressed if possible."
-        )
-
-        return "\n".join(assessment_parts)
-
-    def _build_final_assessment_summary(
-        self, original_assessment: str, all_issues_found: list, max_iterations: int
-    ) -> str:
-        """
-        Build a final assessment summary for failed debugging attempts.
-
-        Args:
-            original_assessment: The initial assessment describing the original bug
-            all_issues_found: List of all assessment details found across iterations
-            max_iterations: Maximum iterations that were attempted
-
-        Returns:
-            Final assessment summary preserving all discovered issues
-        """
-        summary_parts = []
-
-        summary_parts.append(f"DEBUGGING FAILED AFTER {max_iterations} ITERATIONS")
-        summary_parts.append(
-            f"\nORIGINAL ISSUE (still needs to be fixed):\n{original_assessment}"
-        )
-
-        if len(all_issues_found) > 1:
-            summary_parts.append("\nADDITIONAL ISSUES DISCOVERED:")
-            for i, issue in enumerate(all_issues_found[1:], 1):
-                summary_parts.append(f"{i}. {issue}")
-
-        summary_parts.append(
-            "\nNEXT STEPS: Ensure the original issue is addressed first, then tackle additional issues."
-        )
-
-        return "\n".join(summary_parts)
-
     def forward(
         self,
         function_name: str,
@@ -176,18 +102,15 @@ class ToolDebugger(dspy.Module):
         path_ifc_model: str,
     ) -> ModuleOutput:
         """
-        Debug and fix a faulty tool using a multi-agent system with iterative improvement.
+        Debug and fix a faulty tool using TestAndImprove module.
 
         This function implements a complete pipeline for debugging, correcting, and testing
-        Python functions that work with IFC files. The system uses two specialized agents:
+        Python functions that work with IFC files using the TestAndImprove module.
 
         The workflow:
         1. Extract function requirements from the faulty function's signature and docstring
-        2. Start with a faulty function implementation and initial assessment
-        3. ToolCorrector attempts to fix the function based on the assessment feedback
-        4. Function is dynamically wrapped to create a testable tool
-        5. ToolAssessor evaluates the corrected function through direct testing and LLM assessment
-        6. Process repeats until success or max_iter limit is reached
+        2. Use TestAndImprove to iteratively correct and assess the function
+        3. Return the corrected function or error details
 
         Args:
             function_name: Name of the function being debugged
@@ -203,250 +126,47 @@ class ToolDebugger(dspy.Module):
             - status: "success" or "error"
             - error_msg: Error description (if status is "error")
         """
+        # Init the output
+        self.output = ModuleOutput()
 
-        with mlflow.start_span(
-            name=f"ToolDebugger_{function_name}",
-            span_type="MODULE",
-        ) as span:
-            # --- Step 1: Set up the system --- #
-            output = ModuleOutput(status="error")
+        self.logger.info(f"Starting debugging the tool: {function_name}")
 
-            # --- Step 1.1: Extract function requirements from signature and docstring --- #
-            try:
-                function_metadata = _extract_function_metadata(
-                    faulty_function_implementation, function_name
-                )
-
-                # Build function requirements from metadata
-                function_requirements = self._build_function_requirements(
-                    function_metadata
-                )
-
-                self.logger.info(
-                    "The function requirements were successfully extracted."
-                )
-                self.logger.debug(
-                    f"Extracted function requirements: {function_requirements}"
-                )
-
-            except Exception as e:
-                error_msg = f"Failed to extract function metadata: {str(e)}"
-                self.logger.error(error_msg)
-                output.error_msg = error_msg
-                return output
-
-            # Set initial span attributes
-            span.set_attribute("function_name", function_name)
-            span.set_attribute("path_ifc_model", path_ifc_model)
-            span.set_attribute("function_requirements", function_requirements)
-            span.set_attribute("initial_assessment", initial_assessment)
-            span.set_attribute(
-                "faulty_function_implementation", faulty_function_implementation
+        try:
+            # Extract function requirements from signature and docstring
+            function_metadata = _extract_function_metadata(
+                faulty_function_implementation, function_name
             )
 
-            self.logger.info(f"Starting the debugging of the tool: {function_name}")
+            # Build function requirements from metadata
+            function_requirements = self._build_function_requirements(function_metadata)
 
-            # Start with the faulty implementation
-            current_function_implementation = faulty_function_implementation
-            original_assessment = initial_assessment
-            current_assessment = initial_assessment
-            all_issues_found = [initial_assessment]  # Track all issues discovered
-
-            # Reset iteration counter before starting the correction loop
-            self.iter = 0
-
-            # --- Step 2: Iterative improvement loop --- #
-            while self.iter < self.max_iter:
-                self.iter += 1
-
-                with mlflow.start_span(
-                    name=f"tool_debug_iter_{self.iter}",
-                    span_type="CHAIN",
-                ):
-                    # Step 2.1: Correct the function based on current assessment
-                    with mlflow.start_span(
-                        name="ToolCorrector",
-                        span_type="MODULE",
-                    ):
-                        self.logger.info(
-                            f"Iteration {self.iter}: Correcting the function based on assessment"
-                        )
-
-                        prediction = self.tool_corrector(
-                            function_description=function_requirements,
-                            function_name=function_name,
-                            path_ifc_model=path_ifc_model,
-                            current_function_implementation=current_function_implementation,
-                            detailed_function_assessment=current_assessment,
-                        )
-
-                        status = getattr(prediction, "status", None)
-                        error_msg = getattr(prediction, "error_msg", None)
-
-                        if status == "error":
-                            error_msg = (
-                                error_msg
-                                or f"ToolCorrector failed during iteration {self.iter}."
-                            )
-                            self.logger.error(error_msg)
-                            output.error_msg = error_msg
-                            continue
-                        else:
-                            current_function_implementation = (
-                                result.function_implementation
-                                if (result := getattr(prediction, "result", None))
-                                else None
-                            )
-                            if current_function_implementation is None:
-                                output.status = "error"
-                                output.error_msg = "Could not extract the current function implementation from the output."
-                                self.logger.error(output.error_msg)
-                                continue
-                            else:
-                                self.logger.info("✓ Function corrected")
-                                self.logger.debug(
-                                    f"Corrected function implementation:\n{current_function_implementation}"
-                                )
-
-                    # Step 2.2: Create enhanced assessor with dynamic tool
-                    self.logger.info("Assessing the corrected code.")
-                    try:
-                        new_tool = _create_function_from_source_code(
-                            function_name=function_name,
-                            code=current_function_implementation,
-                        )
-
-                        # Create ToolAssessor with primordial tools and the corrected tool
-                        # The CodeAct-based assessor will create its own Python interpreter internally
-                        tools = self.primordial_tools + [new_tool]
-                        tool_assessor = ToolAssessor(
-                            tools=tools, config=self.config.tool_assessor
-                        )
-                        self.logger.info(
-                            "✓ ToolAssessor created with corrected tool to test."
-                        )
-
-                    except Exception as e:
-                        self.logger.error(
-                            f"✗ Failed to create ToolAssessor. Error: {str(e)}"
-                        )
-                        self.logger.error(
-                            f"Code that failed: {current_function_implementation}"
-                        )
-                        continue
-
-                    # Step 2.3: Assess if the corrected function works properly
-                    with mlflow.start_span(name="ToolAssessor", span_type="MODULE"):
-                        try:
-                            self.logger.info("Starting the tool assessment.")
-
-                            output_tool_assessor = tool_assessor(
-                                function_name=function_name,
-                                function_requirements=function_requirements,
-                                path_ifc_model=path_ifc_model,
-                            )
-                            output_tool_assessor = cast(
-                                ModuleOutput, output_tool_assessor
-                            )
-                            self.logger.debug(
-                                f"✓ Assessment completed: {output_tool_assessor.result.assessment_status}"
-                            )
-                            self.logger.debug(
-                                f"Assessment details: {output_tool_assessor.result.assessment_details}"
-                            )
-                        except Exception as e:
-                            self.logger.error(f"✗ Assessment failed: {str(e)}")
-                            continue
-
-                    # Step 2.4: If the assessment is good, update the output and exit the loop
-                    if output_tool_assessor.result.assessment_status == "ok":
-                        self.logger.info(
-                            f"🎉 Function debugging successful after {self.iter} iterations!"
-                        )
-                        output.result.function_implementation = (
-                            current_function_implementation
-                        )
-                        output.status = "success"
-                        output.result.assessment_status = (
-                            output_tool_assessor.result.assessment_status
-                        )
-                        output.result.assessment_details = (
-                            output_tool_assessor.result.assessment_details
-                        )
-                        break
-
-                    # Step 2.5: If the assessment is not satisfactory and we haven't reached max iterations
-                    elif self.iter < self.max_iter:
-                        self.logger.debug(
-                            "Code still needs improvement; will try another correction iteration."
-                        )
-                        # Track new issues while preserving original assessment context
-                        new_issues = (
-                            output_tool_assessor.result.assessment_details
-                            or "No assessment available."
-                        )
-                        if new_issues not in all_issues_found:
-                            all_issues_found.append(new_issues)
-
-                        # Build comprehensive assessment that includes original issue and any new findings
-                        current_assessment = self._build_comprehensive_assessment(
-                            original_assessment, all_issues_found, self.iter
-                        )
-                    else:
-                        self.logger.debug(
-                            "⚠️  Maximum iterations reached without success"
-                        )
-                        output.result.function_implementation = (
-                            current_function_implementation
-                        )
-                        output.result.assessment_status = (
-                            output_tool_assessor.result.assessment_status
-                        )
-                        output.result.assessment_details = (
-                            output_tool_assessor.result.assessment_details
-                        )
-
-            # If we exited the loop without success, still record what we have
-            if output.status == "error" and not output.error_msg:
-                output.error_msg = (
-                    f"Failed to fix function after {self.max_iter} iterations"
-                )
-                output.result.function_implementation = current_function_implementation
-                output.result.assessment_status = "needs_improvement"
-                # Provide comprehensive assessment including original issue
-                final_assessment = self._build_final_assessment_summary(
-                    original_assessment, all_issues_found, self.max_iter
-                )
-                output.result.assessment_details = final_assessment
-
-            # Set final span outputs and attributes
-            span.set_inputs(
-                {
-                    "function_name": function_name,
-                    "faulty_function_implementation": faulty_function_implementation,
-                    "initial_assessment": initial_assessment,
-                    "path_ifc_model": path_ifc_model,
-                }
+            self.logger.info("The function requirements were successfully extracted.")
+            self.logger.debug(
+                f"Extracted function requirements: {function_requirements}"
             )
-            span.set_outputs(
-                {
-                    "status": output.status,
-                    "function_implementation": output.result.function_implementation
-                    or "No implementation generated",
-                    "assessment_status": output.result.assessment_status or "unknown",
-                    "assessment_details": output.result.assessment_details
-                    or "No assessment details",
-                    "iterations_used": self.iter,
-                    "max_iterations": self.max_iter,
-                    "error_msg": output.error_msg or "",
-                }
-            )
-            span.set_attributes(output.result.model_dump())
-            span.set_attribute("iterations_used", self.iter)
-            span.set_attribute("max_iterations", self.max_iter)
 
-            # Return the result (good or bad)
-            return output
+            # Use TestAndImprove to debug and fix the function
+            self.logger.info(
+                "Starting TestAndImprove for function debugging, starting with the initial assessment."
+            )
+            self.output = cast(
+                ModuleOutput,
+                self.test_and_improve(
+                    function_requirements=function_requirements,
+                    function_name=function_name,
+                    path_ifc_model=path_ifc_model,
+                    function_implementation=faulty_function_implementation,
+                    initial_assessment=initial_assessment,
+                ),
+            )
+
+        except Exception as e:
+            self.output.error_msg = (
+                f"An Exception occurred during the debugging process:\nError:\n{e}"
+            )
+            self.logger.error(self.output.error_msg)
+
+        return self.output
 
 
 if __name__ == "__main__":
@@ -466,14 +186,17 @@ if __name__ == "__main__":
         tool_debugger = ToolDebugger()
 
         # debug the tool
-        result = tool_debugger(
-            function_name=function_name,
-            faulty_function_implementation=faulty_function_implementation,
-            initial_assessment=initial_assessment,
-            path_ifc_model=TEST_IFC_PATH,
+        output = cast(
+            ModuleOutput,
+            tool_debugger(
+                function_name=function_name,
+                faulty_function_implementation=faulty_function_implementation,
+                initial_assessment=initial_assessment,
+                path_ifc_model=TEST_IFC_PATH,
+            ),
         )
 
-        print(f"Tool debugging result: {result}")
+        print(f"Tool debugging result: {output.model_dump_json(indent=2)}")
 
         ##########################################
 
