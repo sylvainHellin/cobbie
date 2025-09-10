@@ -155,7 +155,7 @@ if __name__ == "__main__":
     mlflow.set_tracking_uri("http://127.0.0.1:5000")
     mlflow.set_experiment("IfcAnswerEngine")
 
-    dspy.configure_cache(disk_cache_dir=False)
+    dspy.configure_cache(enable_disk_cache=False)
 
     # Initialize the engine - LLM comes from config now!
     engine = IfcAnswerEngine()
