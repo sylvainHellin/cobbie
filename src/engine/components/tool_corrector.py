@@ -55,10 +55,10 @@ class ToolCorrector(dspy.Module):
         lm: Optional[dspy.LM] = None,
     ):
         super().__init__()
+
         # Use provided config or default config
         self.config = config or AGENT_CONFIGS.tool_corrector
         self.lm = lm or self.config.llm.get_llm()
-        dspy.configure(lm=self.lm)
 
         self.tools = tools
         self.max_iters = self.config.max_iters
@@ -82,48 +82,54 @@ class ToolCorrector(dspy.Module):
         self.logger.info(f"Starting ToolCorrector for function: {function_name}")
         self.output = ModuleOutput()
 
-        if self.add_code_prefix:
-            code_prefix = create_code_prefix(
+        code_prefix = (
+            create_code_prefix(
                 path_ifc_model=path_ifc_model,
             )
-        else:
-            code_prefix = None
+            if self.add_code_prefix
+            else None
+        )
+
         self.tool_corrector._update_code_prefix(code_prefix=code_prefix)
 
-        try:
-            prediction = self.tool_corrector(
-                function_description=function_description,
-                function_name=function_name,
-                path_ifc_model=path_ifc_model,
-                current_function_implementation=current_function_implementation,
-                detailed_function_assessment=detailed_function_assessment,
-            )
-
-            self.output.result.function_implementation = getattr(
-                prediction, "new_function_implementation", None
-            )
-
-            if self.output.result.function_implementation:
-                self.logger.info(
-                    f"ToolCorrector result: success - function '{function_name}' updated successfully"
+        with dspy.context(lm=self.lm):
+            try:
+                prediction = self.tool_corrector(
+                    function_description=function_description,
+                    function_name=function_name,
+                    path_ifc_model=path_ifc_model,
+                    current_function_implementation=current_function_implementation,
+                    detailed_function_assessment=detailed_function_assessment,
                 )
-                self.output.status = "success"
 
-            else:
-                self.output.error_msg = (
-                    f"Failed to update the function: {function_name}"
+                self.output.result.function_implementation = getattr(
+                    prediction, "new_function_implementation", None
                 )
-                self.logger.info(self.output.error_msg)
-        except Exception as e:
-            error_msg = f"An Exception occured during the CodeAct forward pass of the ToolCorrector:\nError:{e}\n"
-            self.logger.error(error_msg)
-        finally:
-            self.output.update_cost(
-                lm=self.lm,
-                cost_input_tokens=self.config.llm.cost_input_token,
-                cost_output_tokens=self.config.llm.cost_output_token,
-            )
-            return self.output
+
+                if self.output.result.function_implementation:
+                    self.logger.info(
+                        f"ToolCorrector result: success - function '{function_name}' updated successfully"
+                    )
+                    self.output.status = "success"
+
+                else:
+                    self.output.error_msg = (
+                        f"Failed to update the function: {function_name}"
+                    )
+                    self.logger.info(self.output.error_msg)
+
+            except Exception as e:
+                error_msg = f"An Exception occured during the CodeAct forward pass of the ToolCorrector:\nError:{e}\n"
+                self.logger.error(error_msg)
+
+            finally:
+                self.output.update_cost(
+                    lm=self.lm,
+                    cost_input_tokens=self.config.llm.cost_input_token,
+                    cost_output_tokens=self.config.llm.cost_output_token,
+                )
+
+        return self.output
 
 
 if __name__ == "__main__":
@@ -159,15 +165,20 @@ if __name__ == "__main__":
         )
 
         # correct the tool
-        result = tool_corrector(
-            function_description=function_description,
-            function_name=function_name,
-            path_ifc_model=TEST_IFC_PATH,
-            current_function_implementation=current_function_implementation,
-            detailed_function_assessment=detailed_function_assessment,
+        from typing import cast
+
+        output = cast(
+            ModuleOutput,
+            tool_corrector(
+                function_description=function_description,
+                function_name=function_name,
+                path_ifc_model=TEST_IFC_PATH,
+                current_function_implementation=current_function_implementation,
+                detailed_function_assessment=detailed_function_assessment,
+            ),
         )
 
-        print(f"Correction result: {result}")
+        print(f"Correction result: {output.model_dump_json(indent=2)}")
 
     ##########################################
     # Test data - using similar example as in tool_assessor.py

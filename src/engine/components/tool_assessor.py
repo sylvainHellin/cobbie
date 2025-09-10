@@ -52,7 +52,6 @@ class ToolAssessor(dspy.Module):
         # Use provided config or default config
         self.config = config or AGENT_CONFIGS.tool_assessor
         self.lm = lm or self.config.llm.get_llm()
-        dspy.configure(lm=self.lm)
 
         # Combine base tools with the generated tool
         self.tools = tools
@@ -75,49 +74,51 @@ class ToolAssessor(dspy.Module):
         self.output = ModuleOutput()
         self.logger.info(f"Starting ToolAssessor for function: {function_name}")
 
-        if self.add_code_prefix:
-            code_prefix = create_code_prefix(
-                path_ifc_model=path_ifc_model,
-            )
-        else:
-            code_prefix = None
-        self.tool_assessor._update_code_prefix(code_prefix=code_prefix)
-
-        try:
-            prediction = self.tool_assessor(
-                function_name=function_name,
-                function_requirements=function_requirements,
-                path_ifc_model=path_ifc_model,
-            )
-            self.output.result.assessment_status = getattr(
-                prediction, "assessment_status", None
-            )
-            self.output.result.assessment_details = getattr(
-                prediction, "assessment_details", None
-            )
-
-            if (
-                self.output.result.assessment_status
-                and self.output.result.assessment_details
-            ):
-                self.output.status = "success"
-
-            else:
-                self.output.error_msg = (
-                    f"Tool assessment failed for funtion: {function_name}"
+        with dspy.context(lm=self.lm):
+            if self.add_code_prefix:
+                code_prefix = create_code_prefix(
+                    path_ifc_model=path_ifc_model,
                 )
-                self.logger.error(self.output.error_msg)
-        except Exception as e:
-            self.output.error_msg = f"An Exception occured during the CodeAct forward pass of the ToolAssessor:\nError:{e}\n"
-            self.logger.error(self.output.error_msg)
+            else:
+                code_prefix = None
+            self.tool_assessor._update_code_prefix(code_prefix=code_prefix)
 
-        finally:
-            self.output.update_cost(
-                lm=self.lm,
-                cost_input_tokens=self.config.llm.cost_input_token,
-                cost_output_tokens=self.config.llm.cost_output_token,
-            )
-            return self.output
+            try:
+                prediction = self.tool_assessor(
+                    function_name=function_name,
+                    function_requirements=function_requirements,
+                    path_ifc_model=path_ifc_model,
+                )
+                self.output.result.assessment_status = getattr(
+                    prediction, "assessment_status", None
+                )
+                self.output.result.assessment_details = getattr(
+                    prediction, "assessment_details", None
+                )
+
+                if (
+                    self.output.result.assessment_status
+                    and self.output.result.assessment_details
+                ):
+                    self.output.status = "success"
+
+                else:
+                    self.output.error_msg = (
+                        f"Tool assessment failed for funtion: {function_name}"
+                    )
+                    self.logger.error(self.output.error_msg)
+
+            except Exception as e:
+                self.output.error_msg = f"An Exception occured during the CodeAct forward pass of the ToolAssessor:\nError:{e}\n"
+                self.logger.error(self.output.error_msg)
+
+            finally:
+                self.output.update_cost(
+                    lm=self.lm,
+                    cost_input_tokens=self.config.llm.cost_input_token,
+                    cost_output_tokens=self.config.llm.cost_output_token,
+                )
+                return self.output
 
 
 if __name__ == "__main__":
@@ -134,6 +135,8 @@ if __name__ == "__main__":
         function_name: str,
         python_code: str,
     ):
+        from typing import cast
+
         # setup mlflow
         mlflow.dspy.autolog()  # type: ignore
         mlflow.set_tracking_uri("http://127.0.0.1:5000")
@@ -160,12 +163,15 @@ if __name__ == "__main__":
         )
 
         # assess the tool
-        result = tool_assessor(
-            function_name=function_name,
-            function_requirements=function_requirements,
-            path_ifc_model=TEST_IFC_PATH,
+        output = cast(
+            ModuleOutput,
+            tool_assessor(
+                function_name=function_name,
+                function_requirements=function_requirements,
+                path_ifc_model=TEST_IFC_PATH,
+            ),
         )
-        print(f"Result:\n{result}")
+        print(f"Result:\n{output.model_dump_json(indent=2)}")
 
     ##########################################
     function_requirements = "To accurately determine the width of the emergency escape routes, we need a function that can identify which doors are designated as emergency exits based on their properties or other criteria. The function should be able to query the IFC model for doors with specific properties or classifications that indicate they are emergency exits."
