@@ -283,9 +283,11 @@ class CodeAct(dspy.Module):
             str_trajectory += f"Code:\n```python\n{code}\n```\n"
             str_trajectory += f"Observation: {observation}\n"
 
-        if self._estimate_nb_tokens(str_trajectory) > 2**13:
-            str_trajectory += "Remember: If you think you have finished the task, call final_answer(result_dict) with all the required fields.\n"
-            str_trajectory += f"REQUIRED FIELDS:\n{self.output_fields_description}\n"
+        if self._estimate_nb_tokens(str_trajectory) > 2**12:
+            str_trajectory += "---\nReminder: If you think you have finished the task, call final_answer(result_dict) with all the required fields.\n"
+            str_trajectory += (
+                f"REQUIRED FIELDS:\n{self.output_fields_description}\n---\n"
+            )
 
         return str_trajectory
 
