@@ -85,6 +85,12 @@ class ToolMergerConfig(BaseAgentConfig, CodeActConfig):
     pass  # Inherits all defaults from parent classes
 
 
+class CodeCleanerConfig(BaseAgentConfig):
+    """Configuration for CodeCleaner agent."""
+
+    pass  # Inherits all defaults from parent class
+
+
 class TestAndImproveConfig(BaseAgentConfig, CodeActConfig):
     """Configuration for the TestAndImprove agent"""
 
@@ -98,6 +104,7 @@ class TestAndImproveConfig(BaseAgentConfig, CodeActConfig):
     # Sub-agent configurations
     tool_assessor: ToolAssessorConfig = Field(default_factory=ToolAssessorConfig)
     tool_corrector: ToolCorrectorConfig = Field(default_factory=ToolCorrectorConfig)
+    code_cleaner: CodeCleanerConfig = Field(default_factory=CodeCleanerConfig)
 
 
 class ToolDebuggerConfig(BaseAgentConfig):
@@ -216,6 +223,7 @@ class AgentConfigs(BaseModel):
     error_analyst: ErrorAnalystConfig = Field(default_factory=ErrorAnalystConfig)
     training_module: TrainingModuleConfig = Field(default_factory=TrainingModuleConfig)
     tool_merger: ToolMergerConfig = Field(default_factory=ToolMergerConfig)
+    code_cleaner: CodeCleanerConfig = Field(default_factory=CodeCleanerConfig)
     test_and_improve: TestAndImproveConfig = Field(default_factory=TestAndImproveConfig)
     training_pipeline: TrainingPipelineConfig = Field(
         default_factory=TrainingPipelineConfig
@@ -251,6 +259,7 @@ def get_config(agent_name: str) -> BaseAgentConfig:
         "tool_optimizer": AGENT_CONFIGS.tool_optimizer,
         "error_analyst": AGENT_CONFIGS.error_analyst,
         "training_module": AGENT_CONFIGS.training_module,
+        "code_cleaner": AGENT_CONFIGS.code_cleaner,
         "answer_verifier": AGENT_CONFIGS.answer_verifier,
     }
 
