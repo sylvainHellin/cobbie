@@ -15,13 +15,13 @@ class TrainingContext(BaseModel):
     span: Optional[Span] = None
 
     # Module outputs
-    engine_output: ModuleOutput = ModuleOutput(status="error")
-    verifier_output: ModuleOutput = ModuleOutput(status="error")
-    error_analyst_output: ModuleOutput = ModuleOutput(status="error")
-    tool_debugger_output: ModuleOutput = ModuleOutput(status="error")
-    tool_merger_output: ModuleOutput = ModuleOutput(status="error")
-    tool_optimizer_output: ModuleOutput = ModuleOutput(status="error")
-    tool_creator_output: ModuleOutput = ModuleOutput(status="error")
+    engine: ModuleOutput = ModuleOutput(status="error")
+    answer_verifier: ModuleOutput = ModuleOutput(status="error")
+    error_analyst: ModuleOutput = ModuleOutput(status="error")
+    tool_debugger: ModuleOutput = ModuleOutput(status="error")
+    tool_merger: ModuleOutput = ModuleOutput(status="error")
+    tool_optimizer: ModuleOutput = ModuleOutput(status="error")
+    tool_creator: ModuleOutput = ModuleOutput(status="error")
 
     class Config:
         # Allow OpenTelemetry span objects which aren't Pydantic models
@@ -31,10 +31,10 @@ class TrainingContext(BaseModel):
         """Clear all context data - equivalent to dict.clear()"""
         self.qa_pair = None
         self.span = None
-        self.engine_output = ModuleOutput(status="error")
-        self.verifier_output = ModuleOutput(status="error")
-        self.error_analyst_output = ModuleOutput(status="error")
-        self.tool_debugger_output = ModuleOutput(status="error")
-        self.tool_merger_output = ModuleOutput(status="error")
-        self.tool_optimizer_output = ModuleOutput(status="error")
-        self.tool_creator_output = ModuleOutput(status="error")
+        self.engine = ModuleOutput(status="error")
+        self.answer_verifier = ModuleOutput(status="error")
+        self.error_analyst = ModuleOutput(status="error")
+        self.tool_debugger = ModuleOutput(status="error")
+        self.tool_merger = ModuleOutput(status="error")
+        self.tool_optimizer = ModuleOutput(status="error")
+        self.tool_creator = ModuleOutput(status="error")

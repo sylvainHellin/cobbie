@@ -160,7 +160,7 @@ class LLMRegistry:
             LLMModel(
                 name="gemini-flash-lite", model_path="google/gemini-2.5-flash-lite"
             ),
-            LLMModel(name="qwen3-30b", model_path="qwen3:30b"),
+            LLMModel(name="qwen3-coder:30b", model_path="qwen3-coder:30b"),
             LLMModel(name="gemma3-12b", model_path="gemma3:12b"),
             LLMModel(name="qwen3:8b", model_path="qwen3:8b"),
             LLMModel(name="gemma3-4b", model_path="gemma3:4b"),
@@ -264,7 +264,7 @@ class LLMRegistry:
                 cost_output_token=2.0,
             ),
             # Ollama models
-            ModelAvailability(model_name="qwen3-30b", provider_name="ollama"),
+            ModelAvailability(model_name="qwen3-coder:30b", provider_name="ollama"),
             ModelAvailability(model_name="gemma3-12b", provider_name="ollama"),
             ModelAvailability(model_name="qwen3:8b", provider_name="ollama"),
             ModelAvailability(model_name="gemma3-4b", provider_name="ollama"),
@@ -364,10 +364,17 @@ LLM_REGISTRY = LLMRegistry()
 class LLM(BaseModel):
     """LLM configuration for agents."""
 
+    # Uncomment for using Cloud model
     # model_name: str = Field(default="qwen3-coder", description="Name of the model")
-    model_name: str = Field(default="qwen3:8b", description="Name of the model")
+    # provider_name: str = Field(
+    #     default="deepinfra",
+    #     description="Provider to use (auto-selected if None)",
+    # )
+
+    # Uncomment for using local model
+    model_name: str = Field(default="qwen3-coder:30b", description="Name of the model")
     provider_name: str = Field(
-        default="deepinfra",
+        default="ollama",
         description="Provider to use (auto-selected if None)",
     )
     max_tokens: int = Field(default=2**14, description="Maximum tokens for LLM")

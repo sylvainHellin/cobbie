@@ -35,7 +35,7 @@ class CodeActConfig(BaseModel):
     """Configuration for CodeAct-based agents."""
 
     max_iters: int = Field(
-        default=15, description="Maximum iterations for CodeAct agents"
+        default=10, description="Maximum iterations for CodeAct agents"
     )
     add_code_prefix: bool = Field(
         default=True, description="Whether to add code prefix"
@@ -191,10 +191,10 @@ class AnswerVerifierConfig(BaseAgentConfig):
         default=0.8, description="Similarity threshold for answer verification"
     )
     # Override LLM default to be consistent with other agents (use default_factory)
-    llm: LLM = Field(
-        default=LLM(model_name="claude-sonnet-4", provider_name="openrouter"),
-        description="Language model configuration",
-    )
+    # llm: LLM = Field(
+    #     default=LLM(model_name="claude-sonnet-4", provider_name="openrouter"),
+    #     description="Language model configuration",
+    # )
 
 
 # Global configuration instance
