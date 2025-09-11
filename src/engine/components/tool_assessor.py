@@ -4,7 +4,7 @@ import dspy
 
 from src.config.agents import AGENT_CONFIGS, ToolAssessorConfig
 from src.engine.components.code_act import CodeAct
-from src.engine.schemas import ModuleOutput
+from src.engine.schemas import Err, ModuleOutput, Ok
 from src.engine.util import (
     _create_function_from_source_code,
     create_code_prefix,
@@ -146,17 +146,18 @@ if __name__ == "__main__":
         # setup the primordial tools
         primordial_tools = [web_search, query_ifcopenshell_documentation]
 
-        # Create the function from source code (mocking up the implementation from tool_creator.py)
-        try:
-            new_tool = _create_function_from_source_code(
-                function_name=function_name, code=python_code
-            )
+        # Create the function from source code
+        new_tool = _create_function_from_source_code(
+            function_name=function_name, code=python_code
+        )
+        tools = primordial_tools
+        if isinstance(new_tool, Ok):
             print(f"✓ Successfully created function: {function_name}")
-        except Exception as e:
-            print(f"✗ Failed to create function: {str(e)}")
-            return
+            tools += [new_tool.value]
 
-        tools = primordial_tools + [new_tool]
+        elif isinstance(new_tool, Err):
+            print(f"There was an error creating the new tool: {new_tool.error}")
+            return
 
         # setup the tool assessor
         tool_assessor = ToolAssessor(
