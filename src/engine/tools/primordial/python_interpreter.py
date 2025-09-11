@@ -274,8 +274,6 @@ def get_python_interpreter(
             A formatted string containing both the print outputs and return value
         """
         logger = get_logger("python_interpreter", log_level=LOG_LEVEL)
-        logger.info("tool called.")
-        # logger.debug(f"code to interpret:\n```python\n{python_code}\n```\n")
 
         interpreter = LocalPythonExecutor(
             additional_authorized_imports=authorized_imports
@@ -328,6 +326,7 @@ def get_python_interpreter(
             text=str(returned_value), max_tokens=max_tokens_output
         )
         logs = _truncatenate_text(text=logs, max_tokens=max_tokens_logs)
+        logger.info(f"logs: {logs}")
 
         return returned_value, logs, is_final
 
