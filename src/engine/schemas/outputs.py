@@ -1,4 +1,5 @@
 from typing import Literal, Optional, Self, Callable, Dict, List, Any
+import json
 
 import dspy
 from pydantic import BaseModel
@@ -31,10 +32,10 @@ class AgentOutput(BaseModel):
     ] = None
     existing_tool_names: Optional[List[str]] = None
     tools_merged: Optional[bool] = None
-    history: Optional[List] = None
 
 
 class ModuleOutput(BaseModel):
+    history: Optional[List] = None
     result: AgentOutput = AgentOutput()
     status: Literal["error", "success"] = "error"
     error_msg: Optional[str] = None
@@ -42,6 +43,32 @@ class ModuleOutput(BaseModel):
     output_tokens: Optional[int] = None
     llm: Optional[str] = None
     cost: Optional[float] = None
+
+    def _make_json_serializable(self, obj):
+        """Convert an object to a JSON-serializable format."""
+        try:
+            # Try to serialize the object directly
+            json.dumps(obj)
+            return obj
+        except (TypeError, ValueError):
+            # If it fails, convert to string representation or handle specific types
+            if hasattr(obj, "__dict__"):
+                # For objects with __dict__, try to serialize their attributes
+                try:
+                    return {
+                        k: self._make_json_serializable(v)
+                        for k, v in obj.__dict__.items()
+                        if not k.startswith("_")
+                    }
+                except:
+                    return str(obj)
+            elif isinstance(obj, (list, tuple)):
+                return [self._make_json_serializable(item) for item in obj]
+            elif isinstance(obj, dict):
+                return {k: self._make_json_serializable(v) for k, v in obj.items()}
+            else:
+                # For other non-serializable objects, convert to string
+                return str(obj)
 
     def update_lm_metrics(
         self,
@@ -67,7 +94,8 @@ class ModuleOutput(BaseModel):
                 usage = call.get("usage", {})
                 self.input_tokens += usage.get("prompt_tokens", 0)
                 self.output_tokens += usage.get("completion_tokens", 0)
-            self.history = lm.history
+            # Make history JSON-serializable
+            self.history = self._make_json_serializable(lm.history)
 
         self.cost = (
             (self.input_tokens or 0) * cost_input_tokens
@@ -99,4 +127,7 @@ class ModuleOutput(BaseModel):
 
         # update LM history
         if combine_history:
-            self.history.extend(right_output.history)
+            if self.history is None:
+                self.history = []
+            if right_output.history is not None:
+                self.history.extend(right_output.history)
