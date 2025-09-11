@@ -3,7 +3,7 @@ import mlflow
 from typing import Literal, List, Optional
 
 from src.config.agents import AGENT_CONFIGS, ToolOptimizerConfig
-from src.engine.schemas import ModuleOutput, Result
+from src.engine.schemas import ModuleOutput, AgentOutput
 from src.engine.util import get_logger, get_tools_description
 
 
@@ -136,7 +136,7 @@ class ToolOptimizer(dspy.Module):
                     f"Tool optimization completed. Improvement type: {getattr(prediction, 'improvement', None)}"
                 )
 
-                output.result = Result(
+                output.result = AgentOutput(
                     reasoning=getattr(prediction, "reasoning", None),
                     improvement=getattr(prediction, "improvement", None),
                     function_name=getattr(prediction, "new_tool_name", None),

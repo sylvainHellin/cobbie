@@ -1,13 +1,40 @@
-from typing import Literal, Optional, Self
+from typing import Literal, Optional, Self, Callable, Dict, List, Any
 
 import dspy
 from pydantic import BaseModel
 
-from src.engine.schemas.result import Result
+
+class AgentOutput(BaseModel):
+    assessment_status: Optional[Literal["ok", "needs_improvement"]] = None
+    assessment_details: Optional[str] = None
+    answer: Optional[str] = None
+    correct_answer: Optional[bool] = None
+    reasoning: Optional[str] = None
+    trajectory: Optional[Dict[str, Any]] = None
+    similarity_score: Optional[float] = None
+    need_new_function: Optional[bool] = None
+    new_tool_created: Optional[bool] = None
+    existing_tool_updated: Optional[bool] = None
+    function_requirements: Optional[str] = None
+    function_name: Optional[str] = None
+    function_implementation: Optional[str] = None
+    new_function: Optional[Callable] = None
+    error_category: Optional[Literal["faulty_tool", "missing_tool", "other"]] = None
+    error_analysis: Optional[str] = None
+    improvement: Optional[
+        Literal[
+            "create_new_tool",
+            "merge_existing_tools",
+            "update_existing_tool",
+            "no_action_needed",
+        ]
+    ] = None
+    existing_tool_names: Optional[List[str]] = None
+    tools_merged: Optional[bool] = None
 
 
 class ModuleOutput(BaseModel):
-    result: Result = Result()
+    result: AgentOutput = AgentOutput()
     status: Literal["error", "success"] = "error"
     error_msg: Optional[str] = None
     input_tokens: Optional[int] = None

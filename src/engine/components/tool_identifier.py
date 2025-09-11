@@ -3,7 +3,7 @@ import mlflow
 from typing import Optional
 
 from src.config.agents import AGENT_CONFIGS, ToolIdentifierConfig
-from src.engine.schemas import ModuleOutput, Result
+from src.engine.schemas import ModuleOutput, AgentOutput
 from src.engine.util import get_logger, get_tools_description
 
 
@@ -127,7 +127,7 @@ class ToolIdentifier(dspy.Module):
                     self.logger.info(f"Suggested function name: {function_name}")
                     self.logger.debug(f"Function requirements: {function_requirements}")
 
-                output.result = Result(
+                output.result = AgentOutput(
                     reasoning=reasoning,
                     need_new_function=new_function_identified,
                     function_name=function_name,

@@ -3,7 +3,7 @@ from typing import Literal
 import dspy
 
 from src.config import LOG_LEVEL
-from src.engine.schemas import ModuleOutput, Result
+from src.engine.schemas import ModuleOutput, AgentOutput
 from src.engine.util import get_logger
 
 
@@ -47,7 +47,7 @@ class NameExtractor(dspy.Module):
 
         try:
             prediction = self.extractor(function_requirements=function_requirements)
-            self.output.result = Result(
+            self.output.result = AgentOutput(
                 function_name=getattr(prediction, "function_name", None),
                 reasoning=getattr(prediction, "reasoning", None),
             )

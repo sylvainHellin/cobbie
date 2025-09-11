@@ -147,10 +147,17 @@ class TestAndImprove(dspy.Module):
                     assert self.output.result.function_implementation is not None, (
                         f"Logical Error during {self.iter} pass of the test_and_improve block: source code for creating the function to assess is None."
                     )
-                    new_tool = _create_function_from_source_code(
+                    creation_result = _create_function_from_source_code(
                         function_name=function_name,
                         code=self.output.result.function_implementation,
                     )
+
+                    if creation_result.is_err():
+                        raise Exception(
+                            f"Failed to create function: {creation_result.unwrap_err()}"
+                        )
+
+                    new_tool = creation_result.unwrap()
 
                     # Create ToolAssessor with primordial tools and the generated tool
                     tools = self.primordial_tools + [new_tool]

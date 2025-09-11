@@ -3,7 +3,7 @@ from typing import Callable, List, Optional
 import dspy
 
 from src.config.agents import AGENT_CONFIGS, FUNCTION_BOILERPLATE, ToolProgrammerConfig
-from src.engine.schemas import ModuleOutput, Result
+from src.engine.schemas import ModuleOutput, AgentOutput
 from src.engine.util import create_code_prefix, get_logger
 
 from src.engine.components.code_act import CodeAct
@@ -102,7 +102,7 @@ class ToolProgrammer(dspy.Module):
                 )
                 self.logger.debug(f"function code:\n{function_implementation}\n")
                 return ModuleOutput(
-                    result=Result(function_implementation=function_implementation),
+                    result=AgentOutput(function_implementation=function_implementation),
                     status="success",
                 )
             else:

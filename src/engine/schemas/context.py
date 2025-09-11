@@ -1,7 +1,7 @@
 from typing import Optional
 from pydantic import BaseModel
 
-from .module_output import ModuleOutput
+from .outputs import ModuleOutput
 from .qa_pair import QA_Pair
 
 from mlflow.entities import Span

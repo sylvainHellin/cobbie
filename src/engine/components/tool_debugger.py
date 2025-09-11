@@ -5,7 +5,7 @@ import mlflow
 
 from src.config.agents import AGENT_CONFIGS, ToolDebuggerConfig
 from src.engine.components.test_and_improve import TestAndImprove
-from src.engine.schemas.module_output import ModuleOutput
+from src.engine.schemas import ModuleOutput
 from src.engine.tools.primordial import (
     query_ifcopenshell_documentation,
     web_search,
