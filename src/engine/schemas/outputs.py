@@ -31,6 +31,7 @@ class AgentOutput(BaseModel):
     ] = None
     existing_tool_names: Optional[List[str]] = None
     tools_merged: Optional[bool] = None
+    history: Optional[List] = None
 
 
 class ModuleOutput(BaseModel):
@@ -42,7 +43,7 @@ class ModuleOutput(BaseModel):
     llm: Optional[str] = None
     cost: Optional[float] = None
 
-    def update_cost(
+    def update_lm_metrics(
         self,
         lm: dspy.LM,
         cost_input_tokens: float,
@@ -66,6 +67,7 @@ class ModuleOutput(BaseModel):
                 usage = call.get("usage", {})
                 self.input_tokens += usage.get("prompt_tokens", 0)
                 self.output_tokens += usage.get("completion_tokens", 0)
+            self.history = lm.history
 
         self.cost = (
             (self.input_tokens or 0) * cost_input_tokens

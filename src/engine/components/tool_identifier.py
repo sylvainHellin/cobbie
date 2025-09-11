@@ -144,7 +144,7 @@ class ToolIdentifier(dspy.Module):
                 self.output.error_msg = error_msg
 
             finally:
-                self.output.update_cost(
+                self.output.update_lm_metrics(
                     lm=self.lm,
                     cost_input_tokens=self.config.llm.cost_input_token,
                     cost_output_tokens=self.config.llm.cost_output_token,

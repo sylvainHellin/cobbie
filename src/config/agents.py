@@ -23,7 +23,7 @@ class BaseAgentConfig(BaseModel):
         default_factory=LLM, description="Language model to use with this agent."
     )
     load_optimized_module: bool = Field(
-        default=True,
+        default=False,
         description="Whether to load the optimized Module wor not.",
     )
     tracking_uri: str = Field(

@@ -6,6 +6,7 @@ import mlflow
 from mlflow.entities import LiveSpan
 
 from src.config import AGENT_CONFIGS, PATH_COMPILED_MODEL
+from src.config.agents import TrainingModuleConfig
 from src.engine import (
     AnswerVerifier,
     ErrorAnalyst,
@@ -50,7 +51,7 @@ class TrainingState(Enum):
 class TrainingModule(dspy.Module):
     def __init__(
         self,
-        config=None,
+        config: Optional[TrainingModuleConfig] = None,
         lm: Optional[dspy.LM] = None,  # Optional override
     ):
         super().__init__()
@@ -94,10 +95,7 @@ class TrainingModule(dspy.Module):
         self.previous_usage = self.current_usage
 
         # Initialize default output
-        self.output = ModuleOutput(
-            status="error",
-            error_msg="Default error message from initialization of TrainingModule.",
-        )
+        self.output = ModuleOutput()
 
         # Setup DSPy
         dspy.configure(lm=self.lm)
