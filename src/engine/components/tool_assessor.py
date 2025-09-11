@@ -14,9 +14,10 @@ from src.engine.util import (
 
 class ToolAssessmentSignature(dspy.Signature):
     """
-    Assess whether a Python function meets its requirements and works correctly.
-    Your role is simply to test the function and assess whether it works as intended — you are not responsible for implementing it.
-    Make sure you check that the type hints in the function signature are accurate.
+    Assess whether a Python function meets its requirements and functions correctly.
+    Your role is simply to test the function and determine whether it works as intended; you are not responsible for its implementation.
+    Ensure that you verify the accuracy of the type hints in the function signature.
+    Do not import the function you are assessing; this will raise an error. This function has already been imported and can be used directly in your code.
     """
 
     # inputs
