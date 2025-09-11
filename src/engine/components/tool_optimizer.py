@@ -83,7 +83,6 @@ class ToolOptimizer(dspy.Module):
         # Use provided config or default config
         self.config = config or AGENT_CONFIGS.tool_optimizer
         self.lm = lm or self.config.llm.get_llm()
-        dspy.configure(lm=self.lm)
 
         self.tool_optimizer = dspy.ChainOfThought(SignatureToolOptimizer)
         self.log_level = self.config.log_level
@@ -112,12 +111,9 @@ class ToolOptimizer(dspy.Module):
             - error_msg: Error description (if status is "error")
         """
 
-        with mlflow.start_span(
-            name="ToolOptimizer", span_type="MODULE"
-        ) as optimizer_span:
+        with dspy.context(lm=self.lm):
             self.logger.info("Starting tool optimization analysis")
-            output = ModuleOutput(status="error")
-            optimizer_span.set_attribute("llm", self.lm.model)
+            self.output = ModuleOutput()
 
             try:
                 self.logger.debug(
@@ -136,7 +132,7 @@ class ToolOptimizer(dspy.Module):
                     f"Tool optimization completed. Improvement type: {getattr(prediction, 'improvement', None)}"
                 )
 
-                output.result = AgentOutput(
+                self.output.result = AgentOutput(
                     reasoning=getattr(prediction, "reasoning", None),
                     improvement=getattr(prediction, "improvement", None),
                     function_name=getattr(prediction, "new_tool_name", None),
@@ -145,23 +141,30 @@ class ToolOptimizer(dspy.Module):
                     ),
                     function_requirements=getattr(prediction, "requirements", None),
                 )
-                output.status = "success"
+                self.output.status = "success"
 
                 self.logger.info("Tool optimization analysis completed successfully")
 
             except Exception as e:
                 error_msg = f"Error during tool optimization analysis: {str(e)}"
                 self.logger.error(error_msg)
-                output.error_msg = error_msg
+                self.output.error_msg = error_msg
 
-            return output
+            finally:
+                self.output.update_cost(
+                    lm=self.lm,
+                    cost_input_tokens=self.config.llm.cost_input_token,
+                    cost_output_tokens=self.config.llm.cost_output_token,
+                )
+
+        return self.output
 
 
 if __name__ == "__main__":
+    from typing import cast
 
     def main(
         chat_history: str,
-        lm_name: str = "qwen3-coder",
     ):
         # setup mlflow
         mlflow.dspy.autolog()  # type: ignore
@@ -172,9 +175,9 @@ if __name__ == "__main__":
         tool_optimizer = ToolOptimizer()
 
         # analyze the chat history
-        result = tool_optimizer(chat_history=chat_history)
+        result = cast(ModuleOutput, tool_optimizer(chat_history=chat_history))
 
-        print(f"Tool optimization result: {result}")
+        print(f"Tool optimization result: {result.model_dump_json(indent=2)}")
 
     ##########################################
     # Test data - example chat history
