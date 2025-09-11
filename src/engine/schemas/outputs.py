@@ -76,22 +76,27 @@ class ModuleOutput(BaseModel):
 
         self.llm = lm.model
 
-    def combine_cost(self, output: Self):
-        """Combine cost metrics from another ModuleOutput into this one.
+    def combine_lm_metrics(
+        self,
+        right_output: Self,
+        combine_history: bool = False,
+        update_llm: Literal["right", "left"] = "left",
+    ):
+        """Combine some metrics from another ModuleOutput into this one.
 
         Adds the cost, input_tokens, and output_tokens from the provided output
         to this ModuleOutput's metrics. Handles None values by treating them as 0.
-        Updates the llm field to indicate mixed models if different models were used.
-
-        Args:
-            output: Another ModuleOutput instance whose costs will be added to this one
+        Chose which llm to keep, and if history also needs to be combined.
         """
-        self.cost = (self.cost or 0) + (output.cost or 0)
-        self.input_tokens = (self.input_tokens or 0) + (output.input_tokens or 0)
-        self.output_tokens = (self.output_tokens or 0) + (output.output_tokens or 0)
+        self.cost = (self.cost or 0) + (right_output.cost or 0)
+        self.input_tokens = (self.input_tokens or 0) + (right_output.input_tokens or 0)
+        self.output_tokens = (self.output_tokens or 0) + (
+            right_output.output_tokens or 0
+        )
 
         # Handle LLM field when combining different models
-        if self.llm and output.llm and self.llm != output.llm:
-            self.llm = f"{self.llm}+{output.llm}"
-        elif not self.llm and output.llm:
-            self.llm = output.llm
+        self.llm = right_output.llm if update_llm == "right" else self.llm
+
+        # update LM history
+        if combine_history:
+            self.history.extend(right_output.history)

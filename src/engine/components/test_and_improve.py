@@ -125,7 +125,7 @@ class TestAndImprove(dspy.Module):
                         detailed_function_assessment=initial_assessment,
                     ),
                 )
-                self.output.combine_cost(output=output_tool_corrector)
+                self.output.combine_lm_metrics(right_output=output_tool_corrector)
 
                 if output_tool_corrector.status == "success":
                     self.output.result.function_implementation = (
@@ -171,7 +171,7 @@ class TestAndImprove(dspy.Module):
                                 error_msg=error_msg,
                             ),
                         )
-                        self.output.combine_cost(output=output_code_cleaner)
+                        self.output.combine_lm_metrics(right_output=output_code_cleaner)
 
                         if output_code_cleaner.status == "success":
                             # Update the function implementation with the cleaned code
@@ -233,7 +233,7 @@ class TestAndImprove(dspy.Module):
                     ),
                 )
 
-                self.output.combine_cost(output=output_tool_assessor)
+                self.output.combine_lm_metrics(right_output=output_tool_assessor)
                 self.output.result.assessment_status = (
                     output_tool_assessor.result.assessment_status
                 )
@@ -278,7 +278,7 @@ class TestAndImprove(dspy.Module):
                             detailed_function_assessment=assessment_for_correction,
                         ),
                     )
-                    self.output.combine_cost(output=output_tool_corrector)
+                    self.output.combine_lm_metrics(right_output=output_tool_corrector)
 
                     if output_tool_corrector.status == "success":
                         self.output.result.function_implementation = (

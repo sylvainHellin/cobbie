@@ -210,7 +210,7 @@ class ToolsMerger(dspy.Module):
                 self.output.result.assessment_status = (
                     output_test_and_improve.result.assessment_status
                 )
-                self.output.combine_cost(output=output_test_and_improve)
+                self.output.combine_lm_metrics(right_output=output_test_and_improve)
 
                 if output_test_and_improve.status == "success":
                     self.output.result.function_implementation = (

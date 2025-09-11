@@ -166,7 +166,7 @@ class ToolCreator(dspy.Module):
                 if output_test_and_improve.status == "success":
                     self.output.status = "success"
                     self.output.result = output_test_and_improve.result
-                    self.output.combine_cost(output=output_test_and_improve)
+                    self.output.combine_lm_metrics(right_output=output_test_and_improve)
 
             return self.output
 
