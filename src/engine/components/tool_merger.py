@@ -9,11 +9,10 @@ from src.config.agents import (
     ToolMergerConfig,
 )
 from src.engine.components import CodeAct
+from src.engine.components.test_and_improve import TestAndImprove
 from src.engine.schemas import ModuleOutput
 from src.engine.tools.primordial import query_ifcopenshell_documentation, web_search
 from src.engine.util import create_code_prefix, get_logger
-
-from src.engine.components.test_and_improve import TestAndImprove
 
 
 class SignatureMergeTools(dspy.Signature):
@@ -50,8 +49,8 @@ class SignatureMergeTools(dspy.Signature):
     )
 
 
-class ToolsMerger(dspy.Module):
-    """Module to merge two existing Python functions into one."""
+class InitialMerger(dspy.Module):
+    """Module to merge two existing Python functions into one (without refining)."""
 
     def __init__(
         self,
@@ -74,6 +73,92 @@ class ToolsMerger(dspy.Module):
             tools=tools,
             max_iters=self.max_iters,
         )
+        self.log_level = self.config.log_level
+        self.logger = get_logger(name="InitialMerger", log_level=self.log_level)
+        self.add_code_prefix = self.config.add_code_prefix
+
+    def forward(
+        self,
+        function_requirements: str,
+        function_name: str,
+        path_ifc_model: str,
+        source_code_first_function: str,
+        source_code_second_function: str,
+    ) -> ModuleOutput:
+        with dspy.context(lm=self.lm):
+            self.logger.info(f"Starting ToolMerger for function: {function_name}")
+            self.output = ModuleOutput()
+
+            if self.add_code_prefix:
+                code_prefix = create_code_prefix(
+                    path_ifc_model=path_ifc_model,
+                    imports_boilerplate=FUNCTION_BOILERPLATE,
+                )
+            else:
+                code_prefix = None
+
+            self.tools_merger._update_code_prefix(code_prefix=code_prefix)
+
+            try:
+                prediction = self.tools_merger(
+                    function_name=function_name,
+                    function_requirements=function_requirements,
+                    path_ifc_model=path_ifc_model,
+                    source_code_first_function=source_code_first_function,
+                    source_code_second_function=source_code_second_function,
+                )
+                # Check if we got valid python code
+                function_implementation = getattr(
+                    prediction, "function_implementation", None
+                )
+
+                if function_implementation is not None:
+                    self.logger.info(f"Function '{function_name}' created successfully")
+                    self.logger.debug(f"function code:\n{function_implementation}\n")
+                    self.output.status = "success"
+                    self.output.result.function_implementation = function_implementation
+                    self.output.result.function_name = function_name
+                    self.output.result.function_requirements = function_requirements
+
+                else:
+                    self.output.error_msg = (
+                        f"No valid code generated for function: {function_name}"
+                    )
+                    self.logger.error(self.output.error_msg)
+
+            except Exception as e:
+                self.output.error_msg = f"An Exception occured during the CodeAct forward pass:\nError:\n{e}"
+                self.logger.error(self.output.error_msg)
+
+            finally:
+                self.output.update_cost(
+                    lm=self.lm,
+                    cost_input_tokens=self.config.llm.cost_input_token,
+                    cost_output_tokens=self.config.llm.cost_output_token,
+                )
+        return self.output
+
+
+class ToolsMerger(dspy.Module):
+    """Module to merge two existing Python functions into one ; test and refine the output."""
+
+    def __init__(
+        self,
+        tools: List[Callable] = [
+            query_ifcopenshell_documentation,
+            web_search,
+        ],
+        config: Optional[ToolMergerConfig] = None,
+        lm: Optional[dspy.LM] = None,
+    ):
+        super().__init__()
+        # Use provided config or default config
+        self.config = config or AGENT_CONFIGS.tool_merger
+        self.lm = lm or self.config.llm.get_llm()
+
+        self.tools = tools
+        self.max_iters = self.config.max_iters
+        self.tools_merger = InitialMerger()
         self.test_and_improve = TestAndImprove()
         self.log_level = self.config.log_level
         self.logger = get_logger(name="ToolMerger", log_level=self.log_level)
@@ -88,65 +173,26 @@ class ToolsMerger(dspy.Module):
         source_code_second_function: str,
     ) -> ModuleOutput:
         with dspy.context(lm=self.lm):
-            with mlflow.start_span(name="InitialMerger", span_type="CHAIN"):
-                self.logger.info(f"Starting ToolMerger for function: {function_name}")
-                self.output = ModuleOutput()
+            self.logger.info(f"Starting ToolMerger for function: {function_name}")
+            self.output = ModuleOutput()
 
-                if self.add_code_prefix:
-                    code_prefix = create_code_prefix(
-                        path_ifc_model=path_ifc_model,
-                        imports_boilerplate=FUNCTION_BOILERPLATE,
-                    )
-                else:
-                    code_prefix = None
-
-                self.tools_merger._update_code_prefix(code_prefix=code_prefix)
-
-                try:
-                    prediction = self.tools_merger(
-                        function_name=function_name,
-                        function_requirements=function_requirements,
-                        path_ifc_model=path_ifc_model,
-                        source_code_first_function=source_code_first_function,
-                        source_code_second_function=source_code_second_function,
-                    )
-                    # Check if we got valid python code
-                    function_implementation = getattr(
-                        prediction, "function_implementation", None
-                    )
-
-                    if function_implementation is not None:
-                        self.logger.info(
-                            f"Function '{function_name}' created successfully"
-                        )
-                        self.logger.debug(
-                            f"function code:\n{function_implementation}\n"
-                        )
-                        self.output.result.function_implementation = (
-                            function_implementation
-                        )
-                        self.output.result.function_name = function_name
-                        self.output.result.function_requirements = function_requirements
-
-                    else:
-                        self.output.error_msg = (
-                            f"No valid code generated for function: {function_name}"
-                        )
-                        self.logger.error(self.output.error_msg)
-
-                except Exception as e:
-                    self.output.error_msg = f"An Exception occured during the CodeAct forward pass:\nError:\n{e}"
-                    self.logger.error(self.output.error_msg)
-
-                finally:
-                    self.output.update_cost(
-                        lm=self.lm,
-                        cost_input_tokens=self.config.llm.cost_input_token,
-                        cost_output_tokens=self.config.llm.cost_output_token,
-                    )
+            self.output = cast(
+                ModuleOutput,
+                self.tools_merger(
+                    function_name=function_name,
+                    function_requirements=function_requirements,
+                    path_ifc_model=path_ifc_model,
+                    source_code_first_function=source_code_first_function,
+                    source_code_second_function=source_code_second_function,
+                ),
+            )
 
             # Test and debug the new tool if necessary
-            if self.output.result.function_implementation:
+            if self.output.status == "success":
+                assert self.output.result.function_implementation is not None, (
+                    "Logical error: status of initial merger is a success, but the function_implementation is None."
+                )
+
                 output_test_and_improve = cast(
                     ModuleOutput,
                     self.test_and_improve(
@@ -156,19 +202,20 @@ class ToolsMerger(dspy.Module):
                         path_ifc_model=path_ifc_model,
                     ),
                 )
+
+                # Update the fields of the output
+                self.output.result.assessment_details = (
+                    output_test_and_improve.result.assessment_details
+                )
+                self.output.result.assessment_status = (
+                    output_test_and_improve.result.assessment_status
+                )
                 self.output.combine_cost(output=output_test_and_improve)
+
                 if output_test_and_improve.status == "success":
-                    self.output.status = "success"
                     self.output.result.function_implementation = (
                         output_test_and_improve.result.function_implementation
                     )
-                    self.output.result.assessment_details = (
-                        output_test_and_improve.result.assessment_details
-                    )
-                    self.output.result.assessment_status = (
-                        output_test_and_improve.result.assessment_status
-                    )
-
                 else:
                     self.output.status = "error"
                     self.output.error_msg = output_test_and_improve.error_msg
