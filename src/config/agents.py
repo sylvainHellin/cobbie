@@ -43,12 +43,6 @@ class CodeActConfig(BaseModel):
 
 
 # Individual agent configurations
-class ToolProgrammerConfig(BaseAgentConfig, CodeActConfig):
-    """Configuration for ToolProgrammer agent."""
-
-    pass  # Inherits all defaults from parent classes
-
-
 class ToolAssessorConfig(BaseAgentConfig, CodeActConfig):
     """Configuration for ToolAssessor agent."""
 
@@ -134,7 +128,6 @@ class ToolCreatorConfig(BaseAgentConfig):
     )
 
     # Sub-agent configurations
-    tool_programmer: ToolProgrammerConfig = Field(default_factory=ToolProgrammerConfig)
     tool_assessor: ToolAssessorConfig = Field(default_factory=ToolAssessorConfig)
     tool_corrector: ToolCorrectorConfig = Field(default_factory=ToolCorrectorConfig)
 
@@ -213,7 +206,6 @@ class AgentConfigs(BaseModel):
     )
     tool_creator: ToolCreatorConfig = Field(default_factory=ToolCreatorConfig)
     tool_debugger: ToolDebuggerConfig = Field(default_factory=ToolDebuggerConfig)
-    tool_programmer: ToolProgrammerConfig = Field(default_factory=ToolProgrammerConfig)
     tool_assessor: ToolAssessorConfig = Field(default_factory=ToolAssessorConfig)
     tool_corrector: ToolCorrectorConfig = Field(default_factory=ToolCorrectorConfig)
     function_identifier: ToolIdentifierConfig = Field(
@@ -252,7 +244,6 @@ def get_config(agent_name: str) -> BaseAgentConfig:
         "ifc_answer_engine": AGENT_CONFIGS.ifc_answer_engine,
         "tool_creator": AGENT_CONFIGS.tool_creator,
         "tool_debugger": AGENT_CONFIGS.tool_debugger,
-        "tool_programmer": AGENT_CONFIGS.tool_programmer,
         "tool_assessor": AGENT_CONFIGS.tool_assessor,
         "tool_corrector": AGENT_CONFIGS.tool_corrector,
         "function_identifier": AGENT_CONFIGS.function_identifier,
