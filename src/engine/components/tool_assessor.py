@@ -146,15 +146,13 @@ if __name__ == "__main__":
         primordial_tools = [web_search, query_ifcopenshell_documentation]
 
         # Create the function from source code (mocking up the implementation from tool_creator.py)
-        creation_result = _create_function_from_source_code(
-            function_name=function_name, code=python_code
-        )
-
-        if creation_result.is_ok():
+        try:
+            new_tool = _create_function_from_source_code(
+                function_name=function_name, code=python_code
+            )
             print(f"✓ Successfully created function: {function_name}")
-            new_tool = creation_result.unwrap()
-        else:
-            print(f"✗ Failed to create function: {creation_result.unwrap_err()}")
+        except Exception as e:
+            print(f"✗ Failed to create function: {str(e)}")
             return
 
         tools = primordial_tools + [new_tool]
