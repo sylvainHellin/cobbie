@@ -162,7 +162,7 @@ class LLMRegistry:
             ),
             LLMModel(name="qwen3-30b", model_path="qwen3:30b"),
             LLMModel(name="gemma3-12b", model_path="gemma3:12b"),
-            LLMModel(name="qwen3-8b", model_path="qwen3:8b"),
+            LLMModel(name="qwen3:8b", model_path="qwen3:8b"),
             LLMModel(name="gemma3-4b", model_path="gemma3:4b"),
             LLMModel(name="gemma3n", model_path="gemma3n:e4b"),
             LLMModel(
@@ -266,7 +266,7 @@ class LLMRegistry:
             # Ollama models
             ModelAvailability(model_name="qwen3-30b", provider_name="ollama"),
             ModelAvailability(model_name="gemma3-12b", provider_name="ollama"),
-            ModelAvailability(model_name="qwen3-8b", provider_name="ollama"),
+            ModelAvailability(model_name="qwen3:8b", provider_name="ollama"),
             ModelAvailability(model_name="gemma3-4b", provider_name="ollama"),
             ModelAvailability(model_name="gemma3n", provider_name="ollama"),
         ]
@@ -364,7 +364,8 @@ LLM_REGISTRY = LLMRegistry()
 class LLM(BaseModel):
     """LLM configuration for agents."""
 
-    model_name: str = Field(default="qwen3-coder", description="Name of the model")
+    # model_name: str = Field(default="qwen3-coder", description="Name of the model")
+    model_name: str = Field(default="qwen3:8b", description="Name of the model")
     provider_name: str = Field(
         default="deepinfra",
         description="Provider to use (auto-selected if None)",
