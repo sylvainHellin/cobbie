@@ -62,7 +62,6 @@ class ToolIdentifier(dspy.Module):
         # Use provided config or default config
         self.config = config or AGENT_CONFIGS.function_identifier
         self.lm = lm or self.config.llm.get_llm()
-        dspy.configure(lm=self.lm)
 
         self.tool_identifier = dspy.ChainOfThought(ToolIdentifierSignature)
         self.log_level = self.config.log_level
@@ -90,9 +89,9 @@ class ToolIdentifier(dspy.Module):
             - error_msg: Error description (if status is "error")
         """
 
-        with mlflow.start_span(name="FunctionIdentifier", span_type="MODULE"):
+        with dspy.context(lm=self.lm):
             self.logger.info("Starting function identification analysis")
-            output = ModuleOutput(status="error")
+            self.output = ModuleOutput()
 
             try:
                 self.logger.debug(
@@ -127,13 +126,13 @@ class ToolIdentifier(dspy.Module):
                     self.logger.info(f"Suggested function name: {function_name}")
                     self.logger.debug(f"Function requirements: {function_requirements}")
 
-                output.result = AgentOutput(
+                self.output.result = AgentOutput(
                     reasoning=reasoning,
                     need_new_function=new_function_identified,
                     function_name=function_name,
                     function_requirements=function_requirements,
                 )
-                output.status = "success"
+                self.output.status = "success"
 
                 self.logger.info(
                     "Function identification analysis completed successfully"
@@ -142,29 +141,38 @@ class ToolIdentifier(dspy.Module):
             except Exception as e:
                 error_msg = f"Error during function identification analysis: {str(e)}"
                 self.logger.error(error_msg)
-                output.error_msg = error_msg
+                self.output.error_msg = error_msg
 
-            return output
+            finally:
+                self.output.update_cost(
+                    lm=self.lm,
+                    cost_input_tokens=self.config.llm.cost_input_token,
+                    cost_output_tokens=self.config.llm.cost_output_token,
+                )
+
+            return self.output
 
 
 if __name__ == "__main__":
+    from typing import cast
 
     def main(
         chat_history: str,
-        lm_name: str = "qwen3-coder",
     ):
         # setup mlflow
         mlflow.dspy.autolog()  # type: ignore
         mlflow.set_tracking_uri("http://127.0.0.1:5000")
         mlflow.set_experiment("FunctionIdentifier")
 
+        dspy.configure_cache(enable_disk_cache=False)
+
         # setup the function identifier
         function_identifier = ToolIdentifier()
 
         # analyze the chat history
-        result = function_identifier(chat_history=chat_history)
+        result = cast(ModuleOutput, function_identifier(chat_history=chat_history))
 
-        print(f"Function identification result: {result}")
+        print(f"Function identification result: {result.model_dump_json(indent=2)}")
 
     ##########################################
     # Test data - example chat history
