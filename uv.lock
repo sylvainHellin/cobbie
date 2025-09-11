@@ -1374,6 +1374,7 @@ dependencies = [
     { name = "opentelemetry-sdk" },
     { name = "pydantic" },
     { name = "python-dotenv" },
+    { name = "result" },
     { name = "scipy" },
     { name = "smolagents", extra = ["gradio", "telemetry", "toolkit"] },
 ]
@@ -1402,6 +1403,7 @@ requires-dist = [
     { name = "opentelemetry-sdk", specifier = ">=1.32.1" },
     { name = "pydantic", specifier = ">=2.11.4" },
     { name = "python-dotenv", specifier = ">=1.1.0" },
+    { name = "result", specifier = ">=0.17.0" },
     { name = "scipy", specifier = ">=1.15.3" },
     { name = "smolagents", extras = ["gradio", "telemetry", "toolkit"], specifier = ">=1.15.0" },
     { name = "ty", marker = "extra == 'dev'", specifier = ">=0.0.1a6" },
@@ -3218,6 +3220,15 @@ dependencies = [
 sdist = { url = "https://files.pythonhosted.org/packages/42/f2/05f29bc3913aea15eb670be136045bf5c5bbf4b99ecb839da9b422bb2c85/requests-oauthlib-2.0.0.tar.gz", hash = "sha256:b3dffaebd884d8cd778494369603a9e7b58d29111bf6b41bdc2dcd87203af4e9", size = 55650, upload-time = "2024-03-22T20:32:29.939Z" }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/3b/5d/63d4ae3b9daea098d5d6f5da83984853c1bbacd5dc826764b249fe119d24/requests_oauthlib-2.0.0-py2.py3-none-any.whl", hash = "sha256:7dd8a5c40426b779b0868c404bdef9768deccf22749cde15852df527e6269b36", size = 24179, upload-time = "2024-03-22T20:32:28.055Z" },
+]
+
+[[package]]
+name = "result"
+version = "0.17.0"
+source = { registry = "https://pypi.org/simple" }
+sdist = { url = "https://files.pythonhosted.org/packages/a3/47/2175be65744aa4d8419c27bd3a7a7d65af5bcad7a4dc6a812c00778754f0/result-0.17.0.tar.gz", hash = "sha256:b73da420c0cb1a3bf741dbd41ff96dedafaad6a1b3ef437a9e33e380bb0d91cf", size = 20180, upload-time = "2024-06-02T16:39:54.51Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/e2/90/19110ce9374c3db619e2df0816f2c58e4ddc5cdad5f7284cd81d8b30b7cb/result-0.17.0-py3-none-any.whl", hash = "sha256:49fd668b4951ad15800b8ccefd98b6b94effc789607e19c65064b775570933e8", size = 11689, upload-time = "2024-06-02T16:39:52.715Z" },
 ]
 
 [[package]]
