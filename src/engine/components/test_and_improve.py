@@ -7,6 +7,7 @@ from src.config.agents import (
     AGENT_CONFIGS,
     TestAndImproveConfig,
 )
+from src.engine.components.code_cleaner import CodeCleaner
 from src.engine.components.tool_assessor import ToolAssessor
 from src.engine.components.tool_corrector import ToolCorrector
 from src.engine.schemas import ModuleOutput
@@ -55,6 +56,10 @@ class TestAndImprove(dspy.Module):
         self.tool_corrector = ToolCorrector(
             tools=self.primordial_tools,
             config=self.config.tool_corrector,
+        )
+
+        self.code_cleaner = CodeCleaner(
+            config=self.config.code_cleaner,
         )
 
     def forward(
@@ -153,9 +158,50 @@ class TestAndImprove(dspy.Module):
                     )
 
                     if creation_result.is_err():
-                        raise Exception(
-                            f"Failed to create function: {creation_result.unwrap_err()}"
+                        # Try to clean the code using CodeCleaner
+                        error_msg = creation_result.unwrap_err()
+                        self.logger.warning(
+                            f"Function creation failed, attempting to clean code. Error: {error_msg}"
                         )
+
+                        output_code_cleaner = cast(
+                            ModuleOutput,
+                            self.code_cleaner(
+                                faulty_code=self.output.result.function_implementation,
+                                error_msg=error_msg,
+                            ),
+                        )
+                        self.output.combine_cost(output=output_code_cleaner)
+
+                        if output_code_cleaner.status == "success":
+                            # Update the function implementation with the cleaned code
+                            self.output.result.function_implementation = (
+                                output_code_cleaner.result.function_implementation
+                            )
+                            assert (
+                                self.output.result.function_implementation is not None
+                            ), (
+                                "Logical Error in the TestAndImprove Module: the function implementation is None, although cleaning_result.status == 'success'"
+                            )
+
+                            self.logger.info(
+                                "✓ Code cleaned successfully, retrying function creation"
+                            )
+
+                            # Retry function creation with cleaned code
+                            creation_result = _create_function_from_source_code(
+                                function_name=function_name,
+                                code=self.output.result.function_implementation,
+                            )
+
+                            if creation_result.is_err():
+                                raise Exception(
+                                    f"Failed to create function even after cleaning: {creation_result.unwrap_err()}"
+                                )
+                        else:
+                            raise Exception(
+                                f"Failed to create function and code cleaning failed: {output_code_cleaner.error_msg}"
+                            )
 
                     new_tool = creation_result.unwrap()
 
@@ -256,10 +302,10 @@ if __name__ == "__main__":
     mlflow.set_experiment("TestAndImprove")
 
     # deactivate cache for dspy
-    # dspy.configure_cache(
-    #     enable_disk_cache=False,
-    #     enable_memory_cache=False,
-    # )
+    dspy.configure_cache(
+        enable_disk_cache=False,
+        enable_memory_cache=False,
+    )
 
     function_requirements = """
             Create a function that counts the total number of doors in an IFC model.
