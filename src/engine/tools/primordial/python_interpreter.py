@@ -12,7 +12,6 @@ from typing import Any, Callable, Dict, List, Optional, Tuple
 import tiktoken
 from smolagents.local_python_executor import (
     BASE_PYTHON_TOOLS,
-    InterpreterError,
     LocalPythonExecutor,
 )
 
@@ -295,13 +294,36 @@ def get_python_interpreter(
             logger.debug(f"Console output (logs): {logs}")
             logger.debug(f"Is final: {is_final}")
 
-        except InterpreterError as e:
-            logger.error(f"Error during tool execution: {e}")
-            return (
-                f"An error occurred while trying to execute this code:\n{e}",
-                "",
-                False,
-            )
+        except BaseException as e:
+            # Check if this is our FinalAnswerException
+            if (
+                e.__class__.__name__ == "FinalAnswerException"
+                and str(e) == "FINAL_ANSWER_COMPLETE"
+            ):
+                logger.debug(
+                    "Detected our FinalAnswerException - treating as successful completion"
+                )
+                try:
+                    # Try to retrieve the outputs from the exception or sys module
+                    if hasattr(e, "outputs"):
+                        outputs_dict = getattr(e, "outputs")
+                    else:
+                        import sys
+
+                        outputs_dict = getattr(sys, "_final_answer_outputs", {})
+                        if hasattr(sys, "_final_answer_outputs"):
+                            delattr(sys, "_final_answer_outputs")
+
+                    logger.debug(f"Final answer outputs: {outputs_dict}")
+                    return str(outputs_dict), "", True
+                except Exception as parse_error:
+                    logger.warning(
+                        f"Failed to retrieve FinalAnswerException outputs: {parse_error}"
+                    )
+
+            # If it's not our FinalAnswerException, re-raise it
+            raise
+
         returned_value = _truncatenate_text(
             text=str(returned_value), max_tokens=max_tokens_output
         )

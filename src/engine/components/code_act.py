@@ -19,12 +19,28 @@ from src.engine.tools.primordial.python_interpreter import (
 from src.engine.util import check_final_answer
 
 
+class FinalAnswerException(BaseException):
+    """Exception raised when final_answer is called to signal completion.
+
+    Inherits from BaseException instead of Exception so it won't be caught
+    by regular 'except Exception' blocks in user code.
+    """
+
+    def __init__(self, outputs: dict):
+        self.outputs = outputs
+        super().__init__("FINAL_ANSWER_COMPLETE")
+
+
 def final_answer(outputs: dict):
     """Marks the task as complete.
     Use this function when you are confident you have collected all the necessary information to answer the user's request.
     You should pack all the required output fields into a dictionary and pass it argument to the function.
     """
-    return outputs
+    # Store the outputs in a global-like location that can be accessed later
+    import sys
+
+    setattr(sys, "_final_answer_outputs", outputs)
+    raise FinalAnswerException(outputs)
 
 
 class CodeAct(dspy.Module):
@@ -268,6 +284,32 @@ class CodeAct(dspy.Module):
                 return (thought, code_to_exec, observation), True
             return (thought, code_to_exec, observation), False
         except Exception as e:
+            # Check if this is a FinalAnswerException wrapped in the interpreter error
+            error_message = str(e)
+            if (
+                "FinalAnswerException" in error_message
+                and "Execution completed with outputs:" in error_message
+            ):
+                # Extract the outputs from the exception message
+                try:
+                    # Look for the dictionary in the error message
+                    import re
+
+                    dict_match = re.search(
+                        r"Execution completed with outputs: (\{.*\})", error_message
+                    )
+                    if dict_match:
+                        import ast
+
+                        outputs_dict = ast.literal_eval(dict_match.group(1))
+                        self.last_output_python_interpreter = outputs_dict
+                        logs = getattr(locals(), "logs", "No logs.")
+                        observation = "Execution Logs:\n" + logs
+                        observation += f"\n\nOutput:\n{repr(outputs_dict)}"
+                        return (thought, code_to_exec, observation), True
+                except Exception:
+                    pass  # If parsing fails, fall through to regular error handling
+
             observation = f"An error occurred during execution: {e}"
             return (thought, code_to_exec, observation), False
 
