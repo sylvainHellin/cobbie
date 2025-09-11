@@ -15,6 +15,7 @@ import ifcopenshell.util.system
 import numpy
 import pandas
 
+from src.engine.schemas import Result, ok, err
 from ._extract_function_metadata import _extract_function_metadata
 
 
@@ -23,7 +24,7 @@ def _create_function_from_source_code(
     function_name: str,
     imports: Optional[Dict[str, Any]] = None,
     merge_with_defaults: bool = True,
-) -> Callable:
+) -> Result[Callable, str]:
     """
     Create a callable tool from the generated code that can be used by the assessor.
     The tool executes the function in isolation without exposing implementation details.
@@ -35,6 +36,10 @@ def _create_function_from_source_code(
                 Keys are module names, values are the imported modules.
         merge_with_defaults: If True, merge provided imports with default imports.
                            If False, use only the provided imports (plus __builtins__).
+
+    Returns:
+        Result[Callable, str]: Ok(function) on success, Err(error_message) on failure.
+                              Use .is_ok() and .is_err() to check the result status.
     """
     # Clean up the code string - remove common leading whitespace
     cleaned_code = textwrap.dedent(code).strip()
@@ -90,7 +95,7 @@ def _create_function_from_source_code(
                     result = generated_function(*args, **kwargs)
                     return result  # Return the actual result, don't convert to string
                 except Exception as e:
-                    return f"Error executing {function_name}: {str(e)}"
+                    return f"Error processing the function with the `tool_wrapper` {function_name}: {str(e)}"
 
             # Copy the signature from the original function to the wrapper
             tool_wrapper.__signature__ = sig  # type: ignore
@@ -154,42 +159,35 @@ def _create_function_from_source_code(
 
             # If no "Returns:" found, use a generic description
             if not returns_found:
-                return_description = "Return type not documented - preserves function's original return type"
+                return_description = "Return type not specified."
         else:
-            return_description = (
-                "Return type not specified - preserves function's original return type"
-            )
+            return_description = "Return type not specified."
 
         tool_wrapper.__doc__ = f"""
         {metadata.docstring or f"Tool: {function_name}"}
 
         Args:
-{args_description}
+            {args_description}
 
         Returns:
             {return_description}
         """
 
-        return tool_wrapper
+        return ok(tool_wrapper)
 
     except Exception as e:
-        # Return a dummy function that reports the error
+        # Return error result instead of dummy function
         error_message = str(e)
-
-        # Fallback to get metadata, which will try regex on syntax error
-        metadata = _extract_function_metadata(code, function_name)
-
-        def error_tool(*args, **kwargs) -> str:
-            return f"Error creating tool {function_name}: {error_message}"
-
-        error_tool.__name__ = function_name
-        error_tool.__doc__ = (
-            metadata.docstring or f"Error in function {function_name}: {error_message}"
-        )
-        return error_tool
+        return err(error_message)
 
 
 if __name__ == "__main__":
+    # Import here to avoid circular imports in main execution
+    import sys
+    import os
+
+    sys.path.insert(0, os.path.join(os.path.dirname(__file__), "../../.."))
+
     python_code = '''import ifcopenshell
 import ifcopenshell.util.element
 from typing import List
@@ -226,12 +224,19 @@ def get_emergency_exit_doors(path_ifc_model: str):
     from src.config import TEST_IFC_PATH
 
     function_name = "get_emergency_exit_doors"
-    get_emergency_exit_doors = _create_function_from_source_code(
+    creation_result = _create_function_from_source_code(
         function_name="get_emergency_exit_doors", code=python_code
     )
-    result = get_emergency_exit_doors(TEST_IFC_PATH)
-    print(f"---\nResult of function {function_name}:\n{result}\n")
-    print(
-        f"docstring of function: {function_name}:\n {get_emergency_exit_doors.__doc__}"
-    )
-    print("test completed")
+
+    if creation_result.is_ok():
+        print(f"✓ Successfully created function: {function_name}")
+        get_emergency_exit_doors = creation_result.unwrap()
+        result = get_emergency_exit_doors(TEST_IFC_PATH)
+        print(f"---\nResult of function {function_name}:\n{result}\n")
+        print(
+            f"docstring of function: {function_name}:\n {get_emergency_exit_doors.__doc__}"
+        )
+        print("test completed")
+    else:
+        print(f"✗ Failed to create function: {creation_result.unwrap_err()}")
+        print("test failed")
