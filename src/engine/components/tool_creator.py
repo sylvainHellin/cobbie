@@ -141,7 +141,7 @@ class ToolCreator(dspy.Module):
                 self.logger.error(self.output.error_msg)
 
             finally:
-                self.output.update_lm_metrics(
+                self.output.lm_metrics.update(
                     lm=self.lm,
                     cost_input_tokens=self.config.llm.cost_input_token,
                     cost_output_tokens=self.config.llm.cost_output_token,
