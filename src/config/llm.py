@@ -377,6 +377,7 @@ class LLM(BaseModel):
     #     default="ollama",
     #     description="Provider to use (auto-selected if None)",
     # )
+
     max_tokens: int = Field(default=2**14, description="Maximum tokens for LLM")
 
     @property

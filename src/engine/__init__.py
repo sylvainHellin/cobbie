@@ -7,6 +7,7 @@ from .components.tool_debugger import ToolDebugger
 from .components.answer_verifier import AnswerVerifier
 from .components.tool_merger import ToolsMerger
 from .components.tool_optimizer import ToolOptimizer
+from .components.training_module import TrainingModule
 
 __all__ = [
     "IfcAnswerEngine",
@@ -18,4 +19,5 @@ __all__ = [
     "AnswerVerifier",
     "ToolsMerger",
     "ToolOptimizer",
+    "TrainingModule",
 ]

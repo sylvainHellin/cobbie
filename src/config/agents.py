@@ -173,11 +173,12 @@ class TrainingPipelineConfig(BaseAgentConfig):
         default=True,
         description="Evaluate the performance of the system, before and after the training run.",
     )
+
     optimizer: Literal[
         None,
         "BootStrapFewShot",
     ] = Field(
-        default="BootStrapFewShot",
+        default=None,
         description="Which Dspy optimizer to use after the training and before the final evaluation.",
     )
 

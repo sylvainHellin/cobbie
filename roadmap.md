@@ -1,7 +1,8 @@
 # Roadmap
 
 URGENT:
-Test the refactored `TrainingModule`
+Test the refactored `TrainingModule`. See what needs to be logged in mlflow.
+Create tools to query the useful information for the Experiment.
 
 ## Engine
 
