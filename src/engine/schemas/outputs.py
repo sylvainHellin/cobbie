@@ -79,7 +79,6 @@ class LM_Metrics(BaseModel):
                 usage = call.get("usage", {})
                 self.input_tokens += usage.get("prompt_tokens", 0)
                 self.output_tokens += usage.get("completion_tokens", 0)
-            self.chat.import_chat_messages(lm.history[-1].get("messages"))
 
         self.cost = (
             (self.input_tokens or 0) * cost_input_tokens
@@ -114,9 +113,6 @@ class LM_Metrics(BaseModel):
         # Handle LLM field when combining different models
         self.llm = other_metrics.llm if llm == "other" else self.llm
 
-        # update LM history
-        self.chat = self.chat if history == "self" else other_metrics.chat
-
 
 class Tools_Metrics(BaseModel):
     """Metrics for tracking tool creation, updates, and associated costs.
@@ -129,7 +125,7 @@ class Tools_Metrics(BaseModel):
     nb_tools_merged: float = 0
     cost: float = 0
 
-    def update(self, metrics: Self) -> None:
+    def combine(self, metrics: Self) -> None:
         """Update this Tools_Metrics instance by adding values from another instance.
 
         Args:
@@ -181,4 +177,52 @@ class ModuleOutput(BaseModel):
         Args:
             output: The ModuleOutput instance to combine tool metrics from
         """
-        self.tools_metrics.update(metrics=output.tools_metrics)
+        self.tools_metrics.combine(metrics=output.tools_metrics)
+
+    def update(
+        self,
+        lm: dspy.LM,
+        cost_input_tokens: float,
+        cost_output_tokens: float,
+    ):
+        self.chat.import_chat_messages(lm.history[-1].get("messages"))
+        self.lm_metrics.update(
+            lm=lm,
+            cost_input_tokens=cost_input_tokens,
+            cost_output_tokens=cost_output_tokens,
+        )
+
+        return
+
+
+class TrainingOutputs(BaseModel):
+    """Container for managing multiple ModuleOutput instances with aggregation capabilities.
+
+    This class provides methods to collect, manage, and combine metrics from multiple
+    ModuleOutput instances, useful for tracking cumulative results across multiple
+    engine module executions.
+    """
+
+    outputs: List[ModuleOutput] = []
+    lm_metrics: LM_Metrics = LM_Metrics()
+    tools_metrics: Tools_Metrics = Tools_Metrics()
+
+    def add(self, output: ModuleOutput, update: bool = True) -> None:
+        """Add a ModuleOutput to the collection.
+
+        Args:
+            output: The ModuleOutput instance to add
+            update: If the metrics of the List should be updated (optional)
+        """
+        self.outputs.append(output)
+        if update:
+            self.lm_metrics.combine(other_metrics=output.lm_metrics)
+            self.tools_metrics.combine(metrics=output.tools_metrics)
+
+    def __len__(self) -> int:
+        """Return the number of stored outputs."""
+        return len(self.outputs)
+
+    def __getitem__(self, index: int) -> ModuleOutput:
+        """Allow indexing into stored outputs."""
+        return self.outputs[index]
