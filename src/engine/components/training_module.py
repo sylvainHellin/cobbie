@@ -1,5 +1,5 @@
 from enum import Enum
-from typing import Optional, Tuple, cast
+from typing import Optional, cast
 
 import dspy
 import mlflow
@@ -19,7 +19,6 @@ from src.engine.schemas import (
     Chat,
     ModuleOutput,
     QA_Pair,
-    ToolsMetrics,
     TrainingContext,
 )
 from src.engine.util import (
@@ -28,7 +27,6 @@ from src.engine.util import (
     get_logger,
     save_new_tool,
 )
-from src.experiment.datasets import load_train_dev_split
 
 
 class TrainingState(Enum):
@@ -50,13 +48,12 @@ class TrainingModule(dspy.Module):
     def __init__(
         self,
         config: Optional[TrainingModuleConfig] = None,
-        lm: Optional[dspy.LM] = None,  # Optional override
+        lm: Optional[dspy.LM] = None,
     ):
         super().__init__()
         # Use provided config or default config
         self.config = config or AGENT_CONFIGS.training_module
-        self.logger = get_logger(name="Training", log_level=self.config.log_level)
-        self.tools_metrics = ToolsMetrics()
+        self.logger = get_logger(name="TrainingModule", log_level=self.config.log_level)
 
         # Use provided LLM or get from config
         self.lm = lm or self.config.llm.get_llm()
@@ -65,13 +62,15 @@ class TrainingModule(dspy.Module):
         # Set-up the agents (using the default config for each agent)
         self.answer_verifier = AnswerVerifier()
         self.engine = IfcAnswerEngine()
-        if self.config.load_optimized_module:
-            self.engine.load(path=PATH_COMPILED_MODEL)
         self.tool_creator = ToolCreator()
         self.error_analyst = ErrorAnalyst()
         self.tool_debugger = ToolDebugger()
         self.tool_merger = ToolsMerger()
         self.tool_optimizer = ToolOptimizer()
+
+        # Use compile module if configured
+        if self.config.load_optimized_module:
+            self.engine.load(path=PATH_COMPILED_MODEL)
 
         # Set-up mlflow
         mlflow.dspy.autolog()  # type: ignore
@@ -92,10 +91,6 @@ class TrainingModule(dspy.Module):
         # Initialize default output
         self.output = ModuleOutput()
 
-        # Setup DSPy
-        dspy.configure(lm=self.lm)
-        self.lm.history.clear()
-
         return TrainingState.ENGINE
 
     def _handle_engine(self) -> TrainingState:
@@ -107,7 +102,8 @@ class TrainingModule(dspy.Module):
         self.context.engine = cast(
             ModuleOutput,
             self.engine(
-                question=qa_pair.question, path_ifc_model=qa_pair.ifc_model_path
+                question=qa_pair.question,
+                path_ifc_model=qa_pair.ifc_model_path,
             ),
         )
         self.output.combine_lm_metrics(other_output=self.context.engine)
@@ -118,7 +114,9 @@ class TrainingModule(dspy.Module):
         )
 
         if self.context.engine.status == "success":
+            self.output.result.answer = self.context.engine.result.answer
             return TrainingState.ANSWER_VERIFICATION
+
         else:
             self.output.status = "error"
             self.output.error_msg = self.context.engine.error_msg
@@ -126,22 +124,15 @@ class TrainingModule(dspy.Module):
 
     def _handle_answer_verification(self) -> TrainingState:
         """Handle answer verification."""
-        qa_pair = self.context.qa_pair
-        assert qa_pair, "Error: QA pair is not defined."
+        assert self.context.qa_pair and self.context.engine.result.answer
 
         self.logger.info("IfcAnswerEngine could answer the question.")
-        self.logger.debug(f"Answer: \n{self.context.engine.result.answer}")
-        self.logger.debug(f"Ground Truth: \n{qa_pair.answer}")
 
-        # Verify if answer is correct
-        assert self.context.engine.result.answer, (
-            "Error: Answer in Engine Output is None."
-        )
         self.context.answer_verifier = cast(
             ModuleOutput,
             self.answer_verifier(
-                question=qa_pair.question,
-                first_answer=qa_pair.answer,
+                question=self.context.qa_pair.question,
+                first_answer=self.context.qa_pair.answer,
                 second_answer=self.context.engine.result.answer,
             ),
         )
@@ -156,13 +147,9 @@ class TrainingModule(dspy.Module):
             self.logger.error(self.output.error_msg)
             return TrainingState.ERROR
 
-        assert self.context.answer_verifier.result.similarity_score is not None, (
-            "Something is off: the status of AnswerVerifier is 'success', but the `similarity_score` field is None."
-        )
+        assert self.context.answer_verifier.result.similarity_score is not None
 
         # Update output with verification results
-        self.output.error_msg = None
-        self.output.status = "success"
         self.output.result.similarity_score = (
             self.context.answer_verifier.result.similarity_score
         )
@@ -170,7 +157,6 @@ class TrainingModule(dspy.Module):
             self.context.answer_verifier.result.similarity_score
             >= self.config.similarity_threshold
         )
-        self.output.result.answer = self.context.engine.result.answer
 
         self.logger.info(
             f"AnswerVerifier could check the answer. Correct answer: {self.output.result.correct_answer}"
@@ -185,7 +171,10 @@ class TrainingModule(dspy.Module):
     def _handle_correct_answer(self) -> TrainingState:
         """Try to identify optimization potential for existing tools."""
         self.context.tool_optimizer = cast(
-            ModuleOutput, self.tool_optimizer(chat_history=self.chat.to_string())
+            ModuleOutput,
+            self.tool_optimizer(
+                chat_history=self.chat.to_string(),
+            ),
         )
         self.output.combine_lm_metrics(self.context.tool_optimizer)
 
@@ -194,9 +183,7 @@ class TrainingModule(dspy.Module):
             self.logger.error(self.output.error_msg)
             return TrainingState.ERROR
 
-        assert self.context.tool_optimizer.result.improvement, (
-            "Logical Error: the status of ToolOptimizer is success, but the improvement field is None."
-        )
+        assert self.context.tool_optimizer.result.improvement
 
         # Update the output with the ouput of the ToolOptimizer
         self.output.result.function_name = (
@@ -244,8 +231,7 @@ class TrainingModule(dspy.Module):
 
     def _handle_wrong_answer(self) -> TrainingState:
         """Analyse why the system provided a wrong answer and could we do to mitigate it."""
-        assert self.output.result.answer, "Logical flaw: answer is None."
-        assert self.context.qa_pair, "Logical flaw: no QA pair for analysis."
+        assert self.output.result.answer and self.context.qa_pair
 
         self.context.error_analyst = cast(
             ModuleOutput,
@@ -284,7 +270,6 @@ class TrainingModule(dspy.Module):
                 return TrainingState.TOOL_CREATION
 
             else:
-                self.output.status = "success"
                 self.output.result.error_analysis = (
                     self.context.error_analyst.result.error_analysis
                 )
@@ -300,14 +285,14 @@ class TrainingModule(dspy.Module):
         self.output.result.need_new_function = True
 
         # Ensure all needed information exist
-        assert self.output.result.function_name, "ERROR: function name is missing."
-        assert self.output.result.function_requirements, (
-            "Error: function requirements is missing."
+        assert (
+            self.output.result.function_name
+            and self.output.result.function_requirements
+            and self.context.qa_pair
+            and self.context.qa_pair.ifc_model_path
         )
-        assert self.context.qa_pair, "Error: missing qa_pair"
-        assert self.context.qa_pair.ifc_model_path, "Error: ifc_model_path is missing."
 
-        # Try to generate a new tool
+        # Call the ToolCreator
         self.context.tool_creator = cast(
             ModuleOutput,
             self.tool_creator(
@@ -319,9 +304,7 @@ class TrainingModule(dspy.Module):
         self.output.combine_lm_metrics(self.context.tool_creator)
 
         if self.context.tool_creator.status == "success":
-            assert self.context.tool_creator.result.function_implementation, (
-                "Function implementation missing."
-            )
+            assert self.context.tool_creator.result.function_implementation
 
             self.output.result.new_tool_created = True
             self.output.result.function_implementation = (
@@ -338,7 +321,7 @@ class TrainingModule(dspy.Module):
                 self.output.status = "error"
                 return TrainingState.ERROR
             else:
-                self.tools_metrics.nb_tools_created += 1
+                self.output.tools_metrics.nb_tools_created += 1
                 return TrainingState.END
         else:
             self.output.status = "error"
@@ -363,9 +346,7 @@ class TrainingModule(dspy.Module):
                 function_name=self.output.result.function_name
             )
 
-            assert faulty_function_implementation, (
-                "Error: could not load the source code of the faulty tool."
-            )
+            assert faulty_function_implementation
 
             self.context.tool_debugger = cast(
                 ModuleOutput,
@@ -383,27 +364,25 @@ class TrainingModule(dspy.Module):
                 return TrainingState.ERROR
 
             else:
-                assert self.context.tool_debugger.result.function_implementation, (
-                    "Logical flaw: ToolDebugger status is `success` but the function_implementation is empty."
-                )
+                assert self.context.tool_debugger.result.function_implementation
                 corrected_tool_saved = save_new_tool(
                     function_name=self.output.result.function_name,
                     function_implementation=self.context.tool_debugger.result.function_implementation,
                 )
-                assert corrected_tool_saved, (
-                    "CRITICAL ERROR: the corrected tool could not be saved"
-                )
-                self.output.result.function_implementation = (
-                    self.context.tool_debugger.result.function_implementation
-                )
-                self.output.result.existing_tool_updated = True
-                self.output.status = "success"
-                self.tools_metrics.nb_tools_updated += 1
-                return TrainingState.END
+                if corrected_tool_saved:
+                    self.output.tools_metrics.nb_tools_updated += 1
+                    self.output.result.function_implementation = (
+                        self.context.tool_debugger.result.function_implementation
+                    )
+                    self.output.result.existing_tool_updated = True
+                    return TrainingState.END
+                else:
+                    self.output.error_msg = f"Updated tool: {self.output.result.function_name} could not be saved"
+                    self.logger.error(self.output.error_msg)
+                    return TrainingState.ERROR
 
         except FileNotFoundError:
             self.output.error_msg = f"Could not find the file {self.output.result.function_name} to correct it."
-            self.output.status = "error"
             self.logger.error(self.output.error_msg)
             return TrainingState.ERROR
 
@@ -425,9 +404,13 @@ class TrainingModule(dspy.Module):
             function_name=self.output.result.existing_tool_names[1]
         )
 
-        if not source_code_first_function and not source_code_second_function:
-            self.output.status = "error"
-            self.output.error_msg = f"Could not retrieve the source codes for functions: {self.output.result.existing_tool_names}."
+        if source_code_first_function.is_err():
+            self.output.error_msg = f"Error when trying to load the source code of the first function: {source_code_first_function}"
+            self.logger.error(self.output.error_msg)
+            return TrainingState.ERROR
+
+        elif source_code_second_function.is_err():
+            self.output.error_msg = f"Error when trying to load the source code of the second function: {source_code_second_function}"
             self.logger.error(self.output.error_msg)
             return TrainingState.ERROR
 
@@ -438,8 +421,8 @@ class TrainingModule(dspy.Module):
                     function_name=self.output.result.function_name,
                     function_requirements=self.output.result.function_requirements,
                     path_ifc_model=self.context.qa_pair.ifc_model_path,
-                    source_code_first_function=source_code_first_function,
-                    source_code_second_function=source_code_second_function,
+                    source_code_first_function=source_code_first_function.unwrap(),
+                    source_code_second_function=source_code_second_function.unwrap(),
                 ),
             )
             self.output.combine_lm_metrics(self.context.tool_merger)
@@ -450,9 +433,7 @@ class TrainingModule(dspy.Module):
                     self.context.tool_merger.result.function_implementation
                 )
                 self.output.result.existing_tool_updated = True
-                assert self.output.result.function_implementation, (
-                    "Logical Error: status of ToolMerger is 'success', but function_implementation is empty."
-                )
+                assert self.output.result.function_implementation
                 self.output.result.new_function_saved = save_new_tool(
                     function_name=self.output.result.function_name,
                     function_implementation=self.output.result.function_implementation,
@@ -465,14 +446,15 @@ class TrainingModule(dspy.Module):
                     self.output.result.new_function_saved
                     and self.output.result.old_functions_deleted
                 ):
-                    self.output.status = "success"
-                    self.tools_metrics.nb_tools_merged += 1
+                    self.output.tools_metrics.nb_tools_merged += 1
                     return TrainingState.END
                 else:
                     self.output.error_msg = "Either new tool could not be saved of existing tools could not be deleted."
                     self.logger.error(self.output.error_msg)
                     return TrainingState.ERROR
             else:
+                self.output.error_msg = self.context.tool_merger.error_msg
+                self.logger.error(self.output.error_msg)
                 return TrainingState.ERROR
 
     def _process_state(self) -> TrainingState:
@@ -509,13 +491,12 @@ class TrainingModule(dspy.Module):
     def forward(
         self,
         qa_pair: QA_Pair,
-    ) -> Tuple[ModuleOutput, ToolsMetrics]:
-        """Process a QA pair using the state machine. Return a tuple containing the ModuleOutput and the ToolsMetrics."""
+    ) -> ModuleOutput:
+        """Process a QA pair using the state machine. Return a ModuleOutput."""
 
         # Initialize state machine
         self.state = TrainingState.START
         self.context.qa_pair = qa_pair
-        self.tools_metrics = ToolsMetrics()
 
         with mlflow.start_span(
             name=f"question_id_{qa_pair.id}",
@@ -539,30 +520,31 @@ class TrainingModule(dspy.Module):
                 self.logger.error(self.output.error_msg)
                 self.output.status = "error"
 
-        return (self.output, self.tools_metrics)
-
-
-def main(qa_pair: QA_Pair):
-    # setup the logger
-    logger = get_logger(
-        name="Training run", log_level=AGENT_CONFIGS.training_module.log_level
-    )
-
-    training_module = TrainingModule()
-
-    logger.info("Starting the TrainingModule")
-
-    res = training_module(
-        qa_pair=qa_pair,
-    )
-    output, metrics = res[0], res[1]  # type: ignore
-    return output, metrics
+        return self.output
 
 
 if __name__ == "__main__":
+
+
+    def main(qa_pair: QA_Pair):
+        # setup the logger
+        logger = get_logger(
+            name="Training run", log_level=AGENT_CONFIGS.training_module.log_level
+        )
+
+        training_module = TrainingModule()
+
+        logger.info("Starting the TrainingModule")
+
+        output = cast(ModuleOutput,training_module(
+            qa_pair=qa_pair,
+        ))
+        return output
+
+    from src.experiment.datasets import load_train_dev_split
+
     devset, trainset = load_train_dev_split()
 
-    output, metric = main(trainset[0])
+    output = main(trainset[0])
     print(f"Output:\n{output.model_dump()}")
     print("\n---\n")
-    print(f"Metrics:\n{metric.model_dump()}")
