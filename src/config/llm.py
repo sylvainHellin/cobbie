@@ -365,18 +365,18 @@ class LLM(BaseModel):
     """LLM configuration for agents."""
 
     # Uncomment for using Cloud model
-    # model_name: str = Field(default="qwen3-coder", description="Name of the model")
-    # provider_name: str = Field(
-    #     default="deepinfra",
-    #     description="Provider to use (auto-selected if None)",
-    # )
-
-    # Uncomment for using local model
-    model_name: str = Field(default="qwen3-coder:30b", description="Name of the model")
+    model_name: str = Field(default="qwen3-coder", description="Name of the model")
     provider_name: str = Field(
-        default="ollama",
+        default="deepinfra",
         description="Provider to use (auto-selected if None)",
     )
+
+    # Uncomment for using local model
+    # model_name: str = Field(default="qwen3-coder:30b", description="Name of the model")
+    # provider_name: str = Field(
+    #     default="ollama",
+    #     description="Provider to use (auto-selected if None)",
+    # )
     max_tokens: int = Field(default=2**14, description="Maximum tokens for LLM")
 
     @property
