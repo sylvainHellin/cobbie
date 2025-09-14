@@ -107,39 +107,39 @@ def get_chat_messages(span: Span) -> Chat:
 
 
 # TODO Continue here
-for trace in traces:
-    spans = [span for span in trace.data.spans]
-    for span in spans:
-        print(span.name)
-        spanType = span.attributes["mlflow.spanType"]
-        print(spanType)
+# for trace in traces:
+#     spans = [span for span in trace.data.spans]
+#     for span in spans:
+#         print(span.name)
+#         spanType = span.attributes["mlflow.spanType"]
+#         print(spanType)
 
-        if span.attributes["mlflow.spanType"] == "CHAT_MODEL":
-            model = span.attributes["model"]
-            chat = get_chat_messages(span=span)
-            chat.model = model
-            attributes = span.attributes.keys()
+#         if span.attributes["mlflow.spanType"] == "CHAT_MODEL":
+#             model = span.attributes["model"]
+#             chat = get_chat_messages(span=span)
+#             chat.model = model
+#             attributes = span.attributes.keys()
 
-        if spanType == "TOOL":
-            if span.attributes["name"] == "python_interpreter":
-                code = span.attributes["mlflow.spanInputs"]["python_code"]
-                print_outputs, returned_value, is_final = span.attributes[
-                    "mlflow.spanOutputs"
-                ]
+#         if spanType == "TOOL":
+#             if span.attributes["name"] == "python_interpreter":
+#                 code = span.attributes["mlflow.spanInputs"]["python_code"]
+#                 print_outputs, returned_value, is_final = span.attributes[
+#                     "mlflow.spanOutputs"
+#                 ]
 
-        if spanType == "CHAIN":
-            print(json.dumps(span.attributes, indent=2))
-        # print(span.attributes["mlflow.spanInputs"])
-        # print(span.attributes["mlflow.spanOutputs"])
-span_type = Optional[
-    Literal[
-        "TOOL",
-        "CHAIN",
-        "PARSER",
-        "UNKNOWN",
-        "CHAT_MODEL",
-        "LLM",
-        "MODULE",
-        "QUESTION",
-    ]
-]
+#         if spanType == "CHAIN":
+#             print(json.dumps(span.attributes, indent=2))
+#         # print(span.attributes["mlflow.spanInputs"])
+#         # print(span.attributes["mlflow.spanOutputs"])
+# span_type = Optional[
+#     Literal[
+#         "TOOL",
+#         "CHAIN",
+#         "PARSER",
+#         "UNKNOWN",
+#         "CHAT_MODEL",
+#         "LLM",
+#         "MODULE",
+#         "QUESTION",
+#     ]
+# ]
