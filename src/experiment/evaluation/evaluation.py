@@ -3,7 +3,7 @@ from time import time
 from typing import List, Optional, cast
 
 import mlflow
-from dspy import LM
+import dspy
 from tqdm import tqdm
 
 from src.engine import IfcAnswerEngine
@@ -14,7 +14,7 @@ from src.experiment.validation import metric
 
 
 def evaluate(
-    llm: LM,
+    llm: dspy.LM,
     dataset: List[QA_Pair] = DEVSET,
     experiment_name: Optional[str] = "Evaluation",
     start_run: bool = False,
@@ -69,10 +69,13 @@ def evaluate(
             # Record metrics
             result.duration.append(duration)
             result.tokens.append(
-                (engine_output.input_tokens or 0, engine_output.output_tokens or 0)
+                (
+                    engine_output.lm_metrics.input_tokens or 0,
+                    engine_output.lm_metrics.output_tokens or 0,
+                )
             )
             result.question_ids.append(qa_pair.id)
-            result.cost.append(engine_output.cost or 0)
+            result.cost.append(engine_output.lm_metrics.cost or 0)
 
             if engine_output.status == "error":
                 result.add_error(
@@ -97,17 +100,17 @@ def evaluate(
     if result.errors:
         logger.warning(f"Total errors encountered: {len(result.errors)}")
 
-    # Log metrics to MLflow if a run is active
-    if mlflow.active_run() is not None and log_metris:
-        mlflow.log_metrics(
-            metrics={
-                "mean_accuracy": result.mean_accuracy(),
-                "nb_errors": float(len(result.errors)),
-                "mean_duration": result.mean_duration(),
-                "cost": result.total_cost(),
-            },
-        )
-        logger.info("Logged metrics to MLflow.")
+    # # Log metrics to MLflow if a run is active
+    # if mlflow.active_run() is not None and log_metris:
+    #     mlflow.log_metrics(
+    #         metrics={
+    #             "mean_accuracy": result.mean_accuracy(),
+    #             "nb_errors": float(len(result.errors)),
+    #             "mean_duration": result.mean_duration(),
+    #             "cost": result.total_cost(),
+    #         },
+    #     )
+    #     logger.info("Logged metrics to MLflow.")
 
     return result
 
