@@ -68,7 +68,7 @@ class CodeCleaner(dspy.Module):
         """
         self.logger.info("Starting code cleaning process")
         self.output = ModuleOutput()
-        self.output.llm = self.lm.model
+        self.output.lm_metrics.llm = self.lm.model
 
         with dspy.context(lm=self.lm):
             try:
@@ -97,7 +97,7 @@ class CodeCleaner(dspy.Module):
                 self.logger.error(self.output.error_msg)
 
             finally:
-                self.output.lm_metrics.update(
+                self.output.update(
                     lm=self.lm,
                     cost_input_tokens=self.config.llm.cost_input_token,
                     cost_output_tokens=self.config.llm.cost_output_token,
