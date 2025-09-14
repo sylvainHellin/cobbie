@@ -1,7 +1,9 @@
-from src.experiment.db import connection
-from src.engine.schemas import QA_Pair
-import pandas as pd
 from typing import List
+
+import pandas as pd
+
+from src.engine.schemas import QA_Pair
+from src.experiment.db import connection
 
 
 def load_train_dev_split(
