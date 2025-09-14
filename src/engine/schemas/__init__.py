@@ -1,9 +1,8 @@
-from .outputs import ModuleOutput, AgentOutput
+from .outputs import ModuleOutput, AgentOutput, TrainingOutputs
 from .chat import Chat, Message
 from .context import TrainingContext
 from .qa_pair import QA_Pair
 from .validation_result import EvaluationResult
-from .tools_metrics import ToolsMetrics
 from .result import Result, Ok, Err, ok, err
 
 __all__ = [
@@ -14,10 +13,10 @@ __all__ = [
     "TrainingContext",
     "QA_Pair",
     "EvaluationResult",
-    "ToolsMetrics",
     "Result",
     "Ok",
     "Err",
     "ok",
     "err",
+    "TrainingOutputs",
 ]
