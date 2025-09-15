@@ -57,7 +57,10 @@ class EvaluationResult(BaseModel):
         return 1.0 - self.success_rate()
 
     def total_cost(self) -> float:
-        return sum(self.cost)
+        return sum(self.cost) or 0.0
+
+    def total_errors(self) -> int:
+        return len(self.errors)
 
     def add_error(
         self,

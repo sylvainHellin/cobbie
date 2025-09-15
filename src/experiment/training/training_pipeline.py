@@ -17,7 +17,7 @@ from src.experiment.datasets.data_loader import load_train_dev_split
 from src.experiment.evaluation.evaluation import evaluate
 
 
-class TrainingPipeline(dspy.Module):
+class TrainingPipeline:
     def __init__(
         self,
         config: Optional[TrainingPipelineConfig] = None,
@@ -64,23 +64,23 @@ class TrainingPipeline(dspy.Module):
                 )
                 metrics = {
                     f"mean_accuracy_{mode}_training": eval.mean_accuracy(),
-                    f"nb_errors_{mode}_training": len(eval.errors),
+                    f"nb_errors_{mode}_training": float(eval.total_errors()),
                     f"mean_duration_{mode}_training": eval.mean_duration(),
-                    f"input_tokens_{mode}_training": eval.total_input_tokens(),
-                    f"output_tokens_{mode}_training": eval.total_output_tokens(),
+                    f"input_tokens_{mode}_training": float(eval.total_input_tokens()),
+                    f"output_tokens_{mode}_training": float(eval.total_output_tokens()),
                     f"cost_{mode}_training": eval.total_cost(),
                 }
-                # span.set_attributes(attributes=metrics)
+                span.set_attributes(attributes=metrics)
 
                 # Convert metrics to str for tags
                 mlflow.update_current_trace(
                     tags={k: str(v) for k, v in metrics.items()}
                 )
             # Log the metrics
-            # mlflow.log_metrics(
-            #     metrics=metrics,
-            # )
-            # mlflow.log_param(key="model", value=self.lm.model)
+            mlflow.log_metrics(
+                metrics=metrics,
+            )
+            mlflow.log_param(key="model", value=self.lm.model)
 
         return
 
@@ -90,6 +90,16 @@ class TrainingPipeline(dspy.Module):
                 self.engine = IfcAnswerEngine(llm=self.lm)
                 self.engine = bootstrap_engine(engine=self.engine)
                 span.set_status(status="OK")
+
+    def _train(self, trainset: List[QA_Pair]):
+        for qa_pair in trainset:
+            outputs = cast(ModuleOutput, self.training(qa_pair=qa_pair))
+            self.outputs.add(output=outputs, update=True)
+
+        # mlflow.log_metrics(metrics=self.outputs.tools_metrics.model_dump())
+        # mlflow.log_metrics(metrics=self.outputs.lm_metrics.model_dump())
+        self.logger.info(self.outputs.tools_metrics.model_dump_json(indent=2))
+        self.logger.info(self.outputs.lm_metrics.model_dump_json(indent=2))
 
     def forward(
         self,
@@ -104,15 +114,8 @@ class TrainingPipeline(dspy.Module):
             devset=devset,
         )
 
-        # Go through each examples in the training set
-        for qa_pair in trainset:
-            output = cast(ModuleOutput, self.training(qa_pair=qa_pair))
-            self.outputs.add(output=output, update=True)
-
-        # mlflow.log_metrics(metrics=self.outputs.tools_metrics.model_dump())
-        # mlflow.log_metrics(metrics=self.outputs.lm_metrics.model_dump())
-        self.logger.info(self.outputs.tools_metrics.model_dump_json(indent=2))
-        self.logger.info(self.outputs.lm_metrics.model_dump_json(indent=2))
+        # Train the module
+        self._train(trainset=trainset)
 
         # Compile the program before the final evaluation
         self._optimize()
@@ -139,7 +142,7 @@ def main(
 
     # logger.info("Starting the TrainingModule")
 
-    output = training_pipeline(
+    output = training_pipeline.forward(
         devset=devset,
         trainset=trainset,
     )

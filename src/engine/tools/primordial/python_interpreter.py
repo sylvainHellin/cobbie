@@ -326,7 +326,7 @@ def get_python_interpreter(
             text=str(returned_value), max_tokens=max_tokens_output
         )
         logs = _truncatenate_text(text=logs, max_tokens=max_tokens_logs)
-        logger.info(f"logs: {logs}")
+        logger.info(f"outputs : {logs[:50]}...")
 
         return returned_value, logs, is_final
 
