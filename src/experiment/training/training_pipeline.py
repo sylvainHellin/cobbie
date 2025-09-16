@@ -158,6 +158,6 @@ if __name__ == "__main__":
     )
 
     outputs = main(
-        devset=devset[:3],
-        trainset=trainset[:3],
+        devset=devset[3:5],
+        trainset=trainset[3:5],
     )
