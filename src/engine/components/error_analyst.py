@@ -154,7 +154,6 @@ class ErrorAnalyst(dspy.Module):
                 if (
                     self.output.result.error_analysis is not None
                     and self.output.result.error_category is not None
-                    and self.output.result.function_name is not None
                 ):
                     self.output.status = "success"
                 else:
