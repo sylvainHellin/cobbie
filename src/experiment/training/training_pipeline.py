@@ -97,31 +97,37 @@ class TrainingPipeline:
                 name=f"question_id_{qa_pair.id}",
                 span_type="MODULE",
             ) as span:
-                outputs = cast(ModuleOutput, self.training(qa_pair=qa_pair))
-                status = "OK" if outputs.status == "success" else "ERROR"
+                output = cast(ModuleOutput, self.training(qa_pair=qa_pair))
+                status = "OK" if output.status == "success" else "ERROR"
 
                 span.set_status(status=status)
                 span.set_inputs(inputs=qa_pair)
-                span.set_outputs(outputs=outputs)
-                self.outputs.add(output=outputs, update=True)
+                span.set_outputs(outputs=output)
+                self.outputs.add(output=output, update=True)
 
-                if outputs.tools_metrics.nb_tools_updated > 0:
+                if output.tools_metrics.nb_tools_updated > 0:
                     span.set_attribute("tool updated", True)
-                elif outputs.tools_metrics.nb_tools_created > 0:
+                elif output.tools_metrics.nb_tools_created > 0:
                     span.set_attribute("tool created", True)
-                elif outputs.tools_metrics.nb_tools_merged > 0:
+                elif output.tools_metrics.nb_tools_merged > 0:
                     span.set_attribute("tool merged", True)
 
                 span.set_attributes(
                     {
-                        "input tokens": outputs.lm_metrics.input_tokens,
-                        "output tokens": outputs.lm_metrics.output_tokens,
-                        "similarity score": outputs.result.similarity_score,
+                        "input tokens": output.lm_metrics.input_tokens,
+                        "output tokens": output.lm_metrics.output_tokens,
+                        "similarity score": output.result.similarity_score,
                     }
                 )
 
-        # mlflow.log_metrics(metrics=self.outputs.tools_metrics.model_dump())
-        # mlflow.log_metrics(metrics=self.outputs.lm_metrics.model_dump())
+        mlflow.log_metrics(
+            metrics={
+                "training_cost": self.outputs.lm_metrics.cost or 0.0,
+                "tools created": self.outputs.tools_metrics.nb_tools_created,
+                "tools updated": self.outputs.tools_metrics.nb_tools_updated,
+                "tools merged": self.outputs.tools_metrics.nb_tools_merged,
+            }
+        )
         self.logger.info(self.outputs.tools_metrics.model_dump_json(indent=2))
         self.logger.info(self.outputs.lm_metrics.model_dump_json(indent=2))
 
@@ -183,5 +189,5 @@ if __name__ == "__main__":
 
     outputs = main(
         devset=devset[:5],
-        trainset=trainset[5:9],
+        trainset=trainset[9:12],
     )
