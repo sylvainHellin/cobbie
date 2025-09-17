@@ -1,5 +1,7 @@
+from typing import Any, Dict, List, Literal, Optional, TypeGuard
+
+import dspy
 from pydantic import BaseModel
-from typing import List, Literal, Optional, Dict, TypeGuard
 
 
 class Message(BaseModel):
@@ -38,15 +40,20 @@ class Chat(BaseModel):
         dump = [msg.model_dump_json(indent=2) for msg in self.messages]
         return ",\n".join(dump)
 
-    def import_chat_messages(self, messages: List[Dict[str, str]]):
-        """Import messages from a list of dictionaries and add them to the chat.
+    def import_chat_messages(
+        self,
+        lm: dspy.LM,
+        last: bool = True,
+    ):
+        """Import chat messages from a DSPy LM object.
 
-        Validates that each message has a valid role ("system", "user", or "assistant")
-        before creating Message objects and appending them to the chat.
+        Extracts conversation history from the DSPy LM and imports it into the chat.
+        Can import either just the last conversation turn or the complete history.
 
         Args:
-            messages (List[Dict[str, str]]): List of message dictionaries containing
-                'role' and 'content' keys. Invalid roles will be skipped.
+            lm (dspy.LM): The DSPy language model object containing conversation history
+            last (bool): If True, only import the last conversation turn (system + user + assistant).
+                        If False, import the complete conversation history. Defaults to True.
         """
 
         def is_valid_role(
@@ -54,9 +61,32 @@ class Chat(BaseModel):
         ) -> TypeGuard[Literal["system", "user", "assistant"]]:
             return role in ["system", "user", "assistant"]
 
-        for entry in messages:
-            role = entry.get("role", "")
+        def process_history_entry(history_entry: Dict[str, Any]):
+            """Process a single history entry and add messages to chat."""
+            # Import the input messages (system + user)
+            messages = history_entry.get("messages", [])
+            for entry in messages:
+                role = entry.get("role", "")
+                if is_valid_role(role):
+                    msg = Message(role=role, content=entry.get("content", ""))
+                    self.append_msg(msg=msg)
 
-            if is_valid_role(role):
-                msg = Message(role=role, content=entry.get("content", ""))
-                self.append_msg(msg=msg)
+            # Add assistant response if available
+            if "response" in history_entry and history_entry["response"]:
+                assistant_msg = Message(
+                    role="assistant", content=str(history_entry["response"])
+                )
+                self.append_msg(msg=assistant_msg)
+
+        # Check if LM has history
+        if not hasattr(lm, "history") or not lm.history:
+            return
+
+        if last:
+            # Import only the last conversation turn
+            if lm.history:
+                process_history_entry(lm.history[-1])
+        else:
+            # Import the complete conversation history
+            for history_entry in lm.history:
+                process_history_entry(history_entry)
