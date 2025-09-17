@@ -185,7 +185,9 @@ class ModuleOutput(BaseModel):
         cost_input_tokens: float,
         cost_output_tokens: float,
     ):
-        self.chat.import_chat_messages(lm.history[-1].get("messages"))
+        # Import the last conversation turn (system + user + assistant)
+        self.chat.import_chat_messages(lm=lm, last=True)
+
         self.lm_metrics.update(
             lm=lm,
             cost_input_tokens=cost_input_tokens,
