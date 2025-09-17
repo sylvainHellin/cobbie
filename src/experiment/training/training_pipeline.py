@@ -105,6 +105,21 @@ class TrainingPipeline:
                 span.set_outputs(outputs=outputs)
                 self.outputs.add(output=outputs, update=True)
 
+                if outputs.tools_metrics.nb_tools_updated > 0:
+                    span.set_attribute("tool updated", True)
+                elif outputs.tools_metrics.nb_tools_created > 0:
+                    span.set_attribute("tool created", True)
+                elif outputs.tools_metrics.nb_tools_merged > 0:
+                    span.set_attribute("tool merged", True)
+
+                span.set_attributes(
+                    {
+                        "input tokens": outputs.lm_metrics.input_tokens,
+                        "output tokens": outputs.lm_metrics.output_tokens,
+                        "similarity score": outputs.result.similarity_score,
+                    }
+                )
+
         # mlflow.log_metrics(metrics=self.outputs.tools_metrics.model_dump())
         # mlflow.log_metrics(metrics=self.outputs.lm_metrics.model_dump())
         self.logger.info(self.outputs.tools_metrics.model_dump_json(indent=2))
@@ -167,6 +182,6 @@ if __name__ == "__main__":
     )
 
     outputs = main(
-        devset=devset[3:5],
-        trainset=trainset[3:5],
+        devset=devset[:5],
+        trainset=trainset[5:9],
     )
