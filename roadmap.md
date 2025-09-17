@@ -1,8 +1,8 @@
 # Roadmap
 
 URGENT:
-- See what went wrong with the `TestAndImprove` Module (http://127.0.0.1:5000/#:~:text=cac9be1a1e424188a9f0712d74fa9047)
 - Test the refactored `TrainingModule`. See what needs to be logged in mlflow.
+- Add a CoT module at the end of the toolcreator first code generation to extract the function code if failed to use the `final_answer` fn.
 - Instead of providing the history to the `ToolOptimizer`, just send the last trajectory + last output.
 - Create tools to query the useful information for the Experiment.
 
