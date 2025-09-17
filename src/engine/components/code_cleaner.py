@@ -1,3 +1,4 @@
+import re
 from typing import Optional
 
 import dspy
@@ -51,6 +52,33 @@ class CodeCleaner(dspy.Module):
 
         self.code_cleaner = dspy.ChainOfThought(CodeCleanerSignature)
 
+    def _clean_code_blocks(self, code: str) -> str:
+        """
+        Remove code blocks wrapped in ```python ... ``` or ``` ... ``` from the code.
+
+        Args:
+            code: The code string that may contain code block markers
+
+        Returns:
+            Cleaned code string without code block markers
+        """
+        # Pattern to match code blocks with optional language specification
+        # Matches ```python\n...``` or ```\n...``` patterns
+        pattern = r"```(?:python)?\s*\n(.*?)\n```"
+
+        # Find all code blocks
+        matches = re.findall(pattern, code, re.DOTALL)
+
+        if matches:
+            # If code blocks are found, extract the content from the first/main block
+            # Usually there's just one main code block containing the function
+            cleaned_code = matches[0].strip()
+            self.logger.info("Removed code block markers from function implementation")
+            return cleaned_code
+
+        # If no code blocks found, return original code
+        return code
+
     def forward(
         self,
         faulty_code: str,
@@ -76,8 +104,13 @@ class CodeCleaner(dspy.Module):
                     faulty_code=faulty_code,
                     error_msg=error_msg,
                 )
+                corrected_code = getattr(prediction, "corrected_code", None)
+                # Clean any markdown code block markers from the corrected code
+                if corrected_code:
+                    corrected_code = self._clean_code_blocks(corrected_code)
+
                 self.output.result = AgentOutput(
-                    function_implementation=getattr(prediction, "corrected_code", None),
+                    function_implementation=corrected_code,
                     reasoning=getattr(prediction, "reasoning", None),
                 )
 
