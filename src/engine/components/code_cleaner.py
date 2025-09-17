@@ -49,7 +49,7 @@ class CodeCleaner(dspy.Module):
         self.log_level = self.config.log_level
         self.logger = get_logger(name="CodeCleaner", log_level=self.log_level)
 
-        self.cleaner = dspy.ChainOfThought(CodeCleanerSignature)
+        self.code_cleaner = dspy.ChainOfThought(CodeCleanerSignature)
 
     def forward(
         self,
@@ -72,7 +72,10 @@ class CodeCleaner(dspy.Module):
 
         with dspy.context(lm=self.lm):
             try:
-                prediction = self.cleaner(faulty_code=faulty_code, error_msg=error_msg)
+                prediction = self.code_cleaner(
+                    faulty_code=faulty_code,
+                    error_msg=error_msg,
+                )
                 self.output.result = AgentOutput(
                     function_implementation=getattr(prediction, "corrected_code", None),
                     reasoning=getattr(prediction, "reasoning", None),
@@ -103,7 +106,6 @@ class CodeCleaner(dspy.Module):
                     cost_output_tokens=self.config.llm.cost_output_token,
                 )
 
-        self.logger.info("Completed code cleaning process")
         return self.output
 
 
