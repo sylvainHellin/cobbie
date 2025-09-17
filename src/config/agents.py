@@ -120,7 +120,7 @@ class ToolCreatorConfig(BaseAgentConfig):
     """Configuration for ToolCreator multi-agent system."""
 
     max_iters: int = Field(
-        default=10, description="Maximum iterations for ToolCreator main loop"
+        default=15, description="Maximum iterations for ToolCreator main loop"
     )
     function_boilerplate: str = FUNCTION_BOILERPLATE
     add_code_prefix: bool = Field(

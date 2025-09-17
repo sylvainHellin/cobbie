@@ -95,7 +95,9 @@ class TrainingModule(dspy.Module):
 
     def _handle_engine(self) -> TrainingState:
         """Run the engine and determine next state."""
-        assert self.context.qa_pair
+        assert self.context.qa_pair, (
+            "Logical Error: self.context.qa_pair is None in _handle_engine"
+        )
         qa_pair = self.context.qa_pair
 
         # Run the engine
@@ -110,7 +112,7 @@ class TrainingModule(dspy.Module):
 
         self.chat = self.context.engine.chat
         assert len(self.chat.messages) > 0, (
-            "Something is off: no chat history was found."
+            "Logical error: no messages in chat in _handle_engine"
         )
 
         if self.context.engine.status == "success":
@@ -124,7 +126,9 @@ class TrainingModule(dspy.Module):
 
     def _handle_answer_verification(self) -> TrainingState:
         """Handle answer verification."""
-        assert self.context.qa_pair and self.context.engine.result.answer
+        assert self.context.qa_pair and self.context.engine.result.answer, (
+            "Logical error: self.context.qa_pair or self.context.engine.result.answer is None in _handle_answer_verification"
+        )
 
         self.logger.info("IfcAnswerEngine could answer the question.")
 
@@ -144,10 +148,11 @@ class TrainingModule(dspy.Module):
                 f"There was an error with the AnswerVerifier. "
                 f"Error message: {self.context.answer_verifier.error_msg or 'No error message provided'}"
             )
-            self.logger.error(self.output.error_msg)
             return TrainingState.ERROR
 
-        assert self.context.answer_verifier.result.similarity_score is not None
+        assert self.context.answer_verifier.result.similarity_score, (
+            "Logical error: self.context.answer_verifier.result.similarity_score is None in _handle_answer_verification"
+        )
 
         # Update output with verification results
         self.output.result.similarity_score = (
@@ -180,10 +185,11 @@ class TrainingModule(dspy.Module):
 
         if self.context.tool_optimizer.status == "error":
             self.output.error_msg = self.context.tool_optimizer.error_msg
-            self.logger.error(self.output.error_msg)
             return TrainingState.ERROR
 
-        assert self.context.tool_optimizer.result.improvement
+        assert self.context.tool_optimizer.result.improvement, (
+            "Logical error: self.context.tool_optimizer.result.improvement in _handle_correct_answer"
+        )
 
         # Update the output with the ouput of the ToolOptimizer
         self.output.result.function_name = (
@@ -231,7 +237,9 @@ class TrainingModule(dspy.Module):
 
     def _handle_wrong_answer(self) -> TrainingState:
         """Analyse why the system provided a wrong answer and could we do to mitigate it."""
-        assert self.output.result.answer and self.context.qa_pair
+        assert self.output.result.answer and self.context.qa_pair, (
+            "Logical error: self.output.result.answer or self.context.qa_pair is None in _handle_wrong_answer"
+        )
 
         self.context.error_analyst = cast(
             ModuleOutput,
@@ -290,7 +298,7 @@ class TrainingModule(dspy.Module):
             and self.output.result.function_requirements
             and self.context.qa_pair
             and self.context.qa_pair.ifc_model_path
-        )
+        ), "Logical error: missing input in _handle_tool_creation"
 
         # Call the ToolCreator
         self.context.tool_creator = cast(
@@ -304,7 +312,9 @@ class TrainingModule(dspy.Module):
         self.output.combine_lm_metrics(self.context.tool_creator)
 
         if self.context.tool_creator.status == "success":
-            assert self.context.tool_creator.result.function_implementation
+            assert self.context.tool_creator.result.function_implementation, (
+                "Logical error: self.context.tool_creator.result.function_implementation is None in _handle_tool_creation"
+            )
 
             self.output.result.new_tool_created = True
             self.output.result.function_implementation = (
@@ -325,28 +335,33 @@ class TrainingModule(dspy.Module):
                 return TrainingState.END
         else:
             self.output.status = "error"
-            self.output.error_msg = self.context.tool_creator.error_msg
-            self.logger.error(
-                f"ToolCreator could not create a new tool. Error msg: \n{self.output.error_msg}"
-            )
+            self.output.error_msg = f"ToolCreator could not create a new tool.\nError msg:\n{self.context.tool_creator.error_msg}"
             return TrainingState.ERROR
 
     def _handle_tool_correction(self) -> TrainingState:
         """Correct the faulty tool according the the assessment."""
         assert (
             self.output.result.function_name
-            and self.output.result.assessment_details
+            and self.output.result.function_requirements
             and self.context.qa_pair
             and self.context.qa_pair.ifc_model_path
         ), (
-            "Logical error: Tool correction required, but assessment or function name missing."
+            "Logical error in _handle_tool_creation: Tool correction required, but assessment or function name missing."
         )
         try:
-            faulty_function_implementation = get_function_code(
+            extracted_fn_code = get_function_code(
                 function_name=self.output.result.function_name
             )
 
-            assert faulty_function_implementation
+            assert extracted_fn_code, (
+                "Logical error: faulty_function_implementation is missing in _handle_tool_correction"
+            )
+
+            if extracted_fn_code.is_err():
+                self.output.error_msg = extracted_fn_code.unwrap_err()
+                return TrainingState.ERROR
+            else:
+                faulty_function_implementation = extracted_fn_code.unwrap()
 
             self.context.tool_debugger = cast(
                 ModuleOutput,
@@ -364,7 +379,9 @@ class TrainingModule(dspy.Module):
                 return TrainingState.ERROR
 
             else:
-                assert self.context.tool_debugger.result.function_implementation
+                assert self.context.tool_debugger.result.function_implementation, (
+                    "Logical error: self.context.tool_debugger.result.function_implementation"
+                )
                 corrected_tool_saved = save_new_tool(
                     function_name=self.output.result.function_name,
                     function_implementation=self.context.tool_debugger.result.function_implementation,
@@ -378,12 +395,10 @@ class TrainingModule(dspy.Module):
                     return TrainingState.END
                 else:
                     self.output.error_msg = f"Updated tool: {self.output.result.function_name} could not be saved"
-                    self.logger.error(self.output.error_msg)
                     return TrainingState.ERROR
 
         except FileNotFoundError:
             self.output.error_msg = f"Could not find the file {self.output.result.function_name} to correct it."
-            self.logger.error(self.output.error_msg)
             return TrainingState.ERROR
 
     def _handle_tools_merger(self) -> TrainingState:
@@ -406,12 +421,10 @@ class TrainingModule(dspy.Module):
 
         if source_code_first_function.is_err():
             self.output.error_msg = f"Error when trying to load the source code of the first function: {source_code_first_function}"
-            self.logger.error(self.output.error_msg)
             return TrainingState.ERROR
 
         elif source_code_second_function.is_err():
             self.output.error_msg = f"Error when trying to load the source code of the second function: {source_code_second_function}"
-            self.logger.error(self.output.error_msg)
             return TrainingState.ERROR
 
         else:
@@ -433,7 +446,9 @@ class TrainingModule(dspy.Module):
                     self.context.tool_merger.result.function_implementation
                 )
                 self.output.result.existing_tool_updated = True
-                assert self.output.result.function_implementation
+                assert self.output.result.function_implementation, (
+                    "Logical Error: self.output.result.function_implementation is missing in _handle_tool_merger although status is 'success'"
+                )
                 self.output.result.new_function_saved = save_new_tool(
                     function_name=self.output.result.function_name,
                     function_implementation=self.output.result.function_implementation,
@@ -450,18 +465,16 @@ class TrainingModule(dspy.Module):
                     return TrainingState.END
                 else:
                     self.output.error_msg = "Either new tool could not be saved of existing tools could not be deleted."
-                    self.logger.error(self.output.error_msg)
                     return TrainingState.ERROR
             else:
                 self.output.error_msg = self.context.tool_merger.error_msg
-                self.logger.error(self.output.error_msg)
                 return TrainingState.ERROR
 
     def _process_state(self) -> TrainingState:
         """Process current state and return next state."""
         if self.state == TrainingState.START:
             qa_pair = self.context.qa_pair
-            assert qa_pair
+            assert qa_pair, "Logical error: qa_pair is missing in _process_state"
             return self._initialize_system(qa_pair)
 
         elif self.state == TrainingState.ENGINE:
@@ -517,14 +530,16 @@ class TrainingModule(dspy.Module):
                     self.state = next_state
             except Exception as e:
                 self.output.error_msg = f"An error occured during the Training run for question_id: {qa_pair.id}.\nError:\n{e}"
-                self.logger.error(self.output.error_msg)
                 self.output.status = "error"
+
+        # Log the error msg if any before returning
+        if self.output.status == "error":
+            self.logger.error(self.output.error_msg)
 
         return self.output
 
 
 if __name__ == "__main__":
-
 
     def main(qa_pair: QA_Pair):
         # setup the logger
@@ -536,9 +551,12 @@ if __name__ == "__main__":
 
         logger.info("Starting the TrainingModule")
 
-        output = cast(ModuleOutput,training_module(
-            qa_pair=qa_pair,
-        ))
+        output = cast(
+            ModuleOutput,
+            training_module(
+                qa_pair=qa_pair,
+            ),
+        )
         return output
 
     from src.experiment.datasets import load_train_dev_split

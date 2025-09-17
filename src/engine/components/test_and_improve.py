@@ -95,7 +95,6 @@ class TestAndImprove(dspy.Module):
 
         # Init the output
         self.output = ModuleOutput(status="error")
-        self.output.llm = self.lm.model
         self.output.result.function_implementation = function_implementation
 
         self.logger.info(
