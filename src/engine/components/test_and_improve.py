@@ -158,16 +158,17 @@ class TestAndImprove(dspy.Module):
 
                     if creation_result.is_err():
                         # Try to clean the code using CodeCleaner
-                        error_msg = creation_result.unwrap_err()
+
+                        self.output.error_msg = creation_result.unwrap_err()
                         self.logger.warning(
-                            f"Function creation failed, attempting to clean code. Error: {error_msg}"
+                            f"Function creation failed, attempting to clean code. Error: {self.output.error_msg}"
                         )
 
                         output_code_cleaner = cast(
                             ModuleOutput,
                             self.code_cleaner(
                                 faulty_code=self.output.result.function_implementation,
-                                error_msg=error_msg,
+                                error_msg=self.output.error_msg,
                             ),
                         )
                         self.output.combine_lm_metrics(other_output=output_code_cleaner)
