@@ -73,9 +73,17 @@ class Chat(BaseModel):
 
             # Add assistant response if available
             if "response" in history_entry and history_entry["response"]:
-                assistant_msg = Message(
-                    role="assistant", content=str(history_entry["response"])
+                response = history_entry["response"]
+
+                # Extract content from ModelResponse object
+                choices = getattr(response, "choices", [])
+                content = (
+                    getattr(choices[0], "message", {}).get("content", str(response))
+                    if choices
+                    else str(response)
                 )
+
+                assistant_msg = Message(role="assistant", content=content)
                 self.append_msg(msg=assistant_msg)
 
         # Check if LM has history
