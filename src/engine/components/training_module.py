@@ -120,7 +120,6 @@ class TrainingModule(dspy.Module):
             return TrainingState.ANSWER_VERIFICATION
 
         else:
-            self.output.status = "error"
             self.output.error_msg = self.context.engine.error_msg
             return TrainingState.ERROR
 
@@ -284,7 +283,6 @@ class TrainingModule(dspy.Module):
                 return TrainingState.END
         else:
             self.output.error_msg = self.context.error_analyst.error_msg
-            self.output.status = "error"
             return TrainingState.ERROR
 
     def _handle_tool_creation(self) -> TrainingState:
@@ -312,6 +310,7 @@ class TrainingModule(dspy.Module):
         self.output.combine_lm_metrics(self.context.tool_creator)
 
         if self.context.tool_creator.status == "success":
+            self.logger.info("ToolCreator could create the new tool.")
             assert self.context.tool_creator.result.function_implementation, (
                 "Logical error: self.context.tool_creator.result.function_implementation is None in _handle_tool_creation"
             )
@@ -328,13 +327,11 @@ class TrainingModule(dspy.Module):
 
             if not self.output.result.new_function_saved:
                 self.output.error_msg = f"New tool named: {self.output.result.function_name} could not be saved"
-                self.output.status = "error"
                 return TrainingState.ERROR
             else:
                 self.output.tools_metrics.nb_tools_created += 1
                 return TrainingState.END
         else:
-            self.output.status = "error"
             self.output.error_msg = f"ToolCreator could not create a new tool.\nError msg:\n{self.context.tool_creator.error_msg}"
             return TrainingState.ERROR
 
@@ -530,11 +527,13 @@ class TrainingModule(dspy.Module):
                     self.state = next_state
             except Exception as e:
                 self.output.error_msg = f"An error occured during the Training run for question_id: {qa_pair.id}.\nError:\n{e}"
-                self.output.status = "error"
+                self.state = TrainingState.ERROR
 
-        # Log the error msg if any before returning
-        if self.output.status == "error":
-            self.logger.error(self.output.error_msg)
+            # handle finish scenarii
+            if self.state == TrainingState.END:
+                self.output.status = "success"
+            elif self.state == TrainingState.ERROR:
+                self.logger.error(self.output.error_msg)
 
         return self.output
 
