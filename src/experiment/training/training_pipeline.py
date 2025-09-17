@@ -93,8 +93,17 @@ class TrainingPipeline:
 
     def _train(self, trainset: List[QA_Pair]):
         for qa_pair in trainset:
-            outputs = cast(ModuleOutput, self.training(qa_pair=qa_pair))
-            self.outputs.add(output=outputs, update=True)
+            with mlflow.start_span(
+                name=f"question_id_{qa_pair.id}",
+                span_type="MODULE",
+            ) as span:
+                outputs = cast(ModuleOutput, self.training(qa_pair=qa_pair))
+                status = "OK" if outputs.status == "success" else "ERROR"
+
+                span.set_status(status=status)
+                span.set_inputs(inputs=qa_pair)
+                span.set_outputs(outputs=outputs)
+                self.outputs.add(output=outputs, update=True)
 
         # mlflow.log_metrics(metrics=self.outputs.tools_metrics.model_dump())
         # mlflow.log_metrics(metrics=self.outputs.lm_metrics.model_dump())
