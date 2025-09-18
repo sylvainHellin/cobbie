@@ -59,8 +59,8 @@ class ErrorAnalystSignature(dspy.Signature):
     error_category: Literal["faulty_tool", "missing_tool", "other"] = dspy.OutputField(
         desc="The error category is 'faulty_tool' if an existing tool returns incorrect results; 'missing_tool' if the system lacks a necessary tool to access required information, or would benefit from having access to an additional tool; or 'other' if the error is not tool-related (e.g. CodeAct iteration limits, context issues or reasoning errors)."
     )
-    tool_name: Optional[str] = dspy.OutputField(
-        desc="If the error category is either 'faulty_tool' or 'missing_tool', provide the name of the tool that is to be created or corrected."
+    tool_name: str = dspy.OutputField(
+        desc="If the error category is either 'faulty_tool' or 'missing_tool', provide the name of the tool that is to be created or corrected. Use 'N/A' if not applicable (e.g., for 'other' category)."
     )
     error_analysis: str = dspy.OutputField(
         desc="Detailed error analysis based on error category: For 'faulty_tool' - describe the incorrect behavior in the Python function that needs correction; For 'missing_tool' - specify the function signature, parameters, and BIM data access requirements for creating a new tool; For 'other' - describe issues like CodeAct iteration limits, missing context about IFC structure, misleading prompts, or reasoning errors that could be addressed"
@@ -143,8 +143,10 @@ class ErrorAnalyst(dspy.Module):
                 self.output.result.error_analysis = getattr(
                     prediction, "error_analysis", None
                 )
-                self.output.result.function_name = getattr(
-                    prediction, "tool_name", None
+                tool_name = getattr(prediction, "tool_name", "N/A")
+                # Convert "N/A" back to None for downstream processing
+                self.output.result.function_name = (
+                    None if tool_name == "N/A" else tool_name
                 )
 
                 # Log results

@@ -1,46 +1,43 @@
-import ast
-from typing import Any, Callable, List, Optional, Type, cast
+import re
+from typing import Any, Callable, Dict, List, Optional, Tuple, Type
 
 import dspy
 import mlflow
 import tiktoken
 from dspy.signatures.signature import Signature, ensure_signature
-from smolagents.local_python_executor import fix_final_answer_code
-from smolagents.utils import parse_code_blobs
 
 from src.engine.components.code_act_instruction_template import (
     CODE_AGENT_INSTRUCTION_TEMPLATE,
 )
 from src.engine.tools.primordial.python_interpreter import (
     AUTHORIZED_FUNCTIONS,
-    AUTHORIZED_IMPORTS,
     get_python_interpreter,
 )
-from src.engine.util import check_final_answer
 
 
-class FinalAnswerException(BaseException):
-    """Exception raised when final_answer is called to signal completion.
-
-    Inherits from BaseException instead of Exception so it won't be caught
-    by regular 'except Exception' blocks in user code.
+def parse_code_blobs(text: str) -> str:
     """
+    Extract Python code from markdown code blocks.
 
-    def __init__(self, outputs: dict):
-        self.outputs = outputs
-        super().__init__("FINAL_ANSWER_COMPLETE")
+    Replaces smolagents.utils.parse_code_blobs functionality.
 
+    Args:
+        text: Text containing markdown code blocks
 
-def final_answer(outputs: dict):
-    """Marks the task as complete.
-    Use this function when you are confident you have collected all the necessary information to answer the user's request.
-    You should pack all the required output fields into a dictionary and pass it argument to the function.
+    Returns:
+        Concatenated Python code from all code blocks
     """
-    # Store the outputs in a global-like location that can be accessed later
-    import sys
+    # Find all code blocks with ```python or just ```
+    pattern = r"```(?:python)?\s*\n(.*?)\n```"
+    matches = re.findall(pattern, text, re.DOTALL)
 
-    setattr(sys, "_final_answer_outputs", outputs)
-    raise FinalAnswerException(outputs)
+    if matches:
+        # Join all code blocks with newlines
+        return "\n\n".join(matches)
+    else:
+        # If no code blocks found, assume the entire text is Python code
+        # This handles cases where LLM returns raw Python code without markdown
+        return text.strip()
 
 
 class CodeAct(dspy.Module):
@@ -75,7 +72,7 @@ class CodeAct(dspy.Module):
         Update the tools the agent can use. This will update the signature, setup the Python interpreter to accept these tools, and setup the prediction module.
         """
 
-        self.tools = (tools or []) + [final_answer]
+        self.tools = tools or []
         self._setup_interpreter()
         self._prepare_agent_signatures()
         self._setup_prediction_modules()
@@ -89,12 +86,11 @@ class CodeAct(dspy.Module):
     def _setup_interpreter(self):
         """Initializes the Python interpreter and associated tool."""
         self.additional_authorized_functions = AUTHORIZED_FUNCTIONS.copy()
-        self.additional_authorized_imports = AUTHORIZED_IMPORTS.copy()
+        # No import restrictions - all imports are allowed
         for tool in self.tools:
             self.additional_authorized_functions[tool.__name__] = tool
         python_interpreter = get_python_interpreter(
             additional_authorized_functions=self.additional_authorized_functions,
-            additional_authorized_imports=self.additional_authorized_imports,
         )
 
         self.python_interpreter = dspy.Tool(
@@ -182,11 +178,21 @@ class CodeAct(dspy.Module):
             .append(
                 "python_code",
                 dspy.OutputField(
-                    desc="The Python code to execute to make progress on the task."
+                    desc="The Python code to execute to make progress on the task. Leave empty if you're ready to provide the final answer."
                 ),
                 type_=str,
             )
         )
+
+        # Add the original output fields from the signature to enable completion
+        for field_name, field_info in self.output_fields.items():
+            self.code_act_signature = self.code_act_signature.append(
+                field_name,
+                field_info,
+                type_=field_info.annotation
+                if hasattr(field_info, "annotation")
+                else str,
+            )
 
     def _setup_prediction_modules(self):
         """Sets up the DSPy prediction modules."""
@@ -208,6 +214,33 @@ class CodeAct(dspy.Module):
         tokens = encoding.encode(text)
         return len(tokens)
 
+    def _check_for_completion(
+        self, prediction
+    ) -> Tuple[bool, Optional[Dict[str, Any]]]:
+        """Check if agent has populated target output fields (excluding internal fields)."""
+        extracted_outputs = {}
+
+        # Only check the original output fields from the signature (not internal ones)
+        # Internal fields are: thought, python_code, trajectory
+        internal_fields = {"thought", "python_code", "trajectory"}
+
+        for field_name, field_info in self.output_fields.items():
+            if field_name not in internal_fields and hasattr(prediction, field_name):
+                value = getattr(prediction, field_name)
+                # All fields are now required strings, so just check for non-empty values
+                if value is not None and value != "":
+                    extracted_outputs[field_name] = value
+
+        # Complete if all required non-internal fields populated
+        required_fields = [
+            field for field in self.output_fields.keys() if field not in internal_fields
+        ]
+        is_complete = len(required_fields) > 0 and all(
+            field in extracted_outputs for field in required_fields
+        )
+
+        return is_complete, extracted_outputs if is_complete else None
+
     def forward(self, **kwargs) -> dspy.Prediction:
         """
         Executes the CodeAgent's thought-code-execute loop.
@@ -225,28 +258,39 @@ class CodeAct(dspy.Module):
         #     lm.model
         #     span.set_attributes({"llm": dspy.settings.lm.model})
 
-        for _ in range(self.max_iters):
-            trajectory_item, should_break = self._execute_code_act_loop(
-                trajectory, **kwargs
+        for iteration in range(self.max_iters):
+            trajectory_item, should_break, current_prediction = (
+                self._execute_code_act_loop(trajectory, **kwargs)
             )
             trajectory.append(trajectory_item)
-            if should_break:
+
+            # Only check for completion if the loop indicated we should break
+            # (This means no code was executed, and completion was detected in _execute_code_act_loop)
+            if should_break and current_prediction:
+                # Check if this break was due to completion
+                is_complete, extracted_outputs = self._check_for_completion(
+                    current_prediction
+                )
+                if is_complete:
+                    from src.engine.util import get_logger
+
+                    logger = get_logger("CodeAct", log_level="INFO")
+                    logger.debug(
+                        f"Task completed via output field detection at iteration {iteration + 1}"
+                    )
+                    return dspy.Prediction(**extracted_outputs)
+                # If should_break but not complete, agent is stuck - break anyway
+                break
+            elif should_break:
+                # Break without completion (agent stuck)
                 break
 
-        # Check if the last output from the python_interpreter matches the signature.
-        prediction = dspy.Prediction()
-        if self.last_output_python_interpreter is not None and check_final_answer(
-            self.last_output_python_interpreter, cast(Signature, self.signature)
-        ):
-            if not isinstance(self.last_output_python_interpreter, dict):
-                output = ast.literal_eval(self.last_output_python_interpreter)
-                prediction = dspy.Prediction(**output)
-
-        return prediction
+        # No more automatic result extraction - agent must populate output fields explicitly
+        return dspy.Prediction()
 
     def _execute_code_act_loop(
         self, trajectory: List[tuple[str, str, str]], **kwargs
-    ) -> tuple[tuple[str, str, str], bool]:
+    ) -> Tuple[Tuple[str, str, str], bool, Optional[dspy.Prediction]]:
         """Executes a single step of the agent's loop."""
         str_trajectory = self._format_trajectory(trajectory)
 
@@ -255,63 +299,53 @@ class CodeAct(dspy.Module):
         thought = getattr(prediction, "thought", "")
         python_code = getattr(prediction, "python_code", "")
 
-        if not python_code:
-            # If the model generates no code, assume it's stuck and break.
-            observation = "The agent did not produce any code to complete the task."
-            return (thought, python_code, observation), True
+        # Check completion logic: prioritize code execution over completion
+        if python_code and python_code.strip():
+            # Agent provided code - execute it (iterative mode)
+            # Even if output fields are populated, we execute code first
+            pass  # Continue to code execution
+        else:
+            # No code provided - check if agent has completed by populating output fields
+            is_complete, extracted_outputs = self._check_for_completion(prediction)
+            if is_complete:
+                # Agent has provided final answer in output fields without code
+                observation = (
+                    "Task completed: Agent provided final answer in output fields."
+                )
+                return (thought, python_code, observation), True, prediction
+            else:
+                # No code and no completion - agent is stuck
+                observation = "The agent did not produce any code to complete the task."
+                return (thought, python_code, observation), True, prediction
 
         # Prepare and execute the code for intermediate steps
         try:
-            code_blobs = parse_code_blobs(python_code)
-            code_to_exec = fix_final_answer_code(code_blobs)
+            code_to_exec = parse_code_blobs(python_code)
             if self.code_prefix is not None:
                 code_to_exec = self.code_prefix + "\n" + code_to_exec
 
         except Exception as e:
             observation = f"Error parsing your code: {e}. Please make sure to format the code correctly in a ```python ... ``` block."
-            return (thought, python_code, observation), False
+            return (thought, python_code, observation), False, prediction
 
         try:
-            result, logs, is_final = self.python_interpreter(python_code=code_to_exec)
+            logs = self.python_interpreter(python_code=code_to_exec)
 
-            # Store the last output from the python interpreter
-            self.last_output_python_interpreter = result
+            # Clear the last output since we no longer extract results from interpreter
+            self.last_output_python_interpreter = None
 
-            observation = "Execution Logs:\n" + (logs or "No logs.")
-            observation += "\n\nOutput:\n" + (repr(result) or "No output.")
+            # Check if agent provided both code and completion fields (mixed mode warning)
+            is_complete, _ = self._check_for_completion(prediction)
+            if is_complete:
+                warning = "\n\nWARNING: You provided both python_code and final output fields. Only the code was executed. To complete the task, provide final output fields with empty python_code in your next response."
+                logs = (logs if logs else "No output from code execution.") + warning
+            else:
+                logs = logs if logs else "No output from code execution."
 
-            if is_final:
-                return (thought, code_to_exec, observation), True
-            return (thought, code_to_exec, observation), False
+            return (thought, code_to_exec, logs), False, prediction
         except Exception as e:
-            # Check if this is a FinalAnswerException wrapped in the interpreter error
-            error_message = str(e)
-            if (
-                "FinalAnswerException" in error_message
-                and "Execution completed with outputs:" in error_message
-            ):
-                # Extract the outputs from the exception message
-                try:
-                    # Look for the dictionary in the error message
-                    import re
-
-                    dict_match = re.search(
-                        r"Execution completed with outputs: (\{.*\})", error_message
-                    )
-                    if dict_match:
-                        import ast
-
-                        outputs_dict = ast.literal_eval(dict_match.group(1))
-                        self.last_output_python_interpreter = outputs_dict
-                        logs = getattr(locals(), "logs", "No logs.")
-                        observation = "Execution Logs:\n" + logs
-                        observation += f"\n\nOutput:\n{repr(outputs_dict)}"
-                        return (thought, code_to_exec, observation), True
-                except Exception:
-                    pass  # If parsing fails, fall through to regular error handling
-
             observation = f"An error occurred during execution: {e}"
-            return (thought, code_to_exec, observation), False
+            return (thought, code_to_exec, observation), False, prediction
 
     def _format_trajectory(self, trajectory: List[tuple[str, str, str]]) -> str:
         """Formats the trajectory into a string for the prompt."""
@@ -326,9 +360,9 @@ class CodeAct(dspy.Module):
             str_trajectory += f"Observation: {observation}\n"
 
         if self._estimate_nb_tokens(str_trajectory) > 2**12:
-            str_trajectory += "---\nReminder: If you think you have finished the task, call final_answer(result_dict) with all the required fields.\n"
+            str_trajectory += "---\nReminder: When you have the information needed, populate the required output fields directly.\n"
             str_trajectory += (
-                f"REQUIRED FIELDS:\n{self.output_fields_description}\n---\n"
+                f"REQUIRED OUTPUT FIELDS:\n{self.output_fields_description}\n---\n"
             )
 
         return str_trajectory
@@ -338,6 +372,7 @@ if __name__ == "__main__":
     import uuid
 
     import mlflow
+
     from src.config import LLM
 
     # 1. Define a simple tool

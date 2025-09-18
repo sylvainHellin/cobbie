@@ -270,6 +270,9 @@ class TrainingModule(dspy.Module):
                 self.output.result.function_name = (
                     self.context.error_analyst.result.function_name
                 )
+                self.output.result.function_requirements = (
+                    self.context.error_analyst.result.error_analysis
+                )
                 return TrainingState.TOOL_CORRECTION
             elif self.output.result.error_category == "missing_tool":
                 self.output.result.need_new_function = True
@@ -348,7 +351,7 @@ class TrainingModule(dspy.Module):
             and self.context.qa_pair is not None
             and self.context.qa_pair.ifc_model_path is not None
         ), (
-            "Logical error in _handle_tool_creation: Tool correction required, but assessment or function name missing."
+            "Logical error in _handle_tool_correction: Tool correction required, but assessment or function name missing."
         )
         try:
             extracted_fn_code = get_function_code(

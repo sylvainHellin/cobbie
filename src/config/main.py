@@ -20,14 +20,6 @@ PATH_COMPILED_MODEL = os.path.join(ROOT_PATH, "src/engine/optimizer/engine.json"
 # URI
 MLFLOW_URI = "http://127.0.0.1:5000"
 
-# Load the overview of the documentation of IfcOpenShell
-doc_path = os.path.join(
-    ROOT_PATH, "src/engine/tools/primordial/ifcopenshell_api_overview.md"
-)
-with open(doc_path, "r") as file:
-    IFCOPENSHELL_DOCUMENTATION_OVERVIEW = file.read()
-del doc_path
-
 # loads secrets
 ANTHROPIC_API_KEY = os.environ["ANTHROPIC_API_KEY"]
 OPENAI_API_KEY = os.environ["OPENAI_API_KEY"]

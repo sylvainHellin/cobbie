@@ -7,244 +7,153 @@ The authorization lists are designed to be imported by other modules
 to maintain consistency across the codebase.
 """
 
-from typing import Any, Callable, Dict, List, Optional, Tuple
+import math
+from typing import Any, Callable, Dict, Optional
 
 import tiktoken
-from smolagents.local_python_executor import (
-    BASE_PYTHON_TOOLS,
-    LocalPythonExecutor,
-)
 
 from src.config import LOG_LEVEL
 from src.engine.util import get_logger
 
 # =============================================================================
-# GLOBAL AUTHORIZATION LISTS - Import these in other modules for consistency
+# PYTHON TOOLS - Replaces smolagents BASE_PYTHON_TOOLS
 # =============================================================================
 
-# Comprehensive list of authorized imports
-AUTHORIZED_IMPORTS = [
-    # Core Python modules
-    "math",
-    "statistics",
-    "random",
-    "time",
-    "datetime",
-    "itertools",
-    "collections",
-    "re",
-    "unicodedata",
-    "queue",
-    "stat",
-    # Data science and numerical computing
-    "numpy",
-    "pandas",
-    "scipy",
-    "scipy.spatialscipy.optimize",
-    "scipy.linalg",
-    "scipy.interpolate",
-    "scipy.constants",
-    "scipy.sparse",
-    # Standard library utilities
-    "json",
-    "os",
-    "sys",
-    "pathlib",
-    "glob",
-    "shutil",
-    "tempfile",
-    "typing",
-    "copy",
-    "pickle",
-    "base64",
-    "hashlib",
-    "uuid",
-    "urllib",
-    "urllib.parse",
-    "urllib.request",
-    # String and text processing
-    "string",
-    "textwrap",
-    "difflib",
-    "csv",
-    # Development and debugging
-    "inspect",
-    "logging",
-    "warnings",
-    "traceback",
-    "pprint",
-    # Compression and archives
-    "zipfile",
-    "tarfile",
-    "gzip",
-    # IFC and BIM-specific imports
-    "ifcopenshell",
-    "ifcopenshell.*",  # Allow all ifcopenshell submodules
-    "ifcopenshell.util.element",
-    "ifcopenshell.util.shape",
-    "ifcopenshell.util.placement",
-    "ifcopenshell.util.geolocation",
-    "ifcopenshell.util.system",
-    "ifcopenshell.geom",
-    "ifcopenshell.file",
-    "ifcopenshell.entity_instance",
-]
 
-# Comprehensive list of authorized built-in function names
-AUTHORIZED_FUNCTION_NAMES = [
-    # Core built-ins from BASE_PYTHON_TOOLS
-    "print",
-    "isinstance",
-    "range",
-    "float",
-    "int",
-    "bool",
-    "str",
-    "set",
-    "list",
-    "dict",
-    "tuple",
-    "bytes",
-    "bytearray",
-    "memoryview",
-    # Mathematical functions
-    "round",
-    "ceil",
-    "floor",
-    "log",
-    "exp",
-    "sin",
-    "cos",
-    "tan",
-    "asin",
-    "acos",
-    "atan",
-    "atan2",
-    "degrees",
-    "radians",
-    "pow",
-    "sqrt",
-    # Sequence and collection functions
-    "len",
-    "sum",
-    "max",
-    "min",
-    "abs",
-    "enumerate",
-    "zip",
-    "reversed",
-    "sorted",
-    "all",
-    "any",
-    "map",
-    "filter",
-    "slice",
-    # Type and object inspection
-    "ord",
-    "chr",
-    "next",
-    "iter",
-    "divmod",
-    "callable",
-    "getattr",
-    "hasattr",
-    "setattr",
-    "delattr",
-    "issubclass",
-    "type",
-    "complex",
-    "vars",
-    "dir",
-    "id",
-    "hash",
-    "repr",
-    "ascii",
-    "bin",
-    "hex",
-    "oct",
-    # Advanced built-ins often needed for development
-    "help",
-    "globals",
-    "locals",
-    "eval",
-    "exec",
-    "compile",
-    # File and I/O (be cautious with these)
-    "open",
-    "input",
-    # Exception handling
-    "BaseException",
-    "Exception",
-    "ValueError",
-    "TypeError",
-    "AttributeError",
-    "IndexError",
-    "KeyError",
-    "FileNotFoundError",
-    "RuntimeError",
-]
+def custom_print(*args, **kwargs):
+    """Custom print function that mimics smolagents behavior"""
+    print(*args, **kwargs)
 
 
-def _build_default_authorized_functions() -> Dict[str, Callable]:
+def nodunder_getattr(obj, name):
+    """Safe getattr that blocks dunder attributes"""
+    if name.startswith("__") and name.endswith("__"):
+        raise AttributeError(f"Access to dunder attribute '{name}' is forbidden")
+    return getattr(obj, name)
+
+
+def _build_base_python_tools() -> Dict[str, Any]:
     """
-    Build the comprehensive default functions dictionary.
+    Build the base Python tools dictionary to replace smolagents BASE_PYTHON_TOOLS.
 
     Returns:
-        Dictionary mapping function names to callable objects
+        Dictionary mapping function names to callable objects and types
     """
-    # Start with BASE_PYTHON_TOOLS
-    base_tools = BASE_PYTHON_TOOLS.copy()
+    # Get builtins (not used but kept for potential future use)
+    # builtins_dict = (
+    #     __builtins__ if isinstance(__builtins__, dict) else __builtins__.__dict__
+    # )
 
-    # Handle __builtins__ being either a dict or module
+    # Core built-ins and types
+    tools = {
+        # Custom functions
+        "print": custom_print,
+        "getattr": nodunder_getattr,
+        # Basic types and functions
+        "isinstance": isinstance,
+        "range": range,
+        "float": float,
+        "int": int,
+        "bool": bool,
+        "str": str,
+        "set": set,
+        "list": list,
+        "dict": dict,
+        "tuple": tuple,
+        # Math functions from math module
+        "round": round,
+        "ceil": math.ceil,
+        "floor": math.floor,
+        "log": math.log,
+        "exp": math.exp,
+        "sin": math.sin,
+        "cos": math.cos,
+        "tan": math.tan,
+        "asin": math.asin,
+        "acos": math.acos,
+        "atan": math.atan,
+        "atan2": math.atan2,
+        "degrees": math.degrees,
+        "radians": math.radians,
+        "pow": pow,
+        "sqrt": math.sqrt,
+        # Sequence functions
+        "len": len,
+        "sum": sum,
+        "max": max,
+        "min": min,
+        "abs": abs,
+        "enumerate": enumerate,
+        "zip": zip,
+        "reversed": reversed,
+        "sorted": sorted,
+        "all": all,
+        "any": any,
+        "map": map,
+        "filter": filter,
+        # Other useful functions
+        "ord": ord,
+        "chr": chr,
+        "next": next,
+        "iter": iter,
+        "divmod": divmod,
+        "callable": callable,
+        "hasattr": hasattr,
+        "setattr": setattr,
+        "issubclass": issubclass,
+        "type": type,
+        "complex": complex,
+    }
+
+    return tools
+
+
+# The base Python tools dictionary
+BASE_PYTHON_TOOLS = _build_base_python_tools()
+
+
+# All standard built-ins for broader access
+def _get_all_builtins() -> Dict[str, Any]:
+    """Get all built-in functions for comprehensive access"""
     builtins_dict = (
         __builtins__ if isinstance(__builtins__, dict) else __builtins__.__dict__
     )
 
-    # Add additional built-ins from our comprehensive list
-    additional_builtins = {
-        name: builtins_dict[name]
-        for name in AUTHORIZED_FUNCTION_NAMES
-        if name in builtins_dict and name not in base_tools
+    # Filter out private and dangerous functions
+    safe_builtins = {
+        name: func
+        for name, func in builtins_dict.items()
+        if not name.startswith("_") and name not in ["exec", "eval", "compile"]
     }
 
-    return {**base_tools, **additional_builtins}
+    return safe_builtins
 
 
 # Comprehensive default functions dictionary
-AUTHORIZED_FUNCTIONS = _build_default_authorized_functions()
-
-# Backward compatibility - keep the old name
-ADDITIONAL_AUTHORIZED_IMPORTS = AUTHORIZED_IMPORTS
+AUTHORIZED_FUNCTIONS = {**BASE_PYTHON_TOOLS, **_get_all_builtins()}
 
 
 def get_python_interpreter(
     max_tokens_logs: int = 2**12,
-    max_tokens_output: int = 2**12,
     additional_authorized_functions: Optional[Dict[str, Callable]] = None,
-    additional_authorized_imports: Optional[List[str]] = None,
 ) -> Callable:
     """
-    Create a Python interpreter with enhanced security and comprehensive authorization.
+    Create a Python interpreter with file security and function authorization.
 
-    Both functions and imports follow the same pattern:
-    - Start with comprehensive defaults (AUTHORIZED_FUNCTIONS, AUTHORIZED_IMPORTS)
-    - Extend with additional custom items if provided
+    Security approach:
+    - Allow ALL imports (no import restrictions)
+    - Only restrict file system operations (read-only)
+    - Provide comprehensive function access
 
     Args:
         max_tokens_logs: Maximum tokens for log output
-        max_tokens_output: Maximum tokens for return value output
-        additional_authorized_functions: Additional custom functions beyond the comprehensive defaults
-        additional_authorized_imports: Additional imports beyond the comprehensive defaults
+        additional_authorized_functions: Additional custom functions beyond defaults
 
     Returns:
         A callable Python interpreter function
     """
 
-    # Use comprehensive defaults, extend with additional if provided
-    authorized_imports = AUTHORIZED_IMPORTS.copy()
-    if additional_authorized_imports:
-        authorized_imports.extend(additional_authorized_imports)
-
+    # Build function dictionary - no import restrictions needed
     authorized_functions = AUTHORIZED_FUNCTIONS.copy()
     if additional_authorized_functions:
         authorized_functions.update(additional_authorized_functions)
@@ -262,73 +171,49 @@ def get_python_interpreter(
 
         return f"{truncated_text}\n\n...output truncated after {max_tokens} tokens."
 
-    def python_interpreter(python_code: str) -> Tuple[str, str, bool]:
+    # @mlflow.trace(
+    #     name="PythonInterpreter",
+    #     span_type=SpanType.TOOL,
+    # )
+    def python_interpreter(python_code: str) -> str:
         """
-        Execute Python code and return both the result and any printed output.
+        Execute Python code and return console output.
         As this interpreter has no state, variables will not be carried over when this function is used again.
 
         Args:
             python_code: The Python code to execute as a string
 
         Returns:
-            A formatted string containing both the print outputs and return value
+            Console output (stdout/stderr) as string
         """
         logger = get_logger("python_interpreter", log_level=LOG_LEVEL)
 
-        interpreter = LocalPythonExecutor(
-            additional_authorized_imports=authorized_imports
+        # Use the simplified secure executor
+        from src.engine.tools.primordial._python_executor import (
+            PythonInterpreter,
         )
 
-        # Use the comprehensive default functions with any additional ones
-        interpreter.static_tools = authorized_functions
+        interpreter = PythonInterpreter(
+            additional_authorized_functions=authorized_functions,
+            max_tokens_logs=max_tokens_logs,
+        )
 
-        logger.debug(f"Authorized imports: {'; '.join(authorized_imports)}")
+        logger.debug("All imports allowed (no restrictions)")
         logger.debug(f"Authorized functions: {'; '.join(authorized_functions.keys())}")
 
         try:
-            returned_value, logs, is_final = interpreter(code_action=python_code)
+            logs = interpreter(code_action=python_code)
             logger.debug("Tool execution completed successfully.")
-            logger.debug(f"Returned value: {returned_value}")
             logger.debug(f"Console output (logs): {logs}")
-            logger.debug(f"Is final: {is_final}")
 
-        except BaseException as e:
-            # Check if this is our FinalAnswerException
-            if (
-                e.__class__.__name__ == "FinalAnswerException"
-                and str(e) == "FINAL_ANSWER_COMPLETE"
-            ):
-                logger.debug(
-                    "Detected our FinalAnswerException - treating as successful completion"
-                )
-                try:
-                    # Try to retrieve the outputs from the exception or sys module
-                    if hasattr(e, "outputs"):
-                        outputs_dict = getattr(e, "outputs")
-                    else:
-                        import sys
-
-                        outputs_dict = getattr(sys, "_final_answer_outputs", {})
-                        if hasattr(sys, "_final_answer_outputs"):
-                            delattr(sys, "_final_answer_outputs")
-
-                    logger.debug(f"Final answer outputs: {outputs_dict}")
-                    return str(outputs_dict), "", True
-                except Exception as parse_error:
-                    logger.warning(
-                        f"Failed to retrieve FinalAnswerException outputs: {parse_error}"
-                    )
-
-            # If it's not our FinalAnswerException, re-raise it
+        except Exception as e:
+            logger.error(f"Execution failed: {e}")
             raise
 
-        returned_value = _truncatenate_text(
-            text=str(returned_value), max_tokens=max_tokens_output
-        )
         logs = _truncatenate_text(text=logs, max_tokens=max_tokens_logs)
         logger.info(f"outputs : {logs[:50]}...")
 
-        return returned_value, logs, is_final
+        return logs
 
     return python_interpreter
 
@@ -346,9 +231,8 @@ def get_authorization_info() -> Dict[str, Any]:
         Dictionary containing authorization lists and counts
     """
     return {
-        "authorized_imports": AUTHORIZED_IMPORTS,
         "authorized_functions": list(AUTHORIZED_FUNCTIONS.keys()),
-        "imports_count": len(AUTHORIZED_IMPORTS),
+        "imports_count": "unlimited",  # All imports are allowed
         "functions_count": len(AUTHORIZED_FUNCTIONS),
     }
 
@@ -363,11 +247,11 @@ def format_restrictions_info() -> str:
     info = get_authorization_info()
 
     return f"""
-PYTHON INTERPRETER RESTRICTIONS:
-- Authorized imports ({info["imports_count"]} total): {", ".join(info["authorized_imports"][:20])}{"..." if len(info["authorized_imports"]) > 20 else ""}
+PYTHON INTERPRETER SECURITY:
+- Import restrictions: NONE - All imports are allowed
+- File operations: READ-ONLY - Writing/deleting files is blocked
 - Authorized functions ({info["functions_count"]} total): {", ".join(info["authorized_functions"][:20])}{"..." if len(info["authorized_functions"]) > 20 else ""}
-- Note: typing, os, json, inspect are now allowed
-- LIMITATION: Dunder attributes like __name__, __doc__ are forbidden for security reaon.
+- LIMITATION: Dunder attributes like __name__, __doc__ may be restricted for security
 - Alternative: Use string literals or inspect module for function metadata
 - help(), dir(), globals() are permitted for debugging
 """
@@ -381,12 +265,10 @@ if __name__ == "__main__":
 
     def test_basic_execution_1():
         print("Running test: basic execution with print allowed")
-        code = 'print("Hello")\n"World"'
+        code = 'print("Hello")\nprint("World")'
         interpreter = get_python_interpreter()
         result = interpreter(code)
-        assert "## Print output" in result
         assert "Hello" in result
-        assert "## Return value" in result
         assert "World" in result
         print("PASS: Basic execution with print allowed\n")
 
