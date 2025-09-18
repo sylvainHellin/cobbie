@@ -106,17 +106,16 @@ class TrainingPipeline:
                 self.outputs.add(output=output, update=True)
 
                 if output.tools_metrics.nb_tools_updated > 0:
-                    span.set_attribute("tool updated", True)
+                    mlflow.update_current_trace(tags={"tool merged": "true"})
                 elif output.tools_metrics.nb_tools_created > 0:
-                    span.set_attribute("tool created", True)
+                    mlflow.update_current_trace(tags={"tool created": "true"})
                 elif output.tools_metrics.nb_tools_merged > 0:
-                    span.set_attribute("tool merged", True)
-
-                span.set_attributes(
-                    {
-                        "input tokens": output.lm_metrics.input_tokens,
-                        "output tokens": output.lm_metrics.output_tokens,
-                        "similarity score": output.result.similarity_score,
+                    mlflow.update_current_trace(tags={"tools merged": "true"})
+                mlflow.update_current_trace(
+                    tags={
+                        "input tokens": str(output.lm_metrics.input_tokens),
+                        "output tokens": str(output.lm_metrics.output_tokens),
+                        "similarity score": str(output.result.similarity_score),
                     }
                 )
 
@@ -189,5 +188,5 @@ if __name__ == "__main__":
 
     outputs = main(
         devset=devset[:5],
-        trainset=trainset[14:17],
+        trainset=trainset[17:20],
     )
