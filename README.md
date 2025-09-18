@@ -33,6 +33,32 @@ cd frontend/
 pnpm run preview
 ```
 
+### NocoDB
+
+NocoDB can be used for easier interaction with the dataset.
+
+#### Installation
+
+Ensure that docker is installed, and run:
+```zsh
+docker run -d \
+  --name nocodb \
+  -p 8080:8080 \
+  -v PATH_TO_DB.db:/tmp/sqlite \
+  nocodb/nocodb:latest
+```
+
+#### Start
+```zsh
+docker start nocodb
+```
+
+#### Stop
+```zsh
+docker stop nocodb
+```
+
+
 ## 🏗️ System Architecture
 
 ### Core Components
