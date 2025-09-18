@@ -170,7 +170,7 @@ class TrainingPipelineConfig(BaseAgentConfig):
         default="Training", description="MLflow experiment name"
     )
     evaluate: bool = Field(
-        default=False,
+        default=True,
         description="Evaluate the performance of the system, before and after the training run.",
     )
 

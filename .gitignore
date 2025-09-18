@@ -30,3 +30,4 @@ sandbox.py
 mlartifacts
 mlruns
 logs.log
+.cursor

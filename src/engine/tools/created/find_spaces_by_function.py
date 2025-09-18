@@ -49,8 +49,10 @@ def find_spaces_by_function(
     # Get all spaces
     spaces = ifc_file.by_type("IfcSpace")
     
-    # Default search criteria for storage spaces if not provided
-    if category_descriptions is None:
+    # Only use default values if no specific search criteria are provided
+    use_defaults = not any([classification_types, category_descriptions, keywords])
+    
+    if use_defaults and category_descriptions is None:
         category_descriptions = [
             "Storage Room",
             "Soiled Storage Room Space",
@@ -63,7 +65,7 @@ def find_spaces_by_function(
             "Cleaning Supply Storage"
         ]
     
-    if keywords is None:
+    if use_defaults and keywords is None:
         keywords = [
             "storage",
             "soiled",
@@ -129,6 +131,11 @@ def find_spaces_by_function(
                         prop_value_str = str(prop_value)
                         classification_info[pset_name][prop_name] = prop_value
                         
+                        # Special handling for laboratory spaces to avoid false positives
+                        is_lab_search = any('lab' in kw.lower() for kw in keywords or [])
+                        is_actual_lab = ('laboratory' in prop_value_str.lower() or 
+                                       '13-15 11 24 11' in prop_value_str)
+                        
                         # Check for matching classification types
                         if classification_types_lower:
                             prop_value_lower = prop_value_str.lower()
@@ -137,7 +144,11 @@ def find_spaces_by_function(
                                     if classification == prop_value_lower:
                                         matching_criteria.append(f"{pset_name}.{prop_name} exactly matches '{classification}'")
                                 else:
-                                    if classification in prop_value_lower:
+                                    # For laboratory searches, be more specific
+                                    if is_lab_search and 'lab' in classification:
+                                        if is_actual_lab:
+                                            matching_criteria.append(f"{pset_name}.{prop_name} contains '{classification}'")
+                                    elif classification in prop_value_lower:
                                         matching_criteria.append(f"{pset_name}.{prop_name} contains '{classification}'")
                         
                         # Check for matching category descriptions
@@ -148,7 +159,11 @@ def find_spaces_by_function(
                                     if category == prop_value_lower:
                                         matching_criteria.append(f"{pset_name}.{prop_name} exactly matches '{category}'")
                                 else:
-                                    if category in prop_value_lower:
+                                    # For laboratory searches, be more specific
+                                    if is_lab_search and 'lab' in category:
+                                        if is_actual_lab:
+                                            matching_criteria.append(f"{pset_name}.{prop_name} contains '{category}'")
+                                    elif category in prop_value_lower:
                                         matching_criteria.append(f"{pset_name}.{prop_name} contains '{category}'")
                         
                         # Check for keywords in property values
@@ -159,7 +174,11 @@ def find_spaces_by_function(
                                     if keyword == prop_value_lower:
                                         matching_criteria.append(f"{pset_name}.{prop_name} exactly matches '{keyword}'")
                                 else:
-                                    if keyword in prop_value_lower:
+                                    # For laboratory searches, be more specific to avoid false positives
+                                    if 'lab' in keyword and not is_actual_lab:
+                                        # Skip non-laboratory spaces when searching for labs
+                                        continue
+                                    elif keyword in prop_value_lower:
                                         matching_criteria.append(f"{pset_name}.{prop_name} contains '{keyword}'")
         
         # Check name keywords if no property matches were found
@@ -170,7 +189,14 @@ def find_spaces_by_function(
                     if keyword == name_lower:
                         matching_criteria.append(f"Name exactly matches '{keyword}'")
                 else:
-                    if keyword in name_lower:
+                    # For laboratory searches, check if it's actually a laboratory
+                    is_lab_search = 'lab' in keyword.lower()
+                    is_actual_lab_name = 'laboratory' in name_lower
+                    
+                    if is_lab_search:
+                        if is_actual_lab_name:
+                            matching_criteria.append(f"Name contains '{keyword}'")
+                    elif keyword in name_lower:
                         matching_criteria.append(f"Name contains '{keyword}'")
         
         # If criteria matched and space is not excluded, add to results
