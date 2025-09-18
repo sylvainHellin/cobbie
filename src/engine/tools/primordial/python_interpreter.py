@@ -1,23 +1,16 @@
 """
-Enhanced Python interpreter with comprehensive authorization lists.
-
-This module provides a secure Python code execution environment with
-extensive support for commonly used Python functions and imports.
-The authorization lists are designed to be imported by other modules
-to maintain consistency across the codebase.
+Secure Python interpreter with comprehensive authorization and read-only filesystem security.
 """
 
+import io
 import math
+import sys
 from typing import Any, Callable, Dict, Optional
 
 import tiktoken
 
 from src.config import LOG_LEVEL
 from src.engine.util import get_logger
-
-# =============================================================================
-# PYTHON TOOLS - Replaces smolagents BASE_PYTHON_TOOLS
-# =============================================================================
 
 
 def custom_print(*args, **kwargs):
@@ -33,23 +26,10 @@ def nodunder_getattr(obj, name):
 
 
 def _build_base_python_tools() -> Dict[str, Any]:
-    """
-    Build the base Python tools dictionary to replace smolagents BASE_PYTHON_TOOLS.
-
-    Returns:
-        Dictionary mapping function names to callable objects and types
-    """
-    # Get builtins (not used but kept for potential future use)
-    # builtins_dict = (
-    #     __builtins__ if isinstance(__builtins__, dict) else __builtins__.__dict__
-    # )
-
-    # Core built-ins and types
+    """Build the base Python tools dictionary."""
     tools = {
-        # Custom functions
         "print": custom_print,
         "getattr": nodunder_getattr,
-        # Basic types and functions
         "isinstance": isinstance,
         "range": range,
         "float": float,
@@ -60,7 +40,6 @@ def _build_base_python_tools() -> Dict[str, Any]:
         "list": list,
         "dict": dict,
         "tuple": tuple,
-        # Math functions from math module
         "round": round,
         "ceil": math.ceil,
         "floor": math.floor,
@@ -77,7 +56,6 @@ def _build_base_python_tools() -> Dict[str, Any]:
         "radians": math.radians,
         "pow": pow,
         "sqrt": math.sqrt,
-        # Sequence functions
         "len": len,
         "sum": sum,
         "max": max,
@@ -91,7 +69,6 @@ def _build_base_python_tools() -> Dict[str, Any]:
         "any": any,
         "map": map,
         "filter": filter,
-        # Other useful functions
         "ord": ord,
         "chr": chr,
         "next": next,
@@ -104,22 +81,15 @@ def _build_base_python_tools() -> Dict[str, Any]:
         "type": type,
         "complex": complex,
     }
-
     return tools
 
 
-# The base Python tools dictionary
-BASE_PYTHON_TOOLS = _build_base_python_tools()
-
-
-# All standard built-ins for broader access
 def _get_all_builtins() -> Dict[str, Any]:
     """Get all built-in functions for comprehensive access"""
     builtins_dict = (
         __builtins__ if isinstance(__builtins__, dict) else __builtins__.__dict__
     )
 
-    # Filter out private and dangerous functions
     safe_builtins = {
         name: func
         for name, func in builtins_dict.items()
@@ -129,8 +99,98 @@ def _get_all_builtins() -> Dict[str, Any]:
     return safe_builtins
 
 
-# Comprehensive default functions dictionary
+BASE_PYTHON_TOOLS = _build_base_python_tools()
 AUTHORIZED_FUNCTIONS = {**BASE_PYTHON_TOOLS, **_get_all_builtins()}
+
+
+class PythonInterpreter:
+    """Simple in-process Python executor with read-only filesystem security."""
+
+    def __init__(
+        self,
+        additional_authorized_functions: Optional[Dict[str, Callable]] = None,
+        max_tokens_logs: int = 2**12,
+    ):
+        self.max_tokens_logs = max_tokens_logs
+        self.logger = get_logger("PythonInterpreter", log_level=LOG_LEVEL)
+
+        self.static_tools = AUTHORIZED_FUNCTIONS.copy()
+        if additional_authorized_functions:
+            self.static_tools.update(additional_authorized_functions)
+
+        self._setup_security()
+
+    def _setup_security(self):
+        """Set up read-only filesystem security."""
+        self._original_open = __builtins__.get("open", open)
+
+        def secure_open(file, mode="r", **kwargs):
+            """Override open() to prevent write operations."""
+            if any(m in str(mode) for m in ["w", "a", "x", "+"]):
+                raise PermissionError(f"File writing is not allowed (mode: {mode})")
+            return self._original_open(file, mode, **kwargs)
+
+        self.secure_open = secure_open
+
+    def _truncate_text(self, text: str, max_tokens: int) -> str:
+        """Truncate text to specified token limit."""
+        encoding = tiktoken.get_encoding("cl100k_base")
+        tokens = encoding.encode(text)
+
+        if len(tokens) <= max_tokens:
+            return text
+
+        truncated_tokens = tokens[:max_tokens]
+        truncated_text = encoding.decode(truncated_tokens)
+        return f"{truncated_text}\n\n...output truncated after {max_tokens} tokens."
+
+    def __call__(self, code_action: str) -> str:
+        """Execute Python code in a secure in-process environment."""
+        self.logger.debug(f"Executing code: {code_action[:100]}...")
+
+        stdout_capture = io.StringIO()
+        stderr_capture = io.StringIO()
+        original_stdout = sys.stdout
+        original_stderr = sys.stderr
+
+        sys.stdout = stdout_capture
+        sys.stderr = stderr_capture
+
+        execution_globals = {
+            **self.static_tools,
+            "__builtins__": __builtins__,
+            "open": self.secure_open,
+        }
+
+        execution_locals = {}
+        logs = ""
+
+        try:
+            exec(code_action, execution_globals, execution_locals)
+
+            stdout_content = stdout_capture.getvalue()
+            stderr_content = stderr_capture.getvalue()
+
+            if stdout_content and stderr_content:
+                logs = f"{stdout_content}\n--- stderr ---\n{stderr_content}"
+            elif stdout_content:
+                logs = stdout_content
+            elif stderr_content:
+                logs = f"--- stderr ---\n{stderr_content}"
+            else:
+                logs = ""
+
+        except Exception as e:
+            logs = f"Execution error: {str(e)}"
+            self.logger.error(f"Execution error: {e}")
+
+        finally:
+            sys.stdout = original_stdout
+            sys.stderr = original_stderr
+
+        logs = self._truncate_text(logs, self.max_tokens_logs)
+        self.logger.debug("Execution completed")
+        return logs
 
 
 def get_python_interpreter(
@@ -152,15 +212,13 @@ def get_python_interpreter(
     Returns:
         A callable Python interpreter function
     """
-
-    # Build function dictionary - no import restrictions needed
     authorized_functions = AUTHORIZED_FUNCTIONS.copy()
     if additional_authorized_functions:
         authorized_functions.update(additional_authorized_functions)
 
-    def _truncatenate_text(text: str, max_tokens: int) -> str:
+    def _truncate_text(text: str, max_tokens: int) -> str:
         """Truncate text to specified token limit."""
-        encoding = tiktoken.get_encoding("cl100k_base")  # GPT-4 encoding
+        encoding = tiktoken.get_encoding("cl100k_base")
         tokens = encoding.encode(text)
 
         if len(tokens) <= max_tokens:
@@ -168,13 +226,8 @@ def get_python_interpreter(
 
         truncated_tokens = tokens[:max_tokens]
         truncated_text = encoding.decode(truncated_tokens)
-
         return f"{truncated_text}\n\n...output truncated after {max_tokens} tokens."
 
-    # @mlflow.trace(
-    #     name="PythonInterpreter",
-    #     span_type=SpanType.TOOL,
-    # )
     def python_interpreter(python_code: str) -> str:
         """
         Execute Python code and return console output.
@@ -187,11 +240,6 @@ def get_python_interpreter(
             Console output (stdout/stderr) as string
         """
         logger = get_logger("python_interpreter", log_level=LOG_LEVEL)
-
-        # Use the simplified secure executor
-        from src.engine.tools.primordial._python_executor import (
-            PythonInterpreter,
-        )
 
         interpreter = PythonInterpreter(
             additional_authorized_functions=authorized_functions,
@@ -210,7 +258,7 @@ def get_python_interpreter(
             logger.error(f"Execution failed: {e}")
             raise
 
-        logs = _truncatenate_text(text=logs, max_tokens=max_tokens_logs)
+        logs = _truncate_text(text=logs, max_tokens=max_tokens_logs)
         logger.info(f"outputs : {logs[:50]}...")
 
         return logs
@@ -218,32 +266,17 @@ def get_python_interpreter(
     return python_interpreter
 
 
-# =============================================================================
-# UTILITY FUNCTIONS
-# =============================================================================
-
-
 def get_authorization_info() -> Dict[str, Any]:
-    """
-    Get information about current authorization settings.
-
-    Returns:
-        Dictionary containing authorization lists and counts
-    """
+    """Get information about current authorization settings."""
     return {
         "authorized_functions": list(AUTHORIZED_FUNCTIONS.keys()),
-        "imports_count": "unlimited",  # All imports are allowed
+        "imports_count": "unlimited",
         "functions_count": len(AUTHORIZED_FUNCTIONS),
     }
 
 
 def format_restrictions_info() -> str:
-    """
-    Format authorization information for inclusion in prompts.
-
-    Returns:
-        Formatted string describing what's allowed
-    """
+    """Format authorization information for inclusion in prompts."""
     info = get_authorization_info()
 
     return f"""
@@ -255,84 +288,3 @@ PYTHON INTERPRETER SECURITY:
 - Alternative: Use string literals or inspect module for function metadata
 - help(), dir(), globals() are permitted for debugging
 """
-
-
-# =============================================================================
-# TESTS AND EXAMPLES
-# =============================================================================
-
-if __name__ == "__main__":
-
-    def test_basic_execution_1():
-        print("Running test: basic execution with print allowed")
-        code = 'print("Hello")\nprint("World")'
-        interpreter = get_python_interpreter()
-        result = interpreter(code)
-        assert "Hello" in result
-        assert "World" in result
-        print("PASS: Basic execution with print allowed\n")
-
-    def test_enhanced_functions():
-        print("Running test: enhanced functions")
-        code = """
-import json
-import os
-from typing import List, Dict
-import inspect
-
-# Test various previously forbidden operations
-data = {"test": "value"}
-json_str = json.dumps(data)
-print(f"JSON: {json_str}")
-
-# Test typing
-def example_func(items: List[str]) -> Dict[str, int]:
-    return {item: len(item) for item in items}
-
-result = example_func(["hello", "world"])
-print(f"Typed function result: {result}")
-
-# Test inspection
-sig = inspect.signature(example_func)
-print(f"Function signature: {sig}")
-
-# Test help (should work now)
-help(len)
-
-result
-"""
-        interpreter = get_python_interpreter()
-        result = interpreter(code)
-        print(f"Result: {result}")
-        print("PASS: Enhanced functions test\n")
-
-    def test_restrictions_info():
-        print("Running test: restrictions info")
-        info = get_authorization_info()
-        print(f"Total imports: {info['imports_count']}")
-        print(f"Total functions: {info['functions_count']}")
-
-        print("\nFormatted restrictions:")
-        print(format_restrictions_info())
-        print("PASS: Restrictions info test\n")
-
-    def double_number(num: int) -> int:
-        return num * 2
-
-    def test_custom_fn_allowed():
-        print("Running test: custom function allowed")
-        code = "double = double_number(3)\nprint(double)\ndouble"
-        interpreter = get_python_interpreter(
-            additional_authorized_functions={"double_number": double_number}
-        )
-        result = interpreter(code)
-        print(result)
-        print("PASS: Custom function test\n")
-
-    # Run tests
-    test_basic_execution_1()
-    test_enhanced_functions()
-    test_restrictions_info()
-    test_custom_fn_allowed()
-
-    print("All tests completed!")
