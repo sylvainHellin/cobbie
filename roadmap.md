@@ -1,6 +1,7 @@
 # Roadmap
 
 URGENT:
+- Look at the error in this trace: http://127.0.0.1:5000/#:~:text=question_id_60
 - Test the refactored `TrainingModule`. See what needs to be logged in mlflow.
 - Add a CoT module at the end of the toolcreator first code generation to extract the function code if failed to use the `final_answer` fn.
 - Instead of providing the history to the `ToolOptimizer`, just send the last trajectory + last output.

@@ -95,7 +95,7 @@ class TrainingModule(dspy.Module):
 
     def _handle_engine(self) -> TrainingState:
         """Run the engine and determine next state."""
-        assert self.context.qa_pair, (
+        assert self.context.qa_pair is not None, (
             "Logical Error: self.context.qa_pair is None in _handle_engine"
         )
         qa_pair = self.context.qa_pair
@@ -125,7 +125,10 @@ class TrainingModule(dspy.Module):
 
     def _handle_answer_verification(self) -> TrainingState:
         """Handle answer verification."""
-        assert self.context.qa_pair and self.context.engine.result.answer, (
+        assert (
+            self.context.qa_pair is not None
+            and self.context.engine.result.answer is not None
+        ), (
             "Logical error: self.context.qa_pair or self.context.engine.result.answer is None in _handle_answer_verification"
         )
 
@@ -149,7 +152,7 @@ class TrainingModule(dspy.Module):
             )
             return TrainingState.ERROR
 
-        assert self.context.answer_verifier.result.similarity_score, (
+        assert self.context.answer_verifier.result.similarity_score is not None, (
             "Logical error: self.context.answer_verifier.result.similarity_score is None in _handle_answer_verification"
         )
 
@@ -186,7 +189,7 @@ class TrainingModule(dspy.Module):
             self.output.error_msg = self.context.tool_optimizer.error_msg
             return TrainingState.ERROR
 
-        assert self.context.tool_optimizer.result.improvement, (
+        assert self.context.tool_optimizer.result.improvement is not None, (
             "Logical error: self.context.tool_optimizer.result.improvement in _handle_correct_answer"
         )
 
@@ -222,7 +225,7 @@ class TrainingModule(dspy.Module):
             return TrainingState.TOOL_MERGER
 
         elif self.context.tool_optimizer.result.improvement == "update_existing_tool":
-            assert self.output.result.existing_tool_names, (
+            assert self.output.result.existing_tool_names is not None, (
                 "Result of assessment of ToolOptimizer is `update_existing_tool`, but the field `existing_tool_name` is None."
             )
             self.output.result.function_name = self.output.result.existing_tool_names[0]
@@ -236,7 +239,9 @@ class TrainingModule(dspy.Module):
 
     def _handle_wrong_answer(self) -> TrainingState:
         """Analyse why the system provided a wrong answer and could we do to mitigate it."""
-        assert self.output.result.answer and self.context.qa_pair, (
+        assert (
+            self.output.result.answer is not None and self.context.qa_pair is not None
+        ), (
             "Logical error: self.output.result.answer or self.context.qa_pair is None in _handle_wrong_answer"
         )
 
@@ -292,10 +297,10 @@ class TrainingModule(dspy.Module):
 
         # Ensure all needed information exist
         assert (
-            self.output.result.function_name
-            and self.output.result.function_requirements
-            and self.context.qa_pair
-            and self.context.qa_pair.ifc_model_path
+            self.output.result.function_name is not None
+            and self.output.result.function_requirements is not None
+            and self.context.qa_pair is not None
+            and self.context.qa_pair.ifc_model_path is not None
         ), "Logical error: missing input in _handle_tool_creation"
 
         # Call the ToolCreator
@@ -338,10 +343,10 @@ class TrainingModule(dspy.Module):
     def _handle_tool_correction(self) -> TrainingState:
         """Correct the faulty tool according the the assessment."""
         assert (
-            self.output.result.function_name
-            and self.output.result.function_requirements
-            and self.context.qa_pair
-            and self.context.qa_pair.ifc_model_path
+            self.output.result.function_name is not None
+            and self.output.result.function_requirements is not None
+            and self.context.qa_pair is not None
+            and self.context.qa_pair.ifc_model_path is not None
         ), (
             "Logical error in _handle_tool_creation: Tool correction required, but assessment or function name missing."
         )
@@ -350,7 +355,7 @@ class TrainingModule(dspy.Module):
                 function_name=self.output.result.function_name
             )
 
-            assert extracted_fn_code, (
+            assert extracted_fn_code is not None, (
                 "Logical error: faulty_function_implementation is missing in _handle_tool_correction"
             )
 
@@ -376,7 +381,10 @@ class TrainingModule(dspy.Module):
                 return TrainingState.ERROR
 
             else:
-                assert self.context.tool_debugger.result.function_implementation, (
+                assert (
+                    self.context.tool_debugger.result.function_implementation
+                    is not None
+                ), (
                     "Logical error: self.context.tool_debugger.result.function_implementation"
                 )
                 corrected_tool_saved = save_new_tool(
@@ -401,11 +409,11 @@ class TrainingModule(dspy.Module):
     def _handle_tools_merger(self) -> TrainingState:
         """Merge two existing tools if required"""
         assert (
-            self.output.result.existing_tool_names
-            and self.output.result.function_name
-            and self.output.result.function_requirements
-            and self.context.qa_pair
-            and self.context.qa_pair.ifc_model_path
+            self.output.result.existing_tool_names is not None
+            and self.output.result.function_name is not None
+            and self.output.result.function_requirements is not None
+            and self.context.qa_pair is not None
+            and self.context.qa_pair.ifc_model_path is not None
         ), "Logical Error in _handle_tool_merger: missing information."
 
         source_code_first_function = get_function_code(
@@ -443,7 +451,7 @@ class TrainingModule(dspy.Module):
                     self.context.tool_merger.result.function_implementation
                 )
                 self.output.result.existing_tool_updated = True
-                assert self.output.result.function_implementation, (
+                assert self.output.result.function_implementation is not None, (
                     "Logical Error: self.output.result.function_implementation is missing in _handle_tool_merger although status is 'success'"
                 )
                 self.output.result.new_function_saved = save_new_tool(
@@ -471,7 +479,9 @@ class TrainingModule(dspy.Module):
         """Process current state and return next state."""
         if self.state == TrainingState.START:
             qa_pair = self.context.qa_pair
-            assert qa_pair, "Logical error: qa_pair is missing in _process_state"
+            assert qa_pair is not None, (
+                "Logical error: qa_pair is missing in _process_state"
+            )
             return self._initialize_system(qa_pair)
 
         elif self.state == TrainingState.ENGINE:
@@ -508,32 +518,23 @@ class TrainingModule(dspy.Module):
         self.state = TrainingState.START
         self.context.qa_pair = qa_pair
 
-        with mlflow.start_span(
-            name=f"question_id_{qa_pair.id}",
-            span_type="QUESTION",
-        ) as span:
-            span.set_attribute("question_id", qa_pair.id)
-            span.set_attribute("question", qa_pair.question)
-            span.set_attribute("ground_truth", qa_pair.answer)
-            self.context.span = span
+        # State machine loop
+        try:
+            while self.state not in [
+                TrainingState.END,
+                TrainingState.ERROR,
+            ]:
+                next_state = self._process_state()
+                self.state = next_state
+        except Exception as e:
+            self.output.error_msg = f"An error occured during the Training run for question_id: {qa_pair.id}.\nError:\n{e}"
+            self.state = TrainingState.ERROR
 
-            # State machine loop
-            try:
-                while self.state not in [
-                    TrainingState.END,
-                    TrainingState.ERROR,
-                ]:
-                    next_state = self._process_state()
-                    self.state = next_state
-            except Exception as e:
-                self.output.error_msg = f"An error occured during the Training run for question_id: {qa_pair.id}.\nError:\n{e}"
-                self.state = TrainingState.ERROR
-
-            # handle finish scenarii
-            if self.state == TrainingState.END:
-                self.output.status = "success"
-            elif self.state == TrainingState.ERROR:
-                self.logger.error(self.output.error_msg)
+        # handle finish scenarii
+        if self.state == TrainingState.END:
+            self.output.status = "success"
+        elif self.state == TrainingState.ERROR:
+            self.logger.error(self.output.error_msg)
 
         return self.output
 
