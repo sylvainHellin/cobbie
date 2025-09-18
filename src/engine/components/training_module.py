@@ -26,6 +26,7 @@ from src.engine.util import (
     get_function_code,
     get_logger,
     save_new_tool,
+    get_created_tools,
 )
 
 
@@ -63,7 +64,12 @@ class TrainingModule(dspy.Module):
         self.answer_verifier = AnswerVerifier()
         self.engine = IfcAnswerEngine()
         self.tool_creator = ToolCreator()
-        self.error_analyst = ErrorAnalyst()
+
+        # Load created tools for ErrorAnalyst so it can access them during analysis
+        created_tools_dict = get_created_tools()
+        created_tools_list = [fn for _, fn in created_tools_dict.items()]
+        self.error_analyst = ErrorAnalyst(tools=created_tools_list)
+
         self.tool_debugger = ToolDebugger()
         self.tool_merger = ToolsMerger()
         self.tool_optimizer = ToolOptimizer()
