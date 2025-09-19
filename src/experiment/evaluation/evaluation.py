@@ -1,140 +1,137 @@
 from datetime import datetime
-from time import time
 from typing import List, Optional, cast
 
-import mlflow
 import dspy
+import mlflow
+from mlflow.entities import LiveSpan
 from tqdm import tqdm
 
-from src.engine import IfcAnswerEngine
-from src.engine.schemas import EvaluationResult, QA_Pair, ModuleOutput
+from src.config.agents import AGENT_CONFIGS, EvaluationPipelineConfig
+from src.engine import AnswerVerifier, IfcAnswerEngine
+from src.engine.schemas import ModuleOutput, OutputsCollection, QA_Pair
 from src.engine.util import get_logger
 from src.experiment.datasets import DEVSET
-from src.experiment.validation import metric
 
 
-def evaluate(
-    llm: dspy.LM,
-    dataset: List[QA_Pair] = DEVSET,
-    experiment_name: Optional[str] = "Evaluation",
-    start_run: bool = False,
-    log_metris: bool = False,
-    engine: Optional[IfcAnswerEngine] = None,
-) -> EvaluationResult:
-    """
-    Compute the accuracy of the IfcAnswerEngine.
+class EvaluationPipeline(dspy.Module):
+    def __init__(
+        self,
+        config: Optional[EvaluationPipelineConfig] = None,
+        lm: Optional[dspy.LM] = None,
+    ):
+        super().__init__()
+        # Use provided config or default config
+        self.config = config or AGENT_CONFIGS.evaluation_pipeline
+        self.experiment_name = self.config.experiment_name
+        self.start_run = self.config.start_run
+        self.logger = get_logger(
+            name="EvaluationPipeline", log_level=self.config.log_level
+        )
 
-    Returns:
-        ValidationResult: Comprehensive evaluation results with error tracking
-    """
-    logger = get_logger("Evaluation")
-    logger.info(f"Starting evaluation with LLM: {llm.model}")
+        # Use provided LLM or get from config
+        self.lm = lm or self.config.llm.get_llm()
+        self.engine = IfcAnswerEngine(llm=self.lm)
+        self.answer_verifier = AnswerVerifier()
 
-    # Setup mlflow
-    if experiment_name is not None:
-        mlflow.set_experiment(experiment_name=experiment_name)
-        logger.info(f"MLflow experiment set: {experiment_name}")
-    if start_run:
-        mlflow.start_run(run_name=datetime.now().strftime("%Y-%m-%d-%H-%M-%S"))
-        logger.info("New run started.")
+        # Set-up mlflow
+        mlflow.dspy.autolog()  # type: ignore
+        mlflow.set_tracking_uri(self.config.tracking_uri)
+        mlflow.set_experiment(self.config.experiment_name)
 
-    # Initialize result
-    result = EvaluationResult(llm=llm.model)
+        # outputs
+        self.outputs = OutputsCollection()
 
-    # Initialize engine with provided LLM so compiled few-shot engine uses same model
-    if engine is None:
-        engine = IfcAnswerEngine(llm=llm)
+    def forward(
+        self,
+        dataset: List[QA_Pair] = DEVSET,
+        mode: str = "",
+    ) -> OutputsCollection:
+        """
+        Compute the accuracy of the IfcAnswerEngine.
 
-    # Process examples
-    for _, qa_pair in enumerate(tqdm(dataset, desc="Evaluating examples")):
-        with mlflow.start_span(
-            name=f"question_id_{qa_pair.id}",
-            span_type="CHAIN",
-        ):
-            # Increment total evaluation count
-            result.increment_eval_count()
+        Returns:
+            OutputsCollection
+        """
+        self.logger.info(f"Starting evaluation with LLM: {self.lm.model}")
 
-            # Execute engine
-            start = time()
-            engine_output = cast(
-                ModuleOutput,
-                engine(
-                    question=qa_pair.question,
-                    path_ifc_model=qa_pair.ifc_model_path,
-                ),
-            )
-            end = time()
-            duration = end - start
+        # Setup mlflow
+        if self.experiment_name is not None:
+            mlflow.set_experiment(experiment_name=self.experiment_name)
+            self.logger.info(f"MLflow experiment set: {self.experiment_name}")
+        if self.start_run and mlflow.active_run() is None:
+            mlflow.start_run(run_name=datetime.now().strftime("%Y-%m-%d-%H-%M-%S"))
+            self.logger.info("New run started.")
 
-            # Record metrics
-            result.duration.append(duration)
-            result.tokens.append(
-                (
-                    engine_output.lm_metrics.input_tokens or 0,
-                    engine_output.lm_metrics.output_tokens or 0,
+        # Process examples
+        for _, qa_pair in enumerate(tqdm(dataset, desc="Evaluating examples")):
+            # span = mlflow.get_current_active_span()
+            # if isinstance(span, LiveSpan):
+            #     span.inputs("question_id")
+            with mlflow.start_span(
+                name=f"question_id_{qa_pair.id}",
+                span_type="CHAIN",
+            ) as span:
+                span.set_inputs(inputs=qa_pair.model_dump())
+
+                output = cast(
+                    ModuleOutput,
+                    self.engine(
+                        question=qa_pair.question,
+                        path_ifc_model=qa_pair.ifc_model_path,
+                    ),
                 )
-            )
-            result.question_ids.append(qa_pair.id)
-            result.cost.append(engine_output.lm_metrics.cost or 0)
+                if output.status == "success":
+                    second_output = cast(
+                        ModuleOutput,
+                        self.answer_verifier(
+                            question=qa_pair.question,
+                            first_answer=qa_pair.answer,
+                            second_answer=output.result.answer,
+                        ),
+                    )
+                    if (
+                        second_output.status == "success"
+                        and second_output.result.similarity_score is not None
+                    ):
+                        output.result.similarity_score = (
+                            second_output.result.similarity_score
+                        )
+                        output.combine_lm_metrics(other_output=second_output)
+                        self.outputs.add(output=output, update=True)
 
-            if engine_output.status == "error":
-                result.add_error(
-                    qa_pair.id,
-                    engine_output.error_msg or "",
-                )
-                continue
+                span.set_outputs({"similarity_score": output.result.similarity_score})
 
-            acc = metric(example=qa_pair.to_example(), output=engine_output)
-            result.accuracy.append(acc)
+        mlflow.log_metrics(
+            {
+                f"mean_accuracy{mode}": self.outputs.mean_acc(),
+                f"input_tokens{mode}": self.outputs.lm_metrics.input_tokens or 0,
+                f"output_tokens{mode}": self.outputs.lm_metrics.output_tokens or 0,
+            }
+        )
+        mlflow.update_current_trace(
+            tags={
+                "input tokens": str(self.outputs.lm_metrics.input_tokens),
+                "output tokens": str(self.outputs.lm_metrics.output_tokens),
+                "average accuracy": str(self.outputs.mean_acc()),
+            }
+        )
 
-    # Log final summary
-    successful_evaluations = result.nb_eval - result.nb_failed_eval
-    logger.info(
-        f"Evaluation completed: {successful_evaluations} successful, {result.nb_failed_eval} failed out of {result.nb_eval} total"
-    )
-    logger.info(f"Success rate: {result.evaluation_success_rate():.2%}")
-    logger.info(f"Mean accuracy: {result.mean_accuracy():.3f}")
-    logger.info(f"Mean duration: {result.mean_duration():.2f}s")
-    logger.info(f"Total tokens: {result.total_tokens():,}")
+        self.logger.info(
+            f"Evaluation completed. Mean accuracy: {self.outputs.mean_acc()}"
+        )
 
-    if result.errors:
-        logger.warning(f"Total errors encountered: {len(result.errors)}")
-
-    # # Log metrics to MLflow if a run is active
-    # if mlflow.active_run() is not None and log_metris:
-    #     mlflow.log_metrics(
-    #         metrics={
-    #             "mean_accuracy": result.mean_accuracy(),
-    #             "nb_errors": float(len(result.errors)),
-    #             "mean_duration": result.mean_duration(),
-    #             "cost": result.total_cost(),
-    #         },
-    #     )
-    #     logger.info("Logged metrics to MLflow.")
-
-    return result
+        return self.outputs
 
 
 if __name__ == "__main__":
     # Run evaluation with error handling
-    from src.config import LLM
-
-    llm = LLM(
-        model_name="gpt-oss-120b",
-        provider_name="openrouter",
-    ).get_llm()
 
     mlflow.dspy.autolog(log_evals=True)  # type: ignore
     mlflow.set_tracking_uri("http://127.0.0.1:5000")
 
-    result = evaluate(
-        llm=llm,
-        start_run=True,
-        dataset=DEVSET[12:14],
-        log_metris=True,
+    evaluation = EvaluationPipeline()
+    dataset = DEVSET[:3]
+    outputs = cast(
+        OutputsCollection,
+        evaluation(dataset=dataset),
     )
-
-    # Check your tracking attributes
-    print(f"Total attempts: {result.nb_eval}")
-    print(f"Failed attempts: {result.nb_failed_eval}")
-    print(f"Success rate: {result.evaluation_success_rate():.2%}")

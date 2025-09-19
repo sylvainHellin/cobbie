@@ -9,12 +9,12 @@ from src.engine import IfcAnswerEngine, TrainingModule
 from src.engine.optimizer import bootstrap_engine
 from src.engine.schemas import (
     ModuleOutput,
+    OutputsCollection,
     QA_Pair,
-    TrainingOutputs,
 )
 from src.engine.util import get_logger
 from src.experiment.datasets.data_loader import load_train_dev_split
-from src.experiment.evaluation.evaluation import evaluate
+from src.experiment.evaluation.evaluation import EvaluationPipeline
 
 
 class TrainingPipeline:
@@ -31,6 +31,7 @@ class TrainingPipeline:
         )
         self.evaluate = self.config.evaluate
         self.training = TrainingModule()
+        self.evaluation = EvaluationPipeline()
 
         # Use provided LLM or get from config
         self.lm = lm or self.config.llm.get_llm()
@@ -43,7 +44,7 @@ class TrainingPipeline:
         mlflow.start_run(run_name=datetime.now().strftime("%Y-%m-%d-%H-%M-%S"))
 
         # outputs
-        self.outputs = TrainingOutputs()
+        self.outputs = OutputsCollection()
 
     def _evaluation(
         self,
@@ -51,37 +52,7 @@ class TrainingPipeline:
         devset: List[QA_Pair],
     ):
         if self.evaluate:
-            with mlflow.start_span(
-                name=f"evaluation_{mode}",
-                span_type="CHAIN",
-            ) as span:
-                # run eval
-                eval = evaluate(
-                    llm=self.lm,
-                    start_run=False,
-                    dataset=devset,
-                    engine=self.engine,
-                )
-                metrics = {
-                    f"mean_accuracy_{mode}_training": eval.mean_accuracy(),
-                    f"nb_errors_{mode}_training": float(eval.total_errors()),
-                    f"mean_duration_{mode}_training": eval.mean_duration(),
-                    f"input_tokens_{mode}_training": float(eval.total_input_tokens()),
-                    f"output_tokens_{mode}_training": float(eval.total_output_tokens()),
-                    f"cost_{mode}_training": eval.total_cost(),
-                }
-                span.set_attributes(attributes=metrics)
-
-                # Convert metrics to str for tags
-                mlflow.update_current_trace(
-                    tags={k: str(v) for k, v in metrics.items()}
-                )
-            # Log the metrics
-            mlflow.log_metrics(
-                metrics=metrics,
-            )
-            mlflow.log_param(key="model", value=self.lm.model)
-
+            self.evaluation(dataset=devset, mode=f"_{mode}_training")
         return
 
     def _optimize(self):
@@ -134,7 +105,7 @@ class TrainingPipeline:
         self,
         devset: List[QA_Pair],
         trainset: List[QA_Pair],
-    ) -> TrainingOutputs:
+    ) -> OutputsCollection:
         """Process QA pairs from a training set to train the engine to create, update and merge tools. Will also perform evaluation and optimization if set up in the config."""
 
         # Evaluate the accuracy of the engine before the training round (if setup in the config)

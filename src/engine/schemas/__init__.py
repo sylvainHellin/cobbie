@@ -1,4 +1,4 @@
-from .outputs import ModuleOutput, AgentOutput, TrainingOutputs
+from .outputs import ModuleOutput, AgentOutput, OutputsCollection
 from .chat import Chat, Message
 from .context import TrainingContext
 from .qa_pair import QA_Pair
@@ -18,5 +18,5 @@ __all__ = [
     "Err",
     "ok",
     "err",
-    "TrainingOutputs",
+    "OutputsCollection",
 ]
