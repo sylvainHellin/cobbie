@@ -1,4 +1,3 @@
-
 import ifcopenshell
 import ifcopenshell.util.element
 import ifcopenshell.util.shape
@@ -12,6 +11,10 @@ def calculate_insulation_material_volume(element: ifcopenshell.entity_instance, 
     This function extracts the layer thickness for the specified insulation material 
     from the element's construction and multiplies it by the element's surface area.
     
+    Note: Results are estimates and should be used for rough quantity assessment only.
+    Actual insulation volumes may vary significantly from these estimates.
+    For procurement and cost estimation, physical verification is recommended.
+    
     Assumptions:
     - For layered constructions, the insulation material is represented as a layer with defined thickness
     - For elements with a single material that is the insulation material, the total volume is returned
@@ -22,7 +25,7 @@ def calculate_insulation_material_volume(element: ifcopenshell.entity_instance, 
         insulation_material: IfcMaterial entity representing the insulation material
         
     Returns:
-        float: Volume of insulation material in cubic meters
+        float: Estimated volume of insulation material in cubic meters (with inherent uncertainty)
         
     Raises:
         ValueError: If the insulation material is not found in the element's construction
@@ -62,7 +65,7 @@ def calculate_insulation_material_volume(element: ifcopenshell.entity_instance, 
                 insulation_found = True
                 break
         if insulation_found:
-            raise ValueError(f"Cannot determine thickness of insulation material {insulation_material.Name} in IfcMaterialConstituentSet for element {element.GlobalId}")
+            raise ValueError(f"Cannot determine thickness of insulation material {insulation_material.Name} in IfcMaterialConstituentSet for element {element.GlobalId}. Estimation not possible.")
                 
     elif material_representation.is_a("IfcMaterialProfileSet"):
         # For profile sets, we can't determine layer thickness
@@ -73,7 +76,7 @@ def calculate_insulation_material_volume(element: ifcopenshell.entity_instance, 
                 insulation_found = True
                 break
         if insulation_found:
-            raise ValueError(f"Cannot determine thickness of insulation material {insulation_material.Name} in IfcMaterialProfileSet for element {element.GlobalId}")
+            raise ValueError(f"Cannot determine thickness of insulation material {insulation_material.Name} in IfcMaterialProfileSet for element {element.GlobalId}. Estimation not possible.")
                 
     elif material_representation == insulation_material:
         # Element has only one material which is the insulation material
@@ -83,6 +86,7 @@ def calculate_insulation_material_volume(element: ifcopenshell.entity_instance, 
             shape = ifcopenshell.geom.create_shape(settings, element)
             geometry = shape.geometry
             volume = ifcopenshell.util.shape.get_volume(geometry)
+            # Return the calculated volume but note that it's an estimate
             return volume
         except Exception as e:
             raise ValueError(f"Could not calculate volume for element {element.GlobalId} with single material: {str(e)}")
@@ -175,6 +179,8 @@ def calculate_insulation_material_volume(element: ifcopenshell.entity_instance, 
     # Calculate volume as thickness * area
     try:
         volume = insulation_thickness * area
+        # Return the calculated volume
+        # Note: This is still an estimate due to potential variations in actual thickness and area measurements
         return volume
     except Exception as e:
         raise ValueError(f"Could not calculate volume for element {element.GlobalId}: {str(e)}")

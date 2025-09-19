@@ -13,14 +13,15 @@ def identify_potential_firewalls(
     location, and building code requirements, even without explicit fire rating labels.
     
     This function is designed for IFC models exported from Revit and looks for:
-    1. Construction materials typically associated with firewalls (CMU, concrete, etc.)
-    2. Wall positioning that suggests firewall function (between units, core walls, etc.)
-    3. Wall types that typically function as firewalls based on naming conventions
+    1. Explicit fire rating properties
+    2. Construction materials typically associated with firewalls (CMU, concrete, etc.)
+    3. Wall positioning that suggests firewall function (between units, core walls, etc.)
+    4. Wall types that typically function as firewalls based on naming conventions
     
     Args:
         model_path (str): Path to the IFC file
         wall_type_patterns (List[str], optional): Patterns to match in wall names/types.
-            Defaults to ["fire", "party", "core", "dimising", "cmu", "concrete", "masonry"]
+            Defaults to ["fire", "party", "core", "demising", "cmu", "concrete", "masonry"]
         material_patterns (List[str], optional): Patterns to match in material names.
             Defaults to ["cmu", "concrete", "masonry", "gypsum", "steel", "block"]
         location_criteria (Dict, optional): Criteria for identifying wall positioning.
@@ -39,7 +40,7 @@ def identify_potential_firewalls(
     """
     # Set default patterns if not provided
     if wall_type_patterns is None:
-        wall_type_patterns = ["fire", "party", "core", "dimising", "cmu", "concrete", "masonry"]
+        wall_type_patterns = ["fire", "party", "core", "demising", "cmu", "concrete", "masonry"]
     
     if material_patterns is None:
         material_patterns = ["cmu", "concrete", "masonry", "gypsum", "steel", "block"]
@@ -72,11 +73,8 @@ def identify_potential_firewalls(
         name_lower = (wall.Name or "").lower()
         object_type_lower = (wall.ObjectType or "").lower()
         
-        for pattern in wall_type_patterns:
-            if pattern in name_lower or pattern in object_type_lower:
-                wall_info["indicators"].append(f"Name/Type contains '{pattern}'")
-        
         # Check for associated property sets
+        fire_rating_found = False
         if hasattr(wall, "IsDefinedBy"):
             for rel in wall.IsDefinedBy:
                 if rel.is_a("IfcRelDefinesByProperties"):
@@ -91,9 +89,12 @@ def identify_potential_firewalls(
                                 
                                 # Check for explicit fire rating properties
                                 prop_name_lower = prop.Name.lower()
-                                if ("fire" in prop_name_lower and "rating" in prop_name_lower) or                                    ("fire" in prop_name_lower and "rate" in prop_name_lower):
+                                if ("fire" in prop_name_lower and "rating" in prop_name_lower) or \
+                                   ("fire" in prop_name_lower and "rate" in prop_name_lower) or \
+                                   prop_name_lower in ["fire_rating", "firerating"]:
                                     wall_info["fire_rating"] = str(prop.NominalValue)
                                     wall_info["indicators"].append(f"Explicit fire rating: {prop.NominalValue}")
+                                    fire_rating_found = True
                                 
                                 # Check property values for firewall indicators
                                 prop_value_lower = str(prop.NominalValue).lower()
@@ -103,6 +104,7 @@ def identify_potential_firewalls(
                                         wall_info["indicators"].append(f"Property '{prop.Name}' contains material '{pattern}'")
         
         # Check for material information
+        material_indicators = 0
         if hasattr(wall, "HasAssociations"):
             for assoc in wall.HasAssociations:
                 if assoc.is_a("IfcRelAssociatesMaterial"):
@@ -116,6 +118,7 @@ def identify_potential_firewalls(
                         for pattern in material_patterns:
                             if pattern in material_name_lower:
                                 wall_info["indicators"].append(f"Material name contains '{pattern}'")
+                                material_indicators += 1
                                 
                     elif material.is_a("IfcMaterialLayerSet"):
                         material_info = f"Material Layer Set: {material.LayerSetName}"
@@ -126,6 +129,7 @@ def identify_potential_firewalls(
                         for pattern in material_patterns:
                             if pattern in layer_set_name_lower:
                                 wall_info["indicators"].append(f"Layer set name contains '{pattern}'")
+                                material_indicators += 1
                                 
                         # Check individual layers
                         for layer in material.MaterialLayers:
@@ -138,6 +142,7 @@ def identify_potential_firewalls(
                                 for pattern in material_patterns:
                                     if pattern in layer_material_name_lower:
                                         wall_info["indicators"].append(f"Layer material contains '{pattern}'")
+                                        material_indicators += 1
                                         
                                 # Check layer thickness for firewall indicators
                                 if hasattr(layer, "LayerThickness") and location_criteria.get("thickness_threshold"):
@@ -156,6 +161,7 @@ def identify_potential_firewalls(
                             for pattern in material_patterns:
                                 if pattern in layer_set_name_lower:
                                     wall_info["indicators"].append(f"Layer set usage name contains '{pattern}'")
+                                    material_indicators += 1
                                     
                         # Check individual layers
                         if hasattr(layer_set, "MaterialLayers"):
@@ -169,19 +175,29 @@ def identify_potential_firewalls(
                                     for pattern in material_patterns:
                                         if pattern in layer_material_name_lower:
                                             wall_info["indicators"].append(f"Layer material contains '{pattern}'")
+                                            material_indicators += 1
                                             
                                     # Check layer thickness for firewall indicators
                                     if hasattr(layer, "LayerThickness") and location_criteria.get("thickness_threshold"):
                                         if layer.LayerThickness >= location_criteria["thickness_threshold"]:
                                             wall_info["indicators"].append(f"Thick layer ({layer.LayerThickness}m) suggests firewall")
         
-        # Check for location-based indicators (simplified implementation)
-        # In a full implementation, this would analyze spatial relationships between units
-        if location_criteria.get("between_units") and "party" in name_lower:
-            wall_info["indicators"].append("Located between units (party wall)")
+        # Check name and object type for firewall indicators (more specific patterns)
+        name_indicators = 0
+        for pattern in wall_type_patterns:
+            if pattern in name_lower or pattern in object_type_lower:
+                wall_info["indicators"].append(f"Name/Type contains '{pattern}'")
+                name_indicators += 1
+        
+        # Check for location-based indicators
+        location_indicators = 0
+        if location_criteria.get("between_units") and ("party" in name_lower or "demising" in name_lower):
+            wall_info["indicators"].append("Located between units (party/demising wall)")
+            location_indicators += 1
             
-        # If we found potential firewall indicators or the wall has a fire rating, add to our list
-        if wall_info["indicators"] or wall_info["fire_rating"]:
+        # Only classify as potential firewall if we have strong evidence:
+        # Either an explicit fire rating, or multiple indicators (at least 2 name/type + 1 material)
+        if fire_rating_found or (name_indicators >= 1 and material_indicators >= 1) or (name_indicators >= 1 and location_indicators >= 1):
             potential_firewalls.append(wall_info)
     
     return potential_firewalls

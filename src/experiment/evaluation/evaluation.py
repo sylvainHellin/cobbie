@@ -50,12 +50,13 @@ class EvaluationPipeline:
         self.logger.info(f"Starting evaluation with LLM: {self.lm.model}")
 
         # Setup mlflow
-        if self.experiment_name is not None:
-            mlflow.set_experiment(experiment_name=self.experiment_name)
-            self.logger.info(f"MLflow experiment set: {self.experiment_name}")
-        if self.start_run and mlflow.active_run() is None:
-            mlflow.start_run(run_name=datetime.now().strftime("%Y-%m-%d-%H-%M-%S"))
-            self.logger.info("New run started.")
+        # Test to remove this to see if it removes the bug
+        # if self.experiment_name is not None:
+        #     mlflow.set_experiment(experiment_name=self.experiment_name)
+        #     self.logger.info(f"MLflow experiment set: {self.experiment_name}")
+        # if self.start_run and mlflow.active_run() is None:
+        #     mlflow.start_run(run_name=datetime.now().strftime("%Y-%m-%d-%H-%M-%S"))
+        #     self.logger.info("New run started.")
 
         # Process examples
         for _, qa_pair in enumerate(tqdm(dataset, desc="Evaluating examples")):
@@ -131,7 +132,7 @@ if __name__ == "__main__":
     mlflow.set_experiment("ToolOptimizer")
 
     evaluation = EvaluationPipeline()
-    dataset = DEVSET[: len(DEVSET) // 2]
+    dataset = DEVSET[:]
     outputs = cast(
         OutputsCollection,
         evaluation.forward(dataset=dataset),

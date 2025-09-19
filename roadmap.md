@@ -1,18 +1,12 @@
 # Roadmap
 
-URGENT:
-- Check the way the token calculation is done for the `evaluation` module ; always 0 for answer verifier, and always 246 K for the engine. Something is wrong.
-- Update the metrics to log for a run of the `TrainingPipeline`
+**URGENT**
 
 ## Engine
 
+### Potential improvements
+
 - Instead of providing the history to the `ToolOptimizer`, just send the last trajectory + last output.
-- Understand why this weird behaviour keep happening: the LLM output the same code over and over. Double check the trajectory mechanism.
-- Clean up the `config` file for the LLM: find a more streamlined approach to name them and handle them (Enum?) - maybe move them to a dedicated file instead of general config. **WIP** : look for all files still containing a reference to LANGUAGE_MODELS
-- Created a unified and streamlined way to calculate cost at a `Module` level -- and propagate them back (it should be able to handle different LLM providers with different costs at different module levels.)
-- Upgrade dspy to 3.0 -- workout all the breaking changes -- kill the fastapi server first -- update how Prediction are handled.
-- Add more tracing data in `mlflow` for the `optimizer`
-- Create small util function to calculate the nb of tokens from a specific messages list from mlflow.
 
 
 ## Experiment

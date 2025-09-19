@@ -48,7 +48,7 @@ class TrainingPipeline:
     ):
         if self.evaluate:
             # Re-initialize the Evaluation Module for each forward pass
-            self.evaluation = EvaluationPipeline()
+            # self.evaluation = EvaluationPipeline()
             self.evaluation.forward(dataset=devset, mode=f"_{mode}_training")
         return
 
@@ -164,8 +164,9 @@ if __name__ == "__main__":  # Set-up mlflow
     )
 
     outputs = main(
-        devset=devset[: len(devset) // 2],
-        trainset=trainset[: len(trainset) // 2],
-        #     devset=devset[:2],
-        #     trainset=trainset[:2],
+        # devset=devset[: len(devset) // 2],
+        devset=[],
+        trainset=trainset,
+        # devset=devset[:0],
+        # trainset=trainset[:2],
     )
