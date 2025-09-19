@@ -33,11 +33,6 @@ class EvaluationPipeline:
         self.engine = IfcAnswerEngine(llm=self.lm)
         self.answer_verifier = AnswerVerifier()
 
-        # Set-up mlflow
-        mlflow.dspy.autolog()  # type: ignore
-        mlflow.set_tracking_uri(self.config.tracking_uri)
-        mlflow.set_experiment(self.config.experiment_name)
-
         # outputs
         self.outputs = OutputsCollection()
 
@@ -129,6 +124,11 @@ class EvaluationPipeline:
 
 
 if __name__ == "__main__":
+    # setup mlflow
+    mlflow.dspy.autolog()  # type: ignore
+    mlflow.set_tracking_uri("http://127.0.0.1:5000")
+    mlflow.set_experiment("ToolOptimizer")
+
     # Run evaluation with error handling
 
     mlflow.dspy.autolog(log_evals=True)  # type: ignore
@@ -138,5 +138,5 @@ if __name__ == "__main__":
     dataset = DEVSET[:3]
     outputs = cast(
         OutputsCollection,
-        evaluation(dataset=dataset),
+        evaluation.forward(dataset=dataset),
     )

@@ -1,7 +1,6 @@
 from typing import Callable, List, Literal, Optional
 
 import dspy
-import mlflow
 
 from src.config.agents import AGENT_CONFIGS, ErrorAnalystConfig
 from src.engine.components.code_act import CodeAct
@@ -178,6 +177,7 @@ class ErrorAnalyst(dspy.Module):
 
 
 if __name__ == "__main__":
+    import mlflow
 
     def main(
         chat_history: str,

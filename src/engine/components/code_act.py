@@ -2,7 +2,6 @@ import re
 from typing import Any, Callable, Dict, List, Optional, Tuple, Type
 
 import dspy
-import mlflow
 import tiktoken
 from dspy.signatures.signature import Signature, ensure_signature
 
@@ -252,11 +251,6 @@ class CodeAct(dspy.Module):
             dspy.Prediction: An object containing the final answer.
         """
         trajectory: List[tuple[str, str, str]] = []
-        # span = mlflow.get_current_active_span()
-        # if span is not None:
-        #     lm = cast(dspy.LM, dspy.settings.lm)
-        #     lm.model
-        #     span.set_attributes({"llm": dspy.settings.lm.model})
 
         for iteration in range(self.max_iters):
             trajectory_item, should_break, current_prediction = (

@@ -1,7 +1,6 @@
 from typing import Callable, Dict, cast, Optional
 
 import dspy
-import mlflow
 
 from src.config.agents import AGENT_CONFIGS, ToolDebuggerConfig
 from src.engine.components.test_and_improve import TestAndImprove
@@ -170,6 +169,7 @@ class ToolDebugger(dspy.Module):
 
 
 if __name__ == "__main__":
+    import mlflow
     from src.config import TEST_IFC_PATH
 
     def main(

@@ -78,11 +78,6 @@ class TrainingModule(dspy.Module):
         if self.config.load_optimized_module:
             self.engine.load(path=PATH_COMPILED_MODEL)
 
-        # Set-up mlflow
-        mlflow.dspy.autolog()  # type: ignore
-        mlflow.set_tracking_uri(self.config.tracking_uri)
-        mlflow.set_experiment(self.config.experiment_name)
-
         # State machine attributes
         self.state = TrainingState.START
         self.context = TrainingContext()
@@ -549,6 +544,10 @@ class TrainingModule(dspy.Module):
 
 
 if __name__ == "__main__":
+    # setup mlflow
+    mlflow.dspy.autolog()  # type: ignore
+    mlflow.set_tracking_uri("http://127.0.0.1:5000")
+    mlflow.set_experiment("ToolOptimizer")
 
     def main(qa_pair: QA_Pair):
         # setup the logger

@@ -37,12 +37,6 @@ class TrainingPipeline:
         self.lm = lm or self.config.llm.get_llm()
         self.engine = IfcAnswerEngine(llm=self.lm)
 
-        # Set-up mlflow
-        mlflow.dspy.autolog()  # type: ignore
-        mlflow.set_tracking_uri(self.config.tracking_uri)
-        mlflow.set_experiment(self.config.experiment_name)
-        mlflow.start_run(run_name=datetime.now().strftime("%Y-%m-%d-%H-%M-%S"))
-
         # outputs
         self.outputs = OutputsCollection()
 
@@ -155,7 +149,12 @@ def main(
     return output
 
 
-if __name__ == "__main__":
+if __name__ == "__main__":  # Set-up mlflow
+    mlflow.dspy.autolog()  # type: ignore
+    mlflow.set_tracking_uri("http://127.0.0.1:5000")
+    mlflow.set_experiment("Training")
+    mlflow.start_run(run_name=datetime.now().strftime("%Y-%m-%d-%H-%M-%S"))
+
     devset, trainset = load_train_dev_split()
     dspy.configure_cache(
         enable_disk_cache=True,

@@ -2,7 +2,6 @@ import re
 from typing import Callable, List, Optional, cast
 
 import dspy
-import mlflow
 
 from src.config.agents import (
     AGENT_CONFIGS,
@@ -205,6 +204,7 @@ class ToolCreator(dspy.Module):
 
 
 if __name__ == "__main__":
+    import mlflow
     from src.config import TEST_IFC_PATH
 
     def main(

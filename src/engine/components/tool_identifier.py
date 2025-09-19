@@ -1,5 +1,4 @@
 import dspy
-import mlflow
 from typing import Optional
 
 from src.config.agents import AGENT_CONFIGS, ToolIdentifierConfig
@@ -155,6 +154,7 @@ class ToolIdentifier(dspy.Module):
 
 if __name__ == "__main__":
     from typing import cast
+    import mlflow
 
     def main(
         chat_history: str,

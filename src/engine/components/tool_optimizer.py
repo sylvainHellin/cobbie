@@ -1,5 +1,4 @@
 import dspy
-import mlflow
 from typing import Literal, List, Optional
 
 from src.config.agents import AGENT_CONFIGS, ToolOptimizerConfig
@@ -185,6 +184,7 @@ class ToolOptimizer(dspy.Module):
 
 if __name__ == "__main__":
     from typing import cast
+    import mlflow
 
     def main(
         chat_history: str,

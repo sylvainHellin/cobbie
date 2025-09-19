@@ -1,5 +1,4 @@
 import dspy
-import mlflow
 
 from src.config import AGENT_CONFIGS, LOG_LEVEL
 from src.engine.schemas import ModuleOutput
@@ -103,6 +102,7 @@ class AnswerVerifier(dspy.Module):
 
 if __name__ == "__main__":
     from typing import cast
+    import mlflow
 
     # Try to set up MLflow tracking, but don't fail if server is not available
     mlflow.dspy.autolog()  # type: ignore
