@@ -34,6 +34,29 @@ class SignatureToolOptimizer(dspy.Signature):
     4. **No Action Needed**
        - Current tools handled the requests effectively
        - No clear patterns of inefficiency or gaps identified
+
+    **Tool Recommendation Guidelines**
+       **Primary Goal**: Identify tools that reduce repetitive code patterns and minimize IFC OpenShell documentation queries
+
+       **IFC/BIM-Specific Priorities:**
+       - Target common IFC filtering patterns (interior/exterior, by material, by space, by property values)
+       - Focus on repetitive property extraction workflows (Pset_* properties, geometric properties)
+       - Prioritize tools that abstract frequent IFC relationship traversals
+
+       **Tool Generality Guidelines:**
+       - Favor tools serving broad use cases: `get_interior_elements`, `calculate_material_volumes`, `get_elements_by_property_value`
+       - Avoid overly specific tools: `find_reinforced_medical_equipment_areas`, `get_blue_doors_in_kitchen`
+
+       **When to Recommend Tools:**
+       - Similar 5+ line code blocks appear across conversations
+       - Documentation queries cluster around the same IFC concepts
+       - Multiple existing tools needed for single user requests
+
+       **Implementation Guidelines:**
+       - **Recommend tools that involve**: Property extraction, element filtering, counting operations, basic calculations using existing IFC properties
+       - **Consider carefully tools that involve**: Relationship traversal, simple geometric calculations from IFC geometry data
+       - **Avoid recommending tools that involve**: Complex 3D spatial analysis, topology-dependent calculations, operations requiring external 3D engines
+       - **When in doubt**: Favor simpler tools that work reliably with IfcOpenShell's direct property access over complex geometric computations
     """
 
     # Input fields
