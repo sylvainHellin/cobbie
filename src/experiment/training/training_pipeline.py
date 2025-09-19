@@ -54,7 +54,7 @@ class TrainingPipeline:
         if self.evaluate:
             # Re-initialize the Evaluation Module for each forward pass
             self.evaluation = EvaluationPipeline()
-            self.evaluation(dataset=devset, mode=f"_{mode}_training")
+            self.evaluation.forward(dataset=devset, mode=f"_{mode}_training")
         return
 
     def _optimize(self):
@@ -67,7 +67,7 @@ class TrainingPipeline:
     def _train(self, trainset: List[QA_Pair]):
         for qa_pair in trainset:
             with mlflow.start_span(
-                name=f"question_id_{qa_pair.id}",
+                name=f"train_question_id_{qa_pair.id}",
                 span_type="MODULE",
             ) as span:
                 output = cast(ModuleOutput, self.training(qa_pair=qa_pair))
@@ -94,10 +94,13 @@ class TrainingPipeline:
 
         mlflow.log_metrics(
             metrics={
+                "mean_acc_training": self.outputs.mean_acc(),
                 "training_cost": self.outputs.lm_metrics.cost or 0.0,
-                "tools created": self.outputs.tools_metrics.nb_tools_created,
-                "tools updated": self.outputs.tools_metrics.nb_tools_updated,
-                "tools merged": self.outputs.tools_metrics.nb_tools_merged,
+                "input_tokens_training": self.outputs.lm_metrics.input_tokens or 0.0,
+                "output_tokens_training": self.outputs.lm_metrics.output_tokens or 0.0,
+                "tools_created": self.outputs.tools_metrics.nb_tools_created,
+                "tools_updated": self.outputs.tools_metrics.nb_tools_updated,
+                "tools_merged": self.outputs.tools_metrics.nb_tools_merged,
             }
         )
         self.logger.info(self.outputs.tools_metrics.model_dump_json(indent=2))
@@ -160,6 +163,8 @@ if __name__ == "__main__":
     )
 
     outputs = main(
-        devset=devset[: len(devset) / 2],
-        trainset=trainset[: len(trainset) / 2],
+        devset=devset[: len(devset) // 2],
+        trainset=trainset[: len(trainset) // 2],
+        #     devset=devset[:2],
+        #     trainset=trainset[:2],
     )

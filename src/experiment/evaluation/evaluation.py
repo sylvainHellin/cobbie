@@ -13,7 +13,7 @@ from src.engine.util import get_logger
 from src.experiment.datasets import DEVSET
 
 
-class EvaluationPipeline(dspy.Module):
+class EvaluationPipeline:
     def __init__(
         self,
         config: Optional[EvaluationPipelineConfig] = None,
@@ -65,7 +65,7 @@ class EvaluationPipeline(dspy.Module):
         # Process examples
         for _, qa_pair in enumerate(tqdm(dataset, desc="Evaluating examples")):
             with mlflow.start_span(
-                name=f"question_id_{qa_pair.id}",
+                name=f"eval_question_id_{qa_pair.id}",
                 span_type="CHAIN",
             ) as span:
                 span.set_inputs(inputs=qa_pair.model_dump())
@@ -97,6 +97,14 @@ class EvaluationPipeline(dspy.Module):
                         self.outputs.add(output=output, update=True)
 
                 span.set_outputs({"similarity_score": output.result.similarity_score})
+
+                mlflow.update_current_trace(
+                    tags={
+                        "input tokens": str(output.lm_metrics.input_tokens),
+                        "output tokens": str(output.lm_metrics.output_tokens),
+                        "similarity score": str(output.result.similarity_score),
+                    }
+                )
 
         mlflow.log_metrics(
             {
