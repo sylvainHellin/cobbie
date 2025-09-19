@@ -64,9 +64,6 @@ class EvaluationPipeline(dspy.Module):
 
         # Process examples
         for _, qa_pair in enumerate(tqdm(dataset, desc="Evaluating examples")):
-            # span = mlflow.get_current_active_span()
-            # if isinstance(span, LiveSpan):
-            #     span.inputs("question_id")
             with mlflow.start_span(
                 name=f"question_id_{qa_pair.id}",
                 span_type="CHAIN",

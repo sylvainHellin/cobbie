@@ -52,6 +52,8 @@ class TrainingPipeline:
         devset: List[QA_Pair],
     ):
         if self.evaluate:
+            # Re-initialize the Evaluation Module for each forward pass
+            self.evaluation = EvaluationPipeline()
             self.evaluation(dataset=devset, mode=f"_{mode}_training")
         return
 
@@ -158,6 +160,6 @@ if __name__ == "__main__":
     )
 
     outputs = main(
-        devset=devset[:5],
-        trainset=trainset[17:20],
+        devset=devset[: len(devset) / 2],
+        trainset=trainset[: len(trainset) / 2],
     )
