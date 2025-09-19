@@ -199,7 +199,7 @@ class ModuleOutput(BaseModel):
         return
 
 
-class TrainingOutputs(BaseModel):
+class OutputsCollection(BaseModel):
     """Container for managing multiple ModuleOutput instances with aggregation capabilities.
 
     This class provides methods to collect, manage, and combine metrics from multiple
@@ -230,3 +230,27 @@ class TrainingOutputs(BaseModel):
     def __getitem__(self, index: int) -> ModuleOutput:
         """Allow indexing into stored outputs."""
         return self.outputs[index]
+
+    def mean_acc(self) -> float:
+        """Calculate the average accuracy from similarity scores of successful outputs
+
+        Returns:
+            - float: average similarity score, or 0.0 if no valid score are available
+        """
+        similarity_scores: List[float] = []
+
+        for output in self.outputs:
+            # Filter out errors
+            if (
+                output.status == "success"
+                and output.result.similarity_score is not None
+            ):
+                similarity_scores.append(output.result.similarity_score)
+
+        acc = (
+            (sum(similarity_scores) / len(similarity_scores))
+            if similarity_scores
+            else 0.0
+        )
+
+        return acc
