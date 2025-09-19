@@ -192,7 +192,7 @@ class EvaluationPipelineConfig(BaseAgentConfig):
         default="Evaluation", description="MLflow experiment name"
     )
     start_run: bool = Field(
-        default=False, description="If a new MLflow run should be started."
+        default=True, description="If a new MLflow run should be started."
     )
 
     pass

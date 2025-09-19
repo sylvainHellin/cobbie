@@ -1,9 +1,9 @@
+import gc
 from datetime import datetime
 from typing import List, Optional, cast
 
 import dspy
 import mlflow
-from mlflow.entities import LiveSpan
 from tqdm import tqdm
 
 from src.config.agents import AGENT_CONFIGS, EvaluationPipelineConfig
@@ -100,6 +100,7 @@ class EvaluationPipeline:
                         "similarity score": str(output.result.similarity_score),
                     }
                 )
+            gc.collect()
 
         mlflow.log_metrics(
             {
@@ -129,13 +130,8 @@ if __name__ == "__main__":
     mlflow.set_tracking_uri("http://127.0.0.1:5000")
     mlflow.set_experiment("ToolOptimizer")
 
-    # Run evaluation with error handling
-
-    mlflow.dspy.autolog(log_evals=True)  # type: ignore
-    mlflow.set_tracking_uri("http://127.0.0.1:5000")
-
     evaluation = EvaluationPipeline()
-    dataset = DEVSET[:3]
+    dataset = DEVSET[: len(DEVSET) // 2]
     outputs = cast(
         OutputsCollection,
         evaluation.forward(dataset=dataset),

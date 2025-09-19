@@ -1,3 +1,4 @@
+import gc
 from datetime import datetime
 from typing import List, Literal, Optional, cast
 
@@ -99,6 +100,7 @@ class TrainingPipeline:
         )
         self.logger.info(self.outputs.tools_metrics.model_dump_json(indent=2))
         self.logger.info(self.outputs.lm_metrics.model_dump_json(indent=2))
+        gc.collect()
 
     def forward(
         self,
