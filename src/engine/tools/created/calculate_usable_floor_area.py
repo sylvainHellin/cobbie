@@ -4,7 +4,7 @@ from typing import *
 
 def calculate_usable_floor_area(ifc_model_path: str) -> float:
     """
-    Calculate the total usable floor area by summing the areas of IfcSlab entities 
+    Calculate the total usable floor area by summing the areas of IfcSlab entities
     with PredefinedType='FLOOR' using data from the PSet_Revit_Dimensions property set.
     
     Args:
@@ -25,17 +25,12 @@ def calculate_usable_floor_area(ifc_model_path: str) -> float:
     model = ifcopenshell.open(ifc_model_path)
     
     # Find all IfcSlab entities with PredefinedType='FLOOR'
-    floor_slabs = [slab for slab in model.by_type("IfcSlab") if getattr(slab, 'PredefinedType', None) == "FLOOR"]
+    slabs = [slab for slab in model.by_type("IfcSlab") if getattr(slab, 'PredefinedType', None) == 'FLOOR']
     
     total_area = 0.0
-    processed_slabs = set()  # To avoid double counting
     
-    # For each floor slab, get the area from PSet_Revit_Dimensions
-    for slab in floor_slabs:
-        # Skip if we've already processed this slab (avoid double counting)
-        if slab.GlobalId in processed_slabs:
-            continue
-            
+    # For each slab, get the area from PSet_Revit_Dimensions
+    for slab in slabs:
         # Get property sets for this slab
         property_sets = ifcopenshell.util.element.get_psets(slab)
         
@@ -45,7 +40,5 @@ def calculate_usable_floor_area(ifc_model_path: str) -> float:
             if "Area" in pset_dimensions:
                 # Add the area to our total
                 total_area += pset_dimensions["Area"]
-                # Mark this slab as processed
-                processed_slabs.add(slab.GlobalId)
     
     return float(total_area)

@@ -23,13 +23,15 @@ def find_storage_spaces_comprehensive(model_path: str, storage_types: Optional[L
     - Category Description
     - OmniClass Table 13 Category
     
+    Note: This function is designed for IFC models exported from Revit and uses
+    Revit-specific property sets (PSet_Revit_*).
+    
     Args:
         model_path (str): Path to the IFC model file
         storage_types (List[str], optional): Specific storage types to search for 
             (e.g., "general", "soiled", "hazardous", "utility"). 
             If None, searches for all storage types.
-            Valid options include: "general", "soiled", "hazardous", "utility", 
-            "mechanical", "electrical", "equipment"
+            Valid options include: "general", "soiled", "hazardous", "utility"
     
     Returns:
         List[Dict[str, Any]]: List of dictionaries containing storage space information:
@@ -42,16 +44,19 @@ def find_storage_spaces_comprehensive(model_path: str, storage_types: Optional[L
             - "Properties": All property sets and their values
     """
     
-    # Define storage-related keywords for different types
+    # Define storage-related keywords for different types (excluding technical rooms)
     storage_keywords = {
-        "general": ["storage", "store", "closet", "pantry", "locker"],
+        "general": ["storage", "store", "closet", "pantry", "locker", "stockroom"],
         "soiled": ["soiled"],
-        "hazardous": ["hazardous", "flamable", "gas"],
-        "utility": ["utility", "janitor"],
-        "mechanical": ["mechanical"],
-        "electrical": ["electrical"],
-        "equipment": ["equipment"]
+        "hazardous": ["hazardous", "flammable", "gas"],
+        "utility": ["utility", "janitor"]
     }
+    
+    # Define technical room keywords to exclude
+    technical_room_keywords = [
+        "mechanical", "electrical", "equipment", "plant", "boiler", 
+        "generator", "server", "telecom", "data", "IT"
+    ]
     
     # Load the IFC model
     model = ifcopenshell.open(model_path)
@@ -87,6 +92,20 @@ def find_storage_spaces_comprehensive(model_path: str, storage_types: Optional[L
             
         if "PSet_Revit_Identity Data" in psets and "OmniClass Table 13 Category" in psets["PSet_Revit_Identity Data"]:
             space_info["OmniClass"] = psets["PSet_Revit_Identity Data"]["OmniClass Table 13 Category"]
+        
+        # Check if this is a technical room that should be excluded
+        is_technical_room = False
+        for keyword in technical_room_keywords:
+            # Check in category description, OmniClass, and space name
+            if (space_info["Category"] and keyword.lower() in space_info["Category"].lower()) or \
+               (space_info["OmniClass"] and keyword.lower() in space_info["OmniClass"].lower()) or \
+               (space.Name and keyword.lower() in space.Name.lower()):
+                is_technical_room = True
+                break
+        
+        # Skip technical rooms
+        if is_technical_room:
+            continue
         
         # Check for storage-related terms in various properties
         is_storage = False
@@ -131,15 +150,14 @@ def find_storage_spaces_comprehensive(model_path: str, storage_types: Optional[L
             # Check for generic storage room classifications
             storage_room_indicators = [
                 "Storage Room", "Soiled Storage Room Space", 
-                "Hazardous Material Storage Space", "Equipment Room",
-                "Mechanical Room", "Electrical Room"
+                "Hazardous Material Storage Space", "Stockroom"
             ]
             
             for indicator in storage_room_indicators:
-                # Check in category description
-                if (space_info["Category"] and indicator in space_info["Category"]) or \
-                   (space_info["OmniClass"] and indicator in space_info["OmniClass"]) or \
-                   (space.Name and indicator in space.Name):
+                # Check in category description, OmniClass, and space name
+                if (space_info["Category"] and indicator.lower() in space_info["Category"].lower()) or \
+                   (space_info["OmniClass"] and indicator.lower() in space_info["OmniClass"].lower()) or \
+                   (space.Name and indicator.lower() in space.Name.lower()):
                     is_storage = True
                     found_type = "general"
                     break
