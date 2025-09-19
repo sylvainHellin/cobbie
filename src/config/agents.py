@@ -185,6 +185,16 @@ class TrainingPipelineConfig(BaseAgentConfig):
     pass
 
 
+class EvaluationPipelineConfig(BaseAgentConfig):
+    """Configuration for the evaluation pipeline"""
+
+    experiment_name: str = Field(
+        default="Evaluation", description="MLflow experiment name"
+    )
+
+    pass
+
+
 class AnswerVerifierConfig(BaseAgentConfig):
     """Configuration for AnswerVerifier agent."""
 
@@ -218,10 +228,13 @@ class AgentConfigs(BaseModel):
     tool_merger: ToolMergerConfig = Field(default_factory=ToolMergerConfig)
     code_cleaner: CodeCleanerConfig = Field(default_factory=CodeCleanerConfig)
     test_and_improve: TestAndImproveConfig = Field(default_factory=TestAndImproveConfig)
+    answer_verifier: AnswerVerifierConfig = Field(default_factory=AnswerVerifierConfig)
     training_pipeline: TrainingPipelineConfig = Field(
         default_factory=TrainingPipelineConfig
     )
-    answer_verifier: AnswerVerifierConfig = Field(default_factory=AnswerVerifierConfig)
+    evaluation_pipeline: EvaluationPipelineConfig = Field(
+        default_factory=EvaluationPipelineConfig
+    )
 
 
 # Global instance - this is what gets imported and used
