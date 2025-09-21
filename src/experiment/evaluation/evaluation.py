@@ -1,4 +1,3 @@
-import gc
 from datetime import datetime
 from typing import List, Optional, cast
 
@@ -30,7 +29,10 @@ class EvaluationPipeline:
 
         # Use provided LLM or get from config
         self.lm = lm or self.config.llm.get_llm()
+
         self.engine = IfcAnswerEngine(llm=self.lm)
+        if self.config.load_optimized_module:
+            self.engine.load(path=self.config.path_compiled_model)
         self.answer_verifier = AnswerVerifier()
 
         # outputs
@@ -48,15 +50,6 @@ class EvaluationPipeline:
             OutputsCollection
         """
         self.logger.info(f"Starting evaluation with LLM: {self.lm.model}")
-
-        # Setup mlflow
-        # Test to remove this to see if it removes the bug
-        # if self.experiment_name is not None:
-        #     mlflow.set_experiment(experiment_name=self.experiment_name)
-        #     self.logger.info(f"MLflow experiment set: {self.experiment_name}")
-        # if self.start_run and mlflow.active_run() is None:
-        #     mlflow.start_run(run_name=datetime.now().strftime("%Y-%m-%d-%H-%M-%S"))
-        #     self.logger.info("New run started.")
 
         # Process examples
         for _, qa_pair in enumerate(tqdm(dataset, desc="Evaluating examples")):
@@ -101,7 +94,6 @@ class EvaluationPipeline:
                         "similarity score": str(output.result.similarity_score),
                     }
                 )
-            gc.collect()
 
         mlflow.log_metrics(
             {
@@ -129,7 +121,8 @@ if __name__ == "__main__":
     # setup mlflow
     mlflow.dspy.autolog()  # type: ignore
     mlflow.set_tracking_uri("http://127.0.0.1:5000")
-    mlflow.set_experiment("ToolOptimizer")
+    mlflow.set_experiment("Evaluation")
+    mlflow.start_run(run_name=datetime.now().strftime("%Y-%m-%d-%H-%M-%S"))
 
     evaluation = EvaluationPipeline()
     dataset = DEVSET[:]
