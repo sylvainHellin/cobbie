@@ -7,7 +7,7 @@ from typing import Literal, Optional
 from pydantic import BaseModel, Field
 
 from .llm import LLM
-from .main import FUNCTION_BOILERPLATE, LOG_LEVEL
+from .main import FUNCTION_BOILERPLATE, LOG_LEVEL, PATH_COMPILED_MODEL
 
 
 # Base configuration classes
@@ -23,11 +23,15 @@ class BaseAgentConfig(BaseModel):
         default_factory=LLM, description="Language model to use with this agent."
     )
     load_optimized_module: bool = Field(
-        default=False,
+        default=True,
         description="Whether to load the optimized Module wor not.",
     )
     tracking_uri: str = Field(
         default="http://127.0.0.1:5000", description="MLflow tracking URI"
+    )
+    path_compiled_model: str = Field(
+        default=PATH_COMPILED_MODEL,
+        description="path to the compiled model",
     )
 
 
