@@ -12,8 +12,8 @@ def bootstrap_engine(
 ) -> IfcAnswerEngine:
     # bootstrap_optimizer = BootstrapFewShotWithRandomSearch(
     bootstrap_optimizer = BootstrapFewShot(
-        max_bootstrapped_demos=3,
-        max_labeled_demos=2**4,
+        max_bootstrapped_demos=2,
+        max_labeled_demos=2**3,
         metric=metric,
         metric_threshold=0.9,
         max_rounds=3,
@@ -23,7 +23,9 @@ def bootstrap_engine(
     )
 
     teacher_llm = LLM_REGISTRY.create_dspy_llm(
-        model_name="qwen3-coder", max_tokens=2**14
+        model_name="qwen3-coder",
+        provider_name="deepinfra",
+        max_tokens=2**12,
     )
 
     teacher = IfcAnswerEngine(llm=teacher_llm)
@@ -42,19 +44,25 @@ def bootstrap_engine(
 
 
 if __name__ == "__main__":
-    import dspy
+    from datetime import datetime
 
     mlflow.dspy.autolog(log_evals=True, log_compiles=True)  # type: ignore
     mlflow.set_tracking_uri("http://127.0.0.1:5000")
     mlflow.set_experiment(experiment_name="Optimizer")
+    mlflow.start_run(run_name=datetime.now().strftime("%Y-%m-%d-%H-%M-%S"))
 
-    dspy.configure_cache(
-        enable_memory_cache=False,
-        enable_disk_cache=False,
-        enable_litellm_cache=False,
-    )
+    # dspy.configure_cache(
+    #     enable_memory_cache=False,
+    #     enable_disk_cache=False,
+    #     enable_litellm_cache=False,
+    # )
+
     with mlflow.start_span(name="BootstrapFewShort"):
-        student_llm = LLM_REGISTRY.create_dspy_llm(model_name="gpt-oss-120b")
+        student_llm = LLM_REGISTRY.create_dspy_llm(
+            model_name="qwen3-coder",
+            provider_name="deepinfra",
+            max_tokens=2**12,
+        )
 
         engine = IfcAnswerEngine(llm=student_llm)
 
