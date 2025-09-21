@@ -92,6 +92,7 @@ class ToolCorrector(dspy.Module):
 
         self.tool_corrector._update_code_prefix(code_prefix=code_prefix)
 
+        self.lm = self.config.llm.get_llm()
         with dspy.context(lm=self.lm):
             try:
                 prediction = self.tool_corrector(

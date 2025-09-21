@@ -11,6 +11,7 @@
 ### Potential improvements
 
 - Instead of providing the history to the `ToolOptimizer`, just send the last trajectory + last output.
+- add proper token counting and dspy context setting for the Name Extractor
 
 
 ## Experiment

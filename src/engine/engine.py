@@ -104,6 +104,7 @@ class IfcAnswerEngine(dspy.Module):
 
         self.engine._update_code_prefix(code_prefix=code_prefix)
 
+        self.lm = self.config.llm.get_llm()
         with dspy.context(lm=self.lm):
             # Start the loop: try to answer the question with existing tool
             try:
@@ -134,7 +135,7 @@ class IfcAnswerEngine(dspy.Module):
 if __name__ == "__main__":
     # Test the IfcAnswerEngine
     ifc_model_path = "/Users/sylvainhellin/GitHub/4_phd/ifcAnswerEngineV3/src/experiment/bim_models/duplex/arc.ifc"
-    question = "What is the height of the bedroomns?"
+    question = "What is the height of the bedroomns on the first floor?"
 
     mlflow.dspy.autolog()  # type: ignore
     mlflow.set_tracking_uri("http://127.0.0.1:5000")

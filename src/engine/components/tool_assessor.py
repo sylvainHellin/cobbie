@@ -75,6 +75,7 @@ class ToolAssessor(dspy.Module):
         self.output = ModuleOutput()
         self.logger.info(f"Starting ToolAssessor for function: {function_name}")
 
+        self.lm = self.config.llm.get_llm()
         with dspy.context(lm=self.lm):
             if self.add_code_prefix:
                 code_prefix = create_code_prefix(

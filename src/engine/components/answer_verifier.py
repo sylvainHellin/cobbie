@@ -66,6 +66,7 @@ class AnswerVerifier(dspy.Module):
 
         self.output = ModuleOutput(status="error")
 
+        self.lm = self.config.llm.get_llm()
         with dspy.context(lm=self.lm):
             try:
                 prediction = self.classifier(

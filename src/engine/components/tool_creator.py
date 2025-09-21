@@ -132,6 +132,7 @@ class ToolCreator(dspy.Module):
         # Init the output
         self.output = ModuleOutput()
 
+        self.lm = self.config.llm.get_llm()
         with dspy.context(lm=self.lm):
             self.logger.info(f"Starting the creation of the tool: {function_name}")
 

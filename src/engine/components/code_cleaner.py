@@ -98,6 +98,7 @@ class CodeCleaner(dspy.Module):
         self.output = ModuleOutput()
         self.output.lm_metrics.llm = self.lm.model
 
+        self.lm = self.config.llm.get_llm()
         with dspy.context(lm=self.lm):
             try:
                 prediction = self.code_cleaner(

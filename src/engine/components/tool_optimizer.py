@@ -133,6 +133,7 @@ class ToolOptimizer(dspy.Module):
             - error_msg: Error description (if status is "error")
         """
 
+        self.lm = self.config.llm.get_llm()
         with dspy.context(lm=self.lm):
             self.logger.info("Starting tool optimization analysis")
             self.output = ModuleOutput()

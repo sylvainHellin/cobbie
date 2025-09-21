@@ -125,7 +125,11 @@ if __name__ == "__main__":
     mlflow.start_run(run_name=datetime.now().strftime("%Y-%m-%d-%H-%M-%S"))
 
     evaluation = EvaluationPipeline()
-    dataset = DEVSET[:]
+    dataset = DEVSET[:2]
+
+    # Enable cache?
+    dspy.configure_cache(enable_disk_cache=False)
+
     outputs = cast(
         OutputsCollection,
         evaluation.forward(dataset=dataset),

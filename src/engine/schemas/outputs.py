@@ -90,7 +90,6 @@ class LM_Metrics(BaseModel):
     def combine(
         self,
         other_metrics: Self,
-        history: Literal["self", "other"] = "self",
         llm: Literal["self", "other"] = "self",
     ):
         """Combine metrics from another LM_Metrics instance into this one.
@@ -157,7 +156,6 @@ class ModuleOutput(BaseModel):
     def combine_lm_metrics(
         self,
         other_output: Self,
-        history: Literal["self", "other"] = "self",
         llm: Literal["self", "other"] = "self",
     ):
         """Combine language model metrics from another ModuleOutput into this one.
@@ -169,7 +167,6 @@ class ModuleOutput(BaseModel):
         """
         self.lm_metrics.combine(
             other_metrics=other_output.lm_metrics,
-            history=history,
             llm=llm,
         )
 
