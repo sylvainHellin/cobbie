@@ -118,6 +118,19 @@ class EvaluationPipeline:
 
 
 if __name__ == "__main__":
+    from src.config.agents import EvaluationPipelineConfig
+    from src.config.llm import LLM
+
+    llm = LLM(
+        model_name="qwen3-coder",
+        provider_name="deepinfra",
+    )
+
+    config = EvaluationPipelineConfig(
+        load_optimized_module=True,
+        llm=llm,
+    )
+
     # setup mlflow
     mlflow.dspy.autolog()  # type: ignore
     mlflow.set_tracking_uri("http://127.0.0.1:5000")
@@ -125,7 +138,7 @@ if __name__ == "__main__":
     mlflow.start_run(run_name=datetime.now().strftime("%Y-%m-%d-%H-%M-%S"))
 
     evaluation = EvaluationPipeline()
-    dataset = DEVSET[:2]
+    dataset = DEVSET
 
     # Enable cache?
     dspy.configure_cache(enable_disk_cache=False)
