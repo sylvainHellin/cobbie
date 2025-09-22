@@ -85,7 +85,12 @@ class EvaluationPipeline:
                         output.combine_lm_metrics(other_output=second_output)
                         self.outputs.add(output=output, update=True)
 
-                span.set_outputs({"similarity_score": output.result.similarity_score})
+                span.set_outputs(
+                    {
+                        "similarity_score": output.result.similarity_score,
+                        "answer": output.result.answer,
+                    }
+                )
 
                 mlflow.update_current_trace(
                     tags={
