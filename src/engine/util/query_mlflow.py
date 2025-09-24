@@ -60,44 +60,13 @@ class CustomMLFlowClient(MlflowClient):
             ):
                 self.traces.append(trace)
 
-    # def get_spans(
-    #     trace: Trace,
-    #     span_type: Optional[
-    #         Literal[
-    #             "TOOL",
-    #             "CHAIN",
-    #             "PARSER",
-    #             "UNKNOWN",
-    #             "CHAT_MODEL",
-    #             "LLM",
-    #             "MODULE",
-    #             "QUESTION",
-    #         ]
-    #     ],
-    # ) -> List[Span]:
-    #     spans = [span for span in trace.data.spans]
-
-    #     if span_type:
-    #         filtered_spans = []
-
-    #         for span in spans:
-    #             spanType = span.attributes["mlflow.spanType"]
-    #             if spanType == span_type:
-    #                 filtered_spans.append(span)
-
-    #         return filtered_spans
-
-    #     else:
-    #         return spans
-
-    # def get_chat_messages(span: Span) -> Chat:
-    #     chat = Chat()
-    #     if span.attributes["mlflow.spanType"] == "CHAT_MODEL":
-    #         for msg in span.attributes["mlflow.chat.messages"]:
-    #             role = msg["role"]
-    #             content = msg["content"]
-    #             chat.append_msg(Message(role=role, content=content))
-    #     return chat
+    def get_similarity_scores(self) -> List[float]:
+        scores: List[float] = []
+        for trace in self.traces or []:
+            score = float(trace.info.to_dict().get("tags", {}).get("similarity score"))
+            if score is not None:
+                scores.append(score)
+        return scores
 
 
 if __name__ == "__main__":
@@ -107,8 +76,8 @@ if __name__ == "__main__":
     client = CustomMLFlowClient()
 
     # Define paramenters
-    experiment_name = "Evaluation"
-    run_name = "2025-09-22-09-36-54"
+    experiment_name = "Training"
+    run_name = "2025-09-24-14-47-45"
 
     # Setup the client
     client.setup(
@@ -119,9 +88,29 @@ if __name__ == "__main__":
     # print(client.experiment)
     # print(client.run)
     client.dump_run_metrics()
-    for trace in client.traces[:1] if client.traces is not None else []:
-        print("\n#### Trace info ####\n")
-        print(json.dumps(trace.info.to_dict(), indent=2))
+    scores = client.get_similarity_scores()
+    for score in scores[:5]:
+        print(score)
+
+    correct_answer = []
+    for score in scores:
+        if isinstance(score, str):
+            print(score)
+
+            print(type(score))
+        if score >= 0.85:
+            correct_answer.append(1)
+        else:
+            correct_answer.append(0)
+    acc = sum(correct_answer) / len(correct_answer)
+    print(f"Accuracy of the run: {acc}")
+
+    for idx, trace in enumerate(client.traces[:5]) if client.traces is not None else []:
+        print(f"\n#### Trace Nr. {idx + 1} info ####\n")
+        # print(json.dumps(trace.info.to_dict(), indent=2))
+        print(
+            f"Similarity score: {trace.info.to_dict().get('tags', {}).get('similarity score')}"
+        )
         # print("\n#### Trace data ####\n")
         # print(trace.data)
 
