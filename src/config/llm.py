@@ -169,6 +169,7 @@ class LLMRegistry:
                 name="qwen3-coder-turbo",
                 model_path="Qwen/Qwen3-Coder-480B-A35B-Instruct-Turbo",
             ),
+            LLMModel(name="qwen-3-coder-480b", model_path="qwen-3-coder-480b"),
         ]
 
         for model in models:
@@ -239,9 +240,8 @@ class LLMRegistry:
                 cost_output_token=1.2,
             ),
             ModelAvailability(
-                model_name="qwen3-coder",
-                provider_name="openrouter",
-                model_path_override="cerebras/qwen3-coder",
+                model_name="qwen-3-coder-480b",
+                provider_name="cerebras",
                 cost_input_token=2.0,
                 cost_output_token=2.0,
             ),
