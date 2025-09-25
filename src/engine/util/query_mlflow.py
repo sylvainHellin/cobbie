@@ -76,8 +76,10 @@ if __name__ == "__main__":
     client = CustomMLFlowClient()
 
     # Define paramenters
-    experiment_name = "Training"
-    run_name = "2025-09-24-14-47-45"
+    # experiment_name = "Training"
+    # run_name = "2025-09-24-14-47-45"
+    experiment_name = "Evaluation"
+    run_name = "2025-09-25-07-44-05"
 
     # Setup the client
     client.setup(
@@ -107,7 +109,7 @@ if __name__ == "__main__":
 
     for idx, trace in enumerate(client.traces[:5]) if client.traces is not None else []:
         print(f"\n#### Trace Nr. {idx + 1} info ####\n")
-        # print(json.dumps(trace.info.to_dict(), indent=2))
+        print(json.dumps(trace.info.to_dict(), indent=2))
         print(
             f"Similarity score: {trace.info.to_dict().get('tags', {}).get('similarity score')}"
         )
