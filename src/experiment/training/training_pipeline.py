@@ -155,18 +155,17 @@ if __name__ == "__main__":  # Set-up mlflow
     mlflow.dspy.autolog()  # type: ignore
     mlflow.set_tracking_uri("http://127.0.0.1:5000")
     mlflow.set_experiment("Training")
-    mlflow.start_run(run_name=datetime.now().strftime("%Y-%m-%d-%H-%M-%S"))
+    with mlflow.start_run(run_name=datetime.now().strftime("%Y-%m-%d-%H-%M-%S")):
+        devset, trainset = load_train_dev_split()
+        dspy.configure_cache(
+            enable_disk_cache=True,
+            enable_memory_cache=True,
+        )
 
-    devset, trainset = load_train_dev_split()
-    dspy.configure_cache(
-        enable_disk_cache=True,
-        enable_memory_cache=True,
-    )
-
-    outputs = main(
-        # devset=devset[: len(devset) // 2],
-        devset=[],
-        trainset=trainset,
-        # devset=devset[:0],
-        # trainset=trainset[:2],
-    )
+        outputs = main(
+            # devset=devset[: len(devset) // 2],
+            devset=[],
+            trainset=trainset,
+            # devset=devset[:0],
+            # trainset=trainset[:2],
+        )
