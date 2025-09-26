@@ -3,12 +3,18 @@
 import sqlite3
 from sqlite3 import Connection
 from datetime import datetime
+from sqlalchemy import create_engine
 
 from src.config import DB_PATH
 
 # Global variables for database connection
 db_conn = None
 previous_agent_token_counts = {}
+
+
+def get_engine():
+    engine = create_engine(f"sqlite:///{DB_PATH}")
+    return engine
 
 
 def init_sqlite_db():

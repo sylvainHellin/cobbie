@@ -3,7 +3,10 @@ from typing import List
 import pandas as pd
 
 from src.engine.schemas import QA_Pair
-from src.experiment.db import connection
+from src.experiment.db.db import get_engine
+from src.experiment.db.query import Querier
+
+querier = Querier(conn=get_engine().connect())
 
 
 def load_train_dev_split(
@@ -11,20 +14,21 @@ def load_train_dev_split(
 ) -> tuple[List[QA_Pair], List[QA_Pair]]:
     """Load the dataset and split it into a train and dev set."""
     # Load the dataset table from SQLite database
-    dataset = pd.read_sql("SELECT * FROM dataset ORDER BY id ASC", connection())
-    # dataset.set_index("id", inplace=True)
-    ifc_models = pd.read_sql("SELECT * FROM ifc_models", connection())
-    dataset = pd.merge(
-        left=dataset,
-        right=ifc_models,
+    dataset = querier.get_dataset()
+    df_1 = pd.DataFrame([row.model_dump() for row in dataset])
+    ifc_models = querier.get_ifc_models()
+    df_2 = pd.DataFrame([row.model_dump() for row in ifc_models])
+    data = pd.merge(
+        left=df_1,
+        right=df_2,
         left_on="ifc_id",
         right_on="id",
         suffixes=("", "_ifc"),
     )
 
     # Split into training and dev sets
-    training_df = dataset.sample(frac=frac, random_state=seed)
-    dev_df = dataset.drop(index=training_df.index.to_list())
+    training_df = data.sample(frac=frac, random_state=seed)
+    dev_df = data.drop(index=training_df.index.to_list())
 
     # Convert to dict records and use Pydantic batch validation
     training_records = []

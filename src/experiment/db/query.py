@@ -11,7 +11,12 @@ from src.experiment.db import models
 
 
 GET_DATASET = """-- name: get_dataset \\:many
-select id, question, ground_truth, ifc_id from dataset
+select id, question, ground_truth, ifc_id from dataset order by id asc
+"""
+
+
+GET_IFC_MODELS = """-- name: get_ifc_models \\:many
+select id, project_name, model_name, model_path, model_description from ifc_models
 """
 
 
@@ -29,6 +34,17 @@ class Querier:
                 ifc_id=row[3],
             )
 
+    def get_ifc_models(self) -> Iterator[models.IfcModel]:
+        result = self._conn.execute(sqlalchemy.text(GET_IFC_MODELS))
+        for row in result:
+            yield models.IfcModel(
+                id=row[0],
+                project_name=row[1],
+                model_name=row[2],
+                model_path=row[3],
+                model_description=row[4],
+            )
+
 
 class AsyncQuerier:
     def __init__(self, conn: sqlalchemy.ext.asyncio.AsyncConnection):
@@ -42,4 +58,15 @@ class AsyncQuerier:
                 question=row[1],
                 ground_truth=row[2],
                 ifc_id=row[3],
+            )
+
+    async def get_ifc_models(self) -> AsyncIterator[models.IfcModel]:
+        result = await self._conn.stream(sqlalchemy.text(GET_IFC_MODELS))
+        async for row in result:
+            yield models.IfcModel(
+                id=row[0],
+                project_name=row[1],
+                model_name=row[2],
+                model_path=row[3],
+                model_description=row[4],
             )
