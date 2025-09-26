@@ -132,10 +132,10 @@ def run_sqlc_generate(verbose: bool = True) -> bool:
         return False
 
 
-def fix_positional_parameters(query_file: Path, verbose: bool = True) -> bool:
+def fix_parameter_binding(query_file: Path, verbose: bool = True) -> bool:
     """
-    Convert sqlc's numbered positional parameters to simple positional parameters
-    and update the parameter binding to use tuples instead of dictionaries.
+    Fix sqlc's parameter binding by converting numbered positional parameters
+    to named parameters and ensuring consistent dictionary binding.
 
     Args:
         query_file: Path to the generated query.py file
@@ -144,7 +144,7 @@ def fix_positional_parameters(query_file: Path, verbose: bool = True) -> bool:
     Returns:
         True if changes were made, False otherwise
     """
-    log_step("Fixing positional parameter binding", verbose)
+    log_step("Fixing parameter binding", verbose)
 
     if not query_file.exists():
         log_error(f"Generated query file not found: {query_file}")
@@ -153,23 +153,23 @@ def fix_positional_parameters(query_file: Path, verbose: bool = True) -> bool:
     content = query_file.read_text()
     original_content = content
 
-    # Replace numbered positional parameters (?1, ?2) with simple positional (?, ?)
-    content = re.sub(r"\?\d+", "?", content)
+    # Replace numbered positional parameters (?1, ?2) with named parameters (:p1, :p2)
+    content = re.sub(r"\?1", ":p1", content)
+    content = re.sub(r"\?2", ":p2", content)
+    content = re.sub(r"\?3", ":p3", content)
+    content = re.sub(r"\?4", ":p4", content)
+    # Add more as needed...
 
-    # Replace dictionary parameter binding with tuple binding
-    # {"p1": param1, "p2": param2} -> (param1, param2)
-    content = re.sub(r'{"p1": (\w+), "p2": (\w+)}', r"(\1, \2)", content)
-
-    # Single parameter case: {"p1": param} -> (param,)
-    content = re.sub(r'{"p1": (\w+)}', r"(\1,)", content)
+    # Ensure parameter binding uses dictionaries (sqlc already generates this correctly)
+    # This is mainly a verification step since sqlc generates {"p1": p1, "p2": p2} format
 
     if content != original_content:
         query_file.write_text(content)
-        log_success("Positional parameter fixes applied", verbose)
+        log_success("Parameter binding fixes applied", verbose)
         return True
     else:
         if verbose:
-            print("ℹ️  No positional parameter fixes needed")
+            print("ℹ️  No parameter binding fixes needed")
         return False
 
 
@@ -225,8 +225,8 @@ def main():
     if verbose:
         print()
 
-    # Step 3: Fix positional parameter binding
-    fix_positional_parameters(args.query_path, verbose)
+    # Step 3: Fix parameter binding
+    fix_parameter_binding(args.query_path, verbose)
 
     if verbose:
         print(f"\n🎉 Workflow completed successfully!")

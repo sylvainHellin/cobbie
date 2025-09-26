@@ -1,5 +1,5 @@
 -- Schema dump
--- Generated on: 2025-09-26T22:28:42.583043
+-- Generated on: 2025-09-26T22:39:35.615414
 
 CREATE TABLE ifc_models (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
