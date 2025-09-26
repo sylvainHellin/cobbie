@@ -5,8 +5,9 @@ import mlflow
 from mlflow import MlflowClient
 from mlflow.entities import Experiment, Run, Trace, RunData
 
-from src.config import DB_PATH
-from src.experiment.db import connection
+from src.experiment.db.db import get_engine
+from src.experiment.db.query import Querier
+from src.experiment.db.models import Experiment as ExperimentModel
 
 
 class CustomMLFlowClient(MlflowClient):
@@ -73,6 +74,22 @@ class CustomMLFlowClient(MlflowClient):
                 scores.append(score)
         return scores
 
+    def insert_experiment(self) -> ExperimentModel | None:
+        """Insert the experiment into the DB."""
+        querier = Querier(conn=get_engine().connect())
+        res = None
+        if self.experiment is not None:
+            if (
+                self.experiment.name is not None
+                and self.experiment.experiment_id is not None
+            ):
+                res = querier.insert_experiment(
+                    p1=self.experiment.name,  # mlflow_name
+                    p2=self.experiment.experiment_id,  # mlflow_id
+                )
+
+        return res
+
 
 if __name__ == "__main__":
     from src.config import MLFLOW_URI
@@ -91,37 +108,15 @@ if __name__ == "__main__":
         experiment_name=experiment_name,
         run_name=run_name,
     )
-
-    # print(client.experiment)
-    # print(client.run)
-    client.dump_run_metrics()
-    scores = client.get_similarity_scores()
-    for score in scores[:1]:
-        print(score)
-
-    correct_answer = []
-    for score in scores:
-        if isinstance(score, str):
-            print(score)
-
-            print(type(score))
-        if score >= 0.85:
-            correct_answer.append(1)
-        else:
-            correct_answer.append(0)
-    acc = sum(correct_answer) / len(correct_answer)
-    print(f"Accuracy of the run: {acc}")
-
     for idx, trace in enumerate(client.traces[:1]) if client.traces is not None else []:
         print(f"\n#### Trace Nr. {idx + 1} info ####\n")
         print(json.dumps(trace.info.to_dict(), indent=2))
         print(
             f"Similarity score: {trace.info.to_dict().get('tags', {}).get('similarity score')}"
         )
-        # print("\n#### Trace data ####\n")
-        # print(trace.data)
-    print(client.experiment)
 
+    res = client.insert_experiment()
+    print(res.model_dump_json(indent=2) if res else "Experiment was not inserted")
 
 # TODO Continue here
 # for trace in traces:

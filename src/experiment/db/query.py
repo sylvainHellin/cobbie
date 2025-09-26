@@ -17,6 +17,13 @@ order by id asc
 """
 
 
+GET_EXAMPLE = """-- name: get_example \\:one
+select id, question, ground_truth, ifc_id
+from dataset
+where id = :p1
+"""
+
+
 GET_IFC_MODELS = """-- name: get_ifc_models \\:many
 select id, project_name, model_name, model_path, model_description
 from ifc_models
@@ -25,10 +32,10 @@ from ifc_models
 
 INSERT_EXPERIMENT = """-- name: insert_experiment \\:one
 INSERT INTO experiment
-    (name, mlflow_id, type, timestamp)
+    (mlflow_name, mlflow_id)
 VALUES
-    (?, ?, ?, ?)
-RETURNING id, name, mlflow_id, type, timestamp
+    (:p1, :p2)
+RETURNING id, mlflow_name, mlflow_id
 """
 
 
@@ -46,10 +53,21 @@ class Querier:
                 ifc_id=row[3],
             )
 
-    def get_ifc_models(self) -> Iterator[models.IfcModel]:
+    def get_example(self, *, p1: Any) -> Optional[models.Dataset]:
+        row = self._conn.execute(sqlalchemy.text(GET_EXAMPLE), {"p1": p1}).first()
+        if row is None:
+            return None
+        return models.Dataset(
+            id=row[0],
+            question=row[1],
+            ground_truth=row[2],
+            ifc_id=row[3],
+        )
+
+    def get_ifc_models(self) -> Iterator[models.IfcModels]:
         result = self._conn.execute(sqlalchemy.text(GET_IFC_MODELS))
         for row in result:
-            yield models.IfcModel(
+            yield models.IfcModels(
                 id=row[0],
                 project_name=row[1],
                 model_name=row[2],
@@ -57,21 +75,18 @@ class Querier:
                 model_description=row[4],
             )
 
-    def insert_experiment(self, *, name: Optional[Any], mlflow_id: Optional[Any], type: Optional[Any], timestamp: Optional[Any]) -> Optional[models.Experiment]:
-        row = self._conn.execute(sqlalchemy.text(INSERT_EXPERIMENT), {
-            "p1": name,
-            "p2": mlflow_id,
-            "p3": type,
-            "p4": timestamp,
-        }).first()
+    def insert_experiment(
+        self, *, p1: Optional[Any], p2: Optional[Any]
+    ) -> Optional[models.Experiment]:
+        row = self._conn.execute(
+            sqlalchemy.text(INSERT_EXPERIMENT), {"p1": p1, "p2": p2}
+        ).first()
         if row is None:
             return None
         return models.Experiment(
             id=row[0],
-            name=row[1],
+            mlflow_name=row[1],
             mlflow_id=row[2],
-            type=row[3],
-            timestamp=row[4],
         )
 
 
@@ -89,10 +104,23 @@ class AsyncQuerier:
                 ifc_id=row[3],
             )
 
-    async def get_ifc_models(self) -> AsyncIterator[models.IfcModel]:
+    async def get_example(self, *, p1: Any) -> Optional[models.Dataset]:
+        row = (
+            await self._conn.execute(sqlalchemy.text(GET_EXAMPLE), {"p1": p1})
+        ).first()
+        if row is None:
+            return None
+        return models.Dataset(
+            id=row[0],
+            question=row[1],
+            ground_truth=row[2],
+            ifc_id=row[3],
+        )
+
+    async def get_ifc_models(self) -> AsyncIterator[models.IfcModels]:
         result = await self._conn.stream(sqlalchemy.text(GET_IFC_MODELS))
         async for row in result:
-            yield models.IfcModel(
+            yield models.IfcModels(
                 id=row[0],
                 project_name=row[1],
                 model_name=row[2],
@@ -100,19 +128,18 @@ class AsyncQuerier:
                 model_description=row[4],
             )
 
-    async def insert_experiment(self, *, name: Optional[Any], mlflow_id: Optional[Any], type: Optional[Any], timestamp: Optional[Any]) -> Optional[models.Experiment]:
-        row = (await self._conn.execute(sqlalchemy.text(INSERT_EXPERIMENT), {
-            "p1": name,
-            "p2": mlflow_id,
-            "p3": type,
-            "p4": timestamp,
-        })).first()
+    async def insert_experiment(
+        self, *, p1: Optional[Any], p2: Optional[Any]
+    ) -> Optional[models.Experiment]:
+        row = (
+            await self._conn.execute(
+                sqlalchemy.text(INSERT_EXPERIMENT), {"p1": p1, "p2": p2}
+            )
+        ).first()
         if row is None:
             return None
         return models.Experiment(
             id=row[0],
-            name=row[1],
+            mlflow_name=row[1],
             mlflow_id=row[2],
-            type=row[3],
-            timestamp=row[4],
         )

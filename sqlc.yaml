@@ -17,3 +17,4 @@ sql:
           emit_async_querier: true
           emit_pydantic_models: true
           emit_str_enum: true
+          emit_exact_table_names: true

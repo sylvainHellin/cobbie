@@ -14,13 +14,11 @@ class Dataset(pydantic.BaseModel):
 
 class Experiment(pydantic.BaseModel):
     id: Any
-    name: Optional[Any]
+    mlflow_name: Optional[Any]
     mlflow_id: Optional[Any]
-    type: Optional[Any]
-    timestamp: Optional[Any]
 
 
-class IfcModel(pydantic.BaseModel):
+class IfcModels(pydantic.BaseModel):
     id: Any
     project_name: Any
     model_name: Any
@@ -28,7 +26,7 @@ class IfcModel(pydantic.BaseModel):
     model_description: Any
 
 
-class Log(pydantic.BaseModel):
+class Logs(pydantic.BaseModel):
     id: Any
     run_id: Optional[Any]
     agent_name: Optional[Any]
@@ -44,7 +42,7 @@ class Log(pydantic.BaseModel):
     output_tokens: Optional[Any]
 
 
-class Run(pydantic.BaseModel):
+class Runs(pydantic.BaseModel):
     id: Any
     question_id: Optional[Any]
     llm: Optional[Any]

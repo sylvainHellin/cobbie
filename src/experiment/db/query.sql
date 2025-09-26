@@ -7,10 +7,14 @@ order by id asc;
 select *
 from ifc_models;
 
+-- name: getExample :one
+select *
+from dataset
+where id = :p1;
+
 -- name: insertExperiment :one
 INSERT INTO experiment
-    (name, mlflow_id, type, timestamp)
+    (mlflow_name, mlflow_id)
 VALUES
-    (?, ?, ?, ?)
+    (:p1, :p2)
 RETURNING *;
-
