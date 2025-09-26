@@ -2,7 +2,7 @@
 # versions:
 #   sqlc v1.30.0
 # source: query.sql
-from typing import AsyncIterator, Iterator
+from typing import Any, AsyncIterator, Iterator, Optional
 
 import sqlalchemy
 import sqlalchemy.ext.asyncio
@@ -11,12 +11,24 @@ from src.experiment.db import models
 
 
 GET_DATASET = """-- name: get_dataset \\:many
-select id, question, ground_truth, ifc_id from dataset order by id asc
+select id, question, ground_truth, ifc_id
+from dataset
+order by id asc
 """
 
 
 GET_IFC_MODELS = """-- name: get_ifc_models \\:many
-select id, project_name, model_name, model_path, model_description from ifc_models
+select id, project_name, model_name, model_path, model_description
+from ifc_models
+"""
+
+
+INSERT_EXPERIMENT = """-- name: insert_experiment \\:one
+INSERT INTO experiment
+    (name, mlflow_id, type, timestamp)
+VALUES
+    (?, ?, ?, ?)
+RETURNING id, name, mlflow_id, type, timestamp
 """
 
 
@@ -45,6 +57,23 @@ class Querier:
                 model_description=row[4],
             )
 
+    def insert_experiment(self, *, name: Optional[Any], mlflow_id: Optional[Any], type: Optional[Any], timestamp: Optional[Any]) -> Optional[models.Experiment]:
+        row = self._conn.execute(sqlalchemy.text(INSERT_EXPERIMENT), {
+            "p1": name,
+            "p2": mlflow_id,
+            "p3": type,
+            "p4": timestamp,
+        }).first()
+        if row is None:
+            return None
+        return models.Experiment(
+            id=row[0],
+            name=row[1],
+            mlflow_id=row[2],
+            type=row[3],
+            timestamp=row[4],
+        )
+
 
 class AsyncQuerier:
     def __init__(self, conn: sqlalchemy.ext.asyncio.AsyncConnection):
@@ -70,3 +99,20 @@ class AsyncQuerier:
                 model_path=row[3],
                 model_description=row[4],
             )
+
+    async def insert_experiment(self, *, name: Optional[Any], mlflow_id: Optional[Any], type: Optional[Any], timestamp: Optional[Any]) -> Optional[models.Experiment]:
+        row = (await self._conn.execute(sqlalchemy.text(INSERT_EXPERIMENT), {
+            "p1": name,
+            "p2": mlflow_id,
+            "p3": type,
+            "p4": timestamp,
+        })).first()
+        if row is None:
+            return None
+        return models.Experiment(
+            id=row[0],
+            name=row[1],
+            mlflow_id=row[2],
+            type=row[3],
+            timestamp=row[4],
+        )
