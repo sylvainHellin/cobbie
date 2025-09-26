@@ -27,14 +27,13 @@ def calculate_embodied_carbon(
             - 'total_carbon': Total embodied carbon in kgCO2e
             - 'material_breakdown': Breakdown of carbon by material in kgCO2e
             
-    Raises:
-        ValueError: If no carbon factors are provided and no default factors 
-            are available for the materials in the model.
-            
     Note:
         This function assumes IFC models exported from Revit with PSet_Revit_Dimensions
         containing volume information. For other software, geometry-based volume
         calculation may be needed.
+        
+        For materials without carbon factors, they are simply excluded from the calculation
+        rather than causing the entire function to fail.
     """
     
     # Default element types for structural elements
@@ -70,7 +69,6 @@ def calculate_embodied_carbon(
     # Initialize results
     total_carbon = 0.0
     material_breakdown = {}
-    missing_factors = set()
     
     # Process each element type
     for element_type in element_types:
@@ -133,6 +131,7 @@ def calculate_embodied_carbon(
                                 carbon_factor = factor_value
                                 break
                     
+                    # Only calculate carbon if we have a factor
                     if carbon_factor is not None:
                         element_carbon = volume * carbon_factor
                         total_carbon += element_carbon
@@ -142,16 +141,8 @@ def calculate_embodied_carbon(
                             material_breakdown[material_name] += element_carbon
                         else:
                             material_breakdown[material_name] = element_carbon
-                    else:
-                        # Track materials with missing carbon factors
-                        missing_factors.add(material_name)
-    
-    # If we have materials with missing factors and no user-provided factors, raise an error
-    if missing_factors and carbon_factors == default_carbon_factors:
-        raise ValueError(
-            f"Carbon factors needed for materials: {', '.join(missing_factors)}. "
-            "Please provide a carbon_factors dictionary with factors for these materials."
-        )
+                    # Note: Materials without carbon factors are simply ignored
+                    # rather than causing the function to fail or return 0.0
     
     return {
         'total_carbon': total_carbon,

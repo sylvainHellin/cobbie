@@ -1,12 +1,12 @@
 import ifcopenshell
 import ifcopenshell.util.element
-from typing import List, Dict, Any
+from typing import List, Dict, Any, Optional
 
 def get_element_material_layer_thicknesses(
     model_path: str,
     element_type: str = "IfcWall",
-    element_name_pattern: str = None,
-    material_name_pattern: str = None,
+    element_name_pattern: Optional[str] = None,
+    material_name_pattern: Optional[str] = None,
     return_element_info: bool = True
 ) -> List[Dict[str, Any]]:
     """
@@ -34,6 +34,8 @@ def get_element_material_layer_thicknesses(
     Note:
         This function requires IfcOpenShell to be installed and accessible.
         For elements with multiple material representations, only the first valid layer set is processed.
+        This function primarily works with IFC models exported from Revit or similar BIM authoring software
+        that properly define material layer sets.
     """
     
     # Load the IFC model
@@ -50,48 +52,62 @@ def get_element_material_layer_thicknesses(
     
     # Process each element
     for element in elements:
-        # Get the material of the element
-        material = ifcopenshell.util.element.get_material(element)
-        
-        if not material:
-            continue
+        try:
+            # Get the material of the element
+            material = ifcopenshell.util.element.get_material(element)
             
-        # Handle different material representation types
-        layer_set = None
-        if material.is_a("IfcMaterialLayerSetUsage") and material.ForLayerSet:
-            layer_set = material.ForLayerSet
-        elif material.is_a("IfcMaterialLayerSet"):
-            layer_set = material
-            
-        # If we have a layer set, process its layers
-        if layer_set:
-            layers = layer_set.MaterialLayers
-            
-            for i, layer in enumerate(layers):
-                # Get material name
-                material_name = None
-                if layer.Material:
-                    material_name = layer.Material.Name
-                    
-                # Filter by material name pattern if provided
-                if material_name_pattern:
-                    if not material_name or material_name_pattern.lower() not in material_name.lower():
+            if not material:
+                continue
+                
+            # Handle different material representation types
+            layer_set = None
+            if material.is_a("IfcMaterialLayerSetUsage") and hasattr(material, 'ForLayerSet') and material.ForLayerSet:
+                layer_set = material.ForLayerSet
+            elif material.is_a("IfcMaterialLayerSet"):
+                layer_set = material
+                
+            # If we have a layer set, process its layers
+            if layer_set and hasattr(layer_set, 'MaterialLayers'):
+                layers = layer_set.MaterialLayers
+                
+                for i, layer in enumerate(layers):
+                    try:
+                        # Get material name
+                        material_name = None
+                        if layer.Material and hasattr(layer.Material, 'Name'):
+                            material_name = layer.Material.Name
+                        
+                        # Filter by material name pattern if provided
+                        if material_name_pattern:
+                            if not material_name or material_name_pattern.lower() not in material_name.lower():
+                                continue
+                        
+                        # Create result entry
+                        result_entry = {}
+                        if return_element_info:
+                            result_entry.update({
+                                "element_name": element.Name if hasattr(element, 'Name') else None,
+                                "element_guid": element.GlobalId if hasattr(element, 'GlobalId') else None
+                            })
+                        
+                        # Get layer thickness if available
+                        layer_thickness = None
+                        if hasattr(layer, 'LayerThickness'):
+                            layer_thickness = layer.LayerThickness
+                        
+                        result_entry.update({
+                            "material_name": material_name,
+                            "layer_thickness": layer_thickness,
+                            "layer_position": i  # Position in the layer set (0-indexed)
+                        })
+                        
+                        results.append(result_entry)
+                    except Exception:
+                        # Skip layers that cause errors
                         continue
-                
-                # Create result entry
-                result_entry = {}
-                if return_element_info:
-                    result_entry.update({
-                        "element_name": element.Name,
-                        "element_guid": element.GlobalId
-                    })
-                
-                result_entry.update({
-                    "material_name": material_name,
-                    "layer_thickness": layer.LayerThickness,
-                    "layer_position": i  # Position in the layer set (0-indexed)
-                })
-                
-                results.append(result_entry)
+                        
+        except Exception:
+            # Skip elements that cause errors
+            continue
     
     return results

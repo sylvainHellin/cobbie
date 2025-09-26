@@ -12,8 +12,12 @@ def identify_potential_firewalls(
     Identifies potential firewalls in an IFC model based on construction materials, 
     location, and building code requirements, even without explicit fire rating labels.
     
+    IMPORTANT: This function identifies WALLS THAT COULD POTENTIALLY FUNCTION AS FIREWALLS
+    but DO NOT NECESSARILY HAVE OFFICIAL FIRE RATING DESIGNATION in the model.
+    The presence of these indicators does not confirm that a wall is officially rated as a firewall.
+    
     This function is designed for IFC models exported from Revit and looks for:
-    1. Explicit fire rating properties
+    1. Explicit fire rating properties (if found, this is a confirmed firewall indicator)
     2. Construction materials typically associated with firewalls (CMU, concrete, etc.)
     3. Wall positioning that suggests firewall function (between units, core walls, etc.)
     4. Wall types that typically function as firewalls based on naming conventions
@@ -36,7 +40,12 @@ def identify_potential_firewalls(
             - material_info: Information about the wall's materials
             - property_sets: Dictionary of property sets associated with the wall
             - indicators: List of reasons why this wall was identified as a potential firewall
-            - fire_rating: Any explicit fire rating found (if applicable)
+            - fire_rating: Any explicit fire rating found (None if not found)
+            
+    Note:
+        - Walls with fire_rating != None are confirmed to have fire rating properties
+        - Walls with fire_rating = None are potential candidates based on construction properties
+        - This function does NOT confirm official firewall designation
     """
     # Set default patterns if not provided
     if wall_type_patterns is None:
@@ -195,9 +204,25 @@ def identify_potential_firewalls(
             wall_info["indicators"].append("Located between units (party/demising wall)")
             location_indicators += 1
             
-        # Only classify as potential firewall if we have strong evidence:
-        # Either an explicit fire rating, or multiple indicators (at least 2 name/type + 1 material)
-        if fire_rating_found or (name_indicators >= 1 and material_indicators >= 1) or (name_indicators >= 1 and location_indicators >= 1):
+        # Classification criteria for potential firewalls:
+        # 1. Walls with explicit fire ratings (confirmed firewalls)
+        # 2. Walls with strong evidence of firewall construction (multiple indicators)
+        #    - At least one name/type indicator AND at least one material indicator
+        #    - OR at least one name/type indicator AND location indicator
+        #    - OR significant thickness (implementation-specific threshold)
+        has_sufficient_indicators = (
+            (name_indicators >= 1 and material_indicators >= 1) or 
+            (name_indicators >= 1 and location_indicators >= 1) or
+            (material_indicators >= 2 and name_indicators >= 1)
+        )
+        
+        # Include in results if:
+        # - It has an explicit fire rating (confirmed firewall), OR
+        # - It has sufficient indicators to be considered a potential firewall
+        if fire_rating_found or has_sufficient_indicators:
+            # Add a note to clarify the status of walls without explicit fire ratings
+            if not fire_rating_found:
+                wall_info["indicators"].append("POTENTIAL FIREWALL CANDIDATE: No explicit fire rating found in model")
             potential_firewalls.append(wall_info)
     
     return potential_firewalls

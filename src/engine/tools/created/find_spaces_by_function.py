@@ -1,9 +1,9 @@
 import ifcopenshell
 import ifcopenshell.util.element
-from typing import List, Dict, Optional
+from typing import List, Dict, Optional, Union
 
 def find_spaces_by_function(
-    ifc_file: ifcopenshell.file,
+    ifc_file: Union[ifcopenshell.file, str],
     classification_types: Optional[List[str]] = None,
     category_descriptions: Optional[List[str]] = None,
     keywords: Optional[List[str]] = None,
@@ -27,7 +27,7 @@ def find_spaces_by_function(
     which use specific property set naming conventions.
     
     Args:
-        ifc_file: The IFC file object to search
+        ifc_file: The IFC file object to search or path to the IFC file
         classification_types: List of classification codes to search for 
                              (e.g., ["13-75 11 11: Storage Room", "13-75 41 14: Soiled Storage Room Space"])
         category_descriptions: List of category descriptions to search for
@@ -45,7 +45,12 @@ def find_spaces_by_function(
         - name: The space name
         - matching_criteria: List of criteria that matched
         - classification_info: Dictionary of relevant property set information
+        - area: Area of the space in square feet (if available)
     """
+    # Handle both string path and ifcopenshell.file object
+    if isinstance(ifc_file, str):
+        ifc_file = ifcopenshell.open(ifc_file)
+    
     # Get all spaces
     spaces = ifc_file.by_type("IfcSpace")
     
@@ -79,11 +84,11 @@ def find_spaces_by_function(
             "utility"
         ]
     
-    # Normalize search criteria to lowercase for case-insensitive matching
-    classification_types_lower = [ct.lower() for ct in classification_types] if classification_types else []
-    category_descriptions_lower = [cd.lower() for cd in category_descriptions] if category_descriptions else []
-    keywords_lower = [kw.lower() for kw in keywords] if keywords else []
-    exclude_keywords_lower = [ek.lower() for ek in exclude_keywords] if exclude_keywords else []
+    # Normalize search criteria for case-insensitive matching
+    classification_types_normalized = [ct.lower() for ct in classification_types] if classification_types else []
+    category_descriptions_normalized = [cd.lower() for cd in category_descriptions] if category_descriptions else []
+    keywords_normalized = [kw.lower() for kw in keywords] if keywords else []
+    exclude_keywords_normalized = [ek.lower() for ek in exclude_keywords] if exclude_keywords else []
     
     matching_spaces = []
     
@@ -105,9 +110,9 @@ def find_spaces_by_function(
         classification_info = {}
         
         # Check if space should be excluded based on name
-        if exclude_keywords_lower:
-            name_lower = space_name.lower()
-            if any(exclude_keyword in name_lower for exclude_keyword in exclude_keywords_lower):
+        if exclude_keywords_normalized:
+            name_normalized = space_name.lower()
+            if any(exclude_keyword in name_normalized for exclude_keyword in exclude_keywords_normalized):
                 continue  # Skip this space
         
         # Get property sets for this space
@@ -116,6 +121,11 @@ def find_spaces_by_function(
         except Exception:
             # If we can't get property sets, continue with empty dict
             psets = {}
+        
+        # Track whether each search criterion is satisfied
+        classification_match = not classification_types  # True if no classification search
+        category_match = not category_descriptions  # True if no category search
+        keyword_match = not keywords  # True if no keyword search
         
         # Check specified property sets and properties
         for pset_name, property_names in property_sets_to_check.items():
@@ -128,84 +138,102 @@ def find_spaces_by_function(
                 for prop_name in property_names:
                     if prop_name in pset_data:
                         prop_value = pset_data[prop_name]
-                        prop_value_str = str(prop_value)
+                        prop_value_str = str(prop_value).strip()
                         classification_info[pset_name][prop_name] = prop_value
                         
-                        # Special handling for laboratory spaces to avoid false positives
-                        is_lab_search = any('lab' in kw.lower() for kw in keywords or [])
-                        is_actual_lab = ('laboratory' in prop_value_str.lower() or 
-                                       '13-15 11 24 11' in prop_value_str)
-                        
                         # Check for matching classification types
-                        if classification_types_lower:
-                            prop_value_lower = prop_value_str.lower()
-                            for classification in classification_types_lower:
+                        if classification_types_normalized:
+                            prop_value_normalized = prop_value_str.lower()
+                            for classification in classification_types_normalized:
                                 if exact_match:
-                                    if classification == prop_value_lower:
+                                    # For exact matching, check if the classification matches exactly
+                                    if classification == prop_value_normalized:
+                                        classification_match = True
                                         matching_criteria.append(f"{pset_name}.{prop_name} exactly matches '{classification}'")
                                 else:
-                                    # For laboratory searches, be more specific
-                                    if is_lab_search and 'lab' in classification:
-                                        if is_actual_lab:
-                                            matching_criteria.append(f"{pset_name}.{prop_name} contains '{classification}'")
-                                    elif classification in prop_value_lower:
+                                    # For substring matching, check if classification is contained
+                                    if classification in prop_value_normalized:
+                                        classification_match = True
                                         matching_criteria.append(f"{pset_name}.{prop_name} contains '{classification}'")
                         
                         # Check for matching category descriptions
-                        if category_descriptions_lower:
-                            prop_value_lower = prop_value_str.lower()
-                            for category in category_descriptions_lower:
+                        if category_descriptions_normalized:
+                            prop_value_normalized = prop_value_str.lower()
+                            for category in category_descriptions_normalized:
                                 if exact_match:
-                                    if category == prop_value_lower:
+                                    # For exact matching, check if the category matches exactly
+                                    if category == prop_value_normalized:
+                                        category_match = True
                                         matching_criteria.append(f"{pset_name}.{prop_name} exactly matches '{category}'")
                                 else:
-                                    # For laboratory searches, be more specific
-                                    if is_lab_search and 'lab' in category:
-                                        if is_actual_lab:
-                                            matching_criteria.append(f"{pset_name}.{prop_name} contains '{category}'")
-                                    elif category in prop_value_lower:
+                                    # For substring matching, check if category is contained
+                                    if category in prop_value_normalized:
+                                        category_match = True
                                         matching_criteria.append(f"{pset_name}.{prop_name} contains '{category}'")
                         
                         # Check for keywords in property values
-                        if keywords_lower:
-                            prop_value_lower = prop_value_str.lower()
-                            for keyword in keywords_lower:
+                        if keywords_normalized:
+                            prop_value_normalized = prop_value_str.lower()
+                            for keyword in keywords_normalized:
                                 if exact_match:
-                                    if keyword == prop_value_lower:
+                                    # For exact matching, check if the keyword matches exactly
+                                    if keyword == prop_value_normalized:
+                                        keyword_match = True
                                         matching_criteria.append(f"{pset_name}.{prop_name} exactly matches '{keyword}'")
                                 else:
-                                    # For laboratory searches, be more specific to avoid false positives
-                                    if 'lab' in keyword and not is_actual_lab:
-                                        # Skip non-laboratory spaces when searching for labs
-                                        continue
-                                    elif keyword in prop_value_lower:
+                                    # For substring matching, check if keyword is contained
+                                    # Special handling for laboratory searches
+                                    if keyword in ['lab', 'laboratory']:
+                                        if 'lab' in prop_value_normalized or 'laboratory' in prop_value_normalized:
+                                            keyword_match = True
+                                            matching_criteria.append(f"{pset_name}.{prop_name} contains '{keyword}'")
+                                    elif keyword in prop_value_normalized:
+                                        keyword_match = True
                                         matching_criteria.append(f"{pset_name}.{prop_name} contains '{keyword}'")
         
-        # Check name keywords if no property matches were found
-        if keywords_lower and not matching_criteria:
-            name_lower = space_name.lower()
-            for keyword in keywords_lower:
+        # Check name keywords if needed
+        if keywords_normalized and not keyword_match:
+            name_normalized = space_name.lower()
+            for keyword in keywords_normalized:
                 if exact_match:
-                    if keyword == name_lower:
+                    if keyword == name_normalized:
+                        keyword_match = True
                         matching_criteria.append(f"Name exactly matches '{keyword}'")
                 else:
-                    # For laboratory searches, check if it's actually a laboratory
-                    is_lab_search = 'lab' in keyword.lower()
-                    is_actual_lab_name = 'laboratory' in name_lower
-                    
-                    if is_lab_search:
-                        if is_actual_lab_name:
+                    # Special handling for laboratory searches
+                    if keyword in ['lab', 'laboratory']:
+                        if 'lab' in name_normalized or 'laboratory' in name_normalized:
+                            keyword_match = True
                             matching_criteria.append(f"Name contains '{keyword}'")
-                    elif keyword in name_lower:
+                    elif keyword in name_normalized:
+                        keyword_match = True
                         matching_criteria.append(f"Name contains '{keyword}'")
         
-        # If criteria matched and space is not excluded, add to results
-        if matching_criteria:
+        # Only include space if ALL specified criteria are met
+        if classification_match and category_match and keyword_match:
+            # Extract area information if available
+            area = None
+            if psets:
+                # Look for area in common property sets
+                for pset_name in ['PSet_Revit_Dimensions', 'GSA Space Areas']:
+                    if pset_name in psets:
+                        pset_data = psets[pset_name]
+                        # Look for area properties
+                        for prop_name in ['Area', 'GSA BIM Area']:
+                            if prop_name in pset_data:
+                                area_value = pset_data[prop_name]
+                                if isinstance(area_value, (int, float)):
+                                    area = area_value
+                                    break
+                        if area is not None:
+                            break
+            
             matching_spaces.append({
                 'space': space,
                 'name': space_name,
                 'matching_criteria': matching_criteria,
-                'classification_info': classification_info
+                'classification_info': classification_info,
+                'area': area  # Include area information
             })
     
     # Remove duplicates based on space entity
