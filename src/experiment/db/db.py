@@ -2,6 +2,7 @@
 
 import sqlite3
 from sqlite3 import Connection
+from datetime import datetime
 
 from src.config import DB_PATH
 
@@ -159,3 +160,34 @@ def empty_table(table_name: str) -> None:
         cursor = conn.cursor()
         cursor.execute(f"DELETE FROM {table_name}")
         conn.commit()
+
+
+def dump_schema():
+    """Create a simple schema dump without migration structure"""
+    with connection() as conn:
+        cursor = conn.cursor()
+
+        # Get all CREATE statements
+        cursor.execute(
+            "SELECT sql FROM sqlite_master WHERE type='table' AND name NOT LIKE 'sqlite_%'"
+        )
+        tables = cursor.fetchall()
+
+        cursor.execute(
+            "SELECT sql FROM sqlite_master WHERE type='index' AND name NOT LIKE 'sqlite_%'"
+        )
+        indexes = cursor.fetchall()
+
+        with open("src/experiment/db/schema.sql", "w") as f:
+            f.write("-- Schema dump\n")
+            f.write(f"-- Generated on: {datetime.now().isoformat()}\n\n")
+
+            for table_sql in tables:
+                f.write(table_sql[0] + ";\n\n")
+
+            for index_sql in indexes:
+                f.write(index_sql[0] + ";\n\n")
+
+
+if __name__ == "__main__":
+    schema = dump_schema()

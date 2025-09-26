@@ -5,6 +5,9 @@ import mlflow
 from mlflow import MlflowClient
 from mlflow.entities import Experiment, Run, Trace, RunData
 
+from src.config import DB_PATH
+from src.experiment.db import connection
+
 
 class CustomMLFlowClient(MlflowClient):
     run: Optional[Run] = None
@@ -63,7 +66,9 @@ class CustomMLFlowClient(MlflowClient):
     def get_similarity_scores(self) -> List[float]:
         scores: List[float] = []
         for trace in self.traces or []:
-            score = float(trace.info.to_dict().get("tags", {}).get("similarity score"))
+            score = float(
+                trace.info.to_dict().get("tags", {}).get("similarity score", None)
+            )
             if score is not None:
                 scores.append(score)
         return scores
@@ -76,10 +81,10 @@ if __name__ == "__main__":
     client = CustomMLFlowClient()
 
     # Define paramenters
-    # experiment_name = "Training"
-    # run_name = "2025-09-24-14-47-45"
-    experiment_name = "Evaluation"
-    run_name = "2025-09-25-07-44-05"
+    experiment_name = "Training"
+    run_name = "2025-09-24-14-47-45"
+    # experiment_name = "Evaluation"
+    # run_name = "2025-09-25-07-44-05"
 
     # Setup the client
     client.setup(
@@ -91,7 +96,7 @@ if __name__ == "__main__":
     # print(client.run)
     client.dump_run_metrics()
     scores = client.get_similarity_scores()
-    for score in scores[:5]:
+    for score in scores[:1]:
         print(score)
 
     correct_answer = []
@@ -107,7 +112,7 @@ if __name__ == "__main__":
     acc = sum(correct_answer) / len(correct_answer)
     print(f"Accuracy of the run: {acc}")
 
-    for idx, trace in enumerate(client.traces[:5]) if client.traces is not None else []:
+    for idx, trace in enumerate(client.traces[:1]) if client.traces is not None else []:
         print(f"\n#### Trace Nr. {idx + 1} info ####\n")
         print(json.dumps(trace.info.to_dict(), indent=2))
         print(
@@ -115,6 +120,7 @@ if __name__ == "__main__":
         )
         # print("\n#### Trace data ####\n")
         # print(trace.data)
+    print(client.experiment)
 
 
 # TODO Continue here
