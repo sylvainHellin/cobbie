@@ -6,7 +6,6 @@ from mlflow import MlflowClient
 from mlflow.entities import Experiment, Run, Trace, RunData
 
 from src.experiment.db.db import get_engine
-from src.experiment.db.query import Querier
 from src.experiment.db.models import Experiment as ExperimentModel
 
 
@@ -74,24 +73,6 @@ class CustomMLFlowClient(MlflowClient):
                 scores.append(score)
         return scores
 
-    def insert_experiment(self) -> ExperimentModel | None:
-        """Insert the experiment into the DB."""
-        with get_engine().connect() as conn:
-            querier = Querier(conn=conn)
-            res = None
-            if self.experiment is not None:
-                if (
-                    self.experiment.name is not None
-                    and self.experiment.experiment_id is not None
-                ):
-                    res = querier.insert_experiment(
-                        p1=self.experiment.name,  # mlflow_name
-                        p2=self.experiment.experiment_id,  # mlflow_id
-                    )
-                    # Commit the transaction to persist the changes
-                    conn.commit()
-            return res
-
 
 if __name__ == "__main__":
     from src.config import MLFLOW_URI
@@ -117,8 +98,6 @@ if __name__ == "__main__":
             f"Similarity score: {trace.info.to_dict().get('tags', {}).get('similarity score')}"
         )
 
-    res = client.insert_experiment()
-    print(res.model_dump_json(indent=2) if res else "Experiment was not inserted")
 
 # TODO Continue here
 # for trace in traces:

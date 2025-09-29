@@ -22,7 +22,6 @@ import sqlite3
 import sys
 from datetime import datetime
 from pathlib import Path
-from typing import Optional
 
 # Import our existing fix script
 import re
@@ -229,10 +228,10 @@ def main():
     fix_parameter_binding(args.query_path, verbose)
 
     if verbose:
-        print(f"\n🎉 Workflow completed successfully!")
+        print("\n🎉 Workflow completed successfully!")
         print(f"   📄 Schema: {args.schema_path}")
         print(f"   🐍 Generated code: {args.query_path}")
-        print(f"   ⚡ Ready to use!")
+        print("   ⚡ Ready to use!")
 
 
 if __name__ == "__main__":

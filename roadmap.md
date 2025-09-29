@@ -1,6 +1,7 @@
 # Roadmap
 
 **URGENT**
+- run the `sqlagencode` for the mlflow sqlite db (store in another file, like mlflow_model). Maybe I don't even need to copy the runs and experiment from one to the other, and just query the mlflow db
 - Check the logging of the evaluation script (in wrong experiment ; no traces)
 - Something is off in the token counting of the IfcAnswerEngine in the TrainingPipeline: it is not reset for each questions
 - Try to understand WHY paralelisme somehow activates when I run the evaluation pipeline as part of the training pipeline. It indeed looks like they are called in paralell, but I can't see why.
