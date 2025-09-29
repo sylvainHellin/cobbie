@@ -5,9 +5,6 @@ import mlflow
 from mlflow import MlflowClient
 from mlflow.entities import Experiment, Run, Trace, RunData
 
-from src.experiment.db.db import get_engine
-from src.experiment.db.models import Experiment as ExperimentModel
-
 
 class CustomMLFlowClient(MlflowClient):
     run: Optional[Run] = None
