@@ -29,6 +29,8 @@ dependencies = [
     "result>=0.17.0",
     "scipy>=1.15.3",
     "smolagents[gradio,telemetry,toolkit]>=1.15.0",
+    "sqlacodegen>=3.1.1",
+    "sqlmodel>=0.0.25",
 ]
 
 [tool.setuptools]
