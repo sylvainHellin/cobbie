@@ -8,13 +8,17 @@ sqlacodegen sqlite:///mlflow.sqlite --generator sqlmodels --outfile src/experime
 
 from functools import wraps
 from typing import Callable, List, TypeVar, Optional
+from datetime import datetime
 
+import mlflow
 from sqlmodel import Session, col, or_, select
 from sqlalchemy.orm import selectinload
 
+from src.config import MLFLOW_URI
+from src.engine.util.query_mlflow import CustomMLFlowClient
 from src.experiment.db import EXPERIMENT_DB_ENGINE, MLFLOW_DB_ENGINE
-from src.experiment.db.experiment_models import Dataset, Experiment, Ifcmodels
-from src.experiment.db.mlflow_models import Experiments
+from src.experiment.db.experiment_models import Dataset, Experiment, Ifcmodels, Run
+from src.experiment.db.mlflow_models import Experiments, Runs
 
 T = TypeVar("T")
 
@@ -57,7 +61,7 @@ def get_dataset(
         return dataset
 
 
-def mirror_experiment_mlflow():
+def import_mlflow_experiments():
     """
     Mirrors the experiment from the mlflow db to the experiment db.
     """
@@ -86,6 +90,92 @@ def mirror_experiment_mlflow():
             db_session.commit()
 
 
+def import_mlflow_runs():
+    """
+    Mirrors the runs from the mlflow db to the experiment db.
+    """
+    with Session(EXPERIMENT_DB_ENGINE) as db_session:
+        with Session(MLFLOW_DB_ENGINE) as mlflow_session:
+
+            # Get the runs from mlflow
+            mlflow_runs = [run for run in mlflow_session.exec(select(Runs))]
+
+            # Get the runs from the experiment DB
+            db_runs = {run.id: run for run in db_session.exec(select(Run))}
+
+            # Loop through the experiment to add the missing ones
+            for mlflow_run in mlflow_runs:
+                if mlflow_run.run_uuid is not None and mlflow_run.name is not None:
+                    # extract the metrics of this run
+                    metrics = {
+                        metric.key: metric.value for metric in mlflow_run.metrics
+                    }
+
+                    # Compute the timestamp
+                    timestamp = (
+                        datetime.fromtimestamp(mlflow_run.start_time / 1000)
+                        if mlflow_run.start_time is not None
+                        else None
+                    )
+
+                    # Compute the duration
+                    duration = (
+                        mlflow_run.end_time - mlflow_run.start_time
+                        if (mlflow_run.end_time and mlflow_run.start_time)
+                        else 0
+                    )
+
+                    # extract the other fields
+                    id = mlflow_run.run_uuid
+                    experiment_id = str(mlflow_run.experiment_id)
+                    name = mlflow_run.name
+                    url = f"http://127.0.0.1:5000/#/experiments/{mlflow_run.experiment_id}/runs/{mlflow_run.run_uuid}"
+
+                    cost = metrics.get("cost")
+                    accuracy = metrics.get("accuracy")
+                    input_tokens = int(metrics.get("input_tokens", 0))
+                    output_tokens = int(metrics.get("output_tokens", 0))
+
+                    # Try to get the run from the db_runs
+                    run = db_runs.get(id, None)
+
+                    # If the run don't already exist, create it
+                    if run is None:
+                        run = Run(
+                            id=id,
+                            experiment_id=experiment_id,
+                        )
+
+                    # Now, update all the fields
+                    run.name = name
+                    run.url = url
+                    run.duration = duration
+                    run.cost = cost
+                    run.accuracy = accuracy
+                    run.input_tokens = input_tokens
+                    run.output_tokens = output_tokens
+                    timestamp = timestamp
+
+                    # Add the run to the DB
+                    db_session.add(run)
+
+            # Commit all the runs
+            db_session.commit()
+
+def add_trace_to_run(run_id:str):
+    """
+    Add the key info to the trace table using mlflow sdk for a given run_id.
+    """
+    mlflow.set_tracking_uri(MLFLOW_URI)
+
+    with Session(EXPERIMENT_DB_ENGINE) as session:
+        client = CustomMLFlowClient()
+        client.traces
+        run = mlflow.get_run(run_id=run_id)
+        run.
+
+
+
 if __name__ == "__main__":
     # dataset = get_dataset(
     #     limit=1,
@@ -102,4 +192,5 @@ if __name__ == "__main__":
     #         else "No associated IFC models"
     #     )
     #     break
-    mirror_experiment_mlflow()
+    import_mlflow_experiments()
+    import_mlflow_runs()
