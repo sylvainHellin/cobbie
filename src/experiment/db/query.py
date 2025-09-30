@@ -58,19 +58,31 @@ def get_dataset(
 
 
 def mirror_experiment_mlflow():
+    """
+    Mirrors the experiment from the mlflow db to the experiment db.
+    """
     with Session(EXPERIMENT_DB_ENGINE) as db_session:
         with Session(MLFLOW_DB_ENGINE) as mlflow_session:
-            statement = select(Experiments)
-            results = [exp for exp in mlflow_session.exec(statement)]
-            for res in results:
-                if res.experiment_id is not None and res.name is not None:
-                    if db_session.get(Experiment, res.experiment_id) is None:
-                        exp = Experiment(
-                            id=str(res.experiment_id),
-                            name=res.name,
-                        )
-                        db_session.add(exp)
+            # get ids of existing experiments in the experiment db
+            existing_ids = {exp.id for exp in db_session.exec(select(Experiment)).all()}
 
+            # Get the experiments from mlflow
+            results = [exp for exp in mlflow_session.exec(select(Experiments))]
+
+            # Loop through the experiment to add the missing ones
+            for res in results:
+                if (
+                    res.experiment_id is not None
+                    and res.name is not None
+                    and str(res.experiment_id) not in existing_ids
+                ):
+                    exp = Experiment(
+                        id=str(res.experiment_id),
+                        name=res.name,
+                    )
+                    db_session.add(exp)
+
+            # Commit the added experiments
             db_session.commit()
 
 
