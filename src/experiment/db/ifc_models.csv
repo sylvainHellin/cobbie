@@ -1,6 +1,0 @@
-project_name,model_name,model_description
-duplex,arc,"The architectural model of a house project, with 2 twin houses."
-duplex,mep,"The MEP model of a house project, with 2 twin houses."
-dental_clinic,arc,"The architectural model of a dental clinic building"
-dental_clinic,mep,"The MEP model of a delcal clinic building."
-dental_clinic,str,"The structural model of a dental clinic building. It also contains some non structural elements like the roof."
