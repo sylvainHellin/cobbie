@@ -96,7 +96,6 @@ def import_mlflow_runs():
     """
     with Session(EXPERIMENT_DB_ENGINE) as db_session:
         with Session(MLFLOW_DB_ENGINE) as mlflow_session:
-
             # Get the runs from mlflow
             mlflow_runs = [run for run in mlflow_session.exec(select(Runs))]
 
@@ -162,7 +161,8 @@ def import_mlflow_runs():
             # Commit all the runs
             db_session.commit()
 
-def add_trace_to_run(run_id:str):
+
+def add_trace_to_run(run_id: str):
     """
     Add the key info to the trace table using mlflow sdk for a given run_id.
     """
@@ -172,8 +172,28 @@ def add_trace_to_run(run_id:str):
         client = CustomMLFlowClient()
         client.traces
         run = mlflow.get_run(run_id=run_id)
-        run.
 
+        # TODO continue here
+        return
+
+
+def get_ifc_model(id: int) -> Optional[Ifcmodels]:
+    """
+    Get the IFC Model from the database from it's id, or None if non is found.
+    """
+    with Session(EXPERIMENT_DB_ENGINE) as session:
+        ifc_model = session.get(Ifcmodels, id)
+        return ifc_model
+
+
+def get_all_ifc_models() -> List[Ifcmodels]:
+    """
+    Retrieve all IFC models from the Database
+    """
+    with Session(EXPERIMENT_DB_ENGINE) as session:
+        results = session.exec(select(Ifcmodels))
+        ifc_models = [model for model in results]
+        return ifc_models
 
 
 if __name__ == "__main__":

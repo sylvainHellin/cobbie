@@ -1,7 +1,6 @@
 """FastAPI application for the IFC Answer Engine."""
 
 import os
-import sys
 import traceback
 from datetime import datetime
 from functools import partial
@@ -12,15 +11,12 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse
 from starlette.concurrency import run_in_threadpool
 
-# Add the project root directory to the Python path
-project_root = os.path.join(os.path.dirname(__file__), "..")
-sys.path.append(project_root)
-
 from api.models import QuestionRequest, QuestionResponse
 from src.config import LLM, MLFLOW_URI
-from src.config.llm import LLM
 from src.engine.engine import IfcAnswerEngine
-from src.experiment.db.query_db import get_ifc_models
+
+# from src.experiment.db.query_db import get_ifc_models
+from src.experiment.db.query import get_ifc_model, get_all_ifc_models
 
 app = FastAPI(
     title="IFC Answer Engine API",
@@ -79,11 +75,9 @@ async def ask_question(request: QuestionRequest) -> QuestionResponse:
 
         try:
             # Get the IFC model information from the database (run in threadpool)
-            ifc_models = await run_in_threadpool(
-                partial(get_ifc_models, id=request.model_id)
-            )
+            ifc_model = get_ifc_model(id=request.model_id)
 
-            if not ifc_models:
+            if not ifc_model:
                 error_msg = f"BIM model with ID {request.model_id} not found"
                 span.set_outputs(
                     {
@@ -95,8 +89,6 @@ async def ask_question(request: QuestionRequest) -> QuestionResponse:
                     }
                 )
                 raise HTTPException(status_code=404, detail=error_msg)
-
-            ifc_model = ifc_models[0]  # Get the first (and should be only) result
 
             if not ifc_model.model_path or not os.path.exists(ifc_model.model_path):
                 error_msg = f"BIM model file not found at path: {ifc_model.model_path}"
@@ -198,13 +190,10 @@ async def list_models():
 
         try:
             # Query models from DB in threadpool
-            ifc_models = await run_in_threadpool(get_ifc_models)
+            ifc_models = await run_in_threadpool(get_all_ifc_models)
 
             models = []
             for model in ifc_models:
-                # Generate Supabase URL using model ID as filename
-                supabase_url = f"https://wzutfspshgtxjvquwdla.supabase.co/storage/v1/object/public/ifc_models/{model.id}.ifc"
-
                 models.append(
                     {
                         "id": model.id,
@@ -212,7 +201,6 @@ async def list_models():
                         "model_name": model.model_name,
                         "model_description": model.model_description,
                         "model_path": model.model_path,
-                        "supabase_url": supabase_url,
                     }
                 )
 
@@ -269,9 +257,9 @@ async def get_ifc_file(model_id: int):
 
         try:
             # Get the IFC model information from the database (run in threadpool)
-            ifc_models = await run_in_threadpool(partial(get_ifc_models, id=model_id))
+            ifc_model = await run_in_threadpool(partial(get_ifc_model, id=model_id))
 
-            if not ifc_models:
+            if not ifc_model:
                 error_msg = f"BIM model with ID {model_id} not found"
                 span.set_outputs(
                     {
@@ -283,8 +271,6 @@ async def get_ifc_file(model_id: int):
                     }
                 )
                 raise HTTPException(status_code=404, detail=error_msg)
-
-            ifc_model = ifc_models[0]  # Get the first (and should be only) result
 
             if not ifc_model.model_path or not os.path.exists(ifc_model.model_path):
                 error_msg = f"BIM model file not found at path: {ifc_model.model_path}"
