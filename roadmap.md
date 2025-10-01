@@ -1,6 +1,9 @@
 # Roadmap
 
 **URGENT**
+
+- implement the `update_run` fn in `query.py`
+- implement a function to extract the important data for each span and store it into the db (for a specific `run_id`)
 - run the `sqlagencode` for the mlflow sqlite db (store in another file, like mlflow_model). Maybe I don't even need to copy the runs and experiment from one to the other, and just query the mlflow db
 - Check the logging of the evaluation script (in wrong experiment ; no traces)
 - Something is off in the token counting of the IfcAnswerEngine in the TrainingPipeline: it is not reset for each questions

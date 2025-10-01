@@ -3,10 +3,7 @@ from typing import List
 import pandas as pd
 
 from src.engine.schemas import QA_Pair
-from src.experiment.db.db import get_engine
-from src.experiment.db.query import Querier
-
-querier = Querier(conn=get_engine().connect())
+from src.experiment.db.query import get_dataset, get_ifc_models
 
 
 def load_train_dev_split(
@@ -14,9 +11,9 @@ def load_train_dev_split(
 ) -> tuple[List[QA_Pair], List[QA_Pair]]:
     """Load the dataset and split it into a train and dev set."""
     # Load the dataset table from SQLite database
-    dataset = querier.get_dataset()
+    dataset = get_dataset()
     df_1 = pd.DataFrame([row.model_dump() for row in dataset])
-    ifc_models = querier.get_ifc_models()
+    ifc_models = get_ifc_models()
     df_2 = pd.DataFrame([row.model_dump() for row in ifc_models])
     data = pd.merge(
         left=df_1,

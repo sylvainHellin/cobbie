@@ -3,7 +3,8 @@ from dspy import BootstrapFewShot
 
 from src.config import LLM_REGISTRY, PATH_COMPILED_MODEL
 from src.engine import IfcAnswerEngine
-from src.experiment import TRAINSET, metric
+from src.experiment.datasets import TRAINSET
+from src.experiment.validation import metric
 
 
 def bootstrap_engine(

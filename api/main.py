@@ -16,7 +16,7 @@ from src.config import LLM, MLFLOW_URI
 from src.engine.engine import IfcAnswerEngine
 
 # from src.experiment.db.query_db import get_ifc_models
-from src.experiment.db.query import get_ifc_model, get_all_ifc_models
+from src.experiment.db.query import get_ifc_model, get_ifc_models
 
 app = FastAPI(
     title="IFC Answer Engine API",
@@ -190,7 +190,7 @@ async def list_models():
 
         try:
             # Query models from DB in threadpool
-            ifc_models = await run_in_threadpool(get_all_ifc_models)
+            ifc_models = await run_in_threadpool(get_ifc_models)
 
             models = []
             for model in ifc_models:

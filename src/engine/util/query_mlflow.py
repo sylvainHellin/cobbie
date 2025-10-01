@@ -38,7 +38,22 @@ class CustomMLFlowClient(MlflowClient):
                 self.runData = run.data
                 self.metrics = run.data.metrics
 
-    def setup(
+    def setup_by_run_id(
+        self,
+        run_id: str,
+    ):
+        """
+        set up the client to access all info related to a specific run (for a given run_id)
+        """
+        run = self.get_run(run_id=run_id)
+        self.run = run
+        self.runData = run.data
+        self.metrics = run.data.metrics
+        experiment_id = run.info.experiment_id
+        self.experiment = self.get_experiment(experiment_id=experiment_id)
+        self.set_traces()
+
+    def setup_by_name(
         self,
         experiment_name: str,
         run_name: str,
@@ -84,16 +99,22 @@ if __name__ == "__main__":
     # run_name = "2025-09-25-07-44-05"
 
     # Setup the client
-    client.setup(
+    client.setup_by_name(
         experiment_name=experiment_name,
         run_name=run_name,
     )
-    for idx, trace in enumerate(client.traces[:1]) if client.traces is not None else []:
-        print(f"\n#### Trace Nr. {idx + 1} info ####\n")
-        print(json.dumps(trace.info.to_dict(), indent=2))
-        print(
-            f"Similarity score: {trace.info.to_dict().get('tags', {}).get('similarity score')}"
-        )
+
+    run_id = client.run.info.run_id if client.run else None
+
+    for idx, trace in enumerate(client.traces) if client.traces is not None else []:
+        tags = trace.info.to_dict().get("tags", {})
+        accuracy = tags.get("similarity score")
+        print(accuracy)
+        break
+        # print(f"Number of spans: {len(trace.data.spans)}")
+        # for idx, span in enumerate(trace.data.spans):
+        #     print(json.dumps(span.to_dict(), indent=2))
+        #     break
 
 
 # TODO Continue here

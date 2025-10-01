@@ -110,9 +110,10 @@ class LM_Metrics(BaseModel):
         )
 
         # Handle LLM field when combining different models
-        self.llm = (
-            other_metrics.llm if (llm == "other" and llm is not None) else self.llm
-        )
+        if (llm == "other" and other_metrics.llm is not None) or (
+            llm == "self" and self.llm is None and other_metrics.llm is not None
+        ):
+            self.llm = other_metrics.llm
 
 
 class Tools_Metrics(BaseModel):

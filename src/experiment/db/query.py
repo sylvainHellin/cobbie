@@ -6,18 +6,21 @@ sqlacodegen sqlite:///mlflow.sqlite --generator sqlmodels --outfile src/experime
 ```
 """
 
-from functools import wraps
-from typing import Callable, List, TypeVar, Optional
 from datetime import datetime
+from functools import wraps
+from typing import Callable, List, Optional, TypeVar
 
-import mlflow
-from sqlmodel import Session, col, or_, select
 from sqlalchemy.orm import selectinload
+from sqlmodel import Session, col, select
 
-from src.config import MLFLOW_URI
-from src.engine.util.query_mlflow import CustomMLFlowClient
 from src.experiment.db import EXPERIMENT_DB_ENGINE, MLFLOW_DB_ENGINE
-from src.experiment.db.experiment_models import Dataset, Experiment, Ifcmodels, Run
+from src.experiment.db.experiment_models import (
+    Dataset,
+    Experiment,
+    Ifcmodels,
+    Run,
+    Trace,
+)
 from src.experiment.db.mlflow_models import Experiments, Runs
 
 T = TypeVar("T")
@@ -162,19 +165,47 @@ def import_mlflow_runs():
             db_session.commit()
 
 
-def add_trace_to_run(run_id: str):
+def add_trace(
+    trace: Trace,
+):
     """
-    Add the key info to the trace table using mlflow sdk for a given run_id.
+    Add a new trace to the DB.
     """
-    mlflow.set_tracking_uri(MLFLOW_URI)
 
     with Session(EXPERIMENT_DB_ENGINE) as session:
-        client = CustomMLFlowClient()
-        client.traces
-        run = mlflow.get_run(run_id=run_id)
-
-        # TODO continue here
+        session.add(trace)
+        session.commit()
         return
+
+
+def add_run(run: Run):
+    """
+    Add a new run to the DB.
+    """
+
+    with Session(EXPERIMENT_DB_ENGINE) as session:
+        session.add(run)
+        session.commit()
+        return
+
+
+def update_run(run: Run):
+    """
+    Update an existing run in the DB.
+    """
+
+    with Session(EXPERIMENT_DB_ENGINE) as session:
+        session.merge(run)
+        session.commit()
+        return
+
+
+def update_run_metrics(run_id: str):
+    """
+    Update the run with the provided run_id for all calculable metrics, based on the associated traces.
+    """
+    # TODO continue here
+    return
 
 
 def get_ifc_model(id: int) -> Optional[Ifcmodels]:
@@ -186,7 +217,7 @@ def get_ifc_model(id: int) -> Optional[Ifcmodels]:
         return ifc_model
 
 
-def get_all_ifc_models() -> List[Ifcmodels]:
+def get_ifc_models() -> List[Ifcmodels]:
     """
     Retrieve all IFC models from the Database
     """
