@@ -29,32 +29,28 @@ def calculate_usable_floor_area(ifc_model_path: str) -> float:
         
         This function assumes area values in PSet_Revit_Dimensions are already in square meters,
         which is the standard for Revit-exported IFC models.
+        
+        Size filtering criteria:
+        - Minimum usable area: 1.0 sqm (to include small but valid floor areas)
+        - Maximum usable area: 10000.0 sqm (to exclude likely foundation slabs)
     """
     # Load the IFC model
     model = ifcopenshell.open(ifc_model_path)
     
-    # Find all IfcSlab entities
-    slabs = model.by_type("IfcSlab")
+    # Find all IfcSlab entities with PredefinedType='FLOOR'
+    slabs = [slab for slab in model.by_type("IfcSlab") 
+             if hasattr(slab, 'PredefinedType') and slab.PredefinedType == 'FLOOR']
     
     total_area = 0.0
-    processed_slabs = set()  # To ensure we count each slab only once
+    processed_global_ids = set()  # To ensure we only count each distinct slab once
     
-    # Size thresholds for filtering structural elements
-    # Slabs outside these ranges are likely structural elements not part of usable floor area
-    MIN_USABLE_AREA = 20.0  # sqm - Increased threshold to exclude small structural elements
-    MAX_USABLE_AREA = 2000.0  # sqm - exclude very large foundation slabs
-    
-    # For each slab, get the area from property sets if it's a FLOOR type
+    # For each slab, get the area from property sets
     for slab in slabs:
-        # Ensure we process each slab only once
-        if slab.GlobalId in processed_slabs:
+        # Check for unique GlobalId to avoid counting duplicates
+        if slab.GlobalId in processed_global_ids:
             continue
-        processed_slabs.add(slab.GlobalId)
+        processed_global_ids.add(slab.GlobalId)
         
-        # Only process slabs with PredefinedType='FLOOR'
-        if getattr(slab, 'PredefinedType', None) != 'FLOOR':
-            continue
-            
         # Get property sets for this slab
         property_sets = ifcopenshell.util.element.get_psets(slab)
         
@@ -63,9 +59,9 @@ def calculate_usable_floor_area(ifc_model_path: str) -> float:
             pset_dimensions = property_sets['PSet_Revit_Dimensions']
             if 'Area' in pset_dimensions:
                 area_value = pset_dimensions['Area']
-                
-                # Apply size filters to exclude structural elements
-                if MIN_USABLE_AREA <= area_value <= MAX_USABLE_AREA:
+                # Apply size filtering to exclude structural slabs that are either
+                # too large (likely foundation slabs) or too small (non-usable elements)
+                if 1.0 <= area_value <= 10000.0:
                     total_area += area_value
     
     return float(total_area)

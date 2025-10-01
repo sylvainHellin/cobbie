@@ -7,8 +7,9 @@ import ifcopenshell.util.system
 import ifcopenshell.geom
 import math
 import json
+from typing import *
 import re
-from typing import List, Dict, Any, Optional, Union
+
 
 def find_and_extract_element_properties(
     model_path: str,
@@ -21,10 +22,10 @@ def find_and_extract_element_properties(
     container_types: Optional[List[str]] = None
 ) -> List[Dict[str, Any]]:
     """
-    Search for IFC elements based on multiple criteria and extract specific property values.
+    Search for IFC entities based on multiple criteria and extract specific property values.
     
-    This function works with IFC models from various BIM authoring software including Revit
-    (handling PSet_Revit_* property sets) and other software that follows standard IFC conventions.
+    This function works with IFC models from various BIM authoring software and handles
+    standard property set conventions like PSet_Revit_* for Revit-exported models.
     
     Args:
         model_path (str): Path to the IFC model file
@@ -35,216 +36,206 @@ def find_and_extract_element_properties(
         classification_keywords (List[str], optional): Keywords to search in classification property sets
         match_mode (str): Matching mode - "substring", "exact", or "regex" (default: "substring")
         container_types (List[str], optional): List of container types to search in
-    
-    Returns:
-        List[Dict[str, Any]]: List of dictionaries containing element information and properties
         
-    Example:
-        >>> results = find_and_extract_element_properties(
-        ...     model_path="model.ifc",
-        ...     property_names=["LoadBearing", "FireRating"],
-        ...     name_patterns=["Wall", "Partition"],
-        ...     entity_types=["IfcWall", "IfcWallStandardCase"],
-        ...     property_filters={"LoadBearing": True},
-        ...     match_mode="substring"
-        ... )
+    Returns:
+        List[Dict[str, Any]]: List of dictionaries containing element information and properties:
+            - element_name: Name of the found element
+            - element_guid: GlobalId of the element
+            - element_type: IFC type of the element
+            - container_info: Spatial container information (if available)
+            - properties: Dictionary of requested property names and their values
     """
+    # Load the IFC model
+    model = ifcopenshell.open(model_path)
     
-    # Load the model
-    try:
-        model = ifcopenshell.open(model_path)
-    except Exception as e:
-        raise FileNotFoundError(f"Could not load model from {model_path}: {str(e)}")
+    # Define common property mappings for different software
+    property_mappings = {
+        "Width": ["Width", "NominalWidth"],
+        "Height": ["Height", "NominalHeight"],
+        "Length": ["Length", "NominalLength"],
+        "Area": ["Area", "GrossArea", "NetArea"],
+        "Volume": ["Volume", "GrossVolume", "NetVolume"],
+        "FireRating": ["FireRating", "Fire Resistance Rating"],
+        "ThermalTransmittance": ["ThermalTransmittance", "U-Value", "Heat Transfer Coefficient"],
+        "Description": ["Description"],
+        "Name": ["Name"]
+    }
     
-    # Get all elements to process
+    # Get all relevant elements
     if entity_types:
         elements = []
         for entity_type in entity_types:
             elements.extend(model.by_type(entity_type))
     else:
-        # If no entity types specified, get all elements that have representations
-        elements = []
-        for element in model:
-            if hasattr(element, "Representation") and element.Representation:
-                elements.append(element)
+        # Get all IfcProduct entities (includes IfcElement, IfcSpatialElement, etc.)
+        elements = model.by_type("IfcProduct")
     
-    # Filter elements based on criteria
-    filtered_elements = []
+    # Filter by entity types if specified
+    if entity_types:
+        elements = [e for e in elements if e.is_a() in entity_types]
     
-    for element in elements:
-        should_include = True
-        matching_criteria = []
-        
-        # Filter by name patterns
-        if name_patterns:
-            name_match = False
-            element_name = getattr(element, "Name", None) or ""
-            
+    # Filter by name patterns if specified
+    if name_patterns:
+        filtered_elements = []
+        for element in elements:
+            element_name = getattr(element, 'Name', '') or ''
+            match_found = False
             for pattern in name_patterns:
                 if match_mode == "exact" and element_name == pattern:
-                    name_match = True
-                    matching_criteria.append(f"name_exact:{pattern}")
+                    match_found = True
                     break
                 elif match_mode == "substring" and pattern in element_name:
-                    name_match = True
-                    matching_criteria.append(f"name_substring:{pattern}")
+                    match_found = True
                     break
                 elif match_mode == "regex":
                     try:
                         if re.search(pattern, element_name):
-                            name_match = True
-                            matching_criteria.append(f"name_regex:{pattern}")
+                            match_found = True
                             break
                     except re.error:
-                        # Invalid regex, skip this pattern
-                        continue
-            
-            if not name_match:
-                should_include = False
-        
-        # Filter by property values
-        if should_include and property_filters:
-            element_psets = ifcopenshell.util.element.get_psets(element)
-            property_match = True
-            
-            for filter_prop_name, filter_prop_value in property_filters.items():
-                found_prop = False
+                        # Invalid regex, skip
+                        pass
+            if match_found:
+                filtered_elements.append(element)
+        elements = filtered_elements
+    
+    # Filter by property filters if specified
+    if property_filters:
+        filtered_elements = []
+        for element in elements:
+            psets = ifcopenshell.util.element.get_psets(element)
+            match_all_filters = True
+            for filter_prop, filter_value in property_filters.items():
+                prop_found = False
+                # Check direct attributes first
+                if hasattr(element, filter_prop):
+                    if getattr(element, filter_prop) == filter_value:
+                        prop_found = True
                 
-                # Search in all property sets
-                for pset_name, pset_props in element_psets.items():
-                    if filter_prop_name in pset_props:
-                        found_prop = True
-                        # Check if property value matches
-                        if pset_props[filter_prop_name] == filter_prop_value:
-                            matching_criteria.append(f"property:{filter_prop_name}={filter_prop_value}")
-                        else:
-                            property_match = False
-                        break
+                # If not found in direct attributes, search in property sets
+                if not prop_found:
+                    # Search for the property in all property sets
+                    for pset_name, properties in psets.items():
+                        # Check for exact match first
+                        if filter_prop in properties:
+                            if properties[filter_prop] == filter_value:
+                                prop_found = True
+                                break
+                        # Check for mapped property names
+                        elif filter_prop in property_mappings:
+                            for mapped_name in property_mappings[filter_prop]:
+                                if mapped_name in properties:
+                                    if properties[mapped_name] == filter_value:
+                                        prop_found = True
+                                        break
+                            if prop_found:
+                                break
                 
-                if not found_prop:
-                    property_match = False
-            
-            if not property_match:
-                should_include = False
-        
-        # Filter by classification keywords
-        if should_include and classification_keywords:
-            element_psets = ifcopenshell.util.element.get_psets(element)
-            classification_match = False
-            
-            # Look for classification-related property sets (broadened definition)
+                if not prop_found:
+                    match_all_filters = False
+                    break
+            if match_all_filters:
+                filtered_elements.append(element)
+        elements = filtered_elements
+    
+    # Filter by classification keywords if specified
+    if classification_keywords:
+        filtered_elements = []
+        for element in elements:
+            psets = ifcopenshell.util.element.get_psets(element)
+            keyword_found = False
             for keyword in classification_keywords:
-                keyword_lower = keyword.lower()
-                for pset_name, pset_props in element_psets.items():
-                    pset_name_lower = pset_name.lower()
-                    # Check if this is a classification property set (PSet_*, Pset_*, or contains "classification")
-                    is_classification_pset = (
-                        pset_name.startswith("PSet_") or 
-                        pset_name.startswith("Pset_") or 
-                        "classification" in pset_name_lower
-                    )
-                    
-                    if is_classification_pset:
-                        # Check if keyword is in property set name or any property names/values
-                        if keyword_lower in pset_name_lower:
-                            classification_match = True
-                            matching_criteria.append(f"classification_pset:{keyword}")
-                            break
-                        
-                        # Check property names and values
-                        for prop_name, prop_value in pset_props.items():
-                            prop_name_lower = prop_name.lower()
-                            # Check if keyword is in property name
-                            if keyword_lower in prop_name_lower:
-                                classification_match = True
-                                matching_criteria.append(f"classification_prop_name:{keyword}")
+                # Look for classification-related properties
+                for pset_name, properties in psets.items():
+                    if 'Classification' in pset_name or 'Identity' in pset_name:
+                        for prop_name, prop_value in properties.items():
+                            if isinstance(prop_value, str) and keyword.lower() in prop_value.lower():
+                                keyword_found = True
                                 break
-                            # Check if keyword is in property value (for string values)
-                            if isinstance(prop_value, str) and keyword_lower in prop_value.lower():
-                                classification_match = True
-                                matching_criteria.append(f"classification_prop_value:{keyword}")
-                                break
-                            # Check if keyword matches property value exactly (for non-string values)
-                            elif str(prop_value).lower() == keyword_lower:
-                                classification_match = True
-                                matching_criteria.append(f"classification_prop_value:{keyword}")
-                                break
-                    
-                    if classification_match:
+                    if keyword_found:
                         break
-                if classification_match:
+                if keyword_found:
                     break
-            
-            if not classification_match:
-                should_include = False
-        
-        # Filter by container types
-        if should_include and container_types:
+            if keyword_found:
+                filtered_elements.append(element)
+        elements = filtered_elements
+    
+    # Filter by container types if specified
+    if container_types:
+        filtered_elements = []
+        for element in elements:
             container = ifcopenshell.util.element.get_container(element)
-            if container:
-                container_type = container.is_a()
-                if container_type not in container_types:
-                    should_include = False
-                else:
-                    matching_criteria.append(f"container_type:{container_type}")
-            else:
-                should_include = False
-        
-        # If all filters pass, include this element
-        if should_include:
-            filtered_elements.append({
-                "element": element,
-                "matching_criteria": matching_criteria
-            })
+            if container and container.is_a() in container_types:
+                filtered_elements.append(element)
+        elements = filtered_elements
     
-    # Extract properties for filtered elements
+    # Extract information and properties for each matching element
     results = []
-    
-    for item in filtered_elements:
-        element = item["element"]
-        matching_criteria = item["matching_criteria"]
-        
+    for element in elements:
         # Get element basic information
-        element_name = getattr(element, "Name", None) or ""
-        element_guid = getattr(element, "GlobalId", "")
-        element_type = element.is_a()
-        
-        # Get container information
-        container_name = ""
-        container_type = ""
-        container = ifcopenshell.util.element.get_container(element)
-        if container:
-            container_name = getattr(container, "Name", None) or ""
-            container_type = container.is_a()
-        
-        # Extract requested properties
-        element_psets = ifcopenshell.util.element.get_psets(element)
-        extracted_properties = {}
-        
-        for prop_name in property_names:
-            found = False
-            # Search in all property sets for the requested property
-            for pset_name, pset_props in element_psets.items():
-                if prop_name in pset_props:
-                    extracted_properties[prop_name] = pset_props[prop_name]
-                    found = True
-                    break
-            
-            # If not found, mark as None
-            if not found:
-                extracted_properties[prop_name] = None
-        
-        # Create result dictionary
-        result = {
-            "element_name": element_name,
-            "element_guid": element_guid,
-            "element_type": element_type,
-            "properties": extracted_properties,
-            "container_name": container_name,
-            "container_type": container_type,
-            "matching_criteria": matching_criteria
+        element_info = {
+            "element_name": getattr(element, 'Name', 'N/A') or 'N/A',
+            "element_guid": element.GlobalId,
+            "element_type": element.is_a()
         }
         
-        results.append(result)
+        # Get container information
+        container = ifcopenshell.util.element.get_container(element)
+        if container:
+            element_info["container_info"] = {
+                "name": getattr(container, 'Name', 'N/A') or 'N/A',
+                "type": container.is_a()
+            }
+        else:
+            element_info["container_info"] = None
+        
+        # Extract requested properties
+        element_info["properties"] = {}
+        psets = ifcopenshell.util.element.get_psets(element)
+        
+        for prop_name in property_names:
+            prop_value = None
+            
+            # Check if it's a direct attribute of the element
+            if hasattr(element, prop_name):
+                prop_value = getattr(element, prop_name)
+            else:
+                # Search for the property in all property sets
+                found = False
+                # Check for exact match first
+                for pset_name, properties in psets.items():
+                    if prop_name in properties:
+                        prop_value = properties[prop_name]
+                        found = True
+                        break
+                
+                # If not found, check for mapped property names
+                if not found and prop_name in property_mappings:
+                    for mapped_name in property_mappings[prop_name]:
+                        for pset_name, properties in psets.items():
+                            if mapped_name in properties:
+                                prop_value = properties[mapped_name]
+                                found = True
+                                break
+                        if found:
+                            break
+                
+                # Special handling for common properties in Revit property sets
+                if not found:
+                    for pset_name, properties in psets.items():
+                        # Check in PSet_Revit_* property sets
+                        if 'Revit' in pset_name:
+                            # Handle case where property name might be part of a longer name
+                            for p_name, p_value in properties.items():
+                                if prop_name.lower() in p_name.lower():
+                                    prop_value = p_value
+                                    found = True
+                                    break
+                        if found:
+                            break
+            
+            element_info["properties"][prop_name] = prop_value
+        
+        results.append(element_info)
     
     return results
