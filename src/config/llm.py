@@ -129,6 +129,11 @@ class LLMRegistry:
                 base_url="deepinfra",
                 api_key_env_var="DEEPINFRA_API_KEY",
             ),
+            LLMProvider(
+                name="zai",
+                base_url="https://api.z.ai/api/coding/paas/v4",
+                api_key_env_var="Z_AI_API_KEY",
+            ),
         ]
 
         for provider in providers:
@@ -170,6 +175,7 @@ class LLMRegistry:
                 model_path="Qwen/Qwen3-Coder-480B-A35B-Instruct-Turbo",
             ),
             LLMModel(name="qwen-3-coder-480b", model_path="qwen-3-coder-480b"),
+            LLMModel(name="glm-4.6", model_path="glm-4.6", max_tokens_default=32768),
         ]
 
         for model in models:
@@ -269,6 +275,13 @@ class LLMRegistry:
             ModelAvailability(model_name="qwen3:8b", provider_name="ollama"),
             ModelAvailability(model_name="gemma3-4b", provider_name="ollama"),
             ModelAvailability(model_name="gemma3n", provider_name="ollama"),
+            # Z.ai models
+            ModelAvailability(
+                model_name="glm-4.6",
+                provider_name="zai",
+                cost_input_token=0.6,  # $0.6 per 1M tokens
+                cost_output_token=2.2,  # $2.2 per 1M tokens
+            ),
         ]
 
         self.availability = availability
@@ -324,11 +337,41 @@ class LLMRegistry:
 
         # Use override path if specified, otherwise use base model path
         model_path = availability.model_path_override or model.model_path
-        full_url = f"{provider.base_url}/{model_path}"
-
         max_tokens = max_tokens or model.max_tokens_default
 
-        return dspy.LM(model=full_url, api_key=provider.api_key, max_tokens=max_tokens)
+        # Handle custom providers (like zai) that need special litellm formatting
+        if provider.name == "zai" or (
+            provider.base_url.startswith("http")
+            and not provider.base_url in ["anthropic", "openai", "gemini"]
+        ):
+            # For custom API endpoints, use custom/ prefix and set api_base
+            custom_model = f"custom/{model_path}"
+            # Z.AI API needs the base URL (DSPy/LLM will add /chat/completions)
+            if provider.name == "zai":
+                api_base = provider.base_url
+                # Use OpenAI-compatible format for Z.AI API
+                return dspy.LM(
+                    model="openai/"
+                    + model_path,  # Use openai prefix for custom endpoints
+                    api_base=api_base,
+                    api_key=provider.api_key,
+                    max_tokens=max_tokens,
+                    custom_llm_provider="openai",
+                )
+            else:
+                api_base = provider.base_url
+                return dspy.LM(
+                    model=custom_model,
+                    api_base=api_base,
+                    api_key=provider.api_key,
+                    max_tokens=max_tokens,
+                )
+        else:
+            # For standard providers, construct the model path normally
+            full_url = f"{provider.base_url}/{model_path}"
+            return dspy.LM(
+                model=full_url, api_key=provider.api_key, max_tokens=max_tokens
+            )
 
     def get_costs(
         self, model_name: str, provider_name: str = ""
@@ -365,9 +408,9 @@ class LLM(BaseModel):
     """LLM configuration for agents."""
 
     # Uncomment for using Cloud model
-    model_name: str = Field(default="qwen3-coder", description="Name of the model")
+    model_name: str = Field(default="glm-4.6", description="Name of the model")
     provider_name: str = Field(
-        default="deepinfra",
+        default="zai",
         description="Provider to use (auto-selected if None)",
     )
 
