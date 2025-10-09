@@ -5,11 +5,11 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 ## Build & Test Commands
 
 ### Backend (Python)
-- **Dev Server**: `python api/start_server.py` or `uvicorn api.main:app --host 127.0.0.1 --port 8000 --reload`
-- **Test All**: `pytest`
-- **Single Test**: `pytest tests/test_file.py::test_function`
-- **Lint**: `ruff check .`
-- **Type Check**: `mypy .`
+- **Dev Server**: `uv run python api/start_server.py` or `uv run uvicorn api.main:app --host 127.0.0.1 --port 8000 --reload`
+- **Test All**: `uv run pytest`
+- **Single Test**: `uv run pytest tests/test_file.py::test_function`
+- **Lint**: `uv run ruff check .`
+- **Type Check**: `uv run mypy .`
 
 ### Frontend (React/TypeScript)
 - **Dev Mode**: `cd frontend && pnpm run dev`
@@ -19,7 +19,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 - **Preview**: `cd frontend && pnpm run preview`
 
 ### MLflow Tracking
-- **Start MLflow**: `mlflow server --host 127.0.0.1 --port 5000 --backend-store-uri sqlite:///mlflow.sqlite`
+- **Start MLflow**: `uv run mlflow server --host 127.0.0.1 --port 5000 --backend-store-uri sqlite:///mlflow.sqlite`
 
 ## Architecture Overview
 
@@ -37,6 +37,12 @@ This is a sophisticated BIM AI question-answering system with a multi-agent arch
   - `AnswerVerifier`: Compares AI answers with ground truth using similarity scoring
 - `TrainingModule`: State machine for training mode that learns new tools through iterative improvement
 - Configuration system with hierarchical Pydantic models in `src/config/`
+
+**Agent Configuration Pattern**:
+- Each sub-agent has its own configuration (e.g., `ToolCreatorConfig`, `ToolAssessorConfig`) with specific LLM settings
+- Uses `dspy.context(lm=self.lm, adapter=self.config.llm.adapter)` instead of global `dspy.configure(lm=lm)`
+- This approach allows each agent to maintain independent LM configurations without affecting others
+- Configuration hierarchy: Base agent config → specialized agent configs → LLM settings per agent
 
 **Frontend Architecture**:
 - React + TypeScript with Vite build system
@@ -71,6 +77,12 @@ The system uses a hierarchical configuration approach centered in `src/config/`:
 - Type-safe configuration with Pydantic models
 - Support for multiple LLM providers (OpenAI, Anthropic, Google, Groq, local models via Ollama)
 
+**DSPy Configuration Pattern**:
+- Each agent uses `with dspy.context(lm=self.lm, adapter=self.config.llm.adapter):` for local configuration
+- Avoids global `dspy.configure(lm=lm)` to prevent configuration conflicts between agents
+- Each sub-agent can have different LLM providers, models, and settings
+- Configuration is scoped to the context block, ensuring isolation between agents
+
 ### Tool System
 
 The system can dynamically create Python tools that:
@@ -85,7 +97,7 @@ Created tools are persisted as `.py` files in `src/engine/tools/created/` and ca
 
 ### Environment Setup
 - Python 3.12+ required
-- Uses `uv` package manager for Python dependencies
+- Uses `uv` package manager for Python dependencies - all Python commands should use `uv run` prefix
 - Frontend uses `pnpm` package manager
 - Requires multiple API keys for different LLM providers (set in `.env`)
 
