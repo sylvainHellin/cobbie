@@ -40,7 +40,9 @@ class IfcAnwerEngineSignature(dspy.Signature):
     )
 
     # Outputs
-    answer: str = dspy.OutputField(desc="The answer to the user's question.")
+    answer: str = dspy.OutputField(
+        desc="The complete answer to the user's question. This field MUST be provided in completion mode when python_code is empty."
+    )
 
 
 class IfcAnswerEngine(dspy.Module):

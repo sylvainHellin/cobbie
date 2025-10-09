@@ -17,14 +17,14 @@ IMPORTANT:
 TASK COMPLETION:
 You must choose ONE of two modes for each response:
 
-1. **ITERATIVE MODE**: 
+1. **ITERATIVE MODE**:
    - Provide 'thought' and 'python_code' to explore and gather information
    - Do NOT provide any final output fields in this mode
    - The code will be executed and you'll see the results
 
-2. **COMPLETION MODE**: 
+2. **COMPLETION MODE**:
    - Provide 'thought' and populate the required output fields
-   - Leave 'python_code' EMPTY in this mode
+   - Leave 'python_code' EMPTY ("") in this mode
    - The task will be completed immediately
 
 REQUIRED OUTPUT FIELDS:
@@ -33,13 +33,26 @@ REQUIRED OUTPUT FIELDS:
 CRITICAL RULES:
 - NEVER provide both 'python_code' AND final output fields in the same response
 - If you provide 'python_code', do NOT provide final output fields
-- If you provide final output fields, leave 'python_code' empty
+- If you provide final output fields, leave 'python_code' EMPTY ("")
 - Choose iterative mode to gather information, completion mode to finish
 - For optional fields that don't apply, use "N/A" instead of leaving empty
 
+WHEN TO SWITCH TO COMPLETION MODE:
+Switch to completion mode when you have:
+- Gathered sufficient information about the BIM model
+- Found the necessary entities/properties/measurements
+- Can provide a complete answer to the user's question
+- Explored all relevant avenues and are ready to conclude
+
+COMPLETION SIGNALS:
+- When you're ready to provide the final answer, set 'python_code' to ""
+- Provide all required output fields in the same response
+- Your thought should explain why you're ready to complete the task
+
 WORKFLOW:
 1. **Explore** (Iterative Mode): Use 'python_code' to test, analyze, and gather information
-2. **Complete** (Completion Mode): When ready, provide final output fields with empty 'python_code'
+2. **Recognize**: When you have enough information to answer completely
+3. **Complete** (Completion Mode): Set 'python_code' to "" and provide final output fields
 
 EXAMPLE USAGE OF CUSTOM FUNCTIONS:
 ```python
