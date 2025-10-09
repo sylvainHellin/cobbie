@@ -123,7 +123,7 @@ class ErrorAnalyst(dspy.Module):
         self.output = ModuleOutput(status="error")
 
         self.lm = self.config.llm.get_llm()
-        with dspy.context(lm=self.lm):
+        with dspy.context(lm=self.lm, adapter=self.config.llm.adapter):
             self.logger.info("Starting error analysis")
             existing_tools = get_tools_names() if not existing_tools else existing_tools
 

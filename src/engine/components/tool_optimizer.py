@@ -134,7 +134,7 @@ class ToolOptimizer(dspy.Module):
         """
 
         self.lm = self.config.llm.get_llm()
-        with dspy.context(lm=self.lm):
+        with dspy.context(lm=self.lm, adapter=self.config.llm.adapter):
             self.logger.info("Starting tool optimization analysis")
             self.output = ModuleOutput()
 

@@ -105,7 +105,7 @@ class IfcAnswerEngine(dspy.Module):
         self.engine._update_code_prefix(code_prefix=code_prefix)
 
         self.lm = self.config.llm.get_llm()
-        with dspy.context(lm=self.lm):
+        with dspy.context(lm=self.lm, adapter=self.config.llm.adapter):
             # Start the loop: try to answer the question with existing tool
             try:
                 prediction = self.engine(

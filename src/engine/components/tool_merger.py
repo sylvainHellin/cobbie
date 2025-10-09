@@ -85,7 +85,7 @@ class InitialMerger(dspy.Module):
         source_code_second_function: str,
     ) -> ModuleOutput:
         self.lm = self.config.llm.get_llm()
-        with dspy.context(lm=self.lm):
+        with dspy.context(lm=self.lm, adapter=self.config.llm.adapter):
             self.logger.info(f"Starting ToolMerger for function: {function_name}")
             self.output = ModuleOutput()
 
@@ -172,7 +172,7 @@ class ToolsMerger(dspy.Module):
         source_code_first_function: str,
         source_code_second_function: str,
     ) -> ModuleOutput:
-        with dspy.context(lm=self.lm):
+        with dspy.context(lm=self.lm, adapter=self.config.llm.adapter):
             self.logger.info(f"Starting ToolMerger for function: {function_name}")
             self.output = ModuleOutput()
 

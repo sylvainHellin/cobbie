@@ -37,9 +37,11 @@ cost-aware model selection for different providers.
 """
 
 import os
-from typing import Dict, List, Optional, Tuple
+from typing import Dict, List, Optional, Tuple, Union
 
 import dspy
+from dspy.adapters.chat_adapter import ChatAdapter
+from dspy.adapters.json_adapter import JSONAdapter
 from dotenv import find_dotenv, load_dotenv
 from pydantic import BaseModel, Field
 
@@ -407,6 +409,8 @@ LLM_REGISTRY = LLMRegistry()
 class LLM(BaseModel):
     """LLM configuration for agents."""
 
+    model_config = {"arbitrary_types_allowed": True}
+
     # Uncomment for using Cloud model
     model_name: str = Field(default="glm-4.6", description="Name of the model")
     provider_name: str = Field(
@@ -422,6 +426,10 @@ class LLM(BaseModel):
     # )
 
     max_tokens: int = Field(default=2**14, description="Maximum tokens for LLM")
+    adapter: Union[ChatAdapter, JSONAdapter] = Field(
+        default=JSONAdapter(),  # Default to JSONAdapter since GLM-4.6 is now the default model
+        description="DSPy adapter to use for this model (ChatAdapter or JSONAdapter)",
+    )
 
     @property
     def cost_input_token(self) -> float:

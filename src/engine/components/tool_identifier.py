@@ -89,7 +89,7 @@ class ToolIdentifier(dspy.Module):
         """
 
         self.lm = self.config.llm.get_llm()
-        with dspy.context(lm=self.lm):
+        with dspy.context(lm=self.lm, adapter=self.config.llm.adapter):
             self.logger.info("Starting function identification analysis")
             self.output = ModuleOutput()
 
