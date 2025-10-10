@@ -39,9 +39,10 @@ mlflow.set_experiment("API")
 mlflow.dspy.autolog()  # type: ignore
 
 # Initialize the IFC Answer Engine
-llm = LLM(model_name="qwen-3-coder-480b", provider_name="cerebras").get_llm()
+# llm = LLM(model_name="qwen-3-coder-480b", provider_name="cerebras").get_llm()
 
-engine = IfcAnswerEngine(llm=llm)
+# engine = IfcAnswerEngine(llm=llm)
+engine = IfcAnswerEngine()
 
 
 @app.get("/")
