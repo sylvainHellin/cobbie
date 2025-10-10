@@ -402,26 +402,42 @@ def sync_traces(
 
             traces_to_process = []
             for mlflow_trace in mlflow_traces:
-                # Find a run_id for this trace (for both existing and new traces)
-                experiment_id_str = str(mlflow_trace.experiment_id)
-                if experiment_id_str in run_mapping and run_mapping[experiment_id_str]:
-                    # Use the first available run from this experiment
-                    trace_run_id = run_mapping[experiment_id_str][0]
-                else:
-                    # If no specific run found, try to find any run from this experiment in MLflow
-                    run_statement = select(Runs).where(
-                        Runs.experiment_id == mlflow_trace.experiment_id
-                    ).limit(1)
-                    matching_run = mlflow_session.exec(run_statement).first()
-                    if matching_run and matching_run.run_uuid in synced_run_ids:
-                        trace_run_id = matching_run.run_uuid
-                    else:
-                        logger.warning(f"No suitable run found for trace {mlflow_trace.request_id}")
+                # Get the actual run_id from trace metadata (mlflow.sourceRun)
+                trace_run_id = None
+
+                # Get trace metadata to find the source run
+                metadata_statement = select(TraceRequestMetadata).where(
+                    TraceRequestMetadata.request_id == mlflow_trace.request_id,
+                    TraceRequestMetadata.key == "mlflow.sourceRun"
+                )
+                metadata_record = mlflow_session.exec(metadata_statement).first()
+
+                if metadata_record:
+                    trace_run_id = metadata_record.value
+                    # Check if this run exists in our synced runs
+                    if trace_run_id not in synced_run_ids:
+                        logger.debug(f"Trace {mlflow_trace.request_id} source run {trace_run_id} not in synced runs, skipping")
                         continue
+                else:
+                    # Fallback: if no sourceRun found, try to find any run from this experiment
+                    logger.warning(f"No sourceRun found for trace {mlflow_trace.request_id}")
+                    experiment_id_str = str(mlflow_trace.experiment_id)
+                    if experiment_id_str in run_mapping and run_mapping[experiment_id_str]:
+                        trace_run_id = run_mapping[experiment_id_str][0]
+                    else:
+                        run_statement = select(Runs).where(
+                            Runs.experiment_id == mlflow_trace.experiment_id
+                        ).limit(1)
+                        matching_run = mlflow_session.exec(run_statement).first()
+                        if matching_run and matching_run.run_uuid in synced_run_ids:
+                            trace_run_id = matching_run.run_uuid
+                        else:
+                            logger.warning(f"No suitable run found for trace {mlflow_trace.request_id}")
+                            continue
 
                 # Build mapping for existing traces
                 if mlflow_trace.request_id in existing_trace_ids:
-                    logger.debug(f"Building mapping for existing trace: {mlflow_trace.request_id}")
+                    logger.debug(f"Building mapping for existing trace: {mlflow_trace.request_id} -> run {trace_run_id}")
                     trace_id_to_run_id[mlflow_trace.request_id] = trace_run_id
                     continue
 
