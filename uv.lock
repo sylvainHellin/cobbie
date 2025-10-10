@@ -842,6 +842,15 @@ wheels = [
 ]
 
 [[package]]
+name = "et-xmlfile"
+version = "2.0.0"
+source = { registry = "https://pypi.org/simple" }
+sdist = { url = "https://files.pythonhosted.org/packages/d3/38/af70d7ab1ae9d4da450eeec1fa3918940a5fafb9055e934af8d6eb0c2313/et_xmlfile-2.0.0.tar.gz", hash = "sha256:dab3f4764309081ce75662649be815c4c9081e88f0837825f90fd28317d4da54", size = 17234, upload-time = "2024-10-25T17:25:40.039Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/c1/8b/5fe2cc11fee489817272089c4203e679c63b570a5aaeb18d852ae3cbba6a/et_xmlfile-2.0.0-py3-none-any.whl", hash = "sha256:7a91720bc756843502c3b7504c77b8fe44217c85c537d85037f0f536151b2caa", size = 18059, upload-time = "2024-10-25T17:25:39.051Z" },
+]
+
+[[package]]
 name = "executing"
 version = "2.2.0"
 source = { registry = "https://pypi.org/simple" }
@@ -1370,6 +1379,7 @@ dependencies = [
     { name = "mypy" },
     { name = "ollama" },
     { name = "openinference-instrumentation-smolagents" },
+    { name = "openpyxl" },
     { name = "opentelemetry-exporter-otlp" },
     { name = "opentelemetry-sdk" },
     { name = "pydantic" },
@@ -1402,6 +1412,7 @@ requires-dist = [
     { name = "mypy", specifier = ">=1.16.1" },
     { name = "ollama", specifier = ">=0.4.8" },
     { name = "openinference-instrumentation-smolagents", specifier = ">=0.1.11" },
+    { name = "openpyxl", specifier = ">=3.1.5" },
     { name = "opentelemetry-exporter-otlp", specifier = ">=1.32.1" },
     { name = "opentelemetry-sdk", specifier = ">=1.32.1" },
     { name = "pydantic", specifier = ">=2.11.4" },
@@ -2493,6 +2504,18 @@ source = { registry = "https://pypi.org/simple" }
 sdist = { url = "https://files.pythonhosted.org/packages/ea/c1/851eed629ee65d38395f586eb4d82d9cc7c61c31de4c523394cc84ee4940/openinference_semantic_conventions-0.1.17.tar.gz", hash = "sha256:8c382f756344887c77f03c8def1702318d8d8cc8b4055f46924aabb7c89ed8bd", size = 9635, upload-time = "2025-04-02T04:43:34.111Z" }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/fb/99/306c007c3a2accafcf47fc5c20ea81648c039292ca6770c9c1ab7914dd6b/openinference_semantic_conventions-0.1.17-py3-none-any.whl", hash = "sha256:919b7f2c0b0bdd406377288337d77046efb84866ad4805ad7a73a09368147398", size = 9384, upload-time = "2025-04-02T04:43:32.998Z" },
+]
+
+[[package]]
+name = "openpyxl"
+version = "3.1.5"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "et-xmlfile" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/3d/f9/88d94a75de065ea32619465d2f77b29a0469500e99012523b91cc4141cd1/openpyxl-3.1.5.tar.gz", hash = "sha256:cf0e3cf56142039133628b5acffe8ef0c12bc902d2aadd3e0fe5878dc08d1050", size = 186464, upload-time = "2024-06-28T14:03:44.161Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/c0/da/977ded879c29cbd04de313843e76868e6e13408a94ed6b987245dc7c8506/openpyxl-3.1.5-py2.py3-none-any.whl", hash = "sha256:5282c12b107bffeef825f4617dc029afaf41d0ea60823bbb665ef3079dc79de2", size = 250910, upload-time = "2024-06-28T14:03:41.161Z" },
 ]
 
 [[package]]
