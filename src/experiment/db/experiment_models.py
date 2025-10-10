@@ -22,10 +22,15 @@ class Ifcmodels(SQLModel, table=True):
 
 
 class Dataset(SQLModel, table=True):
+    __table_args__ = (
+        CheckConstraint('category BETWEEN 1 AND 4'),
+    )
+
     question: str = Field(sa_column=Column('question', Text, nullable=False))
     ground_truth: str = Field(sa_column=Column('ground_truth', Text, nullable=False))
     ifc_id: int = Field(sa_column=Column('ifc_id', ForeignKey('ifcmodels.id'), nullable=False))
     id: Optional[int] = Field(default=None, sa_column=Column('id', Integer, primary_key=True))
+    category: Optional[int] = Field(default=None, sa_column=Column('category', Integer))
 
     ifc: Optional['Ifcmodels'] = Relationship(back_populates='dataset')
     trace: list['Trace'] = Relationship(back_populates='question')
