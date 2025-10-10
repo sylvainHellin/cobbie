@@ -41,7 +41,7 @@ class IfcAnwerEngineSignature(dspy.Signature):
 
     # Outputs
     answer: str = dspy.OutputField(
-        desc="The complete answer to the user's question. This field MUST be provided in completion mode when python_code is empty."
+        desc="The complete answer to the user's question. This field MUST ALWAYS be provided, even if you are still fetching some informations using the Python interpreter. Just return \"\" if you don't have an answer yet."
     )
 
 

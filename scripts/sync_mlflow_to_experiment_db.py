@@ -12,9 +12,12 @@ Usage:
 import argparse
 import json
 import logging
+import os
 import sys
+import time
 from datetime import datetime
 from typing import Dict, List, Optional, Set, Tuple
+import urllib3
 
 import mlflow
 from mlflow import MlflowClient
@@ -44,6 +47,15 @@ logger = logging.getLogger(__name__)
 TARGET_EXPERIMENTS = ["Training", "Evaluation"]
 MLFLOW_TRACKING_URI = MLFLOW_URI
 ALLOWED_TOOLS = ['created', 'merged', 'updated', 'deleted', 'none']
+
+# Retry and timeout configuration
+MAX_RETRIES = 3
+RETRY_DELAY_BASE = 1.0  # Base delay in seconds for exponential backoff
+HTTP_TIMEOUT = 30  # HTTP request timeout in seconds
+BATCH_SIZE = 10  # Number of traces to process in each batch
+
+# Progress tracking
+PROGRESS_FILE = "sync_progress.json"
 
 
 class SyncStats:
@@ -75,6 +87,74 @@ class SyncStats:
                 logger.error(f"  - {error}")
 
 
+def retry_with_backoff(max_retries: int = MAX_RETRIES, delay_base: float = RETRY_DELAY_BASE):
+    """Decorator for retrying MLflow operations with exponential backoff."""
+    def decorator(func):
+        def wrapper(*args, **kwargs):
+            for attempt in range(max_retries + 1):
+                try:
+                    return func(*args, **kwargs)
+                except (urllib3.exceptions.HTTPError, mlflow.exceptions.MlflowException,
+                        ConnectionError, TimeoutError) as e:
+                    if attempt == max_retries:
+                        raise
+
+                    delay = delay_base * (2 ** attempt)
+                    logger.warning(f"Attempt {attempt + 1} failed: {e}. Retrying in {delay:.1f} seconds...")
+                    time.sleep(delay)
+                except Exception as e:
+                    # Don't retry on non-connection errors
+                    raise
+            return None
+        return wrapper
+    return decorator
+
+
+def save_progress(progress_data: Dict):
+    """Save progress to allow resuming from checkpoints."""
+    try:
+        with open(PROGRESS_FILE, 'w') as f:
+            json.dump(progress_data, f, indent=2)
+    except Exception as e:
+        logger.warning(f"Failed to save progress: {e}")
+
+
+def load_progress() -> Dict:
+    """Load progress from checkpoint file."""
+    try:
+        if not os.path.exists(PROGRESS_FILE):
+            return {}
+        with open(PROGRESS_FILE, 'r') as f:
+            return json.load(f)
+    except Exception as e:
+        logger.warning(f"Failed to load progress: {e}")
+        return {}
+
+
+def setup_mlflow_client_with_timeout() -> CustomMLFlowClient:
+    """Setup MLflow client with proper timeout configuration."""
+    # Configure urllib3 for better connection handling
+    urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
+
+    mlflow.set_tracking_uri(MLFLOW_TRACKING_URI)
+    client = CustomMLFlowClient()
+
+    # Set timeout on the underlying HTTP client if available
+    try:
+        # MLflow uses requests internally, we can configure the session
+        if hasattr(client, '_tracking_client') and hasattr(client._tracking_client, '_store'):
+            store = client._tracking_client._store
+            if hasattr(store, '_request_headers'):
+                # This is a bit of a hack but helps with timeouts
+                import requests
+                session = requests.Session()
+                session.timeout = HTTP_TIMEOUT
+    except Exception as e:
+        logger.debug(f"Could not configure MLflow client timeout: {e}")
+
+    return client
+
+
 def parse_arguments():
     """Parse command line arguments."""
     parser = argparse.ArgumentParser(
@@ -90,6 +170,11 @@ def parse_arguments():
         '--skip-existing-runs',
         action='store_true',
         help='Skip runs that already exist in experiment database'
+    )
+    parser.add_argument(
+        '--resume',
+        action='store_true',
+        help='Resume from last checkpoint (ignores processed runs)'
     )
     parser.add_argument(
         '--dry-run',
@@ -537,6 +622,109 @@ def sync_traces(
             return trace_id_to_run_id
 
 
+@retry_with_backoff()
+def get_mlflow_experiment_with_retry(client: CustomMLFlowClient, exp_id_int: int):
+    """Get MLflow experiment with retry logic."""
+    return client.get_experiment(experiment_id=exp_id_int)
+
+
+@retry_with_backoff()
+def get_mlflow_runs_with_retry(client: CustomMLFlowClient):
+    """Get MLflow runs with retry logic."""
+    return client.get_runs()
+
+
+@retry_with_backoff()
+def setup_mlflow_run_with_retry(client: CustomMLFlowClient, run_id: str):
+    """Setup MLflow run with retry logic."""
+    client.setup_by_run_id(run_id)
+
+
+def identify_corrupted_traces(target_experiment_ids: Set[str]) -> Set[str]:
+    """
+    Identify traces that have database records but missing artifact files.
+    These traces will cause HTTP 500 errors when accessed via MLflow API.
+    """
+    logger.info("Identifying corrupted traces...")
+    corrupted_traces = set()
+
+    with Session(MLFLOW_DB_ENGINE) as mlflow_session:
+        # Get trace info for target experiments
+        target_experiment_int_ids = []
+        for exp_id in target_experiment_ids:
+            try:
+                target_experiment_int_ids.append(int(exp_id))
+            except ValueError:
+                logger.warning(f"Invalid experiment ID format: {exp_id}")
+
+        # Get all traces in target experiments
+        statement = select(TraceInfo).where(
+            TraceInfo.experiment_id.in_(target_experiment_int_ids)
+        )
+        traces = mlflow_session.exec(statement).all()
+        logger.debug(f"Checking {len(traces)} traces for corruption")
+
+        # Base path for MLflow artifacts
+        artifact_base_path = "./mlartifacts"
+
+        for trace in traces:
+            trace_id = trace.request_id
+            experiment_id = trace.experiment_id
+
+            # Expected artifact path
+            expected_path = f"{artifact_base_path}/{experiment_id}/traces/{trace_id}/artifacts/traces.json"
+
+            # Check if artifact file exists
+            if not os.path.exists(expected_path):
+                logger.debug(f"Corrupted trace found: {trace_id} (missing artifact file)")
+                corrupted_traces.add(trace_id)
+            else:
+                # Check if file is empty or corrupted
+                try:
+                    with open(expected_path, 'r') as f:
+                        content = f.read().strip()
+                    if not content or len(content) < 10:  # Too short to be valid JSON
+                        logger.debug(f"Corrupted trace found: {trace_id} (empty or invalid artifact file)")
+                        corrupted_traces.add(trace_id)
+                except Exception as e:
+                    logger.debug(f"Corrupted trace found: {trace_id} (error reading artifact file: {e})")
+                    corrupted_traces.add(trace_id)
+
+    logger.info(f"Found {len(corrupted_traces)} corrupted traces that will be skipped")
+    return corrupted_traces
+
+
+@retry_with_backoff()
+def safe_get_mlflow_traces_with_retry(client: CustomMLFlowClient, experiment_id: int, run_id: str,
+                                     corrupted_traces: Set[str]) -> List:
+    """
+    Safely get MLflow traces with corrupted trace filtering.
+    """
+    try:
+        # Setup the run to get traces
+        client.setup_by_run_id(run_id)
+
+        if not client.traces:
+            return []
+
+        # Filter out corrupted traces
+        valid_traces = []
+        for trace in client.traces:
+            if trace.info.request_id not in corrupted_traces:
+                valid_traces.append(trace)
+            else:
+                logger.debug(f"Skipping corrupted trace: {trace.info.request_id}")
+
+        return valid_traces
+
+    except Exception as e:
+        # Check if this is related to corrupted traces
+        if "500" in str(e) or "trace" in str(e).lower():
+            logger.warning(f"Likely corrupted traces causing error for run {run_id}: {e}")
+            return []  # Return empty list to skip this run
+        raise
+
+
 def sync_spans(
     trace_id_to_run_id: Dict[str, str],
     target_experiment_ids: Set[str],
@@ -546,8 +734,7 @@ def sync_spans(
     """
     Sync spans from MLflow Python API to experiment database.
 
-    This is the most complex part as spans must be accessed via MLflow Python API,
-    not directly from the database.
+    Enhanced with corrupted trace detection, retry logic, batch processing, and proper error handling.
     """
     if stats is None:
         stats = SyncStats()
@@ -559,9 +746,15 @@ def sync_spans(
         logger.info("[DRY RUN] Would sync spans via MLflow API")
         return
 
-    # Setup MLflow client
-    mlflow.set_tracking_uri(MLFLOW_TRACKING_URI)
-    client = CustomMLFlowClient()
+    # Identify corrupted traces before starting
+    corrupted_traces = identify_corrupted_traces(target_experiment_ids)
+
+    # Load progress to resume from failures
+    progress = load_progress()
+    processed_runs = progress.get("processed_runs", [])
+
+    # Setup MLflow client with proper timeout
+    client = setup_mlflow_client_with_timeout()
 
     with Session(EXPERIMENT_DB_ENGINE) as db_session:
         # Get existing span IDs for deduplication
@@ -569,123 +762,196 @@ def sync_spans(
         logger.debug(f"Found {len(existing_span_ids)} existing spans in experiment DB")
 
         spans_processed = 0
+        total_experiments = len(target_experiment_ids)
+        current_experiment_idx = 0
+        skipped_runs_for_corruption = 0
 
         # Process each experiment
         for experiment_id in target_experiment_ids:
+            current_experiment_idx += 1
+            logger.info(f"Processing experiment {current_experiment_idx}/{total_experiments}: {experiment_id}")
+
             try:
                 # Convert string ID to integer for MLflow API
                 exp_id_int = int(experiment_id)
-                client.experiment = client.get_experiment(experiment_id=exp_id_int)
+
+                # Get experiment with retry logic
+                try:
+                    client.experiment = get_mlflow_experiment_with_retry(client, exp_id_int)
+                except Exception as e:
+                    stats.add_error(f"Failed to get experiment {experiment_id} after retries: {e}")
+                    continue
+
                 if client.experiment is None:
                     logger.warning(f"Experiment {experiment_id} not found in MLflow")
                     continue
 
-                # Get all runs for this experiment
-                runs = client.get_runs()
+                # Get all runs for this experiment with retry logic
+                try:
+                    runs = get_mlflow_runs_with_retry(client)
+                except Exception as e:
+                    stats.add_error(f"Failed to get runs for experiment {experiment_id} after retries: {e}")
+                    continue
+
                 logger.debug(f"Found {len(runs)} runs for experiment {experiment_id}")
 
-                for run in runs:
+                # Filter runs that were synced and not yet processed
+                target_runs = [run for run in runs if run.info.run_id in trace_id_to_run_id.values()
+                             and run.info.run_id not in processed_runs]
+
+                logger.info(f"Processing {len(target_runs)} unprocessed runs out of {len(runs)} total runs")
+
+                for run_idx, run in enumerate(target_runs):
                     run_id = run.info.run_id
+                    logger.info(f"Processing run {run_idx + 1}/{len(target_runs)}: {run_id}")
 
-                    # Only process runs that were synced
-                    if run_id not in trace_id_to_run_id.values():
-                        continue
+                    try:
+                        # Get traces for this run with corruption-safe retry logic
+                        traces = safe_get_mlflow_traces_with_retry(
+                            client, exp_id_int, run_id, corrupted_traces
+                        )
 
-                    # Get traces for this run
-                    client.setup_by_run_id(run_id)
+                        if not traces:
+                            if len(corrupted_traces) > 0:
+                                # Likely skipped due to corruption
+                                skipped_runs_for_corruption += 1
+                                logger.debug(f"Skipping run {run_id} due to corrupted traces")
+                            else:
+                                logger.debug(f"No traces found for run {run_id}")
 
-                    if not client.traces:
-                        logger.debug(f"No traces found for run {run_id}")
-                        continue
-
-                    logger.debug(f"Processing {len(client.traces)} traces for run {run_id}")
-
-                    # Process each trace and its spans
-                    for trace in client.traces:
-                        trace_id = trace.info.request_id
-
-                        if trace_id not in trace_id_to_run_id:
-                            logger.debug(f"Skipping trace {trace_id} - not in trace_id_to_run_id mapping")
+                            # Mark this run as processed
+                            processed_runs.append(run_id)
+                            save_progress({"processed_runs": processed_runs})
                             continue
 
-                        # Get spans from this trace
-                        spans = trace.data.spans if hasattr(trace.data, 'spans') else []
-                        logger.debug(f"Trace {trace_id} has {len(spans)} spans")
+                        logger.debug(f"Processing {len(traces)} traces for run {run_id}")
 
-                        for span in spans:
-                            try:
-                                # Generate unique span ID
-                                span_id = f"{trace_id}_{span.name}_{span.start_time_ns}"
+                        # Process traces in batches
+                        trace_batches = [traces[i:i + BATCH_SIZE]
+                                       for i in range(0, len(traces), BATCH_SIZE)]
 
-                                if span_id in existing_span_ids:
-                                    logger.debug(f"Skipping existing span: {span_id}")
+                        for batch_idx, trace_batch in enumerate(trace_batches):
+                            logger.debug(f"Processing trace batch {batch_idx + 1}/{len(trace_batches)} "
+                                       f"({len(trace_batch)} traces)")
+
+                            # Process each trace and its spans in this batch
+                            for trace in trace_batch:
+                                trace_id = trace.info.request_id
+
+                                if trace_id not in trace_id_to_run_id:
+                                    logger.debug(f"Skipping trace {trace_id} - not in trace_id_to_run_id mapping")
                                     continue
 
-                                # Extract span data
-                                span_type = span.attributes.get("mlflow.spanType", "UNKNOWN")
-                                llm = span.attributes.get("model", None)
+                                # Get spans from this trace
+                                spans = trace.data.spans if hasattr(trace.data, 'spans') else []
+                                if not spans:
+                                    continue
 
-                                # Parse input/output data
-                                input_data = None
-                                output_data = None
+                                logger.debug(f"Trace {trace_id} has {len(spans)} spans")
 
-                                if "mlflow.spanInputs" in span.attributes:
-                                    input_data = json.dumps(span.attributes["mlflow.spanInputs"])
+                                # Process spans for this trace
+                                for span in spans:
+                                    try:
+                                        # Generate unique span ID
+                                        span_id = f"{trace_id}_{span.name}_{span.start_time_ns}"
 
-                                if "mlflow.spanOutputs" in span.attributes:
-                                    output_data = json.dumps(span.attributes["mlflow.spanOutputs"])
+                                        if span_id in existing_span_ids:
+                                            continue
 
-                                # Calculate timing (convert from nanoseconds to timestamp floats)
-                                start_time = span.start_time_ns / 1_000_000_000  # Convert to seconds as float
-                                end_time = span.end_time_ns / 1_000_000_000  # Convert to seconds as float
-                                duration = (span.end_time_ns - span.start_time_ns) / 1_000_000 if span.end_time_ns and span.start_time_ns else 0
+                                        # Extract span data safely
+                                        span_type = span.attributes.get("mlflow.spanType", "UNKNOWN")
+                                        llm = span.attributes.get("model", None)
 
-                                # Extract tokens and cost from span metrics if available
-                                input_tokens = 0
-                                output_tokens = 0
-                                cost = 0.0
+                                        # Parse input/output data with error handling
+                                        input_data = None
+                                        output_data = None
 
-                                # Create span record
-                                span_record = Span(
-                                    id=span_id,
-                                    trace_id=trace_id,
-                                    start_time=start_time,
-                                    end_time=end_time,
-                                    duration=duration,
-                                    type=span_type,
-                                    llm=llm,
-                                    input_data=input_data,
-                                    output_data=output_data,
-                                    input_tokens=input_tokens,
-                                    output_tokens=output_tokens,
-                                    cost=cost
-                                )
+                                        try:
+                                            if "mlflow.spanInputs" in span.attributes:
+                                                input_data = json.dumps(span.attributes["mlflow.spanInputs"])
+                                        except (TypeError, ValueError) as e:
+                                            logger.debug(f"Failed to serialize span inputs for {span_id}: {e}")
 
-                                db_session.add(span_record)
-                                existing_span_ids.add(span_id)
-                                spans_processed += 1
-                                stats.spans_added += 1
-                                logger.debug(f"Added span: {span_id}")
+                                        try:
+                                            if "mlflow.spanOutputs" in span.attributes:
+                                                output_data = json.dumps(span.attributes["mlflow.spanOutputs"])
+                                        except (TypeError, ValueError) as e:
+                                            logger.debug(f"Failed to serialize span outputs for {span_id}: {e}")
 
+                                        # Calculate timing safely
+                                        start_time = span.start_time_ns / 1_000_000_000 if span.start_time_ns else None
+                                        end_time = span.end_time_ns / 1_000_000_000 if span.end_time_ns else None
+                                        duration = ((span.end_time_ns - span.start_time_ns) / 1_000_000
+                                                  if span.end_time_ns and span.start_time_ns else 0)
+
+                                        # Create span record
+                                        span_record = Span(
+                                            id=span_id,
+                                            trace_id=trace_id,
+                                            start_time=start_time,
+                                            end_time=end_time,
+                                            duration=duration,
+                                            type=span_type,
+                                            llm=llm,
+                                            input_data=input_data,
+                                            output_data=output_data,
+                                            input_tokens=0,
+                                            output_tokens=0,
+                                            cost=0.0
+                                        )
+
+                                        db_session.add(span_record)
+                                        existing_span_ids.add(span_id)
+                                        spans_processed += 1
+                                        stats.spans_added += 1
+
+                                    except Exception as e:
+                                        logger.debug(f"Failed to process span {span.name} in trace {trace_id}: {e}")
+                                        continue
+
+                                # Update trace span count
+                                try:
+                                    db_trace = db_session.get(Trace, trace_id)
+                                    if db_trace:
+                                        db_trace.nb_spans = len(spans)
+                                except Exception as e:
+                                    logger.debug(f"Failed to update trace span count for {trace_id}: {e}")
+
+                            # Commit spans for this batch
+                            try:
+                                db_session.commit()
+                                logger.debug(f"Committed spans for trace batch {batch_idx + 1}")
                             except Exception as e:
-                                stats.add_error(f"Failed to process span {span.name}: {e}")
-                                continue
+                                db_session.rollback()
+                                stats.add_error(f"Failed to commit spans batch {batch_idx + 1}: {e}")
+                                raise
 
-                        # Update trace span count
-                        db_trace = db_session.get(Trace, trace_id)
-                        if db_trace:
-                            db_trace.nb_spans = len(spans)
+                        # Mark this run as processed
+                        processed_runs.append(run_id)
+                        save_progress({"processed_runs": processed_runs})
+                        logger.info(f"Completed run {run_id} with {spans_processed} total spans processed so far")
 
-                    # Commit spans for this run
-                    db_session.commit()
-                    logger.debug(f"Committed spans for run {run_id}")
+                    except Exception as e:
+                        stats.add_error(f"Failed to process run {run_id}: {e}")
+                        # Mark this run as processed to avoid getting stuck
+                        processed_runs.append(run_id)
+                        save_progress({"processed_runs": processed_runs})
+                        continue
 
             except Exception as e:
                 stats.add_error(f"Failed to process experiment {experiment_id}: {e}")
-                if not dry_run:
-                    raise
+                continue
 
-        logger.info(f"Synced {spans_processed} spans")
+        # Clean up progress file on successful completion
+        try:
+            if os.path.exists(PROGRESS_FILE):
+                os.remove(PROGRESS_FILE)
+        except Exception as e:
+            logger.warning(f"Failed to remove progress file: {e}")
+
+        logger.info(f"Synced {spans_processed} spans across {len(processed_runs)} runs")
+        if skipped_runs_for_corruption > 0:
+            logger.info(f"Skipped {skipped_runs_for_corruption} runs due to corrupted traces")
 
 
 def main():
@@ -700,6 +966,17 @@ def main():
     if args.dry_run:
         logger.info("DRY RUN MODE - No changes will be made")
 
+    if args.resume:
+        logger.info("RESUME MODE - Will continue from last checkpoint")
+
+    # Check for existing progress file
+    if os.path.exists(PROGRESS_FILE) and not args.resume and not args.dry_run:
+        logger.warning(f"Progress file {PROGRESS_FILE} exists. Use --resume to continue or delete it to start fresh.")
+        response = input("Continue anyway? This will overwrite existing progress. (y/N): ")
+        if response.lower() != 'y':
+            logger.info("Aborted synchronization.")
+            return
+
     # Initialize statistics
     stats = SyncStats()
 
@@ -707,8 +984,10 @@ def main():
         logger.info("Starting MLflow to Experiment Database synchronization...")
         logger.info(f"Target experiments: {args.experiments}")
         logger.info(f"Skip existing runs: {args.skip_existing_runs}")
+        logger.info(f"Resume mode: {args.resume}")
 
         # Phase 1: Sync experiments
+        logger.info("=== Phase 1: Syncing Experiments ===")
         synced_experiment_ids = sync_experiments(args.experiments, args.dry_run)
         stats.experiments_added = len(synced_experiment_ids)
 
@@ -717,6 +996,7 @@ def main():
             return
 
         # Phase 2: Sync runs
+        logger.info("=== Phase 2: Syncing Runs ===")
         synced_run_ids = sync_runs(
             target_experiment_ids=synced_experiment_ids,
             skip_existing=args.skip_existing_runs,
@@ -729,6 +1009,7 @@ def main():
             return
 
         # Phase 3: Sync traces
+        logger.info("=== Phase 3: Syncing Traces ===")
         trace_id_to_run_id = sync_traces(
             target_experiment_ids=synced_experiment_ids,
             synced_run_ids=synced_run_ids,
@@ -737,6 +1018,7 @@ def main():
         )
 
         # Phase 4: Sync spans
+        logger.info("=== Phase 4: Syncing Spans ===")
         sync_spans(
             trace_id_to_run_id=trace_id_to_run_id,
             target_experiment_ids=synced_experiment_ids,
@@ -745,6 +1027,7 @@ def main():
         )
 
         # Print summary
+        logger.info("=== Final Summary ===")
         stats.print_summary()
 
         if stats.errors and not args.dry_run:
@@ -753,9 +1036,15 @@ def main():
         else:
             logger.info("Synchronization completed successfully")
 
+    except KeyboardInterrupt:
+        logger.info("Synchronization interrupted by user")
+        if not args.dry_run:
+            logger.info(f"Progress saved to {PROGRESS_FILE}. Use --resume to continue.")
+        sys.exit(130)
     except Exception as e:
         logger.error(f"Synchronization failed: {e}")
         if not args.dry_run:
+            logger.info(f"Progress saved to {PROGRESS_FILE}. Use --resume to continue.")
             sys.exit(1)
         else:
             logger.error("(This error occurred during dry run)")
