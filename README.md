@@ -328,7 +328,7 @@ src/config/
 ## 📁 Project Structure
 
 ```
-ifcAnswerEngineV3/
+bim-qas/
 ├── src/
 │   ├── config/                    # Configuration system
 │   │   ├── __init__.py
@@ -385,8 +385,8 @@ ifcAnswerEngineV3/
 
 1. Clone the repository:
    ```bash
-   git clone https://github.com/sylvainhellin/ifcAnswerEngineV3.git
-   cd ifcAnswerEngineV3
+   git clone https://github.com/sylvainhellin/bim-qas.git
+   cd bim-qas
    ```
 
 2. Create virtual environment and install dependencies:

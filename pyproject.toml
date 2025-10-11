@@ -3,7 +3,7 @@ requires = ["setuptools>=61.0", "wheel"]
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "ifcanswerenginev3"
+name = "bim-qas"
 version = "0.1.0"
 description = "An Engine that can answer any question related to a given BIM model in .ifc format."
 readme = "README.md"

@@ -18,7 +18,7 @@ The IFC Answer Engine API is a FastAPI-based web service that provides intellige
 
 ```bash
 # Clone the repository and navigate to the project root
-cd ifcAnswerEngineV3
+cd bim-qas
 
 # Install dependencies
 pip install -e .
@@ -371,7 +371,7 @@ The API is configured with permissive CORS settings for development:
 ```python
 allow_origins=["*"]      # Configure specific domains in production
 allow_credentials=True
-allow_methods=["*"] 
+allow_methods=["*"]
 allow_headers=["*"]
 ```
 
@@ -489,11 +489,11 @@ export class IFCAnswerEngineAPI {
   async getModels(): Promise<BIMModel[]> {
     try {
       const response = await fetch(`${this.baseURL}/models`);
-      
+
       if (!response.ok) {
         throw new Error(`HTTP ${response.status}: ${response.statusText}`);
       }
-      
+
       const data: ModelsResponse = await response.json();
       return data.models;
     } catch (error) {
@@ -508,7 +508,7 @@ export class IFCAnswerEngineAPI {
     if (!question.trim()) {
       throw new Error('Question cannot be empty');
     }
-    
+
     if (modelId <= 0) {
       throw new Error('Model ID must be a positive integer');
     }
@@ -557,7 +557,7 @@ export class IFCAnswerEngineAPI {
   async downloadIFCFile(modelId: number, onProgress?: (progress: number) => void): Promise<Blob> {
     try {
       const response = await fetch(`${this.baseURL}/models/${modelId}/ifc`);
-      
+
       if (!response.ok) {
         if (response.status === 404) {
           throw new Error(`Model with ID ${modelId} not found or file unavailable`);
@@ -568,7 +568,7 @@ export class IFCAnswerEngineAPI {
       // Get file size for progress tracking
       const contentLength = response.headers.get('Content-Length');
       const total = contentLength ? parseInt(contentLength, 10) : 0;
-      
+
       if (!response.body) {
         throw new Error('Response body is empty');
       }
@@ -579,12 +579,12 @@ export class IFCAnswerEngineAPI {
 
       while (true) {
         const { done, value } = await reader.read();
-        
+
         if (done) break;
-        
+
         chunks.push(value);
         loaded += value.length;
-        
+
         if (onProgress && total > 0) {
           onProgress((loaded / total) * 100);
         }
@@ -665,10 +665,10 @@ export function useQuestionSubmission() {
       setIsSubmitting(true);
       setError(null);
       setResult(null);
-      
+
       const response = await api.askQuestion(question, modelId);
       setResult(response);
-      
+
       // Additional validation for business logic
       if (response.status === 'error') {
         setError(response.error_msg || 'Unknown error occurred');
@@ -710,7 +710,7 @@ export function useFileDownload() {
       setProgress(0);
 
       const blob = await api.downloadIFCFile(modelId, setProgress);
-      
+
       // Trigger download
       const url = URL.createObjectURL(blob);
       const link = document.createElement('a');
@@ -720,7 +720,7 @@ export function useFileDownload() {
       link.click();
       document.body.removeChild(link);
       URL.revokeObjectURL(url);
-      
+
       setProgress(100);
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Download failed';
@@ -750,27 +750,27 @@ export class APIErrorHandler {
       if (error.message.includes('fetch')) {
         return 'Network connection failed. Please check your internet connection.';
       }
-      
+
       // Timeout errors
       if (error.message.includes('timeout')) {
         return 'Request timed out. The server may be busy, please try again.';
       }
-      
+
       // Validation errors
       if (error.message.includes('validation')) {
         return 'Invalid input data. Please check your request and try again.';
       }
-      
+
       return error.message;
     }
-    
+
     return 'An unexpected error occurred. Please try again.';
   }
 
   static isRetryableError(error: unknown): boolean {
     if (error instanceof Error) {
       // Retry on network errors and server errors
-      return error.message.includes('Network') || 
+      return error.message.includes('Network') ||
              error.message.includes('Server error') ||
              error.message.includes('timeout');
     }
@@ -791,12 +791,12 @@ export async function withRetry<T>(
       if (attempt === maxRetries || !APIErrorHandler.isRetryableError(error)) {
         throw error;
       }
-      
+
       // Exponential backoff
       await new Promise(resolve => setTimeout(resolve, delay * Math.pow(2, attempt - 1)));
     }
   }
-  
+
   throw new Error('Max retries exceeded');
 }
 ```
@@ -850,7 +850,7 @@ export function QuestionForm() {
       <button type="submit" disabled={isSubmitting || !question.trim() || !modelId}>
         {isSubmitting ? 'Processing...' : 'Ask Question'}
       </button>
-      
+
       {error && <div className="error">{error}</div>}
       {result && result.status === 'success' && (
         <div className="answer">

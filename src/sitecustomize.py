@@ -1,5 +1,5 @@
 """
-Site customization for the ifcAnswerEngineV3 project.
+Site customization for the bim-qas project.
 This file is automatically imported by Python and sets up the environment.
 """
 
@@ -61,4 +61,3 @@ def setup_project_environment():
 
 # Execute setup
 setup_project_environment()
-
