@@ -1,26 +1,16 @@
 import ifcopenshell
 import ifcopenshell.util.element
-import ifcopenshell.util.shape
-import ifcopenshell.util.placement
-import ifcopenshell.util.geolocation
-import ifcopenshell.util.system
-import ifcopenshell.geom
-import math
-import json
-from typing import *
+from typing import Dict, Any
 
 
 def get_door_width_by_guid(model_path: str, guid: str) -> Dict[str, Any]:
     """
-    Retrieve door width by GlobalId from an IFC model.
+    Retrieve door width by GlobalId from IFC models with priority-based source selection.
     
-    This function searches for width-related properties across multiple sources:
-    - OverallWidth from direct attributes (highest confidence)
-    - Width from PSet_Revit_Type_Dimensions (medium confidence)
-    - Other width-related properties from various property sets (low confidence)
-    
-    Note: This function assumes the IFC model was exported from Revit and may contain
-    Revit-specific property sets like PSet_Revit_Type_Dimensions.
+    This function searches for width-related properties across multiple sources in priority order:
+    1. OverallWidth from direct attributes (highest confidence)
+    2. Width from PSet_Revit_Type_Dimensions (medium confidence)
+    3. Other width-related properties from various property sets (low confidence)
     
     Args:
         model_path (str): Path to the IFC model file
@@ -32,119 +22,96 @@ def get_door_width_by_guid(model_path: str, guid: str) -> Dict[str, Any]:
             - source (str): Source property name ("none" if not found)
             - confidence (str): "high", "medium", "low", or "none"
             - all_sources (dict): All found width sources for verification
+            
+    Assumptions:
+        - The IFC model was exported from Revit and may contain Revit-specific property sets like PSet_Revit_Type_Dimensions
+        - Width values are stored in meters (SI units)
+        - Multiple property sources may contain width information, requiring priority-based selection
     """
-    # Initialize result structure
+    
+    # Initialize result dictionary
     result = {
-        "width": 0.0,
-        "source": "none",
-        "confidence": "none",
-        "all_sources": {}
+        'width': 0.0,
+        'source': 'none',
+        'confidence': 'none',
+        'all_sources': {}
     }
     
     try:
-        # Load the IFC model
+        # Open the IFC model
         model = ifcopenshell.open(model_path)
         
-        # Find the element by GUID
-        element = model.by_guid(guid)
+        # Find the door by GlobalId
+        door = model.by_guid(guid)
         
-        # Verify it's a door
-        if not element or not element.is_a('IfcDoor'):
+        # Check if the found element is actually a door
+        if not door or door.is_a() != 'IfcDoor':
             return result
             
-        # Collect all width sources
-        width_sources = {}
+        # Get all property sets for the door
+        psets = ifcopenshell.util.element.get_psets(door)
         
-        # 1. Check direct attributes (highest confidence)
-        if hasattr(element, 'OverallWidth') and element.OverallWidth is not None:
-            overall_width = element.OverallWidth
-            try:
-                width_value = float(overall_width)
-                width_sources["OverallWidth"] = {
-                    "value": width_value,
-                    "confidence": "high",
-                    "unit": "meters"
-                }
-            except (ValueError, TypeError):
-                pass  # Skip if cannot convert to float
+        # Dictionary to store all found width sources
+        all_width_sources = {}
         
-        # 2. Check property sets
-        if hasattr(element, 'IsDefinedBy') and element.IsDefinedBy:
-            for rel in element.IsDefinedBy:
-                if rel.is_a('IfcRelDefinesByProperties'):
-                    pset = rel.RelatingPropertyDefinition
-                    if hasattr(pset, 'HasProperties') and pset.HasProperties:
-                        pset_name = getattr(pset, 'Name', 'Unknown')
-                        
-                        for prop in pset.HasProperties:
-                            if hasattr(prop, 'Name') and hasattr(prop, 'NominalValue'):
-                                prop_name = prop.Name
-                                
-                                # Check for width-related properties
-                                if prop_name.lower() in ['width', 'overallwidth'] or 'width' in prop_name.lower():
-                                    # Extract the actual value from NominalValue
-                                    try:
-                                        # Get the wrapped value - this is the key fix
-                                        if hasattr(prop.NominalValue, 'wrappedValue'):
-                                            prop_value = prop.NominalValue.wrappedValue
-                                        else:
-                                            prop_value = prop.NominalValue
-                                        
-                                        # Check if value is numeric
-                                        if isinstance(prop_value, (int, float)):
-                                            width_value = float(prop_value)
-                                            
-                                            # Determine confidence based on property set
-                                            confidence = "low"
-                                            if pset_name == 'PSet_Revit_Type_Dimensions':
-                                                confidence = "medium"
-                                            elif 'dimension' in pset_name.lower():
-                                                confidence = "medium"
-                                            elif pset_name == 'Pset_DoorCommon':
-                                                confidence = "medium"
-                                            
-                                            # Check if value might be in millimeters (convert if > 10)
-                                            unit = "meters"
-                                            if width_value > 10:  # Likely in mm
-                                                width_value = width_value / 1000.0  # Convert to meters
-                                                unit = "millimeters (converted to meters)"
-                                            
-                                            width_sources[f"{pset_name}.{prop_name}"] = {
-                                                "value": width_value,
-                                                "confidence": confidence,
-                                                "unit": unit
-                                            }
-                                    except (ValueError, TypeError, AttributeError):
-                                        # Skip if cannot convert to float or access wrappedValue
-                                        continue
-        
-        # Store all sources for verification
-        result["all_sources"] = width_sources
-        
-        # Select the best width source based on confidence hierarchy
-        if width_sources:
-            # Priority: high > medium > low
-            best_source = None
-            best_confidence = "none"
+        # Priority 1: OverallWidth from direct attributes (highest confidence)
+        overall_width = getattr(door, 'OverallWidth', None)
+        if overall_width is not None:
+            all_width_sources['OverallWidth'] = overall_width
             
-            for source_name, source_data in width_sources.items():
-                confidence = source_data["confidence"]
-                
-                # Update if this source has higher confidence
-                if (best_confidence == "none" or
-                    (confidence == "high" and best_confidence != "high") or
-                    (confidence == "medium" and best_confidence in ["none", "low"]) or
-                    (confidence == "low" and best_confidence == "none")):
-                    best_source = source_name
-                    best_confidence = confidence
-            
-            if best_source:
-                result["width"] = width_sources[best_source]["value"]
-                result["source"] = best_source
-                result["confidence"] = best_confidence
+        # Priority 2: Width from PSet_Revit_Type_Dimensions (medium confidence)
+        if 'PSet_Revit_Type_Dimensions' in psets and 'Width' in psets['PSet_Revit_Type_Dimensions']:
+            all_width_sources['PSet_Revit_Type_Dimensions.Width'] = psets['PSet_Revit_Type_Dimensions']['Width']
         
-        return result
+        # Priority 3: Other width-related properties (low confidence)
+        for pset_name, pset_data in psets.items():
+            for prop_name, prop_value in pset_data.items():
+                # Skip properties we already processed
+                if (pset_name == 'PSet_Revit_Type_Dimensions' and prop_name == 'Width') or prop_name == 'OverallWidth':
+                    continue
+                    
+                # Look for width-related properties (case insensitive)
+                if 'width' in prop_name.lower():
+                    source_name = f'{pset_name}.{prop_name}'
+                    # Only add if it's a numeric value and seems like a main width
+                    if isinstance(prop_value, (int, float)) and prop_value > 0:
+                        # Prioritize properties that seem to be main door width
+                        if any(keyword in prop_name.lower() for keyword in ['width', 'opening', 'unit']):
+                            all_width_sources[source_name] = prop_value
         
-    except Exception:
-        # Handle errors gracefully by returning default result
-        return result
+        # Store all found sources
+        result['all_sources'] = all_width_sources
+        
+        # Select the best width source based on priority
+        selected_width = None
+        selected_source = None
+        selected_confidence = 'none'
+        
+        # Check OverallWidth first (highest priority)
+        if 'OverallWidth' in all_width_sources:
+            selected_width = all_width_sources['OverallWidth']
+            selected_source = 'OverallWidth'
+            selected_confidence = 'high'
+        # Then check PSet_Revit_Type_Dimensions.Width
+        elif 'PSet_Revit_Type_Dimensions.Width' in all_width_sources:
+            selected_width = all_width_sources['PSet_Revit_Type_Dimensions.Width']
+            selected_source = 'PSet_Revit_Type_Dimensions.Width'
+            selected_confidence = 'medium'
+        # Otherwise, use the first available width source (low confidence)
+        elif all_width_sources:
+            # Get the first available source
+            selected_source = list(all_width_sources.keys())[0]
+            selected_width = all_width_sources[selected_source]
+            selected_confidence = 'low'
+        
+        # Use width value directly (assumed to be in meters)
+        if selected_width is not None:
+            result['width'] = float(selected_width)
+            result['source'] = selected_source
+            result['confidence'] = selected_confidence
+        
+    except Exception as e:
+        # If any error occurs, return the default result with error information
+        result['all_sources'] = {'error': str(e)}
+    
+    return result
