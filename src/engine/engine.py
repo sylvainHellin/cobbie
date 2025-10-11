@@ -88,7 +88,9 @@ class IfcAnswerEngine(dspy.Module):
 
         self.engine = CodeAct(
             signature=IfcAnwerEngineSignature,
-            tools=[fn for _, fn in self.additional_authorized_functions.items()],
+            tools=[fn for _, fn in self.additional_authorized_functions.items()].sort(
+                key=lambda func: func.__name__
+            ),
             max_iters=self.max_iters,
         )
         self.logger.info("IfcAnswerEngine initialized.")
