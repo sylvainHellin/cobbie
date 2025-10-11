@@ -5,6 +5,7 @@ Secure Python interpreter with comprehensive authorization and read-only filesys
 import io
 import math
 import sys
+import traceback
 from typing import Any, Callable, Dict, Optional
 
 import tiktoken
@@ -181,7 +182,7 @@ class PythonInterpreter:
                 logs = ""
 
         except Exception as e:
-            logs = f"Execution error: {str(e)}"
+            logs = f"Execution error:\n{traceback.format_exc()}"
             self.logger.error(f"Execution error: {e}")
 
         finally:
