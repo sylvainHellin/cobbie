@@ -119,6 +119,8 @@ class IfcAnswerEngine(dspy.Module):
                 self.output.result.answer = getattr(prediction, "answer", None)
                 if self.output.result.answer is not None:
                     self.output.status = "success"
+                else:
+                    self.output.error_msg = "The agent could not return an answer."
 
             except Exception as e:
                 self.output.error_msg = (
