@@ -16,12 +16,12 @@ import mlflow
 import mlflow.dspy
 from tqdm import tqdm
 
-from src.config.agents import TrainingPipelineConfig
+from src.config.agents import AGENT_CONFIGS
 from src.config.llm import LLM
-from src.engine import TrainingModule
 from src.engine.schemas import OutputsCollection, QA_Pair
 from src.engine.util import get_logger
 from src.experiment.datasets import load_train_dev_split
+from src.experiment.training.training_pipeline import TrainingPipeline
 
 
 def setup_logger(name: str = "TrainingBatch"):
@@ -62,9 +62,20 @@ def process_single_batch(batch: List[QA_Pair], run_id: str, experiment_name: str
     with mlflow.start_run(run_id=run_id) as run_context:
         logger.info(f"Processing batch {batch_num}/{total_batches} with {len(batch)} questions")
 
-        training = TrainingModule()
-        outputs = OutputsCollection()
+        # Create training configuration
+        training_config = AGENT_CONFIGS.training_pipeline
+        training_config.llm = lm_config
 
+        # Create training pipeline
+        experiment = mlflow.get_experiment_by_name(experiment_name)
+        experiment_id = str(experiment.experiment_id) if experiment else "0"
+        training_pipeline = TrainingPipeline(
+            run_id=run_id,
+            experiment_id=experiment_id,
+            config=training_config,
+        )
+
+        outputs = OutputsCollection()
         batch_start_time = datetime.now()
 
         for qa_pair in batch:
@@ -75,39 +86,48 @@ def process_single_batch(batch: List[QA_Pair], run_id: str, experiment_name: str
                 question_start = datetime.now()
 
                 try:
-                    # Process individual question
-                    output = training(qa_pair=qa_pair)
-                    status = "OK" if output.status == "success" else "ERROR"
+                    # Process individual question using the same approach as single-process mode
+                    from datetime import datetime as dt
+                    start = dt.now()
+
+                    # Use the training module directly like in the original training script
+                    from src.engine import TrainingModule
+                    training = TrainingModule()
+                    module_output = training(qa_pair=qa_pair)
+
+                    status = "OK" if module_output.status == "success" else "ERROR"
 
                     # Log detailed metrics and traces
                     tools = "none"
-                    if output.tools_metrics.nb_tools_updated > 0:
+                    if module_output.tools_metrics.nb_tools_updated > 0:
                         mlflow.update_current_trace(tags={"tool merged": "true"})
                         tools = "updated"
-                    elif output.tools_metrics.nb_tools_created > 0:
+                    elif module_output.tools_metrics.nb_tools_created > 0:
                         mlflow.update_current_trace(tags={"tool created": "true"})
                         tools = "created"
-                    elif output.tools_metrics.nb_tools_merged > 0:
+                    elif module_output.tools_metrics.nb_tools_merged > 0:
                         mlflow.update_current_trace(tags={"tools merged": "true"})
                         tools = "merged"
 
                     mlflow.update_current_trace(
                         tags={
-                            "input tokens": str(output.lm_metrics.input_tokens),
-                            "output tokens": str(output.lm_metrics.output_tokens),
-                            "accuracy": str(output.result.similarity_score),
+                            "input tokens": str(module_output.lm_metrics.input_tokens),
+                            "output tokens": str(module_output.lm_metrics.output_tokens),
+                            "accuracy": str(module_output.result.similarity_score),
                             "tools": tools,
                             "status": status,
                         }
                     )
 
-                    outputs.add(output=output, update=True)
+                    outputs.add(output=module_output, update=True)
 
                     question_duration = (datetime.now() - question_start).total_seconds()
                     logger.info(f"Processed question_id {qa_pair.id} in {question_duration:.2f}s - Status: {status}")
 
                 except Exception as e:
                     logger.error(f"Failed to process question_id {qa_pair.id}: {e}")
+                    import traceback
+                    logger.error(traceback.format_exc())
                     mlflow.update_current_trace(
                         tags={
                             "status": "ERROR",

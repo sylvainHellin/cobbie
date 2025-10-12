@@ -64,6 +64,7 @@ class TrainingRunner:
         log_level: Literal["DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"] = "INFO",
         batch_size: Optional[int] = None,
         force_batches: bool = False,
+        disable_batches: bool = False,
         continue_run: bool = False,
     ):
         self.num_samples = num_samples
@@ -76,6 +77,7 @@ class TrainingRunner:
         self.evaluate = evaluate
         self.batch_size = batch_size
         self.force_batches = force_batches
+        self.disable_batches = disable_batches
         self.continue_run = continue_run
 
         # Setup logger
@@ -95,17 +97,30 @@ class TrainingRunner:
             self.num_samples = len(self.trainset_full)
 
         # Prepare actual datasets
-        self.trainset_full = self.trainset_full[:self.num_samples]
+        self.trainset_full = self.trainset_full[: self.num_samples]
         self.devset = self.devset_full  # Use full devset for evaluation
 
         # Setup batch processing
-        self.batch_size = self.batch_size or (30 if self._should_use_batches() else None)
+        should_use_batches = self._should_use_batches()
 
-        self.logger.info(f"Using {len(self.trainset_full)} training samples and {len(self.devset)} dev samples")
-        if self.batch_size:
-            self.logger.info(f"Batch processing enabled with batch size {self.batch_size}")
+        if self.disable_batches:
+            self.batch_size = None
+            self.logger.info("Batch processing explicitly disabled via --disable-batches flag")
+        elif self.force_batches:
+            self.batch_size = self.batch_size or 30
+            self.logger.info("Batch processing forced via --force-batches flag")
+        elif self.batch_size:
+            self.logger.info(f"Batch processing enabled with explicit batch size {self.batch_size}")
+        elif should_use_batches:
+            self.batch_size = 30
+            self.logger.info(f"Auto-enabled batch processing for large dataset ({len(self.trainset_full)} > 100 samples) with batch size {self.batch_size}")
         else:
-            self.logger.info("Single-process mode enabled")
+            self.batch_size = None
+            self.logger.info(f"Single-process mode enabled (dataset size {len(self.trainset_full)} <= 100 samples)")
+
+        self.logger.info(
+            f"Using {len(self.trainset_full)} training samples and {len(self.devset)} dev samples"
+        )
 
         # Setup MLflow
         mlflow.set_tracking_uri("http://127.0.0.1:5000")
@@ -125,7 +140,7 @@ class TrainingRunner:
                 experiment_names=[self.experiment_name],
                 order_by=["start_time DESC"],
                 max_results=1,
-                output_format="list"
+                output_format="list",
             )
 
             if not runs:
@@ -141,7 +156,7 @@ class TrainingRunner:
                 "run_id": run_id,
                 "last_question_id": last_question_id,
                 "status": latest_run.info.status,
-                "start_time": latest_run.info.start_time
+                "start_time": latest_run.info.start_time,
             }
 
         except Exception as e:
@@ -156,7 +171,7 @@ class TrainingRunner:
                 filter_string="name LIKE 'train_question_id_%'",
                 order_by=["timestamp DESC"],
                 max_results=1000,
-                return_type="list"
+                return_type="list",
             )
 
             question_ids = []
@@ -190,7 +205,9 @@ class TrainingRunner:
                     self.logger.info(f"Resuming from question_id {last_question_id}")
                     trainset = self._prepare_resume_trainset(last_question_id)
                 else:
-                    self.logger.info("No previous questions found, starting from beginning")
+                    self.logger.info(
+                        "No previous questions found, starting from beginning"
+                    )
                     trainset = self.trainset_full
 
                 return run_id, trainset, True
@@ -208,7 +225,9 @@ class TrainingRunner:
                 break
 
         if resume_from_index is None:
-            self.logger.warning(f"Question ID {last_question_id} not found in training set, starting from beginning")
+            self.logger.warning(
+                f"Question ID {last_question_id} not found in training set, starting from beginning"
+            )
             return self.trainset_full
 
         if resume_from_index >= len(self.trainset_full):
@@ -216,28 +235,47 @@ class TrainingRunner:
             return []
 
         remaining_questions = self.trainset_full[resume_from_index:]
-        self.logger.info(f"Resuming with {len(remaining_questions)} remaining questions")
+        self.logger.info(
+            f"Resuming with {len(remaining_questions)} remaining questions"
+        )
         return remaining_questions
 
-    def _process_single_batch(self, batch_num: int, start_index: int,
-                             total_batches: int, attempt: int) -> bool:
+    def _process_single_batch(
+        self, batch_num: int, start_index: int, total_batches: int, attempt: int
+    ) -> bool:
         """Process a single batch in a separate Python process."""
 
         cmd = [
-            "uv", "run", "python", "scripts/run_training_batch.py",
-            "--run-id", self.run_id,
-            "--experiment-name", self.experiment_name,
-            "--model", self.model_name,
-            "--provider", self.provider_name,
-            "--start-index", str(start_index),
-            "--batch-size", str(self.batch_size),
-            "--total-samples", str(len(self.trainset)),
-            "--batch-num", str(batch_num + 1),
-            "--total-batches", str(total_batches),
+            "uv",
+            "run",
+            "python",
+            "scripts/run_training_batch.py",
+            "--run-id",
+            self.run_id,
+            "--experiment-name",
+            self.experiment_name,
+            "--model",
+            self.model_name,
+            "--provider",
+            self.provider_name,
+            "--start-index",
+            str(start_index),
+            "--batch-size",
+            str(self.batch_size),
+            "--total-samples",
+            str(len(self.trainset)),
+            "--batch-num",
+            str(batch_num + 1),
+            "--total-batches",
+            str(total_batches),
         ]
 
+        self.logger.debug(f"Batch command: {' '.join(cmd)}")
+
         try:
-            self.logger.info(f"Starting batch {batch_num + 1}/{total_batches} (attempt {attempt})")
+            self.logger.info(
+                f"Starting batch {batch_num + 1}/{total_batches} (attempt {attempt}) - processing questions {start_index} to {min(start_index + self.batch_size, len(self.trainset))}"
+            )
             result = subprocess.run(
                 cmd,
                 capture_output=True,
@@ -246,26 +284,55 @@ class TrainingRunner:
             )
 
             if result.returncode == 0:
-                self.logger.info(f"Batch {batch_num + 1} completed successfully")
+                self.logger.info(f"Batch {batch_num + 1}/{total_batches} completed successfully")
+                # Log any stdout output for debugging
+                if result.stdout.strip():
+                    self.logger.debug(f"Batch {batch_num + 1} stdout: {result.stdout.strip()}")
                 return True
             else:
-                self.logger.error(f"Batch {batch_num + 1} failed with return code {result.returncode}")
-                self.logger.error(f"Stdout: {result.stdout}")
-                self.logger.error(f"Stderr: {result.stderr}")
+                self.logger.error(
+                    f"Batch {batch_num + 1}/{total_batches} failed with return code {result.returncode}"
+                )
+                # Enhanced error reporting
+                self.logger.error(f"Command executed: {' '.join(cmd)}")
+                if result.stdout.strip():
+                    self.logger.error(f"Batch {batch_num + 1} stdout:\n{result.stdout}")
+                if result.stderr.strip():
+                    self.logger.error(f"Batch {batch_num + 1} stderr:\n{result.stderr}")
+                else:
+                    self.logger.error(f"Batch {batch_num + 1} produced no stderr output")
+
+                # Try to identify common issues
+                error_output = (result.stdout + result.stderr).lower()
+                if "module not found" in error_output or "import" in error_output:
+                    self.logger.error("❌ Possible import/module dependency issue - check if all required modules are available")
+                elif "mlflow" in error_output:
+                    self.logger.error("❌ MLflow connection issue - ensure MLflow server is running on http://127.0.0.1:5000")
+                elif "timeout" in error_output:
+                    self.logger.error("❌ Timeout issue - consider reducing batch size or checking system resources")
+                elif "memory" in error_output or "out of memory" in error_output:
+                    self.logger.error("❌ Memory issue - consider reducing batch size")
+                else:
+                    self.logger.error("❌ Unknown error - see above output for details")
+
                 return False
 
         except subprocess.TimeoutExpired:
-            self.logger.error(f"Batch {batch_num + 1} timed out after 1 hour")
+            self.logger.error(f"Batch {batch_num + 1}/{total_batches} timed out after 1 hour")
+            self.logger.error("Consider reducing batch size or checking system resources")
             return False
         except Exception as e:
-            self.logger.error(f"Failed to run batch {batch_num + 1}: {e}")
+            self.logger.error(f"Failed to run batch {batch_num + 1}/{total_batches}: {e}")
+            self.logger.error(f"Exception type: {type(e).__name__}")
             return False
 
     def _run_training_batches(self) -> Dict:
-        """Run training in batches with process isolation."""
+        """Run training in batches with process isolation and fallback to single-process mode."""
         total_batches = (len(self.trainset) + self.batch_size - 1) // self.batch_size
 
-        self.logger.info(f"Starting batched training: {total_batches} batches, {len(self.trainset)} total questions")
+        self.logger.info(
+            f"Starting batched training: {total_batches} batches, {len(self.trainset)} total questions"
+        )
 
         successful_batches = 0
         failed_batches = 0
@@ -279,22 +346,51 @@ class TrainingRunner:
                     batch_num=batch_num,
                     start_index=start_index,
                     total_batches=total_batches,
-                    attempt=attempt + 1
+                    attempt=attempt + 1,
                 )
 
                 if success:
                     successful_batches += 1
                     break
                 elif attempt < max_retries - 1:
-                    self.logger.warning(f"Batch {batch_num + 1} failed, restarting Python process")
+                    self.logger.warning(
+                        f"Batch {batch_num + 1}/{total_batches} failed, restarting Python process"
+                    )
                     time.sleep(10)
                 else:
                     failed_batches += 1
-                    self.logger.error(f"Batch {batch_num + 1} failed after {max_retries} attempts")
+                    self.logger.error(
+                        f"Batch {batch_num + 1}/{total_batches} failed after {max_retries} attempts"
+                    )
+
+        # Check if batch processing failed too often and consider fallback
+        failure_rate = failed_batches / total_batches if total_batches > 0 else 0
+
+        if failure_rate > 0.5:  # If more than 50% of batches failed
+            self.logger.error(f"🚨 Batch processing failed for {failed_batches}/{total_batches} batches ({failure_rate:.1%} failure rate)")
+            self.logger.error("💡 Attempting fallback to single-process mode...")
+
+            # Create dummy configs for fallback
+            llm_config = self._create_llm_config()
+            training_config = self._create_training_config(llm_config)
+
+            try:
+                self.logger.info("🔄 Switching to single-process training mode")
+                return self._run_training_single_process(llm_config, training_config)
+            except Exception as e:
+                self.logger.error(f"❌ Fallback to single-process mode also failed: {e}")
+                # Still return batch metrics but indicate failure
+                return self._compile_final_metrics(successful_batches, total_batches)
+
+        if failed_batches > 0:
+            self.logger.warning(f"⚠️  Batch processing completed with {failed_batches} failed batches")
+            self.logger.warning("💡 Consider using --disable-batches flag if issues persist")
 
         return self._compile_final_metrics(successful_batches, total_batches)
 
-    def _compile_final_metrics(self, successful_batches: int, total_batches: int) -> Dict:
+    def _compile_final_metrics(
+        self, successful_batches: int, total_batches: int
+    ) -> Dict:
         """Compile final metrics after batch processing."""
         # For batch processing, we need to get metrics from MLflow
         # This is a simplified version - in practice you'd aggregate metrics from all batches
@@ -303,7 +399,9 @@ class TrainingRunner:
             "total_batches": total_batches,
             "successful_batches": successful_batches,
             "failed_batches": total_batches - successful_batches,
-            "batch_success_rate": successful_batches / total_batches if total_batches > 0 else 0,
+            "batch_success_rate": successful_batches / total_batches
+            if total_batches > 0
+            else 0,
             "model_name": self.model_name,
             "provider_name": self.provider_name,
             "experiment_name": self.experiment_name,
@@ -312,7 +410,9 @@ class TrainingRunner:
 
     def _create_llm_config(self) -> LLM:
         """Create LLM configuration for the specified model and provider."""
-        self.logger.info(f"Creating LLM config: {self.model_name} from {self.provider_name}")
+        self.logger.info(
+            f"Creating LLM config: {self.model_name} from {self.provider_name}"
+        )
         return LLM(
             model_name=self.model_name,
             provider_name=self.provider_name,
@@ -352,10 +452,7 @@ class TrainingRunner:
         self.logger.info(f"Logged parameters: {params}")
 
     def _calculate_and_log_metrics(
-        self,
-        outputs: OutputsCollection,
-        llm_config: LLM,
-        training_time: float
+        self, outputs: OutputsCollection, llm_config: LLM, training_time: float
     ) -> Dict:
         """Calculate and log training metrics."""
         # Basic metrics
@@ -372,7 +469,9 @@ class TrainingRunner:
         tokens_per_second = total_tokens / training_time if training_time > 0 else 0
 
         # Similarity threshold metrics (0.85)
-        similarity_metrics = self._calculate_similarity_above_threshold(outputs, threshold=0.85)
+        similarity_metrics = self._calculate_similarity_above_threshold(
+            outputs, threshold=0.85
+        )
 
         # Tool metrics
         tools_created = outputs.tools_metrics.nb_tools_created
@@ -385,9 +484,14 @@ class TrainingRunner:
         input_cost = 0.0
         output_cost = 0.0
 
-        if llm_config.cost_input_token is not None and llm_config.cost_output_token is not None:
+        if (
+            llm_config.cost_input_token is not None
+            and llm_config.cost_output_token is not None
+        ):
             input_cost = (total_input_tokens / 1_000_000) * llm_config.cost_input_token
-            output_cost = (total_output_tokens / 1_000_000) * llm_config.cost_output_token
+            output_cost = (
+                total_output_tokens / 1_000_000
+            ) * llm_config.cost_output_token
             total_cost = input_cost + output_cost
 
         # Log metrics to MLflow
@@ -398,12 +502,18 @@ class TrainingRunner:
             "total_tokens": total_tokens,
             "successful_examples": successful_examples,
             "failed_examples": failed_examples,
-            "success_rate": successful_examples / len(outputs.outputs) if outputs.outputs else 0,
+            "success_rate": successful_examples / len(outputs.outputs)
+            if outputs.outputs
+            else 0,
             "training_time_seconds": training_time,
             "tokens_per_second": tokens_per_second,
-            "avg_tokens_per_example": total_tokens / len(self.trainset) if self.trainset else 0,
+            "avg_tokens_per_example": total_tokens / len(self.trainset)
+            if self.trainset
+            else 0,
             "answers_above_0_85_similarity": similarity_metrics["above_threshold"],
-            "percentage_above_0_85_similarity": similarity_metrics["percentage_above_threshold"],
+            "percentage_above_0_85_similarity": similarity_metrics[
+                "percentage_above_threshold"
+            ],
             # Tool metrics
             "tools_created": tools_created,
             "tools_updated": tools_updated,
@@ -413,11 +523,13 @@ class TrainingRunner:
 
         # Add cost metrics if available
         if total_cost > 0:
-            metrics.update({
-                "total_cost_usd": total_cost,
-                "input_cost_usd": input_cost,
-                "output_cost_usd": output_cost,
-            })
+            metrics.update(
+                {
+                    "total_cost_usd": total_cost,
+                    "input_cost_usd": input_cost,
+                    "output_cost_usd": output_cost,
+                }
+            )
 
         mlflow.log_metrics(metrics)
 
@@ -433,10 +545,14 @@ class TrainingRunner:
             "total_tokens": total_tokens,
             "successful_examples": successful_examples,
             "failed_examples": failed_examples,
-            "success_rate": successful_examples / len(outputs.outputs) if outputs.outputs else 0,
+            "success_rate": successful_examples / len(outputs.outputs)
+            if outputs.outputs
+            else 0,
             "training_time_seconds": training_time,
             "tokens_per_second": tokens_per_second,
-            "avg_tokens_per_example": total_tokens / len(self.trainset) if self.trainset else 0,
+            "avg_tokens_per_example": total_tokens / len(self.trainset)
+            if self.trainset
+            else 0,
             "total_cost_usd": total_cost,
             "input_cost_usd": input_cost,
             "output_cost_usd": output_cost,
@@ -450,12 +566,16 @@ class TrainingRunner:
             "total_tools_modified": total_tools_modified,
             # Add similarity metrics
             "answers_above_0_85_similarity": similarity_metrics["above_threshold"],
-            "percentage_above_0_85_similarity": similarity_metrics["percentage_above_threshold"],
+            "percentage_above_0_85_similarity": similarity_metrics[
+                "percentage_above_threshold"
+            ],
         }
 
         return results_summary
 
-    def _calculate_similarity_above_threshold(self, outputs: OutputsCollection, threshold: float = 0.85) -> Dict:
+    def _calculate_similarity_above_threshold(
+        self, outputs: OutputsCollection, threshold: float = 0.85
+    ) -> Dict:
         """Calculate percentage of answers above similarity threshold."""
         successful_outputs = [o for o in outputs.outputs if o.status == "success"]
 
@@ -463,12 +583,14 @@ class TrainingRunner:
             return {
                 "total_successful": 0,
                 "above_threshold": 0,
-                "percentage_above_threshold": 0.0
+                "percentage_above_threshold": 0.0,
             }
 
         above_threshold_count = sum(
-            1 for o in successful_outputs
-            if o.result.similarity_score is not None and o.result.similarity_score >= threshold
+            1
+            for o in successful_outputs
+            if o.result.similarity_score is not None
+            and o.result.similarity_score >= threshold
         )
 
         percentage = (above_threshold_count / len(successful_outputs)) * 100
@@ -476,7 +598,7 @@ class TrainingRunner:
         return {
             "total_successful": len(successful_outputs),
             "above_threshold": above_threshold_count,
-            "percentage_above_threshold": percentage
+            "percentage_above_threshold": percentage,
         }
 
     def _print_results(self, results_summary: Dict):
@@ -487,7 +609,9 @@ class TrainingRunner:
 
         if results_summary.get("batch_processing"):
             # Batch processing mode
-            print(f"Model: {results_summary['model_name']} ({results_summary['provider_name']})")
+            print(
+                f"Model: {results_summary['model_name']} ({results_summary['provider_name']})"
+            )
             print(f"Training Mode: Batched Processing")
             print(f"Total Batches: {results_summary['total_batches']}")
             print(f"Successful Batches: {results_summary['successful_batches']}")
@@ -497,7 +621,9 @@ class TrainingRunner:
             print("Note: Detailed metrics available in MLflow")
         else:
             # Single-process mode
-            print(f"Model: {results_summary['model_name']} ({results_summary['provider_name']})")
+            print(
+                f"Model: {results_summary['model_name']} ({results_summary['provider_name']})"
+            )
             print(f"Training Samples: {results_summary['num_train_samples']}")
             print(f"Dev Samples: {results_summary['num_dev_samples']}")
             print(f"Load Compiled: {results_summary['load_compiled']}")
@@ -510,7 +636,9 @@ class TrainingRunner:
             print(f"  Success Rate: {results_summary['success_rate']:.3f}")
             print(f"  Successful Examples: {results_summary['successful_examples']}")
             print(f"  Failed Examples: {results_summary['failed_examples']}")
-            print(f"  Answers with Similarity ≥0.85: {results_summary['answers_above_0_85_similarity']}/{results_summary['successful_examples']} ({results_summary['percentage_above_0_85_similarity']:.1f}%)")
+            print(
+                f"  Answers with Similarity ≥0.85: {results_summary['answers_above_0_85_similarity']}/{results_summary['successful_examples']} ({results_summary['percentage_above_0_85_similarity']:.1f}%)"
+            )
             print()
 
             print("Tool Creation Metrics:")
@@ -524,7 +652,9 @@ class TrainingRunner:
             print(f"  Input Tokens: {results_summary['total_input_tokens']:,}")
             print(f"  Output Tokens: {results_summary['total_output_tokens']:,}")
             print(f"  Total Tokens: {results_summary['total_tokens']:,}")
-            print(f"  Avg Tokens/Example: {results_summary['avg_tokens_per_example']:.1f}")
+            print(
+                f"  Avg Tokens/Example: {results_summary['avg_tokens_per_example']:.1f}"
+            )
             print()
 
             print("Performance:")
@@ -532,7 +662,7 @@ class TrainingRunner:
             print(f"  Tokens/Second: {results_summary['tokens_per_second']:.1f}")
             print()
 
-            if results_summary['total_cost_usd'] > 0:
+            if results_summary["total_cost_usd"] > 0:
                 print("Cost Analysis:")
                 print(f"  Input Cost: ${results_summary['input_cost_usd']:.4f}")
                 print(f"  Output Cost: ${results_summary['output_cost_usd']:.4f}")
@@ -550,7 +680,9 @@ class TrainingRunner:
         """Run the training experiment."""
         self.logger.info("Starting training experiment")
         self.logger.info(f"Configuration: {self.model_name} from {self.provider_name}")
-        self.logger.info(f"Training samples: {len(self.trainset_full)}, Dev samples: {len(self.devset_full)}")
+        self.logger.info(
+            f"Training samples: {len(self.trainset_full)}, Dev samples: {len(self.devset_full)}"
+        )
         self.logger.info(f"Load Compiled: {self.load_compiled}")
         self.logger.info(f"Use Cache: {self.use_cache}")
         self.logger.info(f"Evaluate: {self.evaluate}")
@@ -584,7 +716,7 @@ class TrainingRunner:
             is_new_run = False
         else:
             # Start new run
-            date_str = datetime.now().strftime('%Y-%m-%d')
+            date_str = datetime.now().strftime("%Y-%m-%d")
             run_name = f"{date_str}-{self.model_name}-{len(self.trainset)}"
             self.logger.info(f"Starting new MLflow run: {run_name}")
             mlflow_context = mlflow.start_run(run_name=run_name)
@@ -598,14 +730,18 @@ class TrainingRunner:
                 # Log parameters only for new runs
                 if is_new_run:
                     self._log_parameters(llm_config)
-                    mlflow.log_params({
-                        "batch_size": self.batch_size,
-                        "force_batches": self.force_batches,
-                        "continue_run": self.continue_run,
-                        "is_batched": self.batch_size is not None,
-                    })
+                    mlflow.log_params(
+                        {
+                            "batch_size": self.batch_size,
+                            "force_batches": self.force_batches,
+                            "continue_run": self.continue_run,
+                            "is_batched": self.batch_size is not None,
+                        }
+                    )
                 else:
-                    self.logger.info("Continuing existing run - skipping parameter logging")
+                    self.logger.info(
+                        "Continuing existing run - skipping parameter logging"
+                    )
 
                 # Enable DSPy autologging
                 mlflow.dspy.autolog()  # type: ignore
@@ -632,12 +768,16 @@ class TrainingRunner:
                 # Determine training mode and execute
                 if self.batch_size:
                     # Batched mode with process isolation
-                    self.logger.info("Using batched training mode with process isolation")
+                    self.logger.info(
+                        "Using batched training mode with process isolation"
+                    )
                     results_summary = self._run_training_batches()
                 else:
                     # Single-process mode (original logic)
                     self.logger.info("Using single-process training mode")
-                    results_summary = self._run_training_single_process(llm_config, training_config)
+                    results_summary = self._run_training_single_process(
+                        llm_config, training_config
+                    )
 
                 # Log additional info
                 mlflow.set_tag("training_status", "completed")
@@ -647,7 +787,9 @@ class TrainingRunner:
 
                 self.logger.info("Training completed successfully")
                 if "mean_accuracy" in results_summary:
-                    self.logger.info(f"Mean accuracy: {results_summary['mean_accuracy']:.3f}")
+                    self.logger.info(
+                        f"Mean accuracy: {results_summary['mean_accuracy']:.3f}"
+                    )
                 self.logger.info(f"Total questions processed: {len(self.trainset)}")
 
                 # Print results
@@ -662,7 +804,9 @@ class TrainingRunner:
                 mlflow.set_tag("error", str(e))
             raise
 
-    def _run_training_single_process(self, llm_config: LLM, training_config: TrainingPipelineConfig) -> Dict:
+    def _run_training_single_process(
+        self, llm_config: LLM, training_config: TrainingPipelineConfig
+    ) -> Dict:
         """Run training in single-process mode (original logic)."""
         # Create training pipeline
         experiment = mlflow.get_experiment_by_name(self.experiment_name)
@@ -707,116 +851,115 @@ def main():
         epilog="""
 Examples:
   # Basic training with GLM-4.6 (no cache)
-  uv run scripts/run_training.py --model glm-4.6 --provider zai --no-cache
+  uv run python scripts/run_training.py --model glm-4.6 --provider zai --no-cache
 
   # Custom training with evaluation and compiled model
-  uv run scripts/run_training.py --model qwen3-coder --provider deepinfra --num-samples 20 --load-compiled --cache --evaluate
+  uv run python scripts/run_training.py --model qwen3-coder --provider deepinfra --num-samples 20 --load-compiled --cache --evaluate
 
   # Continue existing run
-  uv run scripts/run_training.py --run-id 1234567890abcdef --model glm-4.6 --provider zai
+  uv run python scripts/run_training.py --run-id 1234567890abcdef --model glm-4.6 --provider zai
 
   # Auto-enable batching for large datasets
-  uv run scripts/run_training.py --model glm-4.6 --provider zai --no-cache
+  uv run python scripts/run_training.py --model glm-4.6 --provider zai --no-cache
 
   # Force batching for small datasets
-  uv run scripts/run_training.py --model glm-4.6 --provider zai --force-batches --batch-size 30
+  uv run python scripts/run_training.py --model glm-4.6 --provider zai --force-batches --batch-size 30
 
   # Continue the most recent run
-  uv run scripts/run_training.py --continue --model glm-4.6 --provider zai
+  uv run python scripts/run_training.py --continue --model glm-4.6 --provider zai
 
   # Continue with custom batch size
-  uv run scripts/run_training.py --continue --model glm-4.6 --provider zai --batch-size 20
-        """
+  uv run python scripts/run_training.py --continue --model glm-4.6 --provider zai --batch-size 20
+
+  # Force single-process mode for large datasets (if batch processing has issues)
+  uv run python scripts/run_training.py --model glm-4.6 --provider zai --disable-batches
+        """,
     )
 
     parser.add_argument(
         "--num-samples",
         type=int,
-        help="Number of training samples to use (default: all available)"
+        help="Number of training samples to use (default: all available)",
     )
 
     parser.add_argument(
-        "--model",
-        default="glm-4.6",
-        help="LLM model name (default: glm-4.6)"
+        "--model", default="glm-4.6", help="LLM model name (default: glm-4.6)"
     )
 
     parser.add_argument(
-        "--provider",
-        default="zai",
-        help="LLM provider name (default: zai)"
+        "--provider", default="zai", help="LLM provider name (default: zai)"
     )
 
     parser.add_argument(
         "--load-compiled",
         action="store_true",
-        help="Load compiled model (default: False)"
+        help="Load compiled model (default: False)",
     )
 
     parser.add_argument(
         "--no-load-compiled",
         action="store_false",
         dest="load_compiled",
-        help="Do not load compiled model"
+        help="Do not load compiled model",
     )
 
-    parser.add_argument(
-        "--run-id",
-        help="Optional existing MLflow run ID to continue"
-    )
+    parser.add_argument("--run-id", help="Optional existing MLflow run ID to continue")
 
     parser.add_argument(
         "--cache",
         action="store_true",
         default=False,
-        help="Enable DSPy disk cache (default: False)"
+        help="Enable DSPy disk cache (default: False)",
     )
 
     parser.add_argument(
-        "--no-cache",
-        action="store_false",
-        dest="cache",
-        help="Disable DSPy disk cache"
+        "--no-cache", action="store_false", dest="cache", help="Disable DSPy disk cache"
     )
 
     parser.add_argument(
         "--experiment-name",
         default="Training",
-        help="MLflow experiment name (default: Training)"
+        help="MLflow experiment name (default: Training)",
     )
 
     parser.add_argument(
         "--evaluate",
         action="store_true",
         default=False,
-        help="Run evaluation before and after training (default: False)"
+        help="Run evaluation before and after training (default: False)",
     )
 
     parser.add_argument(
         "--log-level",
         default="INFO",
         choices=["DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"],
-        help="Logging level (default: INFO)"
+        help="Logging level (default: INFO)",
     )
 
     parser.add_argument(
         "--continue",
         action="store_true",
         dest="continue_run",
-        help="Continue the most recent run in the experiment (requires MLflow server)"
+        help="Continue the most recent run in the experiment (requires MLflow server)",
     )
 
     parser.add_argument(
         "--batch-size",
         type=int,
         default=None,
-        help="Process training data in batches (default: 30 for large datasets, None for small datasets)"
+        help="Process training data in batches (default: 30 for large datasets, None for small datasets)",
     )
 
     parser.add_argument(
         "--force-batches",
         action="store_true",
-        help="Force batched mode even for small datasets"
+        help="Force batched mode even for small datasets",
+    )
+
+    parser.add_argument(
+        "--disable-batches",
+        action="store_true",
+        help="Force single-process mode even for large datasets (useful if batch processing has issues)",
     )
 
     args = parser.parse_args()
@@ -824,6 +967,15 @@ Examples:
     # Validate arguments
     if args.num_samples is not None and args.num_samples <= 0:
         print("Error: --num-samples must be positive")
+        return 1
+
+    # Validate conflicting batch arguments
+    if args.force_batches and args.disable_batches:
+        print("Error: Cannot use both --force-batches and --disable-batches simultaneously")
+        return 1
+
+    if args.batch_size is not None and args.disable_batches:
+        print("Error: Cannot specify --batch-size when using --disable-batches")
         return 1
 
     # Create and run training
@@ -839,6 +991,7 @@ Examples:
         log_level=args.log_level,
         batch_size=args.batch_size,
         force_batches=args.force_batches,
+        disable_batches=args.disable_batches,
         continue_run=args.continue_run,
     )
 
