@@ -19,6 +19,11 @@ wheels/
 *.bin
 *.pem
 
+# big files
+*.ifc
+*.db
+*.sqlite
+
 # no need to upload
 src/bim_models
 src/experiment/datasets/*.txt
