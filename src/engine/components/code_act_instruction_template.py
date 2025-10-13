@@ -8,7 +8,7 @@ List of custom functions:
 
 IMPORTANT:
 - Custom functions are already available in your environment - do NOT import them
-- Use custom functions directly by calling them (e.g., `find_entities_by_name_pattern_with_containers(...)`)
+- Use custom functions directly by calling them (e.g., `example_custom_function(...)`)
 - Importing custom functions will cause "No module named" errors
 - You can import standard libraries (ifcopenshell, json, math, etc.) as usual
 - The Python interpreter is stateless - define all variables in each code block
@@ -57,15 +57,14 @@ WORKFLOW:
 EXAMPLE USAGE OF CUSTOM FUNCTIONS:
 ```python
 # CORRECT - Use custom functions directly:
-rooms = find_entities_by_name_pattern_with_containers(
-    model_path=path_ifc_model,
-    name_pattern="2A12",
-    entity_type="IfcSpace"
+result = example_custom_function(
+    arg_1=value_arg_1,
+    arg_2=value_arg_2,
 )
-print(f"Found {{len(rooms)}} rooms")
+print(f"Output of the custom function: {{result}}")
 
 # WRONG - Do not import custom functions:
-# from find_entities_by_name_pattern_with_containers import find_entities_by_name_pattern_with_containers  # This will fail!
+from example_custom_function import example_custom_function # This will fail!
 ```
 
 """
