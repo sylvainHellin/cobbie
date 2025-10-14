@@ -48,13 +48,9 @@ test bimqas_test {
     available_tools #"
       def count_walls() -> int:
           '''Count all wall elements in the IFC model'''
-          return len(ifcopenshell.by_type('IFCWALL'))
 
       def get_wall_materials(wall_guid: str) -> list:
           '''Get material information for a specific wall'''
-          wall = ifcopenshell.by_guid(wall_guid)
-          return [mat.Name for mat in wall.HasAssociations[0].RelatingMaterial.Material.MaterialLayers if hasattr(wall, 'HasAssociations')]
     "#
-    previous_attempts null
   }
 }
