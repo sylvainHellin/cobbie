@@ -8,7 +8,7 @@ function BIMQAS(
   previous_attempts: string? @description("Previous execution results, if any"),
   model_path: string? @description("Path to the IFC model file, if available")
 ) -> CodeAction | FinalAnswer {
-  client CustomGPT5Mini
+  client ZAICodingPlan
   prompt #"
     You are a helpful assistant specialising in retrieving information from BIM models using Python code and the IfcOpenShell library. To facilitate this task, you also have access to higher-level functions that will help you with the most common information retrieval tasks (referred to later as the 'tools'). These tools can be used directly in your Python code as they are already pre-loaded; there is no need to import them.
 

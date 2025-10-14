@@ -141,9 +141,9 @@ retry_policy Exponential {
   }
 }
 
-// Z.AI GLM 4.6 clients for BIM QA system
+// Z.AI GLM 4.6 clients for BIM QA system - General API
 client<llm> ZAIClient {
-  provider openai-generic
+  provider openai
   options {
     base_url "https://api.z.ai/api/paas/v4"
     model "glm-4.6"
@@ -153,12 +153,36 @@ client<llm> ZAIClient {
 }
 
 client<llm> ZAIGLM46Mini {
-  provider openai-generic
+  provider openai
   retry_policy Exponential
   options {
     base_url "https://api.z.ai/api/paas/v4"
     model "glm-4.6-mini"
     api_key env.Z_AI_API_KEY
     temperature 0
+  }
+}
+
+// Z.AI GLM Coding Plan - Optimized for coding tasks with enhanced performance
+client<llm> ZAICodingPlan {
+  provider openai
+  options {
+    base_url "https://api.z.ai/api/coding/paas/v4"
+    model "glm-4.6"
+    api_key env.Z_AI_API_KEY
+    temperature 0.1
+    max_tokens 8192
+  }
+}
+
+client<llm> ZAICodingPlanMini {
+  provider openai
+  retry_policy Exponential
+  options {
+    base_url "https://api.z.ai/api/coding/paas/v4"
+    model "glm-4.6-mini"
+    api_key env.Z_AI_API_KEY
+    temperature 0.1
+    max_tokens 4096
   }
 }
