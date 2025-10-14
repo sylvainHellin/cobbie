@@ -351,6 +351,21 @@ wheels = [
 ]
 
 [[package]]
+name = "baml-py"
+version = "0.211.2"
+source = { registry = "https://pypi.org/simple" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/76/7e/6373ddd33cc374d8cb8b9327ae41dab19a978129ff518e6d279a76dcfb8b/baml_py-0.211.2-cp38-abi3-macosx_10_12_x86_64.whl", hash = "sha256:27823a22636e4ef3e2a83a8a972158d1f3caea55a9555521b117c255a61b3452", size = 20338880, upload-time = "2025-10-12T05:24:27.098Z" },
+    { url = "https://files.pythonhosted.org/packages/ef/17/f45a3ed19c362df2c943b1a7623740b96ee32b593b05498f169b09555c2d/baml_py-0.211.2-cp38-abi3-macosx_11_0_arm64.whl", hash = "sha256:36c7a8a7fa37120aa00864d9543a7eaa062f172fd316fc51ca79054d0595896b", size = 18967233, upload-time = "2025-10-12T05:24:30.638Z" },
+    { url = "https://files.pythonhosted.org/packages/ff/15/2421bd1f3f4115efd9d237ff68d542831effcb79a7b98a0cc5a6a8930082/baml_py-0.211.2-cp38-abi3-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:4cffc7bfe40e8a5089c6923678983458337f625d6a74ffae51ec1453d890ae3a", size = 22932857, upload-time = "2025-10-12T05:24:33.366Z" },
+    { url = "https://files.pythonhosted.org/packages/2a/ba/e36215a2cc5d6ead9f906ddeec7867a131c407fddc4e56ab3b1bb8ad02f1/baml_py-0.211.2-cp38-abi3-manylinux_2_24_aarch64.whl", hash = "sha256:539914a1b8d3327674c7e0e96dd00a4ed1738850d95819172163f41e8782a5b7", size = 22102283, upload-time = "2025-10-12T05:24:36.795Z" },
+    { url = "https://files.pythonhosted.org/packages/34/75/2a87b204b50be2d0c0caed17493f2efc82eff5ed2daba19c5607d76f5021/baml_py-0.211.2-cp38-abi3-musllinux_1_1_aarch64.whl", hash = "sha256:ae5d499504deb36f2937a6173b9861db2eced7cc483cf2df7d71f2bcb1660c42", size = 22351686, upload-time = "2025-10-12T05:24:39.836Z" },
+    { url = "https://files.pythonhosted.org/packages/f8/68/e918f0d0dbee2f1b3b997348b646641831d07023fae3b4563cf46db751c6/baml_py-0.211.2-cp38-abi3-musllinux_1_1_x86_64.whl", hash = "sha256:e09ee1f2a5aadcb8e56777fa2480f07f96a28f556694e91c4343515001c1c01b", size = 23073695, upload-time = "2025-10-12T05:24:42.585Z" },
+    { url = "https://files.pythonhosted.org/packages/c7/0a/75fcfd9b4a9cb288b0a1ca778b7f0ea947fb0f7c3fd78ea4680f0134441b/baml_py-0.211.2-cp38-abi3-win_amd64.whl", hash = "sha256:a3d84116bf1f845e0dc4d700db28b1bd8bac3ab4b44ac9e1b599047245b1469b", size = 20054285, upload-time = "2025-10-12T05:24:45.783Z" },
+    { url = "https://files.pythonhosted.org/packages/76/cc/36650f0ee26fc7b364aceceaa2e773a675f435713f5cf4b21a708ca077cd/baml_py-0.211.2-cp38-abi3-win_arm64.whl", hash = "sha256:9828873c10f5d84d0e9d8f4ff6b430f67215f8edf048310e3788177503b3e232", size = 18296258, upload-time = "2025-10-12T05:24:48.49Z" },
+]
+
+[[package]]
 name = "bcrypt"
 version = "4.3.0"
 source = { registry = "https://pypi.org/simple" }
@@ -398,6 +413,74 @@ sdist = { url = "https://files.pythonhosted.org/packages/d8/e4/0c4c39e18fd76d6a6
 wheels = [
     { url = "https://files.pythonhosted.org/packages/50/cd/30110dc0ffcf3b131156077b90e9f60ed75711223f306da4db08eff8403b/beautifulsoup4-4.13.4-py3-none-any.whl", hash = "sha256:9bbbb14bfde9d79f38b8cd5f8c7c85f4b8f2523190ebed90e950a8dea4cb1c4b", size = 187285, upload-time = "2025-04-15T17:05:12.221Z" },
 ]
+
+[[package]]
+name = "bim-qas"
+version = "0.1.0"
+source = { editable = "." }
+dependencies = [
+    { name = "arize-phoenix" },
+    { name = "baml-py" },
+    { name = "chromadb" },
+    { name = "dspy" },
+    { name = "fastapi", extra = ["standard"] },
+    { name = "gradio" },
+    { name = "ifcopenshell" },
+    { name = "ipykernel" },
+    { name = "jupyter" },
+    { name = "mermaid-magic" },
+    { name = "mlflow" },
+    { name = "mypy" },
+    { name = "ollama" },
+    { name = "openinference-instrumentation-smolagents" },
+    { name = "openpyxl" },
+    { name = "opentelemetry-exporter-otlp" },
+    { name = "opentelemetry-sdk" },
+    { name = "pydantic" },
+    { name = "python-dotenv" },
+    { name = "result" },
+    { name = "scipy" },
+    { name = "smolagents", extra = ["gradio", "telemetry", "toolkit"] },
+    { name = "sqlacodegen" },
+    { name = "sqlmodel" },
+    { name = "tabulate" },
+]
+
+[package.optional-dependencies]
+dev = [
+    { name = "ty" },
+]
+
+[package.metadata]
+requires-dist = [
+    { name = "arize-phoenix", specifier = "==8.24.0" },
+    { name = "baml-py", specifier = ">=0.211.2" },
+    { name = "chromadb", specifier = ">=1.0.8" },
+    { name = "dspy", specifier = ">=3" },
+    { name = "fastapi", extras = ["standard"], specifier = ">=0.115.9" },
+    { name = "gradio", specifier = ">=5.29.0" },
+    { name = "ifcopenshell", specifier = ">=0.8.2" },
+    { name = "ipykernel", specifier = ">=6.29.5" },
+    { name = "jupyter", specifier = ">=1.1.1" },
+    { name = "mermaid-magic", specifier = ">=0.1.4" },
+    { name = "mlflow", specifier = ">=3.1.0" },
+    { name = "mypy", specifier = ">=1.16.1" },
+    { name = "ollama", specifier = ">=0.4.8" },
+    { name = "openinference-instrumentation-smolagents", specifier = ">=0.1.11" },
+    { name = "openpyxl", specifier = ">=3.1.5" },
+    { name = "opentelemetry-exporter-otlp", specifier = ">=1.32.1" },
+    { name = "opentelemetry-sdk", specifier = ">=1.32.1" },
+    { name = "pydantic", specifier = ">=2.11.4" },
+    { name = "python-dotenv", specifier = ">=1.1.0" },
+    { name = "result", specifier = ">=0.17.0" },
+    { name = "scipy", specifier = ">=1.15.3" },
+    { name = "smolagents", extras = ["gradio", "telemetry", "toolkit"], specifier = ">=1.15.0" },
+    { name = "sqlacodegen", specifier = ">=3.1.1" },
+    { name = "sqlmodel", specifier = ">=0.0.25" },
+    { name = "tabulate", specifier = ">=0.9.0" },
+    { name = "ty", marker = "extra == 'dev'", specifier = ">=0.0.1a6" },
+]
+provides-extras = ["dev"]
 
 [[package]]
 name = "bleach"
@@ -1360,72 +1443,6 @@ sdist = { url = "https://files.pythonhosted.org/packages/f1/70/7703c29685631f5a7
 wheels = [
     { url = "https://files.pythonhosted.org/packages/76/c6/c88e154df9c4e1a2a66ccf0005a88dfb2650c1dffb6f5ce603dfbd452ce3/idna-3.10-py3-none-any.whl", hash = "sha256:946d195a0d259cbba61165e88e65941f16e9b36ea6ddb97f00452bae8b1287d3", size = 70442, upload-time = "2024-09-15T18:07:37.964Z" },
 ]
-
-[[package]]
-name = "bim-qas"
-version = "0.1.0"
-source = { editable = "." }
-dependencies = [
-    { name = "arize-phoenix" },
-    { name = "chromadb" },
-    { name = "dspy" },
-    { name = "fastapi", extra = ["standard"] },
-    { name = "gradio" },
-    { name = "ifcopenshell" },
-    { name = "ipykernel" },
-    { name = "jupyter" },
-    { name = "mermaid-magic" },
-    { name = "mlflow" },
-    { name = "mypy" },
-    { name = "ollama" },
-    { name = "openinference-instrumentation-smolagents" },
-    { name = "openpyxl" },
-    { name = "opentelemetry-exporter-otlp" },
-    { name = "opentelemetry-sdk" },
-    { name = "pydantic" },
-    { name = "python-dotenv" },
-    { name = "result" },
-    { name = "scipy" },
-    { name = "smolagents", extra = ["gradio", "telemetry", "toolkit"] },
-    { name = "sqlacodegen" },
-    { name = "sqlmodel" },
-    { name = "tabulate" },
-]
-
-[package.optional-dependencies]
-dev = [
-    { name = "ty" },
-]
-
-[package.metadata]
-requires-dist = [
-    { name = "arize-phoenix", specifier = "==8.24.0" },
-    { name = "chromadb", specifier = ">=1.0.8" },
-    { name = "dspy", specifier = ">=3" },
-    { name = "fastapi", extras = ["standard"], specifier = ">=0.115.9" },
-    { name = "gradio", specifier = ">=5.29.0" },
-    { name = "ifcopenshell", specifier = ">=0.8.2" },
-    { name = "ipykernel", specifier = ">=6.29.5" },
-    { name = "jupyter", specifier = ">=1.1.1" },
-    { name = "mermaid-magic", specifier = ">=0.1.4" },
-    { name = "mlflow", specifier = ">=3.1.0" },
-    { name = "mypy", specifier = ">=1.16.1" },
-    { name = "ollama", specifier = ">=0.4.8" },
-    { name = "openinference-instrumentation-smolagents", specifier = ">=0.1.11" },
-    { name = "openpyxl", specifier = ">=3.1.5" },
-    { name = "opentelemetry-exporter-otlp", specifier = ">=1.32.1" },
-    { name = "opentelemetry-sdk", specifier = ">=1.32.1" },
-    { name = "pydantic", specifier = ">=2.11.4" },
-    { name = "python-dotenv", specifier = ">=1.1.0" },
-    { name = "result", specifier = ">=0.17.0" },
-    { name = "scipy", specifier = ">=1.15.3" },
-    { name = "smolagents", extras = ["gradio", "telemetry", "toolkit"], specifier = ">=1.15.0" },
-    { name = "sqlacodegen", specifier = ">=3.1.1" },
-    { name = "sqlmodel", specifier = ">=0.0.25" },
-    { name = "tabulate", specifier = ">=0.9.0" },
-    { name = "ty", marker = "extra == 'dev'", specifier = ">=0.0.1a6" },
-]
-provides-extras = ["dev"]
 
 [[package]]
 name = "ifcopenshell"

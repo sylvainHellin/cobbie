@@ -10,6 +10,7 @@ readme = "README.md"
 requires-python = ">=3.12, <3.13"
 dependencies = [
     "arize-phoenix==8.24.0",
+    "baml-py>=0.211.2",
     "chromadb>=1.0.8",
     "dspy>=3",
     "fastapi[standard]>=0.115.9",
