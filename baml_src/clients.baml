@@ -140,3 +140,25 @@ retry_policy Exponential {
     max_delay_ms 10000
   }
 }
+
+// Z.AI GLM 4.6 clients for BIM QA system
+client<llm> ZAIClient {
+  provider openai-generic
+  options {
+    base_url "https://api.z.ai/api/paas/v4"
+    model "glm-4.6"
+    api_key env.Z_AI_API_KEY
+    temperature 0
+  }
+}
+
+client<llm> ZAIGLM46Mini {
+  provider openai-generic
+  retry_policy Exponential
+  options {
+    base_url "https://api.z.ai/api/paas/v4"
+    model "glm-4.6-mini"
+    api_key env.Z_AI_API_KEY
+    temperature 0
+  }
+}

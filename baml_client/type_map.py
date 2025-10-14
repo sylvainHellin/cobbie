@@ -16,8 +16,26 @@ from . import stream_types
 
 type_map = {
 
+    "types.CodeAction": types.CodeAction,
+    "stream_types.CodeAction": stream_types.CodeAction,
+
+    "types.ErrorAnalysisResult": types.ErrorAnalysisResult,
+    "stream_types.ErrorAnalysisResult": stream_types.ErrorAnalysisResult,
+
+    "types.FinalAnswer": types.FinalAnswer,
+    "stream_types.FinalAnswer": stream_types.FinalAnswer,
+
     "types.Resume": types.Resume,
     "stream_types.Resume": stream_types.Resume,
+
+    "types.SimilarityResult": types.SimilarityResult,
+    "stream_types.SimilarityResult": stream_types.SimilarityResult,
+
+    "types.ToolCreationResult": types.ToolCreationResult,
+    "stream_types.ToolCreationResult": stream_types.ToolCreationResult,
+
+    "types.ToolOptimizationResult": types.ToolOptimizationResult,
+    "stream_types.ToolOptimizationResult": stream_types.ToolOptimizationResult,
 
 
 }

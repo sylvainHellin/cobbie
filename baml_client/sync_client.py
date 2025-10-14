@@ -91,6 +91,20 @@ class BamlSyncClient:
     def parse_stream(self):
       return self.__llm_stream_parser
     
+    def BIMQAS(self, user_input: str,available_tools: str,previous_attempts: typing.Optional[str] = None,model_path: typing.Optional[str] = None,
+        baml_options: BamlCallOptions = {},
+    ) -> typing.Union["types.CodeAction", "types.FinalAnswer"]:
+        # Check if on_tick is provided
+        if 'on_tick' in baml_options:
+            stream = self.stream.BIMQAS(user_input=user_input,available_tools=available_tools,previous_attempts=previous_attempts,model_path=model_path,
+                baml_options=baml_options)
+            return stream.get_final_response()
+        else:
+            # Original non-streaming code
+            result = self.__options.merge_options(baml_options).call_function_sync(function_name="BIMQAS", args={
+                "user_input": user_input,"available_tools": available_tools,"previous_attempts": previous_attempts,"model_path": model_path,
+            })
+            return typing.cast(typing.Union["types.CodeAction", "types.FinalAnswer"], result.cast_to(types, types, stream_types, False, __runtime__))
     def ExtractResume(self, resume: str,
         baml_options: BamlCallOptions = {},
     ) -> types.Resume:
@@ -114,6 +128,18 @@ class BamlStreamClient:
     def __init__(self, options: DoNotUseDirectlyCallManager):
         self.__options = options
 
+    def BIMQAS(self, user_input: str,available_tools: str,previous_attempts: typing.Optional[str] = None,model_path: typing.Optional[str] = None,
+        baml_options: BamlCallOptions = {},
+    ) -> baml_py.BamlSyncStream[typing.Union["stream_types.CodeAction", "stream_types.FinalAnswer"], typing.Union["types.CodeAction", "types.FinalAnswer"]]:
+        ctx, result = self.__options.merge_options(baml_options).create_sync_stream(function_name="BIMQAS", args={
+            "user_input": user_input,"available_tools": available_tools,"previous_attempts": previous_attempts,"model_path": model_path,
+        })
+        return baml_py.BamlSyncStream[typing.Union["stream_types.CodeAction", "stream_types.FinalAnswer"], typing.Union["types.CodeAction", "types.FinalAnswer"]](
+          result,
+          lambda x: typing.cast(typing.Union["stream_types.CodeAction", "stream_types.FinalAnswer"], x.cast_to(types, types, stream_types, True, __runtime__)),
+          lambda x: typing.cast(typing.Union["types.CodeAction", "types.FinalAnswer"], x.cast_to(types, types, stream_types, False, __runtime__)),
+          ctx,
+        )
     def ExtractResume(self, resume: str,
         baml_options: BamlCallOptions = {},
     ) -> baml_py.BamlSyncStream[stream_types.Resume, types.Resume]:
@@ -134,6 +160,13 @@ class BamlHttpRequestClient:
     def __init__(self, options: DoNotUseDirectlyCallManager):
         self.__options = options
 
+    def BIMQAS(self, user_input: str,available_tools: str,previous_attempts: typing.Optional[str] = None,model_path: typing.Optional[str] = None,
+        baml_options: BamlCallOptions = {},
+    ) -> baml_py.baml_py.HTTPRequest:
+        result = self.__options.merge_options(baml_options).create_http_request_sync(function_name="BIMQAS", args={
+            "user_input": user_input,"available_tools": available_tools,"previous_attempts": previous_attempts,"model_path": model_path,
+        }, mode="request")
+        return result
     def ExtractResume(self, resume: str,
         baml_options: BamlCallOptions = {},
     ) -> baml_py.baml_py.HTTPRequest:
@@ -149,6 +182,13 @@ class BamlHttpStreamRequestClient:
     def __init__(self, options: DoNotUseDirectlyCallManager):
         self.__options = options
 
+    def BIMQAS(self, user_input: str,available_tools: str,previous_attempts: typing.Optional[str] = None,model_path: typing.Optional[str] = None,
+        baml_options: BamlCallOptions = {},
+    ) -> baml_py.baml_py.HTTPRequest:
+        result = self.__options.merge_options(baml_options).create_http_request_sync(function_name="BIMQAS", args={
+            "user_input": user_input,"available_tools": available_tools,"previous_attempts": previous_attempts,"model_path": model_path,
+        }, mode="stream")
+        return result
     def ExtractResume(self, resume: str,
         baml_options: BamlCallOptions = {},
     ) -> baml_py.baml_py.HTTPRequest:

@@ -41,14 +41,43 @@ def all_succeeded(checks: typing.Dict[CheckName, Check]) -> bool:
 # #########################################################################
 
 # #########################################################################
-# Generated classes (1)
+# Generated classes (7)
 # #########################################################################
+
+class CodeAction(BaseModel):
+    thoughts: str
+    python_code: str
+
+class ErrorAnalysisResult(BaseModel):
+    error_category: str
+    function_name: typing.Optional[str] = None
+    needs_new_tool: bool
+
+class FinalAnswer(BaseModel):
+    thoughts: str
+    answer: str
 
 class Resume(BaseModel):
     name: str
     email: str
     experience: typing.List[str]
     skills: typing.List[str]
+
+class SimilarityResult(BaseModel):
+    similarity_score: float
+    correct_answer: bool
+    reasoning: str
+
+class ToolCreationResult(BaseModel):
+    function_name: str
+    function_implementation: str
+    success: bool
+
+class ToolOptimizationResult(BaseModel):
+    improvement: str
+    function_name: typing.Optional[str] = None
+    function_requirements: typing.Optional[str] = None
+    existing_tool_names: typing.Optional[typing.List[str]] = None
 
 # #########################################################################
 # Generated type aliases (0)

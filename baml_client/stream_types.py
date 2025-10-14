@@ -23,14 +23,43 @@ class StreamState(BaseModel, typing.Generic[StreamStateValueT]):
     value: StreamStateValueT
     state: typing_extensions.Literal["Pending", "Incomplete", "Complete"]
 # #########################################################################
-# Generated classes (1)
+# Generated classes (7)
 # #########################################################################
+
+class CodeAction(BaseModel):
+    thoughts: typing.Optional[str] = None
+    python_code: typing.Optional[str] = None
+
+class ErrorAnalysisResult(BaseModel):
+    error_category: typing.Optional[str] = None
+    function_name: typing.Optional[str] = None
+    needs_new_tool: typing.Optional[bool] = None
+
+class FinalAnswer(BaseModel):
+    thoughts: typing.Optional[str] = None
+    answer: typing.Optional[str] = None
 
 class Resume(BaseModel):
     name: typing.Optional[str] = None
     email: typing.Optional[str] = None
     experience: typing.List[str]
     skills: typing.List[str]
+
+class SimilarityResult(BaseModel):
+    similarity_score: typing.Optional[float] = None
+    correct_answer: typing.Optional[bool] = None
+    reasoning: typing.Optional[str] = None
+
+class ToolCreationResult(BaseModel):
+    function_name: typing.Optional[str] = None
+    function_implementation: typing.Optional[str] = None
+    success: typing.Optional[bool] = None
+
+class ToolOptimizationResult(BaseModel):
+    improvement: typing.Optional[str] = None
+    function_name: typing.Optional[str] = None
+    function_requirements: typing.Optional[str] = None
+    existing_tool_names: typing.Optional[typing.List[str]] = None
 
 # #########################################################################
 # Generated type aliases (0)
