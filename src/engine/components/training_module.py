@@ -18,7 +18,6 @@ from src.engine import (
 from src.engine.schemas import (
     Chat,
     ModuleOutput,
-    QA_Pair,
     TrainingContext,
 )
 from src.engine.util import (
@@ -28,6 +27,7 @@ from src.engine.util import (
     save_new_tool,
     get_created_tools,
 )
+from src.experiment.db.experiment_models import Dataset
 
 
 class TrainingState(Enum):
@@ -82,7 +82,7 @@ class TrainingModule(dspy.Module):
         self.state = TrainingState.START
         self.context = TrainingContext()
 
-    def _initialize_system(self, qa_pair: QA_Pair) -> TrainingState:
+    def _initialize_system(self, qa_pair: Dataset) -> TrainingState:
         """Initialize processing state and setup."""
         self.context = TrainingContext()
         self.context.qa_pair = qa_pair
@@ -514,7 +514,7 @@ class TrainingModule(dspy.Module):
 
     def forward(
         self,
-        qa_pair: QA_Pair,
+        qa_pair: Dataset,
     ) -> ModuleOutput:
         """Process a QA pair using the state machine. Return a ModuleOutput."""
 
@@ -549,7 +549,7 @@ if __name__ == "__main__":
     mlflow.set_tracking_uri("http://127.0.0.1:5000")
     mlflow.set_experiment("ToolOptimizer")
 
-    def main(qa_pair: QA_Pair):
+    def main(qa_pair: Dataset):
         # setup the logger
         logger = get_logger(
             name="Training run", log_level=AGENT_CONFIGS.training_module.log_level

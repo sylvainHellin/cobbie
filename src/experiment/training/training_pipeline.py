@@ -10,11 +10,10 @@ from src.engine.optimizer import bootstrap_engine
 from src.engine.schemas import (
     ModuleOutput,
     OutputsCollection,
-    QA_Pair,
 )
 from src.engine.util import get_logger
-from src.experiment.datasets.data_loader import load_train_dev_split
-from src.experiment.db.experiment_models import Run, Trace
+from src.experiment.datasets import load_train_dev_split
+from src.experiment.db.experiment_models import Run, Trace, Dataset
 from src.experiment.db.query import add_run, add_trace, update_run_metrics
 from src.experiment.evaluation.evaluation import EvaluationPipeline
 
@@ -50,7 +49,7 @@ class TrainingPipeline:
     def _evaluation(
         self,
         mode: Literal["before", "after"],
-        devset: List[QA_Pair],
+        devset: List[Dataset],
     ):
         if self.evaluate:
             # Re-initialize the Evaluation Module for each forward pass
@@ -65,7 +64,7 @@ class TrainingPipeline:
                 self.engine = bootstrap_engine(engine=self.engine)
                 span.set_status(status="OK")
 
-    def _train(self, trainset: List[QA_Pair]):
+    def _train(self, trainset: List[Dataset]):
         for qa_pair in trainset:
             with mlflow.start_span(
                 name=f"train_question_id_{qa_pair.id}",
@@ -140,8 +139,8 @@ class TrainingPipeline:
 
     def forward(
         self,
-        devset: List[QA_Pair],
-        trainset: List[QA_Pair],
+        devset: List[Dataset],
+        trainset: List[Dataset],
     ) -> OutputsCollection:
         """Process QA pairs from a training set to train the engine to create, update and merge tools. Will also perform evaluation and optimization if set up in the config."""
 
@@ -169,8 +168,8 @@ class TrainingPipeline:
 def main(
     run_id: str,
     experiment_id: str,
-    trainset: List[QA_Pair],
-    devset: List[QA_Pair],
+    trainset: List[Dataset],
+    devset: List[Dataset],
 ):
     # # setup the logger
     # logger = get_logger(

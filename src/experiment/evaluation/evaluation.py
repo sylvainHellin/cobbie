@@ -7,9 +7,10 @@ from tqdm import tqdm
 
 from src.config.agents import AGENT_CONFIGS, EvaluationPipelineConfig
 from src.engine import AnswerVerifier, IfcAnswerEngine
-from src.engine.schemas import ModuleOutput, OutputsCollection, QA_Pair
+from src.engine.schemas import ModuleOutput, OutputsCollection
 from src.engine.util import get_logger
 from src.experiment.datasets import DEVSET
+from src.experiment.db.experiment_models import Dataset
 
 
 class EvaluationPipeline:
@@ -40,7 +41,7 @@ class EvaluationPipeline:
 
     def forward(
         self,
-        dataset: List[QA_Pair] = DEVSET,
+        dataset: List[Dataset] = DEVSET,
         mode: str = "",
     ) -> OutputsCollection:
         """

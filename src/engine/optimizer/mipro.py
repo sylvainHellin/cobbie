@@ -5,7 +5,7 @@ from dspy import MIPROv2
 
 from src.config import PATH_COMPILED_MODEL
 from src.engine import IfcAnswerEngine
-from src.engine.schemas import QA_Pair
+from src.experiment.db.experiment_models import Dataset
 from src.experiment import TRAINSET, metric
 
 optimizer = MIPROv2(
@@ -16,7 +16,7 @@ optimizer = MIPROv2(
 
 
 def mipro_engine_optimizer(
-    dataset: List[QA_Pair],
+    dataset: List[Dataset],
     engine: IfcAnswerEngine,
     save: bool = True,
 ) -> IfcAnswerEngine:

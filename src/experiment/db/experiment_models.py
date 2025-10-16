@@ -3,6 +3,7 @@ import datetime
 
 from sqlalchemy import CheckConstraint, Column, DateTime, Enum, ForeignKey, Integer, REAL, Text, text
 from sqlmodel import Field, Relationship, SQLModel
+from dspy import Example
 
 class Experiment(SQLModel, table=True):
     id: Optional[str] = Field(default=None, sa_column=Column('id', Text, primary_key=True))
@@ -34,6 +35,22 @@ class Dataset(SQLModel, table=True):
 
     ifc: Optional['Ifcmodels'] = Relationship(back_populates='dataset')
     trace: list['Trace'] = Relationship(back_populates='question')
+
+    def to_example(self) -> Example:
+        """
+        Transform the Dataset object into dspy.Example for dspy optimization.
+        This method provides backward compatibility for existing optimizer code.
+        """
+        example = Example(
+            question=self.question,
+            answer=self.ground_truth,
+            path_ifc_model=self.ifc.model_path if self.ifc else None,
+        ).with_inputs(
+            "question",
+            "path_ifc_model",
+        )
+
+        return example
 
 
 class Run(SQLModel, table=True):
