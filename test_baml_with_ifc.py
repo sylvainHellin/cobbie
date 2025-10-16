@@ -34,6 +34,8 @@ from src.engine.components.code_act_agent_baml import BIMQASBaml
 
 # Setup MLflow
 import mlflow
+import time
+
 mlflow.set_tracking_uri("http://127.0.0.1:5000")
 mlflow.set_experiment("BIMQAS_BAML_TEST")
 
@@ -62,8 +64,36 @@ print(f"📁 IFC model: {ifc_model_path}")
 print(f"❓ Question: {test_question}")
 print("=" * 60)
 
-# Run the test
-result = agent.run(test_question)
+# Run the test with MLflow tracking
+start_time = time.time()
+
+with mlflow.start_run(run_name=f"BAML_Test_{test_question[:30].replace(' ', '_')}") as run:
+    # Log parameters
+    mlflow.log_param("question", test_question)
+    mlflow.log_param("ifc_model_path", ifc_model_path)
+    mlflow.log_param("max_iterations", 3)
+    mlflow.log_param("llm_provider", "Z.AI")
+    mlflow.log_param("llm_model", "GLM-4.6")
+    mlflow.log_param("add_code_prefix", True)
+
+    # Run the test
+    result = agent.run(test_question)
+
+    execution_time = time.time() - start_time
+
+    # Log metrics
+    mlflow.log_metric("execution_time_seconds", execution_time)
+    mlflow.log_metric("iterations_used", result.get("iterations", 0))
+
+    success_status = 1 if result.get("status") == "success" else 0
+    mlflow.log_metric("success_status", success_status)
+
+    # Log results as parameters
+    if result.get("status") == "success":
+        mlflow.log_param("final_answer", result.get("answer", ""))
+        mlflow.log_param("reasoning", result.get("reasoning", ""))
+    else:
+        mlflow.log_param("error_message", result.get("error", "Unknown error"))
 
 print("\n📊 RESULT:")
 print("=" * 60)
