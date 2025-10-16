@@ -104,5 +104,10 @@ Created tools are persisted as `.py` files in `src/engine/tools/created/` and ca
 - Always use `uv run` to execute a python script
 - Always use context7 when I need code generation, setup or configuration steps, or
 library/API documentation. This means you should automatically use the Context7 MCP
-tools to resolve library id and get library docs without me having to explicitly ask.
+tools to resolve library id and get library docs without me having to explicitly ask. This is especially true when interacting the the following libraries:
+  - mlflow
+  - dspy
+  - baml
+  - fastapi
+  - sqlmodel
 - Don't make any assumptions. If anything is unclear, ask for clarification.
