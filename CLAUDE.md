@@ -44,20 +44,6 @@ This is a sophisticated BIM AI question-answering system with a multi-agent arch
 - This approach allows each agent to maintain independent LM configurations without affecting others
 - Configuration hierarchy: Base agent config → specialized agent configs → LLM settings per agent
 
-**Frontend Architecture**:
-- React + TypeScript with Vite build system
-- Uses "@thatopen" components for 3D IFC model visualization
-- Shadcn/ui component library for interface elements
-- Supabase for potential backend integration
-- BIM viewer renders IFC models using web-ifc and related 3D libraries
-
-**Data Flow**:
-1. User selects BIM model and asks question via frontend
-2. FastAPI backend (`api/main.py`) receives request and loads IFC model
-3. `IfcAnswerEngine` processes question using available tools (both primordial and created)
-4. If needed, dynamically generates new Python tools to answer the question
-5. Returns answer to frontend, with option to highlight relevant model elements
-
 ### Key Directories
 
 - `src/engine/`: Core AI engine components
@@ -67,7 +53,6 @@ This is a sophisticated BIM AI question-answering system with a multi-agent arch
   - `schemas/`: Pydantic data models for various operations
 - `src/experiment/`: Training pipeline, evaluation, and database operations
 - `api/`: FastAPI web server with endpoints for questioning and model management
-- `frontend/`: React application with 3D BIM viewer and chat interface
 
 ### Configuration System
 
@@ -98,7 +83,6 @@ Created tools are persisted as `.py` files in `src/engine/tools/created/` and ca
 ### Environment Setup
 - Python 3.12+ required
 - Uses `uv` package manager for Python dependencies - all Python commands should use `uv run` prefix
-- Frontend uses `pnpm` package manager
 - Requires multiple API keys for different LLM providers (set in `.env`)
 
 ### Database Integration
@@ -109,9 +93,16 @@ Created tools are persisted as `.py` files in `src/engine/tools/created/` and ca
 ### IFC File Handling
 - System works with .ifc files (BIM model format)
 - Test models available in `src/experiment/bim_models/`
-- Frontend downloads IFC files from backend for 3D visualization
+- Frontend (other repository) downloads IFC files from backend for 3D visualization
 
 ### Testing and Validation
 - Built-in answer verification using similarity scoring
 - Comprehensive error analysis and categorization
 - Tool optimization through merging and correction processes
+
+## Guidelines for writing and testing code
+- Always use `uv run` to execute a python script
+- Always use context7 when I need code generation, setup or configuration steps, or
+library/API documentation. This means you should automatically use the Context7 MCP
+tools to resolve library id and get library docs without me having to explicitly ask.
+- Don't make any assumptions. If anything is unclear, ask for clarification.
