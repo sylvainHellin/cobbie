@@ -219,6 +219,8 @@ class BIMQASBaml:
                         # Process the result
                         if isinstance(result, CodeAction):
                             # Code execution with tracing
+
+                            execution_start = time.time()
                             with mlflow.start_span(name="Python_Code_Execution", span_type="MODULE") as exec_span:
                                 try:
                                     code_to_execute = result.python_code
@@ -235,7 +237,6 @@ class BIMQASBaml:
                                     })
 
                                     self.logger.debug(f"Executing code: {code_to_execute[:200]}...")
-                                    execution_start = time.time()
                                     output = self.python_interpreter(code_to_execute)
                                     execution_time = time.time() - execution_start
                                     code_execution_count += 1
@@ -371,7 +372,7 @@ class BIMQASBaml:
 
             return incomplete_result
 
-  
+
 
 if __name__ == "__main__":
     # Test the BAML implementation
