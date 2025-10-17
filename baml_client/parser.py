@@ -30,6 +30,12 @@ class LlmResponseParser:
         result = self.__options.merge_options(baml_options).parse_response(function_name="BIMQAS", llm_response=llm_response, mode="request")
         return typing.cast(typing.Union["types.CodeAction", "types.FinalAnswer"], result)
 
+    def CodeCleaner(
+        self, llm_response: str, baml_options: BamlCallOptions = {},
+    ) -> types.CleanedCode:
+        result = self.__options.merge_options(baml_options).parse_response(function_name="CodeCleaner", llm_response=llm_response, mode="request")
+        return typing.cast(types.CleanedCode, result)
+
     def CodeExtractor(
         self, llm_response: str, baml_options: BamlCallOptions = {},
     ) -> types.FunctionImplementation:
@@ -41,6 +47,18 @@ class LlmResponseParser:
     ) -> types.Resume:
         result = self.__options.merge_options(baml_options).parse_response(function_name="ExtractResume", llm_response=llm_response, mode="request")
         return typing.cast(types.Resume, result)
+
+    def ToolAssessor(
+        self, llm_response: str, baml_options: BamlCallOptions = {},
+    ) -> typing.Union["types.CodeAction", "types.AssessmentResult"]:
+        result = self.__options.merge_options(baml_options).parse_response(function_name="ToolAssessor", llm_response=llm_response, mode="request")
+        return typing.cast(typing.Union["types.CodeAction", "types.AssessmentResult"], result)
+
+    def ToolCorrector(
+        self, llm_response: str, baml_options: BamlCallOptions = {},
+    ) -> typing.Union["types.CodeAction", "types.ImprovedImplementation"]:
+        result = self.__options.merge_options(baml_options).parse_response(function_name="ToolCorrector", llm_response=llm_response, mode="request")
+        return typing.cast(typing.Union["types.CodeAction", "types.ImprovedImplementation"], result)
 
     def ToolCreator(
         self, llm_response: str, baml_options: BamlCallOptions = {},
@@ -62,6 +80,12 @@ class LlmStreamParser:
         result = self.__options.merge_options(baml_options).parse_response(function_name="BIMQAS", llm_response=llm_response, mode="stream")
         return typing.cast(typing.Union["stream_types.CodeAction", "stream_types.FinalAnswer"], result)
 
+    def CodeCleaner(
+        self, llm_response: str, baml_options: BamlCallOptions = {},
+    ) -> stream_types.CleanedCode:
+        result = self.__options.merge_options(baml_options).parse_response(function_name="CodeCleaner", llm_response=llm_response, mode="stream")
+        return typing.cast(stream_types.CleanedCode, result)
+
     def CodeExtractor(
         self, llm_response: str, baml_options: BamlCallOptions = {},
     ) -> stream_types.FunctionImplementation:
@@ -73,6 +97,18 @@ class LlmStreamParser:
     ) -> stream_types.Resume:
         result = self.__options.merge_options(baml_options).parse_response(function_name="ExtractResume", llm_response=llm_response, mode="stream")
         return typing.cast(stream_types.Resume, result)
+
+    def ToolAssessor(
+        self, llm_response: str, baml_options: BamlCallOptions = {},
+    ) -> typing.Union["stream_types.CodeAction", "stream_types.AssessmentResult"]:
+        result = self.__options.merge_options(baml_options).parse_response(function_name="ToolAssessor", llm_response=llm_response, mode="stream")
+        return typing.cast(typing.Union["stream_types.CodeAction", "stream_types.AssessmentResult"], result)
+
+    def ToolCorrector(
+        self, llm_response: str, baml_options: BamlCallOptions = {},
+    ) -> typing.Union["stream_types.CodeAction", "stream_types.ImprovedImplementation"]:
+        result = self.__options.merge_options(baml_options).parse_response(function_name="ToolCorrector", llm_response=llm_response, mode="stream")
+        return typing.cast(typing.Union["stream_types.CodeAction", "stream_types.ImprovedImplementation"], result)
 
     def ToolCreator(
         self, llm_response: str, baml_options: BamlCallOptions = {},

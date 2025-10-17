@@ -23,8 +23,19 @@ class StreamState(BaseModel, typing.Generic[StreamStateValueT]):
     value: StreamStateValueT
     state: typing_extensions.Literal["Pending", "Incomplete", "Complete"]
 # #########################################################################
-# Generated classes (8)
+# Generated classes (11)
 # #########################################################################
+
+class AssessmentResult(BaseModel):
+    assessment_status: typing.Optional[str] = None
+    assessment_details: typing.Optional[str] = None
+    test_execution_log: typing.Optional[str] = None
+    confidence: typing.Optional[float] = None
+
+class CleanedCode(BaseModel):
+    function_implementation: typing.Optional[str] = None
+    cleaning_reasoning: typing.Optional[str] = None
+    success: typing.Optional[bool] = None
 
 class CodeAction(BaseModel):
     thoughts: typing.Optional[str] = None
@@ -43,6 +54,12 @@ class FunctionImplementation(BaseModel):
     function_implementation: typing.Optional[str] = None
     confidence: typing.Optional[float] = None
     needs_improvement: typing.Optional[bool] = None
+
+class ImprovedImplementation(BaseModel):
+    function_implementation: typing.Optional[str] = None
+    improvement_reasoning: typing.Optional[str] = None
+    confidence: typing.Optional[float] = None
+    changes_summary: typing.Optional[str] = None
 
 class Resume(BaseModel):
     name: typing.Optional[str] = None

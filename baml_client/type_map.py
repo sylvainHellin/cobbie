@@ -16,6 +16,12 @@ from . import stream_types
 
 type_map = {
 
+    "types.AssessmentResult": types.AssessmentResult,
+    "stream_types.AssessmentResult": stream_types.AssessmentResult,
+
+    "types.CleanedCode": types.CleanedCode,
+    "stream_types.CleanedCode": stream_types.CleanedCode,
+
     "types.CodeAction": types.CodeAction,
     "stream_types.CodeAction": stream_types.CodeAction,
 
@@ -27,6 +33,9 @@ type_map = {
 
     "types.FunctionImplementation": types.FunctionImplementation,
     "stream_types.FunctionImplementation": stream_types.FunctionImplementation,
+
+    "types.ImprovedImplementation": types.ImprovedImplementation,
+    "stream_types.ImprovedImplementation": stream_types.ImprovedImplementation,
 
     "types.Resume": types.Resume,
     "stream_types.Resume": stream_types.Resume,

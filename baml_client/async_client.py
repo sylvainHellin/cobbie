@@ -94,6 +94,21 @@ class BamlAsyncClient:
                 "user_input": user_input,"available_tools": available_tools,"previous_attempts": previous_attempts,"model_path": model_path,
             })
             return typing.cast(typing.Union["types.CodeAction", "types.FinalAnswer"], result.cast_to(types, types, stream_types, False, __runtime__))
+    async def CodeCleaner(self, faulty_code: str,error_message: str,
+        baml_options: BamlCallOptions = {},
+    ) -> types.CleanedCode:
+        # Check if on_tick is provided
+        if 'on_tick' in baml_options:
+            # Use streaming internally when on_tick is provided
+            stream = self.stream.CodeCleaner(faulty_code=faulty_code,error_message=error_message,
+                baml_options=baml_options)
+            return await stream.get_final_response()
+        else:
+            # Original non-streaming code
+            result = await self.__options.merge_options(baml_options).call_function_async(function_name="CodeCleaner", args={
+                "faulty_code": faulty_code,"error_message": error_message,
+            })
+            return typing.cast(types.CleanedCode, result.cast_to(types, types, stream_types, False, __runtime__))
     async def CodeExtractor(self, function_name: str,conversation_history: str,
         baml_options: BamlCallOptions = {},
     ) -> types.FunctionImplementation:
@@ -124,6 +139,36 @@ class BamlAsyncClient:
                 "resume": resume,
             })
             return typing.cast(types.Resume, result.cast_to(types, types, stream_types, False, __runtime__))
+    async def ToolAssessor(self, function_name: str,function_requirements: str,path_ifc_model: str,available_tools: str,previous_attempts: typing.Optional[str] = None,
+        baml_options: BamlCallOptions = {},
+    ) -> typing.Union["types.CodeAction", "types.AssessmentResult"]:
+        # Check if on_tick is provided
+        if 'on_tick' in baml_options:
+            # Use streaming internally when on_tick is provided
+            stream = self.stream.ToolAssessor(function_name=function_name,function_requirements=function_requirements,path_ifc_model=path_ifc_model,available_tools=available_tools,previous_attempts=previous_attempts,
+                baml_options=baml_options)
+            return await stream.get_final_response()
+        else:
+            # Original non-streaming code
+            result = await self.__options.merge_options(baml_options).call_function_async(function_name="ToolAssessor", args={
+                "function_name": function_name,"function_requirements": function_requirements,"path_ifc_model": path_ifc_model,"available_tools": available_tools,"previous_attempts": previous_attempts,
+            })
+            return typing.cast(typing.Union["types.CodeAction", "types.AssessmentResult"], result.cast_to(types, types, stream_types, False, __runtime__))
+    async def ToolCorrector(self, function_requirements: str,function_name: str,current_function_implementation: str,detailed_assessment: str,path_ifc_model: str,available_tools: str,previous_attempts: typing.Optional[str] = None,
+        baml_options: BamlCallOptions = {},
+    ) -> typing.Union["types.CodeAction", "types.ImprovedImplementation"]:
+        # Check if on_tick is provided
+        if 'on_tick' in baml_options:
+            # Use streaming internally when on_tick is provided
+            stream = self.stream.ToolCorrector(function_requirements=function_requirements,function_name=function_name,current_function_implementation=current_function_implementation,detailed_assessment=detailed_assessment,path_ifc_model=path_ifc_model,available_tools=available_tools,previous_attempts=previous_attempts,
+                baml_options=baml_options)
+            return await stream.get_final_response()
+        else:
+            # Original non-streaming code
+            result = await self.__options.merge_options(baml_options).call_function_async(function_name="ToolCorrector", args={
+                "function_requirements": function_requirements,"function_name": function_name,"current_function_implementation": current_function_implementation,"detailed_assessment": detailed_assessment,"path_ifc_model": path_ifc_model,"available_tools": available_tools,"previous_attempts": previous_attempts,
+            })
+            return typing.cast(typing.Union["types.CodeAction", "types.ImprovedImplementation"], result.cast_to(types, types, stream_types, False, __runtime__))
     async def ToolCreator(self, function_requirements: str,function_name: str,function_boilerplate: str,path_ifc_model: str,available_tools: typing.Optional[str] = None,previous_attempts: typing.Optional[str] = None,
         baml_options: BamlCallOptions = {},
     ) -> typing.Union["types.CodeAction", "types.FunctionImplementation"]:
@@ -160,6 +205,18 @@ class BamlStreamClient:
           lambda x: typing.cast(typing.Union["types.CodeAction", "types.FinalAnswer"], x.cast_to(types, types, stream_types, False, __runtime__)),
           ctx,
         )
+    def CodeCleaner(self, faulty_code: str,error_message: str,
+        baml_options: BamlCallOptions = {},
+    ) -> baml_py.BamlStream[stream_types.CleanedCode, types.CleanedCode]:
+        ctx, result = self.__options.merge_options(baml_options).create_async_stream(function_name="CodeCleaner", args={
+            "faulty_code": faulty_code,"error_message": error_message,
+        })
+        return baml_py.BamlStream[stream_types.CleanedCode, types.CleanedCode](
+          result,
+          lambda x: typing.cast(stream_types.CleanedCode, x.cast_to(types, types, stream_types, True, __runtime__)),
+          lambda x: typing.cast(types.CleanedCode, x.cast_to(types, types, stream_types, False, __runtime__)),
+          ctx,
+        )
     def CodeExtractor(self, function_name: str,conversation_history: str,
         baml_options: BamlCallOptions = {},
     ) -> baml_py.BamlStream[stream_types.FunctionImplementation, types.FunctionImplementation]:
@@ -182,6 +239,30 @@ class BamlStreamClient:
           result,
           lambda x: typing.cast(stream_types.Resume, x.cast_to(types, types, stream_types, True, __runtime__)),
           lambda x: typing.cast(types.Resume, x.cast_to(types, types, stream_types, False, __runtime__)),
+          ctx,
+        )
+    def ToolAssessor(self, function_name: str,function_requirements: str,path_ifc_model: str,available_tools: str,previous_attempts: typing.Optional[str] = None,
+        baml_options: BamlCallOptions = {},
+    ) -> baml_py.BamlStream[typing.Union["stream_types.CodeAction", "stream_types.AssessmentResult"], typing.Union["types.CodeAction", "types.AssessmentResult"]]:
+        ctx, result = self.__options.merge_options(baml_options).create_async_stream(function_name="ToolAssessor", args={
+            "function_name": function_name,"function_requirements": function_requirements,"path_ifc_model": path_ifc_model,"available_tools": available_tools,"previous_attempts": previous_attempts,
+        })
+        return baml_py.BamlStream[typing.Union["stream_types.CodeAction", "stream_types.AssessmentResult"], typing.Union["types.CodeAction", "types.AssessmentResult"]](
+          result,
+          lambda x: typing.cast(typing.Union["stream_types.CodeAction", "stream_types.AssessmentResult"], x.cast_to(types, types, stream_types, True, __runtime__)),
+          lambda x: typing.cast(typing.Union["types.CodeAction", "types.AssessmentResult"], x.cast_to(types, types, stream_types, False, __runtime__)),
+          ctx,
+        )
+    def ToolCorrector(self, function_requirements: str,function_name: str,current_function_implementation: str,detailed_assessment: str,path_ifc_model: str,available_tools: str,previous_attempts: typing.Optional[str] = None,
+        baml_options: BamlCallOptions = {},
+    ) -> baml_py.BamlStream[typing.Union["stream_types.CodeAction", "stream_types.ImprovedImplementation"], typing.Union["types.CodeAction", "types.ImprovedImplementation"]]:
+        ctx, result = self.__options.merge_options(baml_options).create_async_stream(function_name="ToolCorrector", args={
+            "function_requirements": function_requirements,"function_name": function_name,"current_function_implementation": current_function_implementation,"detailed_assessment": detailed_assessment,"path_ifc_model": path_ifc_model,"available_tools": available_tools,"previous_attempts": previous_attempts,
+        })
+        return baml_py.BamlStream[typing.Union["stream_types.CodeAction", "stream_types.ImprovedImplementation"], typing.Union["types.CodeAction", "types.ImprovedImplementation"]](
+          result,
+          lambda x: typing.cast(typing.Union["stream_types.CodeAction", "stream_types.ImprovedImplementation"], x.cast_to(types, types, stream_types, True, __runtime__)),
+          lambda x: typing.cast(typing.Union["types.CodeAction", "types.ImprovedImplementation"], x.cast_to(types, types, stream_types, False, __runtime__)),
           ctx,
         )
     def ToolCreator(self, function_requirements: str,function_name: str,function_boilerplate: str,path_ifc_model: str,available_tools: typing.Optional[str] = None,previous_attempts: typing.Optional[str] = None,
@@ -211,6 +292,13 @@ class BamlHttpRequestClient:
             "user_input": user_input,"available_tools": available_tools,"previous_attempts": previous_attempts,"model_path": model_path,
         }, mode="request")
         return result
+    async def CodeCleaner(self, faulty_code: str,error_message: str,
+        baml_options: BamlCallOptions = {},
+    ) -> baml_py.baml_py.HTTPRequest:
+        result = await self.__options.merge_options(baml_options).create_http_request_async(function_name="CodeCleaner", args={
+            "faulty_code": faulty_code,"error_message": error_message,
+        }, mode="request")
+        return result
     async def CodeExtractor(self, function_name: str,conversation_history: str,
         baml_options: BamlCallOptions = {},
     ) -> baml_py.baml_py.HTTPRequest:
@@ -223,6 +311,20 @@ class BamlHttpRequestClient:
     ) -> baml_py.baml_py.HTTPRequest:
         result = await self.__options.merge_options(baml_options).create_http_request_async(function_name="ExtractResume", args={
             "resume": resume,
+        }, mode="request")
+        return result
+    async def ToolAssessor(self, function_name: str,function_requirements: str,path_ifc_model: str,available_tools: str,previous_attempts: typing.Optional[str] = None,
+        baml_options: BamlCallOptions = {},
+    ) -> baml_py.baml_py.HTTPRequest:
+        result = await self.__options.merge_options(baml_options).create_http_request_async(function_name="ToolAssessor", args={
+            "function_name": function_name,"function_requirements": function_requirements,"path_ifc_model": path_ifc_model,"available_tools": available_tools,"previous_attempts": previous_attempts,
+        }, mode="request")
+        return result
+    async def ToolCorrector(self, function_requirements: str,function_name: str,current_function_implementation: str,detailed_assessment: str,path_ifc_model: str,available_tools: str,previous_attempts: typing.Optional[str] = None,
+        baml_options: BamlCallOptions = {},
+    ) -> baml_py.baml_py.HTTPRequest:
+        result = await self.__options.merge_options(baml_options).create_http_request_async(function_name="ToolCorrector", args={
+            "function_requirements": function_requirements,"function_name": function_name,"current_function_implementation": current_function_implementation,"detailed_assessment": detailed_assessment,"path_ifc_model": path_ifc_model,"available_tools": available_tools,"previous_attempts": previous_attempts,
         }, mode="request")
         return result
     async def ToolCreator(self, function_requirements: str,function_name: str,function_boilerplate: str,path_ifc_model: str,available_tools: typing.Optional[str] = None,previous_attempts: typing.Optional[str] = None,
@@ -247,6 +349,13 @@ class BamlHttpStreamRequestClient:
             "user_input": user_input,"available_tools": available_tools,"previous_attempts": previous_attempts,"model_path": model_path,
         }, mode="stream")
         return result
+    async def CodeCleaner(self, faulty_code: str,error_message: str,
+        baml_options: BamlCallOptions = {},
+    ) -> baml_py.baml_py.HTTPRequest:
+        result = await self.__options.merge_options(baml_options).create_http_request_async(function_name="CodeCleaner", args={
+            "faulty_code": faulty_code,"error_message": error_message,
+        }, mode="stream")
+        return result
     async def CodeExtractor(self, function_name: str,conversation_history: str,
         baml_options: BamlCallOptions = {},
     ) -> baml_py.baml_py.HTTPRequest:
@@ -259,6 +368,20 @@ class BamlHttpStreamRequestClient:
     ) -> baml_py.baml_py.HTTPRequest:
         result = await self.__options.merge_options(baml_options).create_http_request_async(function_name="ExtractResume", args={
             "resume": resume,
+        }, mode="stream")
+        return result
+    async def ToolAssessor(self, function_name: str,function_requirements: str,path_ifc_model: str,available_tools: str,previous_attempts: typing.Optional[str] = None,
+        baml_options: BamlCallOptions = {},
+    ) -> baml_py.baml_py.HTTPRequest:
+        result = await self.__options.merge_options(baml_options).create_http_request_async(function_name="ToolAssessor", args={
+            "function_name": function_name,"function_requirements": function_requirements,"path_ifc_model": path_ifc_model,"available_tools": available_tools,"previous_attempts": previous_attempts,
+        }, mode="stream")
+        return result
+    async def ToolCorrector(self, function_requirements: str,function_name: str,current_function_implementation: str,detailed_assessment: str,path_ifc_model: str,available_tools: str,previous_attempts: typing.Optional[str] = None,
+        baml_options: BamlCallOptions = {},
+    ) -> baml_py.baml_py.HTTPRequest:
+        result = await self.__options.merge_options(baml_options).create_http_request_async(function_name="ToolCorrector", args={
+            "function_requirements": function_requirements,"function_name": function_name,"current_function_implementation": current_function_implementation,"detailed_assessment": detailed_assessment,"path_ifc_model": path_ifc_model,"available_tools": available_tools,"previous_attempts": previous_attempts,
         }, mode="stream")
         return result
     async def ToolCreator(self, function_requirements: str,function_name: str,function_boilerplate: str,path_ifc_model: str,available_tools: typing.Optional[str] = None,previous_attempts: typing.Optional[str] = None,

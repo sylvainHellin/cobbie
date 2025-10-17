@@ -15,7 +15,7 @@ from baml_client.types import CodeAction, FunctionImplementation
 from src.config.agents import FUNCTION_BOILERPLATE
 from src.engine.schemas import ModuleOutput
 from src.engine.util import get_logger
-from src.engine.components.test_and_improve import TestAndImprove
+from src.engine.components.test_and_improve_baml import TestAndImproveBAML
 from src.engine.util.baml_common import (
     BamlComponentBase,
     run_baml_function_with_metrics,
@@ -47,8 +47,8 @@ class ToolCreatorBAML(BamlComponentBase):
         self.add_code_prefix = add_code_prefix
         self.function_boilerplate = FUNCTION_BOILERPLATE
 
-        # Initialize TestAndImprove for validation
-        self.test_and_improve = TestAndImprove()
+        # Initialize TestAndImproveBAML for validation
+        self.test_and_improve = TestAndImproveBAML()
 
     def _clean_code_blocks(self, code: str) -> str:
         """
@@ -294,10 +294,10 @@ class ToolCreatorBAML(BamlComponentBase):
                             self.logger.warning(f"Unexpected result type: {type(result)}")
                             conversation_history.append(f"Unexpected result: {str(result)}")
 
-                # If we completed the loop with a function implementation, run TestAndImprove
+                # If we completed the loop with a function implementation, run TestAndImproveBAML
                 if output.status == "success" and output.result.function_implementation:
-                    with mlflow.start_span(name="TestAndImprove_Validation", span_type="CHAIN") as validation_span:
-                        self.logger.info("Running TestAndImprove validation")
+                    with mlflow.start_span(name="TestAndImproveBAML_Validation", span_type="CHAIN") as validation_span:
+                        self.logger.info("Running TestAndImproveBAML validation")
 
                         try:
                             test_result = self.test_and_improve(

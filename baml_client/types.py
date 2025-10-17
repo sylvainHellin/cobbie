@@ -41,8 +41,19 @@ def all_succeeded(checks: typing.Dict[CheckName, Check]) -> bool:
 # #########################################################################
 
 # #########################################################################
-# Generated classes (8)
+# Generated classes (11)
 # #########################################################################
+
+class AssessmentResult(BaseModel):
+    assessment_status: str
+    assessment_details: str
+    test_execution_log: typing.Optional[str] = None
+    confidence: typing.Optional[float] = None
+
+class CleanedCode(BaseModel):
+    function_implementation: str
+    cleaning_reasoning: str
+    success: bool
 
 class CodeAction(BaseModel):
     thoughts: str
@@ -61,6 +72,12 @@ class FunctionImplementation(BaseModel):
     function_implementation: str
     confidence: typing.Optional[float] = None
     needs_improvement: bool
+
+class ImprovedImplementation(BaseModel):
+    function_implementation: str
+    improvement_reasoning: str
+    confidence: typing.Optional[float] = None
+    changes_summary: typing.Optional[str] = None
 
 class Resume(BaseModel):
     name: str
