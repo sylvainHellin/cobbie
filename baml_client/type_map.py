@@ -25,6 +25,9 @@ type_map = {
     "types.FinalAnswer": types.FinalAnswer,
     "stream_types.FinalAnswer": stream_types.FinalAnswer,
 
+    "types.FunctionImplementation": types.FunctionImplementation,
+    "stream_types.FunctionImplementation": stream_types.FunctionImplementation,
+
     "types.Resume": types.Resume,
     "stream_types.Resume": stream_types.Resume,
 

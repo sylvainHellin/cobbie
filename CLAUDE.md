@@ -102,6 +102,7 @@ Created tools are persisted as `.py` files in `src/engine/tools/created/` and ca
 
 ## Guidelines for writing and testing code
 - Always use `uv run` to execute a python script
+- Always save test scripts in the `/test` directory to keep them organized and separate from production code
 - Always use context7 when I need code generation, setup or configuration steps, or
 library/API documentation. This means you should automatically use the Context7 MCP
 tools to resolve library id and get library docs without me having to explicitly ask. This is especially true when interacting the the following libraries:

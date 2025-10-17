@@ -30,11 +30,23 @@ class LlmResponseParser:
         result = self.__options.merge_options(baml_options).parse_response(function_name="BIMQAS", llm_response=llm_response, mode="request")
         return typing.cast(typing.Union["types.CodeAction", "types.FinalAnswer"], result)
 
+    def CodeExtractor(
+        self, llm_response: str, baml_options: BamlCallOptions = {},
+    ) -> types.FunctionImplementation:
+        result = self.__options.merge_options(baml_options).parse_response(function_name="CodeExtractor", llm_response=llm_response, mode="request")
+        return typing.cast(types.FunctionImplementation, result)
+
     def ExtractResume(
         self, llm_response: str, baml_options: BamlCallOptions = {},
     ) -> types.Resume:
         result = self.__options.merge_options(baml_options).parse_response(function_name="ExtractResume", llm_response=llm_response, mode="request")
         return typing.cast(types.Resume, result)
+
+    def ToolCreator(
+        self, llm_response: str, baml_options: BamlCallOptions = {},
+    ) -> typing.Union["types.CodeAction", "types.FunctionImplementation"]:
+        result = self.__options.merge_options(baml_options).parse_response(function_name="ToolCreator", llm_response=llm_response, mode="request")
+        return typing.cast(typing.Union["types.CodeAction", "types.FunctionImplementation"], result)
 
     
 
@@ -50,10 +62,22 @@ class LlmStreamParser:
         result = self.__options.merge_options(baml_options).parse_response(function_name="BIMQAS", llm_response=llm_response, mode="stream")
         return typing.cast(typing.Union["stream_types.CodeAction", "stream_types.FinalAnswer"], result)
 
+    def CodeExtractor(
+        self, llm_response: str, baml_options: BamlCallOptions = {},
+    ) -> stream_types.FunctionImplementation:
+        result = self.__options.merge_options(baml_options).parse_response(function_name="CodeExtractor", llm_response=llm_response, mode="stream")
+        return typing.cast(stream_types.FunctionImplementation, result)
+
     def ExtractResume(
         self, llm_response: str, baml_options: BamlCallOptions = {},
     ) -> stream_types.Resume:
         result = self.__options.merge_options(baml_options).parse_response(function_name="ExtractResume", llm_response=llm_response, mode="stream")
         return typing.cast(stream_types.Resume, result)
+
+    def ToolCreator(
+        self, llm_response: str, baml_options: BamlCallOptions = {},
+    ) -> typing.Union["stream_types.CodeAction", "stream_types.FunctionImplementation"]:
+        result = self.__options.merge_options(baml_options).parse_response(function_name="ToolCreator", llm_response=llm_response, mode="stream")
+        return typing.cast(typing.Union["stream_types.CodeAction", "stream_types.FunctionImplementation"], result)
 
     
