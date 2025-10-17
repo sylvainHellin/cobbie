@@ -30,7 +30,7 @@ if not os.getenv("Z_AI_API_KEY"):
 print("✅ Z.AI API key found - using GLM 4.6 with Coding Plan endpoint")
 
 # Import the BAML agent
-from src.engine.components.code_act_agent_baml import BIMQASBaml
+from src.engine.components.bim_qas import BIMQASBaml
 
 # Setup MLflow
 import mlflow

@@ -115,7 +115,7 @@ function BIMQAS(
 ```
 
 ### Step 2.2: Thin Python Orchestration
-**Create NEW file `src/engine/components/code_act_agent_baml.py`:**
+**Create NEW file `src/engine/components/bim_qas.py`:**
 ```python
 from typing import Callable, List, Dict, Any, Optional
 import mlflow
@@ -210,7 +210,7 @@ class BIMQAS:
 - [ ] Regenerate BAML client: `uv run baml-cli generate`
 
 ### Phase 2: Core BAML Alternative
-- [ ] Create `src/engine/components/code_act_agent_baml.py`
+- [ ] Create `src/engine/components/bim_qas.py`
 - [ ] Test union type behavior with `isinstance()` checking
 - [ ] Verify MLflow tracing works with union types
 - [ ] Run basic functionality tests

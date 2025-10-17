@@ -33,7 +33,7 @@ from typing import Dict, Optional, Any, List
 import mlflow
 from tqdm import tqdm
 
-from src.engine.components.code_act_agent_baml import BIMQASBaml
+from src.engine.components.bim_qas import BIMQASBaml
 from src.engine.components.answer_verifier import AnswerVerifier
 from src.engine.util import get_logger
 from src.experiment.datasets import DEVSET

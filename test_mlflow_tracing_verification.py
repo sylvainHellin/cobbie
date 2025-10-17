@@ -22,7 +22,7 @@ mlflow.set_tracking_uri("http://127.0.0.1:5000")
 mlflow.set_experiment("BIMQAS_BAML_Tracing_Verification")
 
 # Import the BAML agent
-from src.engine.components.code_act_agent_baml import BIMQASBaml
+from src.engine.components.bim_qas import BIMQASBaml
 
 # Path to IFC file
 ifc_model_path = "src/experiment/bim_models/duplex/arc.ifc"
