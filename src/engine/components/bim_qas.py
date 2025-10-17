@@ -11,7 +11,7 @@ from src.engine.util import get_logger, get_created_tools, create_code_prefix
 from src.config.agents import FUNCTION_BOILERPLATE
 
 
-class BIMQASBaml:
+class BIM_QAS:
     """BAML-based alternative to DSPy Engine"""
 
     def __init__(
@@ -32,7 +32,7 @@ class BIMQASBaml:
         self.max_tokens_logs = max_tokens_logs
         self.log_level = log_level
 
-        self.logger = get_logger(name="BIMQASBaml", log_level=self.log_level)
+        self.logger = get_logger(name="BIM_QAS", log_level=self.log_level)
 
         # Setup tools including primordial ones
         self._setup_tools()
@@ -390,7 +390,7 @@ if __name__ == "__main__":
     test_question = "What is the total number of walls in the building?"
 
     # Initialize the BAML agent
-    agent = BIMQASBaml(
+    agent = BIM_QAS(
         max_iterations=5,
         log_level="INFO"
     )

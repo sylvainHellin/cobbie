@@ -33,7 +33,7 @@ from typing import Dict, Optional, Any, List
 import mlflow
 from tqdm import tqdm
 
-from src.engine.components.bim_qas import BIMQASBaml
+from src.engine.components.bim_qas import BIM_QAS
 from src.engine.components.answer_verifier import AnswerVerifier
 from src.engine.util import get_logger
 from src.experiment.datasets import DEVSET
@@ -97,10 +97,10 @@ class BAMEvaluationRunner:
             "question_categories": {},
         }
 
-    def _create_baml_agent(self) -> BIMQASBaml:
+    def _create_baml_agent(self) -> BIM_QAS:
         """Create BAML agent instance with current configuration."""
         self.logger.info(f"Creating BAML agent with max_iterations={self.max_iterations}")
-        return BIMQASBaml(
+        return BIM_QAS(
             max_iterations=self.max_iterations,
             log_level="INFO",
             path_ifc_model=self.ifc_model_path,
@@ -125,7 +125,7 @@ class BAMEvaluationRunner:
 
     def _process_single_question(
         self,
-        agent: BIMQASBaml,
+        agent: BIM_QAS,
         question_data,  # QA_Pair object
         question_index: int
     ) -> Dict[str, Any]:

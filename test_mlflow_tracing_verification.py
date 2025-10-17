@@ -22,7 +22,7 @@ mlflow.set_tracking_uri("http://127.0.0.1:5000")
 mlflow.set_experiment("BIMQAS_BAML_Tracing_Verification")
 
 # Import the BAML agent
-from src.engine.components.bim_qas import BIMQASBaml
+from src.engine.components.bim_qas import BIM_QAS
 
 # Path to IFC file
 ifc_model_path = "src/experiment/bim_models/duplex/arc.ifc"
@@ -31,7 +31,7 @@ ifc_model_path = "src/experiment/bim_models/duplex/arc.ifc"
 test_question = "How many walls are in the building?"
 
 # Initialize the BAML agent
-agent = BIMQASBaml(
+agent = BIM_QAS(
     max_iterations=2,  # Reduced for quick testing
     log_level="INFO",
     path_ifc_model=ifc_model_path,

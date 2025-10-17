@@ -30,7 +30,7 @@ if not os.getenv("Z_AI_API_KEY"):
 print("✅ Z.AI API key found - using GLM 4.6 with Coding Plan endpoint")
 
 # Import the BAML agent
-from src.engine.components.bim_qas import BIMQASBaml
+from src.engine.components.bim_qas import BIM_QAS
 
 # Setup MLflow
 import mlflow
@@ -46,7 +46,7 @@ ifc_model_path = "src/experiment/bim_models/duplex/arc.ifc"
 test_question = "How many walls are in the building?"
 
 # Initialize the BAML agent
-agent = BIMQASBaml(
+agent = BIM_QAS(
     max_iterations=3,
     log_level="INFO",
     path_ifc_model=ifc_model_path,
