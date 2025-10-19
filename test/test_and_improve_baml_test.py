@@ -15,6 +15,7 @@ from src.config.main import TEST_IFC_PATH
 from src.engine.components.test_and_improve_baml import TestAndImproveBAML
 from src.engine.util import _create_function_from_source_code
 from src.engine.tools.primordial import web_search, query_ifcopenshell_documentation
+from baml_client.types import TestAndImproveSuccess, TestAndImproveError
 
 
 def test_code_cleaner():
@@ -45,8 +46,8 @@ def count_doors(ifc_file_path: str) -> int:
         print(f"✅ CodeCleaner test passed")
         print(f"   Result type: {type(result).__name__}")
         print(f"   Success: {result.success if hasattr(result, 'success') else 'Unknown'}")
-        if hasattr(result, 'cleaning_reasoning'):
-            print(f"   Reasoning: {result.cleaning_reasoning[:100]}...")
+        if hasattr(result, 'reasoning'):
+            print(f"   Reasoning: {result.reasoning[:100]}...")
         return True
 
     except Exception as e:
@@ -90,23 +91,33 @@ def count_doors(ifc_file_path: str) -> int:
         test_function = creation_result.unwrap()
         test_and_improve.add_function_to_interpreter(function_name, test_function)
 
-        # Run just the assessment phase
+        # Setup function and assessor config first
         test_and_improve.iter = 0
-        test_and_improve.output = test_and_improve._perform_assessment(
-            function_implementation=function_implementation,
-            function_requirements=function_requirements,
+        assessor_config, setup_success = test_and_improve._create_function_and_setup_assessor(
             function_name=function_name,
-            path_ifc_model=TEST_IFC_PATH
+            function_implementation=function_implementation
+        )
+
+        if not setup_success:
+            print(f"❌ Failed to setup assessor")
+            return False
+
+        # Run the assessment phase
+        assessment_result, success = test_and_improve._perform_assessment(
+            function_name=function_name,
+            function_requirements=function_requirements,
+            path_ifc_model=TEST_IFC_PATH,
+            assessor_config=assessor_config
         )
 
         print(f"✅ ToolAssessor test completed")
-        print(f"   Status: {test_and_improve.output.status}")
+        print(f"   Success: {success}")
 
-        if test_and_improve.output.result.assessment_status:
-            print(f"   Assessment Status: {test_and_improve.output.result.assessment_status}")
-            print(f"   Assessment Details: {test_and_improve.output.result.assessment_details[:150]}...")
+        if success and assessment_result and assessment_result.assessment_status:
+            print(f"   Assessment Status: {assessment_result.assessment_status}")
+            print(f"   Assessment Details: {assessment_result.assessment_details[:150]}...")
 
-        return test_and_improve.output.status == "success"
+        return success and assessment_result is not None
 
     except Exception as e:
         print(f"❌ ToolAssessor test failed: {str(e)}")
@@ -152,7 +163,7 @@ def count_doors(ifc_file_path: str) -> int:
 
         # Run the correction phase
         test_and_improve.iter = 0
-        test_and_improve.output = test_and_improve._perform_correction(
+        improved_implementation, success = test_and_improve._perform_correction(
             function_requirements=function_requirements,
             function_name=function_name,
             current_function_implementation=current_implementation,
@@ -161,17 +172,15 @@ def count_doors(ifc_file_path: str) -> int:
         )
 
         print(f"✅ ToolCorrector test completed")
-        print(f"   Status: {test_and_improve.output.status}")
+        print(f"   Success: {success}")
 
-        if test_and_improve.output.status == "success":
+        if success and improved_implementation:
             print(f"   ✅ Function successfully improved")
-            print(f"   Improved implementation length: {len(test_and_improve.output.result.function_implementation)} chars")
+            print(f"   Improved implementation length: {len(improved_implementation)} chars")
         else:
             print(f"   ⚠️  Function improvement incomplete")
-            if test_and_improve.output.error_msg:
-                print(f"   Error: {test_and_improve.output.error_msg[:150]}...")
 
-        return test_and_improve.output.status == "success"
+        return success and improved_implementation is not None
 
     except Exception as e:
         print(f"❌ ToolCorrector test failed: {str(e)}")
@@ -219,18 +228,24 @@ def count_doors(ifc_file_path: str) -> int:
         )
 
         print(f"✅ Full TestAndImproveBAML test completed")
-        print(f"   Final Status: {result.status}")
-        print(f"   Assessment Status: {result.result.assessment_status}")
 
-        if result.status == "success":
+        if isinstance(result, TestAndImproveSuccess):
+            print(f"   Status: SUCCESS")
             print(f"   ✅ Function successfully improved")
-            print(f"   Final implementation length: {len(result.result.function_implementation)} chars")
-        else:
+            print(f"   Final implementation length: {len(result.function_implementation)} chars")
+            print(f"   Iterations Used: {result.iterations_used}")
+            print(f"   Total Time: {result.total_time_seconds:.2f} seconds")
+            return True
+        elif isinstance(result, TestAndImproveError):
+            print(f"   Status: ERROR")
+            print(f"   Error Message: {result.error_message}")
             print(f"   ⚠️  Function improvement incomplete")
-            if result.error_msg:
-                print(f"   Error: {result.error_msg[:150]}...")
-
-        return result.status == "success"
+            print(f"   Iterations Completed: {result.iterations_completed}")
+            return False
+        else:
+            print(f"   Status: UNKNOWN")
+            print(f"   Unknown result type: {type(result)}")
+            return False
 
     except Exception as e:
         print(f"❌ Full TestAndImproveBAML test failed: {str(e)}")

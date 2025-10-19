@@ -23,18 +23,17 @@ class StreamState(BaseModel, typing.Generic[StreamStateValueT]):
     value: StreamStateValueT
     state: typing_extensions.Literal["Pending", "Incomplete", "Complete"]
 # #########################################################################
-# Generated classes (11)
+# Generated classes (13)
 # #########################################################################
 
 class AssessmentResult(BaseModel):
     assessment_status: typing.Optional[str] = None
     assessment_details: typing.Optional[str] = None
     test_execution_log: typing.Optional[str] = None
-    confidence: typing.Optional[float] = None
 
 class CleanedCode(BaseModel):
     function_implementation: typing.Optional[str] = None
-    cleaning_reasoning: typing.Optional[str] = None
+    reasoning: typing.Optional[str] = None
     success: typing.Optional[bool] = None
 
 class CodeAction(BaseModel):
@@ -57,8 +56,7 @@ class FunctionImplementation(BaseModel):
 
 class ImprovedImplementation(BaseModel):
     function_implementation: typing.Optional[str] = None
-    improvement_reasoning: typing.Optional[str] = None
-    confidence: typing.Optional[float] = None
+    reasoning: typing.Optional[str] = None
     changes_summary: typing.Optional[str] = None
 
 class Resume(BaseModel):
@@ -71,6 +69,18 @@ class SimilarityResult(BaseModel):
     similarity_score: typing.Optional[float] = None
     correct_answer: typing.Optional[bool] = None
     reasoning: typing.Optional[str] = None
+
+class TestAndImproveError(BaseModel):
+    error_message: typing.Optional[str] = None
+    iterations_completed: typing.Optional[int] = None
+    final_assessment_status: typing.Optional[str] = None
+    partial_function_implementation: typing.Optional[str] = None
+
+class TestAndImproveSuccess(BaseModel):
+    function_implementation: typing.Optional[str] = None
+    assessment_details: typing.Optional[str] = None
+    iterations_used: typing.Optional[int] = None
+    total_time_seconds: typing.Optional[float] = None
 
 class ToolCreationResult(BaseModel):
     function_name: typing.Optional[str] = None

@@ -43,6 +43,12 @@ type_map = {
     "types.SimilarityResult": types.SimilarityResult,
     "stream_types.SimilarityResult": stream_types.SimilarityResult,
 
+    "types.TestAndImproveError": types.TestAndImproveError,
+    "stream_types.TestAndImproveError": stream_types.TestAndImproveError,
+
+    "types.TestAndImproveSuccess": types.TestAndImproveSuccess,
+    "stream_types.TestAndImproveSuccess": stream_types.TestAndImproveSuccess,
+
     "types.ToolCreationResult": types.ToolCreationResult,
     "stream_types.ToolCreationResult": stream_types.ToolCreationResult,
 

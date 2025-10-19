@@ -249,10 +249,11 @@ class ToolCreatorBAML(BamlComponentBase):
 
                         # Process result based on type
                         if isinstance(result, FunctionImplementation):
-                            # Tool creation complete
+                            # Tool creation complete - reset status regardless of previous CodeAction failures
                             function_implementation = self._clean_code_blocks(result.function_implementation)
                             output.result.function_implementation = function_implementation
                             output.status = "success"
+                            output.error_msg = None  # Clear any previous error messages
 
                             total_time = time.time() - run_start_time
                             self.logger.info(f"BAML ToolCreator completed in {iteration + 1} iterations")
@@ -300,7 +301,7 @@ class ToolCreatorBAML(BamlComponentBase):
                         self.logger.info("Running TestAndImproveBAML validation")
 
                         try:
-                            test_result = self.test_and_improve(
+                            test_result = self.test_and_improve.forward(
                                 function_implementation=output.result.function_implementation,
                                 function_requirements=function_requirements,
                                 function_name=function_name,

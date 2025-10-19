@@ -20,7 +20,7 @@ from .globals import DO_NOT_USE_DIRECTLY_UNLESS_YOU_KNOW_WHAT_YOURE_DOING_RUNTIM
 class TypeBuilder(type_builder.TypeBuilder):
     def __init__(self):
         super().__init__(classes=set(
-          ["AssessmentResult","CleanedCode","CodeAction","ErrorAnalysisResult","FinalAnswer","FunctionImplementation","ImprovedImplementation","Resume","SimilarityResult","ToolCreationResult","ToolOptimizationResult",]
+          ["AssessmentResult","CleanedCode","CodeAction","ErrorAnalysisResult","FinalAnswer","FunctionImplementation","ImprovedImplementation","Resume","SimilarityResult","TestAndImproveError","TestAndImproveSuccess","ToolCreationResult","ToolOptimizationResult",]
         ), enums=set(
           []
         ), runtime=DO_NOT_USE_DIRECTLY_UNLESS_YOU_KNOW_WHAT_YOURE_DOING_RUNTIME)
@@ -31,7 +31,7 @@ class TypeBuilder(type_builder.TypeBuilder):
 
 
     # #########################################################################
-    # Generated classes 11
+    # Generated classes 13
     # #########################################################################
 
     @property
@@ -71,6 +71,14 @@ class TypeBuilder(type_builder.TypeBuilder):
         return SimilarityResultViewer(self)
 
     @property
+    def TestAndImproveError(self) -> "TestAndImproveErrorViewer":
+        return TestAndImproveErrorViewer(self)
+
+    @property
+    def TestAndImproveSuccess(self) -> "TestAndImproveSuccessViewer":
+        return TestAndImproveSuccessViewer(self)
+
+    @property
     def ToolCreationResult(self) -> "ToolCreationResultViewer":
         return ToolCreationResultViewer(self)
 
@@ -86,14 +94,14 @@ class TypeBuilder(type_builder.TypeBuilder):
 
 
 # #########################################################################
-# Generated classes 11
+# Generated classes 13
 # #########################################################################
 
 class AssessmentResultAst:
     def __init__(self, tb: type_builder.TypeBuilder):
         _tb = tb._tb # type: ignore (we know how to use this private attribute)
         self._bldr = _tb.class_("AssessmentResult")
-        self._properties: typing.Set[str] = set([  "assessment_status",  "assessment_details",  "test_execution_log",  "confidence",  ])
+        self._properties: typing.Set[str] = set([  "assessment_status",  "assessment_details",  "test_execution_log",  ])
         self._props = AssessmentResultProperties(self._bldr, self._properties)
 
     def type(self) -> baml_py.FieldType:
@@ -133,10 +141,6 @@ class AssessmentResultProperties:
     def test_execution_log(self) -> type_builder.ClassPropertyViewer:
         return type_builder.ClassPropertyViewer(self.__bldr.property("test_execution_log"))
     
-    @property
-    def confidence(self) -> type_builder.ClassPropertyViewer:
-        return type_builder.ClassPropertyViewer(self.__bldr.property("confidence"))
-    
     
 
 
@@ -144,7 +148,7 @@ class CleanedCodeAst:
     def __init__(self, tb: type_builder.TypeBuilder):
         _tb = tb._tb # type: ignore (we know how to use this private attribute)
         self._bldr = _tb.class_("CleanedCode")
-        self._properties: typing.Set[str] = set([  "function_implementation",  "cleaning_reasoning",  "success",  ])
+        self._properties: typing.Set[str] = set([  "function_implementation",  "reasoning",  "success",  ])
         self._props = CleanedCodeProperties(self._bldr, self._properties)
 
     def type(self) -> baml_py.FieldType:
@@ -177,8 +181,8 @@ class CleanedCodeProperties:
         return type_builder.ClassPropertyViewer(self.__bldr.property("function_implementation"))
     
     @property
-    def cleaning_reasoning(self) -> type_builder.ClassPropertyViewer:
-        return type_builder.ClassPropertyViewer(self.__bldr.property("cleaning_reasoning"))
+    def reasoning(self) -> type_builder.ClassPropertyViewer:
+        return type_builder.ClassPropertyViewer(self.__bldr.property("reasoning"))
     
     @property
     def success(self) -> type_builder.ClassPropertyViewer:
@@ -371,7 +375,7 @@ class ImprovedImplementationAst:
     def __init__(self, tb: type_builder.TypeBuilder):
         _tb = tb._tb # type: ignore (we know how to use this private attribute)
         self._bldr = _tb.class_("ImprovedImplementation")
-        self._properties: typing.Set[str] = set([  "function_implementation",  "improvement_reasoning",  "confidence",  "changes_summary",  ])
+        self._properties: typing.Set[str] = set([  "function_implementation",  "reasoning",  "changes_summary",  ])
         self._props = ImprovedImplementationProperties(self._bldr, self._properties)
 
     def type(self) -> baml_py.FieldType:
@@ -404,12 +408,8 @@ class ImprovedImplementationProperties:
         return type_builder.ClassPropertyViewer(self.__bldr.property("function_implementation"))
     
     @property
-    def improvement_reasoning(self) -> type_builder.ClassPropertyViewer:
-        return type_builder.ClassPropertyViewer(self.__bldr.property("improvement_reasoning"))
-    
-    @property
-    def confidence(self) -> type_builder.ClassPropertyViewer:
-        return type_builder.ClassPropertyViewer(self.__bldr.property("confidence"))
+    def reasoning(self) -> type_builder.ClassPropertyViewer:
+        return type_builder.ClassPropertyViewer(self.__bldr.property("reasoning"))
     
     @property
     def changes_summary(self) -> type_builder.ClassPropertyViewer:
@@ -512,6 +512,108 @@ class SimilarityResultProperties:
     @property
     def reasoning(self) -> type_builder.ClassPropertyViewer:
         return type_builder.ClassPropertyViewer(self.__bldr.property("reasoning"))
+    
+    
+
+
+class TestAndImproveErrorAst:
+    def __init__(self, tb: type_builder.TypeBuilder):
+        _tb = tb._tb # type: ignore (we know how to use this private attribute)
+        self._bldr = _tb.class_("TestAndImproveError")
+        self._properties: typing.Set[str] = set([  "error_message",  "iterations_completed",  "final_assessment_status",  "partial_function_implementation",  ])
+        self._props = TestAndImproveErrorProperties(self._bldr, self._properties)
+
+    def type(self) -> baml_py.FieldType:
+        return self._bldr.field()
+
+    @property
+    def props(self) -> "TestAndImproveErrorProperties":
+        return self._props
+
+
+class TestAndImproveErrorViewer(TestAndImproveErrorAst):
+    def __init__(self, tb: type_builder.TypeBuilder):
+        super().__init__(tb)
+
+    
+    def list_properties(self) -> typing.List[typing.Tuple[str, type_builder.ClassPropertyViewer]]:
+        return [(name, type_builder.ClassPropertyViewer(self._bldr.property(name))) for name in self._properties]
+    
+
+
+class TestAndImproveErrorProperties:
+    def __init__(self, bldr: baml_py.ClassBuilder, properties: typing.Set[str]):
+        self.__bldr = bldr
+        self.__properties = properties # type: ignore (we know how to use this private attribute) # noqa: F821
+
+    
+    
+    @property
+    def error_message(self) -> type_builder.ClassPropertyViewer:
+        return type_builder.ClassPropertyViewer(self.__bldr.property("error_message"))
+    
+    @property
+    def iterations_completed(self) -> type_builder.ClassPropertyViewer:
+        return type_builder.ClassPropertyViewer(self.__bldr.property("iterations_completed"))
+    
+    @property
+    def final_assessment_status(self) -> type_builder.ClassPropertyViewer:
+        return type_builder.ClassPropertyViewer(self.__bldr.property("final_assessment_status"))
+    
+    @property
+    def partial_function_implementation(self) -> type_builder.ClassPropertyViewer:
+        return type_builder.ClassPropertyViewer(self.__bldr.property("partial_function_implementation"))
+    
+    
+
+
+class TestAndImproveSuccessAst:
+    def __init__(self, tb: type_builder.TypeBuilder):
+        _tb = tb._tb # type: ignore (we know how to use this private attribute)
+        self._bldr = _tb.class_("TestAndImproveSuccess")
+        self._properties: typing.Set[str] = set([  "function_implementation",  "assessment_details",  "iterations_used",  "total_time_seconds",  ])
+        self._props = TestAndImproveSuccessProperties(self._bldr, self._properties)
+
+    def type(self) -> baml_py.FieldType:
+        return self._bldr.field()
+
+    @property
+    def props(self) -> "TestAndImproveSuccessProperties":
+        return self._props
+
+
+class TestAndImproveSuccessViewer(TestAndImproveSuccessAst):
+    def __init__(self, tb: type_builder.TypeBuilder):
+        super().__init__(tb)
+
+    
+    def list_properties(self) -> typing.List[typing.Tuple[str, type_builder.ClassPropertyViewer]]:
+        return [(name, type_builder.ClassPropertyViewer(self._bldr.property(name))) for name in self._properties]
+    
+
+
+class TestAndImproveSuccessProperties:
+    def __init__(self, bldr: baml_py.ClassBuilder, properties: typing.Set[str]):
+        self.__bldr = bldr
+        self.__properties = properties # type: ignore (we know how to use this private attribute) # noqa: F821
+
+    
+    
+    @property
+    def function_implementation(self) -> type_builder.ClassPropertyViewer:
+        return type_builder.ClassPropertyViewer(self.__bldr.property("function_implementation"))
+    
+    @property
+    def assessment_details(self) -> type_builder.ClassPropertyViewer:
+        return type_builder.ClassPropertyViewer(self.__bldr.property("assessment_details"))
+    
+    @property
+    def iterations_used(self) -> type_builder.ClassPropertyViewer:
+        return type_builder.ClassPropertyViewer(self.__bldr.property("iterations_used"))
+    
+    @property
+    def total_time_seconds(self) -> type_builder.ClassPropertyViewer:
+        return type_builder.ClassPropertyViewer(self.__bldr.property("total_time_seconds"))
     
     
 

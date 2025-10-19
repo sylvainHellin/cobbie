@@ -11,14 +11,20 @@ Key Architecture Preservation:
 
 import re
 import time
-from typing import Dict, Any, Optional, List, Callable
+from typing import Dict, Any, Optional, List, Callable, Union
 
 import mlflow
 from baml_client import b
-from baml_client.types import CodeAction, AssessmentResult, ImprovedImplementation, CleanedCode
+from baml_client.types import (
+    CodeAction,
+    AssessmentResult,
+    ImprovedImplementation,
+    CleanedCode,
+    TestAndImproveSuccess,
+    TestAndImproveError
+)
 
 from src.config.agents import TestAndImproveConfig
-from src.engine.schemas import ModuleOutput, Err, Ok
 from src.engine.util import (
     _create_function_from_source_code,
     get_logger
@@ -39,13 +45,17 @@ class TestAndImproveBAML(BamlComponentBase):
     2. ToolCorrector improves based on assessment feedback
     3. CodeCleaner fixes syntax errors when needed
     4. Iterative assessment/correction loop
+
+    Returns:
+        - TestAndImproveSuccess: Function successfully tested and improved
+        - TestAndImproveError: Process failed or couldn't achieve success
     """
 
     def __init__(
         self,
         config: Optional[TestAndImproveConfig] = None,
         log_level: str = "INFO",
-        max_iterations: int = 10,
+        max_iterations: int = 2,
     ):
         # Initialize base component with tools and interpreter
         super().__init__(
@@ -58,9 +68,6 @@ class TestAndImproveBAML(BamlComponentBase):
 
         # Initialize iteration counter
         self.iter = 0
-
-        # Initialize output
-        self.output = ModuleOutput(status="error")
 
         self.logger.info("BAML TestAndImprove initialized")
 
@@ -139,7 +146,7 @@ class TestAndImproveBAML(BamlComponentBase):
             if isinstance(result, CleanedCode) and result.success:
                 cleaned_code = self._clean_code_blocks(result.function_implementation)
                 self.logger.info("✓ Code cleaned successfully by BAML CodeCleaner")
-                self.logger.debug(f"Cleaning reasoning: {result.cleaning_reasoning}")
+                self.logger.debug(f"Cleaning reasoning: {result.reasoning}")
                 return cleaned_code, True
             else:
                 self.logger.warning("BAML CodeCleaner failed to clean the code")
@@ -176,8 +183,29 @@ class TestAndImproveBAML(BamlComponentBase):
 
             new_tool = creation_result.unwrap()
 
+            # Add the new function to additional_authorized_functions so it's available in the interpreter
+            # Use a unique name that includes iteration to avoid conflicts
+            unique_function_name = f"{function_name}_iter_{self.iter}"
+            self.additional_authorized_functions[unique_function_name] = new_tool
+            self.additional_authorized_functions[function_name] = new_tool  # Keep original name for backward compatibility
+
+            # Force clear any existing Python interpreter instance to ensure fresh namespace
+            if hasattr(self, 'python_interpreter'):
+                delattr(self, 'python_interpreter')
+
+            # Reinitialize the Python interpreter to include the new function
+            self._setup_interpreter()
+
+            # Verify the function is properly available in the interpreter
+            try:
+                # Test that the function is accessible
+                test_result = self.python_interpreter(f"print('Function {function_name} available:', callable({function_name}))")
+                self.logger.debug(f"Function availability test: {test_result}")
+            except Exception as verify_error:
+                self.logger.warning(f"Function verification failed: {verify_error}")
+
             # Create tools list combining primordial tools with the generated tool
-            tools = list(self.additional_authorized_functions.values()) + [new_tool]
+            tools = list(self.additional_authorized_functions.values())
 
             # Generate tool documentation for BAML
             tools_docs = self._generate_tools_docs_for_list(tools)
@@ -245,7 +273,7 @@ class TestAndImproveBAML(BamlComponentBase):
 
             # Initialize assessment loop
             previous_attempts = []
-            max_assessor_iterations = 5  # Configurable limit for assessment iterations
+            max_assessor_iterations = 10  # Configurable limit for assessment iterations
 
             for iteration in range(max_assessor_iterations):
                 self.logger.debug(f"Assessor iteration {iteration + 1}/{max_assessor_iterations}")
@@ -358,7 +386,7 @@ class TestAndImproveBAML(BamlComponentBase):
 
             # Initialize correction loop
             previous_attempts = []
-            max_corrector_iterations = 5  # Configurable limit for correction iterations
+            max_corrector_iterations = 10  # Configurable limit for correction iterations
 
             for iteration in range(max_corrector_iterations):
                 self.logger.debug(f"Corrector iteration {iteration + 1}/{max_corrector_iterations}")
@@ -452,7 +480,7 @@ class TestAndImproveBAML(BamlComponentBase):
         path_ifc_model: str,
         function_implementation: str,
         initial_assessment: Optional[str] = None,
-    ) -> ModuleOutput:
+    ) -> TestAndImproveSuccess | TestAndImproveError:
         """
         Main execution method for TestAndImprove using BAML patterns.
 
@@ -464,12 +492,13 @@ class TestAndImproveBAML(BamlComponentBase):
             initial_assessment: Optional initial assessment describing known issues to fix
 
         Returns:
-            ModuleOutput containing the assessment result and improved function
+            TestAndImproveSuccess: Function successfully tested and improved
+            TestAndImproveError: Process failed or couldn't achieve success
         """
-        # Reset iteration counter and initialize output
+        # Reset iteration counter and initialize state
         self.iter = 0
-        self.output = ModuleOutput(status="error")
-        self.output.result.function_implementation = function_implementation
+        current_function_implementation = function_implementation
+        final_assessment_status = None
 
         run_start_time = time.time()
 
@@ -504,17 +533,20 @@ class TestAndImproveBAML(BamlComponentBase):
                         improved_implementation, success = self._perform_correction(
                             function_requirements=function_requirements,
                             function_name=function_name,
-                            current_function_implementation=function_implementation,
+                            current_function_implementation=current_function_implementation,
                             detailed_assessment=initial_assessment,
                             path_ifc_model=path_ifc_model
                         )
 
                         if success and improved_implementation:
-                            self.output.result.function_implementation = improved_implementation
+                            current_function_implementation = improved_implementation
                             self.logger.info("✓ Initial correction completed")
                         else:
-                            self.output.error_msg = "Initial correction failed"
-                            self.logger.error("✗ Initial correction failed")
+                            return TestAndImproveError(
+                                error_message="Initial correction failed",
+                                iterations_completed=self.iter,
+                                final_assessment_status="initial_correction_failed"
+                            )
 
                 # --- Iterative improvement loop --- #
                 while self.iter < self.max_iterations:
@@ -526,18 +558,18 @@ class TestAndImproveBAML(BamlComponentBase):
                         # Step 1: Create function and setup ToolAssessor
                         assessor_config, setup_success = self._create_function_and_setup_assessor(
                             function_name=function_name,
-                            function_implementation=self.output.result.function_implementation
+                            function_implementation=current_function_implementation
                         )
 
                         if not setup_success:
                             # Try to clean the code if function creation failed
                             cleaned_code, cleaning_success = self._handle_code_cleaning(
-                                faulty_code=self.output.result.function_implementation,
-                                error_msg=self.output.error_msg or "Function creation failed"
+                                faulty_code=current_function_implementation,
+                                error_msg="Function creation failed"
                             )
 
                             if cleaning_success:
-                                self.output.result.function_implementation = cleaned_code
+                                current_function_implementation = cleaned_code
                                 # Retry function creation with cleaned code
                                 assessor_config, setup_success = self._create_function_and_setup_assessor(
                                     function_name=function_name,
@@ -545,9 +577,12 @@ class TestAndImproveBAML(BamlComponentBase):
                                 )
 
                             if not setup_success:
-                                self.output.error_msg = f"✗ Failed to create function and setup ToolAssessor in iteration {self.iter}"
-                                self.logger.error(self.output.error_msg)
-                                continue
+                                return TestAndImproveError(
+                                    error_message=f"✗ Failed to create function and setup ToolAssessor in iteration {self.iter}",
+                                    iterations_completed=self.iter,
+                                    final_assessment_status=final_assessment_status,
+                                    partial_function_implementation=current_function_implementation
+                                )
 
                         # Step 2: Perform assessment
                         assessment_result, assessment_success = self._perform_assessment(
@@ -558,18 +593,37 @@ class TestAndImproveBAML(BamlComponentBase):
                         )
 
                         if not assessment_success or not assessment_result:
-                            self.output.error_msg = f"Assessment failed in iteration {self.iter}"
-                            continue
+                            return TestAndImproveError(
+                                error_message=f"Assessment failed in iteration {self.iter}",
+                                iterations_completed=self.iter,
+                                final_assessment_status=final_assessment_status,
+                                partial_function_implementation=current_function_implementation
+                            )
 
-                        # Store assessment results
-                        self.output.result.assessment_status = assessment_result.assessment_status
-                        self.output.result.assessment_details = assessment_result.assessment_details
+                        # Store assessment status for potential error reporting
+                        final_assessment_status = assessment_result.assessment_status
 
                         # Step 3: Check if assessment passed
                         if assessment_result.assessment_status == "ok":
                             self.logger.info(f"🎉 Function passed assessment after {self.iter} iterations!")
-                            self.output.status = "success"
-                            break
+
+                            total_time = time.time() - run_start_time
+                            mlflow.log_metric("test_and_improve_iterations_used", self.iter)
+                            mlflow.log_metric("test_and_improve_total_time", total_time)
+
+                            run_span.set_outputs({
+                                "status": "success",
+                                "assessment_status": assessment_result.assessment_status,
+                                "iterations_used": self.iter,
+                                "total_time_seconds": total_time
+                            })
+
+                            return TestAndImproveSuccess(
+                                function_implementation=current_function_implementation,
+                                assessment_details=assessment_result.assessment_details,
+                                iterations_used=self.iter,
+                                total_time_seconds=total_time
+                            )
 
                         # Step 4: Perform correction if assessment failed
                         self.logger.info("Function needs improvement, attempting correction")
@@ -584,46 +638,32 @@ class TestAndImproveBAML(BamlComponentBase):
                         improved_implementation, correction_success = self._perform_correction(
                             function_requirements=function_requirements,
                             function_name=function_name,
-                            current_function_implementation=self.output.result.function_implementation,
+                            current_function_implementation=current_function_implementation,
                             detailed_assessment=assessment_for_correction,
                             path_ifc_model=path_ifc_model
                         )
 
                         if correction_success and improved_implementation:
-                            self.output.result.function_implementation = improved_implementation
+                            current_function_implementation = improved_implementation
                             self.logger.info(f"✓ Correction completed in iteration {self.iter}")
                         else:
-                            self.output.error_msg = f"Correction failed in iteration {self.iter}"
-                            self.logger.error(self.output.error_msg)
+                            self.logger.error(f"Correction failed in iteration {self.iter}")
 
-                # Final result preparation
+                # Max iterations reached without success
                 total_time = time.time() - run_start_time
+                self.logger.warning(f"TestAndImprove reached max iterations ({self.max_iterations}) without success")
 
-                if self.output.status == "success":
-                    self.logger.info(f"BAML TestAndImprove completed successfully in {self.iter} iterations")
-                    mlflow.log_metric("test_and_improve_iterations_used", self.iter)
-                    mlflow.log_metric("test_and_improve_total_time", total_time)
-
-                    run_span.set_outputs({
-                        "status": "success",
-                        "assessment_status": self.output.result.assessment_status,
-                        "iterations_used": self.iter,
-                        "total_time_seconds": total_time
-                    })
-                else:
-                    self.output.error_msg = (
+                return TestAndImproveError(
+                    error_message=(
                         f"Failed to improve function: {function_name}. "
                         f"Completed {self.iter} iterations without success."
-                    )
-                    run_span.set_outputs({
-                        "status": "incomplete",
-                        "error_message": self.output.error_msg,
-                        "iterations_completed": self.iter,
-                        "final_assessment_status": self.output.result.assessment_status
-                    })
+                    ),
+                    iterations_completed=self.iter,
+                    final_assessment_status=final_assessment_status,
+                    partial_function_implementation=current_function_implementation
+                )
 
             except Exception as e:
-                self.output.error_msg = f"BAML TestAndImprove crashed: {str(e)}"
                 self.logger.error(f"BAML TestAndImprove crashed: {str(e)}")
                 run_span.set_outputs({
                     "status": "crashed",
@@ -631,69 +671,9 @@ class TestAndImproveBAML(BamlComponentBase):
                     "error_type": type(e).__name__
                 })
 
-        return self.output
-
-
-if __name__ == "__main__":
-    # Test the BAML TestAndImprove
-    import os
-    from dotenv import load_dotenv
-    from src.config.main import TEST_IFC_PATH
-
-    # Load environment variables
-    load_dotenv()
-
-    # Setup MLflow
-    mlflow.set_tracking_uri("http://127.0.0.1:5000")
-    mlflow.set_experiment("TestAndImprove_BAML")
-
-    # Test data
-    function_requirements = """
-    Create a function that counts the total number of doors in an IFC model.
-    The function should:
-    1. Take an IFC file path as input
-    2. Open the IFC model using ifcopenshell
-    3. Find all door elements (IfcDoor)
-    4. Return the count as an integer (not as a string)
-
-    The function should handle errors gracefully and return accurate counts.
-    """
-
-    function_name = "count_doors"
-
-    # Faulty implementation for testing
-    function_implementation = '''
-import ifcopenshell
-def count_doors(ifc_file_path: str) -> int:
-    """Count all doors in an IFC model."""
-    model = ifcopenshell.open(ifc_file_path)
-    doors = model.by_type("IfcDoor")
-    return str(len(doors))  # Wrong return type - should be int
-'''
-
-    # Initialize and test the BAML TestAndImprove
-    test_and_improve = TestAndImproveBAML(
-        max_iterations=3,
-        log_level="INFO"
-    )
-
-    print(f"Testing BAML TestAndImprove for function: {function_name}")
-    print(f"Requirements: {function_requirements[:100]}...")
-
-    result = test_and_improve(
-        function_requirements=function_requirements,
-        function_name=function_name,
-        path_ifc_model=TEST_IFC_PATH,
-        function_implementation=function_implementation,
-    )
-
-    print(f"\nResult:")
-    print(f"Status: {result.status}")
-    print(f"Assessment Status: {result.result.assessment_status}")
-    if result.result.assessment_details:
-        print(f"Assessment Details: {result.result.assessment_details[:200]}...")
-    if result.status == "success" and result.result.function_implementation:
-        print(f"\nImproved Function Implementation:")
-        print(result.result.function_implementation)
-    else:
-        print(f"Error: {result.error_msg}")
+                return TestAndImproveError(
+                    error_message=f"BAML TestAndImprove crashed: {str(e)}",
+                    iterations_completed=self.iter,
+                    final_assessment_status=final_assessment_status,
+                    partial_function_implementation=current_function_implementation
+                )

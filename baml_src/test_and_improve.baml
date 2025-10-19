@@ -7,22 +7,36 @@ class AssessmentResult {
   assessment_status string @description("'ok' if function works as expected, 'needs_improvement' if issues found")
   assessment_details string @description("Detailed explanation of test results and any issues discovered")
   test_execution_log string? @description("Log of function execution and test cases attempted")
-  confidence float? @description("Confidence level in the assessment (0.0-1.0)")
 }
 
 // Improved implementation from ToolCorrector - addresses assessment feedback
 class ImprovedImplementation {
   function_implementation string @description("Updated Python source code addressing assessment issues")
-  improvement_reasoning string @description("Explanation of changes made and how they address the feedback")
-  confidence float? @description("Confidence level in the improvements (0.0-1.0)")
+  reasoning string @description("Explanation of changes made and how they address the feedback")
   changes_summary string? @description("Brief summary of the main changes made")
 }
 
 // Cleaned code from CodeCleaner - fixes syntax and compilation errors
 class CleanedCode {
   function_implementation string @description("Python code with syntax errors fixed")
-  cleaning_reasoning string @description("Explanation of syntax fixes and corrections applied")
+  reasoning string @description("Explanation of syntax fixes and corrections applied")
   success bool @description("Whether the cleaning was successful")
+}
+
+// Successful outcome - function has been tested and improved successfully
+class TestAndImproveSuccess {
+  function_implementation string @description("Final validated function implementation")
+  assessment_details string @description("Final assessment confirming function works correctly")
+  iterations_used int @description("Number of iterations needed to achieve success")
+  total_time_seconds float @description("Total time taken for testing and improvement")
+}
+
+// Error outcome - testing and improvement process failed
+class TestAndImproveError {
+  error_message string @description("Detailed error description")
+  iterations_completed int @description("Number of iterations completed before failure")
+  final_assessment_status string? @description("Last known assessment status, if any")
+  partial_function_implementation string? @description("Best function implementation achieved, if any")
 }
 
 // ToolAssessor function - tests function behavior using CodeAct pattern
@@ -40,12 +54,14 @@ function ToolAssessor(
     You are testing a Python function that has been created to meet specific requirements.
     Your role is to thoroughly test the function as a BLACK BOX - you can use the function but cannot see its implementation.
 
-    FUNCTION TO TEST: {{ function_name }}
+    FUNCTION TO TEST: 
+    {{ function_name }}
 
     REQUIREMENTS TO VERIFY:
     {{ function_requirements }}
 
-    TEST MODEL PATH: {{ path_ifc_model }}
+    TEST MODEL PATH: 
+    {{ path_ifc_model }}
 
     AVAILABLE TOOLS:
     {{ available_tools }}
@@ -66,7 +82,6 @@ function ToolAssessor(
     - assessment_status: "ok" or "needs_improvement"
     - assessment_details: Detailed explanation of test results
     - test_execution_log: Optional log of tests performed
-    - confidence: Optional confidence level (0.0-1.0)
 
     TESTING APPROACH:
     1. Test normal operation with the provided IFC model
@@ -94,7 +109,8 @@ function ToolCorrector(
   prompt #"
     You are improving a Python function based on detailed assessment feedback.
 
-    FUNCTION NAME: {{ function_name }}
+    FUNCTION NAME: 
+    {{ function_name }}
 
     REQUIREMENTS:
     {{ function_requirements }}
@@ -105,7 +121,8 @@ function ToolCorrector(
     ASSESSMENT FEEDBACK TO ADDRESS:
     {{ detailed_assessment }}
 
-    TEST MODEL PATH: {{ path_ifc_model }}
+    TEST MODEL PATH: 
+    {{ path_ifc_model }}
 
     AVAILABLE TOOLS:
     {{ available_tools }}
@@ -124,8 +141,7 @@ function ToolCorrector(
 
     If the function is fully improved and ready, return ImprovedImplementation with:
     - function_implementation: The complete improved Python code
-    - improvement_reasoning: Explanation of changes made
-    - confidence: Optional confidence level (0.0-1.0)
+    - reasoning: Explanation of changes made
     - changes_summary: Optional brief summary of main changes
 
     IMPROVEMENT REQUIREMENTS:
@@ -157,7 +173,7 @@ function CodeCleaner(
 
     Your task is to fix the syntax errors and return a CleanedCode object with:
     - function_implementation: The corrected Python code
-    - cleaning_reasoning: Brief explanation of fixes made
+    - reasoning: Brief explanation of fixes made
     - success: boolean indicating if cleaning was successful
 
     Fix only syntax errors, import issues, and compilation problems.
