@@ -139,6 +139,9 @@ class ToolCreatorConfig(BaseAgentConfig):
 class IfcAnswerEngineConfig(BaseAgentConfig):
     """Configuration for the main IfcAnswerEngine."""
 
+    engine_type: Literal["dspy", "baml"] = Field(
+        default="baml", description="Engine type: 'dspy' for IfcAnswerEngine, 'baml' for BIMQASEngine"
+    )
     max_iters: int = Field(default=10, description="Maximum iterations for main engine")
     max_retry: int = Field(default=2, description="Maximum retry attempts")
     import_all_created_tools: bool = Field(

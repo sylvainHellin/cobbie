@@ -13,7 +13,7 @@ from starlette.concurrency import run_in_threadpool
 
 from api.models import QuestionRequest, QuestionResponse
 from src.config import LLM, MLFLOW_URI
-from src.engine.engine import IfcAnswerEngine
+from src.engine import create_engine
 
 # from src.experiment.db.query_db import get_ifc_models
 from src.experiment.db.query import get_ifc_model, get_ifc_models
@@ -38,11 +38,25 @@ mlflow.set_tracking_uri(MLFLOW_URI)
 mlflow.set_experiment("API")
 mlflow.dspy.autolog()  # type: ignore
 
-# Initialize the IFC Answer Engine
-# llm = LLM(model_name="qwen-3-coder-480b", provider_name="cerebras").get_llm()
+# Initialize the IFC Answer Engine with configurable type
+# Engine type can be set via ENGINE_TYPE environment variable ("dspy" or "baml")
+# Default is "dspy" for backward compatibility
+engine_type = os.getenv("ENGINE_TYPE", "dspy").lower()
 
-# engine = IfcAnswerEngine(llm=llm)
-engine = IfcAnswerEngine()
+if engine_type not in ["dspy", "baml"]:
+    raise ValueError(f"Invalid ENGINE_TYPE: {engine_type}. Must be 'dspy' or 'baml'")
+
+print(f"🚀 Starting API with {engine_type.upper()} engine")
+
+# Optional LLM override for DSPy engine
+llm = None
+if engine_type == "dspy":
+    # Uncomment and configure if you want to use a specific LLM for DSPy
+    # llm = LLM(model_name="qwen-3-coder-480b", provider_name="cerebras").get_llm()
+    pass
+
+# Create engine using factory function
+engine = create_engine(engine_type=engine_type, llm=llm)
 
 
 @app.get("/")
@@ -64,115 +78,122 @@ async def ask_question(request: QuestionRequest) -> QuestionResponse:
     """
     start_time = datetime.now()
 
-    with mlflow.start_span(name="API_ask_question", span_type="API") as span:
-        # Log the inputs
-        span.set_inputs(
-            {
-                "question": request.question,
-                "model_id": request.model_id,
-                "timestamp": start_time.isoformat(),
-            }
-        )
-
-        try:
-            # Get the IFC model information from the database (run in threadpool)
-            ifc_model = get_ifc_model(id=request.model_id)
-
-            if not ifc_model:
-                error_msg = f"BIM model with ID {request.model_id} not found"
-                span.set_outputs(
+    # Set the experiment and start an MLflow run to properly capture traces
+    mlflow.set_experiment("API")
+    run_name = f"API_Question_{datetime.now().strftime('%Y%m%d_%H%M%S')}"
+    with mlflow.start_run(run_name=run_name) as run:
+        # Create a nested run for the engine execution (this is where traces will be stored)
+        engine_run_name = f"Engine_{request.model_id}_{datetime.now().strftime('%H%M%S')}"
+        with mlflow.start_run(run_name=engine_run_name, nested=True) as engine_run:
+            with mlflow.start_span(name="API_ask_question", span_type="API") as span:
+                # Log the inputs
+                span.set_inputs(
                     {
-                        "status": "error",
-                        "error_msg": error_msg,
-                        "duration_seconds": (
-                            datetime.now() - start_time
-                        ).total_seconds(),
+                        "question": request.question,
+                        "model_id": request.model_id,
+                        "timestamp": start_time.isoformat(),
                     }
                 )
-                raise HTTPException(status_code=404, detail=error_msg)
 
-            if not ifc_model.model_path or not os.path.exists(ifc_model.model_path):
-                error_msg = f"BIM model file not found at path: {ifc_model.model_path}"
-                span.set_outputs(
-                    {
-                        "status": "error",
-                        "error_msg": error_msg,
-                        "duration_seconds": (
-                            datetime.now() - start_time
-                        ).total_seconds(),
+                try:
+                    # Get the IFC model information from the database (run in threadpool)
+                    ifc_model = get_ifc_model(id=request.model_id)
+
+                    if not ifc_model:
+                        error_msg = f"BIM model with ID {request.model_id} not found"
+                        span.set_outputs(
+                            {
+                                "status": "error",
+                                "error_msg": error_msg,
+                                "duration_seconds": (
+                                    datetime.now() - start_time
+                                ).total_seconds(),
+                            }
+                        )
+                        raise HTTPException(status_code=404, detail=error_msg)
+
+                    if not ifc_model.model_path or not os.path.exists(ifc_model.model_path):
+                        error_msg = f"BIM model file not found at path: {ifc_model.model_path}"
+                        span.set_outputs(
+                            {
+                                "status": "error",
+                                "error_msg": error_msg,
+                                "duration_seconds": (
+                                    datetime.now() - start_time
+                                ).total_seconds(),
+                            }
+                        )
+                        raise HTTPException(status_code=404, detail=error_msg)
+
+                    # Log model information
+                    span.set_attributes(
+                        {
+                            "model_path": ifc_model.model_path,
+                            "project_name": ifc_model.project_name,
+                            "model_name": ifc_model.model_name,
+                        }
+                    )
+
+                    # Use the engine to answer the question (run in threadpool)
+                    result = await run_in_threadpool(
+                        partial(
+                            engine.forward,
+                            question=request.question,
+                            path_ifc_model=ifc_model.model_path,
+                        )
+                    )
+
+                    # Prepare model information
+                    model_info = {
+                        "id": ifc_model.id,
+                        "project_name": ifc_model.project_name,
+                        "model_name": ifc_model.model_name,
+                        "model_description": ifc_model.model_description,
                     }
-                )
-                raise HTTPException(status_code=404, detail=error_msg)
 
-            # Log model information
-            span.set_attributes(
-                {
-                    "model_path": ifc_model.model_path,
-                    "project_name": ifc_model.project_name,
-                    "model_name": ifc_model.model_name,
-                }
-            )
+                    duration = (datetime.now() - start_time).total_seconds()
 
-            # Use the engine to answer the question (run in threadpool)
-            result = await run_in_threadpool(
-                partial(
-                    engine.forward,
-                    question=request.question,
-                    path_ifc_model=ifc_model.model_path,
-                )
-            )
+                    # Log the outputs
+                    span.set_outputs(
+                        {
+                            "status": result.status,
+                            "answer": result.result.answer,
+                            "error_msg": result.error_msg,
+                            "duration_seconds": duration,
+                            "model_info": model_info,
+                        }
+                    )
 
-            # Prepare model information
-            model_info = {
-                "id": ifc_model.id,
-                "project_name": ifc_model.project_name,
-                "model_name": ifc_model.model_name,
-                "model_description": ifc_model.model_description,
-            }
+                    return QuestionResponse(
+                        status=result.status,
+                        answer=result.result.answer,
+                        error_msg=result.error_msg,
+                        model_info=model_info,
+                    )
 
-            duration = (datetime.now() - start_time).total_seconds()
+                except HTTPException:
+                    # Re-raise HTTP exceptions
+                    raise
+                except Exception as e:
+                    # Handle any other unexpected errors
+                    error_msg = f"An unexpected error occurred: {str(e)}"
+                    duration = (datetime.now() - start_time).total_seconds()
 
-            # Log the outputs
-            span.set_outputs(
-                {
-                    "status": result.status,
-                    "answer": result.result.answer,
-                    "error_msg": result.error_msg,
-                    "duration_seconds": duration,
-                    "model_info": model_info,
-                }
-            )
+                    span.set_outputs(
+                        {
+                            "status": "error",
+                            "error_msg": error_msg,
+                            "duration_seconds": duration,
+                            "exception": str(e),
+                        }
+                    )
 
-            return QuestionResponse(
-                status=result.status,
-                answer=result.result.answer,
-                error_msg=result.error_msg,
-                model_info=model_info,
-            )
+                    print(f"Error in ask_question: {error_msg}")
+                    print(f"Traceback: {traceback.format_exc()}")
 
-        except HTTPException:
-            # Re-raise HTTP exceptions
-            raise
-        except Exception as e:
-            # Handle any other unexpected errors
-            error_msg = f"An unexpected error occurred: {str(e)}"
-            duration = (datetime.now() - start_time).total_seconds()
-
-            span.set_outputs(
-                {
-                    "status": "error",
-                    "error_msg": error_msg,
-                    "duration_seconds": duration,
-                    "exception": str(e),
-                }
-            )
-
-            print(f"Error in ask_question: {error_msg}")
-            print(f"Traceback: {traceback.format_exc()}")
-
-            return QuestionResponse(
-                status="error", answer=None, error_msg=error_msg, model_info=None
-            )
+                    return QuestionResponse(
+                        status="error", answer=None, error_msg=error_msg, model_info=None
+                    )
 
 
 @app.get("/models")

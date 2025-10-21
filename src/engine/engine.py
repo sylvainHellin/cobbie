@@ -10,6 +10,7 @@ from src.engine.util import (
     create_code_prefix,
 )
 from src.engine.components import CodeAct
+from src.engine.components.bim_qas import BIM_QAS
 from src.engine.tools.primordial import (
     query_ifcopenshell_documentation,
     web_search,
@@ -136,6 +137,91 @@ class IfcAnswerEngine(dspy.Module):
                 )
 
         return self.output
+
+
+class BIMQASEngine(BIM_QAS):
+    """
+    BAML-based BIM Question Answering Engine that matches the IfcAnswerEngine interface.
+
+    This class provides a drop-in replacement for IfcAnswerEngine using BAML
+    instead of DSPy for the underlying language model interactions.
+    """
+
+    def __init__(
+        self,
+        additional_authorized_functions: Optional[Dict[str, Callable]] = {
+            "web_search": web_search,
+            "query_ifcopenshell_documentation": query_ifcopenshell_documentation,
+        },
+        additional_authorized_imports: Optional[List[str]] = None,
+        config: Optional[IfcAnswerEngineConfig] = None,
+        llm: Optional[dspy.LM] = None,  # For compatibility, not used in BAML
+    ):
+        # Map the IfcAnswerEngine parameters to BIM_QAS parameters
+        max_iterations = config.max_iters if config else 10
+        add_code_prefix = config.add_code_prefix if config else False
+        max_tokens_logs = config.max_tokens_logs if config else 2**12
+        log_level = config.log_level if config else "INFO"
+
+        super().__init__(
+            additional_authorized_functions=additional_authorized_functions,
+            additional_authorized_imports=additional_authorized_imports,
+            config=config,
+            llm=llm,
+            max_iterations=max_iterations,
+            add_code_prefix=add_code_prefix,
+            max_tokens_logs=max_tokens_logs,
+            log_level=log_level
+        )
+
+        self.logger.info("BIMQASEngine (BAML) initialized.")
+
+
+def create_engine(
+    config: Optional[IfcAnswerEngineConfig] = None,
+    llm: Optional[dspy.LM] = None,
+    engine_type: Optional[str] = None
+) -> IfcAnswerEngine | BIMQASEngine:
+    """
+    Factory function to create the appropriate engine based on configuration.
+
+    Args:
+        config: Engine configuration (optional)
+        llm: Language model (optional, only used for DSPy engine)
+        engine_type: Override engine type ("dspy" or "baml", optional)
+
+    Returns:
+        IfcAnswerEngine or BIMQASEngine instance
+    """
+    # Use provided config or default
+    if config is None:
+        config = AGENT_CONFIGS.ifc_answer_engine
+
+    # Determine engine type
+    if engine_type is None:
+        engine_type = config.engine_type
+
+    # Create appropriate engine
+    if engine_type == "baml":
+        logger = get_logger(name="EngineFactory", log_level=config.log_level)
+        logger.info("Creating BAML-based BIMQASEngine")
+        return BIMQASEngine(
+            additional_authorized_functions={
+                "web_search": web_search,
+                "query_ifcopenshell_documentation": query_ifcopenshell_documentation,
+            },
+            config=config,
+            llm=llm  # For compatibility, not used in BAML
+        )
+    elif engine_type == "dspy":
+        logger = get_logger(name="EngineFactory", log_level=config.log_level)
+        logger.info("Creating DSPy-based IfcAnswerEngine")
+        return IfcAnswerEngine(
+            config=config,
+            llm=llm
+        )
+    else:
+        raise ValueError(f"Unknown engine type: {engine_type}. Use 'dspy' or 'baml'")
 
 
 if __name__ == "__main__":

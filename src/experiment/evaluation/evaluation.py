@@ -6,7 +6,7 @@ import mlflow
 from tqdm import tqdm
 
 from src.config.agents import AGENT_CONFIGS, EvaluationPipelineConfig
-from src.engine import AnswerVerifier, IfcAnswerEngine
+from src.engine import AnswerVerifier, create_engine
 from src.engine.schemas import ModuleOutput, OutputsCollection
 from src.engine.util import get_logger
 from src.experiment.datasets import DEVSET
@@ -31,8 +31,14 @@ class EvaluationPipeline:
         # Use provided LLM or get from config
         self.lm = lm or self.config.llm.get_llm()
 
-        self.engine = IfcAnswerEngine(llm=self.lm)
-        if self.config.load_optimized_module:
+        # Create engine using factory function - inherits engine type from IfcAnswerEngine config
+        self.engine = create_engine(
+            config=AGENT_CONFIGS.ifc_answer_engine,
+            llm=self.lm
+        )
+
+        # Note: BAML engines don't support load() method like DSPy optimized modules
+        if self.config.load_optimized_module and hasattr(self.engine, 'load'):
             self.engine.load(path=self.config.path_compiled_model)
         self.answer_verifier = AnswerVerifier()
 
@@ -60,11 +66,14 @@ class EvaluationPipeline:
             ) as span:
                 span.set_inputs(inputs=qa_pair.model_dump())
 
+                # Get the model path from the Dataset relationship
+                path_ifc_model = qa_pair.ifc.model_path if qa_pair.ifc else None
+
                 output = cast(
                     ModuleOutput,
                     self.engine(
                         question=qa_pair.question,
-                        path_ifc_model=qa_pair.ifc_model_path,
+                        path_ifc_model=path_ifc_model,
                     ),
                 )
                 if output.status == "success":

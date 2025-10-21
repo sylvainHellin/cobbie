@@ -1,4 +1,4 @@
-from .engine import IfcAnswerEngine
+from .engine import IfcAnswerEngine, BIMQASEngine, create_engine
 from .components.tool_creator import ToolCreator
 from .components.extract_function_name import NameExtractor
 from .components.tool_identifier import ToolIdentifier
@@ -11,6 +11,8 @@ from .components.training_module import TrainingModule
 
 __all__ = [
     "IfcAnswerEngine",
+    "BIMQASEngine",
+    "create_engine",
     "ToolCreator",
     "NameExtractor",
     "ToolIdentifier",

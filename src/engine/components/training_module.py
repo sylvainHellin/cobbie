@@ -82,6 +82,10 @@ class TrainingModule(dspy.Module):
         self.state = TrainingState.START
         self.context = TrainingContext()
 
+    def get_model_path(self, dataset: Dataset) -> Optional[str]:
+        """Helper to get model path from Dataset object."""
+        return dataset.ifc.model_path if dataset.ifc else None
+
     def _initialize_system(self, qa_pair: Dataset) -> TrainingState:
         """Initialize processing state and setup."""
         self.context = TrainingContext()
@@ -102,11 +106,12 @@ class TrainingModule(dspy.Module):
         qa_pair = self.context.qa_pair
 
         # Run the engine
+        path_ifc_model = self.get_model_path(qa_pair)
         self.context.engine = cast(
             ModuleOutput,
             self.engine(
                 question=qa_pair.question,
-                path_ifc_model=qa_pair.ifc_model_path,
+                path_ifc_model=path_ifc_model,
             ),
         )
         self.output.combine_lm_metrics(other_output=self.context.engine)
@@ -304,7 +309,7 @@ class TrainingModule(dspy.Module):
             self.output.result.function_name is not None
             and self.output.result.function_requirements is not None
             and self.context.qa_pair is not None
-            and self.context.qa_pair.ifc_model_path is not None
+            and get_model_path(self.context.qa_pair) is not None
         ), "Logical error: missing input in _handle_tool_creation"
 
         # Call the ToolCreator
@@ -313,7 +318,7 @@ class TrainingModule(dspy.Module):
             self.tool_creator(
                 function_name=self.output.result.function_name,
                 function_requirements=self.output.result.function_requirements,
-                path_ifc_model=self.context.qa_pair.ifc_model_path,
+                path_ifc_model=get_model_path(self.context.qa_pair),
             ),
         )
         self.output.combine_lm_metrics(self.context.tool_creator)
@@ -350,7 +355,7 @@ class TrainingModule(dspy.Module):
             self.output.result.function_name is not None
             and self.output.result.function_requirements is not None
             and self.context.qa_pair is not None
-            and self.context.qa_pair.ifc_model_path is not None
+            and get_model_path(self.context.qa_pair) is not None
         ), (
             "Logical error in _handle_tool_correction: Tool correction required, but assessment or function name missing."
         )
@@ -375,7 +380,7 @@ class TrainingModule(dspy.Module):
                     function_name=self.output.result.function_name,
                     faulty_function_implementation=faulty_function_implementation,
                     initial_assessment=self.output.result.assessment_details,
-                    path_ifc_model=self.context.qa_pair.ifc_model_path,
+                    path_ifc_model=get_model_path(self.context.qa_pair),
                 ),
             )
             self.output.combine_lm_metrics(self.context.tool_debugger)
@@ -417,7 +422,7 @@ class TrainingModule(dspy.Module):
             and self.output.result.function_name is not None
             and self.output.result.function_requirements is not None
             and self.context.qa_pair is not None
-            and self.context.qa_pair.ifc_model_path is not None
+            and get_model_path(self.context.qa_pair) is not None
         ), "Logical Error in _handle_tool_merger: missing information."
 
         source_code_first_function = get_function_code(
@@ -442,7 +447,7 @@ class TrainingModule(dspy.Module):
                 self.tool_merger(
                     function_name=self.output.result.function_name,
                     function_requirements=self.output.result.function_requirements,
-                    path_ifc_model=self.context.qa_pair.ifc_model_path,
+                    path_ifc_model=get_model_path(self.context.qa_pair),
                     source_code_first_function=source_code_first_function.unwrap(),
                     source_code_second_function=source_code_second_function.unwrap(),
                 ),

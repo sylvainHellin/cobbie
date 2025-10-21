@@ -6,9 +6,28 @@ import time
 from baml_client import b
 from baml_client.types import CodeAction, FinalAnswer
 
+from src.engine.schemas import ModuleOutput
 from src.engine.tools.primordial.python_interpreter import get_python_interpreter
 from src.engine.util import get_logger, get_created_tools, create_code_prefix
-from src.config.agents import FUNCTION_BOILERPLATE
+from src.config.agents import FUNCTION_BOILERPLATE, IfcAnswerEngineConfig
+
+# BAML result types
+from baml_client.types import CodeAction, FinalAnswer
+from pydantic import BaseModel
+
+
+class BIMQASResult(BaseModel):
+    """Typed result for BIM_QAS execution."""
+
+    status: str  # "success", "incomplete", "error"
+    answer: Optional[str] = None
+    reasoning: Optional[str] = None
+    iterations: int
+    previous_results: List[str]
+    total_execution_time: float
+    baml_calls_made: int
+    code_executions: int
+    error: Optional[str] = None
 
 
 class BIM_QAS:
@@ -16,21 +35,44 @@ class BIM_QAS:
 
     def __init__(
         self,
+        additional_authorized_functions: Optional[Dict[str, Callable]] = {
+            "web_search": None,  # Will be set in _setup_tools
+            "query_ifcopenshell_documentation": None,  # Will be set in _setup_tools
+        },
+        additional_authorized_imports: Optional[List[str]] = None,
+        config: Optional[IfcAnswerEngineConfig] = None,
+        llm: Optional[Any] = None,  # For compatibility with IfcAnswerEngine interface
         tools: Optional[List[Callable]] = None,
-        max_iterations: int = 10,
-        additional_authorized_functions: Optional[Dict[str, Callable]] = None,
-        add_code_prefix: bool = False,
+        max_iterations: Optional[int] = None,
+        add_code_prefix: Optional[bool] = None,
         path_ifc_model: str = "",
-        max_tokens_logs: int = 2**12,
-        log_level: str = "INFO"
+        max_tokens_logs: Optional[int] = None,
+        log_level: Optional[str] = None
     ):
-        self.tools = tools or []
-        self.max_iterations = max_iterations
-        self.additional_authorized_functions = additional_authorized_functions or {}
-        self.add_code_prefix = add_code_prefix
+        # Use provided config or default
+        if config:
+            self.config = config
+        else:
+            # Create a config-like object for BAML
+            self.config = type('Config', (), {
+                'max_iters': max_iterations or 10,
+                'log_level': log_level or "INFO",
+                'max_tokens_logs': max_tokens_logs or 2**12,
+                'add_code_prefix': add_code_prefix if add_code_prefix is not None else False,
+                'import_all_created_tools': True
+            })()
+
+        # Initialize attributes from config or direct parameters
+        self.max_iterations = self.config.max_iters
+        self.log_level = self.config.log_level
+        self.max_tokens_logs = self.config.max_tokens_logs
+        self.add_code_prefix = self.config.add_code_prefix
         self.path_ifc_model = path_ifc_model
-        self.max_tokens_logs = max_tokens_logs
-        self.log_level = log_level
+
+        # Tools and functions
+        self.tools = tools or []
+        self.additional_authorized_functions = additional_authorized_functions or {}
+        self.additional_authorized_imports = additional_authorized_imports or []
 
         self.logger = get_logger(name="BIM_QAS", log_level=self.log_level)
 
@@ -108,7 +150,7 @@ class BIM_QAS:
             imports_boilerplate=FUNCTION_BOILERPLATE
         )
 
-    def run(self, user_input: str) -> Dict[str, Any]:
+    def run(self, user_input: str) -> BIMQASResult:
         """Orchestration layer for the CodeAct logic using BAML with MLflow tracing"""
 
         run_start_time = time.time()
@@ -196,20 +238,21 @@ class BIM_QAS:
                             if isinstance(result, CodeAction):
                                 baml_span.set_outputs({
                                     "result_type": "CodeAction",
+                                    "thoughts": result.thoughts,
+                                    "python_code": result.python_code,
                                     "python_code_length": len(result.python_code),
-                                    "python_code_preview": result.python_code[:200] + "..." if len(result.python_code) > 200 else result.python_code,
                                     "baml_call_time_seconds": baml_call_time
                                 })
                                 # Log metrics for code action
                                 mlflow.log_metric(f"code_generated_length_iteration_{iteration + 1}", len(result.python_code))
+                                mlflow.log_metric(f"has_thoughts", 1 if result.thoughts else 0)
 
                             elif isinstance(result, FinalAnswer):
                                 baml_span.set_outputs({
                                     "result_type": "FinalAnswer",
+                                    "thoughts": result.thoughts,
+                                    "answer": result.answer,
                                     "answer_length": len(result.answer),
-                                    "answer_preview": result.answer[:200] + "..." if len(result.answer) > 200 else result.answer,
-                                    "has_thoughts": bool(result.thoughts),
-                                    "thoughts_length": len(result.thoughts) if result.thoughts else 0,
                                     "baml_call_time_seconds": baml_call_time
                                 })
                                 # Log metrics for final answer
@@ -287,19 +330,19 @@ class BIM_QAS:
                             total_execution_time = time.time() - run_start_time
                             self.logger.info(f"BAML CodeAct completed in {iteration + 1} iterations")
 
-                            final_result = {
-                                "status": "success",
-                                "answer": result.answer,
-                                "iterations": iteration + 1,
-                                "reasoning": result.thoughts,
-                                "previous_results": previous_results,
-                                "total_execution_time": total_execution_time,
-                                "baml_calls_made": baml_call_count,
-                                "code_executions": code_execution_count
-                            }
+                            final_result = BIMQASResult(
+                                status="success",
+                                answer=result.answer,
+                                reasoning=result.thoughts,
+                                iterations=iteration + 1,
+                                previous_results=previous_results,
+                                total_execution_time=total_execution_time,
+                                baml_calls_made=baml_call_count,
+                                code_executions=code_execution_count
+                            )
 
                             # Log final result and comprehensive metrics
-                            run_span.set_outputs(final_result)
+                            run_span.set_outputs(final_result.model_dump())
                             iteration_span.set_outputs({
                                 "iteration_completed": True,
                                 "final_answer_found": True,
@@ -344,19 +387,20 @@ class BIM_QAS:
             # Max iterations reached
             total_execution_time = time.time() - run_start_time
             self.logger.warning(f"BAML CodeAct reached max iterations ({self.max_iterations})")
-            incomplete_result = {
-                "status": "incomplete",
-                "iterations": self.max_iterations,
-                "last_result": previous_results[-1] if previous_results else "No results",
-                "previous_results": previous_results,
-                "error": "Maximum iterations reached without completion",
-                "total_execution_time": total_execution_time,
-                "baml_calls_made": baml_call_count,
-                "code_executions": code_execution_count
-            }
+            incomplete_result = BIMQASResult(
+                status="incomplete",
+                answer=None,
+                reasoning=None,
+                iterations=self.max_iterations,
+                previous_results=previous_results,
+                error="Maximum iterations reached without completion",
+                total_execution_time=total_execution_time,
+                baml_calls_made=baml_call_count,
+                code_executions=code_execution_count
+            )
 
             # Log incomplete result and metrics
-            run_span.set_outputs(incomplete_result)
+            run_span.set_outputs(incomplete_result.model_dump())
             run_span.set_attributes({
                 "run.status": "incomplete",
                 "completion.reason": "max_iterations_reached"
@@ -372,6 +416,100 @@ class BIM_QAS:
 
             return incomplete_result
 
+    def forward(self, question: str, path_ifc_model: str = "") -> ModuleOutput:
+        """
+        Interface-compatible method matching IfcAnswerEngine.forward()
+
+        Args:
+            question: The question to answer
+            path_ifc_model: Path to the IFC model file
+
+        Returns:
+            ModuleOutput: Compatible output format
+        """
+        self.logger.info("Starting forward pass with BAML engine.")
+
+        # Update path_ifc_model if provided
+        if path_ifc_model:
+            original_path = self.path_ifc_model
+            self.path_ifc_model = path_ifc_model
+            # Re-setup interpreter with new model path
+            self._setup_interpreter()
+
+        # Initialize ModuleOutput
+        output = ModuleOutput()
+
+        try:
+            # Run the BAML engine
+            baml_result = self.run(user_input=question)
+
+            # Convert BIMQASResult to ModuleOutput
+            output = self._baml_result_to_module_output(baml_result)
+
+            self.logger.info(f"BAML engine completed with status: {output.status}")
+
+        except Exception as e:
+            output.status = "error"
+            output.error_msg = f"Error during BAML engine forward pass: {str(e)}"
+            self.logger.error(output.error_msg)
+
+        # Restore original path if we changed it
+        if path_ifc_model and 'original_path' in locals():
+            self.path_ifc_model = original_path
+            self._setup_interpreter()
+
+        return output
+
+    def __call__(self, question: str, path_ifc_model: str = "") -> ModuleOutput:
+        """
+        Alternative interface for direct calling compatibility
+        """
+        return self.forward(question=question, path_ifc_model=path_ifc_model)
+
+    def _baml_result_to_module_output(self, result: BIMQASResult) -> ModuleOutput:
+        """
+        Convert BAML engine BIMQASResult to ModuleOutput format
+
+        Args:
+            result: BIMQASResult from BAML engine
+
+        Returns:
+            ModuleOutput: Compatible output format
+        """
+        output = ModuleOutput()
+
+        # Map status
+        if result.status == "success":
+            output.status = "success"
+        elif result.status == "incomplete":
+            output.status = "error"
+            output.error_msg = result.error or "Maximum iterations reached"
+        else:
+            output.status = "error"
+            output.error_msg = result.error or "Unknown error occurred"
+
+        # Set answer if available
+        if result.answer:
+            output.result.answer = result.answer
+
+        # Set reasoning if available
+        if result.reasoning:
+            output.result.reasoning = result.reasoning
+
+        # Create mock LM metrics for BAML (since we don't have DSPy LM history)
+        output.lm_metrics.llm = "BAML/Z.AI-GLM-4.6"  # Could be made configurable
+        output.lm_metrics.input_tokens = result.baml_calls_made * 1000  # Estimate
+        output.lm_metrics.output_tokens = result.code_executions * 500  # Estimate
+        output.lm_metrics.cost = result.total_execution_time * 0.001  # Estimate
+
+        # Set tools metrics if any tools were used/created
+        if result.code_executions > 0:
+            output.tools_metrics.nb_tools_created = 0  # BAML doesn't create tools in the same way
+            output.tools_metrics.nb_tools_updated = 0
+            output.tools_metrics.nb_tools_merged = 0
+            output.tools_metrics.cost = 0.0
+
+        return output
 
 
 if __name__ == "__main__":

@@ -50,7 +50,7 @@ class BAMEvaluationRunner:
         run_id: Optional[str] = None,
         experiment_name: str = "BAML_Evaluation",
         log_level: str = "INFO",
-        max_iterations: int = 5,
+        max_iterations: int = 10,
         ifc_model_path: str = "src/experiment/bim_models/duplex/arc.ifc",
         add_code_prefix: bool = True,
     ):
@@ -180,16 +180,16 @@ class BAMEvaluationRunner:
 
                     execution_time = time.time() - start_time
 
-                    # Extract result information
-                    status = result.get("status", "unknown")
-                    answer = result.get("answer", "")
-                    reasoning = result.get("reasoning", "")
-                    iterations = result.get("iterations", 0)
-                    total_execution_time = result.get("total_execution_time", 0.0)
-                    baml_calls_made = result.get("baml_calls_made", 0)
-                    code_executions = result.get("code_executions", 0)
-                    previous_results = result.get("previous_results", [])
-                    error_message = result.get("error", "")
+                    # Extract result information from BIMQASResult
+                    status = result.status
+                    answer = result.answer or ""
+                    reasoning = result.reasoning or ""
+                    iterations = result.iterations
+                    total_execution_time = result.total_execution_time
+                    baml_calls_made = result.baml_calls_made
+                    code_executions = result.code_executions
+                    previous_results = result.previous_results or []
+                    error_message = result.error or ""
 
                     # Update metrics
                     self.evaluation_metrics["total_questions"] += 1

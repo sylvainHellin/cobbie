@@ -5,7 +5,7 @@ import dspy
 import mlflow
 
 from src.config.agents import AGENT_CONFIGS, TrainingPipelineConfig
-from src.engine import IfcAnswerEngine, TrainingModule
+from src.engine import create_engine, TrainingModule
 from src.engine.optimizer import bootstrap_engine
 from src.engine.schemas import (
     ModuleOutput,
@@ -41,7 +41,12 @@ class TrainingPipeline:
 
         # Use provided LLM or get from config
         self.lm = lm or self.config.llm.get_llm()
-        self.engine = IfcAnswerEngine(llm=self.lm)
+
+        # Create engine using factory function - inherits engine type from IfcAnswerEngine config
+        self.engine = create_engine(
+            config=AGENT_CONFIGS.ifc_answer_engine,
+            llm=self.lm
+        )
 
         # outputs
         self.outputs = OutputsCollection()

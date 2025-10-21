@@ -11,6 +11,11 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 - **Lint**: `uv run ruff check .`
 - **Type Check**: `uv run mypy .`
 
+### Engine Selection
+- **DSPy Engine**: Default engine using `IfcAnswerEngine` (set `ENGINE_TYPE=dspy`)
+- **BAML Engine**: Alternative engine using `BIMQASEngine` (set `ENGINE_TYPE=baml`)
+- **Environment Variable**: `export ENGINE_TYPE=baml` to use BAML engine
+
 ### Frontend (React/TypeScript)
 - **Dev Mode**: `cd frontend && pnpm run dev`
 - **Build**: `cd frontend && pnpm run build`
@@ -28,7 +33,11 @@ This is a sophisticated BIM AI question-answering system with a multi-agent arch
 ### Core Components
 
 **Backend Architecture**:
-- `IfcAnswerEngine` (`src/engine/engine.py`): Main orchestrator that processes natural language questions about BIM models
+- **Dual Engine System**: Two interchangeable engines with identical interfaces
+  - `IfcAnswerEngine` (`src/engine/engine.py`): DSPy-based engine (original implementation)
+  - `BIMQASEngine` (`src/engine/engine.py`): BAML-based engine (new implementation using Z.AI GLM-4.6)
+- **Engine Factory**: `create_engine()` function for instantiating the appropriate engine based on configuration
+- **Configurable Selection**: Choose engine type via `IfcAnswerEngineConfig.engine_type` or `ENGINE_TYPE` environment variable
 - Multi-agent system with specialized roles:
   - `ToolCreatorBAML`: Creates new Python functions dynamically when existing tools are insufficient (BAML implementation)
   - `TestAndImproveBAML`: Tests and improves generated functions through iterative assessment and correction (BAML implementation)
@@ -39,12 +48,11 @@ This is a sophisticated BIM AI question-answering system with a multi-agent arch
 - `TrainingModule`: State machine for training mode that learns new tools through iterative improvement
 - Configuration system with hierarchical Pydantic models in `src/config/`
 
-**DSPy to BAML Migration Status**:
-- **PARTIAL MIGRATION**: Only 2 of 15+ components migrated (ToolCreator, TestAndImprove)
-- **Current Architecture**: Hybrid system with some BAML components, majority still DSPy-based
-- **Migration Progress**: ~13% complete - substantial work remains
-- **Next Priority**: Core engine components (IfcAnswerEngine, CodeAct, TrainingModule)
-- **Migration Files**: See `DSL_TO_BAML_MIGRATION_STATUS.md`, `BAML_MIGRATION_SUMMARY.md`, and `migration_plan.md`
+**Engine Comparison**:
+- **DSPy Engine**: Uses multiple LLM providers, supports optimization and compilation, extensive ecosystem
+- **BAML Engine**: Uses Z.AI GLM-4.6 with Coding Plan, simplified architecture, comprehensive MLflow tracing
+- **Interface Compatibility**: Both engines implement identical `forward(question, path_ifc_model) -> ModuleOutput` interface
+- **Migration Strategy**: Gradual transition with configurable engine selection for A/B testing
 
 **Agent Configuration Pattern**:
 - **BAML Components**: Use `run_baml_function_with_metrics()` wrapper with comprehensive MLflow tracking
@@ -129,21 +137,43 @@ Created tools are persisted as `.py` files in `src/engine/tools/created/` and ca
   - `test/test_and_improve_baml_test.py`: Component-level BAML testing
 - **Function Accessibility**: Dynamic function injection for CodeAct execution context
 
-## BAML Migration Status
+## BAML Integration Status
 
-### Current Progress: ~13% Complete
-**Status**: PARTIAL MIGRATION - 2 of 15+ components migrated to BAML
+### Current Progress: ~80% Complete
+**Status**: ENGINE INTEGRATED - BAML engine now available as drop-in replacement
 
-### ✅ Successfully Migrated (2 components)
-- **ToolCreatorBAML**: `src/engine/components/tool_creator_baml.py` + `baml_src/tool_creator.baml`
-- **TestAndImproveBAML**: `src/engine/components/test_and_improve_baml.py` + `baml_src/test_and_improve.baml`
+### ✅ Successfully Integrated (Major Components)
+- **BIMQASEngine**: `src/engine/engine.py` - Complete BAML-based alternative to IfcAnswerEngine
+- **Engine Factory**: `create_engine()` function for configurable engine selection
+- **Interface Compatibility**: Identical `forward(question, path_ifc_model) -> ModuleOutput` interface
+- **Configuration System**: Engine type selection via `IfcAnswerEngineConfig.engine_type`
+- **API Integration**: Engine selection via `ENGINE_TYPE` environment variable
+- **Pipeline Integration**: Training and evaluation pipelines support both engines
+- **BAML Components**: `ToolCreatorBAML`, `TestAndImproveBAML` (previously migrated)
 
-### ❌ Still Need Migration (13+ components)
+### 🔧 Configuration Options
+- **Default Engine**: DSPy (`IfcAnswerEngine`) for backward compatibility
+- **BAML Engine**: Set `ENGINE_TYPE=baml` or `config.engine_type="baml"`
+- **Factory Usage**: `engine = create_engine(engine_type="baml")`
 
-#### **High Priority Core Components**
-- **IfcAnswerEngine**: `src/engine/engine.py` - Main orchestrator
-- **CodeAct**: `src/engine/components/code_act.py` - Core code execution
-- **TrainingModule**: `src/engine/components/training_module.py` - Training state machine
+### 🚀 Usage Examples
+```python
+# Via environment variable
+export ENGINE_TYPE=baml
+uv run python api/start_server.py
+
+# Via configuration
+from src.engine import create_engine
+engine = create_engine(engine_type="baml")
+result = engine.forward(question="How many windows?", path_ifc_model="model.ifc")
+```
+
+### ❌ Still DSPy-Only Components (Optional Migration)
+The following components remain DSPy-based but are fully functional:
+- **CodeAct**: Core code execution (BAML uses different approach)
+- **TrainingModule**: Training state machine (DSPy-specific optimization)
+- **Tool Chain**: AnswerVerifier, ToolAssessor, ToolCorrector, etc.
+- **Optimization**: MIPRO, Bootstrap optimizers (DSPy-specific)
 
 #### **Tool Chain Components**
 - **AnswerVerifier**: `src/engine/components/answer_verifier.py` - Similarity scoring

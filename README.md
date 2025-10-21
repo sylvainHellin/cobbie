@@ -1,8 +1,12 @@
-# IfcAnswerEngine - V3
+# IfcAnswerEngine - V4
 
 An intelligent engine that answers questions about BIM models in .ifc format using a sophisticated multi-agent system. Built with [DSPy](https://github.com/stanfordnlp/dspy) and featuring dynamic tool creation, the system can learn new capabilities during training and apply them in inference.
 
 ## 🚀 Key Features
+
+- **Dual Engine Architecture**: Choose between DSPy and BAML implementations
+  - **DSPy Engine**: Multi-provider LLM support, advanced optimization capabilities
+  - **BAML Engine**: Simplified architecture using Z.AI GLM-4.6 with comprehensive MLflow tracing
 
 - **Multi-Agent Architecture**: Specialized agents for different tasks (programming, assessment, correction)
 - **Dynamic Tool Creation**: Automatically generates new Python functions when needed
@@ -22,9 +26,19 @@ mlflow server --host 127.0.0.1 --port 5000 --backend-store-uri sqlite:///mlflow.
 
 ### FastAPI backend
 
+Choose your engine type before starting:
+
+**DSPy Engine (Default)**:
 ```zsh
 uvicorn api.main:app --host 127.0.0.1 --port 8000 --reload
 ```
+
+**BAML Engine**:
+```zsh
+ENGINE_TYPE=baml uvicorn api.main:app --host 127.0.0.1 --port 8000 --reload
+```
+
+The BAML engine uses Z.AI GLM-4.6 and requires a valid Z.AI API key in your `.env` file.
 
 ### Frontend
 
