@@ -238,3 +238,4 @@ tools to resolve library id and get library docs without me having to explicitly
 5. **Integration**: Update main orchestration and configuration
 
 - Don't make any assumptions. If anything is unclear, ask for clarification.
+- If you create new tests, unless explicitly stated differently, don't create a new mlflow experiment: use the "test" experiment.
