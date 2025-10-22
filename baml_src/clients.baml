@@ -186,3 +186,16 @@ client<llm> ZAICodingPlanMini {
     max_tokens 4096
   }
 }
+
+// DeepInfra QWEN3-CODER client - High-performance coding model
+client<llm> DeepInfraQwen3Coder {
+  provider openai
+  retry_policy Exponential
+  options {
+    base_url "https://api.deepinfra.com/v1/openai"
+    model "Qwen/Qwen3-Coder-480B-A35B-Instruct-Turbo"
+    api_key env.DEEPINFRA_API_KEY
+    temperature 0.1
+    max_tokens 8192
+  }
+}
