@@ -773,8 +773,8 @@ Examples:
 
     parser.add_argument(
         "--experiment-name",
-        default="Unified_Evaluation",
-        help="MLflow experiment name (default: Unified_Evaluation)"
+        default="Evaluation",
+        help="MLflow experiment name (default: Evaluation)"
     )
 
     parser.add_argument(
