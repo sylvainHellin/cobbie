@@ -23,8 +23,7 @@ Usage:
 import argparse
 import time
 from datetime import datetime
-from typing import Dict, Optional, Any, List, Literal, cast
-import os
+from typing import Any, Dict, List, Literal, Optional, cast
 
 import dspy
 import mlflow
@@ -32,8 +31,7 @@ import mlflow.dspy
 from tqdm import tqdm
 
 from src.config.agents import AGENT_CONFIGS, IfcAnswerEngineConfig
-from src.config.llm import LLM
-from src.engine import create_engine, AnswerVerifier
+from src.engine import AnswerVerifier, create_engine
 from src.engine.schemas import ModuleOutput
 from src.engine.util import get_logger
 from src.experiment.datasets import DEVSET, Dataset
@@ -47,7 +45,7 @@ class EvaluationRunner:
         engine_type: Literal["baml", "dspy"] = "baml",
         model_name: Optional[str] = None,
         provider_name: Optional[str] = None,
-        num_samples: int = 10,
+        num_samples: int = 15,
         load_compiled: bool = False,
         cache: bool = False,
         run_id: Optional[str] = None,
@@ -75,6 +73,7 @@ class EvaluationRunner:
         mlflow.set_experiment(self.experiment_name)
 
         # Initialize AnswerVerifier (used by both engines)
+        # TODO Update to use the BAML version
         self.answer_verifier = AnswerVerifier()
 
         # Initialize metrics tracking (unified for both engines)
@@ -121,7 +120,6 @@ class EvaluationRunner:
             "load_compiled": self.load_compiled,
             "cache": self.cache,
             "max_tokens": config.llm.max_tokens,
-            "evaluation_framework": "unified_direct_engine",
         }
 
         # Log cost information if available
@@ -135,8 +133,8 @@ class EvaluationRunner:
             params["dspy_cache_enabled"] = self.cache
             params["dspy_load_compiled"] = self.load_compiled
         elif config.engine_type == "baml":
-            params["baml_max_iters"] = config.max_iters
-            params["baml_add_code_prefix"] = config.add_code_prefix
+            params["max_iters"] = config.max_iters
+            params["add_code_prefix"] = config.add_code_prefix
 
         mlflow.log_params(params)
         self.logger.info(f"Logged parameters: {params}")
@@ -167,8 +165,10 @@ class EvaluationRunner:
                 "category": category,
                 "question_id": question_id,
                 "engine_type": config.engine_type,
-                "model_name": config.llm.model_name,
+                "llm": config.llm.model_name,
                 "provider_name": config.llm.provider_name,
+                "project_name": question_data.ifc.project_name,
+                "model_name": question_data.ifc.model_name,
             })
 
             # Create main span for this question processing
@@ -181,7 +181,6 @@ class EvaluationRunner:
                     "engine_type": config.engine_type
                 })
                 question_span.set_attributes({
-                    "question_type": "evaluation",
                     "engine": config.engine_type,
                     "model": config.llm.model_name,
                     "provider": config.llm.provider_name
@@ -231,43 +230,39 @@ class EvaluationRunner:
 
                     # Log question-level metrics
                     mlflow.log_metrics({
-                        "execution_time_seconds": execution_time,
+                        "execution_time": execution_time,
                         "input_tokens": input_tokens,
                         "output_tokens": output_tokens,
                         "success": 1 if status == "success" else 0,
-                        "answer_length": len(answer),
-                        "has_reasoning": 1 if reasoning else 0,
                         **engine_metrics
                     })
 
                     # Prepare question span outputs
                     question_outputs = {
                         "status": status,
-                        "execution_time_seconds": execution_time,
+                        "execution_time": execution_time,
                         "input_tokens": input_tokens,
                         "output_tokens": output_tokens,
-                        "answer_length": len(answer),
-                        "has_reasoning": bool(reasoning),
                         **engine_metrics
                     }
 
                     if status == "success":
                         question_outputs.update({
-                            "answer_preview": answer[:200] + "..." if len(answer) > 200 else answer,
-                            "reasoning_preview": reasoning[:200] + "..." if len(reasoning) > 200 else reasoning,
+                            "answer": answer,
+                            "reasoning": reasoning,
                             "reasoning_length": len(reasoning)
                         })
                     else:
                         question_outputs.update({
-                            "error_message": getattr(result, 'error_msg', ''),
+                            "error_msg": getattr(result, 'error_msg', ''),
                             "error_type": self._extract_error_type(getattr(result, 'error_msg', ''))
                         })
 
                     question_span.set_outputs(question_outputs)
+                    question_span.set_status("OK")
                     question_span.set_attributes({
                         "question.status": status,
                         "question.category": category,
-                        "question.success": status == "success"
                     })
 
                     # Now run AnswerVerifier if we have a successful answer
@@ -292,6 +287,11 @@ class EvaluationRunner:
                         })
 
                     self.logger.info(f"Question {question_index + 1} completed: {status} in {execution_time:.2f}s, similarity: {similarity_score:.3f}")
+
+                    mlflow.log_params({
+                        "answer": answer,
+                        "similarity_score": similarity_score,
+                    })
 
                     return {
                         "question": question,
@@ -323,7 +323,7 @@ class EvaluationRunner:
 
                     # Log failure
                     mlflow.log_metrics({
-                        "execution_time_seconds": execution_time,
+                        "execution_time": execution_time,
                         "success": 0.0,
                         })
 
@@ -334,7 +334,7 @@ class EvaluationRunner:
 
                     question_span.set_outputs({
                         "status": "error",
-                        "execution_time_seconds": execution_time,
+                        "execution_time": execution_time,
                         "error_message": str(e),
                         "error_type": error_type
                     })
@@ -370,8 +370,8 @@ class EvaluationRunner:
             # BAML-specific metrics - check if they exist in the result
             if hasattr(result, 'iterations'):
                 metrics['iterations'] = result.iterations
-            if hasattr(result, 'baml_calls'):
-                metrics['baml_calls'] = result.baml_calls
+            if hasattr(result, 'llm_calls'):
+                metrics['llm_calls'] = result.baml_calls
             if hasattr(result, 'code_executions'):
                 metrics['code_executions'] = result.code_executions
 
@@ -387,7 +387,6 @@ class EvaluationRunner:
                     "ground_truth": ground_truth
                 })
                 verifier_span.set_attributes({
-                    "verifier_type": "DSPy_AnswerVerifier",
                     "llm_model": self.answer_verifier.lm.model if hasattr(self.answer_verifier, 'lm') else "unknown"
                 })
 
@@ -407,22 +406,16 @@ class EvaluationRunner:
                         "reasoning": reasoning,
                         "status": "success"
                     })
-                    verifier_span.set_attributes({
-                        "verifier.status": "success",
-                        "similarity_score_valid": True
-                    })
+                    verifier_span.set_status("OK")
 
                     self.logger.debug(f"AnswerVerifier: similarity={similarity_score:.3f}, reasoning: {reasoning[:100]}...")
                     return similarity_score, reasoning
+
                 else:
                     error_msg = verifier_output.error_msg or "Unknown AnswerVerifier error"
+                    verifier_span.set_status("ERROR")
                     verifier_span.set_outputs({
                         "error_message": error_msg,
-                        "status": "error"
-                    })
-                    verifier_span.set_attributes({
-                        "verifier.status": "error",
-                        "similarity_score_valid": False
                     })
 
                     self.logger.warning(f"AnswerVerifier failed: {error_msg}")
@@ -487,8 +480,8 @@ class EvaluationRunner:
             "answers_above_0_85_similarity": high_similarity_count,
 
             # Performance metrics
-            "total_execution_time_seconds": total_execution_time,
-            "avg_execution_time_seconds": avg_execution_time,
+            "total_execution_time": total_execution_time,
+            "avg_execution_time": avg_execution_time,
 
             # Token metrics
             "total_input_tokens": total_input_tokens,
@@ -512,9 +505,7 @@ class EvaluationRunner:
             total_cost = input_cost + output_cost
 
             metrics.update({
-                "input_cost_usd": input_cost,
-                "output_cost_usd": output_cost,
-                "total_cost_usd": total_cost,
+                "cost": total_cost
             })
 
         mlflow.log_metrics(metrics)
@@ -532,17 +523,17 @@ class EvaluationRunner:
 
             # Success metrics
             "success_rate": success_rate,
-            "successful_answers": len(successful_results),
-            "failed_answers": total_questions - len(successful_results),
+            # "successful_answers": len(successful_results),
+            # "failed_answers": total_questions - len(successful_results),
 
             # Similarity metrics
             "mean_similarity_score": mean_similarity,
-            "high_similarity_count": high_similarity_count,
+            # "high_similarity_count": high_similarity_count,
             "high_similarity_rate_percent": high_similarity_rate,
 
             # Performance metrics
-            "total_execution_time_seconds": total_execution_time,
-            "avg_execution_time_seconds": avg_execution_time,
+            "total_execution_time": total_execution_time,
+            "avg_execution_time": avg_execution_time,
 
             # Token metrics
             "total_input_tokens": total_input_tokens,
@@ -554,21 +545,16 @@ class EvaluationRunner:
             "tokens_per_second": total_tokens / total_execution_time if total_execution_time > 0 else 0.0,
 
             # Engine-specific metrics
-            "engine_specific_metrics": self.evaluation_metrics["engine_specific_metrics"],
+            # "engine_specific_metrics": self.evaluation_metrics["engine_specific_metrics"],
 
             # Configuration
             "load_compiled": self.load_compiled,
             "cache": self.cache,
             "experiment_name": self.experiment_name,
-        }
 
-        # Add cost metrics if calculated
-        if "total_cost_usd" in metrics:
-            results_summary.update({
-                "input_cost_usd": metrics["input_cost_usd"],
-                "output_cost_usd": metrics["output_cost_usd"],
-                "total_cost_usd": metrics["total_cost_usd"],
-            })
+            # Cost
+            "cost": getattr(metrics, "cost", 0)
+        }
 
         return results_summary
 
@@ -601,8 +587,8 @@ class EvaluationRunner:
         print()
 
         print("Performance:")
-        print(f"  Total Execution Time: {results_summary['total_execution_time_seconds']:.1f}s")
-        print(f"  Avg Execution Time/Question: {results_summary['avg_execution_time_seconds']:.1f}s")
+        print(f"  Total Execution Time: {results_summary['total_execution_time']:.1f}s")
+        print(f"  Avg Execution Time/Question: {results_summary['avg_execution_time']:.1f}s")
         print(f"  Tokens/Second: {results_summary['tokens_per_second']:.1f}")
         print()
 
@@ -626,7 +612,7 @@ class EvaluationRunner:
         if self.run_id:
             print(f"  Run ID: {self.run_id}")
         print(f"  Experiment: {self.experiment_name}")
-        print(f"  View details: http://127.0.0.1:5000")
+        print("  View details: http://127.0.0.1:5000")
         print("=" * 80)
 
     def run_evaluation(self) -> Dict:
@@ -694,12 +680,12 @@ class EvaluationRunner:
 
                 # Calculate and log metrics for the main evaluation run
                 results_summary = self._calculate_and_log_metrics(question_results, config)
-                results_summary["total_evaluation_time_seconds"] = total_evaluation_time
+                results_summary["total_evaluation_time"] = total_evaluation_time
 
                 # Log additional info to main run
                 mlflow.set_tag("evaluation_status", "completed")
                 mlflow.set_tag("engine_type", config.engine_type)
-                mlflow.set_tag("total_evaluation_time_seconds", total_evaluation_time)
+                mlflow.set_tag("total_evaluation_time", total_evaluation_time)
                 mlflow.set_tag("individual_question_traces", "true")
 
                 self.logger.info("Unified evaluation completed successfully")
