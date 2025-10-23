@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-Unified Evaluation Script for IFC Answer Engine
+Evaluation Script for IFC Answer Engine
 
 This script provides a single, clean interface for evaluating both DSPy and BAML engines
 using the same evaluation approach. It eliminates the EvaluationPipeline wrapper and uses
@@ -38,7 +38,7 @@ from src.experiment.datasets import DEVSET, Dataset
 
 
 class EvaluationRunner:
-    """Unified evaluation runner for both DSPy and BAML engines."""
+    """Evaluation runner for both DSPy and BAML engines."""
 
     def __init__(
         self,
@@ -561,7 +561,7 @@ class EvaluationRunner:
     def _print_results(self, results_summary: Dict):
         """Print formatted evaluation results."""
         print("\n" + "=" * 80)
-        print("UNIFIED EVALUATION RESULTS")
+        print("EVALUATION RESULTS")
         print("=" * 80)
 
         print(f"Engine: {results_summary['engine_type'].upper()}")
@@ -616,8 +616,8 @@ class EvaluationRunner:
         print("=" * 80)
 
     def run_evaluation(self) -> Dict:
-        """Run the unified evaluation experiment."""
-        self.logger.info("Starting unified evaluation experiment")
+        """Run the evaluation experiment."""
+        self.logger.info("Starting evaluation experiment")
 
         # Create engine configuration
         config = self._create_engine_config()
@@ -688,7 +688,7 @@ class EvaluationRunner:
                 mlflow.set_tag("total_evaluation_time", total_evaluation_time)
                 mlflow.set_tag("individual_question_traces", "true")
 
-                self.logger.info("Unified evaluation completed successfully")
+                self.logger.info("Evaluation completed successfully")
                 self.logger.info(f"Success rate: {results_summary['success_rate']:.3f}")
                 self.logger.info(f"Mean similarity: {results_summary['mean_similarity_score']:.3f}")
                 self.logger.info(f"Total evaluation time: {total_evaluation_time:.1f}s")
@@ -700,7 +700,7 @@ class EvaluationRunner:
                 return results_summary
 
         except Exception as e:
-            self.logger.error(f"Unified evaluation failed: {e}")
+            self.logger.error(f"Evaluation failed: {e}")
             if self.run_id:
                 try:
                     mlflow.set_tag("evaluation_status", "failed")
@@ -711,9 +711,9 @@ class EvaluationRunner:
 
 
 def main():
-    """Main function to run the unified evaluation."""
+    """Main function to run the evaluation."""
     parser = argparse.ArgumentParser(
-        description="Run unified evaluation experiments on IFC Answer Engine",
+        description="Run evaluation experiments on IFC Answer Engine",
         formatter_class=argparse.RawDescriptionHelpFormatter,
         epilog="""
 Examples:
@@ -824,11 +824,11 @@ Examples:
 
     try:
         runner.run_evaluation()
-        print("\nUnified evaluation completed successfully!")
+        print("\nEvaluation completed successfully!")
         return 0
 
     except Exception as e:
-        print(f"\nError during unified evaluation: {e}")
+        print(f"\nError during evaluation: {e}")
         return 1
 
 
