@@ -25,7 +25,7 @@ class BIMQASResult(BaseModel):
     iterations: int
     previous_results: List[str]
     total_execution_time: float
-    baml_calls_made: int
+    llm_calls: int
     code_executions: int
     error: Optional[str] = None
 
@@ -179,14 +179,11 @@ class BIM_QAS:
 
             # Log metrics about tools and configuration
             mlflow.log_metric("tools_available", len(self.additional_authorized_functions))
-            mlflow.log_metric("tools_docs_length", len(tools_docs))
-            if code_prefix:
-                mlflow.log_metric("code_prefix_length", len(code_prefix))
 
             # Initialize counters for comprehensive metrics
             code_execution_count = 0
             total_code_execution_time = 0
-            baml_call_count = 0
+            llm_calls = 0
 
             self.logger.info(f"Starting BAML CodeAct execution for: {user_input[:100]}...")
 
@@ -198,10 +195,9 @@ class BIM_QAS:
 
                     # Log iteration context
                     iteration_span.set_inputs({
-                        "iteration_number": iteration + 1,
+                        "iteration": iteration + 1,
                         "max_iterations": self.max_iterations,
                         "previous_attempts_count": len(previous_results),
-                        "previous_context_length": len("\n".join(previous_results[-3:])) if previous_results else 0
                     })
 
                     # Prepare previous context
@@ -214,7 +210,6 @@ class BIM_QAS:
                                 "user_input": user_input,
                                 "has_previous_attempts": previous_context is not None,
                                 "model_path": self.path_ifc_model or "None",
-                                "tools_docs_length": len(tools_docs)
                             })
 
                             baml_start_time = time.time()
@@ -224,11 +219,11 @@ class BIM_QAS:
                                 previous_attempts=previous_context,
                                 model_path=self.path_ifc_model if self.path_ifc_model else None
                             )
-                            baml_call_time = time.time() - baml_start_time
-                            baml_call_count += 1
+                            latency = time.time() - baml_start_time
+                            llm_calls += 1
 
                             # Log BAML call metrics
-                            mlflow.log_metric(f"baml_call_time_iteration_{iteration + 1}", baml_call_time)
+                            mlflow.log_metric(f"latency_llm_call_{iteration + 1}", latency)
                             baml_span.set_attributes({
                                 "llm.provider": "Z.AI",  # Could be made configurable
                                 "llm.model": "GLM-4.6"  # Could be made configurable
@@ -240,24 +235,16 @@ class BIM_QAS:
                                     "result_type": "CodeAction",
                                     "thoughts": result.thoughts,
                                     "python_code": result.python_code,
-                                    "python_code_length": len(result.python_code),
-                                    "baml_call_time_seconds": baml_call_time
+                                    "latency": latency
                                 })
-                                # Log metrics for code action
-                                mlflow.log_metric(f"code_generated_length_iteration_{iteration + 1}", len(result.python_code))
-                                mlflow.log_metric(f"has_thoughts", 1 if result.thoughts else 0)
 
                             elif isinstance(result, FinalAnswer):
                                 baml_span.set_outputs({
                                     "result_type": "FinalAnswer",
                                     "thoughts": result.thoughts,
                                     "answer": result.answer,
-                                    "answer_length": len(result.answer),
-                                    "baml_call_time_seconds": baml_call_time
+                                    "latency": latency
                                 })
-                                # Log metrics for final answer
-                                mlflow.log_metric(f"final_answer_length", len(result.answer))
-                                mlflow.log_metric(f"has_reasoning", 1 if result.thoughts else 0)
 
                         # Process the result
                         if isinstance(result, CodeAction):
@@ -273,10 +260,8 @@ class BIM_QAS:
                                         code_to_execute = f"{code_prefix}\n{code_to_execute}"
 
                                     exec_span.set_inputs({
-                                        "code_length": len(code_to_execute),
                                         "has_code_prefix": bool(code_prefix),
-                                        "code_prefix_length": len(code_prefix) if code_prefix else 0,
-                                        "code_preview": code_to_execute[:300] + "..." if len(code_to_execute) > 300 else code_to_execute
+                                        "python_code": code_to_execute
                                     })
 
                                     self.logger.debug(f"Executing code: {code_to_execute[:200]}...")
@@ -292,16 +277,11 @@ class BIM_QAS:
                                     # Log execution results with metrics
                                     exec_span.set_outputs({
                                         "execution_successful": True,
-                                        "execution_time_seconds": execution_time,
-                                        "output_length": len(output),
-                                        "output_preview": output[:200] + "..." if len(output) > 200 else output,
-                                        "code_execution_number": code_execution_count
+                                        "execution_time": execution_time,
+                                        "output": output,
                                     })
                                     exec_span.set_attributes({"execution.status": "success"})
 
-                                    # Log iteration-level metrics
-                                    mlflow.log_metric(f"code_execution_time_iteration_{iteration + 1}", execution_time)
-                                    mlflow.log_metric(f"output_length_iteration_{iteration + 1}", len(output))
 
                                 except Exception as e:
                                     execution_time = time.time() - execution_start
@@ -312,18 +292,15 @@ class BIM_QAS:
                                     # Log execution error with metrics
                                     exec_span.set_outputs({
                                         "execution_successful": False,
-                                        "execution_time_seconds": execution_time,
+                                        "execution_time": execution_time,
                                         "error_message": str(e),
                                         "error_type": type(e).__name__,
-                                        "code_execution_number": code_execution_count + 1
                                     })
                                     exec_span.set_attributes({
                                         "execution.status": "error",
                                         "error.type": type(e).__name__
                                     })
 
-                                    # Log error metrics
-                                    mlflow.log_metric(f"code_execution_error_iteration_{iteration + 1}", 1)
 
                         elif isinstance(result, FinalAnswer):
                             # Done! Type checking tells us we're finished
@@ -337,7 +314,7 @@ class BIM_QAS:
                                 iterations=iteration + 1,
                                 previous_results=previous_results,
                                 total_execution_time=total_execution_time,
-                                baml_calls_made=baml_call_count,
+                                llm_calls=llm_calls,
                                 code_executions=code_execution_count
                             )
 
@@ -346,23 +323,19 @@ class BIM_QAS:
                             iteration_span.set_outputs({
                                 "iteration_completed": True,
                                 "final_answer_found": True,
-                                "iteration_time_seconds": time.time() - iteration_start_time
+                                "iteration_time": time.time() - iteration_start_time
                             })
 
                             # Run-level metrics
-                            mlflow.log_metric("total_execution_time_seconds", total_execution_time)
-                            mlflow.log_metric("iterations_used", iteration + 1)
-                            mlflow.log_metric("baml_calls_total", baml_call_count)
-                            mlflow.log_metric("code_executions_total", code_execution_count)
+                            mlflow.log_metric("execution_time", total_execution_time)
+                            mlflow.log_metric("iterations", iteration + 1)
+                            mlflow.log_metric("llm_calls", llm_calls)
                             mlflow.log_metric("avg_code_execution_time", total_code_execution_time / max(code_execution_count, 1))
-                            mlflow.log_metric("success_status", 1)
-                            mlflow.log_metric("efficiency_score", (iteration + 1) / self.max_iterations)  # Lower is better
+                            mlflow.log_metric("status", 1)
+                            mlflow.log_metric("efficiency", (iteration + 1) / self.max_iterations)  # Lower is better
 
-                            # Set final attributes
-                            run_span.set_attributes({
-                                "run.status": "success",
-                                "completion.iteration": iteration + 1
-                            })
+                            # Set span status
+                            run_span.set_status("OK")
 
                             return final_result
 
@@ -371,18 +344,16 @@ class BIM_QAS:
                         previous_results.append(f"BAML Error: {str(e)}")
 
                         # Log error at iteration level
+                        iteration_span.set_status("ERROR")
                         iteration_span.set_attributes({
-                            "iteration.status": "error",
                             "error.type": type(e).__name__
                         })
                         iteration_span.set_outputs({
                             "iteration_completed": False,
                             "error_message": str(e),
-                            "iteration_time_seconds": time.time() - iteration_start_time
+                            "iteration_time": time.time() - iteration_start_time
                         })
 
-                        # Log error metrics
-                        mlflow.log_metric(f"baml_error_iteration_{iteration + 1}", 1)
 
             # Max iterations reached
             total_execution_time = time.time() - run_start_time
@@ -395,21 +366,21 @@ class BIM_QAS:
                 previous_results=previous_results,
                 error="Maximum iterations reached without completion",
                 total_execution_time=total_execution_time,
-                baml_calls_made=baml_call_count,
+                llm_calls=llm_calls,
                 code_executions=code_execution_count
             )
 
             # Log incomplete result and metrics
             run_span.set_outputs(incomplete_result.model_dump())
+            run_span.set_status("ERROR")
             run_span.set_attributes({
-                "run.status": "incomplete",
                 "completion.reason": "max_iterations_reached"
             })
 
             # Run-level metrics for incomplete runs
-            mlflow.log_metric("total_execution_time_seconds", total_execution_time)
-            mlflow.log_metric("iterations_used", self.max_iterations)
-            mlflow.log_metric("baml_calls_total", baml_call_count)
+            mlflow.log_metric("total_execution_time", total_execution_time)
+            mlflow.log_metric("iterations", self.max_iterations)
+            mlflow.log_metric("llm_calls", llm_calls)
             mlflow.log_metric("code_executions_total", code_execution_count)
             mlflow.log_metric("success_status", 0)
             mlflow.log_metric("completion_rate", self.max_iterations / self.max_iterations)  # Always 1.0 for max iterations
@@ -498,7 +469,7 @@ class BIM_QAS:
 
         # Create mock LM metrics for BAML (since we don't have DSPy LM history)
         output.lm_metrics.llm = "BAML/Z.AI-GLM-4.6"  # Could be made configurable
-        output.lm_metrics.input_tokens = result.baml_calls_made * 1000  # Estimate
+        output.lm_metrics.input_tokens = result.llm_calls * 1000  # Estimate
         output.lm_metrics.output_tokens = result.code_executions * 500  # Estimate
         output.lm_metrics.cost = result.total_execution_time * 0.001  # Estimate
 
