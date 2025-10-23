@@ -28,7 +28,7 @@ Usage:
 import argparse
 import time
 from datetime import datetime
-from typing import Dict, Optional, Any, List
+from typing import Dict, Optional, Any, List, Literal
 
 import mlflow
 from tqdm import tqdm
@@ -49,7 +49,7 @@ class BAMEvaluationRunner:
         provider_name: str = "zai",
         run_id: Optional[str] = None,
         experiment_name: str = "BAML_Evaluation",
-        log_level: str = "INFO",
+        log_level: Literal["DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"] = "INFO",
         max_iterations: int = 10,
         ifc_model_path: str = "src/experiment/bim_models/duplex/arc.ifc",
         add_code_prefix: bool = True,
