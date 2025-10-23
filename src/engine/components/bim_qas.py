@@ -270,7 +270,16 @@ class BIM_QAS:
                                     code_execution_count += 1
                                     total_code_execution_time += execution_time
 
-                                    result_msg = f"Code: {result.python_code}\nResult: {output}"
+                                    result_msg = f"""Iteration {iteration + 1}:
+Thoughts: {result.thoughts}
+
+Code:
+{result.python_code}
+
+Result:
+{output}
+
+---"""
                                     previous_results.append(result_msg)
                                     self.logger.debug(f"Code execution successful: {output[:100]}...")
 
@@ -285,7 +294,16 @@ class BIM_QAS:
 
                                 except Exception as e:
                                     execution_time = time.time() - execution_start
-                                    error_msg = f"Code: {result.python_code}\nError: {str(e)}"
+                                    error_msg = f"""Iteration {iteration + 1}:
+Thoughts: {result.thoughts}
+
+Code:
+{result.python_code}
+
+Error:
+{str(e)}
+
+---"""
                                     previous_results.append(error_msg)
                                     self.logger.error(f"Code execution failed: {str(e)}")
 
@@ -341,7 +359,11 @@ class BIM_QAS:
 
                     except Exception as e:
                         self.logger.error(f"BAML function call failed: {str(e)}")
-                        previous_results.append(f"BAML Error: {str(e)}")
+                        previous_results.append(f"""Iteration {iteration + 1}:
+Processing Error:
+{str(e)}
+
+---""")
 
                         # Log error at iteration level
                         iteration_span.set_status("ERROR")
