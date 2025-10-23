@@ -1,5 +1,6 @@
 from typing import List, Tuple
 import pandas as pd
+import random
 
 from src.experiment.db.query import get_dataset, get_ifc_models
 from src.experiment.db.experiment_models import Dataset
@@ -24,9 +25,14 @@ def load_train_dev_split(
     total_items = len(dataset)
     train_size = int(total_items * frac)
 
-    # Simple split for now - could be made more sophisticated
-    train_data = dataset[:train_size]
-    dev_data = dataset[train_size:]
+    # Shuffle the dataset using the provided seed for reproducible randomization
+    random.seed(seed)
+    shuffled_dataset = dataset.copy()
+    random.shuffle(shuffled_dataset)
+
+    # Split the shuffled dataset
+    train_data = shuffled_dataset[:train_size]
+    dev_data = shuffled_dataset[train_size:]
 
     return train_data, dev_data
 
