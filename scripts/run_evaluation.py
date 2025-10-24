@@ -142,21 +142,22 @@ class EvaluationRunner:
     def _process_single_question(
         self,
         engine,
-        question_data: Dataset,
-        question_index: int,
+        example: Dataset,
+        example_index: int,
         config: IfcAnswerEngineConfig
     ) -> Dict[str, Any]:
         """Process a single question with individual MLflow trace."""
-        question = question_data.question
-        ground_truth = getattr(question_data, 'answer', '') or getattr(question_data, 'ground_truth', '')
-        category = getattr(question_data, 'category', 'unknown')
-        question_id = getattr(question_data, 'id', f'q_{question_index + 1}')
+        question = example.question
+        ground_truth = getattr(example, 'answer', '') or getattr(example, 'ground_truth', '')
+        category = getattr(example, 'category', 'unknown')
+        question_id = getattr(example, 'id', f'q_{example_index + 1}')
 
-        self.logger.info(f"Processing question {question_index + 1}/{len(self.dataset)}: {question[:100]}...")
+        self.logger.info(f"Processing question {example_index + 1}/{len(self.dataset)}: {question[:100]}...")
 
         # Create individual MLflow run (nested run) for this question
-        run_name = f"{config.engine_type.upper()}_Q{question_index + 1}_{question_id}_{config.llm.model_name}"
+        run_name = f"{config.engine_type.upper()}_Q{example_index + 1}_{question_id}_{config.llm.model_name}"
 
+        assert example.ifc is not None, "The ifc field of the Example cannot be None."
         with mlflow.start_run(run_name=run_name, nested=True) as question_run:
             # Log question parameters
             mlflow.log_params({
@@ -167,8 +168,8 @@ class EvaluationRunner:
                 "engine_type": config.engine_type,
                 "llm": config.llm.model_name,
                 "provider_name": config.llm.provider_name,
-                "project_name": question_data.ifc.project_name,
-                "model_name": question_data.ifc.model_name,
+                "project_name": example.ifc.project_name,
+                "model_name": example.ifc.model_name,
             })
 
             # Create main span for this question processing
@@ -177,7 +178,7 @@ class EvaluationRunner:
                     "question": question,
                     "ground_truth": ground_truth,
                     "category": category,
-                    "question_index": question_index + 1,
+                    "question_index": example_index + 1,
                     "engine_type": config.engine_type
                 })
                 question_span.set_attributes({
@@ -190,9 +191,9 @@ class EvaluationRunner:
 
                 try:
                     # Extract IFC path from question data
-                    ifc_path = question_data.ifc.model_path if question_data.ifc else None
+                    ifc_path = example.ifc.model_path if example.ifc else None
                     if not ifc_path:
-                        self.logger.warning(f"No IFC path found for question {question_index + 1}")
+                        self.logger.warning(f"No IFC path found for question {example_index + 1}")
 
                     # Run the engine
                     result = engine.forward(question, ifc_path)
@@ -220,21 +221,12 @@ class EvaluationRunner:
                         error_type = self._extract_error_type(getattr(result, 'error_msg', ''))
                         self.evaluation_metrics["error_types"][error_type] = \
                             self.evaluation_metrics["error_types"].get(error_type, 0) + 1
-
-                    # Extract engine-specific metrics
-                    engine_metrics = self._extract_engine_metrics(result, config.engine_type)
-                    for key, value in engine_metrics.items():
-                        if key not in self.evaluation_metrics["engine_specific_metrics"]:
-                            self.evaluation_metrics["engine_specific_metrics"][key] = 0
-                        self.evaluation_metrics["engine_specific_metrics"][key] += value
-
                     # Log question-level metrics
                     mlflow.log_metrics({
                         "execution_time": execution_time,
                         "input_tokens": input_tokens,
                         "output_tokens": output_tokens,
                         "success": 1 if status == "success" else 0,
-                        **engine_metrics
                     })
 
                     # Prepare question span outputs
@@ -243,7 +235,6 @@ class EvaluationRunner:
                         "execution_time": execution_time,
                         "input_tokens": input_tokens,
                         "output_tokens": output_tokens,
-                        **engine_metrics
                     }
 
                     if status == "success":
@@ -286,7 +277,7 @@ class EvaluationRunner:
                             "verifier_reasoning": verifier_reasoning
                         })
 
-                    self.logger.info(f"Question {question_index + 1} completed: {status} in {execution_time:.2f}s, similarity: {similarity_score:.3f}")
+                    self.logger.info(f"Question {example_index + 1} completed: {status} in {execution_time:.2f}s, similarity: {similarity_score:.3f}")
 
                     mlflow.log_params({
                         "answer": answer,
@@ -306,13 +297,12 @@ class EvaluationRunner:
                         "input_tokens": input_tokens,
                         "output_tokens": output_tokens,
                         "error_message": getattr(result, 'error_msg', ''),
-                        "engine_metrics": engine_metrics,
                         "mlflow_run_id": question_run.info.run_id,
                     }
 
                 except Exception as e:
                     execution_time = time.time() - start_time
-                    self.logger.error(f"Question {question_index + 1} failed with exception: {str(e)}")
+                    self.logger.error(f"Question {example_index + 1} failed with exception: {str(e)}")
 
                     # Update error metrics
                     self.evaluation_metrics["total_questions"] += 1
@@ -357,25 +347,6 @@ class EvaluationRunner:
                         "engine_metrics": {},
                         "mlflow_run_id": question_run.info.run_id,
                     }
-
-    def _extract_engine_metrics(self, result: ModuleOutput, engine_type: str) -> Dict[str, Any]:
-        """Extract engine-specific metrics from the result."""
-        metrics = {}
-
-        if engine_type == "dspy":
-            # DSPy-specific metrics would be in result attributes
-            # For now, just include token metrics which are already handled
-            pass
-        elif engine_type == "baml":
-            # BAML-specific metrics - check if they exist in the result
-            if hasattr(result, 'iterations'):
-                metrics['iterations'] = result.iterations
-            if hasattr(result, 'llm_calls'):
-                metrics['llm_calls'] = result.baml_calls
-            if hasattr(result, 'code_executions'):
-                metrics['code_executions'] = result.code_executions
-
-        return metrics
 
     def _run_answer_verifier(self, question: str, answer: str, ground_truth: str) -> tuple[float, str]:
         """Run the AnswerVerifier to get similarity score and reasoning."""
