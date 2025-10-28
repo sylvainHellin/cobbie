@@ -43,10 +43,7 @@ class TrainingPipeline:
         self.lm = lm or self.config.llm.get_llm()
 
         # Create engine using factory function - inherits engine type from IfcAnswerEngine config
-        self.engine = create_engine(
-            config=AGENT_CONFIGS.ifc_answer_engine,
-            llm=self.lm
-        )
+        self.engine = create_engine(config=AGENT_CONFIGS.ifc_answer_engine, llm=self.lm)
 
         # outputs
         self.outputs = OutputsCollection()
@@ -126,6 +123,11 @@ class TrainingPipeline:
                 )
                 add_trace(trace=trace)
 
+                # Garbage collection after each training question to prevent resource accumulation
+                import gc
+
+                gc.collect()
+
         mlflow.log_metrics(
             metrics={
                 "accuracy": self.outputs.mean_acc(),
@@ -196,7 +198,20 @@ def main(
     return output
 
 
-if __name__ == "__main__":  # Set-up mlflow
+if __name__ == "__main__":
+    # Configure multiprocessing to prevent semaphore leaks on macOS
+    import multiprocessing as mp
+
+    # Set multiprocessing start method to 'fork' to avoid resource recreation
+    # This prevents semaphore leaks on macOS
+    try:
+        mp.set_start_method("fork", force=True)
+    except RuntimeError:
+        # 'fork' might not be available on all systems
+        pass
+
+    # Set-up mlflow with reduced logging to prevent resource issues
+    # Disable autolog to prevent excessive trace accumulation
     mlflow.dspy.autolog()  # type: ignore
     mlflow.set_tracking_uri("http://127.0.0.1:5000")
 

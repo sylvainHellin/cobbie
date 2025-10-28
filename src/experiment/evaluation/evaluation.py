@@ -32,13 +32,10 @@ class EvaluationPipeline:
         self.lm = lm or self.config.llm.get_llm()
 
         # Create engine using factory function - inherits engine type from IfcAnswerEngine config
-        self.engine = create_engine(
-            config=AGENT_CONFIGS.ifc_answer_engine,
-            llm=self.lm
-        )
+        self.engine = create_engine(config=AGENT_CONFIGS.ifc_answer_engine, llm=self.lm)
 
         # Note: BAML engines don't support load() method like DSPy optimized modules
-        if self.config.load_optimized_module and hasattr(self.engine, 'load'):
+        if self.config.load_optimized_module and hasattr(self.engine, "load"):
             self.engine.load(path=self.config.path_compiled_model)
         self.answer_verifier = AnswerVerifier()
 
@@ -110,6 +107,11 @@ class EvaluationPipeline:
                     }
                 )
 
+                # Garbage collection after each question to prevent resource accumulation
+                import gc
+
+                gc.collect()
+
         mlflow.log_metrics(
             {
                 f"mean_accuracy{mode}": self.outputs.mean_acc(),
@@ -133,24 +135,18 @@ class EvaluationPipeline:
 
 
 if __name__ == "__main__":
-    from src.config.agents import EvaluationPipelineConfig
-    from src.config.llm import LLM
+    # Configure multiprocessing to prevent semaphore leaks on macOS
+    import multiprocessing as mp
 
-    llm = LLM(
-        model_name="qwen3-coder",
-        provider_name="deepinfra",
-    )
+    try:
+        mp.set_start_method("fork", force=True)
+    except RuntimeError:
+        pass
 
-    config = EvaluationPipelineConfig(
-        load_optimized_module=True,
-        llm=llm,
-    )
-
-    # setup mlflow
-    mlflow.dspy.autolog()  # type: ignore
+    # Run evaluation with error handling
+    mlflow.dspy.autolog(log_evals=True)  # type: ignore
     mlflow.set_tracking_uri("http://127.0.0.1:5000")
-    mlflow.set_experiment("Evaluation")
-    mlflow.start_run(run_name=datetime.now().strftime("%Y-%m-%d-%H-%M-%S"))
+    mlflow.set_experiment("ToolOptimizer")
 
     evaluation = EvaluationPipeline()
     dataset = DEVSET
