@@ -129,7 +129,7 @@ Created tools are persisted as `.py` files in `src/engine/tools/created/` and ca
 - Frontend (other repository) downloads IFC files from backend for 3D visualization
 
 ### Testing and Validation
-- Built-in answer verification using similarity scoring
+- Built-in answer verification using classification-based evaluation (correct/wrong/abstained)
 - Comprehensive error analysis and categorization
 - Tool optimization through merging and correction processes
 - **BAML Testing**: Comprehensive test suites for BAML components with MLflow integration
@@ -172,11 +172,12 @@ result = engine.forward(question="How many windows?", path_ifc_model="model.ifc"
 The following components remain DSPy-based but are fully functional:
 - **CodeAct**: Core code execution (BAML uses different approach)
 - **TrainingModule**: Training state machine (DSPy-specific optimization)
-- **Tool Chain**: AnswerVerifier, ToolAssessor, ToolCorrector, etc.
+- **Tool Chain**: ToolAssessor, ToolCorrector, etc. (AnswerVerifier migrated to BAML)
 - **Optimization**: MIPRO, Bootstrap optimizers (DSPy-specific)
 
 #### **Tool Chain Components**
-- **AnswerVerifier**: `src/engine/components/answer_verifier.py` - Similarity scoring
+- **AnswerVerifier**: `src/engine/components/answer_verifier.py` - DSPy similarity scoring (legacy)
+- **BamlAnswerVerifier**: `src/engine/components/baml_answer_verifier.py` - BAML classification-based evaluation
 - **ToolAssessor**: `src/engine/components/tool_assessor.py` - Black-box testing
 - **ToolCorrector**: `src/engine/components/tool_corrector.py` - Function improvement
 - **ToolOptimizer**: `src/engine/components/tool_optimizer.py` - Tool analysis

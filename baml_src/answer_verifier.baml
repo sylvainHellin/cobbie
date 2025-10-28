@@ -15,7 +15,7 @@ function EvaluateResponse(
   category: QuestionCategory,
   ground_truth: string,
   system_response: string,
-  bim_context: string @description("Brief description of what data is available in the BIM model")
+  bim_context: string? @description("Brief description of what data is available in the BIM model")
 ) -> AnswerEvaluationResult {
   client ZAICodingPlan
 

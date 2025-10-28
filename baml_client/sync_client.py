@@ -133,7 +133,7 @@ class BamlSyncClient:
                 "function_name": function_name,"conversation_history": conversation_history,
             })
             return typing.cast(types.FunctionImplementation, result.cast_to(types, types, stream_types, False, __runtime__))
-    def EvaluateResponse(self, question: str,category: types.QuestionCategory,ground_truth: str,system_response: str,bim_context: str,
+    def EvaluateResponse(self, question: str,category: types.QuestionCategory,ground_truth: str,system_response: str,bim_context: typing.Optional[str] = None,
         baml_options: BamlCallOptions = {},
     ) -> types.AnswerEvaluationResult:
         # Check if on_tick is provided
@@ -234,7 +234,7 @@ class BamlStreamClient:
           lambda x: typing.cast(types.FunctionImplementation, x.cast_to(types, types, stream_types, False, __runtime__)),
           ctx,
         )
-    def EvaluateResponse(self, question: str,category: types.QuestionCategory,ground_truth: str,system_response: str,bim_context: str,
+    def EvaluateResponse(self, question: str,category: types.QuestionCategory,ground_truth: str,system_response: str,bim_context: typing.Optional[str] = None,
         baml_options: BamlCallOptions = {},
     ) -> baml_py.BamlSyncStream[stream_types.AnswerEvaluationResult, types.AnswerEvaluationResult]:
         ctx, result = self.__options.merge_options(baml_options).create_sync_stream(function_name="EvaluateResponse", args={
@@ -311,7 +311,7 @@ class BamlHttpRequestClient:
             "function_name": function_name,"conversation_history": conversation_history,
         }, mode="request")
         return result
-    def EvaluateResponse(self, question: str,category: types.QuestionCategory,ground_truth: str,system_response: str,bim_context: str,
+    def EvaluateResponse(self, question: str,category: types.QuestionCategory,ground_truth: str,system_response: str,bim_context: typing.Optional[str] = None,
         baml_options: BamlCallOptions = {},
     ) -> baml_py.baml_py.HTTPRequest:
         result = self.__options.merge_options(baml_options).create_http_request_sync(function_name="EvaluateResponse", args={
@@ -368,7 +368,7 @@ class BamlHttpStreamRequestClient:
             "function_name": function_name,"conversation_history": conversation_history,
         }, mode="stream")
         return result
-    def EvaluateResponse(self, question: str,category: types.QuestionCategory,ground_truth: str,system_response: str,bim_context: str,
+    def EvaluateResponse(self, question: str,category: types.QuestionCategory,ground_truth: str,system_response: str,bim_context: typing.Optional[str] = None,
         baml_options: BamlCallOptions = {},
     ) -> baml_py.baml_py.HTTPRequest:
         result = self.__options.merge_options(baml_options).create_http_request_sync(function_name="EvaluateResponse", args={

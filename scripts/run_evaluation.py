@@ -31,7 +31,8 @@ import mlflow.dspy
 from tqdm import tqdm
 
 from src.config.agents import AGENT_CONFIGS, IfcAnswerEngineConfig
-from src.engine import AnswerVerifier, create_engine
+from src.engine import create_engine
+from src.engine.components.baml_answer_verifier import BamlAnswerVerifier
 from src.engine.schemas import ModuleOutput
 from src.engine.util import get_logger
 from src.experiment.datasets import DEVSET, Dataset
@@ -72,9 +73,8 @@ class EvaluationRunner:
         mlflow.set_tracking_uri("http://127.0.0.1:5000")
         mlflow.set_experiment(self.experiment_name)
 
-        # Initialize AnswerVerifier (used by both engines)
-        # TODO Update to use the BAML version
-        self.answer_verifier = AnswerVerifier()
+        # Initialize BAML AnswerVerifier
+        self.answer_verifier = BamlAnswerVerifier()
 
         # Initialize metrics tracking (unified for both engines)
         self.evaluation_metrics = {
@@ -82,7 +82,7 @@ class EvaluationRunner:
             "successful_answers": 0,
             "failed_answers": 0,
             "total_execution_time": 0.0,
-            "similarity_scores": [],
+            "classifications": [],
             "total_input_tokens": 0,
             "total_output_tokens": 0,
             "engine_specific_metrics": {},
@@ -149,8 +149,42 @@ class EvaluationRunner:
         """Process a single question with individual MLflow trace."""
         question = example.question
         ground_truth = getattr(example, 'answer', '') or getattr(example, 'ground_truth', '')
-        category = getattr(example, 'category', 'unknown')
+        category = getattr(example, 'category', None)
         question_id = getattr(example, 'id', f'q_{example_index + 1}')
+
+        # Skip question if category is not provided
+        if category is None:
+            error_msg = f"ERROR: Question {question_id} missing required 'category' field. SKIPPING this question. Please update the dataset."
+            self.logger.error(error_msg)
+            print(f"\n{error_msg}")
+
+            # Log error to MLflow
+            with mlflow.start_span(name="Missing_Category_Error", span_type="ERROR") as error_span:
+                error_span.set_inputs({
+                    "question": question,
+                    "question_id": question_id
+                })
+                error_span.set_outputs({
+                    "error": "Missing required 'category' field",
+                    "action": "Question skipped"
+                })
+                error_span.set_status("ERROR")
+
+            # Return error result
+            return {
+                "question": question,
+                "ground_truth": ground_truth,
+                "category": None,
+                "status": "error",
+                "error_message": "Missing required 'category' field",
+                "execution_time": 0.0,
+                "classification": None,
+                "justification": None,
+                "confidence": None,
+                "input_tokens": 0,
+                "output_tokens": 0,
+                "mlflow_run_id": "skipped_no_category",
+            }
 
         self.logger.info(f"Processing question {example_index + 1}/{len(self.dataset)}: {question[:100]}...")
 
@@ -257,31 +291,35 @@ class EvaluationRunner:
                     })
 
                     # Now run AnswerVerifier if we have a successful answer
-                    similarity_score = 0.0
-                    verifier_reasoning = ""
+                    classification = None
+                    justification = None
+                    confidence = None
                     if status == "success" and answer and ground_truth:
-                        similarity_score, verifier_reasoning = self._run_answer_verifier(
-                            question, answer, ground_truth
+                        verifier_result = self._run_answer_verifier(
+                            question, category, ground_truth, answer
                         )
 
-                        # Update similarity metrics
-                        self.evaluation_metrics["similarity_scores"].append(similarity_score)
+                        classification = verifier_result.classification
+                        justification = verifier_result.justification
+                        confidence = verifier_result.confidence
 
-                        # Log similarity metrics
-                        mlflow.log_metrics({
-                            "similarity_score": similarity_score,
-                        })
+                        # Update classification metrics
+                        self.evaluation_metrics["classifications"].append(classification)
 
                         question_outputs.update({
-                            "similarity_score": similarity_score,
-                            "verifier_reasoning": verifier_reasoning
+                            "classification": classification,
+                            "justification": justification,
+                            "confidence": confidence
                         })
 
-                    self.logger.info(f"Question {example_index + 1} completed: {status} in {execution_time:.2f}s, similarity: {similarity_score:.3f}")
+                    self.logger.info(f"Question {example_index + 1} completed: {status} in {execution_time:.2f}s, classification: {classification}")
 
+                    # Log LLM outputs as parameters
                     mlflow.log_params({
                         "answer": answer,
-                        "similarity_score": similarity_score,
+                        "classification": classification or "not_evaluated",
+                        "justification": justification or "not_evaluated",
+                        "confidence": confidence or "not_evaluated",
                     })
 
                     return {
@@ -292,8 +330,9 @@ class EvaluationRunner:
                         "answer": answer,
                         "reasoning": reasoning,
                         "execution_time": execution_time,
-                        "similarity_score": similarity_score,
-                        "verifier_reasoning": verifier_reasoning,
+                        "classification": classification,
+                        "justification": justification,
+                        "confidence": confidence,
                         "input_tokens": input_tokens,
                         "output_tokens": output_tokens,
                         "error_message": getattr(result, 'error_msg', ''),
@@ -340,61 +379,48 @@ class EvaluationRunner:
                         "status": "error",
                         "error_message": str(e),
                         "execution_time": execution_time,
-                        "similarity_score": 0.0,
-                        "verifier_reasoning": "",
+                        "classification": None,
+                        "justification": None,
+                        "confidence": None,
                         "input_tokens": 0,
                         "output_tokens": 0,
                         "engine_metrics": {},
                         "mlflow_run_id": question_run.info.run_id,
                     }
 
-    def _run_answer_verifier(self, question: str, answer: str, ground_truth: str) -> tuple[float, str]:
-        """Run the AnswerVerifier to get similarity score and reasoning."""
+    def _run_answer_verifier(self, question: str, category: str, ground_truth: str, system_response: str):
+        """Run the BAML AnswerVerifier to get AnswerEvaluationResult."""
         try:
-            with mlflow.start_span(name="AnswerVerifier", span_type="CHAIN") as verifier_span:
+            with mlflow.start_span(name="BamlAnswerVerifier", span_type="CHAIN") as verifier_span:
                 verifier_span.set_inputs({
                     "question": question,
-                    "answer": answer,
-                    "ground_truth": ground_truth
-                })
-                verifier_span.set_attributes({
-                    "llm_model": self.answer_verifier.lm.model if hasattr(self.answer_verifier, 'lm') else "unknown"
+                    "category": category,
+                    "ground_truth": ground_truth,
+                    "system_response": system_response
                 })
 
-                # Run AnswerVerifier
-                verifier_output = cast(ModuleOutput, self.answer_verifier(
+                # Run BAML AnswerVerifier
+                verifier_result = self.answer_verifier.forward(
                     question=question,
-                    first_answer=answer,
-                    second_answer=ground_truth
-                ))
+                    category=category,
+                    ground_truth=ground_truth,
+                    system_response=system_response
+                )
 
-                if verifier_output.status == "success" and verifier_output.result:
-                    similarity_score = verifier_output.result.similarity_score or 0.0
-                    reasoning = verifier_output.result.reasoning or ""
+                verifier_span.set_outputs({
+                    "classification": verifier_result.classification,
+                    "justification": verifier_result.justification,
+                    "confidence": verifier_result.confidence,
+                    "status": "success"
+                })
+                verifier_span.set_status("OK")
 
-                    verifier_span.set_outputs({
-                        "similarity_score": similarity_score,
-                        "reasoning": reasoning,
-                        "status": "success"
-                    })
-                    verifier_span.set_status("OK")
-
-                    self.logger.debug(f"AnswerVerifier: similarity={similarity_score:.3f}, reasoning: {reasoning[:100]}...")
-                    return similarity_score, reasoning
-
-                else:
-                    error_msg = verifier_output.error_msg or "Unknown AnswerVerifier error"
-                    verifier_span.set_status("ERROR")
-                    verifier_span.set_outputs({
-                        "error_message": error_msg,
-                    })
-
-                    self.logger.warning(f"AnswerVerifier failed: {error_msg}")
-                    return 0.0, ""
+                self.logger.debug(f"BamlAnswerVerifier: classification={verifier_result.classification}, confidence={verifier_result.confidence}")
+                return verifier_result
 
         except Exception as e:
-            self.logger.error(f"AnswerVerifier exception: {str(e)}")
-            return 0.0, ""
+            self.logger.error(f"BamlAnswerVerifier exception: {str(e)}")
+            raise
 
     def _extract_error_type(self, error_message: str) -> str:
         """Extract error type from error message."""
@@ -421,11 +447,15 @@ class EvaluationRunner:
         # Basic success metrics
         success_rate = len(successful_results) / total_questions if total_questions > 0 else 0.0
 
-        # Similarity metrics
-        similarity_scores = [r["similarity_score"] for r in successful_results]
-        mean_similarity = sum(similarity_scores) / len(similarity_scores) if similarity_scores else 0.0
-        high_similarity_count = sum(1 for score in similarity_scores if score >= 0.85)
-        high_similarity_rate = (high_similarity_count / len(similarity_scores)) * 100 if similarity_scores else 0.0
+        # Classification metrics
+        classifications = [r["classification"] for r in successful_results if r["classification"] is not None]
+        correct_count = sum(1 for c in classifications if c == "correct")
+        wrong_count = sum(1 for c in classifications if c == "wrong")
+        abstained_count = sum(1 for c in classifications if c == "abstained")
+
+        # Calculate accuracy and abstainance rate
+        accuracy = correct_count / (correct_count + wrong_count) if (correct_count + wrong_count) > 0 else 0.0
+        abstainance_rate = abstained_count / len(classifications) if classifications else 0.0
 
         # Performance metrics
         total_execution_time = sum(r["execution_time"] for r in question_results)
@@ -444,11 +474,13 @@ class EvaluationRunner:
             "failed_answers": total_questions - len(successful_results),
             "total_questions": total_questions,
 
-            # Similarity metrics
-            "mean_similarity_score": mean_similarity,
-            "high_similarity_count": high_similarity_count,
-            "high_similarity_rate_percent": high_similarity_rate,
-            "answers_above_0_85_similarity": high_similarity_count,
+            # Classification metrics
+            "accuracy": accuracy,
+            "abstainance_rate": abstainance_rate,
+            "correct_count": correct_count,
+            "wrong_count": wrong_count,
+            "abstained_count": abstained_count,
+            "total_evaluated": len(classifications),
 
             # Performance metrics
             "total_execution_time": total_execution_time,
@@ -497,10 +529,13 @@ class EvaluationRunner:
             # "successful_answers": len(successful_results),
             # "failed_answers": total_questions - len(successful_results),
 
-            # Similarity metrics
-            "mean_similarity_score": mean_similarity,
-            # "high_similarity_count": high_similarity_count,
-            "high_similarity_rate_percent": high_similarity_rate,
+            # Classification metrics
+            "accuracy": accuracy,
+            "abstainance_rate": abstainance_rate,
+            "correct_count": correct_count,
+            "wrong_count": wrong_count,
+            "abstained_count": abstained_count,
+            "total_evaluated": len(classifications),
 
             # Performance metrics
             "total_execution_time": total_execution_time,
@@ -546,8 +581,15 @@ class EvaluationRunner:
         print(f"  Success Rate: {results_summary['success_rate']:.3f}")
         print(f"  Successful Answers: {results_summary['successful_answers']}")
         print(f"  Failed Answers: {results_summary['failed_answers']}")
-        print(f"  Mean Similarity Score: {results_summary['mean_similarity_score']:.3f}")
-        print(f"  High Similarity (≥0.85): {results_summary['high_similarity_count']} ({results_summary['high_similarity_rate_percent']:.1f}%)")
+        print()
+
+        print("Classification Metrics:")
+        print(f"  Accuracy: {results_summary['accuracy']:.3f}")
+        print(f"  Abstainance Rate: {results_summary['abstainance_rate']:.3f}")
+        print(f"  Correct Answers: {results_summary['correct_count']}")
+        print(f"  Wrong Answers: {results_summary['wrong_count']}")
+        print(f"  Abstained Answers: {results_summary['abstained_count']}")
+        print(f"  Total Evaluated: {results_summary['total_evaluated']}")
         print()
 
         print("Token Usage:")
@@ -661,7 +703,7 @@ class EvaluationRunner:
 
                 self.logger.info("Evaluation completed successfully")
                 self.logger.info(f"Success rate: {results_summary['success_rate']:.3f}")
-                self.logger.info(f"Mean similarity: {results_summary['mean_similarity_score']:.3f}")
+                self.logger.info(f"Accuracy: {results_summary['accuracy']:.3f}")
                 self.logger.info(f"Total evaluation time: {total_evaluation_time:.1f}s")
                 self.logger.info(f"Individual question traces created: {len(question_results)}")
 
