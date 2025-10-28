@@ -16,6 +16,9 @@ from . import stream_types
 
 type_map = {
 
+    "types.AnswerEvaluationResult": types.AnswerEvaluationResult,
+    "stream_types.AnswerEvaluationResult": stream_types.AnswerEvaluationResult,
+
     "types.AssessmentResult": types.AssessmentResult,
     "stream_types.AssessmentResult": stream_types.AssessmentResult,
 
@@ -37,9 +40,6 @@ type_map = {
     "types.ImprovedImplementation": types.ImprovedImplementation,
     "stream_types.ImprovedImplementation": stream_types.ImprovedImplementation,
 
-    "types.Resume": types.Resume,
-    "stream_types.Resume": stream_types.Resume,
-
     "types.SimilarityResult": types.SimilarityResult,
     "stream_types.SimilarityResult": stream_types.SimilarityResult,
 
@@ -55,5 +55,7 @@ type_map = {
     "types.ToolOptimizationResult": types.ToolOptimizationResult,
     "stream_types.ToolOptimizationResult": stream_types.ToolOptimizationResult,
 
+
+    "types.QuestionCategory": types.QuestionCategory,
 
 }

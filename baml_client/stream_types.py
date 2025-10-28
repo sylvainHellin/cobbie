@@ -26,8 +26,13 @@ class StreamState(BaseModel, typing.Generic[StreamStateValueT]):
 # Generated classes (13)
 # #########################################################################
 
+class AnswerEvaluationResult(BaseModel):
+    classification: typing.Optional[typing.Union[str, str, str]] = None
+    justification: typing.Optional[str] = None
+    confidence: typing.Optional[typing.Union[str, str, str]] = None
+
 class AssessmentResult(BaseModel):
-    assessment_status: typing.Optional[str] = None
+    assessment_status: typing.Optional[typing.Union[str, str]] = None
     assessment_details: typing.Optional[str] = None
     test_execution_log: typing.Optional[str] = None
 
@@ -58,12 +63,6 @@ class ImprovedImplementation(BaseModel):
     function_implementation: typing.Optional[str] = None
     reasoning: typing.Optional[str] = None
     changes_summary: typing.Optional[str] = None
-
-class Resume(BaseModel):
-    name: typing.Optional[str] = None
-    email: typing.Optional[str] = None
-    experience: typing.List[str]
-    skills: typing.List[str]
 
 class SimilarityResult(BaseModel):
     similarity_score: typing.Optional[float] = None

@@ -8,19 +8,7 @@ enum QuestionCategory {
   Category4 @alias("4")
 }
 
-class EvaluationResult {
-  classification "correct" | "wrong" | "abstained" @description(#"
-    Classification of the system response
-  "#)
 
-  justification string @description(#"
-    Brief explanation (2-3 sentences) of why this classification was chosen.
-  "#)
-
-  confidence "high" | "medium" | "low" @description(#"
-    Evaluator confidence level
-  "#)
-}
 
 function EvaluateResponse(
   question: string,
@@ -28,7 +16,7 @@ function EvaluateResponse(
   ground_truth: string,
   system_response: string,
   bim_context: string @description("Brief description of what data is available in the BIM model")
-) -> EvaluationResult {
+) -> AnswerEvaluationResult {
   client ZAICodingPlan
 
   prompt #"

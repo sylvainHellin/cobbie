@@ -1,14 +1,3 @@
-// BAML ToolCreator implementation for replacing DSPy version
-// Follows CodeAct pattern with union return types for clean flow control
-// Reuses existing classes from schemas.baml
-
-// Extended result class for when tool creation is complete
-class FunctionImplementation {
-  function_implementation string
-  confidence float?
-  needs_improvement bool
-}
-
 // Main ToolCreator function returning either continue action or final implementation
 function ToolCreator(
   function_requirements: string,

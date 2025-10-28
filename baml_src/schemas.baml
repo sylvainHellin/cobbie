@@ -1,5 +1,4 @@
 // BAML schemas for BIM QA system
-// Union types for CodeAct implementation
 
 // Code execution action (loop mode)
 class CodeAction {
@@ -22,7 +21,7 @@ class ToolCreationResult {
 
 // Answer verification result
 class SimilarityResult {
-  similarity_score float
+similarity_score float
   correct_answer bool
   reasoning string
 }
@@ -40,4 +39,63 @@ class ToolOptimizationResult {
   function_name string?
   function_requirements string?
   existing_tool_names string[]?
+}
+
+// Answer evaluation result
+class AnswerEvaluationResult {
+  classification "correct" | "wrong" | "abstained" @description(#"
+    Classification of the system response
+  "#)
+
+  justification string @description(#"
+    Brief explanation (2-3 sentences) of why this classification was chosen.
+  "#)
+
+  confidence "high" | "medium" | "low" @description(#"
+    Evaluator confidence level
+  "#)
+}
+
+// Assessment result from ToolAssessor - tests function behavior without seeing implementation
+class AssessmentResult {
+  assessment_status "ok" | "needs_improvement" @description("'ok' if function works as expected, 'needs_improvement' if issues found")
+  assessment_details string @description("Detailed explanation of test results and any issues discovered")
+  test_execution_log string? @description("Log of function execution and test cases attempted")
+}
+
+// Extended result class for when tool creation is complete
+class FunctionImplementation {
+  function_implementation string
+  confidence float?
+  needs_improvement bool
+}
+
+// Improved implementation from ToolCorrector - addresses assessment feedback
+class ImprovedImplementation {
+  function_implementation string @description("Updated Python source code addressing assessment issues")
+  reasoning string @description("Explanation of changes made and how they address the feedback")
+  changes_summary string? @description("Brief summary of the main changes made")
+}
+
+// Cleaned code from CodeCleaner - fixes syntax and compilation errors
+class CleanedCode {
+  function_implementation string @description("Python code with syntax errors fixed")
+  reasoning string @description("Explanation of syntax fixes and corrections applied")
+  success bool @description("Whether the cleaning was successful")
+}
+
+// Successful outcome - function has been tested and improved successfully
+class TestAndImproveSuccess {
+  function_implementation string @description("Final validated function implementation")
+  assessment_details string @description("Final assessment confirming function works correctly")
+  iterations_used int @description("Number of iterations needed to achieve success")
+  total_time_seconds float @description("Total time taken for testing and improvement")
+}
+
+// Error outcome - testing and improvement process failed
+class TestAndImproveError {
+  error_message string @description("Detailed error description")
+  iterations_completed int @description("Number of iterations completed before failure")
+  final_assessment_status string? @description("Last known assessment status, if any")
+  partial_function_implementation string? @description("Best function implementation achieved, if any")
 }

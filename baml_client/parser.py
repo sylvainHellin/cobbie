@@ -42,11 +42,11 @@ class LlmResponseParser:
         result = self.__options.merge_options(baml_options).parse_response(function_name="CodeExtractor", llm_response=llm_response, mode="request")
         return typing.cast(types.FunctionImplementation, result)
 
-    def ExtractResume(
+    def EvaluateResponse(
         self, llm_response: str, baml_options: BamlCallOptions = {},
-    ) -> types.Resume:
-        result = self.__options.merge_options(baml_options).parse_response(function_name="ExtractResume", llm_response=llm_response, mode="request")
-        return typing.cast(types.Resume, result)
+    ) -> types.AnswerEvaluationResult:
+        result = self.__options.merge_options(baml_options).parse_response(function_name="EvaluateResponse", llm_response=llm_response, mode="request")
+        return typing.cast(types.AnswerEvaluationResult, result)
 
     def ToolAssessor(
         self, llm_response: str, baml_options: BamlCallOptions = {},
@@ -92,11 +92,11 @@ class LlmStreamParser:
         result = self.__options.merge_options(baml_options).parse_response(function_name="CodeExtractor", llm_response=llm_response, mode="stream")
         return typing.cast(stream_types.FunctionImplementation, result)
 
-    def ExtractResume(
+    def EvaluateResponse(
         self, llm_response: str, baml_options: BamlCallOptions = {},
-    ) -> stream_types.Resume:
-        result = self.__options.merge_options(baml_options).parse_response(function_name="ExtractResume", llm_response=llm_response, mode="stream")
-        return typing.cast(stream_types.Resume, result)
+    ) -> stream_types.AnswerEvaluationResult:
+        result = self.__options.merge_options(baml_options).parse_response(function_name="EvaluateResponse", llm_response=llm_response, mode="stream")
+        return typing.cast(stream_types.AnswerEvaluationResult, result)
 
     def ToolAssessor(
         self, llm_response: str, baml_options: BamlCallOptions = {},

@@ -133,20 +133,20 @@ class BamlSyncClient:
                 "function_name": function_name,"conversation_history": conversation_history,
             })
             return typing.cast(types.FunctionImplementation, result.cast_to(types, types, stream_types, False, __runtime__))
-    def ExtractResume(self, resume: str,
+    def EvaluateResponse(self, question: str,category: types.QuestionCategory,ground_truth: str,system_response: str,bim_context: str,
         baml_options: BamlCallOptions = {},
-    ) -> types.Resume:
+    ) -> types.AnswerEvaluationResult:
         # Check if on_tick is provided
         if 'on_tick' in baml_options:
-            stream = self.stream.ExtractResume(resume=resume,
+            stream = self.stream.EvaluateResponse(question=question,category=category,ground_truth=ground_truth,system_response=system_response,bim_context=bim_context,
                 baml_options=baml_options)
             return stream.get_final_response()
         else:
             # Original non-streaming code
-            result = self.__options.merge_options(baml_options).call_function_sync(function_name="ExtractResume", args={
-                "resume": resume,
+            result = self.__options.merge_options(baml_options).call_function_sync(function_name="EvaluateResponse", args={
+                "question": question,"category": category,"ground_truth": ground_truth,"system_response": system_response,"bim_context": bim_context,
             })
-            return typing.cast(types.Resume, result.cast_to(types, types, stream_types, False, __runtime__))
+            return typing.cast(types.AnswerEvaluationResult, result.cast_to(types, types, stream_types, False, __runtime__))
     def ToolAssessor(self, function_name: str,function_requirements: str,path_ifc_model: str,available_tools: str,previous_attempts: typing.Optional[str] = None,
         baml_options: BamlCallOptions = {},
     ) -> typing.Union["types.CodeAction", "types.AssessmentResult"]:
@@ -234,16 +234,16 @@ class BamlStreamClient:
           lambda x: typing.cast(types.FunctionImplementation, x.cast_to(types, types, stream_types, False, __runtime__)),
           ctx,
         )
-    def ExtractResume(self, resume: str,
+    def EvaluateResponse(self, question: str,category: types.QuestionCategory,ground_truth: str,system_response: str,bim_context: str,
         baml_options: BamlCallOptions = {},
-    ) -> baml_py.BamlSyncStream[stream_types.Resume, types.Resume]:
-        ctx, result = self.__options.merge_options(baml_options).create_sync_stream(function_name="ExtractResume", args={
-            "resume": resume,
+    ) -> baml_py.BamlSyncStream[stream_types.AnswerEvaluationResult, types.AnswerEvaluationResult]:
+        ctx, result = self.__options.merge_options(baml_options).create_sync_stream(function_name="EvaluateResponse", args={
+            "question": question,"category": category,"ground_truth": ground_truth,"system_response": system_response,"bim_context": bim_context,
         })
-        return baml_py.BamlSyncStream[stream_types.Resume, types.Resume](
+        return baml_py.BamlSyncStream[stream_types.AnswerEvaluationResult, types.AnswerEvaluationResult](
           result,
-          lambda x: typing.cast(stream_types.Resume, x.cast_to(types, types, stream_types, True, __runtime__)),
-          lambda x: typing.cast(types.Resume, x.cast_to(types, types, stream_types, False, __runtime__)),
+          lambda x: typing.cast(stream_types.AnswerEvaluationResult, x.cast_to(types, types, stream_types, True, __runtime__)),
+          lambda x: typing.cast(types.AnswerEvaluationResult, x.cast_to(types, types, stream_types, False, __runtime__)),
           ctx,
         )
     def ToolAssessor(self, function_name: str,function_requirements: str,path_ifc_model: str,available_tools: str,previous_attempts: typing.Optional[str] = None,
@@ -311,11 +311,11 @@ class BamlHttpRequestClient:
             "function_name": function_name,"conversation_history": conversation_history,
         }, mode="request")
         return result
-    def ExtractResume(self, resume: str,
+    def EvaluateResponse(self, question: str,category: types.QuestionCategory,ground_truth: str,system_response: str,bim_context: str,
         baml_options: BamlCallOptions = {},
     ) -> baml_py.baml_py.HTTPRequest:
-        result = self.__options.merge_options(baml_options).create_http_request_sync(function_name="ExtractResume", args={
-            "resume": resume,
+        result = self.__options.merge_options(baml_options).create_http_request_sync(function_name="EvaluateResponse", args={
+            "question": question,"category": category,"ground_truth": ground_truth,"system_response": system_response,"bim_context": bim_context,
         }, mode="request")
         return result
     def ToolAssessor(self, function_name: str,function_requirements: str,path_ifc_model: str,available_tools: str,previous_attempts: typing.Optional[str] = None,
@@ -368,11 +368,11 @@ class BamlHttpStreamRequestClient:
             "function_name": function_name,"conversation_history": conversation_history,
         }, mode="stream")
         return result
-    def ExtractResume(self, resume: str,
+    def EvaluateResponse(self, question: str,category: types.QuestionCategory,ground_truth: str,system_response: str,bim_context: str,
         baml_options: BamlCallOptions = {},
     ) -> baml_py.baml_py.HTTPRequest:
-        result = self.__options.merge_options(baml_options).create_http_request_sync(function_name="ExtractResume", args={
-            "resume": resume,
+        result = self.__options.merge_options(baml_options).create_http_request_sync(function_name="EvaluateResponse", args={
+            "question": question,"category": category,"ground_truth": ground_truth,"system_response": system_response,"bim_context": bim_context,
         }, mode="stream")
         return result
     def ToolAssessor(self, function_name: str,function_requirements: str,path_ifc_model: str,available_tools: str,previous_attempts: typing.Optional[str] = None,

@@ -37,15 +37,26 @@ def get_checks(checks: typing.Dict[CheckName, Check]) -> typing.List[Check]:
 def all_succeeded(checks: typing.Dict[CheckName, Check]) -> bool:
     return all(check.status == "succeeded" for check in get_checks(checks))
 # #########################################################################
-# Generated enums (0)
+# Generated enums (1)
 # #########################################################################
+
+class QuestionCategory(str, Enum):
+    Category1 = "Category1"
+    Category2 = "Category2"
+    Category3 = "Category3"
+    Category4 = "Category4"
 
 # #########################################################################
 # Generated classes (13)
 # #########################################################################
 
+class AnswerEvaluationResult(BaseModel):
+    classification: typing.Union[typing_extensions.Literal['correct'], typing_extensions.Literal['wrong'], typing_extensions.Literal['abstained']]
+    justification: str
+    confidence: typing.Union[typing_extensions.Literal['high'], typing_extensions.Literal['medium'], typing_extensions.Literal['low']]
+
 class AssessmentResult(BaseModel):
-    assessment_status: str
+    assessment_status: typing.Union[typing_extensions.Literal['ok'], typing_extensions.Literal['needs_improvement']]
     assessment_details: str
     test_execution_log: typing.Optional[str] = None
 
@@ -76,12 +87,6 @@ class ImprovedImplementation(BaseModel):
     function_implementation: str
     reasoning: str
     changes_summary: typing.Optional[str] = None
-
-class Resume(BaseModel):
-    name: str
-    email: str
-    experience: typing.List[str]
-    skills: typing.List[str]
 
 class SimilarityResult(BaseModel):
     similarity_score: float
