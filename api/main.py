@@ -41,7 +41,7 @@ mlflow.dspy.autolog()  # type: ignore
 # Initialize the IFC Answer Engine with configurable type
 # Engine type can be set via ENGINE_TYPE environment variable ("dspy" or "baml")
 # Default is "dspy" for backward compatibility
-engine_type = os.getenv("ENGINE_TYPE", "dspy").lower()
+engine_type = os.getenv("ENGINE_TYPE", "baml").lower()
 
 if engine_type not in ["dspy", "baml"]:
     raise ValueError(f"Invalid ENGINE_TYPE: {engine_type}. Must be 'dspy' or 'baml'")
