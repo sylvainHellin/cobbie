@@ -106,6 +106,20 @@ def cobbie(
                     baml_latency = time.time() - baml_start_time
                     llm_calls += 1
                     
+                    # Extract token usage from collector for this iteration
+                    iteration_input_tokens = 0
+                    iteration_output_tokens = 0
+                    
+                    # Get collector from kwargs to extract token usage
+                    baml_options = kwargs.get("baml_options", {})
+                    collector = baml_options.get("collector")
+                    
+                    if collector and collector.last and collector.last.usage:
+                        usage = collector.last.usage
+                        iteration_input_tokens = usage.input_tokens or 0
+                        iteration_output_tokens = usage.output_tokens or 0
+                        iteration_total_tokens = iteration_input_tokens + iteration_output_tokens
+                    
                     # Log BAML call metrics
                     mlflow.log_metric(f"latency_llm_call_{iteration + 1}", baml_latency)
                     baml_span.set_attributes({
@@ -113,13 +127,24 @@ def cobbie(
                         "llm.model": "GLM-4.6"  # Could be made configurable
                     })
                     
+                    # Log token usage to BAML span
+                    if iteration_input_tokens > 0 or iteration_output_tokens > 0:
+                        baml_span.set_attributes({
+                            "token_usage.input_tokens": iteration_input_tokens,
+                            "token_usage.output_tokens": iteration_output_tokens,
+                            "token_usage.total_tokens": iteration_total_tokens
+                        })
+                    
                     # Log BAML output with metrics
                     if isinstance(result, CodeAction):
                         baml_span.set_outputs({
                             "result_type": "CodeAction",
                             "thoughts": result.thoughts,
                             "python_code": result.python_code,
-                            "latency": baml_latency
+                            "latency": baml_latency,
+                            "input_tokens": iteration_input_tokens,
+                            "output_tokens": iteration_output_tokens,
+                            "total_tokens": iteration_total_tokens
                         })
                         
                     elif isinstance(result, FinalAnswer):
@@ -127,21 +152,32 @@ def cobbie(
                             "result_type": "FinalAnswer",
                             "thoughts": result.thoughts,
                             "answer": result.answer,
-                            "latency": baml_latency
+                            "latency": baml_latency,
+                            "input_tokens": iteration_input_tokens,
+                            "output_tokens": iteration_output_tokens,
+                            "total_tokens": iteration_total_tokens
                         })
                 
                 # Handle union type flow control
                 if isinstance(result, FinalAnswer):
                     logger.info(f"COBBIE completed successfully after {iteration + 1} iterations")
                     
-                    # Log final iteration metrics
+                    # Log final iteration metrics with token usage
                     iteration_span.set_outputs({
                         "final_answer": result.answer,
                         "final_reasoning": result.thoughts,
                         "total_iterations": iteration + 1,
                         "llm_calls": llm_calls,
                         "code_executions": code_execution_count,
-                        "iteration_success": True
+                        "iteration_success": True,
+                        "final_iteration_input_tokens": iteration_input_tokens,
+                        "final_iteration_output_tokens": iteration_output_tokens,
+                        "final_iteration_total_tokens": iteration_total_tokens
+                    })
+                    iteration_span.set_attributes({
+                        "token_usage.final_iteration_input": iteration_input_tokens,
+                        "token_usage.final_iteration_output": iteration_output_tokens,
+                        "token_usage.final_iteration_total": iteration_total_tokens
                     })
                     iteration_span.set_status("OK")
                     
@@ -197,13 +233,21 @@ Result:
                             })
                             exec_span.set_status("OK")
                             
-                            # Log iteration completion
+                            # Log iteration completion with token usage
                             iteration_span.set_outputs({
                                 "iteration_number": iteration + 1,
                                 "code_executed": True,
                                 "code_execution_time": code_execution_time,
                                 "thoughts": result.thoughts,
-                                "partial_results_count": len(previous_results)
+                                "partial_results_count": len(previous_results),
+                                "input_tokens": iteration_input_tokens,
+                                "output_tokens": iteration_output_tokens,
+                                "total_tokens": iteration_total_tokens
+                            })
+                            iteration_span.set_attributes({
+                                "token_usage.input_tokens": iteration_input_tokens,
+                                "token_usage.output_tokens": iteration_output_tokens,
+                                "token_usage.total_tokens": iteration_total_tokens
                             })
                             iteration_span.set_status("OK")
                             
@@ -232,7 +276,15 @@ Result:
                             iteration_span.set_outputs({
                                 "iteration_number": iteration + 1,
                                 "code_executed": False,
-                                "execution_error": error_msg
+                                "execution_error": error_msg,
+                                "input_tokens": iteration_input_tokens,
+                                "output_tokens": iteration_output_tokens,
+                                "total_tokens": iteration_total_tokens
+                            })
+                            iteration_span.set_attributes({
+                                "token_usage.input_tokens": iteration_input_tokens,
+                                "token_usage.output_tokens": iteration_output_tokens,
+                                "token_usage.total_tokens": iteration_total_tokens
                             })
                             iteration_span.set_status("ERROR")
                             
@@ -248,19 +300,34 @@ Result:
                     iteration_span.set_outputs({
                         "iteration_number": iteration + 1,
                         "unexpected_result_type": str(type(result)),
-                        "error": error_msg
+                        "error": error_msg,
+                        "input_tokens": iteration_input_tokens,
+                        "output_tokens": iteration_output_tokens,
+                        "total_tokens": iteration_total_tokens
+                    })
+                    iteration_span.set_attributes({
+                        "token_usage.input_tokens": iteration_input_tokens,
+                        "token_usage.output_tokens": iteration_output_tokens,
+                        "token_usage.total_tokens": iteration_total_tokens
                     })
                     iteration_span.set_status("ERROR")
                     continue
                     
             except Exception as e:
-                error_msg = f"Error in iteration {iteration + 1}: {str(e)}"
+                error_msg = f"Iteration {iteration + 1} failed: {str(e)}"
                 logger.error(error_msg)
-                previous_results.append(f"Iteration {iteration + 1}: Error - {error_msg}")
                 
                 iteration_span.set_outputs({
                     "iteration_number": iteration + 1,
-                    "iteration_error": error_msg
+                    "iteration_error": error_msg,
+                    "input_tokens": iteration_input_tokens,
+                    "output_tokens": iteration_output_tokens,
+                    "total_tokens": iteration_total_tokens
+                })
+                iteration_span.set_attributes({
+                    "token_usage.input_tokens": iteration_input_tokens,
+                    "token_usage.output_tokens": iteration_output_tokens,
+                    "token_usage.total_tokens": iteration_total_tokens
                 })
                 iteration_span.set_status("ERROR")
                 continue
