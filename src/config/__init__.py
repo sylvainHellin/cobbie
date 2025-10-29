@@ -16,7 +16,7 @@ from .main import (
     FUNCTION_BOILERPLATE,
     LOG_LEVEL,
 )
-from .agents import AGENT_CONFIGS, get_config, update_config, AgentConfigs
+from .agents import AGENT_CONFIGS, get_config, update_config, AgentConfigs, IfcAnswerEngineConfig
 from .llm import LLM, LLM_REGISTRY
 
 __all__ = [
@@ -39,6 +39,7 @@ __all__ = [
     "get_config",
     "update_config",
     "AgentConfigs",
+    "IfcAnswerEngineConfig",
     # From llm config
     "LLM",
     "LLM_REGISTRY",
