@@ -447,24 +447,47 @@ def cobbie_with_metrics(
             )
             execution_time = time.time() - start_time
 
-            # Extract token usage from collector (following baml_common.py pattern)
+            # Extract token usage from collector
             input_tokens = 0
             output_tokens = 0
+            total_tokens = 0
+            last_call_tokens = 0
 
-            if collector and collector.last and collector.last.usage:
-                usage = collector.last.usage
-                input_tokens = usage.input_tokens or 0
-                output_tokens = usage.output_tokens or 0
+            # Use collector.usage for cumulative total across ALL calls (not just the last one)
+            if collector:
+                try:
+                    # Get cumulative usage across all calls
+                    if hasattr(collector, 'usage') and collector.usage:
+                        usage = collector.usage
+                        input_tokens = usage.input_tokens or 0
+                        output_tokens = usage.output_tokens or 0
+                        total_tokens = input_tokens + output_tokens
 
-            total_tokens = input_tokens + output_tokens
+                    # Also get last call info for comparison (debugging purposes)
+                    if hasattr(collector, 'last') and collector.last and hasattr(collector.last, 'usage') and collector.last.usage:
+                        last_usage = collector.last.usage
+                        last_call_tokens = (last_usage.input_tokens or 0) + (last_usage.output_tokens or 0)
+
+                    logger.info(f"Token tracking - Cumulative: {total_tokens} (in: {input_tokens}, out: {output_tokens}), Last call: {last_call_tokens}")
+
+                except Exception as e:
+                    logger.warning(f"Error extracting token usage from collector: {e}")
+                    # Fallback to zero values
+                    input_tokens = 0
+                    output_tokens = 0
+                    total_tokens = 0
+            else:
+                logger.warning("No collector available for token tracking")
 
             # Log metrics to MLflow
             mlflow.log_metrics({
                 "cobbie_input_tokens": input_tokens,
                 "cobbie_output_tokens": output_tokens,
                 "cobbie_total_tokens": total_tokens,
+                "cobbie_last_call_tokens": last_call_tokens,  # For comparison/debugging
                 "cobbie_execution_time": execution_time,
-                "cobbie_success": 1 if "iteration limit" not in final_answer.answer.lower() else 0
+                "cobbie_success": 1 if "iteration limit" not in final_answer.answer.lower() else 0,
+                "cobbie_calls_count": len(collector.logs) if collector and hasattr(collector, 'logs') else 0
             })
 
             # Set span outputs and attributes
@@ -474,6 +497,8 @@ def cobbie_with_metrics(
                 "input_tokens": input_tokens,
                 "output_tokens": output_tokens,
                 "total_tokens": total_tokens,
+                "last_call_tokens": last_call_tokens,
+                "calls_count": len(collector.logs) if collector and hasattr(collector, 'logs') else 0,
                 "execution_time": execution_time,
                 "success": "iteration limit" not in final_answer.answer.lower()
             })
@@ -482,7 +507,9 @@ def cobbie_with_metrics(
                 "token_usage.input_tokens": input_tokens,
                 "token_usage.output_tokens": output_tokens,
                 "token_usage.total_tokens": total_tokens,
-                "execution_time_seconds": execution_time
+                "token_usage.last_call_tokens": last_call_tokens,
+                "execution_time_seconds": execution_time,
+                "collector.calls_count": len(collector.logs) if collector and hasattr(collector, 'logs') else 0
             })
 
             logger.info(f"COBBIE with metrics completed. Tokens: {total_tokens}, Time: {execution_time:.2f}s")

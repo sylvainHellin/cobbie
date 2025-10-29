@@ -6,8 +6,6 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ### Backend (Python)
 - **Dev Server**: `uv run python api/start_server.py` or `uv run uvicorn api.main:app --host 127.0.0.1 --port 8000 --reload`
-- **Test All**: `uv run pytest`
-- **Single Test**: `uv run pytest tests/test_file.py::test_function`
 - **Lint**: `uv run ruff check .`
 - **Type Check**: `uv run mypy .`
 
@@ -64,7 +62,7 @@ This is a sophisticated BIM AI question-answering system with a multi-agent arch
 
 - `src/engine/`: Core AI engine components
   - `components/`: Multi-agent implementations (mix of BAML and DSPy)
-    - **BAML Components**: `tool_creator_baml.py`, `test_and_improve_baml.py` (2 migrated)
+    - **BAML Components**: `tool_creator_baml.py`, `test_and_improve_baml.py`, `cobbie.py` (3 migrated)
     - **DSPy Components**: `engine.py`, `code_act.py`, `training_module.py`, `answer_verifier.py`, `tool_assessor.py`, `tool_corrector.py`, `tool_optimizer.py`, `tool_merger.py`, `error_analyst.py`, `tool_debugger.py` (13+ not migrated)
   - `tools/primordial/`: Built-in tools (web search, IFC documentation query)
   - `tools/created/`: Dynamically generated Python tools
@@ -73,7 +71,7 @@ This is a sophisticated BIM AI question-answering system with a multi-agent arch
 - `src/experiment/`: Training pipeline, evaluation, and database operations
   - `training/`: DSPy-based training pipeline (needs migration)
 - `baml_src/`: BAML schema definitions (partial)
-  - **Migrated**: `tool_creator.baml`, `test_and_improve.baml`
+  - **Migrated**: `tool_creator.baml`, `test_and_improve.baml`, `bim_qas.baml`
   - **Needed**: schemas for 13+ remaining components
 - `baml_client/`: BAML client integration code
 - `scripts/`: Training scripts (need BAML updates)
@@ -135,6 +133,7 @@ Created tools are persisted as `.py` files in `src/engine/tools/created/` and ca
 - **BAML Testing**: Comprehensive test suites for BAML components with MLflow integration
   - `test/test_tool_creator_baml.py`: End-to-end BAML pipeline testing
   - `test/test_and_improve_baml_test.py`: Component-level BAML testing
+  - `test/test_cobbie.py`: Functional COBBIE implementation with parameter logging
 - **Function Accessibility**: Dynamic function injection for CodeAct execution context
 
 ## BAML Integration Status
@@ -149,7 +148,7 @@ Created tools are persisted as `.py` files in `src/engine/tools/created/` and ca
 - **Configuration System**: Engine type selection via `IfcAnswerEngineConfig.engine_type`
 - **API Integration**: Engine selection via `ENGINE_TYPE` environment variable
 - **Pipeline Integration**: Training and evaluation pipelines support both engines
-- **BAML Components**: `ToolCreatorBAML`, `TestAndImproveBAML` (previously migrated)
+- **BAML Components**: `ToolCreatorBAML`, `TestAndImproveBAML`, `COBBIE` (previously migrated)
 
 ### 🔧 Configuration Options
 - **Default Engine**: DSPy (`IfcAnswerEngine`) for backward compatibility

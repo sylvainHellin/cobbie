@@ -10,6 +10,7 @@ This guide provides patterns and best practices for converting OOP DSPy agents t
 2. **MLflow Parameter**: The `_with_metrics` function always has `mlflow: bool = True`
 3. **Return Types**: Base function returns `ResultType`, metrics function returns `Tuple[ResultType, LM_Metrics]`
 4. **Configuration**: Most config goes in `.baml` files, with runtime overrides via `ClientRegistry`
+5. **⚠️ Token Tracking**: Use `collector.usage` for cumulative totals, `collector.last.usage` only for single calls
 
 **Example Template:**
 ```python
@@ -24,6 +25,12 @@ def my_function_with_metrics(
     mlflow: bool = True  # ALWAYS REQUIRED
 ) -> Tuple[ResultType, LM_Metrics]:
     """Function with MLflow orchestration and metrics."""
+    # ✅ CRITICAL: Use cumulative token tracking
+    if collector and hasattr(collector, 'usage') and collector.usage:
+        usage = collector.usage  # All calls, not just last!
+        input_tokens = usage.input_tokens or 0
+        output_tokens = usage.output_tokens or 0
+    
     # Implementation with MLflow spans and LM_Metrics return
     pass
 ```
@@ -302,54 +309,123 @@ def robust_function(...):
 
 ### BAML Collector API Usage
 
-**Basic Collector Usage:**
+**⚠️ CRITICAL: Cumulative vs. Last Call Usage**
+
+For multi-call systems (like COBBIE, TestAndImprove), use `collector.usage` for **cumulative total** across ALL calls:
 ```python
 from baml_client import b
 from baml_py import Collector
 
-def function_with_metrics():
-    # BAML wrapper provides collector automatically
-    result, collector = run_baml_function_with_metrics(
-        component_name="ComponentName",
-        baml_function=b.SomeFunction,
-        param1=value1,
-        param2=value2
-    )
+def multi_call_function_with_metrics():
+    collector = Collector(name="multi-call-collector")
+    
+    # Multiple BAML calls with same collector
+    result1 = b.FirstCall("input1", baml_options={"collector": collector})
+    result2 = b.SecondCall("input2", baml_options={"collector": collector})
+    result3 = b.ThirdCall("input3", baml_options={"collector": collector})
 
-    # Extract token usage
-    usage = collector.last.usage if collector.last else None
-    input_tokens = usage.input_tokens if usage else 0
-    output_tokens = usage.output_tokens if usage else 0
-
-    return result, {
+    # ✅ CORRECT: Use collector.usage for cumulative total across ALL calls
+    input_tokens = 0
+    output_tokens = 0
+    
+    if collector and hasattr(collector, 'usage') and collector.usage:
+        usage = collector.usage
+        input_tokens = usage.input_tokens or 0
+        output_tokens = usage.output_tokens or 0
+    
+    total_tokens = input_tokens + output_tokens
+    
+    # ❌ WRONG: collector.last.usage only gets the VERY LAST call
+    # last_usage = collector.last.usage  # Only captures result3 tokens!
+    
+    return result3, {
         "input_tokens": input_tokens,
         "output_tokens": output_tokens,
-        "total_tokens": input_tokens + output_tokens
+        "total_tokens": total_tokens
     }
 ```
 
-**Direct Collector Usage (Advanced):**
+**Single Call Functions:**
 ```python
 from baml_client import b
 from baml_py import Collector
 
-def advanced_function():
-    collector = Collector(name="my-collector")
+def single_call_function_with_metrics():
+    collector = Collector(name="single-call-collector")
+    
+    result = b.SingleCall("input", baml_options={"collector": collector})
 
-    result = b.SomeFunction(
-        "input",
-        baml_options={"collector": collector}
-    )
+    # For single calls, both approaches work (cumulative == last call)
+    usage = collector.usage  # ✅ Preferred: Always use this
+    # OR
+    usage = collector.last.usage  # ✅ Also works for single calls
+    
+    return result, {
+        "input_tokens": usage.input_tokens if usage else 0,
+        "output_tokens": usage.output_tokens if usage else 0,
+        "total_tokens": (usage.input_tokens or 0) + (usage.output_tokens or 0)
+    }
+```
 
-    # Access detailed usage information
-    usage = collector.last.usage
-    print(f"Input tokens: {usage.input_tokens}")
-    print(f"Output tokens: {usage.output_tokens}")
+**Advanced Multi-Call with Error Handling:**
+```python
+from baml_client import b
+from baml_py import Collector
 
-    # Access raw response for debugging
-    raw_response = collector.last.raw_llm_response
-
-    return result
+def robust_multi_call_with_metrics():
+    collector = Collector(name="robust-collector")
+    
+    try:
+        # Multiple calls that may have different token usage
+        result1 = b.IterativeCall("input1", baml_options={"collector": collector})
+        result2 = b.IterativeCall("input2", baml_options={"collector": collector})
+        
+        # Enhanced token tracking with error handling
+        input_tokens = 0
+        output_tokens = 0
+        total_tokens = 0
+        last_call_tokens = 0
+        
+        if collector:
+            try:
+                # Get cumulative usage across all calls
+                if hasattr(collector, 'usage') and collector.usage:
+                    usage = collector.usage
+                    input_tokens = usage.input_tokens or 0
+                    output_tokens = usage.output_tokens or 0
+                    total_tokens = input_tokens + output_tokens
+                
+                # Also get last call info for comparison/debugging
+                if (hasattr(collector, 'last') and collector.last and 
+                    hasattr(collector.last, 'usage') and collector.last.usage):
+                    last_usage = collector.last.usage
+                    last_call_tokens = (last_usage.input_tokens or 0) + (last_usage.output_tokens or 0)
+                
+                logger.info(f"Token tracking - Cumulative: {total_tokens}, Last call: {last_call_tokens}")
+                
+            except Exception as e:
+                logger.warning(f"Error extracting token usage from collector: {e}")
+                # Fallback to zero values
+                input_tokens = 0
+                output_tokens = 0
+                total_tokens = 0
+        else:
+            logger.warning("No collector available for token tracking")
+        
+        # Log to MLflow with comprehensive metrics
+        mlflow.log_metrics({
+            "function_input_tokens": input_tokens,
+            "function_output_tokens": output_tokens,
+            "function_total_tokens": total_tokens,
+            "function_last_call_tokens": last_call_tokens,
+            "function_calls_count": len(collector.logs) if collector and hasattr(collector, 'logs') else 0
+        })
+        
+        return result2, collector
+        
+    except Exception as e:
+        logger.error(f"Multi-call function failed: {e}")
+        raise
 ```
 
 ### LM_Metrics Integration
@@ -359,7 +435,10 @@ def advanced_function():
 from src.engine.schemas.outputs import LM_Metrics
 
 def create_lm_metrics_from_collector(collector) -> LM_Metrics:
-    usage = collector.last.usage if collector.last else None
+    # ✅ Use cumulative usage for multi-call systems
+    usage = None
+    if collector and hasattr(collector, 'usage') and collector.usage:
+        usage = collector.usage
 
     return LM_Metrics(
         input_tokens=usage.input_tokens if usage else 0,
@@ -367,6 +446,67 @@ def create_lm_metrics_from_collector(collector) -> LM_Metrics:
         llm="zai-glm-4.6",  # Extract from config or collector
         cost=None  # Calculate if cost rates available
     )
+```
+
+**MLflow Integration Pattern:**
+```python
+def log_comprehensive_metrics(collector, execution_time, success=True):
+    """
+    Log comprehensive token metrics to MLflow for multi-call systems.
+    
+    Args:
+        collector: BAML Collector with token usage data
+        execution_time: Function execution time in seconds
+        success: Whether the operation succeeded
+    """
+    input_tokens = 0
+    output_tokens = 0
+    total_tokens = 0
+    last_call_tokens = 0
+    calls_count = 0
+    
+    if collector:
+        try:
+            # Cumulative usage across all calls
+            if hasattr(collector, 'usage') and collector.usage:
+                usage = collector.usage
+                input_tokens = usage.input_tokens or 0
+                output_tokens = usage.output_tokens or 0
+                total_tokens = input_tokens + output_tokens
+            
+            # Last call usage for comparison
+            if (hasattr(collector, 'last') and collector.last and 
+                hasattr(collector.last, 'usage') and collector.last.usage):
+                last_usage = collector.last.usage
+                last_call_tokens = (last_usage.input_tokens or 0) + (last_usage.output_tokens or 0)
+            
+            # Number of calls made
+            calls_count = len(collector.logs) if hasattr(collector, 'logs') else 0
+            
+        except Exception as e:
+            logger.warning(f"Error extracting metrics from collector: {e}")
+    
+    # Log comprehensive metrics
+    mlflow.log_metrics({
+        "input_tokens": input_tokens,
+        "output_tokens": output_tokens,
+        "total_tokens": total_tokens,
+        "last_call_tokens": last_call_tokens,
+        "calls_count": calls_count,
+        "execution_time_seconds": execution_time,
+        "success": 1 if success else 0,
+        "avg_tokens_per_call": total_tokens / max(calls_count, 1)
+    })
+    
+    # Set span attributes for detailed tracing
+    if hasattr(mlflow, 'active_run') and mlflow.active_run():
+        with mlflow.start_span(name="token_metrics", span_type="ATTRIBUTE") as span:
+            span.set_attributes({
+                "token_usage.total": total_tokens,
+                "token_usage.per_call": total_tokens / max(calls_count, 1),
+                "call_count": calls_count,
+                "efficiency_ratio": total_tokens / max(execution_time, 0.001)  # tokens per second
+            })
 ```
 
 ## Essential Code Patterns
@@ -496,16 +636,44 @@ def process_baml_result(result):
   ```
 
 #### Token Usage Variables
-- **Problem**: Undefined token variables (`input_tokens`, `output_tokens`, `total_tokens`)
-- **Solution**: Always extract from BAML collector before logging metrics
+- **Problem**: Using `collector.last.usage` for multi-call systems, missing cumulative totals
+- **Solution**: Use `collector.usage` for cumulative totals, `collector.last.usage` only for single calls
 - **Pattern**:
   ```python
-  if collector and collector.last and collector.last.usage:
-      usage = collector.last.usage
+  # ✅ CORRECT: Multi-call systems (COBBIE, TestAndImprove, etc.)
+  if collector and hasattr(collector, 'usage') and collector.usage:
+      usage = collector.usage
       input_tokens = usage.input_tokens or 0
       output_tokens = usage.output_tokens or 0
   total_tokens = input_tokens + output_tokens
+  
+  # ❌ WRONG: collector.last.usage only gets the VERY LAST call
+  # This causes major underreporting for iterative systems
+  if collector and collector.last and collector.last.usage:
+      usage = collector.last.usage  # Only captures final iteration!
   ```
+
+#### Cumulative Token Tracking Pitfall
+- **Problem**: Critical error in token monitoring for multi-call systems (COBBIE, TestAndImprove)
+- **Impact**: Massive underreporting of token usage (up to 90%+ underreporting for 10+ iterations)
+- **Root Cause**: Using `collector.last.usage` instead of `collector.usage` 
+- **When It Happens**: Any BAML function that makes multiple LLM calls across iterations
+- **Detection**: MLflow shows unexpectedly low token counts for complex operations
+- **Fix Pattern**:
+  ```python
+  # ❌ WRONG - Only captures final iteration
+  if collector and collector.last and collector.last.usage:
+      usage = collector.last.usage  # ~50 tokens for final iteration only
+      input_tokens = usage.input_tokens or 0
+      output_tokens = usage.output_tokens or 0
+  
+  # ✅ CORRECT - Captures ALL iterations
+  if collector and hasattr(collector, 'usage') and collector.usage:
+      usage = collector.usage  # ~500+ tokens for 10 iterations
+      input_tokens = usage.input_tokens or 0  
+      output_tokens = usage.output_tokens or 0
+  ```
+- **Real-World Impact**: COBBIE function was reporting ~50 tokens instead of ~500+ tokens for 10-iteration runs
 
 #### Parameter Logging
 - **Problem**: Missing experiment parameters for reproducibility
