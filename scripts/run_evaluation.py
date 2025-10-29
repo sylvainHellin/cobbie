@@ -23,7 +23,7 @@ Usage:
 import argparse
 import time
 from datetime import datetime
-from typing import Any, Dict, List, Literal, Optional, cast
+from typing import Any, Dict, List, Literal, Optional
 
 import dspy
 import mlflow
@@ -32,8 +32,7 @@ from tqdm import tqdm
 
 from src.config.agents import AGENT_CONFIGS, IfcAnswerEngineConfig
 from src.engine import create_engine
-from src.engine.components.baml_answer_verifier import BamlAnswerVerifier
-from src.engine.schemas import ModuleOutput
+from src.engine.components.baml_answer_verifier import verify_answer_with_metrics
 from src.engine.util import get_logger
 from src.experiment.datasets import DEVSET, Dataset
 
@@ -72,9 +71,6 @@ class EvaluationRunner:
         # Setup MLflow
         mlflow.set_tracking_uri("http://127.0.0.1:5000")
         mlflow.set_experiment(self.experiment_name)
-
-        # Initialize BAML AnswerVerifier
-        self.answer_verifier = BamlAnswerVerifier()
 
         # Initialize metrics tracking (unified for both engines)
         self.evaluation_metrics = {
@@ -295,8 +291,11 @@ class EvaluationRunner:
                     justification = None
                     confidence = None
                     if status == "success" and answer and ground_truth:
-                        verifier_result = self._run_answer_verifier(
-                            question, category, ground_truth, answer
+                        verifier_result, verifier_metrics = verify_answer_with_metrics(
+                            question=question,
+                            category=category,
+                            ground_truth=ground_truth,
+                            system_response=answer
                         )
 
                         classification = verifier_result.classification
@@ -305,6 +304,10 @@ class EvaluationRunner:
 
                         # Update classification metrics
                         self.evaluation_metrics["classifications"].append(classification)
+
+                        # Update token counts with verifier metrics
+                        self.evaluation_metrics["total_input_tokens"] += verifier_metrics.input_tokens or 0
+                        self.evaluation_metrics["total_output_tokens"] += verifier_metrics.output_tokens or 0
 
                         question_outputs.update({
                             "classification": classification,
@@ -388,39 +391,6 @@ class EvaluationRunner:
                         "mlflow_run_id": question_run.info.run_id,
                     }
 
-    def _run_answer_verifier(self, question: str, category: str, ground_truth: str, system_response: str):
-        """Run the BAML AnswerVerifier to get AnswerEvaluationResult."""
-        try:
-            with mlflow.start_span(name="BamlAnswerVerifier", span_type="CHAIN") as verifier_span:
-                verifier_span.set_inputs({
-                    "question": question,
-                    "category": category,
-                    "ground_truth": ground_truth,
-                    "system_response": system_response
-                })
-
-                # Run BAML AnswerVerifier
-                verifier_result = self.answer_verifier.forward(
-                    question=question,
-                    category=category,
-                    ground_truth=ground_truth,
-                    system_response=system_response
-                )
-
-                verifier_span.set_outputs({
-                    "classification": verifier_result.classification,
-                    "justification": verifier_result.justification,
-                    "confidence": verifier_result.confidence,
-                    "status": "success"
-                })
-                verifier_span.set_status("OK")
-
-                self.logger.debug(f"BamlAnswerVerifier: classification={verifier_result.classification}, confidence={verifier_result.confidence}")
-                return verifier_result
-
-        except Exception as e:
-            self.logger.error(f"BamlAnswerVerifier exception: {str(e)}")
-            raise
 
     def _extract_error_type(self, error_message: str) -> str:
         """Extract error type from error message."""
