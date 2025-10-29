@@ -199,3 +199,16 @@ client<llm> DeepInfraQwen3Coder {
     max_tokens 8192
   }
 }
+
+// Minimax M2 client
+client<llm> MinimaxM2 {
+  provider openai
+  retry_policy Exponential
+  options {
+    base_url "https://api.minimax.chat/v1"
+    model "minimax-m2"
+    api_key env.MINIMAX_API_KEY
+    temperature 0.1
+    max_tokens 8192
+  }
+}

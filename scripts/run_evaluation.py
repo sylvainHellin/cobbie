@@ -496,11 +496,6 @@ class EvaluationRunner:
             "tokens_per_second": total_tokens / total_execution_time if total_execution_time > 0 else 0.0,
         }
 
-        # Add engine-specific metrics
-        for key, total_value in self.evaluation_metrics["engine_specific_metrics"].items():
-            metrics[f"total_{key}"] = total_value
-            metrics[f"avg_{key}_per_question"] = total_value / total_questions if total_questions > 0 else 0.0
-
         # Add cost calculations if available
         if config.llm.cost_input_token is not None and config.llm.cost_output_token is not None:
             input_cost = (total_input_tokens / 1_000_000) * config.llm.cost_input_token
@@ -526,8 +521,8 @@ class EvaluationRunner:
 
             # Success metrics
             "success_rate": success_rate,
-            # "successful_answers": len(successful_results),
-            # "failed_answers": total_questions - len(successful_results),
+            "successful_answers": len(successful_results),
+            "failed_answers": total_questions - len(successful_results),
 
             # Classification metrics
             "accuracy": accuracy,
@@ -550,16 +545,8 @@ class EvaluationRunner:
             # Tokens per second
             "tokens_per_second": total_tokens / total_execution_time if total_execution_time > 0 else 0.0,
 
-            # Engine-specific metrics
-            # "engine_specific_metrics": self.evaluation_metrics["engine_specific_metrics"],
-
-            # Configuration
-            "load_compiled": self.load_compiled,
-            "cache": self.cache,
-            "experiment_name": self.experiment_name,
-
             # Cost
-            "cost": getattr(metrics, "cost", 0)
+            "cost": metrics.get("cost", 0)
         }
 
         return results_summary
@@ -573,14 +560,6 @@ class EvaluationRunner:
         print(f"Engine: {results_summary['engine_type'].upper()}")
         print(f"Model: {results_summary['model_name']} ({results_summary['provider_name']})")
         print(f"Samples: {results_summary['num_samples']}")
-        print(f"Load Compiled: {results_summary['load_compiled']}")
-        print(f"Cache: {results_summary['cache']}")
-        print()
-
-        print("Performance Metrics:")
-        print(f"  Success Rate: {results_summary['success_rate']:.3f}")
-        print(f"  Successful Answers: {results_summary['successful_answers']}")
-        print(f"  Failed Answers: {results_summary['failed_answers']}")
         print()
 
         print("Classification Metrics:")
@@ -604,15 +583,6 @@ class EvaluationRunner:
         print(f"  Avg Execution Time/Question: {results_summary['avg_execution_time']:.1f}s")
         print(f"  Tokens/Second: {results_summary['tokens_per_second']:.1f}")
         print()
-
-        if results_summary['engine_specific_metrics']:
-            print("Engine-Specific Metrics:")
-            for key, value in results_summary['engine_specific_metrics'].items():
-                avg_key = f"avg_{key}_per_question"
-                if avg_key in results_summary:
-                    print(f"  Total {key.replace('_', ' ').title()}: {value}")
-                    print(f"  Avg {key.replace('_', ' ').title()}/Question: {results_summary[avg_key]:.1f}")
-            print()
 
         if "total_cost_usd" in results_summary:
             print("Cost Analysis:")
