@@ -486,6 +486,43 @@ def process_baml_result(result):
 
 ### Common Pitfalls to Avoid
 
+#### MLflow Context Issues
+- **Problem**: Spans created outside MLflow run context cause warnings
+- **Solution**: Check for active run before creating spans, use `nullcontext()` fallback
+- **Pattern**: 
+  ```python
+  active_run = mlflow.active_run()
+  run_context_manager = nullcontext() if active_run else mlflow.start_run(run_name="Component_Execution_Run")
+  ```
+
+#### Token Usage Variables
+- **Problem**: Undefined token variables (`input_tokens`, `output_tokens`, `total_tokens`)
+- **Solution**: Always extract from BAML collector before logging metrics
+- **Pattern**:
+  ```python
+  if collector and collector.last and collector.last.usage:
+      usage = collector.last.usage
+      input_tokens = usage.input_tokens or 0
+      output_tokens = usage.output_tokens or 0
+  total_tokens = input_tokens + output_tokens
+  ```
+
+#### Parameter Logging
+- **Problem**: Missing experiment parameters for reproducibility
+- **Solution**: Log comprehensive parameters following `run_evaluation.py` pattern
+- **Pattern**:
+  ```python
+  params = {
+      "component": "COMPONENT_NAME",
+      "engine_type": "baml",
+      "max_iterations": max_iterations,
+      "tools_count": len(tools),
+      "llm_provider": "Z.AI",
+      "llm_model": "GLM-4.6"
+  }
+  mlflow.log_params(params)
+  ```
+
 - **Incorrect MLflow Context Usage**: Always use context managers, never create spans directly
 - **Missing Collector Usage**: Don't forget to extract token usage from collectors
 - **Incomplete Error Handling**: Ensure spans are properly closed with error status
@@ -531,6 +568,23 @@ def test_mlflow_integration():
 
         # Verify MLflow spans were created
         # Check span inputs/outputs contain expected data
+```
+
+**COBBIE Integration Example:**
+```python
+def test_cobbie_with_metrics():
+    tools = create_demo_tools()
+    question = "How many walls in the building?"
+    
+    final_answer, collector = cobbie_with_metrics(
+        user_input=question,
+        tools=tools,
+        max_iterations=5
+    )
+    
+    assert final_answer.answer is not None
+    assert collector.last.usage.input_tokens > 0
+    assert collector.last.usage.output_tokens > 0
 ```
 
 ## Conclusion
