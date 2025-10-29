@@ -343,6 +343,25 @@ def cobbie_with_metrics(
     run_context_manager = nullcontext() if active_run else mlflow.start_run(run_name="COBBIE_Execution_Run")
     
     with run_context_manager as run:
+        # Log parameters to MLflow (following run_evaluation.py pattern)
+        params = {
+            "component": "COBBIE",
+            "engine_type": "baml",
+            "max_iterations": max_iterations,
+            "add_code_prefix": add_code_prefix,
+            "model_path": model_path or "None",
+            "tools_count": len(tools),
+            "llm_provider": "Z.AI",  # Could be made configurable
+            "llm_model": "GLM-4.6"   # Could be made configurable
+        }
+        
+        # Add tool names as parameters for better traceability
+        for i, tool_name in enumerate(tools.keys()):
+            params[f"tool_{i+1}"] = tool_name
+        
+        mlflow.log_params(params)
+        logger.info(f"Logged COBBIE parameters: {params}")
+        
         # Start MLflow span for the entire execution (following run_evaluation.py pattern)
         with mlflow.start_span(name="COBBIE_Execution", span_type="CHAIN") as span:
             # Set span inputs
