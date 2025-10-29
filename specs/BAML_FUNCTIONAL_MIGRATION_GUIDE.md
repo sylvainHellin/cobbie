@@ -6,17 +6,19 @@ This guide provides patterns and best practices for converting OOP DSPy agents t
 
 **Every migrated agent MUST follow this pattern:**
 
-1. **Two Functions**: Always create both `function_name()` and `function_name_with_metrics()`
+1. **Three Functions (Advanced)**: Create `function_name()`, `function_name_with_metrics()`, and optionally `function_name_forward()` for compatibility
 2. **MLflow Parameter**: The `_with_metrics` function always has `mlflow: bool = True`
 3. **Return Types**: Base function returns `ResultType`, metrics function returns `Tuple[ResultType, LM_Metrics]`
 4. **Configuration**: Most config goes in `.baml` files, with runtime overrides via `ClientRegistry`
 5. **⚠️ Token Tracking**: Use `collector.usage` for cumulative totals, `collector.last.usage` only for single calls
+6. **🆕 Nested Spans**: Implement 3-level span hierarchy for complex systems (main → iteration → LLM calls)
+7. **🆕 Context Management**: Use `nullcontext()` pattern to handle existing MLflow runs gracefully
 
-**Example Template:**
+**Example Template (Advanced 3-Function Pattern):**
 ```python
 def my_function(param1: str, param2: Optional[str] = None) -> ResultType:
     """Base function - no MLflow orchestration."""
-    # Implementation using run_baml_function_with_metrics()
+    # Direct functional implementation without MLflow orchestration
     pass
 
 def my_function_with_metrics(
@@ -30,9 +32,23 @@ def my_function_with_metrics(
         usage = collector.usage  # All calls, not just last!
         input_tokens = usage.input_tokens or 0
         output_tokens = usage.output_tokens or 0
-    
-    # Implementation with MLflow spans and LM_Metrics return
+
+    # Implementation with comprehensive MLflow spans and LM_Metrics return
     pass
+
+def my_function_forward(
+    param1: str,
+    param2: Optional[str] = None,
+    config: Optional[ConfigType] = None
+) -> ModuleOutput:
+    """
+    Backward compatibility wrapper returning ModuleOutput.
+
+    Provides compatibility with existing interfaces while using new functional implementation.
+    """
+    # Convert between ResultType and ModuleOutput for compatibility
+    result = my_function(param1, param2)
+    return _result_to_module_output(result)
 ```
 
 ## Table of Contents
@@ -72,16 +88,32 @@ Usage example:
 
 ### Reference Implementation
 
-See `src/engine/components/baml_answer_verifier.py` for the complete example of this migration pattern.
+**🆕 Canonical Reference Implementation:**
+See `src/engine/components/cobbie.py` for the complete production-quality advanced implementation of these patterns.
+
+**COBBIE** demonstrates:
+- **Advanced 3-Function Architecture**: `cobbie()`, `cobbie_with_metrics()`, `cobbie_forward()`
+- **Sophisticated MLflow Integration**: 3-level nested span hierarchy with comprehensive tracking
+- **Advanced Token Monitoring**: Dual-level token tracking with both cumulative and per-iteration metrics
+- **Comprehensive Error Handling**: Per-iteration error classification with severity-based flow control
+- **Production-Quality Patterns**: Real-world implementation that powers the BAML engine
+
+**Simple Component Reference**: See `src/engine/components/baml_answer_verifier.py` for basic 2-function pattern implementation.
 
 ## Pattern Conversion: Class → Function
 
-### Standard Function Pattern (REQUIRED)
+### Advanced Function Pattern (REQUIRED)
 
-**Every agent MUST follow this two-function pattern:**
+**Every complex agent SHOULD follow this three-function pattern:**
 
 1. **Base Function**: Simple function returning just the result
-2. **Function with Metrics**: Returns tuple of `(result, LM_Metrics)` with MLflow support
+2. **Function with Metrics**: Returns tuple of `(result, LM_Metrics)` with comprehensive MLflow support
+3. **Compatibility Wrapper**: Returns existing interface types (e.g., `ModuleOutput`) for backward compatibility
+
+**When to use which pattern:**
+- **Simple Components**: 2-function pattern is sufficient (e.g., AnswerVerifier)
+- **Complex Systems**: 3-function pattern recommended (e.g., COBBIE, TestAndImprove)
+- **Interface Migration**: Always include compatibility wrapper when replacing existing components
 
 **DSPy OOP Pattern:**
 ```python
@@ -97,7 +129,7 @@ class AnswerVerifier(dspy.Module):
             pass
 ```
 
-**BAML Functional Pattern (REQUIRED):**
+**BAML Functional Pattern (Advanced 3-Function):**
 ```python
 def verify_answer(
     question: str,
@@ -129,8 +161,44 @@ def verify_answer_with_metrics(
     mlflow: bool = True  # ALWAYS include this parameter
 ) -> Tuple[AnswerEvaluationResult, LM_Metrics]:
     """Function with metrics - includes MLflow orchestration and returns LM_Metrics."""
-    # Implementation with MLflow spans and metrics collection
+    # Implementation with comprehensive MLflow spans and metrics collection
     # (See MLflow Integration Patterns section for full implementation)
+
+
+def verify_answer_forward(
+    question: str,
+    category: Literal[1, 2, 3, 4],
+    ground_truth: str,
+    system_response: str,
+    bim_context: Optional[str] = "BIM model containing building information",
+    config: Optional[ConfigType] = None
+) -> ModuleOutput:
+    """
+    Backward compatibility wrapper returning ModuleOutput.
+
+    This function provides compatibility with the existing interface while using
+    the new functional implementation. Can be removed when all calling code
+    is updated to use the new interface directly.
+    """
+    try:
+        final_answer = verify_answer(
+            question=question,
+            category=category,
+            ground_truth=ground_truth,
+            system_response=system_response,
+            bim_context=bim_context
+        )
+
+        # Convert AnswerEvaluationResult to ModuleOutput for compatibility
+        return _answer_result_to_module_output(final_answer)
+
+    except Exception as e:
+        # Handle errors gracefully
+        logger.error(f"Error in verify_answer_forward: {e}")
+        output = ModuleOutput()
+        output.status = "error"
+        output.error_msg = f"Answer verification failed: {str(e)}"
+        return output
 ```
 
 ### Configuration Handling
@@ -199,10 +267,129 @@ def function_with_legacy_config(param: str, config: Optional[ConfigType] = None)
 
 ### Context Manager Best Practices
 
-**Standard Span Pattern:**
+**🆕 Advanced Multi-Level Span Pattern (COBBIE-style):**
 ```python
 import mlflow
+from contextlib import nullcontext
 
+def complex_function_with_metrics(..., mlflow: bool = True):
+    if mlflow:
+        # Check if we're already in an MLflow run
+        active_run = mlflow.active_run()
+        run_context_manager = (
+            nullcontext()
+            if active_run
+            else mlflow.start_run(run_name="ComplexFunction_Execution_Run")
+        )
+
+        with run_context_manager:
+            # Log comprehensive parameters following run_evaluation.py pattern
+            mlflow.log_params({
+                "component": "ComplexFunction",
+                "engine_type": "baml",
+                "max_iterations": max_iterations,
+                "tools_count": len(tools),
+                "llm_provider": llm_provider,
+                "llm_model": llm_name,
+                "tools": ", ".join(tools.keys()),
+            })
+
+            # Main execution span
+            with mlflow.start_span(name="ComplexFunction", span_type="CHAIN") as main_span:
+                main_span.set_inputs({
+                    "user_input": user_input,
+                    "max_iterations": max_iterations,
+                    "tools_count": len(tools),
+                })
+
+                # Multi-iteration loop with per-iteration spans
+                for iteration in range(max_iterations):
+                    with mlflow.start_span(
+                        name=f"Iteration_{iteration + 1}", span_type="CHAIN"
+                    ) as iteration_span:
+
+                        # LLM call span within iteration
+                        with mlflow.start_span(
+                            name=f"LLM_call_{iteration + 1}", span_type="LLM"
+                        ) as llm_span:
+                            llm_span.set_inputs({
+                                "question": question,
+                                "iteration": iteration + 1,
+                            })
+
+                            # BAML function call
+                            result, collector = run_baml_function_with_metrics(...)
+
+                            # Extract token usage (cumulative for multi-call systems)
+                            input_tokens = 0
+                            output_tokens = 0
+                            if collector and hasattr(collector, 'usage') and collector.usage:
+                                usage = collector.usage
+                                input_tokens = usage.input_tokens or 0
+                                output_tokens = usage.output_tokens or 0
+
+                            llm_span.set_attributes({
+                                "llm.provider": llm_provider,
+                                "llm.model": llm_name,
+                                "input_tokens": input_tokens,
+                                "output_tokens": output_tokens,
+                                "total_tokens": input_tokens + output_tokens,
+                            })
+
+                            llm_span.set_outputs({
+                                "result_type": type(result).__name__,
+                                "iteration": iteration + 1,
+                            })
+
+                        # Handle iteration result
+                        if isinstance(result, FinalResult):
+                            iteration_span.set_outputs({
+                                "final_answer": result.answer,
+                                "total_iterations": iteration + 1,
+                                "iteration_success": True,
+                            })
+                            iteration_span.set_status("OK")
+
+                            # Set main span outputs and return
+                            main_span.set_outputs({
+                                "answer": result.answer,
+                                "total_iterations": iteration + 1,
+                                "success": True,
+                            })
+                            main_span.set_status("OK")
+                            return result, metrics
+
+                        elif isinstance(result, CodeAction):
+                            # Continue to next iteration
+                            iteration_span.set_status("OK")
+                            continue
+
+                        else:
+                            # Handle unexpected result type
+                            error_msg = f"Unexpected result type: {type(result)}"
+                            iteration_span.set_outputs({"error_msg": error_msg})
+                            iteration_span.set_status("ERROR")
+                            continue
+
+                # Max iterations reached
+                main_span.set_outputs({
+                    "termination_reason": "max_iterations_reached",
+                    "total_iterations": max_iterations,
+                    "success": False,
+                })
+                main_span.set_status("OK")
+
+                # Create final incomplete result
+                final_result = create_incomplete_result(...)
+                return final_result, metrics
+
+    else:
+        # Run without MLflow orchestration
+        return direct_function_call(...)
+```
+
+**Standard Span Pattern (for simple components):**
+```python
 def verify_answer_with_metrics(..., mlflow: bool = True):
     if mlflow:
         with mlflow.start_span(name="BamlAnswerVerifier", span_type="CHAIN") as verifier_span:
@@ -273,7 +460,137 @@ with mlflow.start_span(name="Component_Name", span_type="CHAIN") as component_sp
 
 ### Error Handling Patterns
 
-**Comprehensive Error Handling:**
+**🆕 Advanced Per-Iteration Error Handling (COBBIE Pattern):**
+```python
+def robust_multi_iteration_function(...):
+    """
+    Comprehensive error handling with per-iteration status management.
+
+    Each iteration gets granular error tracking with appropriate span status.
+    """
+    # Initialize error tracking
+    error_count = 0
+    critical_errors = []
+
+    for iteration in range(max_iterations):
+        with mlflow.start_span(
+            name=f"Iteration_{iteration + 1}", span_type="CHAIN"
+        ) as iteration_span:
+
+            try:
+                # Main processing logic
+                result = process_iteration(iteration, previous_attempts)
+
+                # Handle successful result
+                if isinstance(result, FinalResult):
+                    iteration_span.set_outputs({
+                        "final_answer": result.answer,
+                        "total_iterations": iteration + 1,
+                        "error_count": error_count,
+                        "iteration_success": True,
+                    })
+                    iteration_span.set_status("OK")
+                    return result
+
+                # Continue for intermediate results
+                iteration_span.set_status("OK")
+                continue
+
+            except Exception as e:
+                error_count += 1
+                error_type = type(e).__name__
+                error_message = str(e)
+
+                # 🆕 Granular error classification
+                if "token" in error_message.lower():
+                    error_category = "token_limit"
+                    severity = "warning"
+                elif "timeout" in error_message.lower():
+                    error_category = "timeout"
+                    severity = "error"
+                elif "permission" in error_message.lower():
+                    error_category = "permission"
+                    severity = "critical"
+                else:
+                    error_category = "unknown"
+                    severity = "error"
+
+                # 🆕 Track critical errors separately
+                if severity == "critical":
+                    critical_errors.append({
+                        "iteration": iteration + 1,
+                        "error_type": error_type,
+                        "error_message": error_message,
+                        "category": error_category
+                    })
+
+                # Set iteration span with comprehensive error information
+                iteration_span.set_outputs({
+                    "error_type": error_type,
+                    "error_message": error_message,
+                    "error_category": error_category,
+                    "error_severity": severity,
+                    "error_count": error_count,
+                    "iteration": iteration + 1,
+                })
+
+                iteration_span.set_attributes({
+                    "error.occurred": True,
+                    "error.category": error_category,
+                    "error.severity": severity,
+                    "error.count.total": error_count,
+                    "error.count.critical": len(critical_errors),
+                })
+
+                iteration_span.set_status("ERROR")
+
+                # 🆕 Decide whether to continue or abort based on severity
+                if severity == "critical":
+                    logger.error(f"Critical error in iteration {iteration + 1}: {e}")
+                    break
+                else:
+                    logger.warning(f"Non-critical error in iteration {iteration + 1}: {e}")
+                    continue
+
+    # Handle max iterations or critical errors
+    with mlflow.start_span(
+        name="Process_Completed_With_Errors", span_type="CHAIN"
+    ) as final_span:
+        final_span.set_inputs({
+            "max_iterations": max_iterations,
+            "total_errors": error_count,
+            "critical_errors": len(critical_errors),
+            "completion_reason": "max_iterations_or_critical_error"
+        })
+
+        if critical_errors:
+            # Create result with critical error information
+            final_answer = create_error_result(
+                errors=critical_errors,
+                total_iterations=max_iterations,
+                error_summary=f"Process failed with {len(critical_errors)} critical errors"
+            )
+        else:
+            # Create result with non-critical error information
+            final_answer = create_partial_result(
+                total_iterations=max_iterations,
+                error_count=error_count,
+                last_attempts=previous_attempts[-3:]  # Last 3 attempts
+            )
+
+        final_span.set_outputs({
+            "answer": final_answer.answer,
+            "reasoning": final_answer.thoughts,
+            "total_errors": error_count,
+            "critical_errors": len(critical_errors),
+            "completion_status": "incomplete_with_errors"
+        })
+
+        final_span.set_status("OK")
+        return final_answer
+```
+
+**Standard Error Handling (for simple components):**
 ```python
 def robust_function(...):
     if mlflow:
@@ -305,6 +622,39 @@ def robust_function(...):
                 raise
 ```
 
+**🆕 Unexpected Result Type Handling:**
+```python
+def handle_unexpected_result_types(result, iteration):
+    """
+    Graceful handling of unexpected BAML result types.
+
+    Maintains system stability when encountering unexpected union type members.
+    """
+    if isinstance(result, ExpectedType):
+        return process_expected_result(result)
+
+    elif isinstance(result, AnotherExpectedType):
+        return process_alternative_result(result)
+
+    else:
+        # 🆕 Comprehensive unexpected type handling
+        error_msg = f"Unexpected result type: {type(result)}"
+        logger.error(error_msg)
+
+        # Log detailed information about unexpected type
+        logger.debug(f"Unexpected result details: {result}")
+        logger.debug(f"Result attributes: {dir(result) if hasattr(result, '__dict__') else 'N/A'}")
+
+        # Create safe fallback result
+        fallback_result = create_safe_fallback_result(
+            error_message=error_msg,
+            iteration=iteration,
+            result_type=type(result).__name__
+        )
+
+        return fallback_result
+```
+
 ## Token Usage & Metrics Tracking
 
 ### BAML Collector API Usage
@@ -318,7 +668,7 @@ from baml_py import Collector
 
 def multi_call_function_with_metrics():
     collector = Collector(name="multi-call-collector")
-    
+
     # Multiple BAML calls with same collector
     result1 = b.FirstCall("input1", baml_options={"collector": collector})
     result2 = b.SecondCall("input2", baml_options={"collector": collector})
@@ -327,22 +677,114 @@ def multi_call_function_with_metrics():
     # ✅ CORRECT: Use collector.usage for cumulative total across ALL calls
     input_tokens = 0
     output_tokens = 0
-    
+
     if collector and hasattr(collector, 'usage') and collector.usage:
         usage = collector.usage
         input_tokens = usage.input_tokens or 0
         output_tokens = usage.output_tokens or 0
-    
+
     total_tokens = input_tokens + output_tokens
-    
+
     # ❌ WRONG: collector.last.usage only gets the VERY LAST call
     # last_usage = collector.last.usage  # Only captures result3 tokens!
-    
+
     return result3, {
         "input_tokens": input_tokens,
         "output_tokens": output_tokens,
         "total_tokens": total_tokens
     }
+```
+
+**🆕 Advanced Dual-Level Token Monitoring (COBBIE Pattern):**
+```python
+from baml_client import b
+from baml_py import Collector
+import mlflow
+
+def sophisticated_multi_call_with_metrics():
+    """
+    Advanced token tracking with dual-level monitoring and comprehensive error handling.
+
+    Tracks both cumulative totals across all calls AND last call details for debugging.
+    """
+    collector = Collector(name="sophisticated-multi-call")
+
+    try:
+        # Multiple iterative calls
+        for iteration in range(max_iterations):
+            result = b.IterativeCall(f"input_{iteration}", baml_options={"collector": collector})
+
+            # Process result and potentially continue/exit
+            if isinstance(result, FinalResult):
+                break
+
+        # 🆕 Enhanced token tracking with error handling
+        input_tokens = 0
+        output_tokens = 0
+        total_tokens = 0
+        last_call_tokens = 0
+        calls_count = 0
+
+        if collector:
+            try:
+                # Get cumulative usage across all calls
+                if hasattr(collector, 'usage') and collector.usage:
+                    usage = collector.usage
+                    input_tokens = usage.input_tokens or 0
+                    output_tokens = usage.output_tokens or 0
+                    total_tokens = input_tokens + output_tokens
+
+                # 🆕 Also get last call info for comparison/debugging
+                if (hasattr(collector, 'last') and collector.last and
+                    hasattr(collector.last, 'usage') and collector.last.usage):
+                    last_usage = collector.last.usage
+                    last_call_tokens = (last_usage.input_tokens or 0) + (last_usage.output_tokens or 0)
+
+                # 🆕 Number of calls made for performance analysis
+                calls_count = len(collector.logs) if hasattr(collector, 'logs') else 0
+
+                logger.info(f"Token tracking - Cumulative: {total_tokens}, Last call: {last_call_tokens}, Calls: {calls_count}")
+
+            except Exception as e:
+                logger.warning(f"Error extracting token usage from collector: {e}")
+                # Fallback to zero values
+                input_tokens = 0
+                output_tokens = 0
+                total_tokens = 0
+                calls_count = 0
+        else:
+            logger.warning("No collector available for token tracking")
+
+        # 🆕 Log comprehensive metrics to MLflow
+        mlflow.log_metrics({
+            "function_input_tokens": input_tokens,
+            "function_output_tokens": output_tokens,
+            "function_total_tokens": total_tokens,
+            "function_last_call_tokens": last_call_tokens,  # For comparison/debugging
+            "function_calls_count": calls_count,
+            "execution_time_seconds": execution_time,
+            "success": 1 if success else 0,
+            "avg_tokens_per_call": total_tokens / max(calls_count, 1),
+            "efficiency_ratio": total_tokens / max(execution_time, 0.001)  # tokens per second
+        })
+
+        # 🆕 Set span attributes for detailed tracing
+        if hasattr(mlflow, 'active_run') and mlflow.active_run():
+            with mlflow.start_span(name="token_metrics", span_type="ATTRIBUTE") as span:
+                span.set_attributes({
+                    "token_usage.total": total_tokens,
+                    "token_usage.per_call": total_tokens / max(calls_count, 1),
+                    "token_usage.last_call": last_call_tokens,
+                    "call_count": calls_count,
+                    "efficiency.tokens_per_second": total_tokens / max(execution_time, 0.001),
+                    "tracking.completeness": "full" if total_tokens > 0 else "partial"
+                })
+
+        return final_result, collector
+
+    except Exception as e:
+        logger.error(f"Multi-call function failed: {e}")
+        raise
 ```
 
 **Single Call Functions:**
@@ -507,6 +949,633 @@ def log_comprehensive_metrics(collector, execution_time, success=True):
                 "call_count": calls_count,
                 "efficiency_ratio": total_tokens / max(execution_time, 0.001)  # tokens per second
             })
+```
+
+## 🆕 Advanced Iteration Management Patterns
+
+### Per-Iteration Span Management
+
+**COBBIE-Style Iteration Tracking:**
+```python
+def advanced_iteration_management():
+    """
+    Sophisticated iteration management with comprehensive tracking.
+
+    Each iteration gets its own span with detailed metrics and status management.
+    """
+    # Initialize state tracking
+    previous_attempts = ""
+    code_execution_count = 0
+    total_code_execution_time = 0
+    llm_calls = 0
+
+    # Main reasoning loop with per-iteration spans
+    for iteration in range(max_iterations):
+        iteration_start = time.time()
+
+        # Create dedicated span for this iteration
+        with mlflow.start_span(
+            name=f"Iteration_{iteration + 1}", span_type="CHAIN"
+        ) as iteration_span:
+
+            # Extract token usage for this specific iteration
+            iteration_input_tokens = 0
+            iteration_output_tokens = 0
+            iteration_total_tokens = 0
+
+            # LLM call span within iteration
+            with mlflow.start_span(
+                name=f"LLM_call_{iteration + 1}", span_type="LLM"
+            ) as llm_span:
+                llm_span.set_inputs({
+                    "question": question,
+                    "available_tools": tools_docs,
+                    "previous_attempts": previous_attempts,
+                    "iteration": iteration + 1,
+                })
+
+                # BAML function call
+                result = _code_act_iter(
+                    user_input=question,
+                    available_tools=tools_docs,
+                    previous_attempts=previous_attempts,
+                    **kwargs
+                )
+
+                # Calculate iteration duration
+                iteration_duration = time.time() - iteration_start
+                llm_calls += 1
+
+                # Extract token usage for this iteration
+                if collector and collector.last and collector.last.usage:
+                    usage = collector.last.usage
+                    iteration_input_tokens = usage.input_tokens or 0
+                    iteration_output_tokens = usage.output_tokens or 0
+                    iteration_total_tokens = iteration_input_tokens + iteration_output_tokens
+
+                # Log LLM call metrics
+                llm_span.set_attributes({
+                    "llm.provider": llm_provider,
+                    "llm.model": llm_name,
+                    "input_tokens": iteration_input_tokens,
+                    "output_tokens": iteration_output_tokens,
+                    "total_tokens": iteration_total_tokens,
+                    "latency": iteration_duration,
+                })
+
+                llm_span.set_outputs({
+                    "result_type": type(result).__name__,
+                    "iteration": iteration + 1,
+                })
+
+            # Handle union type flow control with iteration-level tracking
+            if isinstance(result, FinalAnswer):
+                # Success case - update iteration span with final results
+                iteration_span.set_outputs({
+                    "final_answer": result.answer,
+                    "final_reasoning": result.thoughts,
+                    "total_iterations": iteration + 1,
+                    "llm_calls": llm_calls,
+                    "code_executions": code_execution_count,
+                    "iteration_success": True,
+                    "final_iteration_input_tokens": iteration_input_tokens,
+                    "final_iteration_output_tokens": iteration_output_tokens,
+                    "final_iteration_total_tokens": iteration_total_tokens,
+                })
+
+                iteration_span.set_attributes({
+                    "token_usage.final_iteration_input": iteration_input_tokens,
+                    "token_usage.final_iteration_output": iteration_output_tokens,
+                    "token_usage.final_iteration_total": iteration_total_tokens,
+                })
+
+                iteration_span.set_status("OK")
+                return result
+
+            elif isinstance(result, CodeAction):
+                # Continue iteration - execute code and update state
+                current_attempt = _execute_code_action(
+                    code_action=result,
+                    iteration=iteration,
+                    tools=tools,
+                    model_path=model_path,
+                )
+
+                # Update state for next iteration
+                previous_attempts += f"\n{current_attempt}\n"
+                code_execution_count += 1
+
+                # Set iteration span with progress information
+                iteration_span.set_attributes({
+                    "token_usage.input_tokens": iteration_input_tokens,
+                    "token_usage.output_tokens": iteration_output_tokens,
+                    "token_usage.total_tokens": iteration_total_tokens,
+                    "code_execution_count": code_execution_count,
+                })
+
+                iteration_span.set_status("OK")
+                continue
+
+            else:
+                # Handle unexpected result type
+                error_msg = f"Unexpected result type: {type(result)}"
+                logger.error(error_msg)
+
+                previous_attempts += (
+                    f"\n--- Iteration {iteration + 1} ---\nError:\n{error_msg}"
+                )
+
+                iteration_span.set_outputs({
+                    "error_msg": error_msg,
+                })
+
+                iteration_span.set_attributes({
+                    "token_usage.input_tokens": iteration_input_tokens,
+                    "token_usage.output_tokens": iteration_output_tokens,
+                    "token_usage.total_tokens": iteration_total_tokens,
+                })
+
+                iteration_span.set_status("ERROR")
+                continue
+
+    # Max iterations reached - create comprehensive final span
+    with mlflow.start_span(
+        name="Max_Iterations_Reached", span_type="CHAIN"
+    ) as final_span:
+        final_span.set_inputs({
+            "max_iterations": max_iterations,
+            "total_iterations_completed": max_iterations,
+            "llm_calls": llm_calls,
+            "code_executions": code_execution_count,
+            "total_code_execution_time": total_code_execution_time,
+        })
+
+        # Create comprehensive final answer with partial results
+        final_answer = FinalAnswer(
+            thoughts=(
+                f"Reached maximum iteration limit ({max_iterations}) without resolving the question. "
+                f"Summary:\n"
+                f"- Total iterations: {max_iterations}\n"
+                f"- LLM calls: {llm_calls}\n"
+                f"- Code executions: {code_execution_count}\n"
+                f"- Total code execution time: {total_code_execution_time:.2f}s\n\n"
+                f"Last 3 attempts:\n" + "\n".join(previous_attempts[-3:])
+                if previous_attempts
+                else "No previous attempts"
+            ),
+            answer=(
+                "Unable to complete the request due to iteration limit. "
+                "The question may be too complex or required information may not be accessible "
+                "with the available tools."
+            ),
+        )
+
+        final_span.set_outputs({
+            "answer": final_answer.answer,
+            "reasoning": final_answer.thoughts,
+            "termination_reason": "max_iterations_reached",
+            "summary": {
+                "max_iterations": max_iterations,
+                "llm_calls": llm_calls,
+                "code_executions": code_execution_count,
+                "total_code_execution_time": total_code_execution_time,
+                "partial_results_count": len(previous_attempts),
+            },
+        })
+
+        final_span.set_status("OK")
+        return final_answer
+```
+
+### State Management Across Iterations
+
+**Previous Attempts Accumulation Pattern:**
+```python
+def manage_iteration_state():
+    """
+    Effective state management across multiple iterations.
+
+    Maintains comprehensive history while avoiding memory bloat.
+    """
+    previous_attempts = ""
+
+    for iteration in range(max_iterations):
+        # Generate current attempt
+        current_attempt = generate_attempt_result(
+            iteration=iteration,
+            question=question,
+            previous_context=previous_attempts
+        )
+
+        # 🆕 Smart state updates with formatting
+        if iteration == 0:
+            previous_attempts = f"--- Iteration 1 ---\n{current_attempt}"
+        else:
+            previous_attempts += f"\n--- Iteration {iteration + 1} ---\n{current_attempt}"
+
+        # 🆕 Optional: Limit history size to prevent memory issues
+        if len(previous_attempts) > 10000:  # 10k character limit
+            # Keep only recent iterations
+            lines = previous_attempts.split('\n')
+            recent_lines = lines[-20:]  # Keep last 20 lines
+            previous_attempts = '\n'.join(recent_lines)
+
+        # Continue with next iteration using updated state
+        result = process_next_iteration(previous_attempts)
+```
+
+## 🆕 Advanced Patterns for Complex Systems
+
+### Comprehensive Span Architecture
+
+**Production-Quality Span Hierarchy (COBBIE Reference):**
+```python
+def production_span_architecture():
+    """
+    Comprehensive span architecture for complex multi-iteration systems.
+
+    This pattern demonstrates proper span hierarchy, attribute naming,
+    and status management for production environments.
+    """
+    # Check if we're already in an MLflow run
+    active_run = mlflow.active_run()
+    run_context_manager = (
+        nullcontext()
+        if active_run
+        else mlflow.start_run(run_name="ComplexSystem_Execution_Run")
+    )
+
+    with run_context_manager:
+        # Log comprehensive parameters following run_evaluation.py pattern
+        mlflow.log_params({
+            "component": "ComplexSystem",
+            "engine_type": "baml",
+            "max_iterations": max_iterations,
+            "tools_count": len(tools),
+            "llm_provider": llm_provider,
+            "llm_model": llm_name,
+            "tools": ", ".join(tools.keys()),
+            "session_id": session_id,
+            "user_id": user_id,
+        })
+
+        # Main execution span with comprehensive tracking
+        with mlflow.start_span(name="ComplexSystem", span_type="CHAIN") as main_span:
+            start_time = time.time()
+
+            # Set comprehensive span inputs
+            main_span.set_inputs({
+                "user_input": user_input,
+                "max_iterations": max_iterations,
+                "tools_count": len(tools),
+                "session_id": session_id,
+            })
+
+            # Set span attributes for categorization and filtering
+            main_span.set_attributes({
+                "component.name": "ComplexSystem",
+                "component.version": "2.0.0",
+                "component.type": "iterative_reasoning",
+                "execution.mode": "production",
+                "llm.provider": llm_provider,
+                "llm.model": llm_name,
+                "feature.multi_iteration": True,
+                "feature.code_execution": True,
+                "feature.error_handling": "advanced",
+            })
+
+            # Initialize comprehensive metrics
+            total_iterations = 0
+            successful_iterations = 0
+            failed_iterations = 0
+            total_llm_calls = 0
+            total_code_executions = 0
+            total_tokens = 0
+            critical_errors = []
+
+            # Multi-iteration processing with detailed tracking
+            for iteration in range(max_iterations):
+                total_iterations += 1
+
+                with mlflow.start_span(
+                    name=f"Iteration_{iteration + 1}", span_type="CHAIN"
+                ) as iteration_span:
+
+                    iteration_start = time.time()
+
+                    # Set iteration attributes
+                    iteration_span.set_attributes({
+                        "iteration.number": iteration + 1,
+                        "iteration.total": max_iterations,
+                        "iteration.progress": (iteration + 1) / max_iterations,
+                    })
+
+                    try:
+                        # LLM call span with comprehensive tracking
+                        with mlflow.start_span(
+                            name=f"LLM_Call_{iteration + 1}", span_type="LLM"
+                        ) as llm_span:
+                            llm_span.set_inputs({
+                                "question": question,
+                                "iteration": iteration + 1,
+                                "context_length": len(previous_attempts),
+                            })
+
+                            # BAML function call
+                            result, collector = run_baml_function_with_metrics(
+                                component_name=f"Iteration_{iteration + 1}",
+                                baml_function=b.ProcessInput,
+                                question=question,
+                                context=previous_attempts,
+                                **kwargs
+                            )
+
+                            total_llm_calls += 1
+                            iteration_duration = time.time() - iteration_start
+
+                            # Extract token usage with error handling
+                            iteration_tokens = 0
+                            if collector and hasattr(collector, 'last') and collector.last:
+                                if hasattr(collector.last, 'usage') and collector.last.usage:
+                                    usage = collector.last.usage
+                                    iteration_tokens = (usage.input_tokens or 0) + (usage.output_tokens or 0)
+                                    total_tokens += iteration_tokens
+
+                            # Set LLM span attributes
+                            llm_span.set_attributes({
+                                "llm.provider": llm_provider,
+                                "llm.model": llm_name,
+                                "tokens.input": collector.last.usage.input_tokens if collector.last and hasattr(collector.last, 'usage') else 0,
+                                "tokens.output": collector.last.usage.output_tokens if collector.last and hasattr(collector.last, 'usage') else 0,
+                                "tokens.total": iteration_tokens,
+                                "latency.ms": iteration_duration * 1000,
+                                "iteration": iteration + 1,
+                            })
+
+                            llm_span.set_outputs({
+                                "result_type": type(result).__name__,
+                                "has_code_action": isinstance(result, CodeAction),
+                                "has_final_answer": isinstance(result, FinalAnswer),
+                            })
+
+                        # Process result with comprehensive tracking
+                        if isinstance(result, FinalAnswer):
+                            successful_iterations += 1
+
+                            # Set successful iteration span
+                            iteration_span.set_outputs({
+                                "result_type": "final_answer",
+                                "final_answer": result.answer,
+                                "final_reasoning": result.thoughts,
+                                "iteration_success": True,
+                                "total_iterations": iteration + 1,
+                                "tokens_used": iteration_tokens,
+                                "duration": iteration_duration,
+                            })
+
+                            iteration_span.set_attributes({
+                                "status.success": True,
+                                "status.completion": "success",
+                                "tokens.iteration": iteration_tokens,
+                            })
+
+                            iteration_span.set_status("OK")
+
+                            # Update main span with final results
+                            main_span.set_outputs({
+                                "answer": result.answer,
+                                "reasoning": result.thoughts,
+                                "total_iterations": total_iterations,
+                                "successful_iterations": successful_iterations,
+                                "failed_iterations": failed_iterations,
+                                "total_llm_calls": total_llm_calls,
+                                "total_tokens": total_tokens,
+                                "execution_time": time.time() - start_time,
+                                "success": True,
+                                "completion_reason": "successful_completion",
+                            })
+
+                            main_span.set_attributes({
+                                "execution.success": True,
+                                "completion.reason": "successful_completion",
+                                "performance.tokens_per_second": total_tokens / max(time.time() - start_time, 0.001),
+                                "efficiency.iterations_needed": total_iterations,
+                            })
+
+                            main_span.set_status("OK")
+
+                            # Log final metrics to MLflow
+                            mlflow.log_metrics({
+                                "complex_system_total_iterations": total_iterations,
+                                "complex_system_successful_iterations": successful_iterations,
+                                "complex_system_total_tokens": total_tokens,
+                                "complex_system_execution_time": time.time() - start_time,
+                                "complex_system_success": 1,
+                            })
+
+                            return result, create_comprehensive_metrics(
+                                total_iterations=total_iterations,
+                                total_tokens=total_tokens,
+                                execution_time=time.time() - start_time,
+                                collector=collector
+                            )
+
+                        elif isinstance(result, CodeAction):
+                            # Execute code and continue
+                            code_result = execute_code_code_action(result)
+                            total_code_executions += 1
+
+                            # Update state for next iteration
+                            previous_attempts += f"\n{code_result}\n"
+
+                            iteration_span.set_outputs({
+                                "result_type": "code_action",
+                                "code_executed": True,
+                                "execution_result": code_result,
+                                "iteration_success": True,
+                                "tokens_used": iteration_tokens,
+                                "duration": iteration_duration,
+                            })
+
+                            iteration_span.set_attributes({
+                                "status.success": True,
+                                "status.completion": "continue",
+                                "tokens.iteration": iteration_tokens,
+                                "code.executed": True,
+                            })
+
+                            iteration_span.set_status("OK")
+                            successful_iterations += 1
+                            continue
+
+                        else:
+                            # Handle unexpected result type
+                            failed_iterations += 1
+                            error_msg = f"Unexpected result type: {type(result)}"
+
+                            iteration_span.set_outputs({
+                                "result_type": "error",
+                                "error_message": error_msg,
+                                "iteration_success": False,
+                                "tokens_used": iteration_tokens,
+                                "duration": iteration_duration,
+                            })
+
+                            iteration_span.set_attributes({
+                                "status.success": False,
+                                "status.completion": "error",
+                                "error.type": "unexpected_result_type",
+                                "tokens.iteration": iteration_tokens,
+                            })
+
+                            iteration_span.set_status("ERROR")
+                            continue
+
+                    except Exception as e:
+                        failed_iterations += 1
+                        error_msg = f"Iteration {iteration + 1} failed: {str(e)}"
+
+                        # Check if critical error
+                        is_critical = any(keyword in error_msg.lower() for keyword in ["permission", "auth", "api key"])
+                        if is_critical:
+                            critical_errors.append({"iteration": iteration + 1, "error": error_msg})
+
+                        iteration_span.set_outputs({
+                            "result_type": "exception",
+                            "error_message": error_msg,
+                            "error_type": type(e).__name__,
+                            "is_critical": is_critical,
+                            "iteration_success": False,
+                            "duration": time.time() - iteration_start,
+                        })
+
+                        iteration_span.set_attributes({
+                            "status.success": False,
+                            "status.completion": "exception",
+                            "error.type": type(e).__name__,
+                            "error.critical": is_critical,
+                        })
+
+                        iteration_span.set_status("ERROR")
+
+                        if is_critical:
+                            logger.error(f"Critical error in iteration {iteration + 1}: {e}")
+                            break
+                        else:
+                            logger.warning(f"Non-critical error in iteration {iteration + 1}: {e}")
+                            continue
+
+            # Max iterations reached - create comprehensive final result
+            main_span.set_outputs({
+                "answer": "Maximum iterations reached without completion",
+                "reasoning": f"Process stopped after {max_iterations} iterations",
+                "total_iterations": total_iterations,
+                "successful_iterations": successful_iterations,
+                "failed_iterations": failed_iterations,
+                "total_llm_calls": total_llm_calls,
+                "total_code_executions": total_code_executions,
+                "total_tokens": total_tokens,
+                "execution_time": time.time() - start_time,
+                "success": False,
+                "completion_reason": "max_iterations_reached",
+                "critical_errors": len(critical_errors),
+            })
+
+            main_span.set_attributes({
+                "execution.success": False,
+                "completion.reason": "max_iterations_reached",
+                "performance.tokens_per_second": total_tokens / max(time.time() - start_time, 0.001),
+                "efficiency.success_rate": successful_iterations / max(total_iterations, 1),
+            })
+
+            main_span.set_status("OK")
+
+            # Log final metrics
+            mlflow.log_metrics({
+                "complex_system_total_iterations": total_iterations,
+                "complex_system_successful_iterations": successful_iterations,
+                "complex_system_failed_iterations": failed_iterations,
+                "complex_system_total_tokens": total_tokens,
+                "complex_system_execution_time": time.time() - start_time,
+                "complex_system_success": 0,
+                "complex_system_critical_errors": len(critical_errors),
+            })
+
+            # Create comprehensive incomplete result
+            final_result = create_incomplete_result(
+                total_iterations=total_iterations,
+                successful_iterations=successful_iterations,
+                failed_iterations=failed_iterations,
+                critical_errors=critical_errors,
+                previous_attempts=previous_attempts
+            )
+
+            return final_result, create_comprehensive_metrics(
+                total_iterations=total_iterations,
+                total_tokens=total_tokens,
+                execution_time=time.time() - start_time,
+                success=False,
+                collector=collector
+            )
+```
+
+### Attribute Naming Standards
+
+**🆕 Standardized Attribute Naming Convention:**
+```python
+def set_standardized_attributes(span, **kwargs):
+    """
+    Set standardized attributes for consistent filtering and analysis.
+
+    Follows dot-notation hierarchy for logical grouping.
+    """
+    # Standard naming patterns:
+    # - component.*: Component identification
+    # - execution.*: Execution metadata
+    # - performance.*: Performance metrics
+    # - token.*: Token usage information
+    # - error.*: Error-related information
+    # - status.*: Status information
+    # - iteration.*: Iteration-specific data
+
+    standard_attributes = {
+        # Component identification
+        "component.name": kwargs.get("component_name", "Unknown"),
+        "component.version": kwargs.get("component_version", "1.0.0"),
+        "component.type": kwargs.get("component_type", "function"),
+
+        # Execution metadata
+        "execution.mode": kwargs.get("execution_mode", "production"),
+        "execution.environment": kwargs.get("environment", "development"),
+        "execution.session_id": kwargs.get("session_id", ""),
+        "execution.user_id": kwargs.get("user_id", ""),
+
+        # Performance metrics
+        "performance.tokens_per_second": kwargs.get("tokens_per_second", 0),
+        "performance.iterations_per_second": kwargs.get("iterations_per_second", 0),
+        "performance.efficiency_score": kwargs.get("efficiency_score", 0),
+
+        # Token usage
+        "token.input": kwargs.get("input_tokens", 0),
+        "token.output": kwargs.get("output_tokens", 0),
+        "token.total": kwargs.get("total_tokens", 0),
+        "token.calls_count": kwargs.get("calls_count", 0),
+
+        # Status information
+        "status.success": kwargs.get("success", False),
+        "status.completion": kwargs.get("completion_reason", "unknown"),
+        "status.error_type": kwargs.get("error_type", ""),
+    }
+
+    # Set only non-zero/non-empty attributes to reduce noise
+    for key, value in standard_attributes.items():
+        if value not in [0, "", None, False]:
+            span.set_attribute(key, value)
+
+    # Set custom attributes
+    for key, value in kwargs.items():
+        if key not in standard_attributes:
+            span.set_attribute(f"custom.{key}", value)
 ```
 
 ## Essential Code Patterns
@@ -758,9 +1827,36 @@ def test_cobbie_with_metrics():
 ## Conclusion
 
 This functional BAML approach provides:
-- **Better Observability**: Comprehensive MLflow integration
+
+### Core Benefits
+- **Better Observability**: Comprehensive MLflow integration with nested span hierarchies
 - **Cleaner Code**: Pure functions instead of complex class hierarchies
 - **Improved Performance**: Direct token tracking and reduced overhead
 - **Enhanced Maintainability**: Easier testing and reasoning
 
-The AnswerVerifier implementation in `src/engine/components/baml_answer_verifier.py` serves as the canonical reference for these patterns.
+### 🆕 Advanced Capabilities (COBBIE-style)
+- **Production-Quality Observability**: 3-level span hierarchy with comprehensive attribute tracking
+- **Sophisticated Token Monitoring**: Dual-level tracking (cumulative + per-iteration) with call counting
+- **Robust Error Handling**: Per-iteration error classification with severity-based flow control
+- **Advanced Iteration Management**: State management with smart history accumulation
+- **Context-Aware Integration**: Graceful handling of existing MLflow runs with `nullcontext()` pattern
+
+### Reference Implementations
+
+**🆕 Production Reference**: The COBBIE implementation in `src/engine/components/cobbie.py` serves as the canonical reference for advanced patterns, demonstrating:
+- Real-world production quality
+- Comprehensive MLflow integration
+- Sophisticated error handling and state management
+- Advanced token tracking and performance monitoring
+
+**Simple Component Reference**: The AnswerVerifier implementation in `src/engine/components/baml_answer_verifier.py` provides basic 2-function pattern guidance for simpler components.
+
+### Migration Philosophy
+
+The updated guide reflects a progression from theoretical patterns to production-proven implementations, ensuring developers have access to:
+- **Real-world patterns** from actual production code
+- **Scalable architectures** that handle complex multi-iteration systems
+- **Comprehensive observability** suitable for enterprise environments
+- **Robust error handling** that maintains system stability under failure conditions
+
+This approach ensures that migrated components not only work correctly but also meet the operational requirements of production systems.
