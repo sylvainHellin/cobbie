@@ -45,10 +45,10 @@ def demo_basic_functionality():
     """Demonstrate basic COBBIE functionality with metrics."""
     print("🚀 COBBIE Demo: BIM Question Answering with MLflow Tracing")
     print("="*60)
-    
+
     # Set up MLflow experiment for demo
     experiment_name = "COBBIE_Demo"
-    
+
     # Check if MLflow server is running, otherwise use SQLite
     try:
         # Try to connect to MLflow server first
@@ -62,7 +62,7 @@ def demo_basic_functionality():
         mlflow.set_tracking_uri("sqlite:///mlflow.sqlite")
         print("📊 Using SQLite MLflow backend (traces will have limited functionality)")
         print("💡 Start MLflow server for full trace viewing: uv run mlflow server --host 127.0.0.1 --port 5000")
-    
+
     mlflow.set_experiment(experiment_name)
     print(f"📊 MLflow experiment set: {experiment_name}")
     print()
@@ -107,10 +107,10 @@ def main():
     print("COBBIE (COde-Based BIM Information Extraction)")
     print("Functional BAML Implementation with MLflow Tracing")
     print()
-    
+
     # Run demo directly without additional nested run context
     demo_basic_functionality()
-    
+
     print("\n" + "="*60)
     print("✅ Demo Complete!")
     print()
