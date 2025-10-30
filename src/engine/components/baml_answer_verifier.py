@@ -3,15 +3,16 @@ BAML-based answer verification functions.
 Provides classification, justification, and confidence for answer evaluation.
 """
 
+import time
 from typing import Literal, Optional, Tuple
+
+import mlflow
+from baml_py.baml_py import Collector
 
 from baml_client import b
 from baml_client.types import AnswerEvaluationResult, QuestionCategory
-
 from src.config import LOG_LEVEL
-from src.engine.schemas.outputs import LM_Metrics
 from src.engine.util import get_logger
-from src.engine.util.baml_common import run_baml_function_with_metrics
 
 # Initialize logger for the functional approach
 _logger = get_logger(name="baml_answer_verifier", log_level=LOG_LEVEL)
@@ -33,62 +34,11 @@ def verify_answer(
     category: Literal[1, 2, 3, 4],
     ground_truth: str,
     system_response: str,
-    bim_context: Optional[str] = "BIM model containing building information"
-) -> AnswerEvaluationResult:
-    """
-    Evaluate an answer against ground truth using BAML EvaluateResponse function.
-
-    Args:
-        question: The question being answered
-        category: Question category (1, 2, 3, or 4)
-        ground_truth: The ground truth answer
-        system_response: The system's answer to evaluate
-        bim_context: Optional context about the BIM model
-
-    Returns:
-        AnswerEvaluationResult containing classification, justification, and confidence
-    """
-    _logger.info("Starting BAML answer verification")
-    _logger.debug(
-        f"\nQuestion: {question}\nCategory: {category}\nGround truth: {ground_truth}\nSystem response: {system_response}"
-    )
-
-    try:
-        # Map category to BAML enum
-        baml_category = _map_category_to_baml(category)
-
-        # Call BAML EvaluateResponse function with metrics collection
-        baml_result, collector = run_baml_function_with_metrics(
-            component_name="AnswerVerifier",
-            baml_function=b.EvaluateResponse,
-            question=question,
-            category=baml_category,
-            ground_truth=ground_truth,
-            system_response=system_response,
-            bim_context=bim_context
-        )
-
-        _logger.info(
-            f"BAML answer verification completed: classification={baml_result.classification}, "
-            f"confidence={baml_result.confidence}"
-        )
-
-        return baml_result
-
-    except Exception as e:
-        error_msg = f"Exception during BAML answer verification: {e}"
-        _logger.error(error_msg)
-        raise
-
-
-def verify_answer_with_metrics(
-    question: str,
-    category: Literal[1, 2, 3, 4],
-    ground_truth: str,
-    system_response: str,
     bim_context: Optional[str] = "BIM model containing building information",
-    mlflow: bool = True
-) -> Tuple[AnswerEvaluationResult, LM_Metrics]:
+    llm_provider: str = "zai",
+    llm_name: str = "GLM-4.6",
+    **kwargs,
+) -> Tuple[AnswerEvaluationResult, Collector]:
     """
     Evaluate an answer and return both result and usage metrics.
 
@@ -107,119 +57,69 @@ def verify_answer_with_metrics(
         - llm: Model identifier
         - cost: Calculated cost (if available)
     """
-    _logger.info("Starting BAML answer verification with metrics")
-    _logger.debug(
-        f"\nQuestion: {question}\nCategory: {category}\nGround truth: {ground_truth}\nSystem response: {system_response}"
-    )
+    # Start timer
+    start = time.time()
 
-    try:
-        # Create MLflow orchestration span if requested
-        if mlflow:
-            import mlflow
-            with mlflow.start_span(name="BamlAnswerVerifier", span_type="CHAIN") as verifier_span:
-                verifier_span.set_inputs({
-                    "question": question,
-                    "category": category,
-                    "ground_truth": ground_truth,
-                    "system_response": system_response,
-                    "bim_context": bim_context
-                })
+    # Create collector for token tracking
+    collector = Collector(name="AnswerVerifier")
 
-                try:
-                    # Map category to BAML enum
-                    baml_category = _map_category_to_baml(category)
+    # Add collector to kwargs for BAML calls
+    if "baml_options" not in kwargs:
+        kwargs["baml_options"] = {}
+        kwargs["baml_options"]["collector"] = collector
 
-                    # Call BAML EvaluateResponse function with metrics collection
-                    baml_result, collector = run_baml_function_with_metrics(
-                        component_name="AnswerVerifier",
-                        baml_function=b.EvaluateResponse,
-                        question=question,
-                        category=baml_category,
-                        ground_truth=ground_truth,
-                        system_response=system_response,
-                        bim_context=bim_context
-                    )
 
-                    # Extract token usage from collector
-                    usage = collector.last.usage if collector.last else None
-                    input_tokens = usage.input_tokens if usage else 0
-                    output_tokens = usage.output_tokens if usage else 0
+    with mlflow.start_span(name="AnswerVerifier", span_type="LLM") as verifier_span:
+        verifier_span.set_inputs({
+            "question": question,
+            "category": category,
+            "ground_truth": ground_truth,
+            "system_response": system_response,
+            "bim_context": bim_context,
+        })
 
-                    # Create LM_Metrics instance
-                    lm_metrics = LM_Metrics(
-                        input_tokens=input_tokens or 0,
-                        output_tokens=output_tokens or 0,
-                        llm="zai-glm-4.6",  # TODO: Extract this from collector or config
-                        cost=None  # Cost calculation not available from BAML collector
-                    )
+        # Map category to BAML enum
+        baml_category = _map_category_to_baml(category)
 
-                    _logger.info(
-                        f"BAML answer verification with metrics completed: classification={baml_result.classification}, "
-                        f"confidence={baml_result.confidence}, input_tokens={input_tokens}, output_tokens={output_tokens}"
-                    )
+        # Classify the answer
+        answer_classification = b.with_options(**kwargs.pop("baml_options", {})).EvaluateResponse(
+            question=question,
+            category=baml_category,
+            ground_truth=ground_truth,
+            system_response=system_response,
+            bim_context=bim_context,
+            **kwargs,
+        )
 
-                    # Set MLflow span outputs and status
-                    verifier_span.set_outputs({
-                        "classification": baml_result.classification,
-                        "justification": baml_result.justification,
-                        "confidence": baml_result.confidence,
-                        "input_tokens": lm_metrics.input_tokens,
-                        "output_tokens": lm_metrics.output_tokens,
-                        "status": "success"
-                    })
-                    verifier_span.set_status("OK")
+        # Log outputs
+        verifier_span.set_outputs({
+            "classification": answer_classification.classification,
+            "justification": answer_classification.justification,
+            "confidence": answer_classification.confidence
+        })
 
-                    return baml_result, lm_metrics
+        # Calculate metrics
+        duration = time.time() - start
+        input_tokens = 0
+        output_tokens = 0
+        total_tokens = 0
+        if collector.last:
+            usage = collector.last.usage
+            input_tokens = usage.input_tokens or 0
+            output_tokens = usage.output_tokens or 0
+            total_tokens = input_tokens + output_tokens
 
-                except Exception as inner_e:
-                    # Set MLflow span error status
-                    verifier_span.set_outputs({
-                        "error": str(inner_e),
-                        "status": "error"
-                    })
-                    verifier_span.set_status("ERROR")
-                    raise inner_e
-        else:
-            # Run without MLflow orchestration span
-            # Map category to BAML enum
-            baml_category = _map_category_to_baml(category)
+        # Log metrics
+        verifier_span.set_attributes({
+            "duration": duration,
+            "input_tokens": input_tokens,
+            "output_tokens": output_tokens,
+            "total_tokens": total_tokens,
+            "llm_provider": llm_provider,
+            "llm_name": llm_name,
+        })
 
-            # Call BAML EvaluateResponse function with metrics collection
-            baml_result, collector = run_baml_function_with_metrics(
-                component_name="AnswerVerifier",
-                baml_function=b.EvaluateResponse,
-                question=question,
-                category=baml_category,
-                ground_truth=ground_truth,
-                system_response=system_response,
-                bim_context=bim_context
-            )
-
-            # Extract token usage from collector
-            usage = collector.last.usage if collector.last else None
-            input_tokens = usage.input_tokens if usage else 0
-            output_tokens = usage.output_tokens if usage else 0
-
-            # Create LM_Metrics instance
-            lm_metrics = LM_Metrics(
-                input_tokens=input_tokens or 0,
-                output_tokens=output_tokens or 0,
-                llm="zai-glm-4.6",  # TODO: Extract this from collector or config
-                cost=None  # Cost calculation not available from BAML collector
-            )
-
-            _logger.info(
-                f"BAML answer verification with metrics completed: classification={baml_result.classification}, "
-                f"confidence={baml_result.confidence}, input_tokens={input_tokens}, output_tokens={output_tokens}"
-            )
-
-            return baml_result, lm_metrics
-
-    except Exception as e:
-        error_msg = f"Exception during BAML answer verification with metrics: {e}"
-        _logger.error(error_msg)
-        raise
-
+        return answer_classification, collector
 
 if __name__ == "__main__":
     import mlflow
@@ -229,7 +129,7 @@ if __name__ == "__main__":
     mlflow.set_experiment("BamlAnswerVerifier")
 
     # Test the functional answer verifier
-    result = verify_answer(
+    result, collector = verify_answer(
         question="How many doors are there in this house?",
         category=1,
         ground_truth="There are 120 doors in this house.",
@@ -242,8 +142,19 @@ if __name__ == "__main__":
     print(f"Justification: {result.justification}")
     print(f"Confidence: {result.confidence}")
 
+    # Extract metrics
+    input_tokens = 0
+    output_tokens = 0
+    total_tokens = 0
+
+    if collector and hasattr(collector, 'usage') and collector.usage:
+        usage = collector.usage
+        input_tokens = usage.input_tokens or 0
+        output_tokens = usage.output_tokens or 0
+        total_tokens = input_tokens + output_tokens
+
     # Test the functional answer verifier with metrics
-    result_with_metrics, metrics = verify_answer_with_metrics(
+    result_with_metrics, metrics = verify_answer(
         question="How many doors are there in this house?",
         category=1,
         ground_truth="There are 120 doors in this house.",
@@ -255,6 +166,5 @@ if __name__ == "__main__":
     print(f"Classification: {result_with_metrics.classification}")
     print(f"Justification: {result_with_metrics.justification}")
     print(f"Confidence: {result_with_metrics.confidence}")
-    print(f"Input Tokens: {metrics.input_tokens}")
-    print(f"Output Tokens: {metrics.output_tokens}")
-    print(f"LLM: {metrics.llm}")
+    print(f"Input Tokens: {input_tokens}")
+    print(f"Output Tokens: {output_tokens}")

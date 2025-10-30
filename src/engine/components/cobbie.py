@@ -321,7 +321,7 @@ def cobbie_with_metrics(
     run_context_manager = (
         nullcontext()
         if active_run
-        else mlflow.start_run(run_name="COBBIE_Execution_Run")
+        else mlflow.start_run(run_name="Cobbie")
     )
 
     with run_context_manager:
