@@ -12,13 +12,13 @@ function ToolAssessor(
     You are testing a Python function that has been created to meet specific requirements.
     Your role is to thoroughly test the function as a BLACK BOX - you can use the function but cannot see its implementation.
 
-    FUNCTION TO TEST: 
+    FUNCTION TO TEST:
     {{ function_name }}
 
     REQUIREMENTS TO VERIFY:
     {{ function_requirements }}
 
-    TEST MODEL PATH: 
+    TEST MODEL PATH:
     {{ path_ifc_model }}
 
     AVAILABLE TOOLS:
@@ -67,7 +67,7 @@ function ToolCorrector(
   prompt #"
     You are improving a Python function based on detailed assessment feedback.
 
-    FUNCTION NAME: 
+    FUNCTION NAME:
     {{ function_name }}
 
     REQUIREMENTS:
@@ -79,7 +79,7 @@ function ToolCorrector(
     ASSESSMENT FEEDBACK TO ADDRESS:
     {{ detailed_assessment }}
 
-    TEST MODEL PATH: 
+    TEST MODEL PATH:
     {{ path_ifc_model }}
 
     AVAILABLE TOOLS:
@@ -149,7 +149,7 @@ test ToolAssessorTest {
   args {
     function_name "count_doors"
     function_requirements "Count all doors in an IFC model. Return an integer count."
-    path_ifc_model "/Users/sylvainhellin/GitHub/4_phd/bim-qas/src/experiment/bim_models/duplex/arc.ifc"
+    path_ifc_model "/Users/sylvainhellin/GitHub/4_phd/cobbie/src/experiment/bim_models/duplex/arc.ifc"
     available_tools #"
       def count_doors(ifc_file_path: str) -> int:
           '''Count all doors in an IFC model'''
@@ -173,7 +173,7 @@ test ToolCorrectorTest {
           return str(len(doors))  # Wrong return type
     "#
     detailed_assessment "The function correctly counts doors (14) but returns a string instead of an integer, violating requirement #4. The function signature indicates it should return an integer."
-    path_ifc_model "/Users/sylvainhellin/GitHub/4_phd/bim-qas/src/experiment/bim_models/duplex/arc.ifc"
+    path_ifc_model "/Users/sylvainhellin/GitHub/4_phd/cobbie/src/experiment/bim_models/duplex/arc.ifc"
     available_tools #"
       def web_search(query: str) -> str:
           '''Search the web for information'''

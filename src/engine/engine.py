@@ -226,7 +226,7 @@ def create_engine(
 
 if __name__ == "__main__":
     # Test the IfcAnswerEngine
-    ifc_model_path = "/Users/sylvainhellin/GitHub/4_phd/bim-qas/src/experiment/bim_models/duplex/arc.ifc"
+    ifc_model_path = "/Users/sylvainhellin/GitHub/4_phd/cobbie/src/experiment/bim_models/duplex/arc.ifc"
     question = "What is the height of the bedroomns on the first floor?"
 
     mlflow.dspy.autolog()  # type: ignore

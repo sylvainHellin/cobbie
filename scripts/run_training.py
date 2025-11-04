@@ -40,11 +40,9 @@ from tqdm import tqdm
 
 from src.config.agents import TrainingPipelineConfig
 from src.config.llm import LLM
-from src.engine.schemas import OutputsCollection, QA_Pair
+from src.engine.schemas import OutputsCollection
 from src.engine.util import get_logger
 from src.experiment.datasets import load_train_dev_split
-from src.experiment.db.experiment_models import Run
-from src.experiment.db.query import add_run, update_run_metrics
 from src.experiment.training.training_pipeline import TrainingPipeline
 
 

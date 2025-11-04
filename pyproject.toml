@@ -3,9 +3,9 @@ requires = ["setuptools>=61.0", "wheel"]
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "bim-qas"
+name = "cobbie"
 version = "0.1.0"
-description = "An Engine that can answer any question related to a given BIM model in .ifc format."
+description = "An AI agent that can answer any question related to a given BIM model in .ifc format."
 readme = "README.md"
 requires-python = ">=3.12, <3.13"
 dependencies = [

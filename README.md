@@ -342,7 +342,7 @@ src/config/
 ## 📁 Project Structure
 
 ```
-bim-qas/
+cobbie/
 ├── src/
 │   ├── config/                    # Configuration system
 │   │   ├── __init__.py

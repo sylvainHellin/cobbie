@@ -1,5 +1,5 @@
 """
-Site customization for the bim-qas project.
+Site customization for the cobbie project.
 This file is automatically imported by Python and sets up the environment.
 """
 

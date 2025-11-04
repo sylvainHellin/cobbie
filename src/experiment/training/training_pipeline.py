@@ -13,9 +13,8 @@ from src.engine.schemas import (
 )
 from src.engine.util import get_logger
 from src.experiment.datasets import load_train_dev_split
-from src.experiment.db.experiment_models import Run, Trace, Dataset
-from src.experiment.db.query import add_run, add_trace, update_run_metrics
-from src.experiment.evaluation.evaluation import EvaluationPipeline
+from src.experiment.db.models import IfcBench
+from src.experiment.db.query
 
 
 class TrainingPipeline:

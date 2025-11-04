@@ -3,12 +3,12 @@ import pandas as pd
 import random
 
 from src.experiment.db.query import get_dataset, get_ifc_models
-from src.experiment.db.experiment_models import Dataset
+from src.experiment.db.models import IfcBench
 
 
 def load_train_dev_split(
     frac: float = 0.75, seed: int = 42
-) -> Tuple[List[Dataset], List[Dataset]]:
+) -> Tuple[List[IfcBench], List[IfcBench]]:
     """Load the dataset and split it into a train and dev set."""
     # Load the dataset table from SQLite database
     dataset = get_dataset()

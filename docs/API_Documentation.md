@@ -18,7 +18,7 @@ The IFC Answer Engine API is a FastAPI-based web service that provides intellige
 
 ```bash
 # Clone the repository and navigate to the project root
-cd bim-qas
+cd cobbie
 
 # Install dependencies
 pip install -e .

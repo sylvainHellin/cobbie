@@ -8,7 +8,6 @@ load_dotenv(find_dotenv())
 ROOT_PATH = os.environ["ROOT_PATH"]
 SRC_PATH = os.path.join(ROOT_PATH, "src")
 TEST_IFC_PATH = os.path.join(ROOT_PATH, "src/experiment/bim_models/duplex/arc.ifc")
-DATASET_PATH = os.path.join(SRC_PATH, "experiment/datasets", "ifc-bench-v1.1.csv")
 VECTORSTORE_PATH = os.path.join(ROOT_PATH, "src/engine/tools/primordial/vectorstore")
 DB_PATH = os.path.join(ROOT_PATH, "src/experiment/db/db.db")
 CSV_IFC_MODELS_PATH = os.path.join(ROOT_PATH, "src/experiment/db/ifc_models.csv")

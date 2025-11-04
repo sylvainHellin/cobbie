@@ -27,7 +27,7 @@ from src.engine.util import (
     save_new_tool,
     get_created_tools,
 )
-from src.experiment.db.experiment_models import Dataset
+from src.experiment.db.models import IfcBench
 
 
 class TrainingState(Enum):

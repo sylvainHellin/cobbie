@@ -2,7 +2,7 @@ from sqlmodel import create_engine
 from src.config import DB_PATH
 
 # Create engines with connection pooling and better connection management
-EXPERIMENT_DB_ENGINE = create_engine(
+DB_ENGINE = create_engine(
     url=f"sqlite:///{DB_PATH}",
     # echo=True,
     pool_pre_ping=True,  # Validate connections before use

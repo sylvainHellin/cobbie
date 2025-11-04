@@ -2,7 +2,7 @@ from typing import Optional
 from pydantic import BaseModel
 
 from .outputs import ModuleOutput
-from ...experiment.db.experiment_models import Dataset
+from ...experiment.db.models import IfcBench
 
 from mlflow.entities import Span
 
@@ -11,7 +11,7 @@ class TrainingContext(BaseModel):
     """Context data shared between state machine steps in TrainingModule."""
 
     # Core data
-    qa_pair: Optional[Dataset] = None
+    qa_pair: Optional[IfcBench] = None
     span: Optional[Span] = None
 
     # Module outputs

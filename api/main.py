@@ -12,7 +12,7 @@ from fastapi.responses import FileResponse
 from starlette.concurrency import run_in_threadpool
 
 from api.models import QuestionRequest, QuestionResponse
-from src.config import LLM, MLFLOW_URI
+from src.config import MLFLOW_URI
 from src.engine import create_engine
 
 # from src.experiment.db.query_db import get_ifc_models
@@ -36,7 +36,6 @@ app.add_middleware(
 # Configure MLflow for API tracking
 mlflow.set_tracking_uri(MLFLOW_URI)
 mlflow.set_experiment("API")
-mlflow.dspy.autolog()  # type: ignore
 
 # Initialize the IFC Answer Engine with configurable type
 # Engine type can be set via ENGINE_TYPE environment variable ("dspy" or "baml")
