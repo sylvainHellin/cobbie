@@ -129,3 +129,12 @@ class NewHelperFunction {
   function_implementation string @description("Complete Python function implementation including imports, docstring, and type hints")
   success bool @description("Whether the function is complete, tested, and ready for use")
 }
+
+// Faulty tool identification result - analyzes wrong answers to identify tool-related failures
+class FaultyToolAnalysis {
+  thoughts string @description("Chain-of-thought analysis of the execution history to identify tool-related failures")
+  faulty_tool bool @description("Whether a faulty tool was identified as the primary cause of the wrong answer")
+  faulty_tool_name string @description("Name of the faulty tool (empty string if faulty_tool is false)")
+  error_description string @description("Summary of the error and test cases demonstrating the failure (empty string if faulty_tool is false)")
+  confidence "high" | "medium" | "low" @description("Confidence level in this faulty tool identification")
+}

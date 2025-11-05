@@ -24,7 +24,16 @@ function EvaluateResponse(
     QUESTION CATEGORY: {{ category }}
     QUESTION: {{ question }}
 
-    GROUND TRUTH: {{ ground_truth }}
+    REFERENCE ANSWER: {{ ground_truth }}
+
+    Note: This reference answer represents one valid answer from a human expert labeler,
+    but is NOT absolute truth. The labeler may have:
+    - Used different extraction methods (manual calculation, proxy measurements)
+    - Made reasonable inferences not directly in the IFC model
+    - Missed information that the system found
+    - Applied domain knowledge or workarounds
+
+    The system response may differ while still being correct.
 
     SYSTEM RESPONSE: {{ system_response }}
 
@@ -33,58 +42,98 @@ function EvaluateResponse(
     EVALUATION TASK:
 
     Classify the system response as one of:
-    - "correct": System provided accurate answer
-    - "wrong": System provided inaccurate/hallucinated answer
+    - "correct": System provided accurate, useful answer
+    - "wrong": System provided factually incorrect information
     - "abstained": System explicitly declined to answer
 
-    EVALUATION CRITERIA BY CATEGORY:
+    ---
 
-    Categories 1, 2, 3 (Direct Retrieval, Computational, Geometric):
-    - CORRECT: The system response contains all essential information from the ground truth AND does not contradict it.
-      * Additional contextual information beyond the ground truth is acceptable and often beneficial
-      * The core facts/values from ground truth must be present (allowing for reasonable rounding)
-      * Extra details should be factually accurate, but their presence doesn't disqualify the answer
+    CORE EVALUATION PRINCIPLE:
 
-    - WRONG:
-      * Missing essential information from ground truth
-      * Contradicts ground truth facts
-      * Contains factual errors or hallucinations
+    Mark as WRONG only if the response contains factually incorrect information that
+    contradicts verifiable facts from the reference answer or the IFC model.
 
-    - ABSTAINED: System explicitly declines (e.g., "I cannot determine...", "Insufficient information...").
+    Different approaches, additional information, alternative extraction methods, or
+    finding data the labeler missed are all ACCEPTABLE and should be marked CORRECT.
 
-    Category 4 (Incomplete Information):
-    - CORRECT: Answer includes ALL of:
-      1. Acknowledgment that some information is missing from BIM model
-      2. Explicit statement of reasonable assumptions made
-      3. Useful estimate or partial answer
-      4. There are no factual errors in the information extracted from the BIM model
+    ---
 
-    - WRONG:
-      - Missing assumptions (presents estimate as fact)
-      - Unreasonable assumptions
-      - Hallucination of data not in model
+    EVALUATION CRITERIA:
 
-    - ABSTAINED: System declined to answer (also acceptable for Category 4)
+    ALL CATEGORIES (1, 2, 3, 4):
 
-    ABSTENTION DETECTION:
-    Look for explicit phrases indicating refusal:
-    - "I cannot determine..."
-    - "Insufficient information..."
-    - "This data is not available..."
-    - "I am unable to answer..."
-    - "Cannot be calculated without..."
+    CORRECT if the response:
+      * Core facts align with reference answer (different wording/structure is fine)
+      * Provides ADDITIONAL accurate information beyond the reference (this is valuable, not hallucination)
+      * Uses a different but valid extraction method and reaches reasonable conclusions
+      * For geometric/computational questions: uses reasonable methodology and provides plausible results
+      * Transparently explains data limitations or IFC model issues while still providing useful information
+      * Finds information that the reference answer missed (the labeler may have been incomplete)
+      * Makes stated assumptions that are reasonable for the context (especially Category 4)
+      * Would be useful and non-misleading to a BIM professional
 
-    Do NOT count as abstention:
-    - Expressions of uncertainty while still providing an answer
-    - Conditional statements ("If X, then Y")
-    - Partial information followed by explanation
+      Special considerations by category:
+      - Category 1 (Direct Retrieval): Core facts should match, but additional context is beneficial
+      - Category 2 (Computational): Allow ~5% numerical variance due to different calculation methods
+      - Category 3 (Geometric): Multiple valid approaches exist (geometry-based vs property-based)
+      - Category 4 (Incomplete Info): Transparency about limitations + useful partial answer is sufficient
+
+    WRONG if the response:
+      * Contains factual errors that directly CONTRADICT the reference answer on overlapping information
+      * Fabricates specific data that is demonstrably not in the IFC model and contradicts reference
+      * Provides incorrect numerical values that differ significantly (>5-10%) without explanation
+      * Misidentifies elements, relationships, or properties in a way that contradicts reference
+      * Makes unreasonable assumptions without stating them (Category 4)
+      * Would mislead a BIM professional with false information
+
+      Important: DO NOT mark as wrong if:
+      - The response simply lacks some details from the reference (unless critical)
+      - The response uses different extraction methods but is factually sound
+      - The response provides more information than the reference
+      - The response honestly states that certain data is not accessible in the IFC
+
+    ABSTAINED if the response:
+      * Explicitly refuses to answer with phrases like:
+        - "I cannot determine..."
+        - "Insufficient information to answer..."
+        - "This data is not available and I cannot provide an answer..."
+        - "I am unable to answer this question..."
+        - "Cannot be calculated without..."
+
+      DO NOT count as abstention:
+      - Expressions of uncertainty while still providing an answer
+      - Conditional statements ("If X, then Y...")
+      - Partial information followed by explanation of limitations
+      - "Data not found in standard properties, but here's what I found..."
+
+    ---
+
+    EVALUATION PROCESS:
+
+    When the system response differs from the reference answer:
+
+    1. Identify overlapping claims (what both answers address)
+    2. Check if overlapping claims contradict each other factually
+    3. If yes → Consider WRONG
+    4. If no → Consider CORRECT (differences are acceptable)
+
+    For additional information in system response not in reference:
+    - Ask: "Is this plausibly derived from an IFC model?"
+    - Ask: "Does this contradict the reference answer?"
+    - If plausible and non-contradictory → CORRECT
+    - If implausible or contradictory → WRONG
+
+    ---
 
     IMPORTANT GUIDELINES:
-    1. Compare semantic content, not exact wording
-    2. Allow for reasonable rounding/approximation in numerical answers (e.g. 2%)
-    3. For Category 4: Prioritize transparency about limitations over precision
-    4. Be strict about hallucinations - any fabricated data should be marked WRONG
-    5. Focus on whether the response would be useful and non-misleading to a BIM professional
+
+    1. Compare semantic content, not exact wording or structure
+    2. Multiple correct answers can exist, especially for Categories 3 & 4
+    3. Additional accurate context is valuable, not problematic
+    4. The reference answer may be incomplete or use undocumented methods
+    5. Transparency about IFC model limitations is professional and appropriate
+    6. Focus on: "Is this factually wrong?" not "Is this different from reference?"
+    7. When in doubt between CORRECT and WRONG, prefer CORRECT if the response is useful and non-misleading
 
     {{ ctx.output_format }}
   "#
