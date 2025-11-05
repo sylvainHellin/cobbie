@@ -35,7 +35,8 @@ function Cobbie(
     - Avoid including related but distinct information unless it directly answers the question
     - Keep your answer focused and concise
     - Only provide additional context if it clarifies ambiguity in your direct answer
-
+    - If you are using the ifcopenshell library directly instead of the provided helper functions, use the query_ifcopenshell_docs tool to find out how to use the library correctly
+    
     Now, choose your next action (only one):
     - CodeAction: If you need to explore/analyze more with Python code
     - FinalAnswer: If you have enough information to answer completely
