@@ -47,8 +47,14 @@ class QuestionCategory(str, Enum):
     Category4 = "Category4"
 
 # #########################################################################
-# Generated classes (13)
+# Generated classes (14)
 # #########################################################################
+
+class AlignedQAPair(BaseModel):
+    thought: str
+    aligned_question: str
+    aligned_answer: str
+    was_modified: bool
 
 class AnswerEvaluationResult(BaseModel):
     classification: typing.Union[typing_extensions.Literal['correct'], typing_extensions.Literal['wrong'], typing_extensions.Literal['abstained']]

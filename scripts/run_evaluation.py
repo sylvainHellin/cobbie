@@ -23,8 +23,8 @@ import mlflow
 import mlflow.dspy
 from tqdm import tqdm
 
-from src.engine.components.baml_answer_verifier import verify_answer
-from src.engine.components.cobbie import cobbie_with_metrics
+from src.agents.answer_verifier import verify_answer
+from src.agents.cobbie import cobbie
 from src.engine.tools.primordial import query_ifcopenshell_documentation, web_search
 from src.experiment.datasets import DEVSET
 
@@ -236,7 +236,7 @@ def process_question(
             start_time_cobbie = time.time()
 
             # Run COBBIE with metrics
-            final_answer, collector = cobbie_with_metrics(
+            final_answer, collector = cobbie(
                 user_input=question,
                 tools=tools_dict,
                 model_path=ifc_path,
@@ -260,6 +260,7 @@ def process_question(
             confidence = None
             verifier_input_tokens = 0
             verifier_output_tokens = 0
+            verifier_duration = 0
 
             if final_answer.answer and ground_truth:
                 verifier_start = time.time()
@@ -283,7 +284,8 @@ def process_question(
 
             # Log question-level metrics
             mlflow.log_metrics({
-                "execution_time": cobbie_duration,
+                "cobbie_duration": cobbie_duration,
+                "verifier_duration": verifier_duration,
                 "cobbie_input_tokens": cobbie_input_tokens,
                 "cobbie_output_tokens": cobbie_output_tokens,
                 "verifier_input_tokens": verifier_input_tokens,

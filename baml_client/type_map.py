@@ -16,6 +16,9 @@ from . import stream_types
 
 type_map = {
 
+    "types.AlignedQAPair": types.AlignedQAPair,
+    "stream_types.AlignedQAPair": stream_types.AlignedQAPair,
+
     "types.AnswerEvaluationResult": types.AnswerEvaluationResult,
     "stream_types.AnswerEvaluationResult": stream_types.AnswerEvaluationResult,
 

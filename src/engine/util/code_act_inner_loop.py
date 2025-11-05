@@ -94,19 +94,25 @@ def _code_act_iter(
     baml_options = kwargs.pop("baml_options", {})
 
     # Call BAML function with union return type and proper options handling
-    if baml_options:
-        result = b.with_options(**baml_options).BIMQAS(
-            user_input=user_input,
-            available_tools=available_tools,
-            previous_attempts=previous_attempts,
-            model_path=model_path,
-        )
-    else:
-        result = b.BIMQAS(
-            user_input=user_input,
-            available_tools=available_tools,
-            previous_attempts=previous_attempts,
-            model_path=model_path,
+    try:
+        if baml_options:
+            result = b.with_options(**baml_options).Cobbie(
+                user_input=user_input,
+                available_tools=available_tools,
+                previous_attempts=previous_attempts,
+                model_path=model_path,
+            )
+        else:
+            result = b.Cobbie(
+                user_input=user_input,
+                available_tools=available_tools,
+                previous_attempts=previous_attempts,
+                model_path=model_path,
+            )
+    except Exception as e:
+        result = FinalAnswer(
+            answer="ERROR",
+            thoughts=f"An Exception occured when trying to process the answer. Exception:\n{e}",
         )
 
     return result

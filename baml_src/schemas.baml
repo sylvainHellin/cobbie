@@ -84,6 +84,14 @@ class CleanedCode {
   success bool @description("Whether the cleaning was successful")
 }
 
+// Aligned question-answer pair for dataset cleaning
+class AlignedQAPair {
+  thought string @description("Analysis of the alignment between question and answer, and reasoning for any changes")
+  aligned_question string @description("Question reformulated to align with answer structure and scope (or original if already aligned)")
+  aligned_answer string @description("Answer with improved formatting/clarity while preserving factual content (or original if already good)")
+  was_modified bool @description("Whether any modifications were made to question or answer")
+}
+
 // Successful outcome - function has been tested and improved successfully
 class TestAndImproveSuccess {
   function_implementation string @description("Final validated function implementation")

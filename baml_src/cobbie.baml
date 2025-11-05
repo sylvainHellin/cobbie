@@ -5,7 +5,7 @@ function Cobbie(
   previous_attempts: string? @description("Previous execution results, if any"),
   model_path: string? @description("Path to the IFC model file, if available")
 ) -> CodeAction | FinalAnswer {
-  client GLM_4_6 
+  client GLM_4_6
   prompt #"
     You are a helpful assistant specialising in retrieving information from BIM models using Python code and the IfcOpenShell library. To facilitate this task, you also have access to higher-level functions that will help you with the most common information retrieval tasks (referred to later as the 'tools'). These tools can be used directly in your Python code as they are already pre-loaded; there is no need to import them.
 
@@ -28,6 +28,13 @@ function Cobbie(
     Previous Results:
     {{ previous_attempts }}
     {% endif %}
+
+    ANSWERING GUIDELINES:
+    - Answer precisely what is asked - no more, no less
+    - Pay careful attention to the specific element types, properties, or scope requested
+    - Avoid including related but distinct information unless it directly answers the question
+    - Keep your answer focused and concise
+    - Only provide additional context if it clarifies ambiguity in your direct answer
 
     Now, choose your next action (only one):
     - CodeAction: If you need to explore/analyze more with Python code

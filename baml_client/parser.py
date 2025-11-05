@@ -48,6 +48,12 @@ class LlmResponseParser:
         result = self.__options.merge_options(baml_options).parse_response(function_name="EvaluateResponse", llm_response=llm_response, mode="request")
         return typing.cast(types.AnswerEvaluationResult, result)
 
+    def QuestionAnswerAlignment(
+        self, llm_response: str, baml_options: BamlCallOptions = {},
+    ) -> types.AlignedQAPair:
+        result = self.__options.merge_options(baml_options).parse_response(function_name="QuestionAnswerAlignment", llm_response=llm_response, mode="request")
+        return typing.cast(types.AlignedQAPair, result)
+
     def ToolAssessor(
         self, llm_response: str, baml_options: BamlCallOptions = {},
     ) -> typing.Union["types.CodeAction", "types.AssessmentResult"]:
@@ -97,6 +103,12 @@ class LlmStreamParser:
     ) -> stream_types.AnswerEvaluationResult:
         result = self.__options.merge_options(baml_options).parse_response(function_name="EvaluateResponse", llm_response=llm_response, mode="stream")
         return typing.cast(stream_types.AnswerEvaluationResult, result)
+
+    def QuestionAnswerAlignment(
+        self, llm_response: str, baml_options: BamlCallOptions = {},
+    ) -> stream_types.AlignedQAPair:
+        result = self.__options.merge_options(baml_options).parse_response(function_name="QuestionAnswerAlignment", llm_response=llm_response, mode="stream")
+        return typing.cast(stream_types.AlignedQAPair, result)
 
     def ToolAssessor(
         self, llm_response: str, baml_options: BamlCallOptions = {},

@@ -43,7 +43,17 @@ function EvaluateResponse(
     EVALUATION CRITERIA BY CATEGORY:
 
     Categories 1, 2, 3 (Direct Retrieval, Computational, Geometric):
-    - CORRECT: Answer matches ground truth (factually accurate and complete).     - ABSTAINED: System explicitly declines (e.g., "I cannot determine...", "Insufficient information...").
+    - CORRECT: The system response contains all essential information from the ground truth AND does not contradict it.
+      * Additional contextual information beyond the ground truth is acceptable and often beneficial
+      * The core facts/values from ground truth must be present (allowing for reasonable rounding)
+      * Extra details should be factually accurate, but their presence doesn't disqualify the answer
+
+    - WRONG:
+      * Missing essential information from ground truth
+      * Contradicts ground truth facts
+      * Contains factual errors or hallucinations
+
+    - ABSTAINED: System explicitly declines (e.g., "I cannot determine...", "Insufficient information...").
 
     Category 4 (Incomplete Information):
     - CORRECT: Answer includes ALL of:
@@ -92,5 +102,45 @@ test radiator_count_test {
     ground_truth "There is one radiator in room A202."
     system_response "I could find one radiator in room A202."
     bim_context "this is the bim model for a duplex house."
+  }
+}
+
+// Test function for pipe types with additional context
+// This tests whether additional contextual information is properly accepted
+test pipe_types_with_context_test {
+  functions [EvaluateResponse]
+  args {
+    question "What types of pipes are used in the building, including their quantities?"
+    category Category1
+    ground_truth "Total Pipe Segments: 60 Pipe Types: - hwa afvoer: 60 segments"
+    system_response #"
+      Based on my analysis of the IFC model, the building contains the following pipe-related elements:
+
+      ## Main Pipe Types:
+
+      ### 1. HWA Afvoer (Rainwater Drainage Pipes)
+      - **Quantity**: 60 elements
+      - **Type**: IfcBuildingElementProxy
+      - **Material**: Zinc (04 Zink)
+      - **Classification**: Pipe Segment
+      - **Layer**: 5210_afvoeren - regenwater (rainwater drainage)
+      - **Position**: Exterior
+      - **Structural Function**: Non-Load-Bearing Element
+
+      ### 2. Waterslag (Water Splash/Drip Edge)
+      - **Quantity**: 35 elements
+      - **Type**: IfcCovering
+      - **Function**: Water management elements, typically installed at roof edges or transitions
+
+      ## Summary:
+      - **Total pipe-related elements**: 95
+      - **Primary system**: Rainwater drainage (HWA system)
+      - **Material**: All HWA pipes are made of zinc
+      - **Location**: All exterior elements
+      - **Modeling approach**: Pipes are modeled as IfcBuildingElementProxy elements rather than standard IfcPipe entities (due to IFC2X3 schema limitations)
+
+      The building appears to have a comprehensive rainwater drainage system with 60 zinc pipe segments and 35 water splash protection elements, all designed for exterior installation and rainwater management.
+    "#
+    bim_context null
   }
 }

@@ -139,6 +139,21 @@ class BamlAsyncClient:
                 "question": question,"category": category,"ground_truth": ground_truth,"system_response": system_response,"bim_context": bim_context,
             })
             return typing.cast(types.AnswerEvaluationResult, result.cast_to(types, types, stream_types, False, __runtime__))
+    async def QuestionAnswerAlignment(self, question: str,answer: str,
+        baml_options: BamlCallOptions = {},
+    ) -> types.AlignedQAPair:
+        # Check if on_tick is provided
+        if 'on_tick' in baml_options:
+            # Use streaming internally when on_tick is provided
+            stream = self.stream.QuestionAnswerAlignment(question=question,answer=answer,
+                baml_options=baml_options)
+            return await stream.get_final_response()
+        else:
+            # Original non-streaming code
+            result = await self.__options.merge_options(baml_options).call_function_async(function_name="QuestionAnswerAlignment", args={
+                "question": question,"answer": answer,
+            })
+            return typing.cast(types.AlignedQAPair, result.cast_to(types, types, stream_types, False, __runtime__))
     async def ToolAssessor(self, function_name: str,function_requirements: str,path_ifc_model: str,available_tools: str,previous_attempts: typing.Optional[str] = None,
         baml_options: BamlCallOptions = {},
     ) -> typing.Union["types.CodeAction", "types.AssessmentResult"]:
@@ -241,6 +256,18 @@ class BamlStreamClient:
           lambda x: typing.cast(types.AnswerEvaluationResult, x.cast_to(types, types, stream_types, False, __runtime__)),
           ctx,
         )
+    def QuestionAnswerAlignment(self, question: str,answer: str,
+        baml_options: BamlCallOptions = {},
+    ) -> baml_py.BamlStream[stream_types.AlignedQAPair, types.AlignedQAPair]:
+        ctx, result = self.__options.merge_options(baml_options).create_async_stream(function_name="QuestionAnswerAlignment", args={
+            "question": question,"answer": answer,
+        })
+        return baml_py.BamlStream[stream_types.AlignedQAPair, types.AlignedQAPair](
+          result,
+          lambda x: typing.cast(stream_types.AlignedQAPair, x.cast_to(types, types, stream_types, True, __runtime__)),
+          lambda x: typing.cast(types.AlignedQAPair, x.cast_to(types, types, stream_types, False, __runtime__)),
+          ctx,
+        )
     def ToolAssessor(self, function_name: str,function_requirements: str,path_ifc_model: str,available_tools: str,previous_attempts: typing.Optional[str] = None,
         baml_options: BamlCallOptions = {},
     ) -> baml_py.BamlStream[typing.Union["stream_types.CodeAction", "stream_types.AssessmentResult"], typing.Union["types.CodeAction", "types.AssessmentResult"]]:
@@ -313,6 +340,13 @@ class BamlHttpRequestClient:
             "question": question,"category": category,"ground_truth": ground_truth,"system_response": system_response,"bim_context": bim_context,
         }, mode="request")
         return result
+    async def QuestionAnswerAlignment(self, question: str,answer: str,
+        baml_options: BamlCallOptions = {},
+    ) -> baml_py.baml_py.HTTPRequest:
+        result = await self.__options.merge_options(baml_options).create_http_request_async(function_name="QuestionAnswerAlignment", args={
+            "question": question,"answer": answer,
+        }, mode="request")
+        return result
     async def ToolAssessor(self, function_name: str,function_requirements: str,path_ifc_model: str,available_tools: str,previous_attempts: typing.Optional[str] = None,
         baml_options: BamlCallOptions = {},
     ) -> baml_py.baml_py.HTTPRequest:
@@ -368,6 +402,13 @@ class BamlHttpStreamRequestClient:
     ) -> baml_py.baml_py.HTTPRequest:
         result = await self.__options.merge_options(baml_options).create_http_request_async(function_name="EvaluateResponse", args={
             "question": question,"category": category,"ground_truth": ground_truth,"system_response": system_response,"bim_context": bim_context,
+        }, mode="stream")
+        return result
+    async def QuestionAnswerAlignment(self, question: str,answer: str,
+        baml_options: BamlCallOptions = {},
+    ) -> baml_py.baml_py.HTTPRequest:
+        result = await self.__options.merge_options(baml_options).create_http_request_async(function_name="QuestionAnswerAlignment", args={
+            "question": question,"answer": answer,
         }, mode="stream")
         return result
     async def ToolAssessor(self, function_name: str,function_requirements: str,path_ifc_model: str,available_tools: str,previous_attempts: typing.Optional[str] = None,
