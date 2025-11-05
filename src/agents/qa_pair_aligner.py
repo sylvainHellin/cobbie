@@ -60,10 +60,10 @@ def align_qa_pair(
             try:
                 if collector.last and collector.last.calls:
                     first_call = collector.last.calls[0]
-                    
+
                     if hasattr(first_call, 'http_request') and first_call.http_request:
                         http_body = first_call.http_request.body
-                        
+
                         # Try text method first
                         if hasattr(http_body, 'text'):
                             try:
@@ -92,7 +92,7 @@ def align_qa_pair(
                                         raw_prompt = body_text
                             except Exception:
                                 pass
-                        
+
                         # Try json method if text didn't work
                         if not raw_prompt and hasattr(http_body, 'json'):
                             try:
@@ -113,7 +113,7 @@ def align_qa_pair(
                                     raw_prompt = body_json
                             except Exception:
                                 pass
-                        
+
                         # Try raw method as last resort
                         if not raw_prompt and hasattr(http_body, 'raw'):
                             try:
@@ -160,7 +160,7 @@ def align_qa_pair(
 
         except Exception as e:
             _logger.error(f"Error aligning QA pair {qa_pair.id}: {e}")
-            
+
             # Log error
             aligner_span.set_outputs(
                 {
@@ -193,8 +193,29 @@ if __name__ == "__main__":
     # Create a test QA pair
     test_qa_pair = IfcBench(
         id=1,
-        question="What types of pipes are used in the building, including their quantities?",
-        ground_truth="Total Pipe Segments: 60\nPipe Types:\n- hwa afvoer: 60 segments",
+        question="What stair types are used, with their quantities?",
+        ground_truth="""Total Stairs: 71
+
+           Stair Types:
+           - 24_DD_ betontrap: 32 stairs (45.1%)
+           - 24_stair_DD_trapbordes: 18 stairs (25.4%)
+           - 24-DD-stalentrap verd: 14 stairs (19.7%)
+           - Trap_DD-trap woning type F: 2 stairs (2.8%)
+           - Trap_DD-trap woning type G: 2 stairs (2.8%)
+           - 24-DD-stalen trap beganegrond: 1 stairs (1.4%)
+           - 28_stair_DD_trapbordes: 1 stairs (1.4%)
+           - DD-KOOILADDER: 1 stairs (1.4%)
+
+           Concrete Stairs:
+           - 24_DD_ betontrap: 32 stairs
+
+           Steel Stairs:
+           - 24-DD-stalen trap beganegrond: 1 stairs
+           - 24-DD-stalentrap verd: 14 stairs
+
+           Stair Landings:
+           - 24_stair_DD_trapbordes: 18 landings
+           - 28_stair_DD_trapbordes: 1 landings""",
         ifc_id=1,
         category=1,
     )
