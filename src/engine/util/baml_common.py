@@ -42,13 +42,13 @@ class BamlComponentBase:
         """Setup available tools including primordial and created tools - BIM_QAS pattern."""
         # Add primordial tools
         from src.engine.tools.primordial import (
-            query_ifcopenshell_documentation,
+            query_ifcopenshell_docs,
             web_search,
         )
 
         self.additional_authorized_functions.update({
             "web_search": web_search,
-            "query_ifcopenshell_documentation": query_ifcopenshell_documentation,
+            "query_ifcopenshell_docs": query_ifcopenshell_docs,
         })
 
         # Add created tools if they exist

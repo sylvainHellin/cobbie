@@ -6,7 +6,7 @@ from src.config.agents import AGENT_CONFIGS, ToolDebuggerConfig
 from src.engine.components.test_and_improve import TestAndImprove
 from src.engine.schemas import ModuleOutput
 from src.engine.tools.primordial import (
-    query_ifcopenshell_documentation,
+    query_ifcopenshell_docs,
     web_search,
 )
 from src.engine.util import (
@@ -20,7 +20,7 @@ class ToolDebugger(dspy.Module):
         self,
         additional_authorized_functions: Dict[str, Callable] = {
             "web_search": web_search,
-            "query_ifcopenshell_documentation": query_ifcopenshell_documentation,
+            "query_ifcopenshell_docs": query_ifcopenshell_docs,
         },
         config: Optional[ToolDebuggerConfig] = None,
         lm: Optional[dspy.LM] = None,

@@ -37,7 +37,7 @@ class BIM_QAS:
         self,
         additional_authorized_functions: Optional[Dict[str, Callable]] = {
             "web_search": None,  # Will be set in _setup_tools
-            "query_ifcopenshell_documentation": None,  # Will be set in _setup_tools
+            "query_ifcopenshell_docs": None,  # Will be set in _setup_tools
         },
         additional_authorized_imports: Optional[List[str]] = None,
         config: Optional[IfcAnswerEngineConfig] = None,
@@ -86,13 +86,13 @@ class BIM_QAS:
         """Setup available tools including primordial and created tools"""
         # Add primordial tools
         from src.engine.tools.primordial import (
-            query_ifcopenshell_documentation,
+            query_ifcopenshell_docs,
             web_search,
         )
 
         self.additional_authorized_functions.update({
             "web_search": web_search,
-            "query_ifcopenshell_documentation": query_ifcopenshell_documentation,
+            "query_ifcopenshell_docs": query_ifcopenshell_docs,
         })
 
         # Add custom tools

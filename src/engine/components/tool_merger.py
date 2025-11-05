@@ -10,7 +10,7 @@ from src.config.agents import (
 from src.engine.components import CodeAct
 from src.engine.components.test_and_improve import TestAndImprove
 from src.engine.schemas import ModuleOutput
-from src.engine.tools.primordial import query_ifcopenshell_documentation, web_search
+from src.engine.tools.primordial import query_ifcopenshell_docs, web_search
 from src.engine.util import create_code_prefix, get_logger
 
 
@@ -54,7 +54,7 @@ class InitialMerger(dspy.Module):
     def __init__(
         self,
         tools: List[Callable] = [
-            query_ifcopenshell_documentation,
+            query_ifcopenshell_docs,
             web_search,
         ],
         config: Optional[ToolMergerConfig] = None,
@@ -145,7 +145,7 @@ class ToolsMerger(dspy.Module):
     def __init__(
         self,
         tools: List[Callable] = [
-            query_ifcopenshell_documentation,
+            query_ifcopenshell_docs,
             web_search,
         ],
         config: Optional[ToolMergerConfig] = None,

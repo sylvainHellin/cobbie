@@ -128,7 +128,7 @@ if __name__ == "__main__":
 
     from src.config import TEST_IFC_PATH
     from src.engine.tools.primordial import (
-        query_ifcopenshell_documentation,
+        query_ifcopenshell_docs,
         web_search,
     )
 
@@ -145,7 +145,7 @@ if __name__ == "__main__":
         mlflow.set_experiment("ToolAssessor")
 
         # setup the primordial tools
-        primordial_tools = [web_search, query_ifcopenshell_documentation]
+        primordial_tools = [web_search, query_ifcopenshell_docs]
 
         # Create the function from source code
         new_tool = _create_function_from_source_code(

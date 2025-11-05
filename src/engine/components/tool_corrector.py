@@ -138,7 +138,7 @@ if __name__ == "__main__":
 
     from src.config import TEST_IFC_PATH
     from src.engine.tools.primordial import (
-        query_ifcopenshell_documentation,
+        query_ifcopenshell_docs,
         web_search,
     )
 
@@ -157,7 +157,7 @@ if __name__ == "__main__":
         dspy.configure_cache(enable_disk_cache=False, enable_memory_cache=False)
 
         # setup the primordial tools
-        primordial_tools = [web_search, query_ifcopenshell_documentation]
+        primordial_tools = [web_search, query_ifcopenshell_docs]
 
         # setup the tool corrector
         tool_corrector = ToolCorrector(

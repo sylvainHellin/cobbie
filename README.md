@@ -287,7 +287,7 @@ stateDiagram-v2
 
     state PrimordialTools {
         state "web_search" as WS
-        state "query_ifcopenshell_documentation" as QID
+        state "query_ifcopenshell_docs" as QID
     }
 
     class Question input

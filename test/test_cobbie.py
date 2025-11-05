@@ -10,7 +10,7 @@ import mlflow
 from typing import Dict, Callable
 
 from src.engine.components.cobbie import cobbie, cobbie_with_metrics
-from src.engine.tools.primordial import query_ifcopenshell_documentation, web_search
+from src.engine.tools.primordial import query_ifcopenshell_docs, web_search
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
@@ -36,7 +36,7 @@ def create_demo_tools() -> Dict[str, Callable]:
     return {
         "count_walls": count_walls,
         "get_building_info": get_building_info,
-        "query_ifcopenshell_documentation": query_ifcopenshell_documentation,
+        "query_ifcopenshell_docs": query_ifcopenshell_docs,
         "web_search": web_search
     }
 

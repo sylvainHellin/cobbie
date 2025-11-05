@@ -25,7 +25,7 @@ from tqdm import tqdm
 
 from src.agents.answer_verifier import verify_answer
 from src.agents.cobbie import cobbie
-from src.engine.tools.primordial import query_ifcopenshell_documentation, web_search
+from src.engine.tools.primordial import query_ifcopenshell_docs, web_search
 from src.experiment.datasets import DEVSET
 
 # Setup logging
@@ -421,7 +421,7 @@ Examples:
 
     # Prepare tools for COBBIE
     tools_dict = {
-        "query_ifcopenshell_documentation": query_ifcopenshell_documentation,
+        "query_ifcopenshell_docs": query_ifcopenshell_docs,
         "web_search": web_search,
     }
 

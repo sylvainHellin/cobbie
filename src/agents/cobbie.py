@@ -481,11 +481,11 @@ def cobbie_forward(
     # Setup tools if not provided
     if tools is None:
         from src.engine.tools.primordial import (
-            query_ifcopenshell_documentation,
+            query_ifcopenshell_docs,
             web_search,
         )
 
-        tools = [query_ifcopenshell_documentation, web_search]
+        tools = [query_ifcopenshell_docs, web_search]
 
     # Convert tools list to dictionary for internal use
     tools_dict = {tool.__name__: tool for tool in tools if callable(tool)}
@@ -534,7 +534,7 @@ if __name__ == "__main__":
 
     from src.config import TEST_IFC_PATH
     from src.engine.tools.primordial import (
-        query_ifcopenshell_documentation,
+        query_ifcopenshell_docs,
         web_search,
     )
 
@@ -544,7 +544,7 @@ if __name__ == "__main__":
 
     # Setup tools
     tools_dict = {
-        "query_ifcopenshell_documentation": query_ifcopenshell_documentation,
+        "query_ifcopenshell_docs": query_ifcopenshell_docs,
         "web_search": web_search,
     }
 

@@ -12,7 +12,7 @@ from src.engine.util import (
 from src.engine.components import CodeAct
 from src.engine.components.bim_qas import BIM_QAS
 from src.engine.tools.primordial import (
-    query_ifcopenshell_documentation,
+    query_ifcopenshell_docs,
     web_search,
 )
 
@@ -58,7 +58,7 @@ class IfcAnswerEngine(dspy.Module):
         self,
         additional_authorized_functions: Optional[Dict[str, Callable]] = {
             "web_search": web_search,
-            "query_ifcopenshell_documentation": query_ifcopenshell_documentation,
+            "query_ifcopenshell_docs": query_ifcopenshell_docs,
         },
         additional_authorized_imports: Optional[List[str]] = None,
         config: Optional[IfcAnswerEngineConfig] = None,
@@ -151,7 +151,7 @@ class BIMQASEngine(BIM_QAS):
         self,
         additional_authorized_functions: Optional[Dict[str, Callable]] = {
             "web_search": web_search,
-            "query_ifcopenshell_documentation": query_ifcopenshell_documentation,
+            "query_ifcopenshell_docs": query_ifcopenshell_docs,
         },
         additional_authorized_imports: Optional[List[str]] = None,
         config: Optional[IfcAnswerEngineConfig] = None,
@@ -208,7 +208,7 @@ def create_engine(
         return BIMQASEngine(
             additional_authorized_functions={
                 "web_search": web_search,
-                "query_ifcopenshell_documentation": query_ifcopenshell_documentation,
+                "query_ifcopenshell_docs": query_ifcopenshell_docs,
             },
             config=config,
             llm=llm  # For compatibility, not used in BAML

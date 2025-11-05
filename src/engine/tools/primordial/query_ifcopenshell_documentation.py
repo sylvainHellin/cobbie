@@ -1,181 +1,80 @@
-# %%
-# ==================== Set up ==================== #
-import json
 import os
-import sys
-
-from chromadb import PersistentClient
-from chromadb.errors import NotFoundError
+import requests
 from dotenv import find_dotenv, load_dotenv
 
-_ = load_dotenv(find_dotenv())
-ROOT_PATH = os.getenv("ROOT_PATH")
-assert ROOT_PATH is not None
-
-sys.path.insert(0, ROOT_PATH)
-from src.config import LOG_LEVEL, VECTORSTORE_PATH  # noqa: E402
-from src.engine.util import get_logger  # noqa: E402
+load_dotenv(find_dotenv())
+CONTEXT7_API_KEY = os.getenv("CONTEXT7_API_KEY")
 
 
-# Move the client initialization into a function
-def get_db_client():
+def query_ifcopenshell_docs(query: str, max_tokens: int = 2048) -> str:
     """
-    Get the ChromaDB collection for IfcOpenShell documentation.
-
-    Returns:
-        Collection: The IfcOpenShell documentation collection
-
-    Raises:
-        NotFoundError: If the collection doesn't exist
-        Exception: For other database connection issues
-    """
-    logger = get_logger("get_db_client", log_level=LOG_LEVEL)
-
-    try:
-        logger.debug(f"Connecting to database at: {VECTORSTORE_PATH}")
-        client = PersistentClient(path=VECTORSTORE_PATH)
-
-        # List available collections for debugging
-        collections = client.list_collections()
-        collection_names = [c.name for c in collections]
-        logger.debug(f"Available collections: {collection_names}")
-
-        # Try to get the collection
-        collection = client.get_collection(name="ifcopenshell")
-        logger.debug("Successfully connected to ifcopenshell collection")
-        return collection
-
-    except NotFoundError as e:
-        error_msg = "IfcOpenShell documentation collection not found. You may need to run the vector database creation script first."
-        logger.error(error_msg)
-        raise NotFoundError(error_msg) from e
-
-    except Exception as e:
-        error_msg = (
-            f"Failed to connect to vector database at {VECTORSTORE_PATH}: {str(e)}"
-        )
-        logger.error(error_msg)
-        raise Exception(error_msg) from e
-
-
-# %%
-# ==================== Define tools to query the DB ==================== #
-def query_ifcopenshell_documentation(
-    query: str,
-    n_results: int = 10,
-) -> str:
-    """Queries the documentation from the IfcOpenShell library using natural language.
+    Retrieves up-to-date information and code examples related to the provided query from the IFCopenshell documentation.
 
     Args:
-        query (str): Natural language description of the desired functionality.
+        query: The topic or query to focus the documentation on (e.g., "file reading",
+               "geometry", "IFC entities")
+        max_tokens: Maximum number of tokens to retrieve (default: 2048)
 
     Returns:
-        str: A JSON-serialized string containing a list of matching documentation entries, where each entry is a dictionary with keys: "module", "type", "name", "docstring"
+        str: The documentation text as a string
+
+    Example:
+        >>> docs = query_ifcopenshell_docs("Using the IfcOpenShell Python API, write a script that opens an IFC4 file, finds all entities of type `IfcWall`, and prints their `GlobalId` attribute. The script should not modify or save the file.")
+        >>> print(docs)
     """
-    logger = get_logger("query_ifc_documentation", log_level=LOG_LEVEL)
-    logger.info(f"Query: {query}")
-    logger.debug(f"n_results: {n_results}")
+    if not CONTEXT7_API_KEY:
+        return "Could not retrieve the information ; API_KEY missing."
 
-    # Add input validation for query
-    if not query or not query.strip():
-        error_msg = "Query string cannot be empty"
-        logger.error(f"INPUT VALIDATION ERROR: {error_msg}")
-        return json.dumps({"error": error_msg})
+    url = "https://mcp.context7.com/mcp"
 
-    # Input validation for n_results
-    if not isinstance(n_results, int) or n_results <= 0:
-        error_msg = "n_results must be a positive integer"
-        logger.error(f"INPUT VALIDATION ERROR: {error_msg}")
-        return json.dumps({"error": error_msg})
+    payload = {
+        "jsonrpc": "2.0",
+        "id": 1,
+        "method": "tools/call",
+        "params": {
+            "name": "get-library-docs",
+            "arguments": {
+                "context7CompatibleLibraryID": "/ifcopenshell/ifcopenshell",
+                "topic": query,
+                "tokens": max_tokens,
+            },
+        },
+    }
 
-    # Get database connection with proper error handling
+    headers = {
+        "Content-Type": "application/json",
+        "Accept": "application/json, text/event-stream",
+        "CONTEXT7_API_KEY": CONTEXT7_API_KEY,
+    }
+
     try:
-        logger.debug("Connecting to IfcOpenShell documentation database...")
-        collection = get_db_client()
-        logger.debug("✓ Database connection successful")
-    except NotFoundError as e:
-        error_msg = f"Database setup issue: {str(e)}"
-        logger.error(f"DATABASE ERROR: {error_msg}")
-        return json.dumps({"error": error_msg})
-    except Exception as e:
-        error_msg = f"Database connection failed: {str(e)}"
-        logger.error(f"DATABASE ERROR: {error_msg}")
-        return json.dumps({"error": error_msg})
+        response = requests.post(url, json=payload, headers=headers, timeout=30)
+        response.raise_for_status()
 
-    # query the similar elements from the db
-    try:
-        results = collection.query(
-            query_texts=[query],  # Add the query text for semantic search
-            n_results=n_results,
-        )
-        logger.debug(
-            f"✓ Database query completed successfully. Found {len(results['ids'][0]) if results['ids'] else 0} results"
-        )
+        data = response.json()
 
-    except Exception as e:
-        error_msg = f"Error executing database query: {str(e)}"
-        logger.error(f"QUERY ERROR: {error_msg}")
-        return json.dumps({"error": error_msg})
+        if "error" in data:
+            return f"API error: {data['error']}"
 
-    # Log the results at debug level
-    for i in range(len(results["ids"][0])):
-        metadata = None
-        document = None
-        if results["metadatas"] is not None and results["metadatas"][0] is not None:
-            metadata = results["metadatas"][0][i]
-        if results["documents"] is not None and results["documents"][0] is not None:
-            document = results["documents"][0][i]
+        if "result" in data and "content" in data["result"]:
+            content = data["result"]["content"]
+            if isinstance(content, list):
+                doc_text = ""
+                for block in content:
+                    if isinstance(block, dict) and "text" in block:
+                        doc_text += block["text"]
+                return doc_text
+            elif isinstance(content, dict) and "text" in content:
+                return content["text"]
 
-        if metadata is not None:
-            logger.debug(f"Result {i + 1} Metadata: {json.dumps(metadata, indent=2)}")
-        if document is not None:
-            logger.debug(
-                f"Result {i + 1} Document: {document[:200]}..."
-                if len(document) > 200
-                else f"Result {i + 1} Document: {document}"
-            )
+        return str(data.get("result", data))
 
-    # create and return the successful response
-    try:
-        response = []
-        for i in range(len(results["ids"][0])):
-            elt = {
-                "module": (results["metadatas"] or [[]])[0][i]["module"],
-                "type": (results["metadatas"] or [[]])[0][i]["type"],
-                "name": (results["metadatas"] or [[]])[0][i]["name"],
-                "docstring": (results["documents"] or [[]])[0][i],
-            }
-            response.append(elt)
-
-        logger.debug(f"✓ Successfully formatted {len(response)} results for return")
-        # serialize and return the output
-        return json.dumps(response, indent=2)
-
-    except Exception as e:
-        error_msg = f"Error formatting query results: {str(e)}"
-        logger.error(f"FORMATTING ERROR: {error_msg}")
-        return json.dumps({"error": error_msg})
+    except requests.exceptions.RequestException as e:
+        return f"Failed to query Context7 API: {str(e)}"
 
 
-# %%
-# ==================== Test the tools ==================== #
 if __name__ == "__main__":
-    query = "Get the properties of an Entity."
-
-    # Example usage with docstring filter
-    res1 = query_ifcopenshell_documentation(
-        query=query,
+    docs = query_ifcopenshell_docs(
+        "reading IFC files and accessing entities", max_tokens=3000
     )
-
-    print("\n", "=" * 50, "\n")
-    print("<Test with docstring filter>")
-    print(f"Query: {query}\n")
-    print(res1)
-
-    # Example usage without any filters
-    print("=" * 50)
-    print("<Test without filters>")
-    res2 = query_ifcopenshell_documentation(
-        query="Get IFC elements by type", n_results=5
-    )
-    print(res2)
+    print(f"Retrieved documentation: \n\n{docs}")
