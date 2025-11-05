@@ -15,6 +15,9 @@ Usage:
     # Full run (all samples, with database update)
     uv run python scripts/clean_ifc_bench.py --nb-samples 1000 --update
 
+    # Resume from index 500 (useful for interrupted runs)
+    uv run python scripts/clean_ifc_bench.py --start 500 --nb-samples 1000 --update
+
     # Full dataset (no database update)
     uv run python scripts/clean_ifc_bench.py
 """
@@ -86,13 +89,15 @@ def process_qa_pair(
     # Create nested MLflow run for this QA pair
     run_name = f"qa_pair_{qa_pair.id}"
 
-    with mlflow.start_run(run_name=run_name, nested=True) as qa_run:
+    with mlflow.start_run(run_name=run_name, nested=True):
         # Log original parameters
-        mlflow.log_params({
-            "qa_pair_id": qa_pair.id,
-            "question_index": question_index,
-            "original_category": original_category,
-        })
+        mlflow.log_params(
+            {
+                "qa_pair_id": qa_pair.id,
+                "question_index": question_index,
+                "original_category": original_category,
+            }
+        )
 
         # Phase 1: Align question and answer
         try:
@@ -135,26 +140,32 @@ def process_qa_pair(
                 result["error_message"] += f"; Validation error: {str(e)}"
             else:
                 result["error_message"] = f"Validation error: {str(e)}"
-            validated_qa_pair = aligned_qa_pair  # Use aligned values on validation error
+            validated_qa_pair = (
+                aligned_qa_pair  # Use aligned values on validation error
+            )
 
         # Determine overall status
         if result["alignment_error"] or result["validation_error"]:
             result["status"] = "error"
 
         # Log summary metrics
-        mlflow.log_metrics({
-            "question_changed": 1 if result["question_changed"] else 0,
-            "answer_changed": 1 if result["answer_changed"] else 0,
-            "category_changed": 1 if result["category_changed"] else 0,
-            "alignment_error": 1 if result["alignment_error"] else 0,
-            "validation_error": 1 if result["validation_error"] else 0,
-        })
+        mlflow.log_metrics(
+            {
+                "question_changed": 1 if result["question_changed"] else 0,
+                "answer_changed": 1 if result["answer_changed"] else 0,
+                "category_changed": 1 if result["category_changed"] else 0,
+                "alignment_error": 1 if result["alignment_error"] else 0,
+                "validation_error": 1 if result["validation_error"] else 0,
+            }
+        )
 
         # Log final values
-        mlflow.log_params({
-            "final_category": validated_qa_pair.category,
-            "status": result["status"],
-        })
+        mlflow.log_params(
+            {
+                "final_category": validated_qa_pair.category,
+                "status": result["status"],
+            }
+        )
 
         # Return result with final QA pair
         result["cleaned_qa_pair"] = validated_qa_pair
@@ -192,7 +203,9 @@ def update_database(results: List[Dict]) -> int:
                         session.add(db_record)
                         updated_count += 1
                     else:
-                        logger.warning(f"Record with id {result['id']} not found in database")
+                        logger.warning(
+                            f"Record with id {result['id']} not found in database"
+                        )
 
                 except Exception as e:
                     logger.error(f"Error updating record {result['id']}: {e}")
@@ -234,7 +247,7 @@ def save_report(results: List[Dict], report_path: Path):
     ]
 
     # Write CSV
-    with open(report_path, 'w', newline='', encoding='utf-8') as csvfile:
+    with open(report_path, "w", newline="", encoding="utf-8") as csvfile:
         writer = csv.DictWriter(csvfile, fieldnames=fieldnames)
         writer.writeheader()
 
@@ -246,7 +259,9 @@ def save_report(results: List[Dict], report_path: Path):
     logger.info(f"Report saved successfully: {report_path}")
 
 
-def print_summary(results: List[Dict], duration: float, updated: bool, report_path: Path):
+def print_summary(
+    results: List[Dict], duration: float, updated: bool, report_path: Path
+):
     """
     Print a summary of the cleaning results.
 
@@ -271,14 +286,22 @@ def print_summary(results: List[Dict], duration: float, updated: bool, report_pa
     print("IFC-BENCH DATASET CLEANING SUMMARY")
     print("=" * 80)
     print(f"Total records processed: {total_records}")
-    print(f"Successful: {successful_records} ({successful_records/total_records*100:.1f}%)")
-    print(f"Errors: {error_records} ({error_records/total_records*100:.1f}%)")
+    print(
+        f"Successful: {successful_records} ({successful_records / total_records * 100:.1f}%)"
+    )
+    print(f"Errors: {error_records} ({error_records / total_records * 100:.1f}%)")
     print()
 
     print("Changes Applied:")
-    print(f"  Questions aligned: {questions_aligned} ({questions_aligned/total_records*100:.1f}%)")
-    print(f"  Answers aligned: {answers_aligned} ({answers_aligned/total_records*100:.1f}%)")
-    print(f"  Categories updated: {categories_updated} ({categories_updated/total_records*100:.1f}%)")
+    print(
+        f"  Questions aligned: {questions_aligned} ({questions_aligned / total_records * 100:.1f}%)"
+    )
+    print(
+        f"  Answers aligned: {answers_aligned} ({answers_aligned / total_records * 100:.1f}%)"
+    )
+    print(
+        f"  Categories updated: {categories_updated} ({categories_updated / total_records * 100:.1f}%)"
+    )
     print()
 
     print("Errors Encountered:")
@@ -286,8 +309,12 @@ def print_summary(results: List[Dict], duration: float, updated: bool, report_pa
     print(f"  Validation errors: {validation_errors}")
     print()
 
-    print(f"Processing time: {duration:.1f}s ({duration/total_records:.2f}s per record)")
-    print(f"Database updated: {'Yes' if updated else 'No (use --update flag to update)'}")
+    print(
+        f"Processing time: {duration:.1f}s ({duration / total_records:.2f}s per record)"
+    )
+    print(
+        f"Database updated: {'Yes' if updated else 'No (use --update flag to update)'}"
+    )
     print()
 
     print(f"Report saved to: {report_path}")
@@ -308,22 +335,32 @@ Examples:
   # Full run (all samples, with database update)
   uv run python scripts/clean_ifc_bench.py --nb-samples 1000 --update
 
+  # Resume from index 500 (useful for interrupted runs)
+  uv run python scripts/clean_ifc_bench.py --start 500 --nb-samples 1000 --update
+
   # Process entire dataset without updating
   uv run python scripts/clean_ifc_bench.py
-        """
+        """,
     )
 
     parser.add_argument(
         "--nb-samples",
         type=int,
         default=None,
-        help="Number of samples to process (default: all samples in dataset)"
+        help="Number of samples to process (default: all samples in dataset)",
+    )
+
+    parser.add_argument(
+        "--start",
+        type=int,
+        default=0,
+        help="Index from which to start processing (default: 0, useful for resuming interrupted runs)",
     )
 
     parser.add_argument(
         "--update",
         action="store_true",
-        help="Update the database with cleaned data (default: False for safety)"
+        help="Update the database with cleaned data (default: False for safety)",
     )
 
     args = parser.parse_args()
@@ -333,37 +370,49 @@ Examples:
         print("Error: --nb-samples must be positive")
         return 1
 
+    if args.start < 0:
+        print("Error: --start must be non-negative")
+        return 1
+
     # Setup MLflow
     mlflow.set_tracking_uri("http://127.0.0.1:5000")
     mlflow.set_experiment("IFCBenchCleaning")
 
-    # Load dataset
-    logger.info(f"Loading dataset (limit={args.nb_samples or 'all'})...")
-    dataset = get_dataset(limit=args.nb_samples)
+    # Load dataset with offset
+    offset = args.start if args.start > 0 else None
+    logger.info(
+        f"Loading dataset (offset={offset or 0}, limit={args.nb_samples or 'all'})..."
+    )
+    dataset = get_dataset(limit=args.nb_samples, offset=offset)
 
     if not dataset:
         print("Error: No data found in dataset")
         return 1
 
     print(f"\nLoaded {len(dataset)} QA pairs from IFC-Bench dataset")
+    if args.start > 0:
+        print(f"Starting from index: {args.start}")
     print(f"Database update: {'ENABLED' if args.update else 'DISABLED (dry run)'}")
     print()
 
     # Create timestamp for report
-    timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
+    timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
     report_path = Path(f"reports/ifc_bench_cleaning_{timestamp}.csv")
 
     # Start main MLflow run
     run_name = f"IFCBenchCleaning_{timestamp}_samples_{len(dataset)}"
     logger.info(f"Starting MLflow run: {run_name}")
 
-    with mlflow.start_run(run_name=run_name) as run:
+    with mlflow.start_run(run_name=run_name):
         # Log parameters
-        mlflow.log_params({
-            "num_samples": len(dataset),
-            "update_database": args.update,
-            "timestamp": timestamp,
-        })
+        mlflow.log_params(
+            {
+                "num_samples": len(dataset),
+                "start_index": args.start,
+                "update_database": args.update,
+                "timestamp": timestamp,
+            }
+        )
 
         # Process all QA pairs
         start_time = time.time()
@@ -371,7 +420,9 @@ Examples:
 
         with tqdm(total=len(dataset), desc="Cleaning IFC-Bench dataset") as pbar:
             for i, qa_pair in enumerate(dataset):
-                result = process_qa_pair(qa_pair, question_index=i)
+                # Use actual index (accounting for start offset)
+                actual_index = args.start + i
+                result = process_qa_pair(qa_pair, question_index=actual_index)
                 results.append(result)
                 pbar.update(1)
 
@@ -387,21 +438,31 @@ Examples:
         validation_errors = sum(1 for r in results if r["validation_error"])
 
         # Log summary metrics
-        mlflow.log_metrics({
-            "total_records": total_records,
-            "successful_records": successful_records,
-            "error_records": total_records - successful_records,
-            "questions_aligned": questions_aligned,
-            "answers_aligned": answers_aligned,
-            "categories_updated": categories_updated,
-            "alignment_errors": alignment_errors,
-            "validation_errors": validation_errors,
-            "processing_time": duration,
-            "avg_time_per_record": duration / total_records if total_records > 0 else 0,
-            "question_alignment_rate": questions_aligned / total_records if total_records > 0 else 0,
-            "answer_alignment_rate": answers_aligned / total_records if total_records > 0 else 0,
-            "category_update_rate": categories_updated / total_records if total_records > 0 else 0,
-        })
+        mlflow.log_metrics(
+            {
+                "total_records": total_records,
+                "successful_records": successful_records,
+                "error_records": total_records - successful_records,
+                "questions_aligned": questions_aligned,
+                "answers_aligned": answers_aligned,
+                "categories_updated": categories_updated,
+                "alignment_errors": alignment_errors,
+                "validation_errors": validation_errors,
+                "processing_time": duration,
+                "avg_time_per_record": duration / total_records
+                if total_records > 0
+                else 0,
+                "question_alignment_rate": questions_aligned / total_records
+                if total_records > 0
+                else 0,
+                "answer_alignment_rate": answers_aligned / total_records
+                if total_records > 0
+                else 0,
+                "category_update_rate": categories_updated / total_records
+                if total_records > 0
+                else 0,
+            }
+        )
 
         # Update database if requested
         if args.update:

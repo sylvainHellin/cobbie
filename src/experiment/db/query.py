@@ -36,15 +36,25 @@ def with_session(func: Callable[..., T]) -> Callable[..., T]:
 
 def get_dataset(
     limit: Optional[int] = None,
+    offset: Optional[int] = None,
     load_ifc_model: bool = False,
 ) -> List[IfcBench]:
     """
     Return the whole dataset as a List of Dataset
+
+    Args:
+        limit: Maximum number of records to return
+        offset: Number of records to skip from the beginning
+        load_ifc_model: Whether to eager load the IFC model relationship
     """
 
     with Session(DB_ENGINE) as session:
         # base select statement
         statement = select(IfcBench).order_by(col(IfcBench.id).asc())
+
+        # offset if provided
+        if offset:
+            statement = statement.offset(offset)
 
         # limit if limit provided
         if limit:
