@@ -36,3 +36,4 @@ mlartifacts
 mlruns
 logs.log
 .cursor
+reports
