@@ -17,7 +17,7 @@ function EvaluateResponse(
   system_response: string,
   bim_context: string? @description("Brief description of what data is available in the BIM model")
 ) -> AnswerEvaluationResult {
-  client ZAICodingPlan
+  client GLM_4_6
 
   prompt #"
     You are evaluating a BIM information extraction system's response to a question.

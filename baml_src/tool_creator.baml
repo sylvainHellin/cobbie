@@ -7,7 +7,7 @@ function ToolCreator(
   available_tools: string?,
   previous_attempts: string?
 ) -> CodeAction | FunctionImplementation {
-  client ZAICodingPlan
+  client GLM_4_6
   prompt #"
     You are an expert Python programmer specializing in creating tools for BIM (Building Information Modeling) analysis using the IfcOpenShell library.
 
@@ -60,7 +60,7 @@ function CodeExtractor(
   function_name: string,
   conversation_history: string
 ) -> FunctionImplementation {
-  client ZAICodingPlan
+  client GLM_4_6
   prompt #"
     Extract the Python function implementation from the conversation history.
 

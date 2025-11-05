@@ -7,7 +7,7 @@ function ToolAssessor(
   available_tools: string,
   previous_attempts: string? @description("Previous test execution results, if any")
 ) -> CodeAction | AssessmentResult {
-  client ZAICodingPlan
+  client GLM_4_6
   prompt #"
     You are testing a Python function that has been created to meet specific requirements.
     Your role is to thoroughly test the function as a BLACK BOX - you can use the function but cannot see its implementation.
@@ -63,7 +63,7 @@ function ToolCorrector(
   available_tools: string,
   previous_attempts: string? @description("Previous improvement attempts, if any")
 ) -> CodeAction | ImprovedImplementation {
-  client ZAICodingPlan
+  client GLM_4_6
   prompt #"
     You are improving a Python function based on detailed assessment feedback.
 
@@ -119,7 +119,7 @@ function CodeCleaner(
   faulty_code: string,
   error_message: string
 ) -> CleanedCode {
-  client ZAICodingPlan
+  client GLM_4_6
   prompt #"
     Fix syntax and compilation errors in Python function source code.
 

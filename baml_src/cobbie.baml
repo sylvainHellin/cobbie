@@ -1,14 +1,11 @@
-// BAML CodeAct implementation for BIM QA system
-// Single function that returns either CodeAction (continue) or FinalAnswer (stop)
-
-// Main BIM QA function with union return type
-function BIMQAS(
+// Cobbie Agent - Extract information from BIM models
+function Cobbie(
   user_input: string,
   available_tools: string,
   previous_attempts: string? @description("Previous execution results, if any"),
   model_path: string? @description("Path to the IFC model file, if available")
 ) -> CodeAction | FinalAnswer {
-  client ZAICodingPlan
+  client GLM_4_6 
   prompt #"
     You are a helpful assistant specialising in retrieving information from BIM models using Python code and the IfcOpenShell library. To facilitate this task, you also have access to higher-level functions that will help you with the most common information retrieval tasks (referred to later as the 'tools'). These tools can be used directly in your Python code as they are already pre-loaded; there is no need to import them.
 
@@ -41,8 +38,8 @@ function BIMQAS(
 }
 
 // Test function for BIMQAS
-test bimqas_test {
-  functions [BIMQAS]
+test test_cobbie {
+  functions [Cobbie]
   args {
     user_input "How many walls are in the building?"
     available_tools #"
