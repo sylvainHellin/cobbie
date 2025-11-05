@@ -47,7 +47,7 @@ class QuestionCategory(str, Enum):
     Category4 = "Category4"
 
 # #########################################################################
-# Generated classes (15)
+# Generated classes (16)
 # #########################################################################
 
 class AlignedQAPair(BaseModel):
@@ -120,6 +120,12 @@ class ToolCreationResult(BaseModel):
     function_name: str
     function_implementation: str
     success: bool
+
+class ToolIdentified(BaseModel):
+    thoughts: str
+    new_tool: bool
+    new_tool_name: str
+    new_tool_description: str
 
 class ToolOptimizationResult(BaseModel):
     improvement: str

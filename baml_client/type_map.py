@@ -58,6 +58,9 @@ type_map = {
     "types.ToolCreationResult": types.ToolCreationResult,
     "stream_types.ToolCreationResult": stream_types.ToolCreationResult,
 
+    "types.ToolIdentified": types.ToolIdentified,
+    "stream_types.ToolIdentified": stream_types.ToolIdentified,
+
     "types.ToolOptimizationResult": types.ToolOptimizationResult,
     "stream_types.ToolOptimizationResult": stream_types.ToolOptimizationResult,
 

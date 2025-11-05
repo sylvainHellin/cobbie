@@ -114,3 +114,11 @@ class CategoryValidationResult {
   updated bool @description("Whether the category was changed from the original")
   thought string @description("Reasoning for the category classification and any changes made")
 }
+
+// Helper function identification result from successful Cobbie executions
+class ToolIdentified {
+  thoughts string @description("Step-by-step analysis of the execution history to identify reusable patterns")
+  new_tool bool @description("Whether a new helper function should be created (true) or not (false)")
+  new_tool_name string @description("Suggested name for the new helper function (empty string if new_tool is false)")
+  new_tool_description string @description("Detailed description of what the helper function should do, its parameters, return type, and use cases (empty string if new_tool is false)")
+}
