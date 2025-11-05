@@ -15,7 +15,6 @@ function EvaluateResponse(
   category: QuestionCategory,
   ground_truth: string,
   system_response: string,
-  bim_context: string? @description("Brief description of what data is available in the BIM model")
 ) -> AnswerEvaluationResult {
   client GLM_4_6
 
@@ -24,8 +23,6 @@ function EvaluateResponse(
 
     QUESTION CATEGORY: {{ category }}
     QUESTION: {{ question }}
-
-    BIM CONTEXT: {{ bim_context }}
 
     GROUND TRUTH: {{ ground_truth }}
 
@@ -101,7 +98,6 @@ test radiator_count_test {
     category Category1
     ground_truth "There is one radiator in room A202."
     system_response "I could find one radiator in room A202."
-    bim_context "this is the bim model for a duplex house."
   }
 }
 
@@ -141,6 +137,5 @@ test pipe_types_with_context_test {
 
       The building appears to have a comprehensive rainwater drainage system with 60 zinc pipe segments and 35 water splash protection elements, all designed for exterior installation and rainwater management.
     "#
-    bim_context null
   }
 }

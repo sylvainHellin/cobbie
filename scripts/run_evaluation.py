@@ -160,7 +160,6 @@ def process_question(
     question_data,
     question_index: int,
     tools_dict: Dict[str, Callable],
-    bim_context: Optional[str] = None,
 ) -> Dict:
     """Process a single question with COBBIE and verification.
 
@@ -270,7 +269,6 @@ def process_question(
                     category=category,
                     ground_truth=ground_truth,
                     system_response=final_answer.answer,
-                    bim_context=bim_context,
                 )
 
                 verifier_duration = time.time() - verifier_start
@@ -425,7 +423,7 @@ Examples:
         "query_ifcopenshell_docs": query_ifcopenshell_docs,
         "web_search": web_search,
     }
-    
+
     # Add all created tools from src/engine/tools/created/
     try:
         created_tools = get_created_tools()

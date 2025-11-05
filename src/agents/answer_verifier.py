@@ -34,7 +34,6 @@ def verify_answer(
     category: Literal[1, 2, 3, 4],
     ground_truth: str,
     system_response: str,
-    bim_context: Optional[str] = "BIM model containing building information",
     llm_provider: str = "zai",
     llm_name: str = "GLM-4.6",
     **kwargs,
@@ -47,7 +46,6 @@ def verify_answer(
         category: Question category (1, 2, 3, or 4)
         ground_truth: The ground truth answer
         system_response: The system's answer to evaluate
-        bim_context: Optional context about the BIM model
         mlflow: Whether to create MLflow orchestration spans (default: True)
 
     Returns:
@@ -75,7 +73,6 @@ def verify_answer(
                 "category": category,
                 "ground_truth": ground_truth,
                 "system_response": system_response,
-                "bim_context": bim_context,
             }
         )
 
@@ -91,7 +88,6 @@ def verify_answer(
                 category=baml_category,
                 ground_truth=ground_truth,
                 system_response=system_response,
-                bim_context=bim_context,
                 **kwargs,
             )
         except Exception as e:
@@ -149,7 +145,6 @@ if __name__ == "__main__":
         category=1,
         ground_truth="There are 120 doors in this house.",
         system_response="I could count 123 doors.",
-        bim_context="Residential building model with door and window elements",
     )
 
     print("BAML Answer Verifier Test Results:")
@@ -174,7 +169,6 @@ if __name__ == "__main__":
         category=1,
         ground_truth="There are 120 doors in this house.",
         system_response="I could count 123 doors.",
-        bim_context="Residential building model with door and window elements",
     )
 
     print("\nBAML Answer Verifier with Metrics Test Results:")

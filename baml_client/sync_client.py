@@ -133,18 +133,18 @@ class BamlSyncClient:
                 "function_name": function_name,"conversation_history": conversation_history,
             })
             return typing.cast(types.FunctionImplementation, result.cast_to(types, types, stream_types, False, __runtime__))
-    def EvaluateResponse(self, question: str,category: types.QuestionCategory,ground_truth: str,system_response: str,bim_context: typing.Optional[str] = None,
+    def EvaluateResponse(self, question: str,category: types.QuestionCategory,ground_truth: str,system_response: str,
         baml_options: BamlCallOptions = {},
     ) -> types.AnswerEvaluationResult:
         # Check if on_tick is provided
         if 'on_tick' in baml_options:
-            stream = self.stream.EvaluateResponse(question=question,category=category,ground_truth=ground_truth,system_response=system_response,bim_context=bim_context,
+            stream = self.stream.EvaluateResponse(question=question,category=category,ground_truth=ground_truth,system_response=system_response,
                 baml_options=baml_options)
             return stream.get_final_response()
         else:
             # Original non-streaming code
             result = self.__options.merge_options(baml_options).call_function_sync(function_name="EvaluateResponse", args={
-                "question": question,"category": category,"ground_truth": ground_truth,"system_response": system_response,"bim_context": bim_context,
+                "question": question,"category": category,"ground_truth": ground_truth,"system_response": system_response,
             })
             return typing.cast(types.AnswerEvaluationResult, result.cast_to(types, types, stream_types, False, __runtime__))
     def HelperFunctionCreator(self, history: str,example_question: str,example_answer: str,example_bim_model: str,other_bim_models_for_testing: typing.List[str],function_name: str,function_description: str,previous_attempts: typing.Optional[str] = None,
@@ -290,11 +290,11 @@ class BamlStreamClient:
           lambda x: typing.cast(types.FunctionImplementation, x.cast_to(types, types, stream_types, False, __runtime__)),
           ctx,
         )
-    def EvaluateResponse(self, question: str,category: types.QuestionCategory,ground_truth: str,system_response: str,bim_context: typing.Optional[str] = None,
+    def EvaluateResponse(self, question: str,category: types.QuestionCategory,ground_truth: str,system_response: str,
         baml_options: BamlCallOptions = {},
     ) -> baml_py.BamlSyncStream[stream_types.AnswerEvaluationResult, types.AnswerEvaluationResult]:
         ctx, result = self.__options.merge_options(baml_options).create_sync_stream(function_name="EvaluateResponse", args={
-            "question": question,"category": category,"ground_truth": ground_truth,"system_response": system_response,"bim_context": bim_context,
+            "question": question,"category": category,"ground_truth": ground_truth,"system_response": system_response,
         })
         return baml_py.BamlSyncStream[stream_types.AnswerEvaluationResult, types.AnswerEvaluationResult](
           result,
@@ -415,11 +415,11 @@ class BamlHttpRequestClient:
             "function_name": function_name,"conversation_history": conversation_history,
         }, mode="request")
         return result
-    def EvaluateResponse(self, question: str,category: types.QuestionCategory,ground_truth: str,system_response: str,bim_context: typing.Optional[str] = None,
+    def EvaluateResponse(self, question: str,category: types.QuestionCategory,ground_truth: str,system_response: str,
         baml_options: BamlCallOptions = {},
     ) -> baml_py.baml_py.HTTPRequest:
         result = self.__options.merge_options(baml_options).create_http_request_sync(function_name="EvaluateResponse", args={
-            "question": question,"category": category,"ground_truth": ground_truth,"system_response": system_response,"bim_context": bim_context,
+            "question": question,"category": category,"ground_truth": ground_truth,"system_response": system_response,
         }, mode="request")
         return result
     def HelperFunctionCreator(self, history: str,example_question: str,example_answer: str,example_bim_model: str,other_bim_models_for_testing: typing.List[str],function_name: str,function_description: str,previous_attempts: typing.Optional[str] = None,
@@ -500,11 +500,11 @@ class BamlHttpStreamRequestClient:
             "function_name": function_name,"conversation_history": conversation_history,
         }, mode="stream")
         return result
-    def EvaluateResponse(self, question: str,category: types.QuestionCategory,ground_truth: str,system_response: str,bim_context: typing.Optional[str] = None,
+    def EvaluateResponse(self, question: str,category: types.QuestionCategory,ground_truth: str,system_response: str,
         baml_options: BamlCallOptions = {},
     ) -> baml_py.baml_py.HTTPRequest:
         result = self.__options.merge_options(baml_options).create_http_request_sync(function_name="EvaluateResponse", args={
-            "question": question,"category": category,"ground_truth": ground_truth,"system_response": system_response,"bim_context": bim_context,
+            "question": question,"category": category,"ground_truth": ground_truth,"system_response": system_response,
         }, mode="stream")
         return result
     def HelperFunctionCreator(self, history: str,example_question: str,example_answer: str,example_bim_model: str,other_bim_models_for_testing: typing.List[str],function_name: str,function_description: str,previous_attempts: typing.Optional[str] = None,
