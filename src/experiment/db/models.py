@@ -24,5 +24,6 @@ class IfcBench(SQLModel, table=True):
     ifc_id: int = Field(sa_column=Column('ifc_id', ForeignKey('ifcmodels.id'), nullable=False))
     id: int = Field(sa_column=Column('id', Integer, primary_key=True))
     category: Optional[int] = Field(default=None, sa_column=Column('category', Integer))
+    cobbie: Optional[str] = Field(default=None, sa_column=Column('cobbie', Text))
 
     ifc: Optional['Ifcmodels'] = Relationship(back_populates='ifc_bench')
