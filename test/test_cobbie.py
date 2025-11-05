@@ -11,6 +11,7 @@ from typing import Dict, Callable
 
 from src.engine.components.cobbie import cobbie, cobbie_with_metrics
 from src.engine.tools.primordial import query_ifcopenshell_docs, web_search
+from src.engine.util import get_created_tools
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
@@ -18,27 +19,23 @@ logger = logging.getLogger(__name__)
 
 
 def create_demo_tools() -> Dict[str, Callable]:
-    """Create a set of demo tools for testing COBBIE."""
-
-    def count_walls() -> int:
-        """Count all wall elements in the IFC model."""
-        return 42  # Mock implementation
-
-    def get_building_info() -> dict:
-        """Get basic building information."""
-        return {
-            "name": "Demo Building",
-            "floors": 3,
-            "area": 1500.5,
-            "construction_year": 2020
-        }
-
-    return {
-        "count_walls": count_walls,
-        "get_building_info": get_building_info,
+    """Create a comprehensive set of tools for testing COBBIE, including all created tools."""
+    
+    # Start with primordial tools
+    tools = {
         "query_ifcopenshell_docs": query_ifcopenshell_docs,
         "web_search": web_search
     }
+    
+    # Add all created tools from src/engine/tools/created/
+    try:
+        created_tools = get_created_tools()
+        tools.update(created_tools)
+        logger.info(f"Loaded {len(created_tools)} created tools")
+    except Exception as e:
+        logger.warning(f"Could not load created tools: {e}")
+    
+    return tools
 
 
 def demo_basic_functionality():
