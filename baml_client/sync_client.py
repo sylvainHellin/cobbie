@@ -147,6 +147,20 @@ class BamlSyncClient:
                 "question": question,"category": category,"ground_truth": ground_truth,"system_response": system_response,"bim_context": bim_context,
             })
             return typing.cast(types.AnswerEvaluationResult, result.cast_to(types, types, stream_types, False, __runtime__))
+    def HelperFunctionCreator(self, history: str,example_question: str,example_answer: str,example_bim_model: str,other_bim_models_for_testing: typing.List[str],function_name: str,function_description: str,previous_attempts: typing.Optional[str] = None,
+        baml_options: BamlCallOptions = {},
+    ) -> typing.Union["types.CodeAction", "types.NewHelperFunction"]:
+        # Check if on_tick is provided
+        if 'on_tick' in baml_options:
+            stream = self.stream.HelperFunctionCreator(history=history,example_question=example_question,example_answer=example_answer,example_bim_model=example_bim_model,other_bim_models_for_testing=other_bim_models_for_testing,function_name=function_name,function_description=function_description,previous_attempts=previous_attempts,
+                baml_options=baml_options)
+            return stream.get_final_response()
+        else:
+            # Original non-streaming code
+            result = self.__options.merge_options(baml_options).call_function_sync(function_name="HelperFunctionCreator", args={
+                "history": history,"example_question": example_question,"example_answer": example_answer,"example_bim_model": example_bim_model,"other_bim_models_for_testing": other_bim_models_for_testing,"function_name": function_name,"function_description": function_description,"previous_attempts": previous_attempts,
+            })
+            return typing.cast(typing.Union["types.CodeAction", "types.NewHelperFunction"], result.cast_to(types, types, stream_types, False, __runtime__))
     def HelperFunctionIdentifier(self, history: str,example_question: str,existing_helper_functions: str,
         baml_options: BamlCallOptions = {},
     ) -> types.ToolIdentified:
@@ -288,6 +302,18 @@ class BamlStreamClient:
           lambda x: typing.cast(types.AnswerEvaluationResult, x.cast_to(types, types, stream_types, False, __runtime__)),
           ctx,
         )
+    def HelperFunctionCreator(self, history: str,example_question: str,example_answer: str,example_bim_model: str,other_bim_models_for_testing: typing.List[str],function_name: str,function_description: str,previous_attempts: typing.Optional[str] = None,
+        baml_options: BamlCallOptions = {},
+    ) -> baml_py.BamlSyncStream[typing.Union["stream_types.CodeAction", "stream_types.NewHelperFunction"], typing.Union["types.CodeAction", "types.NewHelperFunction"]]:
+        ctx, result = self.__options.merge_options(baml_options).create_sync_stream(function_name="HelperFunctionCreator", args={
+            "history": history,"example_question": example_question,"example_answer": example_answer,"example_bim_model": example_bim_model,"other_bim_models_for_testing": other_bim_models_for_testing,"function_name": function_name,"function_description": function_description,"previous_attempts": previous_attempts,
+        })
+        return baml_py.BamlSyncStream[typing.Union["stream_types.CodeAction", "stream_types.NewHelperFunction"], typing.Union["types.CodeAction", "types.NewHelperFunction"]](
+          result,
+          lambda x: typing.cast(typing.Union["stream_types.CodeAction", "stream_types.NewHelperFunction"], x.cast_to(types, types, stream_types, True, __runtime__)),
+          lambda x: typing.cast(typing.Union["types.CodeAction", "types.NewHelperFunction"], x.cast_to(types, types, stream_types, False, __runtime__)),
+          ctx,
+        )
     def HelperFunctionIdentifier(self, history: str,example_question: str,existing_helper_functions: str,
         baml_options: BamlCallOptions = {},
     ) -> baml_py.BamlSyncStream[stream_types.ToolIdentified, types.ToolIdentified]:
@@ -396,6 +422,13 @@ class BamlHttpRequestClient:
             "question": question,"category": category,"ground_truth": ground_truth,"system_response": system_response,"bim_context": bim_context,
         }, mode="request")
         return result
+    def HelperFunctionCreator(self, history: str,example_question: str,example_answer: str,example_bim_model: str,other_bim_models_for_testing: typing.List[str],function_name: str,function_description: str,previous_attempts: typing.Optional[str] = None,
+        baml_options: BamlCallOptions = {},
+    ) -> baml_py.baml_py.HTTPRequest:
+        result = self.__options.merge_options(baml_options).create_http_request_sync(function_name="HelperFunctionCreator", args={
+            "history": history,"example_question": example_question,"example_answer": example_answer,"example_bim_model": example_bim_model,"other_bim_models_for_testing": other_bim_models_for_testing,"function_name": function_name,"function_description": function_description,"previous_attempts": previous_attempts,
+        }, mode="request")
+        return result
     def HelperFunctionIdentifier(self, history: str,example_question: str,existing_helper_functions: str,
         baml_options: BamlCallOptions = {},
     ) -> baml_py.baml_py.HTTPRequest:
@@ -472,6 +505,13 @@ class BamlHttpStreamRequestClient:
     ) -> baml_py.baml_py.HTTPRequest:
         result = self.__options.merge_options(baml_options).create_http_request_sync(function_name="EvaluateResponse", args={
             "question": question,"category": category,"ground_truth": ground_truth,"system_response": system_response,"bim_context": bim_context,
+        }, mode="stream")
+        return result
+    def HelperFunctionCreator(self, history: str,example_question: str,example_answer: str,example_bim_model: str,other_bim_models_for_testing: typing.List[str],function_name: str,function_description: str,previous_attempts: typing.Optional[str] = None,
+        baml_options: BamlCallOptions = {},
+    ) -> baml_py.baml_py.HTTPRequest:
+        result = self.__options.merge_options(baml_options).create_http_request_sync(function_name="HelperFunctionCreator", args={
+            "history": history,"example_question": example_question,"example_answer": example_answer,"example_bim_model": example_bim_model,"other_bim_models_for_testing": other_bim_models_for_testing,"function_name": function_name,"function_description": function_description,"previous_attempts": previous_attempts,
         }, mode="stream")
         return result
     def HelperFunctionIdentifier(self, history: str,example_question: str,existing_helper_functions: str,

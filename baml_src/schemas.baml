@@ -122,3 +122,10 @@ class ToolIdentified {
   new_tool_name string @description("Suggested name for the new helper function (empty string if new_tool is false)")
   new_tool_description string @description("Detailed description of what the helper function should do, its parameters, return type, and use cases (empty string if new_tool is false)")
 }
+
+// Helper function implementation result - final output from HelperFunctionCreator
+class NewHelperFunction {
+  thoughts string @description("Summary of development process, testing performed, and validation results")
+  function_implementation string @description("Complete Python function implementation including imports, docstring, and type hints")
+  success bool @description("Whether the function is complete, tested, and ready for use")
+}

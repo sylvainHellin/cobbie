@@ -47,7 +47,7 @@ class QuestionCategory(str, Enum):
     Category4 = "Category4"
 
 # #########################################################################
-# Generated classes (16)
+# Generated classes (17)
 # #########################################################################
 
 class AlignedQAPair(BaseModel):
@@ -98,6 +98,11 @@ class ImprovedImplementation(BaseModel):
     function_implementation: str
     reasoning: str
     changes_summary: typing.Optional[str] = None
+
+class NewHelperFunction(BaseModel):
+    thoughts: str
+    function_implementation: str
+    success: bool
 
 class SimilarityResult(BaseModel):
     similarity_score: float

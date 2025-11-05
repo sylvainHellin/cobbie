@@ -48,6 +48,12 @@ class LlmResponseParser:
         result = self.__options.merge_options(baml_options).parse_response(function_name="EvaluateResponse", llm_response=llm_response, mode="request")
         return typing.cast(types.AnswerEvaluationResult, result)
 
+    def HelperFunctionCreator(
+        self, llm_response: str, baml_options: BamlCallOptions = {},
+    ) -> typing.Union["types.CodeAction", "types.NewHelperFunction"]:
+        result = self.__options.merge_options(baml_options).parse_response(function_name="HelperFunctionCreator", llm_response=llm_response, mode="request")
+        return typing.cast(typing.Union["types.CodeAction", "types.NewHelperFunction"], result)
+
     def HelperFunctionIdentifier(
         self, llm_response: str, baml_options: BamlCallOptions = {},
     ) -> types.ToolIdentified:
@@ -115,6 +121,12 @@ class LlmStreamParser:
     ) -> stream_types.AnswerEvaluationResult:
         result = self.__options.merge_options(baml_options).parse_response(function_name="EvaluateResponse", llm_response=llm_response, mode="stream")
         return typing.cast(stream_types.AnswerEvaluationResult, result)
+
+    def HelperFunctionCreator(
+        self, llm_response: str, baml_options: BamlCallOptions = {},
+    ) -> typing.Union["stream_types.CodeAction", "stream_types.NewHelperFunction"]:
+        result = self.__options.merge_options(baml_options).parse_response(function_name="HelperFunctionCreator", llm_response=llm_response, mode="stream")
+        return typing.cast(typing.Union["stream_types.CodeAction", "stream_types.NewHelperFunction"], result)
 
     def HelperFunctionIdentifier(
         self, llm_response: str, baml_options: BamlCallOptions = {},

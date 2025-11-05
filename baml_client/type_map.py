@@ -46,6 +46,9 @@ type_map = {
     "types.ImprovedImplementation": types.ImprovedImplementation,
     "stream_types.ImprovedImplementation": stream_types.ImprovedImplementation,
 
+    "types.NewHelperFunction": types.NewHelperFunction,
+    "stream_types.NewHelperFunction": stream_types.NewHelperFunction,
+
     "types.SimilarityResult": types.SimilarityResult,
     "stream_types.SimilarityResult": stream_types.SimilarityResult,
 

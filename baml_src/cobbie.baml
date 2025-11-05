@@ -35,7 +35,8 @@ function Cobbie(
     - Avoid including related but distinct information unless it directly answers the question
     - Keep your answer focused and concise
     - Only provide additional context if it clarifies ambiguity in your direct answer
-    - If you are using the ifcopenshell library directly instead of the provided helper functions, use the query_ifcopenshell_docs tool to find out how to use the library correctly
+    If you are using the ifcopenshell library directly instead of the provided helper functions, first use the query_ifcopenshell_docs tool to find out how to use the library correctly. Do not rely on your memory of how to use this library, as you are not very familiar with it. You could use a query inside a code block to try an implementation and see the results of your code and the retrieved documentation at the same time.
+    - Check out all the Psets and ePsets that are currently available for this particular BIM model. There is no established naming system or ontology, and the type of properties stored varies significantly depending on the model.
     
     Now, choose your next action (only one):
     - CodeAction: If you need to explore/analyze more with Python code

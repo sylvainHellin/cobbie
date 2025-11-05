@@ -23,7 +23,7 @@ class StreamState(BaseModel, typing.Generic[StreamStateValueT]):
     value: StreamStateValueT
     state: typing_extensions.Literal["Pending", "Incomplete", "Complete"]
 # #########################################################################
-# Generated classes (16)
+# Generated classes (17)
 # #########################################################################
 
 class AlignedQAPair(BaseModel):
@@ -74,6 +74,11 @@ class ImprovedImplementation(BaseModel):
     function_implementation: typing.Optional[str] = None
     reasoning: typing.Optional[str] = None
     changes_summary: typing.Optional[str] = None
+
+class NewHelperFunction(BaseModel):
+    thoughts: typing.Optional[str] = None
+    function_implementation: typing.Optional[str] = None
+    success: typing.Optional[bool] = None
 
 class SimilarityResult(BaseModel):
     similarity_score: typing.Optional[float] = None
