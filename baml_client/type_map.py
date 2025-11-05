@@ -25,6 +25,9 @@ type_map = {
     "types.AssessmentResult": types.AssessmentResult,
     "stream_types.AssessmentResult": stream_types.AssessmentResult,
 
+    "types.CategoryValidationResult": types.CategoryValidationResult,
+    "stream_types.CategoryValidationResult": stream_types.CategoryValidationResult,
+
     "types.CleanedCode": types.CleanedCode,
     "stream_types.CleanedCode": stream_types.CleanedCode,
 

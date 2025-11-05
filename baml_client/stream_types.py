@@ -23,7 +23,7 @@ class StreamState(BaseModel, typing.Generic[StreamStateValueT]):
     value: StreamStateValueT
     state: typing_extensions.Literal["Pending", "Incomplete", "Complete"]
 # #########################################################################
-# Generated classes (14)
+# Generated classes (15)
 # #########################################################################
 
 class AlignedQAPair(BaseModel):
@@ -41,6 +41,11 @@ class AssessmentResult(BaseModel):
     assessment_status: typing.Optional[typing.Union[str, str]] = None
     assessment_details: typing.Optional[str] = None
     test_execution_log: typing.Optional[str] = None
+
+class CategoryValidationResult(BaseModel):
+    validated_category: typing.Optional[str] = None
+    updated: typing.Optional[bool] = None
+    thought: typing.Optional[str] = None
 
 class CleanedCode(BaseModel):
     function_implementation: typing.Optional[str] = None

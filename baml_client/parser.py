@@ -72,6 +72,12 @@ class LlmResponseParser:
         result = self.__options.merge_options(baml_options).parse_response(function_name="ToolCreator", llm_response=llm_response, mode="request")
         return typing.cast(typing.Union["types.CodeAction", "types.FunctionImplementation"], result)
 
+    def ValidateQuestionCategory(
+        self, llm_response: str, baml_options: BamlCallOptions = {},
+    ) -> types.CategoryValidationResult:
+        result = self.__options.merge_options(baml_options).parse_response(function_name="ValidateQuestionCategory", llm_response=llm_response, mode="request")
+        return typing.cast(types.CategoryValidationResult, result)
+
     
 
 class LlmStreamParser:
@@ -127,5 +133,11 @@ class LlmStreamParser:
     ) -> typing.Union["stream_types.CodeAction", "stream_types.FunctionImplementation"]:
         result = self.__options.merge_options(baml_options).parse_response(function_name="ToolCreator", llm_response=llm_response, mode="stream")
         return typing.cast(typing.Union["stream_types.CodeAction", "stream_types.FunctionImplementation"], result)
+
+    def ValidateQuestionCategory(
+        self, llm_response: str, baml_options: BamlCallOptions = {},
+    ) -> stream_types.CategoryValidationResult:
+        result = self.__options.merge_options(baml_options).parse_response(function_name="ValidateQuestionCategory", llm_response=llm_response, mode="stream")
+        return typing.cast(stream_types.CategoryValidationResult, result)
 
     

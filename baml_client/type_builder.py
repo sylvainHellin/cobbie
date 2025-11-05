@@ -20,7 +20,7 @@ from .globals import DO_NOT_USE_DIRECTLY_UNLESS_YOU_KNOW_WHAT_YOURE_DOING_RUNTIM
 class TypeBuilder(type_builder.TypeBuilder):
     def __init__(self):
         super().__init__(classes=set(
-          ["AlignedQAPair","AnswerEvaluationResult","AssessmentResult","CleanedCode","CodeAction","ErrorAnalysisResult","FinalAnswer","FunctionImplementation","ImprovedImplementation","SimilarityResult","TestAndImproveError","TestAndImproveSuccess","ToolCreationResult","ToolOptimizationResult",]
+          ["AlignedQAPair","AnswerEvaluationResult","AssessmentResult","CategoryValidationResult","CleanedCode","CodeAction","ErrorAnalysisResult","FinalAnswer","FunctionImplementation","ImprovedImplementation","SimilarityResult","TestAndImproveError","TestAndImproveSuccess","ToolCreationResult","ToolOptimizationResult",]
         ), enums=set(
           ["QuestionCategory",]
         ), runtime=DO_NOT_USE_DIRECTLY_UNLESS_YOU_KNOW_WHAT_YOURE_DOING_RUNTIME)
@@ -35,7 +35,7 @@ class TypeBuilder(type_builder.TypeBuilder):
 
 
     # #########################################################################
-    # Generated classes 14
+    # Generated classes 15
     # #########################################################################
 
     @property
@@ -49,6 +49,10 @@ class TypeBuilder(type_builder.TypeBuilder):
     @property
     def AssessmentResult(self) -> "AssessmentResultViewer":
         return AssessmentResultViewer(self)
+
+    @property
+    def CategoryValidationResult(self) -> "CategoryValidationResultViewer":
+        return CategoryValidationResultViewer(self)
 
     @property
     def CleanedCode(self) -> "CleanedCodeViewer":
@@ -152,7 +156,7 @@ class QuestionCategoryValues:
 
 
 # #########################################################################
-# Generated classes 14
+# Generated classes 15
 # #########################################################################
 
 class AlignedQAPairAst:
@@ -296,6 +300,53 @@ class AssessmentResultProperties:
     @property
     def test_execution_log(self) -> type_builder.ClassPropertyViewer:
         return type_builder.ClassPropertyViewer(self.__bldr.property("test_execution_log"))
+    
+    
+
+
+class CategoryValidationResultAst:
+    def __init__(self, tb: type_builder.TypeBuilder):
+        _tb = tb._tb # type: ignore (we know how to use this private attribute)
+        self._bldr = _tb.class_("CategoryValidationResult")
+        self._properties: typing.Set[str] = set([  "validated_category",  "updated",  "thought",  ])
+        self._props = CategoryValidationResultProperties(self._bldr, self._properties)
+
+    def type(self) -> baml_py.FieldType:
+        return self._bldr.field()
+
+    @property
+    def props(self) -> "CategoryValidationResultProperties":
+        return self._props
+
+
+class CategoryValidationResultViewer(CategoryValidationResultAst):
+    def __init__(self, tb: type_builder.TypeBuilder):
+        super().__init__(tb)
+
+    
+    def list_properties(self) -> typing.List[typing.Tuple[str, type_builder.ClassPropertyViewer]]:
+        return [(name, type_builder.ClassPropertyViewer(self._bldr.property(name))) for name in self._properties]
+    
+
+
+class CategoryValidationResultProperties:
+    def __init__(self, bldr: baml_py.ClassBuilder, properties: typing.Set[str]):
+        self.__bldr = bldr
+        self.__properties = properties # type: ignore (we know how to use this private attribute) # noqa: F821
+
+    
+    
+    @property
+    def validated_category(self) -> type_builder.ClassPropertyViewer:
+        return type_builder.ClassPropertyViewer(self.__bldr.property("validated_category"))
+    
+    @property
+    def updated(self) -> type_builder.ClassPropertyViewer:
+        return type_builder.ClassPropertyViewer(self.__bldr.property("updated"))
+    
+    @property
+    def thought(self) -> type_builder.ClassPropertyViewer:
+        return type_builder.ClassPropertyViewer(self.__bldr.property("thought"))
     
     
 

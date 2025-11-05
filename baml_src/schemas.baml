@@ -107,3 +107,10 @@ class TestAndImproveError {
   final_assessment_status string? @description("Last known assessment status, if any")
   partial_function_implementation string? @description("Best function implementation achieved, if any")
 }
+
+// Category validation result for question-answer pairs
+class CategoryValidationResult {
+  validated_category string @description("The correct category (1, 2, 3, or 4) according to the taxonomy")
+  updated bool @description("Whether the category was changed from the original")
+  thought string @description("Reasoning for the category classification and any changes made")
+}

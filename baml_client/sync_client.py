@@ -203,6 +203,20 @@ class BamlSyncClient:
                 "function_requirements": function_requirements,"function_name": function_name,"function_boilerplate": function_boilerplate,"path_ifc_model": path_ifc_model,"available_tools": available_tools,"previous_attempts": previous_attempts,
             })
             return typing.cast(typing.Union["types.CodeAction", "types.FunctionImplementation"], result.cast_to(types, types, stream_types, False, __runtime__))
+    def ValidateQuestionCategory(self, question: str,answer: str,current_category: str,
+        baml_options: BamlCallOptions = {},
+    ) -> types.CategoryValidationResult:
+        # Check if on_tick is provided
+        if 'on_tick' in baml_options:
+            stream = self.stream.ValidateQuestionCategory(question=question,answer=answer,current_category=current_category,
+                baml_options=baml_options)
+            return stream.get_final_response()
+        else:
+            # Original non-streaming code
+            result = self.__options.merge_options(baml_options).call_function_sync(function_name="ValidateQuestionCategory", args={
+                "question": question,"answer": answer,"current_category": current_category,
+            })
+            return typing.cast(types.CategoryValidationResult, result.cast_to(types, types, stream_types, False, __runtime__))
     
 
 
@@ -308,6 +322,18 @@ class BamlStreamClient:
           lambda x: typing.cast(typing.Union["types.CodeAction", "types.FunctionImplementation"], x.cast_to(types, types, stream_types, False, __runtime__)),
           ctx,
         )
+    def ValidateQuestionCategory(self, question: str,answer: str,current_category: str,
+        baml_options: BamlCallOptions = {},
+    ) -> baml_py.BamlSyncStream[stream_types.CategoryValidationResult, types.CategoryValidationResult]:
+        ctx, result = self.__options.merge_options(baml_options).create_sync_stream(function_name="ValidateQuestionCategory", args={
+            "question": question,"answer": answer,"current_category": current_category,
+        })
+        return baml_py.BamlSyncStream[stream_types.CategoryValidationResult, types.CategoryValidationResult](
+          result,
+          lambda x: typing.cast(stream_types.CategoryValidationResult, x.cast_to(types, types, stream_types, True, __runtime__)),
+          lambda x: typing.cast(types.CategoryValidationResult, x.cast_to(types, types, stream_types, False, __runtime__)),
+          ctx,
+        )
     
 
 class BamlHttpRequestClient:
@@ -372,6 +398,13 @@ class BamlHttpRequestClient:
             "function_requirements": function_requirements,"function_name": function_name,"function_boilerplate": function_boilerplate,"path_ifc_model": path_ifc_model,"available_tools": available_tools,"previous_attempts": previous_attempts,
         }, mode="request")
         return result
+    def ValidateQuestionCategory(self, question: str,answer: str,current_category: str,
+        baml_options: BamlCallOptions = {},
+    ) -> baml_py.baml_py.HTTPRequest:
+        result = self.__options.merge_options(baml_options).create_http_request_sync(function_name="ValidateQuestionCategory", args={
+            "question": question,"answer": answer,"current_category": current_category,
+        }, mode="request")
+        return result
     
 
 class BamlHttpStreamRequestClient:
@@ -434,6 +467,13 @@ class BamlHttpStreamRequestClient:
     ) -> baml_py.baml_py.HTTPRequest:
         result = self.__options.merge_options(baml_options).create_http_request_sync(function_name="ToolCreator", args={
             "function_requirements": function_requirements,"function_name": function_name,"function_boilerplate": function_boilerplate,"path_ifc_model": path_ifc_model,"available_tools": available_tools,"previous_attempts": previous_attempts,
+        }, mode="stream")
+        return result
+    def ValidateQuestionCategory(self, question: str,answer: str,current_category: str,
+        baml_options: BamlCallOptions = {},
+    ) -> baml_py.baml_py.HTTPRequest:
+        result = self.__options.merge_options(baml_options).create_http_request_sync(function_name="ValidateQuestionCategory", args={
+            "question": question,"answer": answer,"current_category": current_category,
         }, mode="stream")
         return result
     

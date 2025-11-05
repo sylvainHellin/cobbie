@@ -47,7 +47,7 @@ class QuestionCategory(str, Enum):
     Category4 = "Category4"
 
 # #########################################################################
-# Generated classes (14)
+# Generated classes (15)
 # #########################################################################
 
 class AlignedQAPair(BaseModel):
@@ -65,6 +65,11 @@ class AssessmentResult(BaseModel):
     assessment_status: typing.Union[typing_extensions.Literal['ok'], typing_extensions.Literal['needs_improvement']]
     assessment_details: str
     test_execution_log: typing.Optional[str] = None
+
+class CategoryValidationResult(BaseModel):
+    validated_category: str
+    updated: bool
+    thought: str
 
 class CleanedCode(BaseModel):
     function_implementation: str
