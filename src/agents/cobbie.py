@@ -29,7 +29,7 @@ def _cobbie(
     llm_name: str = "GLM-4.6",
     llm_provider: str = "zai",
     **kwargs,
-) -> FinalAnswer:
+) -> Tuple[FinalAnswer, str]:
     """
     Main COBBIE function for BIM question answering.
 
@@ -45,7 +45,8 @@ def _cobbie(
         **kwargs: Additional arguments passed to BAML function
 
     Returns:
-        FinalAnswer with the answer and reasoning
+        Tuple of (FinalAnswer, execution_history) where execution_history contains
+        the complete iteration-by-iteration trace of thoughts, code, and results
     """
     logger.info(f"Starting COBBIE execution for: {question[:100]}...")
 
@@ -180,7 +181,7 @@ def _cobbie(
                 )
                 iteration_span.set_status("OK")
 
-                return result
+                return result, previous_attempts
 
             elif isinstance(result, CodeAction):
                 # Update the previous results
@@ -277,7 +278,7 @@ def _cobbie(
         )
         final_span.set_status("OK")
 
-        return final_answer
+        return final_answer, previous_attempts
 
 
 def cobbie(
@@ -289,11 +290,11 @@ def cobbie(
     llm_provider: str = "zai",
     llm_name: str = "glm-4.6",
     **kwargs,
-) -> Tuple[FinalAnswer, Collector]:
+) -> Tuple[FinalAnswer, Collector, str]:
     """
     Execute COBBIE with comprehensive metrics collection.
 
-    Returns FinalAnswer and Collector for performance tracking and analysis.
+    Returns FinalAnswer, Collector, and execution history for performance tracking and analysis.
 
     Args:
         user_input: The question or task to address
@@ -304,7 +305,8 @@ def cobbie(
         **kwargs: Additional arguments passed to BAML function
 
     Returns:
-        Tuple of (FinalAnswer, Collector)
+        Tuple of (FinalAnswer, Collector, execution_history) where execution_history
+        contains the complete iteration-by-iteration trace of thoughts, code, and results
     """
     # Create collector for token tracking
     collector = Collector(name="COBBIE")
@@ -352,7 +354,7 @@ def cobbie(
 
             # Execute COBBIE and measure time within the main span context
             start_time = time.time()
-            final_answer = _cobbie(
+            final_answer, execution_history = _cobbie(
                 question=user_input,
                 tools=tools,
                 max_iterations=max_iterations,
@@ -450,7 +452,7 @@ def cobbie(
                 f"COBBIE with metrics completed. Tokens: {total_tokens}, Time: {execution_time:.2f}s"
             )
 
-            return final_answer, collector
+            return final_answer, collector, execution_history
 
 
 def cobbie_forward(
@@ -557,7 +559,7 @@ if __name__ == "__main__":
     print(f"Model Path: {model_path}\n")
 
     # Test cobbie_with_metrics for comprehensive tracking
-    result, collector = cobbie(
+    result, collector, execution_history = cobbie(
         user_input=test_question,
         tools=tools_dict,
         max_iterations=5,
@@ -569,6 +571,7 @@ if __name__ == "__main__":
     print("COBBIE Test Results:")
     print(f"Answer: {result.answer}")
     print(f"\nReasoning: {result.thoughts}")
+    print(f"\nExecution History:\n{execution_history}")
 
     # Extract metrics
     input_tokens = 0

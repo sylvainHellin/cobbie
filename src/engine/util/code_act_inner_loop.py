@@ -19,7 +19,7 @@ def _execute_code_action(
     Execute a CodeAction from the agent return the the formated result of the attempt.
     """
     with mlflow.start_span(
-        name=f"code_action_{iteration}", span_type="TOOL"
+        name=f"code_action_{iteration + 1}", span_type="TOOL"
     ) as code_action_span:
         # Extract the python code from the CodeAction
         python_code = code_action.python_code

@@ -236,7 +236,7 @@ def process_question(
             start_time_cobbie = time.time()
 
             # Run COBBIE with metrics
-            final_answer, collector = cobbie(
+            final_answer, collector, _ = cobbie(
                 user_input=question,
                 tools=tools_dict,
                 model_path=ifc_path,
