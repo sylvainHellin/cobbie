@@ -47,7 +47,7 @@ class QuestionCategory(str, Enum):
     Category4 = "Category4"
 
 # #########################################################################
-# Generated classes (17)
+# Generated classes (18)
 # #########################################################################
 
 class AlignedQAPair(BaseModel):
@@ -84,6 +84,13 @@ class ErrorAnalysisResult(BaseModel):
     error_category: str
     function_name: typing.Optional[str] = None
     needs_new_tool: bool
+
+class FaultyToolAnalysis(BaseModel):
+    thoughts: str
+    faulty_tool: bool
+    faulty_tool_name: str
+    error_description: str
+    confidence: typing.Union[typing_extensions.Literal['high'], typing_extensions.Literal['medium'], typing_extensions.Literal['low']]
 
 class FinalAnswer(BaseModel):
     thoughts: str

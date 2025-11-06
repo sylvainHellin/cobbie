@@ -48,6 +48,12 @@ class LlmResponseParser:
         result = self.__options.merge_options(baml_options).parse_response(function_name="EvaluateResponse", llm_response=llm_response, mode="request")
         return typing.cast(types.AnswerEvaluationResult, result)
 
+    def FaultyToolIdentifier(
+        self, llm_response: str, baml_options: BamlCallOptions = {},
+    ) -> types.FaultyToolAnalysis:
+        result = self.__options.merge_options(baml_options).parse_response(function_name="FaultyToolIdentifier", llm_response=llm_response, mode="request")
+        return typing.cast(types.FaultyToolAnalysis, result)
+
     def HelperFunctionCreator(
         self, llm_response: str, baml_options: BamlCallOptions = {},
     ) -> typing.Union["types.CodeAction", "types.NewHelperFunction"]:
@@ -121,6 +127,12 @@ class LlmStreamParser:
     ) -> stream_types.AnswerEvaluationResult:
         result = self.__options.merge_options(baml_options).parse_response(function_name="EvaluateResponse", llm_response=llm_response, mode="stream")
         return typing.cast(stream_types.AnswerEvaluationResult, result)
+
+    def FaultyToolIdentifier(
+        self, llm_response: str, baml_options: BamlCallOptions = {},
+    ) -> stream_types.FaultyToolAnalysis:
+        result = self.__options.merge_options(baml_options).parse_response(function_name="FaultyToolIdentifier", llm_response=llm_response, mode="stream")
+        return typing.cast(stream_types.FaultyToolAnalysis, result)
 
     def HelperFunctionCreator(
         self, llm_response: str, baml_options: BamlCallOptions = {},

@@ -37,6 +37,9 @@ type_map = {
     "types.ErrorAnalysisResult": types.ErrorAnalysisResult,
     "stream_types.ErrorAnalysisResult": stream_types.ErrorAnalysisResult,
 
+    "types.FaultyToolAnalysis": types.FaultyToolAnalysis,
+    "stream_types.FaultyToolAnalysis": stream_types.FaultyToolAnalysis,
+
     "types.FinalAnswer": types.FinalAnswer,
     "stream_types.FinalAnswer": stream_types.FinalAnswer,
 

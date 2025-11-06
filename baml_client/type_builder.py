@@ -20,7 +20,7 @@ from .globals import DO_NOT_USE_DIRECTLY_UNLESS_YOU_KNOW_WHAT_YOURE_DOING_RUNTIM
 class TypeBuilder(type_builder.TypeBuilder):
     def __init__(self):
         super().__init__(classes=set(
-          ["AlignedQAPair","AnswerEvaluationResult","AssessmentResult","CategoryValidationResult","CleanedCode","CodeAction","ErrorAnalysisResult","FinalAnswer","FunctionImplementation","ImprovedImplementation","NewHelperFunction","SimilarityResult","TestAndImproveError","TestAndImproveSuccess","ToolCreationResult","ToolIdentified","ToolOptimizationResult",]
+          ["AlignedQAPair","AnswerEvaluationResult","AssessmentResult","CategoryValidationResult","CleanedCode","CodeAction","ErrorAnalysisResult","FaultyToolAnalysis","FinalAnswer","FunctionImplementation","ImprovedImplementation","NewHelperFunction","SimilarityResult","TestAndImproveError","TestAndImproveSuccess","ToolCreationResult","ToolIdentified","ToolOptimizationResult",]
         ), enums=set(
           ["QuestionCategory",]
         ), runtime=DO_NOT_USE_DIRECTLY_UNLESS_YOU_KNOW_WHAT_YOURE_DOING_RUNTIME)
@@ -35,7 +35,7 @@ class TypeBuilder(type_builder.TypeBuilder):
 
 
     # #########################################################################
-    # Generated classes 17
+    # Generated classes 18
     # #########################################################################
 
     @property
@@ -65,6 +65,10 @@ class TypeBuilder(type_builder.TypeBuilder):
     @property
     def ErrorAnalysisResult(self) -> "ErrorAnalysisResultViewer":
         return ErrorAnalysisResultViewer(self)
+
+    @property
+    def FaultyToolAnalysis(self) -> "FaultyToolAnalysisViewer":
+        return FaultyToolAnalysisViewer(self)
 
     @property
     def FinalAnswer(self) -> "FinalAnswerViewer":
@@ -164,7 +168,7 @@ class QuestionCategoryValues:
 
 
 # #########################################################################
-# Generated classes 17
+# Generated classes 18
 # #########################################################################
 
 class AlignedQAPairAst:
@@ -492,6 +496,61 @@ class ErrorAnalysisResultProperties:
     @property
     def needs_new_tool(self) -> type_builder.ClassPropertyViewer:
         return type_builder.ClassPropertyViewer(self.__bldr.property("needs_new_tool"))
+    
+    
+
+
+class FaultyToolAnalysisAst:
+    def __init__(self, tb: type_builder.TypeBuilder):
+        _tb = tb._tb # type: ignore (we know how to use this private attribute)
+        self._bldr = _tb.class_("FaultyToolAnalysis")
+        self._properties: typing.Set[str] = set([  "thoughts",  "faulty_tool",  "faulty_tool_name",  "error_description",  "confidence",  ])
+        self._props = FaultyToolAnalysisProperties(self._bldr, self._properties)
+
+    def type(self) -> baml_py.FieldType:
+        return self._bldr.field()
+
+    @property
+    def props(self) -> "FaultyToolAnalysisProperties":
+        return self._props
+
+
+class FaultyToolAnalysisViewer(FaultyToolAnalysisAst):
+    def __init__(self, tb: type_builder.TypeBuilder):
+        super().__init__(tb)
+
+    
+    def list_properties(self) -> typing.List[typing.Tuple[str, type_builder.ClassPropertyViewer]]:
+        return [(name, type_builder.ClassPropertyViewer(self._bldr.property(name))) for name in self._properties]
+    
+
+
+class FaultyToolAnalysisProperties:
+    def __init__(self, bldr: baml_py.ClassBuilder, properties: typing.Set[str]):
+        self.__bldr = bldr
+        self.__properties = properties # type: ignore (we know how to use this private attribute) # noqa: F821
+
+    
+    
+    @property
+    def thoughts(self) -> type_builder.ClassPropertyViewer:
+        return type_builder.ClassPropertyViewer(self.__bldr.property("thoughts"))
+    
+    @property
+    def faulty_tool(self) -> type_builder.ClassPropertyViewer:
+        return type_builder.ClassPropertyViewer(self.__bldr.property("faulty_tool"))
+    
+    @property
+    def faulty_tool_name(self) -> type_builder.ClassPropertyViewer:
+        return type_builder.ClassPropertyViewer(self.__bldr.property("faulty_tool_name"))
+    
+    @property
+    def error_description(self) -> type_builder.ClassPropertyViewer:
+        return type_builder.ClassPropertyViewer(self.__bldr.property("error_description"))
+    
+    @property
+    def confidence(self) -> type_builder.ClassPropertyViewer:
+        return type_builder.ClassPropertyViewer(self.__bldr.property("confidence"))
     
     
 

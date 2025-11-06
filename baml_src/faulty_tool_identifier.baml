@@ -110,13 +110,13 @@ function FaultyToolIdentifier(
 test FaultyToolPositiveTest {
   functions [FaultyToolIdentifier]
   args {
-    question "How many emergency exit doors are in the building?"
-    ground_truth "There are 3 emergency exit doors in the building."
-    provided_answer "There are 15 emergency exit doors in the building."
-    justification "The system response contains incorrect numerical information. The ground truth states 3 emergency exit doors, but the system reported 15. This is a significant discrepancy and represents a factual error."
+    question "How many doors have a fire rating of at least 30 minutes?"
+    ground_truth "There are 3 doors with a fire rating of at least 30 minutes."
+    provided_answer "There are 15 doors with a fire rating of at least 30 minutes."
+    justification "The system response contains incorrect numerical information. The ground truth states 3 doors, but the system reported 15. This is a significant discrepancy and represents a factual error."
     history #"
       --- Iteration 1 ---
-      Thoughts: I need to count emergency exit doors. Let me use the available tool to count doors by type.
+      Thoughts: I need to count the doors. Let me use the available tool to count doors by type.
 
       Code:
       result = count_doors_by_fire_rating(path_ifc_model, min_fire_rating=30)
@@ -127,7 +127,7 @@ test FaultyToolPositiveTest {
 
       --- Final Answer ---
       Thoughts: The count_doors_by_fire_rating function returned 15 doors with fire rating >= 30 minutes.
-      Answer: There are 15 emergency exit doors in the building.
+      Answer: There are 15 doors with a fire rating of at least 30 minutes.
     "#
     existing_helper_functions #"
       def query_ifcopenshell_docs(query: str) -> str:
