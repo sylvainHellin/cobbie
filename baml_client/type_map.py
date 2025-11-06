@@ -52,6 +52,9 @@ type_map = {
     "types.NewHelperFunction": types.NewHelperFunction,
     "stream_types.NewHelperFunction": stream_types.NewHelperFunction,
 
+    "types.NewToolAnalysis": types.NewToolAnalysis,
+    "stream_types.NewToolAnalysis": stream_types.NewToolAnalysis,
+
     "types.SimilarityResult": types.SimilarityResult,
     "stream_types.SimilarityResult": stream_types.SimilarityResult,
 
@@ -64,14 +67,11 @@ type_map = {
     "types.ToolCreationResult": types.ToolCreationResult,
     "stream_types.ToolCreationResult": stream_types.ToolCreationResult,
 
-    "types.UpdatedHelperFunction": types.UpdatedHelperFunction,
-    "stream_types.UpdatedHelperFunction": stream_types.UpdatedHelperFunction,
-
-    "types.NewToolAnalysis": types.NewToolAnalysis,
-    "stream_types.NewToolAnalysis": stream_types.NewToolAnalysis,
-
     "types.ToolOptimizationResult": types.ToolOptimizationResult,
     "stream_types.ToolOptimizationResult": stream_types.ToolOptimizationResult,
+
+    "types.UpdatedHelperFunction": types.UpdatedHelperFunction,
+    "stream_types.UpdatedHelperFunction": stream_types.UpdatedHelperFunction,
 
 
     "types.QuestionCategory": types.QuestionCategory,

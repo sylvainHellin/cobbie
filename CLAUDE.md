@@ -79,3 +79,4 @@ The system supports multiple LLM providers:
 - Start MLflow server before training/evaluation
 - Use BAML components for new development (not DSPy)
 - API supports both engines via environment variable configuration
+- Use mypy to check for type errors whenever you implement something, before claiming it is finished.

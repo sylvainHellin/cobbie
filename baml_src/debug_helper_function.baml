@@ -39,7 +39,7 @@ function HelperFunctionDebugger(
     # Query documentation about spatial relationships
     docs = query_ifcopenshell_docs(
         "How to find which building storey an IfcDoor belongs to using spatial containment relationships",
-        max_tokens=3000
+        max_tokens=1024
     )
     print(docs)
 

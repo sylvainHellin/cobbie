@@ -87,6 +87,12 @@ class NewHelperFunction(BaseModel):
     function_implementation: typing.Optional[str] = None
     success: typing.Optional[bool] = None
 
+class NewToolAnalysis(BaseModel):
+    thoughts: typing.Optional[str] = None
+    new_tool: typing.Optional[bool] = None
+    new_tool_name: typing.Optional[str] = None
+    new_tool_description: typing.Optional[str] = None
+
 class SimilarityResult(BaseModel):
     similarity_score: typing.Optional[float] = None
     correct_answer: typing.Optional[bool] = None
@@ -109,24 +115,18 @@ class ToolCreationResult(BaseModel):
     function_implementation: typing.Optional[str] = None
     success: typing.Optional[bool] = None
 
+class ToolOptimizationResult(BaseModel):
+    improvement: typing.Optional[str] = None
+    function_name: typing.Optional[str] = None
+    function_requirements: typing.Optional[str] = None
+    existing_tool_names: typing.Optional[typing.List[str]] = None
+
 class UpdatedHelperFunction(BaseModel):
     thoughts: typing.Optional[str] = None
     fixed_implementation: typing.Optional[str] = None
     changes_summary: typing.Optional[str] = None
     success: typing.Optional[bool] = None
     test_cases_provided: typing.Optional[str] = None
-
-class NewToolAnalysis(BaseModel):
-    thoughts: typing.Optional[str] = None
-    new_tool: typing.Optional[bool] = None
-    new_tool_name: typing.Optional[str] = None
-    new_tool_description: typing.Optional[str] = None
-
-class ToolOptimizationResult(BaseModel):
-    improvement: typing.Optional[str] = None
-    function_name: typing.Optional[str] = None
-    function_requirements: typing.Optional[str] = None
-    existing_tool_names: typing.Optional[typing.List[str]] = None
 
 # #########################################################################
 # Generated type aliases (0)

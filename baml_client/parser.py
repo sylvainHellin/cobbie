@@ -102,7 +102,7 @@ class LlmResponseParser:
         result = self.__options.merge_options(baml_options).parse_response(function_name="ValidateQuestionCategory", llm_response=llm_response, mode="request")
         return typing.cast(types.CategoryValidationResult, result)
 
-
+    
 
 class LlmStreamParser:
     __options: DoNotUseDirectlyCallManager
@@ -187,3 +187,5 @@ class LlmStreamParser:
     ) -> stream_types.CategoryValidationResult:
         result = self.__options.merge_options(baml_options).parse_response(function_name="ValidateQuestionCategory", llm_response=llm_response, mode="stream")
         return typing.cast(stream_types.CategoryValidationResult, result)
+
+    

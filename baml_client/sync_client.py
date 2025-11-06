@@ -90,7 +90,7 @@ class BamlSyncClient:
     @property
     def parse_stream(self):
       return self.__llm_stream_parser
-
+    
     def Cobbie(self, user_input: str,available_tools: str,previous_attempts: typing.Optional[str] = None,model_path: typing.Optional[str] = None,
         baml_options: BamlCallOptions = {},
     ) -> typing.Union["types.CodeAction", "types.FinalAnswer"]:
@@ -273,7 +273,7 @@ class BamlSyncClient:
                 "question": question,"answer": answer,"current_category": current_category,
             })
             return typing.cast(types.CategoryValidationResult, result.cast_to(types, types, stream_types, False, __runtime__))
-
+    
 
 
 class BamlStreamClient:
@@ -438,7 +438,7 @@ class BamlStreamClient:
           lambda x: typing.cast(types.CategoryValidationResult, x.cast_to(types, types, stream_types, False, __runtime__)),
           ctx,
         )
-
+    
 
 class BamlHttpRequestClient:
     __options: DoNotUseDirectlyCallManager
@@ -537,7 +537,7 @@ class BamlHttpRequestClient:
             "question": question,"answer": answer,"current_category": current_category,
         }, mode="request")
         return result
-
+    
 
 class BamlHttpStreamRequestClient:
     __options: DoNotUseDirectlyCallManager
@@ -636,6 +636,6 @@ class BamlHttpStreamRequestClient:
             "question": question,"answer": answer,"current_category": current_category,
         }, mode="stream")
         return result
-
+    
 
 b = BamlSyncClient(DoNotUseDirectlyCallManager({}))

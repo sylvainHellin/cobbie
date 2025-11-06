@@ -53,6 +53,8 @@ def find_elements_with_properties(
             entities_to_search.extend(model.by_type(entity_type))
     
     results = []
+    # Track processed GUIDs to avoid duplicates when same entity appears in multiple entity types
+    processed_guids = set()
     
     # Process each entity
     for entity in entities_to_search:
@@ -61,6 +63,12 @@ def find_elements_with_properties(
         # Skip purely relational entities unless specifically requested
         if entity_type.startswith("IfcRel") and entity_types is not None and entity_type not in entity_types:
             continue
+        
+        # Skip if we've already processed this GUID (avoid duplicates)
+        entity_guid = entity.GlobalId
+        if entity_guid in processed_guids:
+            continue
+        processed_guids.add(entity_guid)
             
         # Get entity name
         entity_name = getattr(entity, "Name", None)
@@ -195,7 +203,7 @@ def find_elements_with_properties(
         # Add to results
         results.append({
             "element_name": entity_name,
-            "element_guid": entity.GlobalId,
+            "element_guid": entity_guid,
             "element_type": entity_type,
             "container_info": container_info,
             "properties": element_properties

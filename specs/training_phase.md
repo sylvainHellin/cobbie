@@ -36,14 +36,18 @@ This document specifies the implementation of the training phase for Cobbie's mu
 | `identify_faulty_tool` | `src.agents.faulty_tool_identifier` | Identifies faulty tools | `Tuple[FaultyToolAnalysis, Collector]` |
 | `debug_helper_function` | `src.agents.debug_helper_function` | Fixes faulty tools | `Tuple[UpdatedHelperFunction, Collector, str]` |
 
+**Note**: `identify_faulty_tool` and `debug_helper_function` must be added to `src/agents/__init__.py` exports.
+
 ### Available Utility Functions
 
 | Function | Module | Purpose | Returns |
 |----------|--------|---------|---------|
-| `get_created_tools()` | `src.engine.util.get_created_tools` | Load all created tools dynamically | `Dict[str, Callable]` |
-| `save_new_tool()` | `src.engine.util.save_new_tool` | Save tool to disk | `bool` |
-| `get_function_code()` | `src.engine.util.get_function_code` | Read tool source code | `Result[str, str]` |
-| `generate_tools_docs()` | `src.engine.util.generate_tools_docs` | Generate tool documentation string | `str` |
+| `get_created_tools()` | `src.engine.util` | Load all created tools dynamically | `Dict[str, Callable]` |
+| `save_new_tool()` | `src.engine.util` | Save tool to disk | `bool` |
+| `get_function_code()` | `src.engine.util` | Read tool source code | `Result[str, str]` |
+| `generate_tools_docs()` | `src.engine.util` | Generate tool documentation string | `str` |
+
+**Note**: `generate_tools_docs` must be added to `src/engine/util/__init__.py` exports.
 
 ### Missing Utilities
 
@@ -222,6 +226,8 @@ class Context(BaseModel):
 ### 4.3 MLflow Structure
 
 Following the pattern from `scripts/run_evaluation.py`:
+
+**Span Strategy**: Use ONE main span for the entire QA processing state machine. Each agent creates its own nested spans internally.
 
 #### Main Run
 ```python
@@ -574,7 +580,9 @@ def handle_create_new_tool(context: Context) -> Tuple[TrainingState, Context]:
                 raise ValueError("No IFC model path available for tool creation")
 
             # Get other BIM models for testing (from bim_models directory)
-            bim_models_dir = "/Users/sylvainhellin/GitHub/4_phd/cobbie/src/experiment/bim_models"
+            # Import ROOT_PATH from env for configurable path
+            from src.config import ROOT_PATH
+            bim_models_dir = os.path.join(ROOT_PATH, "src/experiment/bim_models")
             other_models = [
                 os.path.join(bim_models_dir, f)
                 for f in os.listdir(bim_models_dir)
@@ -858,6 +866,105 @@ def handle_debug_faulty_tool(context: Context) -> Tuple[TrainingState, Context]:
 
 ### 4.5 Helper Functions
 
+#### `log_qa_metrics(context: Context) -> dict`
+
+```python
+def log_qa_metrics(context: Context) -> dict:
+    """
+    Extract and log metrics for a single QA pair to MLflow.
+    
+    Args:
+        context: Context object with all agent results
+        
+    Returns:
+        Dictionary with metrics for aggregate calculation
+    """
+    # Extract token metrics from all collectors
+    cobbie_input, cobbie_output, cobbie_total = extract_token_metrics(context.cobbie_collector)
+    verify_input, verify_output, verify_total = extract_token_metrics(context.verify_collector)
+    identify_tool_input, identify_tool_output, identify_tool_total = extract_token_metrics(context.identify_tool_collector)
+    create_tool_input, create_tool_output, create_tool_total = extract_token_metrics(context.create_tool_collector)
+    identify_faulty_input, identify_faulty_output, identify_faulty_total = extract_token_metrics(context.identify_faulty_collector)
+    debug_tool_input, debug_tool_output, debug_tool_total = extract_token_metrics(context.debug_tool_collector)
+    
+    # Calculate totals
+    total_tokens = cobbie_total + verify_total + identify_tool_total + create_tool_total + identify_faulty_total + debug_tool_total
+    total_duration = (context.cobbie_duration + context.verify_duration + 
+                     context.identify_tool_duration + context.create_tool_duration +
+                     context.identify_faulty_duration + context.debug_tool_duration)
+    
+    # Get classification
+    classification = context.verify_result.classification if context.verify_result else "unknown"
+    
+    # Build metrics dictionary
+    metrics = {
+        "cobbie_duration": context.cobbie_duration,
+        "cobbie_input_tokens": cobbie_input,
+        "cobbie_output_tokens": cobbie_output,
+        "cobbie_total_tokens": cobbie_total,
+        "verify_duration": context.verify_duration,
+        "verify_input_tokens": verify_input,
+        "verify_output_tokens": verify_output,
+        "verify_total_tokens": verify_total,
+        "total_tokens": total_tokens,
+        "total_duration": total_duration,
+        "answer_correct": 1 if classification == "correct" else 0,
+        "answer_wrong": 1 if classification == "wrong" else 0,
+        "answer_abstained": 1 if classification == "abstained" else 0,
+        "tool_created": 1 if context.tool_created else 0,
+        "tool_updated": 1 if context.tool_updated else 0,
+        "error": 1 if context.error_message else 0,
+    }
+    
+    # Add Path A metrics if applicable
+    if context.identify_tool_result:
+        metrics.update({
+            "identify_tool_duration": context.identify_tool_duration,
+            "identify_tool_input_tokens": identify_tool_input,
+            "identify_tool_output_tokens": identify_tool_output,
+            "identify_tool_total_tokens": identify_tool_total,
+        })
+    
+    if context.create_tool_result:
+        metrics.update({
+            "create_tool_duration": context.create_tool_duration,
+            "create_tool_input_tokens": create_tool_input,
+            "create_tool_output_tokens": create_tool_output,
+            "create_tool_total_tokens": create_tool_total,
+        })
+    
+    # Add Path B metrics if applicable
+    if context.identify_faulty_result:
+        metrics.update({
+            "identify_faulty_duration": context.identify_faulty_duration,
+            "identify_faulty_input_tokens": identify_faulty_input,
+            "identify_faulty_output_tokens": identify_faulty_output,
+            "identify_faulty_total_tokens": identify_faulty_total,
+        })
+    
+    if context.debug_tool_result:
+        metrics.update({
+            "debug_tool_duration": context.debug_tool_duration,
+            "debug_tool_input_tokens": debug_tool_input,
+            "debug_tool_output_tokens": debug_tool_output,
+            "debug_tool_total_tokens": debug_tool_total,
+        })
+    
+    # Log to MLflow
+    mlflow.log_metrics(metrics)
+    
+    # Return dictionary for aggregate calculation
+    return {
+        "question_id": context.qa_pair.id,
+        "classification": classification,
+        "tool_created": context.tool_created,
+        "tool_updated": context.tool_updated,
+        "error": bool(context.error_message),
+        "total_tokens": total_tokens,
+        "total_duration": total_duration,
+    }
+```
+
 #### `extract_token_metrics(collector: Optional[Collector]) -> Tuple[int, int, int]`
 
 ```python
@@ -1057,7 +1164,7 @@ if __name__ == "__main__":
 | Tool reloading | Reload after each creation/update via `get_created_tools()` | Ensures newly created/updated tools are immediately available for subsequent QA pairs |
 | Tool creation validation | Create immediately when `identify_helper_function` suggests | Trust the agent's judgment; validation can be added later via TEST_TOOL state |
 | Abstained answers | Skip both paths (IDENTIFY_NEW_TOOL and IDENTIFY_FAULTY_TOOL) | No clear signal about correctness, so no action is safest |
-| Error handling | Log error and continue to next QA pair | Maximize training coverage; don't let one failure stop entire run |
+| Error handling | Log current results, set run status to "ERROR", continue to next QA pair | Maximize training coverage; don't let one failure stop entire run |
 | MLflow structure | Main run + nested runs per QA pair | Follows evaluation script pattern; provides hierarchical tracking |
 | Metrics tracking | Token usage, execution time, tool actions, error details, correctness | Comprehensive tracking for analysis and optimization |
 | Tool merging | Not included | Removed from new workflow per user specification |

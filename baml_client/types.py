@@ -111,6 +111,12 @@ class NewHelperFunction(BaseModel):
     function_implementation: str
     success: bool
 
+class NewToolAnalysis(BaseModel):
+    thoughts: str
+    new_tool: bool
+    new_tool_name: str
+    new_tool_description: str
+
 class SimilarityResult(BaseModel):
     similarity_score: float
     correct_answer: bool
@@ -133,24 +139,18 @@ class ToolCreationResult(BaseModel):
     function_implementation: str
     success: bool
 
+class ToolOptimizationResult(BaseModel):
+    improvement: str
+    function_name: typing.Optional[str] = None
+    function_requirements: typing.Optional[str] = None
+    existing_tool_names: typing.Optional[typing.List[str]] = None
+
 class UpdatedHelperFunction(BaseModel):
     thoughts: str
     fixed_implementation: str
     changes_summary: str
     success: bool
     test_cases_provided: str
-
-class NewToolAnalysis(BaseModel):
-    thoughts: str
-    new_tool: bool
-    new_tool_name: str
-    new_tool_description: str
-
-class ToolOptimizationResult(BaseModel):
-    improvement: str
-    function_name: typing.Optional[str] = None
-    function_requirements: typing.Optional[str] = None
-    existing_tool_names: typing.Optional[typing.List[str]] = None
 
 # #########################################################################
 # Generated type aliases (0)
