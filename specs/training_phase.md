@@ -1186,3 +1186,9 @@ The implementation is successful when:
 - **Agent Guidelines**: `src/agents/agents_implementation_guideline.md` - Best practices
 - **Available Agents**: `src/agents/` - All production-ready agents
 - **Utility Functions**: `src/engine/util/` - Helper functions
+
+## Future work
+
+- implement a resume capability for long runs
+- add tool pruning at regular intervals
+- add tool testing before saving them
