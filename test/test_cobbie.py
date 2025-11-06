@@ -6,12 +6,14 @@ using BAML and CodeAct pattern with MLflow tracing.
 """
 
 import logging
-import mlflow
-from typing import Dict, Callable
+from typing import Callable, Dict
 
-from src.engine.components.cobbie import cobbie, cobbie_with_metrics
-from src.tools.initial import query_ifcopenshell_docs, web_search
+import mlflow
+import requests
+
+from src.agents import cobbie
 from src.engine.util import get_created_tools
+from src.tools.initial import query_ifcopenshell_docs, web_search
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
@@ -24,7 +26,7 @@ def create_demo_tools() -> Dict[str, Callable]:
     # Start with primordial tools
     tools = {
         "query_ifcopenshell_docs": query_ifcopenshell_docs,
-        "web_search": web_search
+        "web_search": web_search,
     }
 
     # Add all created tools from src.tools/created/
@@ -41,7 +43,7 @@ def create_demo_tools() -> Dict[str, Callable]:
 def demo_basic_functionality():
     """Demonstrate basic COBBIE functionality with metrics."""
     print("🚀 COBBIE Demo: BIM Question Answering with MLflow Tracing")
-    print("="*60)
+    print("=" * 60)
 
     # Set up MLflow experiment for demo
     experiment_name = "COBBIE_Demo"
@@ -49,7 +51,6 @@ def demo_basic_functionality():
     # Check if MLflow server is running, otherwise use SQLite
     try:
         # Try to connect to MLflow server first
-        import requests
         requests.get("http://127.0.0.1:5000", timeout=2)
         mlflow.set_tracking_uri("http://127.0.0.1:5000")
         print("📊 Connected to MLflow server at http://127.0.0.1:5000")
@@ -58,7 +59,9 @@ def demo_basic_functionality():
         # Fallback to SQLite backend
         mlflow.set_tracking_uri("sqlite:///mlflow.sqlite")
         print("📊 Using SQLite MLflow backend (traces will have limited functionality)")
-        print("💡 Start MLflow server for full trace viewing: uv run mlflow server --host 127.0.0.1 --port 5000")
+        print(
+            "💡 Start MLflow server for full trace viewing: uv run mlflow server --host 127.0.0.1 --port 5000"
+        )
 
     mlflow.set_experiment(experiment_name)
     print(f"📊 MLflow experiment set: {experiment_name}")
@@ -74,10 +77,8 @@ def demo_basic_functionality():
 
     # Execute COBBIE with metrics
     try:
-        final_answer, collector = cobbie_with_metrics(
-            user_input=question,
-            tools=tools,
-            max_iterations=5
+        final_answer, collector, _ = cobbie(
+            user_input=question, tools=tools, max_iterations=5
         )
 
         print("✅ COBBIE Execution Successful!")
@@ -91,11 +92,14 @@ def demo_basic_functionality():
             print("📊 Metrics:")
             print(f"  Input tokens: {usage.input_tokens or 0}")
             print(f"  Output tokens: {usage.output_tokens or 0}")
-            print(f"  Total tokens: {(usage.input_tokens or 0) + (usage.output_tokens or 0)}")
+            print(
+                f"  Total tokens: {(usage.input_tokens or 0) + (usage.output_tokens or 0)}"
+            )
 
     except Exception as e:
         print(f"❌ Error: {e}")
         import traceback
+
         traceback.print_exc()
 
 
@@ -108,7 +112,7 @@ def main():
     # Run demo directly without additional nested run context
     demo_basic_functionality()
 
-    print("\n" + "="*60)
+    print("\n" + "=" * 60)
     print("✅ Demo Complete!")
     print()
     print("Key Benefits:")
