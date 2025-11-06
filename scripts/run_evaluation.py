@@ -221,7 +221,6 @@ def process_question(
                 "ground_truth": ground_truth,
                 "category": category,
                 "question_index": question_index + 1,
-                "engine_type": "baml",
                 "model_path": ifc_path or "None",
             })
             question_span.set_attributes({
@@ -443,7 +442,6 @@ Examples:
 
         # Log parameters
         mlflow.log_params({
-            "engine_type": "baml",
             "model_name": "glm-4.6",
             "provider_name": "zai",
             "component": "COBBIE",
@@ -478,7 +476,6 @@ Examples:
 
         # Log additional info to main run
         mlflow.set_tag("evaluation_status", "completed")
-        mlflow.set_tag("engine_type", "baml")
         mlflow.set_tag("component", "COBBIE")
         mlflow.set_tag("total_evaluation_time", total_evaluation_time)
         mlflow.set_tag("individual_question_traces", "true")

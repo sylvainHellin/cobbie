@@ -233,7 +233,6 @@ run_name = f"TRAINING_{datetime.now().strftime('%Y-%m-%d-%H-%M-%S')}_samples_{ar
 with mlflow.start_run(run_name=run_name) as main_run:
     # Log main-level parameters
     mlflow.log_params({
-        "engine_type": "baml",
         "model_name": "glm-4.6",
         "provider_name": "zai",
         "component": "Training",
@@ -271,7 +270,6 @@ with mlflow.start_run(run_name=run_name, nested=True) as qa_run:
         "ground_truth": qa_pair.answer,
         "category": qa_pair.category,
         "ifc_model_path": qa_pair.ifc.model_path if qa_pair.ifc else None,
-        "engine_type": "baml",
     })
 
     # Create span for overall QA processing
@@ -969,7 +967,6 @@ def main():
         # Log main-level parameters
         initial_tools = get_created_tools()
         mlflow.log_params({
-            "engine_type": "baml",
             "model_name": "glm-4.6",
             "provider_name": "zai",
             "component": "Training",
