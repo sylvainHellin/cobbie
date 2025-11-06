@@ -49,6 +49,40 @@ function HelperFunctionCreator(
     - Example model: {{ example_bim_model }}
     - Other models: {{ other_bim_models_for_testing | join(", ") }}
 
+      AVAILABLE TOOL FOR DEVELOPMENT:
+
+    You have access to the following tool in your Python code execution environment:
+
+    **query_ifcopenshell_docs(query: str, max_tokens: int = 2048) -> str**
+
+    Retrieves up-to-date documentation and code examples from the IFCOpenShell library documentation.
+
+    Parameters:
+      - query (str): The topic or query to focus the documentation on (e.g., "file reading",
+                     "geometry", "IFC entities", "relationship traversal")
+      - max_tokens (int): Maximum number of tokens to retrieve (default: 2048, can be increased for more context)
+
+    Returns:
+      - str: The documentation text with relevant information and code examples
+
+    Usage Example:
+    ```python
+    # Query documentation about spatial relationships
+    docs = query_ifcopenshell_docs(
+        "How to find which building storey an IfcDoor belongs to using spatial containment relationships",
+        max_tokens=1024
+    )
+    print(docs)
+
+    # Query documentation about opening IFC files
+    docs = query_ifcopenshell_docs("opening IFC files and reading entities")
+    print(docs)
+    ```
+
+    CRITICAL: When developing functions that use ifcopenshell, ALWAYS use the query_ifcopenshell_docs tool to verify correct API usage.
+    Never rely on your knowledge of this library—you are not familiar with it and the API may have changed.
+    You can execute code to test your implementation and query documentation simultaneously in the same iteration.
+
     IMPORTANT GUIDELINES:
     - **Always use query_ifcopenshell_docs** before implementing ifcopenshell code to ensure correct usage
     - Extract the reusable pattern from the execution history, not just copy-paste the code
