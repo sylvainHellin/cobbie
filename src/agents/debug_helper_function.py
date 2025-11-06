@@ -3,8 +3,10 @@ Agent that debugs existing faulty helper functions.
 Test and fix faulty helper functions from Cobbie executions resulting in a wrong answer.
 """
 
+import os
 import time
 from contextlib import nullcontext
+from pathlib import Path
 from typing import Optional, Tuple
 
 import mlflow
@@ -133,7 +135,34 @@ def _debug_helper_function(
 
     # Prepare the paths to the other BIM models
     if other_bim_models_for_testing is None:
-        pass # TODO create a string version of a the list of all path of .ifc files in src/experiment/bim_models sub-directories
+        # Get the absolute path to the BIM models directory
+        bim_models_dir = Path(__file__).parent.parent / "experiment" / "bim_models"
+
+        if bim_models_dir.exists():
+            # Find all .ifc files recursively in the directory
+            ifc_files = []
+            for root, dirs, files in os.walk(bim_models_dir):
+                for file in files:
+                    if file.endswith(".ifc"):
+                        ifc_path = os.path.join(root, file)
+                        # Exclude the current model being tested
+                        if ifc_path != ifc_model_path:
+                            ifc_files.append(ifc_path)
+
+            # Format as a string list
+            if ifc_files:
+                other_bim_models_for_testing = "\n".join(
+                    [f"- {path}" for path in ifc_files]
+                )
+                _logger.info(f"Found {len(ifc_files)} other BIM models for testing")
+            else:
+                other_bim_models_for_testing = (
+                    "No other BIM models available for testing"
+                )
+                _logger.warning("No other BIM models found in bim_models directory")
+        else:
+            other_bim_models_for_testing = "BIM models directory not found"
+            _logger.warning(f"BIM models directory not found at {bim_models_dir}")
 
     # Initialize execution history
     previous_attempts = ""
@@ -444,7 +473,7 @@ def debug_helper_function(
             final_result, execution_history = _debug_helper_function(
                 faulty_function_name=faulty_function_name,
                 faulty_function_implementation=faulty_function_implementation,
-                history_faulty_tool_use= history_faulty_tool_use,
+                history_faulty_tool_use=history_faulty_tool_use,
                 other_bim_models_for_testing=other_bim_models_for_testing,
                 error_description=error_description,
                 ifc_model_path=ifc_model_path,
@@ -540,11 +569,11 @@ def debug_helper_function(
 
 
 if __name__ == "__main__":
-    import mlflow
     import ifcopenshell
+    import mlflow
 
-    from src.agents.cobbie import cobbie
     from src.agents.answer_verifier import verify_answer
+    from src.agents.cobbie import cobbie
     from src.agents.faulty_tool_identifier import identify_faulty_tool
     from src.config import TEST_IFC_PATH
     from src.engine.tools.primordial import query_ifcopenshell_docs, web_search
@@ -563,13 +592,14 @@ if __name__ == "__main__":
             Number of doors on the specified floor
         """
         ifc_file = ifcopenshell.open(ifc_file_path)
-        doors = ifc_file.by_type('IfcDoor') # type: ignore
+        doors = ifc_file.by_type("IfcDoor")  # type: ignore
 
         # BUG: Returns ALL doors instead of filtering by floor_name
         return len(doors)
 
     # Get the faulty function's source code
     import inspect
+
     faulty_implementation = inspect.getsource(count_doors_by_floor)
 
     # Try to set up MLflow tracking
@@ -609,7 +639,10 @@ if __name__ == "__main__":
         print(f"Cobbie Answer: {cobbie_result.answer}\n")
 
         # Construct full history
-        full_history = execution_history + f"\n--- Final Answer ---\nThoughts: {cobbie_result.thoughts}\nAnswer: {cobbie_result.answer}"
+        full_history = (
+            execution_history
+            + f"\n--- Final Answer ---\nThoughts: {cobbie_result.thoughts}\nAnswer: {cobbie_result.answer}"
+        )
 
         print("=" * 80)
         print("STEP 2: Verifying answer")
@@ -675,13 +708,21 @@ if __name__ == "__main__":
 
                 # Extract metrics
                 total_tokens = 0
-                if debugger_collector and hasattr(debugger_collector, "usage") and debugger_collector.usage:
+                if (
+                    debugger_collector
+                    and hasattr(debugger_collector, "usage")
+                    and debugger_collector.usage
+                ):
                     usage = debugger_collector.usage
                     input_tokens = usage.input_tokens or 0
                     output_tokens = usage.output_tokens or 0
                     total_tokens = input_tokens + output_tokens
 
                 print(f"\nTotal Tokens Used: {total_tokens}")
-                print(f"Number of LLM Calls: {len(debugger_collector.logs) if hasattr(debugger_collector, 'logs') else 'N/A'}")
+                print(
+                    f"Number of LLM Calls: {len(debugger_collector.logs) if hasattr(debugger_collector, 'logs') else 'N/A'}"
+                )
         else:
-            print("Answer was not wrong - skipping faulty tool identification and debugging.")
+            print(
+                "Answer was not wrong - skipping faulty tool identification and debugging."
+            )
