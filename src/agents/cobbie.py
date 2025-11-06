@@ -325,19 +325,20 @@ def cobbie(
     )
 
     with run_context_manager:
-        # Log parameters to MLflow (following run_evaluation.py pattern)
-        mlflow.log_params(
-            {
-                "component": "COBBIE",
-                "max_iterations": max_iterations,
-                "add_code_prefix": add_code_prefix,
-                "model_path": model_path or "None",
-                "tools_count": len(tools),
-                "llm_provider": llm_provider,
-                "llm_model": llm_name,
-                "tools": ", ".join(tools.keys()),
-            }
-        )
+        # Only log parameters if we created a new run (not when running in existing run)
+        if not active_run:
+            mlflow.log_params(
+                {
+                    "component": "COBBIE",
+                    "max_iterations": max_iterations,
+                    "add_code_prefix": add_code_prefix,
+                    "model_path": model_path or "None",
+                    "tools_count": len(tools),
+                    "llm_provider": llm_provider,
+                    "llm_model": llm_name,
+                    "tools": ", ".join(tools.keys()),
+                }
+            )
 
         # Start MLflow span for the entire execution
         with mlflow.start_span(name="COBBIE", span_type="CHAIN") as cobbie_span:

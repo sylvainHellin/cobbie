@@ -435,18 +435,19 @@ def create_helper_function(
     )
 
     with run_context_manager:
-        # Log parameters to MLflow
-        mlflow.log_params(
-            {
-                "component": "HelperFunctionCreator",
-                "max_iterations": max_iterations,
-                "function_name": function_name,
-                "example_bim_model": example_bim_model,
-                "other_models_count": len(other_bim_models_for_testing) if other_bim_models_for_testing is not None else 0,
-                "llm_provider": llm_provider,
-                "llm_model": llm_name,
-            }
-        )
+        # Only log parameters if we created a new run (not when running in existing run)
+        if not active_run:
+            mlflow.log_params(
+                {
+                    "component": "HelperFunctionCreator",
+                    "max_iterations": max_iterations,
+                    "function_name": function_name,
+                    "example_bim_model": example_bim_model,
+                    "other_models_count": len(other_bim_models_for_testing) if other_bim_models_for_testing is not None else 0,
+                    "llm_provider": llm_provider,
+                    "llm_model": llm_name,
+                }
+            )
 
         # Start MLflow span for the entire execution
         with mlflow.start_span(
