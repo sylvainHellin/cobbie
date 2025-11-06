@@ -490,7 +490,7 @@ def cobbie_forward(
         tools = [query_ifcopenshell_docs, web_search]
 
     # Convert tools list to dictionary for internal use
-    tools_dict = {tool.__name__: tool for tool in tools if callable(tool)}
+    tools_dict = {getattr(tool, '__name__', None): tool for tool in tools if callable(tool)}
 
     # Execute COBBIE
     try:
