@@ -191,7 +191,7 @@ class BamlSyncClient:
             return typing.cast(typing.Union["types.CodeAction", "types.UpdatedHelperFunction"], result.cast_to(types, types, stream_types, False, __runtime__))
     def HelperFunctionIdentifier(self, history: str,example_question: str,existing_helper_functions: str,
         baml_options: BamlCallOptions = {},
-    ) -> types.ToolIdentified:
+    ) -> types.NewToolAnalysis:
         # Check if on_tick is provided
         if 'on_tick' in baml_options:
             stream = self.stream.HelperFunctionIdentifier(history=history,example_question=example_question,existing_helper_functions=existing_helper_functions,
@@ -202,7 +202,7 @@ class BamlSyncClient:
             result = self.__options.merge_options(baml_options).call_function_sync(function_name="HelperFunctionIdentifier", args={
                 "history": history,"example_question": example_question,"existing_helper_functions": existing_helper_functions,
             })
-            return typing.cast(types.ToolIdentified, result.cast_to(types, types, stream_types, False, __runtime__))
+            return typing.cast(types.NewToolAnalysis, result.cast_to(types, types, stream_types, False, __runtime__))
     def QuestionAnswerAlignment(self, question: str,answer: str,
         baml_options: BamlCallOptions = {},
     ) -> types.AlignedQAPair:
@@ -368,14 +368,14 @@ class BamlStreamClient:
         )
     def HelperFunctionIdentifier(self, history: str,example_question: str,existing_helper_functions: str,
         baml_options: BamlCallOptions = {},
-    ) -> baml_py.BamlSyncStream[stream_types.ToolIdentified, types.ToolIdentified]:
+    ) -> baml_py.BamlSyncStream[stream_types.NewToolAnalysis, types.NewToolAnalysis]:
         ctx, result = self.__options.merge_options(baml_options).create_sync_stream(function_name="HelperFunctionIdentifier", args={
             "history": history,"example_question": example_question,"existing_helper_functions": existing_helper_functions,
         })
-        return baml_py.BamlSyncStream[stream_types.ToolIdentified, types.ToolIdentified](
+        return baml_py.BamlSyncStream[stream_types.NewToolAnalysis, types.NewToolAnalysis](
           result,
-          lambda x: typing.cast(stream_types.ToolIdentified, x.cast_to(types, types, stream_types, True, __runtime__)),
-          lambda x: typing.cast(types.ToolIdentified, x.cast_to(types, types, stream_types, False, __runtime__)),
+          lambda x: typing.cast(stream_types.NewToolAnalysis, x.cast_to(types, types, stream_types, True, __runtime__)),
+          lambda x: typing.cast(types.NewToolAnalysis, x.cast_to(types, types, stream_types, False, __runtime__)),
           ctx,
         )
     def QuestionAnswerAlignment(self, question: str,answer: str,

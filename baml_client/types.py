@@ -140,7 +140,7 @@ class UpdatedHelperFunction(BaseModel):
     success: bool
     test_cases_provided: str
 
-class ToolIdentified(BaseModel):
+class NewToolAnalysis(BaseModel):
     thoughts: str
     new_tool: bool
     new_tool_name: str

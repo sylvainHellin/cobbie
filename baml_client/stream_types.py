@@ -116,7 +116,7 @@ class UpdatedHelperFunction(BaseModel):
     success: typing.Optional[bool] = None
     test_cases_provided: typing.Optional[str] = None
 
-class ToolIdentified(BaseModel):
+class NewToolAnalysis(BaseModel):
     thoughts: typing.Optional[str] = None
     new_tool: typing.Optional[bool] = None
     new_tool_name: typing.Optional[str] = None

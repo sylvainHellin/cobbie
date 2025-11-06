@@ -67,8 +67,8 @@ type_map = {
     "types.UpdatedHelperFunction": types.UpdatedHelperFunction,
     "stream_types.UpdatedHelperFunction": stream_types.UpdatedHelperFunction,
 
-    "types.ToolIdentified": types.ToolIdentified,
-    "stream_types.ToolIdentified": stream_types.ToolIdentified,
+    "types.NewToolAnalysis": types.NewToolAnalysis,
+    "stream_types.NewToolAnalysis": stream_types.NewToolAnalysis,
 
     "types.ToolOptimizationResult": types.ToolOptimizationResult,
     "stream_types.ToolOptimizationResult": stream_types.ToolOptimizationResult,

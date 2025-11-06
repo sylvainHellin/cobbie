@@ -68,9 +68,9 @@ class LlmResponseParser:
 
     def HelperFunctionIdentifier(
         self, llm_response: str, baml_options: BamlCallOptions = {},
-    ) -> types.ToolIdentified:
+    ) -> types.NewToolAnalysis:
         result = self.__options.merge_options(baml_options).parse_response(function_name="HelperFunctionIdentifier", llm_response=llm_response, mode="request")
-        return typing.cast(types.ToolIdentified, result)
+        return typing.cast(types.NewToolAnalysis, result)
 
     def QuestionAnswerAlignment(
         self, llm_response: str, baml_options: BamlCallOptions = {},
@@ -154,9 +154,9 @@ class LlmStreamParser:
 
     def HelperFunctionIdentifier(
         self, llm_response: str, baml_options: BamlCallOptions = {},
-    ) -> stream_types.ToolIdentified:
+    ) -> stream_types.NewToolAnalysis:
         result = self.__options.merge_options(baml_options).parse_response(function_name="HelperFunctionIdentifier", llm_response=llm_response, mode="stream")
-        return typing.cast(stream_types.ToolIdentified, result)
+        return typing.cast(stream_types.NewToolAnalysis, result)
 
     def QuestionAnswerAlignment(
         self, llm_response: str, baml_options: BamlCallOptions = {},

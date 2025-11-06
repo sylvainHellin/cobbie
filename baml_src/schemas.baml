@@ -116,7 +116,7 @@ class CategoryValidationResult {
 }
 
 // Helper function identification result from successful Cobbie executions
-class ToolIdentified {
+class NewToolAnalysis {
   thoughts string @description("Step-by-step analysis of the execution history to identify reusable patterns")
   new_tool bool @description("Whether a new helper function should be created (true) or not (false)")
   new_tool_name string @description("Suggested name for the new helper function (empty string if new_tool is false)")

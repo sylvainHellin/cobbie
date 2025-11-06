@@ -9,7 +9,7 @@ from typing import Tuple
 import mlflow
 from baml_py.baml_py import Collector
 from baml_client import b
-from baml_client.types import ToolIdentified
+from baml_client.types import NewToolAnalysis
 from src.config import LOG_LEVEL
 from src.engine.util import get_logger
 
@@ -24,7 +24,7 @@ def identify_helper_function(
     llm_provider: str = "zai",
     llm_name: str = "GLM-4.6",
     **kwargs,
-) -> Tuple[ToolIdentified, Collector]:
+) -> Tuple[NewToolAnalysis, Collector]:
     """
     Analyze a successful Cobbie execution to identify reusable helper functions.
 
@@ -37,7 +37,7 @@ def identify_helper_function(
         **kwargs: Additional arguments passed to BAML function
 
     Returns:
-        Tuple of (ToolIdentified, Collector) where ToolIdentified contains:
+        Tuple of (NewToolAnalysis, Collector) where NewToolAnalysis contains:
         - thoughts: Step-by-step analysis of the execution history
         - new_tool: Whether a new helper function should be created
         - new_tool_name: Suggested name for the new helper function
@@ -77,7 +77,7 @@ def identify_helper_function(
             )
         except Exception as e:
             _logger.error(f"Error identifying helper function: {e}")
-            tool_identification = ToolIdentified(
+            tool_identification = NewToolAnalysis(
                 thoughts=f"An Exception occurred when trying to identify helper function. Exception:\n{e}",
                 new_tool=False,
                 new_tool_name="",

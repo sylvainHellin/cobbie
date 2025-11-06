@@ -6,7 +6,7 @@ function HelperFunctionIdentifier(
   history: string @description("Complete execution history from Cobbie: thoughts, code, results, and final answer"),
   example_question: string @description("The question that was successfully answered by Cobbie"),
   existing_helper_functions: string @description("List of all existing helper functions with their docstrings and signatures")
-) -> ToolIdentified {
+) -> NewToolAnalysis {
   client GLM_4_6
   prompt #"
     You are an expert Python developer and software architect specializing in BIM (Building Information Modeling) systems.

@@ -20,7 +20,7 @@ from .globals import DO_NOT_USE_DIRECTLY_UNLESS_YOU_KNOW_WHAT_YOURE_DOING_RUNTIM
 class TypeBuilder(type_builder.TypeBuilder):
     def __init__(self):
         super().__init__(classes=set(
-          ["AlignedQAPair","AnswerEvaluationResult","AssessmentResult","CategoryValidationResult","CleanedCode","CodeAction","ErrorAnalysisResult","FaultyToolAnalysis","FinalAnswer","FunctionImplementation","ImprovedImplementation","NewHelperFunction","SimilarityResult","TestAndImproveError","TestAndImproveSuccess","ToolCreationResult","UpdatedHelperFunction","ToolIdentified","ToolOptimizationResult",]
+          ["AlignedQAPair","AnswerEvaluationResult","AssessmentResult","CategoryValidationResult","CleanedCode","CodeAction","ErrorAnalysisResult","FaultyToolAnalysis","FinalAnswer","FunctionImplementation","ImprovedImplementation","NewHelperFunction","SimilarityResult","TestAndImproveError","TestAndImproveSuccess","ToolCreationResult","UpdatedHelperFunction","NewToolAnalysis","ToolOptimizationResult",]
         ), enums=set(
           ["QuestionCategory",]
         ), runtime=DO_NOT_USE_DIRECTLY_UNLESS_YOU_KNOW_WHAT_YOURE_DOING_RUNTIME)
@@ -107,8 +107,8 @@ class TypeBuilder(type_builder.TypeBuilder):
         return UpdatedHelperFunctionViewer(self)
 
     @property
-    def ToolIdentified(self) -> "ToolIdentifiedViewer":
-        return ToolIdentifiedViewer(self)
+    def NewToolAnalysis(self) -> "NewToolAnalysisViewer":
+        return NewToolAnalysisViewer(self)
 
     @property
     def ToolOptimizationResult(self) -> "ToolOptimizationResultViewer":
@@ -994,22 +994,22 @@ class UpdatedHelperFunctionProperties:
 
 
 
-class ToolIdentifiedAst:
+class NewToolAnalysisAst:
     def __init__(self, tb: type_builder.TypeBuilder):
         _tb = tb._tb # type: ignore (we know how to use this private attribute)
-        self._bldr = _tb.class_("ToolIdentified")
+        self._bldr = _tb.class_("NewToolAnalysis")
         self._properties: typing.Set[str] = set([  "thoughts",  "new_tool",  "new_tool_name",  "new_tool_description",  ])
-        self._props = ToolIdentifiedProperties(self._bldr, self._properties)
+        self._props = NewToolAnalysisProperties(self._bldr, self._properties)
 
     def type(self) -> baml_py.FieldType:
         return self._bldr.field()
 
     @property
-    def props(self) -> "ToolIdentifiedProperties":
+    def props(self) -> "NewToolAnalysisProperties":
         return self._props
 
 
-class ToolIdentifiedViewer(ToolIdentifiedAst):
+class NewToolAnalysisViewer(NewToolAnalysisAst):
     def __init__(self, tb: type_builder.TypeBuilder):
         super().__init__(tb)
 
@@ -1019,7 +1019,7 @@ class ToolIdentifiedViewer(ToolIdentifiedAst):
 
 
 
-class ToolIdentifiedProperties:
+class NewToolAnalysisProperties:
     def __init__(self, bldr: baml_py.ClassBuilder, properties: typing.Set[str]):
         self.__bldr = bldr
         self.__properties = properties # type: ignore (we know how to use this private attribute) # noqa: F821

@@ -31,7 +31,7 @@ This document specifies the implementation of the training phase for Cobbie's mu
 |-------|--------|---------|---------|
 | `cobbie` | `src.agents.cobbie` | Main BIM Q&A agent | `Tuple[FinalAnswer, Collector, str]` |
 | `verify_answer` | `src.agents.answer_verifier` | Answer verification | `Tuple[AnswerEvaluationResult, Collector]` |
-| `identify_helper_function` | `src.agents.identify_helper_function` | Identifies new tool opportunities | `Tuple[ToolIdentified, Collector]` |
+| `identify_helper_function` | `src.agents.identify_helper_function` | Identifies new tool opportunities | `Tuple[NewToolAnalysis, Collector]` |
 | `create_helper_function` | `src.agents.create_helper_function` | Creates new tools | `Tuple[NewHelperFunction, Collector, str]` |
 | `identify_faulty_tool` | `src.agents.faulty_tool_identifier` | Identifies faulty tools | `Tuple[FaultyToolAnalysis, Collector]` |
 | `debug_helper_function` | `src.agents.debug_helper_function` | Fixes faulty tools | `Tuple[UpdatedHelperFunction, Collector, str]` |
@@ -83,7 +83,7 @@ END (Move to next QA pair)
 
 1. **IDENTIFY_NEW_TOOL**: Call `identify_helper_function()` to analyze execution history
    - Input: Cobbie's execution history, question, existing tools docs
-   - Output: `ToolIdentified` with `new_tool` boolean and tool details
+   - Output: `NewToolAnalysis` with `new_tool` boolean and tool details
 
 2. **CREATE_NEW_TOOL** (if `new_tool == True`):
    - Call `create_helper_function()` to create the tool
@@ -166,7 +166,7 @@ from baml_py.baml_py import Collector
 from baml_client.types import (
     FinalAnswer,
     AnswerEvaluationResult,
-    ToolIdentified,
+    NewToolAnalysis,
     NewHelperFunction,
     FaultyToolAnalysis,
     UpdatedHelperFunction,
@@ -190,7 +190,7 @@ class Context(BaseModel):
     verify_duration: float = 0.0
 
     # Identify helper function results (Path A)
-    identify_tool_result: Optional[ToolIdentified] = None
+    identify_tool_result: Optional[NewToolAnalysis] = None
     identify_tool_collector: Optional[Collector] = None
     identify_tool_duration: float = 0.0
 
