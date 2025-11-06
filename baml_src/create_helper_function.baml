@@ -6,7 +6,7 @@ function HelperFunctionCreator(
   example_question: string @description("The question that was successfully answered by Cobbie"),
   example_answer: string @description("The ground truth answer to the example question"),
   example_bim_model: string @description("Path to the BIM model used to answer the example question"),
-  other_bim_models_for_testing: string[] @description("List of paths to other available BIM models for testing generalization"),
+  other_bim_models_for_testing: string[]? @description("List of paths to other available BIM models for testing generalization. If not provided, the system will automatically discover other IFC files in the bim_models directory."),
   function_name: string @description("Name of the helper function to create"),
   function_description: string @description("Detailed description of what the helper function should do, including parameters and return type"),
   previous_attempts: string? @description("Previous code execution results and attempts, if any")
