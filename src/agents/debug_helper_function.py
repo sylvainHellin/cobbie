@@ -289,7 +289,7 @@ def _debug_helper_function(
                         "token_usage.final_iteration_total": iteration_total_tokens,
                     }
                 )
-                iteration_span.set_status("OK")
+                iteration_span.set_status("OK" if result.success else "ERROR")
 
                 return result, previous_attempts
 
