@@ -3,10 +3,9 @@ Agent that creates new helper functions.
 Extracts and implements reusable helper functions from successful Cobbie executions.
 """
 
-import logging
 import time
 from contextlib import nullcontext
-from typing import Callable, Dict, List, Optional, Tuple
+from typing import List, Optional, Tuple
 
 import mlflow
 from baml_py.baml_py import Collector
