@@ -169,6 +169,21 @@ class BamlAsyncClient:
                 "history": history,"example_question": example_question,"example_answer": example_answer,"example_bim_model": example_bim_model,"other_bim_models_for_testing": other_bim_models_for_testing,"function_name": function_name,"function_description": function_description,"previous_attempts": previous_attempts,
             })
             return typing.cast(typing.Union["types.CodeAction", "types.NewHelperFunction"], result.cast_to(types, types, stream_types, False, __runtime__))
+    async def HelperFunctionDebugger(self, faulty_function_name: str,faulty_function_implementation: str,error_description: str,ifc_model_path: str,previous_attempts: typing.Optional[str] = None,
+        baml_options: BamlCallOptions = {},
+    ) -> typing.Union["types.CodeAction", "types.ToolFixed"]:
+        # Check if on_tick is provided
+        if 'on_tick' in baml_options:
+            # Use streaming internally when on_tick is provided
+            stream = self.stream.HelperFunctionDebugger(faulty_function_name=faulty_function_name,faulty_function_implementation=faulty_function_implementation,error_description=error_description,ifc_model_path=ifc_model_path,previous_attempts=previous_attempts,
+                baml_options=baml_options)
+            return await stream.get_final_response()
+        else:
+            # Original non-streaming code
+            result = await self.__options.merge_options(baml_options).call_function_async(function_name="HelperFunctionDebugger", args={
+                "faulty_function_name": faulty_function_name,"faulty_function_implementation": faulty_function_implementation,"error_description": error_description,"ifc_model_path": ifc_model_path,"previous_attempts": previous_attempts,
+            })
+            return typing.cast(typing.Union["types.CodeAction", "types.ToolFixed"], result.cast_to(types, types, stream_types, False, __runtime__))
     async def HelperFunctionIdentifier(self, history: str,example_question: str,existing_helper_functions: str,
         baml_options: BamlCallOptions = {},
     ) -> types.ToolIdentified:
@@ -340,6 +355,18 @@ class BamlStreamClient:
           lambda x: typing.cast(typing.Union["types.CodeAction", "types.NewHelperFunction"], x.cast_to(types, types, stream_types, False, __runtime__)),
           ctx,
         )
+    def HelperFunctionDebugger(self, faulty_function_name: str,faulty_function_implementation: str,error_description: str,ifc_model_path: str,previous_attempts: typing.Optional[str] = None,
+        baml_options: BamlCallOptions = {},
+    ) -> baml_py.BamlStream[typing.Union["stream_types.CodeAction", "stream_types.ToolFixed"], typing.Union["types.CodeAction", "types.ToolFixed"]]:
+        ctx, result = self.__options.merge_options(baml_options).create_async_stream(function_name="HelperFunctionDebugger", args={
+            "faulty_function_name": faulty_function_name,"faulty_function_implementation": faulty_function_implementation,"error_description": error_description,"ifc_model_path": ifc_model_path,"previous_attempts": previous_attempts,
+        })
+        return baml_py.BamlStream[typing.Union["stream_types.CodeAction", "stream_types.ToolFixed"], typing.Union["types.CodeAction", "types.ToolFixed"]](
+          result,
+          lambda x: typing.cast(typing.Union["stream_types.CodeAction", "stream_types.ToolFixed"], x.cast_to(types, types, stream_types, True, __runtime__)),
+          lambda x: typing.cast(typing.Union["types.CodeAction", "types.ToolFixed"], x.cast_to(types, types, stream_types, False, __runtime__)),
+          ctx,
+        )
     def HelperFunctionIdentifier(self, history: str,example_question: str,existing_helper_functions: str,
         baml_options: BamlCallOptions = {},
     ) -> baml_py.BamlStream[stream_types.ToolIdentified, types.ToolIdentified]:
@@ -462,6 +489,13 @@ class BamlHttpRequestClient:
             "history": history,"example_question": example_question,"example_answer": example_answer,"example_bim_model": example_bim_model,"other_bim_models_for_testing": other_bim_models_for_testing,"function_name": function_name,"function_description": function_description,"previous_attempts": previous_attempts,
         }, mode="request")
         return result
+    async def HelperFunctionDebugger(self, faulty_function_name: str,faulty_function_implementation: str,error_description: str,ifc_model_path: str,previous_attempts: typing.Optional[str] = None,
+        baml_options: BamlCallOptions = {},
+    ) -> baml_py.baml_py.HTTPRequest:
+        result = await self.__options.merge_options(baml_options).create_http_request_async(function_name="HelperFunctionDebugger", args={
+            "faulty_function_name": faulty_function_name,"faulty_function_implementation": faulty_function_implementation,"error_description": error_description,"ifc_model_path": ifc_model_path,"previous_attempts": previous_attempts,
+        }, mode="request")
+        return result
     async def HelperFunctionIdentifier(self, history: str,example_question: str,existing_helper_functions: str,
         baml_options: BamlCallOptions = {},
     ) -> baml_py.baml_py.HTTPRequest:
@@ -552,6 +586,13 @@ class BamlHttpStreamRequestClient:
     ) -> baml_py.baml_py.HTTPRequest:
         result = await self.__options.merge_options(baml_options).create_http_request_async(function_name="HelperFunctionCreator", args={
             "history": history,"example_question": example_question,"example_answer": example_answer,"example_bim_model": example_bim_model,"other_bim_models_for_testing": other_bim_models_for_testing,"function_name": function_name,"function_description": function_description,"previous_attempts": previous_attempts,
+        }, mode="stream")
+        return result
+    async def HelperFunctionDebugger(self, faulty_function_name: str,faulty_function_implementation: str,error_description: str,ifc_model_path: str,previous_attempts: typing.Optional[str] = None,
+        baml_options: BamlCallOptions = {},
+    ) -> baml_py.baml_py.HTTPRequest:
+        result = await self.__options.merge_options(baml_options).create_http_request_async(function_name="HelperFunctionDebugger", args={
+            "faulty_function_name": faulty_function_name,"faulty_function_implementation": faulty_function_implementation,"error_description": error_description,"ifc_model_path": ifc_model_path,"previous_attempts": previous_attempts,
         }, mode="stream")
         return result
     async def HelperFunctionIdentifier(self, history: str,example_question: str,existing_helper_functions: str,

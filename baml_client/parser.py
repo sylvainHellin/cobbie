@@ -60,6 +60,12 @@ class LlmResponseParser:
         result = self.__options.merge_options(baml_options).parse_response(function_name="HelperFunctionCreator", llm_response=llm_response, mode="request")
         return typing.cast(typing.Union["types.CodeAction", "types.NewHelperFunction"], result)
 
+    def HelperFunctionDebugger(
+        self, llm_response: str, baml_options: BamlCallOptions = {},
+    ) -> typing.Union["types.CodeAction", "types.ToolFixed"]:
+        result = self.__options.merge_options(baml_options).parse_response(function_name="HelperFunctionDebugger", llm_response=llm_response, mode="request")
+        return typing.cast(typing.Union["types.CodeAction", "types.ToolFixed"], result)
+
     def HelperFunctionIdentifier(
         self, llm_response: str, baml_options: BamlCallOptions = {},
     ) -> types.ToolIdentified:
@@ -139,6 +145,12 @@ class LlmStreamParser:
     ) -> typing.Union["stream_types.CodeAction", "stream_types.NewHelperFunction"]:
         result = self.__options.merge_options(baml_options).parse_response(function_name="HelperFunctionCreator", llm_response=llm_response, mode="stream")
         return typing.cast(typing.Union["stream_types.CodeAction", "stream_types.NewHelperFunction"], result)
+
+    def HelperFunctionDebugger(
+        self, llm_response: str, baml_options: BamlCallOptions = {},
+    ) -> typing.Union["stream_types.CodeAction", "stream_types.ToolFixed"]:
+        result = self.__options.merge_options(baml_options).parse_response(function_name="HelperFunctionDebugger", llm_response=llm_response, mode="stream")
+        return typing.cast(typing.Union["stream_types.CodeAction", "stream_types.ToolFixed"], result)
 
     def HelperFunctionIdentifier(
         self, llm_response: str, baml_options: BamlCallOptions = {},

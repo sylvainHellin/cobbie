@@ -23,7 +23,7 @@ class StreamState(BaseModel, typing.Generic[StreamStateValueT]):
     value: StreamStateValueT
     state: typing_extensions.Literal["Pending", "Incomplete", "Complete"]
 # #########################################################################
-# Generated classes (18)
+# Generated classes (19)
 # #########################################################################
 
 class AlignedQAPair(BaseModel):
@@ -108,6 +108,13 @@ class ToolCreationResult(BaseModel):
     function_name: typing.Optional[str] = None
     function_implementation: typing.Optional[str] = None
     success: typing.Optional[bool] = None
+
+class ToolFixed(BaseModel):
+    thoughts: typing.Optional[str] = None
+    fixed_implementation: typing.Optional[str] = None
+    changes_summary: typing.Optional[str] = None
+    success: typing.Optional[bool] = None
+    test_cases_provided: typing.Optional[str] = None
 
 class ToolIdentified(BaseModel):
     thoughts: typing.Optional[str] = None

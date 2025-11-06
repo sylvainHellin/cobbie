@@ -5,7 +5,6 @@ function HelperFunctionDebugger(
   faulty_function_name: string @description("Name of the identified faulty function"),
   faulty_function_implementation: string @description("Current (faulty) implementation of the function that needs to be fixed"),
   error_description: string @description("Detailed description of what's wrong with the function and test cases showing the failure"),
-  execution_context: string @description("Context of how the function was used in Cobbie's execution, including parameters and expected behavior"),
   ifc_model_path: string @description("Path to the IFC model where the failure occurred for testing purposes"),
   previous_attempts: string? @description("Previous code execution results and attempts, if any")
 ) -> CodeAction | ToolFixed {
@@ -28,9 +27,6 @@ function HelperFunctionDebugger(
 
     Error Description:
     {{ error_description }}
-
-    Execution Context:
-    {{ execution_context }}
 
     IFC Model Path: {{ ifc_model_path }}
 
@@ -173,7 +169,6 @@ def get_element_thickness(ifc_file_path: str, element_guid: str) -> float:
     return 0.0
     """#
     error_description "The function looks for 'Width' property when it should look for 'Thickness' property. When called on a wall element that has Thickness=0.2m, the function returns 0.0 because it's searching for the wrong property name."
-    execution_context "Used to extract wall thickness for thermal calculations, but returns 0.0 for walls that have valid Thickness values due to incorrect property name lookup."
     ifc_model_path "/Users/sylvainhellin/GitHub/4_phd/cobbie/src/experiment/bim_models/duplex/arc.ifc"
   }
 }
@@ -210,7 +205,6 @@ def calculate_area_by_type(ifc_file_path: str, ifc_type: str) -> float:
     return total_area
     """#
     error_description "The function fails when elements don't have geometry or when the IFC type doesn't exist. It should handle cases where geometry is not available and validate that the ifc_type parameter is valid before processing."
-    execution_context "Called with 'IfcNonExistentType' which caused a crash, and with elements that have no geometry which caused NoneType errors. The function needs better error handling and input validation."
     ifc_model_path "/Users/sylvainhellin/GitHub/4_phd/cobbie/src/experiment/bim_models/duplex/arc.ifc"
   }
 }

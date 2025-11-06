@@ -311,9 +311,34 @@ if __name__ == "__main__":
         # Display results and metrics
 ```
 
-**Reference implementations:** 
+**Reference implementations:**
 - `src/agents/identify_helper_function.py:123-195` (for successful executions)
 - `src/agents/faulty_tool_identifier.py:143-284` (for failed executions)
+
+### Complete Tool Repair Workflow
+
+For comprehensive tool lifecycle management, combine multiple agents:
+
+```python
+# Complete workflow: Identify → Fix → Update
+cobbie_result, cobbie_collector, history = cobbie(...)
+verification, v_collector = verify_answer(...)
+
+if verification.classification == "wrong":
+    # Identify the faulty tool
+    faulty_analysis, f_collector = identify_faulty_tool(...)
+
+    if faulty_analysis.faulty_tool:
+        # Fix the identified tool
+        fixed_result, fx_collector = fix_tool(
+            faulty_function_name=faulty_analysis.faulty_tool_name,
+            faulty_function_implementation=original_implementation,
+            error_description=faulty_analysis.error_description,
+            ...
+        )
+```
+
+**Reference implementation:** `src/agents/tool_fixer.py:143-284`
 
 ## Quick Reference Examples
 

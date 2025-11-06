@@ -138,3 +138,12 @@ class FaultyToolAnalysis {
   error_description string @description("Summary of the error and test cases demonstrating the failure (empty string if faulty_tool is false)")
   confidence "high" | "medium" | "low" @description("Confidence level in this faulty tool identification")
 }
+
+// Tool fixing result - analyzes and fixes faulty helper functions
+class ToolFixed {
+  thoughts string @description("Analysis of the faulty function and explanation of the fixing process")
+  fixed_implementation string @description("Fixed Python function implementation that addresses the identified issues")
+  changes_summary string @description("Summary of the main changes made to fix the function")
+  success bool @description("Whether the function was successfully fixed and is ready for use")
+  test_cases_provided string @description("Test cases that can be used to verify the fix works correctly")
+}
