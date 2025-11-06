@@ -287,10 +287,38 @@ mlflow.log_metrics({
 })
 ```
 
+## Testing Pattern
+
+### Self-Contained Tests in `if __main__` Block
+
+For agents that analyze other agents' outputs, create realistic test workflows:
+
+```python
+if __name__ == "__main__":
+    # 1. Run the upstream agent (e.g., cobbie)
+    result, collector, history = upstream_agent(...)
+    
+    # 2. Verify/process results (e.g., answer_verifier)
+    verification, v_collector = verify_agent(...)
+    
+    # 3. Analyze with your agent (conditional on step 2)
+    if verification.classification == "wrong":
+        analysis, a_collector = your_agent(
+            history=history,
+            result=result,
+            ...
+        )
+        # Display results and metrics
+```
+
+**Reference implementations:** 
+- `src/agents/identify_helper_function.py:123-195` (for successful executions)
+- `src/agents/faulty_tool_identifier.py:143-284` (for failed executions)
+
 ## Quick Reference Examples
 
 ### Simple Agent Template
-**File:** `src/agents/simple_agent_template.py`
+**Files:** `src/agents/answer_verifier.py`, `src/agents/identify_helper_function.py`
 
 ### Complex Agent Template
 **File:** `src/agents/cobbie.py` (lines 50-150)
