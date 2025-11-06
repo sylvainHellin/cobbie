@@ -7,7 +7,7 @@ import os
 import time
 from contextlib import nullcontext
 from pathlib import Path
-from typing import Optional, Tuple
+from typing import List, Optional, Tuple
 
 import mlflow
 from baml_py.baml_py import Collector
@@ -29,7 +29,7 @@ def _helper_function_debugger_iter(
     error_description: str,
     ifc_model_path: str,
     history_faulty_tool_use: Optional[str] = None,
-    other_bim_models_for_testing: Optional[str] = None,
+    other_bim_models_for_testing: Optional[List[str]] = None,
     previous_attempts: Optional[str] = None,
     **kwargs,
 ) -> CodeAction | ToolFixed:
@@ -97,7 +97,7 @@ def _debug_helper_function(
     faulty_function_implementation: str,
     error_description: str,
     ifc_model_path: str,
-    other_bim_models_for_testing: Optional[str] = None,
+    other_bim_models_for_testing: Optional[List[str]] = None,
     history_faulty_tool_use: Optional[str] = None,
     max_iterations: int = 15,
     llm_name: str = "GLM-4.6",
@@ -149,19 +149,14 @@ def _debug_helper_function(
                         if ifc_path != ifc_model_path:
                             ifc_files.append(ifc_path)
 
-            # Format as a string list
             if ifc_files:
-                other_bim_models_for_testing = "\n".join(
-                    [f"- {path}" for path in ifc_files]
-                )
+                other_bim_models_for_testing = ifc_files
                 _logger.info(f"Found {len(ifc_files)} other BIM models for testing")
             else:
-                other_bim_models_for_testing = (
-                    "No other BIM models available for testing"
-                )
+                other_bim_models_for_testing = []
                 _logger.warning("No other BIM models found in bim_models directory")
         else:
-            other_bim_models_for_testing = "BIM models directory not found"
+            other_bim_models_for_testing = []
             _logger.warning(f"BIM models directory not found at {bim_models_dir}")
 
     # Initialize execution history
@@ -394,7 +389,7 @@ def debug_helper_function(
     error_description: str,
     ifc_model_path: str,
     history_faulty_tool_use: Optional[str] = None,
-    other_bim_models_for_testing: Optional[str] = None,
+    other_bim_models_for_testing: Optional[List[str]] = None,
     max_iterations: int = 15,
     llm_provider: str = "zai",
     llm_name: str = "GLM-4.6",
@@ -447,6 +442,7 @@ def debug_helper_function(
                     "max_iterations": max_iterations,
                     "faulty_function_name": faulty_function_name,
                     "ifc_model_path": ifc_model_path,
+                    "other_models_count": len(other_bim_models_for_testing) if other_bim_models_for_testing else 0,
                     "llm_provider": llm_provider,
                     "llm_model": llm_name,
                 }

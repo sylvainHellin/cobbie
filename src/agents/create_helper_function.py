@@ -3,8 +3,10 @@ Agent that creates new helper functions.
 Extracts and implements reusable helper functions from successful Cobbie executions.
 """
 
+import os
 import time
 from contextlib import nullcontext
+from pathlib import Path
 from typing import List, Optional, Tuple
 
 import mlflow
@@ -134,6 +136,32 @@ def _create_helper_function(
     tools = {
         "query_ifcopenshell_docs": query_ifcopenshell_docs,
     }
+
+    # Prepare the paths to the other BIM models if not provided
+    if not other_bim_models_for_testing:
+        # Get the absolute path to the BIM models directory
+        bim_models_dir = Path(__file__).parent.parent / "experiment" / "bim_models"
+
+        if bim_models_dir.exists():
+            # Find all .ifc files recursively in the directory
+            ifc_files = []
+            for root, dirs, files in os.walk(bim_models_dir):
+                for file in files:
+                    if file.endswith(".ifc"):
+                        ifc_path = os.path.join(root, file)
+                        # Exclude the current model being tested
+                        if ifc_path != example_bim_model:
+                            ifc_files.append(ifc_path)
+
+            if ifc_files:
+                other_bim_models_for_testing = ifc_files
+                _logger.info(f"Found {len(ifc_files)} other BIM models for testing")
+            else:
+                other_bim_models_for_testing = []
+                _logger.warning("No other BIM models found in bim_models directory")
+        else:
+            other_bim_models_for_testing = []
+            _logger.warning(f"BIM models directory not found at {bim_models_dir}")
 
     # Initialize execution history
     previous_attempts = ""
