@@ -99,9 +99,9 @@ def _create_helper_function(
     example_question: str,
     example_answer: str,
     example_bim_model: str,
-    other_bim_models_for_testing: List[str],
     function_name: str,
     function_description: str,
+    other_bim_models_for_testing: Optional[List[str]] = None,
     max_iterations: int = 15,
     llm_name: str = "GLM-4.6",
     llm_provider: str = "zai",
@@ -138,7 +138,7 @@ def _create_helper_function(
     }
 
     # Prepare the paths to the other BIM models if not provided
-    if not other_bim_models_for_testing:
+    if other_bim_models_for_testing is None:
         # Get the absolute path to the BIM models directory
         bim_models_dir = Path(__file__).parent.parent / "experiment" / "bim_models"
 
@@ -388,9 +388,9 @@ def create_helper_function(
     example_question: str,
     example_answer: str,
     example_bim_model: str,
-    other_bim_models_for_testing: List[str],
     function_name: str,
     function_description: str,
+    other_bim_models_for_testing: Optional[List[str]] = None,
     max_iterations: int = 15,
     llm_provider: str = "zai",
     llm_name: str = "GLM-4.6",
@@ -442,7 +442,7 @@ def create_helper_function(
                 "max_iterations": max_iterations,
                 "function_name": function_name,
                 "example_bim_model": example_bim_model,
-                "other_models_count": len(other_bim_models_for_testing),
+                "other_models_count": len(other_bim_models_for_testing) if other_bim_models_for_testing is not None else 0,
                 "llm_provider": llm_provider,
                 "llm_model": llm_name,
             }
@@ -591,12 +591,6 @@ if __name__ == "__main__":
     # Get list of available BIM models for testing
     import os
     bim_models_dir = "/Users/sylvainhellin/GitHub/4_phd/cobbie/src/experiment/bim_models"
-    other_models = [
-        os.path.join(bim_models_dir, f)
-        for f in os.listdir(bim_models_dir)
-        if f.endswith(".ifc") and os.path.join(bim_models_dir, f) != model_path
-    ][:3]  # Limit to 3 other models
-
     print("=" * 80)
     print("STEP 1: Running Cobbie to answer question")
     print("=" * 80)
@@ -650,7 +644,6 @@ if __name__ == "__main__":
             example_question=test_question,
             example_answer=ground_truth,
             example_bim_model=model_path,
-            other_bim_models_for_testing=other_models,
             function_name=tool_identified.new_tool_name,
             function_description=tool_identified.new_tool_description,
             max_iterations=15,
