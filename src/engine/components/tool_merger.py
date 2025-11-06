@@ -10,7 +10,7 @@ from src.config.agents import (
 from src.engine.components import CodeAct
 from src.engine.components.test_and_improve import TestAndImprove
 from src.engine.schemas import ModuleOutput
-from src.engine.tools.primordial import query_ifcopenshell_docs, web_search
+from src.tools.initial import query_ifcopenshell_docs, web_search
 from src.engine.util import create_code_prefix, get_logger
 
 

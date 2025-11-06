@@ -33,7 +33,7 @@ def get_created_tools(tools: List[Callable] = []) -> Dict[str, Callable]:
     for module_name in python_files:
         try:
             # Use absolute import path
-            module = importlib.import_module(f"src.engine.tools.created.{module_name}")
+            module = importlib.import_module(f"src.tools.created.{module_name}")
             # Get all objects from the module
             for name, fn in inspect.getmembers(module):
                 # Only include functions that are defined in this module (not imported)

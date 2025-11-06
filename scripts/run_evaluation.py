@@ -25,7 +25,7 @@ from tqdm import tqdm
 
 from src.agents.answer_verifier import verify_answer
 from src.agents.cobbie import cobbie
-from src.engine.tools.primordial import query_ifcopenshell_docs, web_search
+from src.tools.initial import query_ifcopenshell_docs, web_search
 from src.engine.util import get_created_tools
 from src.experiment.datasets import DEVSET
 
@@ -420,7 +420,7 @@ Examples:
         "web_search": web_search,
     }
 
-    # Add all created tools from src/engine/tools/created/
+    # Add all created tools from src.tools/created/
     try:
         created_tools = get_created_tools()
         tools_dict.update(created_tools)

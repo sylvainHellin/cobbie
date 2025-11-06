@@ -14,7 +14,7 @@ from baml_py.baml_py import Collector
 
 from baml_client.types import CodeAction, NewHelperFunction
 from src.config import LOG_LEVEL
-from src.engine.tools.primordial import query_ifcopenshell_docs
+from src.tools.initial import query_ifcopenshell_docs
 from src.engine.util.code_act_inner_loop import _execute_code_action
 from src.engine.util.generate_tools_docs import generate_tools_docs
 from src.engine.util.get_logger import get_logger
@@ -568,7 +568,7 @@ if __name__ == "__main__":
     from src.agents.cobbie import cobbie
     from src.agents.identify_helper_function import identify_helper_function
     from src.config import TEST_IFC_PATH
-    from src.engine.tools.primordial import (
+    from src.tools.initial import (
         query_ifcopenshell_docs,
         web_search,
     )

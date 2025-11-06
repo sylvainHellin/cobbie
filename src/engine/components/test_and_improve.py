@@ -11,7 +11,7 @@ from src.engine.components.code_cleaner import CodeCleaner
 from src.engine.components.tool_assessor import ToolAssessor
 from src.engine.components.tool_corrector import ToolCorrector
 from src.engine.schemas import ModuleOutput
-from src.engine.tools.primordial import (
+from src.tools.initial import (
     query_ifcopenshell_docs,
     web_search,
 )

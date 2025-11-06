@@ -7,7 +7,7 @@ from baml_client import b
 from baml_client.types import CodeAction, FinalAnswer
 
 from src.engine.schemas import ModuleOutput
-from src.engine.tools.primordial.python_interpreter import get_python_interpreter
+from src.tools.initial.python_interpreter import get_python_interpreter
 from src.engine.util import get_logger, get_created_tools, create_code_prefix
 from src.config.agents import FUNCTION_BOILERPLATE, IfcAnswerEngineConfig
 
@@ -85,7 +85,7 @@ class BIM_QAS:
     def _setup_tools(self):
         """Setup available tools including primordial and created tools"""
         # Add primordial tools
-        from src.engine.tools.primordial import (
+        from src.tools.initial import (
             query_ifcopenshell_docs,
             web_search,
         )

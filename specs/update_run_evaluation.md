@@ -60,7 +60,7 @@ The print statements were also decent and can be reused.
 ### 5. **Technical Integration**
 - **Replace**: `engine.forward(question, ifc_path)`
 - **With**: `cobbie_with_metrics(user_input=question, tools=tools_dict, model_path=ifc_path)`
-- **Tools**: Direct import from `src.engine.tools.primordial`
+- **Tools**: Direct import from `src.tools.initial`
 - **No try/except**: Remove complex error handling as specified
 - **Token tracking**: Leverage COBBIE's comprehensive collector metrics
 

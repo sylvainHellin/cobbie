@@ -123,7 +123,7 @@ engine_config = AGENT_CONFIGS.ifc_answer_engine
 ### Tool Management
 
 ```python
-from src.engine.tools import get_created_tools
+from src.tools import get_created_tools
 from src.engine.util import save_new_tool
 
 # Get all dynamically created tools

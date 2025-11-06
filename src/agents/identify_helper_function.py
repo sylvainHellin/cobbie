@@ -125,7 +125,7 @@ if __name__ == "__main__":
 
     from src.agents.cobbie import cobbie
     from src.config import TEST_IFC_PATH
-    from src.engine.tools.primordial import query_ifcopenshell_docs, web_search
+    from src.tools.initial import query_ifcopenshell_docs, web_search
 
     # Try to set up MLflow tracking, but don't fail if server is not available
     mlflow.set_tracking_uri("http://127.0.0.1:5000")

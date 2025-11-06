@@ -148,7 +148,7 @@ if __name__ == "__main__":
     from src.agents.cobbie import cobbie
     from src.agents.answer_verifier import verify_answer
     from src.config import TEST_IFC_PATH
-    from src.engine.tools.primordial import query_ifcopenshell_docs, web_search
+    from src.tools.initial import query_ifcopenshell_docs, web_search
 
     # Define a FAULTY helper function for testing purposes
     # BUG: This function ignores the floor_name parameter and returns ALL doors

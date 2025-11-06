@@ -14,7 +14,7 @@ sys.path.append(os.path.join(os.path.dirname(__file__), '..', 'src'))
 from src.config.main import TEST_IFC_PATH
 from src.engine.components.test_and_improve_baml import TestAndImproveBAML
 from src.engine.util import _create_function_from_source_code
-from src.engine.tools.primordial import web_search, query_ifcopenshell_docs
+from src.tools.initial import web_search, query_ifcopenshell_docs
 from baml_client.types import TestAndImproveSuccess, TestAndImproveError
 
 

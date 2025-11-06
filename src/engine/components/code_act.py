@@ -8,7 +8,7 @@ from dspy.signatures.signature import Signature, ensure_signature
 from src.engine.components.code_act_instruction_template import (
     CODE_AGENT_INSTRUCTION_TEMPLATE,
 )
-from src.engine.tools.primordial.python_interpreter import (
+from src.tools.initial.python_interpreter import (
     AUTHORIZED_FUNCTIONS,
     get_python_interpreter,
 )

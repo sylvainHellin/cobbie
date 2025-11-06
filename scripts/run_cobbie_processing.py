@@ -30,7 +30,7 @@ from sqlmodel import Session
 from tqdm import tqdm
 
 from src.agents.cobbie import cobbie
-from src.engine.tools.primordial import query_ifcopenshell_docs, web_search
+from src.tools.initial import query_ifcopenshell_docs, web_search
 from src.engine.util import get_created_tools
 from src.experiment.db import DB_ENGINE
 from src.experiment.db.models import IfcBench
@@ -362,7 +362,7 @@ Examples:
         "web_search": web_search,
     }
 
-    # Add all created tools from src/engine/tools/created/
+    # Add all created tools from src.tools/created/
     try:
         created_tools = get_created_tools()
         tools_dict.update(created_tools)

@@ -12,7 +12,7 @@ from baml_client import b
 from baml_py import Collector
 from baml_client.types import CodeAction, FunctionImplementation
 
-from src.engine.tools.primordial.python_interpreter import get_python_interpreter
+from src.tools.initial.python_interpreter import get_python_interpreter
 from src.engine.util import get_logger, get_created_tools, create_code_prefix
 
 
@@ -41,7 +41,7 @@ class BamlComponentBase:
     def _setup_tools(self):
         """Setup available tools including primordial and created tools - BIM_QAS pattern."""
         # Add primordial tools
-        from src.engine.tools.primordial import (
+        from src.tools.initial import (
             query_ifcopenshell_docs,
             web_search,
         )

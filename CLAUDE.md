@@ -31,7 +31,7 @@ The project is migrating from DSPy to BAML:
 
 ### Core Components
 - **Main Agents**: `src/agents/cobbie.py` (primary BIM extraction), `src/agents/answer_verifier.py`
-- **Tool Ecosystem**: `src/engine/tools/primordial/` (base tools) and `src/engine/tools/created/` (dynamically generated)
+- **Tool Ecosystem**: `src.tools.initial/` (base tools) and `src.tools/created/` (dynamically generated)
 - **Web API**: FastAPI application in `api/main.py` with dual engine support (DSPy/BAML)
 - **Configuration**: Hierarchical config system in `src/config/` (for the legacy DSPy implementation ; not used for new BAML implementation)
 - **Data Pipeline**: SQLite database with MLflow tracking
