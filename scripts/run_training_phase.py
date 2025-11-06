@@ -8,7 +8,7 @@ import os
 import time
 from datetime import datetime
 from enum import Enum, auto
-from typing import Callable, Dict, List, Optional, Tuple
+from typing import Callable, Dict, List, Literal, Optional, Tuple, cast
 
 import mlflow
 from pydantic import BaseModel, ConfigDict
@@ -20,6 +20,7 @@ from baml_client.types import (
     NewHelperFunction,
     FaultyToolAnalysis,
     UpdatedHelperFunction,
+    HelperFunctionAssessment,
 )
 
 from src.agents import (
@@ -29,6 +30,7 @@ from src.agents import (
     create_helper_function,
     identify_faulty_tool,
     debug_helper_function,
+    assess_helper_function,
 )
 from src.config import LOG_LEVEL, ROOT_PATH
 from src.engine.util import (
@@ -50,15 +52,20 @@ class TrainingState(Enum):
     START = auto()
     RUN_COBBIE = auto()
     VERIFY_ANSWER = auto()
-    
+
     # Path A: Correct answer
     IDENTIFY_NEW_TOOL = auto()
     CREATE_NEW_TOOL = auto()
-    
+
     # Path B: Wrong answer
     IDENTIFY_FAULTY_TOOL = auto()
     DEBUG_FAULTY_TOOL = auto()
-    
+
+    # Tool testing (both paths)
+    TEST_TOOL_WITH_COBBIE = auto()
+    ASSESS_TOOL_USAGE = auto()
+    DECIDE_TOOL_FATE = auto()
+
     # Terminal states
     END = auto()
     ERROR = auto()
@@ -104,11 +111,26 @@ class Context(BaseModel):
     debug_tool_collector: Optional[Collector] = None
     debug_tool_history: str = ""
     debug_tool_duration: float = 0.0
-    
+
+    # Tool testing results (both paths)
+    test_cobbie_result: Optional[FinalAnswer] = None
+    test_cobbie_collector: Optional[Collector] = None
+    test_cobbie_history: str = ""
+    test_cobbie_duration: float = 0.0
+    test_verify_result: Optional[AnswerEvaluationResult] = None
+    test_verify_collector: Optional[Collector] = None
+    test_verify_duration: float = 0.0
+
+    # Tool assessment results (both paths)
+    tool_assessment: Optional[HelperFunctionAssessment] = None
+    tool_assessment_collector: Optional[Collector] = None
+    tool_assessment_duration: float = 0.0
+
     # Tracking metadata
     error_message: Optional[str] = None
     tool_created: bool = False
     tool_updated: bool = False
+    tool_saved: bool = False
     tool_name: Optional[str] = None
     path_taken: Optional[str] = None  # "correct" or "wrong" or "abstained"
 
@@ -156,18 +178,22 @@ def calculate_aggregate_metrics(qa_results: List[dict]) -> dict:
     total_count = len(qa_results)
     if total_count == 0:
         return {}
-    
+
     correct_count = sum(1 for r in qa_results if r.get("classification") == "correct")
     wrong_count = sum(1 for r in qa_results if r.get("classification") == "wrong")
     abstained_count = sum(1 for r in qa_results if r.get("classification") == "abstained")
-    
+
     tools_created = sum(1 for r in qa_results if r.get("tool_created"))
     tools_updated = sum(1 for r in qa_results if r.get("tool_updated"))
+    tools_saved = sum(1 for r in qa_results if r.get("tool_saved"))  # NEW
+    tools_tested = sum(1 for r in qa_results if r.get("tool_was_tested"))  # NEW
+    tools_kept = sum(1 for r in qa_results if r.get("tool_recommendation") == "keep_tool")  # NEW
+    tools_discarded = sum(1 for r in qa_results if r.get("tool_recommendation") == "discard_tool")  # NEW
     errors = sum(1 for r in qa_results if r.get("error"))
-    
+
     total_tokens = sum(r.get("total_tokens", 0) for r in qa_results)
     total_duration = sum(r.get("total_duration", 0) for r in qa_results)
-    
+
     return {
         "total_qa_pairs": total_count,
         "correct_answers": correct_count,
@@ -175,10 +201,16 @@ def calculate_aggregate_metrics(qa_results: List[dict]) -> dict:
         "abstained_answers": abstained_count,
         "tools_created": tools_created,
         "tools_updated": tools_updated,
+        "tools_saved": tools_saved,  # NEW
+        "tools_tested": tools_tested,  # NEW
+        "tools_kept": tools_kept,  # NEW
+        "tools_discarded": tools_discarded,  # NEW
         "errors": errors,
         "success_rate": correct_count / total_count if total_count > 0 else 0,
         "tool_creation_rate": tools_created / correct_count if correct_count > 0 else 0,
         "tool_update_rate": tools_updated / wrong_count if wrong_count > 0 else 0,
+        "tool_save_rate": tools_saved / tools_tested if tools_tested > 0 else 0,  # NEW
+        "tool_keep_rate": tools_kept / tools_tested if tools_tested > 0 else 0,  # NEW
         "avg_tokens_per_qa": total_tokens / total_count if total_count > 0 else 0,
         "avg_duration_per_qa": total_duration / total_count if total_count > 0 else 0,
         "total_tokens": total_tokens,
@@ -211,16 +243,30 @@ def log_qa_metrics(context: Context) -> dict:
     debug_tool_input, debug_tool_output, debug_tool_total = extract_token_metrics(
         context.debug_tool_collector
     )
-    
-    # Calculate totals
+
+    # NEW: Extract test and assessment metrics
+    test_cobbie_input, test_cobbie_output, test_cobbie_total = extract_token_metrics(
+        context.test_cobbie_collector
+    )
+    test_verify_input, test_verify_output, test_verify_total = extract_token_metrics(
+        context.test_verify_collector
+    )
+    tool_assess_input, tool_assess_output, tool_assess_total = extract_token_metrics(
+        context.tool_assessment_collector
+    )
+
+    # Calculate totals (including new components)
     total_tokens = (
-        cobbie_total + verify_total + identify_tool_total + 
-        create_tool_total + identify_faulty_total + debug_tool_total
+        cobbie_total + verify_total + identify_tool_total +
+        create_tool_total + identify_faulty_total + debug_tool_total +
+        test_cobbie_total + test_verify_total + tool_assess_total
     )
     total_duration = (
-        context.cobbie_duration + context.verify_duration + 
+        context.cobbie_duration + context.verify_duration +
         context.identify_tool_duration + context.create_tool_duration +
-        context.identify_faulty_duration + context.debug_tool_duration
+        context.identify_faulty_duration + context.debug_tool_duration +
+        context.test_cobbie_duration + context.test_verify_duration +
+        context.tool_assessment_duration
     )
     
     # Get classification
@@ -243,6 +289,7 @@ def log_qa_metrics(context: Context) -> dict:
         "answer_abstained": 1 if classification == "abstained" else 0,
         "tool_created": 1 if context.tool_created else 0,
         "tool_updated": 1 if context.tool_updated else 0,
+        "tool_saved": 1 if context.tool_saved else 0,  # NEW
         "error": 1 if context.error_message else 0,
     }
     
@@ -279,19 +326,51 @@ def log_qa_metrics(context: Context) -> dict:
             "debug_tool_output_tokens": debug_tool_output,
             "debug_tool_total_tokens": debug_tool_total,
         })
-    
+
+    # NEW: Add tool testing metrics if applicable
+    if context.test_cobbie_result:
+        metrics.update({
+            "test_cobbie_duration": context.test_cobbie_duration,
+            "test_cobbie_input_tokens": test_cobbie_input,
+            "test_cobbie_output_tokens": test_cobbie_output,
+            "test_cobbie_total_tokens": test_cobbie_total,
+            "test_verify_duration": context.test_verify_duration,
+            "test_verify_input_tokens": test_verify_input,
+            "test_verify_output_tokens": test_verify_output,
+            "test_verify_total_tokens": test_verify_total,
+        })
+
+    # NEW: Add tool assessment metrics if applicable
+    if context.tool_assessment:
+        metrics.update({
+            "tool_assessment_duration": context.tool_assessment_duration,
+            "tool_assessment_input_tokens": tool_assess_input,
+            "tool_assessment_output_tokens": tool_assess_output,
+            "tool_assessment_total_tokens": tool_assess_total,
+            "tool_was_used": 1 if context.tool_assessment.tool_was_used else 0,
+            "tool_usage_helpful": 1 if context.tool_assessment.tool_usage_quality == "helpful" else 0,
+            "tool_usage_harmful": 1 if context.tool_assessment.tool_usage_quality == "harmful" else 0,
+            "tool_recommendation_keep": 1 if context.tool_assessment.recommendation == "keep_tool" else 0,
+            "tool_recommendation_discard": 1 if context.tool_assessment.recommendation == "discard_tool" else 0,
+        })
+
     # Log to MLflow
     mlflow.log_metrics(metrics)
-    
+
     # Return dictionary for aggregate calculation
     return {
         "question_id": context.qa_pair.id,
         "classification": classification,
         "tool_created": context.tool_created,
         "tool_updated": context.tool_updated,
+        "tool_saved": context.tool_saved,  # NEW
         "error": bool(context.error_message),
         "total_tokens": total_tokens,
         "total_duration": total_duration,
+        # NEW: Tool assessment data
+        "tool_was_tested": bool(context.tool_assessment),
+        "tool_recommendation": context.tool_assessment.recommendation if context.tool_assessment else None,
+        "tool_usage_quality": context.tool_assessment.tool_usage_quality if context.tool_assessment else None,
     }
 
 
@@ -499,17 +578,20 @@ def handle_identify_new_tool(context: Context) -> Tuple[TrainingState, Context]:
 def handle_create_new_tool(context: Context) -> Tuple[TrainingState, Context]:
     """
     Create a new helper function (Path A: Correct answer).
-    
+
+    CHANGED: No longer saves the tool immediately.
+    Instead, transitions to TEST_TOOL_WITH_COBBIE for validation.
+
     Actions:
     1. Get IFC model path from QA pair
     2. Get other BIM models for testing
     3. Call create_helper_function()
-    4. If success: Save tool, reload tools, mark as created
+    4. If success: Mark as created, transition to testing
     5. If failure: Log error
-    
+
     Returns:
         Next state:
-        - END if success
+        - TEST_TOOL_WITH_COBBIE if success
         - ERROR if failure
     """
     _logger.info(f"Creating new tool: {context.tool_name}...")
@@ -567,27 +649,13 @@ def handle_create_new_tool(context: Context) -> Tuple[TrainingState, Context]:
         context.create_tool_duration = time.time() - start_time
         
         _logger.info(f"Tool creation success: {result.success}")
-        
+
         if result.success:
-            # Save the new tool
-            save_success = save_new_tool(
-                function_name=context.tool_name,
-                function_implementation=result.function_implementation,
-            )
-            
-            if save_success:
-                _logger.info(f"New tool created and saved: {context.tool_name}")
-                context.tool_created = True
-                
-                # Reload tools to include the new one
-                context.tools = get_created_tools()
-                _logger.info(f"Tools reloaded. Now have {len(context.tools)} tools")
-                
-                return TrainingState.END, context
-            else:
-                _logger.error(f"Failed to save new tool: {context.tool_name}")
-                context.error_message = f"Failed to save tool: {context.tool_name}"
-                return TrainingState.ERROR, context
+            # Don't save immediately - proceed to testing first
+            _logger.info(f"New tool created: {context.tool_name}, proceeding to testing")
+            context.tool_created = True
+
+            return TrainingState.TEST_TOOL_WITH_COBBIE, context
         else:
             _logger.warning(f"Tool creation was not successful: {result.thoughts}")
             context.error_message = f"Tool creation failed: {result.thoughts}"
@@ -675,17 +743,20 @@ def handle_identify_faulty_tool(context: Context) -> Tuple[TrainingState, Contex
 def handle_debug_faulty_tool(context: Context) -> Tuple[TrainingState, Context]:
     """
     Debug and fix a faulty helper function (Path B: Wrong answer).
-    
+
+    CHANGED: No longer saves the tool immediately.
+    Instead, transitions to TEST_TOOL_WITH_COBBIE for validation.
+
     Actions:
     1. Get faulty tool source code with get_function_code()
     2. Get IFC model path from QA pair
     3. Call debug_helper_function()
-    4. If success: Save corrected tool, reload tools, mark as updated
+    4. If success: Mark as updated, transition to testing
     5. If failure: Log error
-    
+
     Returns:
         Next state:
-        - END if success
+        - TEST_TOOL_WITH_COBBIE if success
         - ERROR if failure
     """
     _logger.info(f"Debugging faulty tool: {context.tool_name}...")
@@ -739,28 +810,14 @@ def handle_debug_faulty_tool(context: Context) -> Tuple[TrainingState, Context]:
         context.debug_tool_duration = time.time() - start_time
         
         _logger.info(f"Tool debugging success: {result.success}")
-        
+
         if result.success:
-            # Save the corrected tool (overwrites the faulty one)
-            save_success = save_new_tool(
-                function_name=context.tool_name,
-                function_implementation=result.fixed_implementation,
-            )
-            
-            if save_success:
-                _logger.info(f"Faulty tool corrected and saved: {context.tool_name}")
-                _logger.info(f"Changes summary: {result.changes_summary}")
-                context.tool_updated = True
-                
-                # Reload tools to include the corrected version
-                context.tools = get_created_tools()
-                _logger.info(f"Tools reloaded. Now have {len(context.tools)} tools")
-                
-                return TrainingState.END, context
-            else:
-                _logger.error(f"Failed to save corrected tool: {context.tool_name}")
-                context.error_message = f"Failed to save corrected tool: {context.tool_name}"
-                return TrainingState.ERROR, context
+            # Don't save immediately - proceed to testing first
+            _logger.info(f"Faulty tool debugged: {context.tool_name}, proceeding to testing")
+            _logger.info(f"Changes summary: {result.changes_summary}")
+            context.tool_updated = True
+
+            return TrainingState.TEST_TOOL_WITH_COBBIE, context
         else:
             _logger.warning(f"Tool debugging was not successful: {result.thoughts}")
             context.error_message = f"Tool debugging failed: {result.thoughts}"
@@ -770,6 +827,296 @@ def handle_debug_faulty_tool(context: Context) -> Tuple[TrainingState, Context]:
         _logger.error(f"Error debugging faulty tool: {e}")
         context.error_message = f"Debug tool error: {e}"
         context.debug_tool_duration = time.time() - start_time
+        return TrainingState.ERROR, context
+
+
+def handle_test_tool_with_cobbie(context: Context) -> Tuple[TrainingState, Context]:
+    """
+    Re-run Cobbie with enhanced question to test the new/updated tool.
+
+    Actions:
+    1. Temporarily add the new/updated tool to the tools dictionary
+    2. Enhance the question to encourage using the tool
+    3. Run Cobbie with the enhanced question
+    4. Store test results in context
+    5. Transition to assessment
+
+    Returns:
+        Next state: ASSESS_TOOL_USAGE
+    """
+    _logger.info(f"Testing tool with Cobbie: {context.tool_name}...")
+
+    start_time = time.time()
+
+    try:
+        # Assert tool_name is not None (should be set by previous states)
+        assert context.tool_name is not None, "tool_name should be set before testing"
+
+        # Get the tool implementation
+        if context.create_tool_result:
+            tool_implementation = context.create_tool_result.function_implementation
+            _logger.info(f"Testing newly created tool: {context.tool_name}")
+        elif context.debug_tool_result:
+            tool_implementation = context.debug_tool_result.fixed_implementation
+            _logger.info(f"Testing debugged tool: {context.tool_name}")
+        else:
+            raise ValueError("No tool implementation available for testing")
+
+        # Temporarily add the tool to the tools dictionary
+        from src.engine.util import _create_function_from_source_code
+
+        creation_result = _create_function_from_source_code(
+            function_name=context.tool_name,
+            code=tool_implementation,
+        )
+
+        if creation_result.is_err():
+            error_msg = f"Failed to create function for testing: {creation_result.unwrap_err()}"
+            _logger.error(error_msg)
+            context.error_message = error_msg
+            return TrainingState.ERROR, context
+
+        new_tool = creation_result.unwrap()
+
+        # Create a copy of tools with the new tool added
+        test_tools = context.tools.copy()
+        test_tools[context.tool_name] = new_tool
+
+        _logger.info(f"Tool '{context.tool_name}' added to test environment. Total tools: {len(test_tools)}")
+
+        # Enhance the question to guide tool usage
+        enhanced_question = (
+            f"{context.qa_pair.question}\n\n"
+            f"NOTE: A helper function `{context.tool_name}` was recently created. "
+            f"If it seems relevant, consider using it to help answer this question."
+        )
+
+        # Get IFC model path
+        ifc_path = context.qa_pair.ifc.model_path if context.qa_pair.ifc else None
+
+        # Run Cobbie with enhanced question and test tools
+        result, collector, history = cobbie(
+            user_input=enhanced_question,
+            tools=test_tools,
+            max_iterations=10,
+            model_path=ifc_path,
+            llm_provider="zai",
+            llm_name="GLM-4.6",
+        )
+
+        context.test_cobbie_result = result
+        context.test_cobbie_collector = collector
+        context.test_cobbie_history = history
+        context.test_cobbie_duration = time.time() - start_time
+
+        _logger.info(f"Tool testing Cobbie run completed: {result.answer[:100]}...")
+        return TrainingState.ASSESS_TOOL_USAGE, context
+
+    except Exception as e:
+        _logger.error(f"Error testing tool with Cobbie: {e}")
+        context.error_message = f"Tool testing error: {e}"
+        context.test_cobbie_duration = time.time() - start_time
+        return TrainingState.ERROR, context
+
+
+def handle_assess_tool_usage(context: Context) -> Tuple[TrainingState, Context]:
+    """
+    Analyze if the tested tool was helpful during Cobbie's execution.
+
+    Actions:
+    1. Verify the test answer with verify_answer agent
+    2. Get tool description from creation/debugging context
+    3. Call assess_helper_function to analyze tool usage
+    4. Store assessment in context
+    5. Transition to decision state
+
+    Returns:
+        Next state: DECIDE_TOOL_FATE
+    """
+    _logger.info(f"Assessing tool usage: {context.tool_name}...")
+
+    start_time = time.time()
+
+    try:
+        # Assert tool_name is not None (should be set by previous states)
+        assert context.tool_name is not None, "tool_name should be set before assessment"
+
+        # Assert category is valid (1-4)
+        assert context.qa_pair.category is not None and context.qa_pair.category in [1, 2, 3, 4], "category must be 1-4"
+        category = cast(Literal[1, 2, 3, 4], context.qa_pair.category)
+
+        # Verify the test answer
+        verify_start = time.time()
+        verify_result, verify_collector = verify_answer(
+            question=context.qa_pair.question,
+            category=category,
+            ground_truth=context.qa_pair.ground_truth,
+            system_response=context.test_cobbie_result.answer,
+            llm_provider="zai",
+            llm_name="GLM-4.6",
+        )
+        context.test_verify_result = verify_result
+        context.test_verify_collector = verify_collector
+        context.test_verify_duration = time.time() - verify_start
+
+        _logger.info(f"Test answer verified: {verify_result.classification} (confidence: {verify_result.confidence})")
+
+        # Get tool description based on path
+        if context.create_tool_result:
+            tool_description = context.identify_tool_result.new_tool_description
+        elif context.debug_tool_result:
+            tool_description = context.identify_faulty_result.error_description
+        else:
+            raise ValueError("No tool context available for assessment")
+
+        # Construct full test history with final answer
+        full_test_history = (
+            f"{context.test_cobbie_history}\n\n"
+            f"--- Final Answer ---\n"
+            f"Thoughts: {context.test_cobbie_result.thoughts}\n"
+            f"Answer: {context.test_cobbie_result.answer}"
+        )
+
+        # Assess tool usage
+        assess_start = time.time()
+        assessment, assessment_collector = assess_helper_function(
+            execution_history=full_test_history,
+            original_question=context.qa_pair.question,
+            ground_truth_answer=context.qa_pair.ground_truth,
+            tested_tool_name=context.tool_name,
+            tested_tool_description=tool_description,
+            final_answer=context.test_cobbie_result.answer,
+            answer_correctness=verify_result.classification,
+            llm_provider="zai",
+            llm_name="GLM-4.6",
+        )
+        context.tool_assessment = assessment
+        context.tool_assessment_collector = assessment_collector
+        context.tool_assessment_duration = time.time() - assess_start
+
+        _logger.info(
+            f"Tool assessment completed: {assessment.recommendation} "
+            f"(quality: {assessment.tool_usage_quality}, confidence: {assessment.confidence})"
+        )
+
+        context.tool_assessment_duration = time.time() - start_time
+        return TrainingState.DECIDE_TOOL_FATE, context
+
+    except Exception as e:
+        _logger.error(f"Error assessing tool usage: {e}")
+        context.error_message = f"Tool assessment error: {e}"
+        context.tool_assessment_duration = time.time() - start_time
+        return TrainingState.ERROR, context
+
+
+def handle_decide_tool_fate(context: Context) -> Tuple[TrainingState, Context]:
+    """
+    Decide whether to keep, discard, or flag the tool based on assessment.
+
+    Actions:
+    1. Examine the assessment recommendation
+    2. Make final decision on tool fate
+    3. Save tool if recommended (keep_tool)
+    4. Log decision and rationale
+    5. Update context metadata
+
+    Returns:
+        Next state: END
+    """
+    _logger.info(f"Deciding fate of tool: {context.tool_name}...")
+
+    try:
+        # Assert tool_name is not None (should be set by previous states)
+        assert context.tool_name is not None, "tool_name should be set before deciding fate"
+
+        assessment = context.tool_assessment
+
+        # Get tool implementation
+        if context.create_tool_result:
+            tool_implementation = context.create_tool_result.function_implementation
+            action = "created"
+        elif context.debug_tool_result:
+            tool_implementation = context.debug_tool_result.fixed_implementation
+            action = "debugged"
+        else:
+            raise ValueError("No tool implementation available")
+
+        # Decision logic based on recommendation
+        if assessment.recommendation == "keep_tool":
+            # Tool is helpful, save it permanently
+            save_success = save_new_tool(
+                function_name=context.tool_name,
+                function_implementation=tool_implementation,
+            )
+
+            if save_success:
+                context.tool_saved = True
+                _logger.info(
+                    f"✅ Tool '{context.tool_name}' validated and saved permanently\n"
+                    f"   Quality: {assessment.tool_usage_quality}\n"
+                    f"   Confidence: {assessment.confidence}\n"
+                    f"   Details: {assessment.usage_details[:200]}..."
+                )
+
+                # Reload tools to include the new one
+                context.tools = get_created_tools()
+                _logger.info(f"Tools reloaded. Now have {len(context.tools)} tools")
+
+                return TrainingState.END, context
+            else:
+                _logger.error(f"Failed to save tool: {context.tool_name}")
+                context.error_message = f"Failed to save tool: {context.tool_name}"
+                return TrainingState.ERROR, context
+
+        elif assessment.recommendation == "discard_tool":
+            # Tool is not useful or harmful, discard it
+            context.tool_saved = False
+            _logger.info(
+                f"❌ Tool '{context.tool_name}' discarded\n"
+                f"   Quality: {assessment.tool_usage_quality}\n"
+                f"   Confidence: {assessment.confidence}\n"
+                f"   Reason: {assessment.usage_details[:200]}..."
+            )
+            return TrainingState.END, context
+
+        elif assessment.recommendation == "improve_tool":
+            # Tool has potential but needs work
+            context.tool_saved = False
+            _logger.info(
+                f"⚠️  Tool '{context.tool_name}' needs improvement (not saved)\n"
+                f"   Quality: {assessment.tool_usage_quality}\n"
+                f"   Confidence: {assessment.confidence}\n"
+                f"   Issues: {assessment.usage_details[:200]}..."
+            )
+            return TrainingState.END, context
+
+        else:  # unclear
+            # Conservative: keep it tentatively with low confidence
+            save_success = save_new_tool(
+                function_name=context.tool_name,
+                function_implementation=tool_implementation,
+            )
+
+            if save_success:
+                context.tool_saved = True
+                _logger.info(
+                    f"❓ Tool '{context.tool_name}' assessment unclear, saved tentatively\n"
+                    f"   Quality: {assessment.tool_usage_quality}\n"
+                    f"   Confidence: {assessment.confidence}\n"
+                    f"   Note: {assessment.usage_details[:200]}..."
+                )
+
+                # Reload tools
+                context.tools = get_created_tools()
+                return TrainingState.END, context
+            else:
+                _logger.error(f"Failed to save tool: {context.tool_name}")
+                context.error_message = f"Failed to save tool: {context.tool_name}"
+                return TrainingState.ERROR, context
+
+    except Exception as e:
+        _logger.error(f"Error deciding tool fate: {e}")
+        context.error_message = f"Tool fate decision error: {e}"
         return TrainingState.ERROR, context
 
 
@@ -802,6 +1149,12 @@ def process_state(state: TrainingState, context: Context) -> Tuple[TrainingState
         return handle_identify_faulty_tool(context)
     elif state == TrainingState.DEBUG_FAULTY_TOOL:
         return handle_debug_faulty_tool(context)
+    elif state == TrainingState.TEST_TOOL_WITH_COBBIE:
+        return handle_test_tool_with_cobbie(context)
+    elif state == TrainingState.ASSESS_TOOL_USAGE:
+        return handle_assess_tool_usage(context)
+    elif state == TrainingState.DECIDE_TOOL_FATE:
+        return handle_decide_tool_fate(context)
     else:
         _logger.error(f"Unknown state: {state}")
         context.error_message = f"Unknown state: {state}"

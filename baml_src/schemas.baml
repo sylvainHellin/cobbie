@@ -147,3 +147,43 @@ class UpdatedHelperFunction {
   success bool @description("Whether the function was successfully fixed and is ready for use")
   test_cases_provided string @description("Test cases that can be used to verify the fix works correctly")
 }
+
+// Helper function usage assessment - analyzes if a specific tool was helpful during execution
+class HelperFunctionAssessment {
+  thoughts string @description("Detailed analysis of how the tool was used during execution")
+
+  tool_was_used bool @description("Whether the tool was actually called during execution")
+
+  tool_usage_quality "helpful" | "not_used" | "ignored" | "misused" | "harmful" @description(#"
+    Assessment of how the tool contributed to the answer:
+    - helpful: Tool was used correctly and contributed to producing the correct answer
+    - not_used: Tool was available but Cobbie didn't use it at all
+    - ignored: Tool was considered/mentioned but deemed unnecessary or not applicable
+    - misused: Tool was used incorrectly (wrong parameters, wrong context, misunderstood purpose)
+    - harmful: Tool was used and led to incorrect results or wrong reasoning
+  "#)
+
+  usage_details string @description(#"
+    Detailed explanation of tool usage patterns and outcomes:
+    - If helpful: How the tool contributed to the correct answer
+    - If not_used: Why the tool wasn't needed or what alternative approach was used
+    - If ignored: Why Cobbie chose not to use it
+    - If misused: What parameters were wrong or how the usage was incorrect
+    - If harmful: How the tool's output led to the wrong answer
+  "#)
+
+  recommendation "keep_tool" | "discard_tool" | "improve_tool" | "unclear" @description(#"
+    Final recommendation based on usage analysis:
+    - keep_tool: Tool was helpful and should be saved permanently
+    - discard_tool: Tool wasn't useful, was harmful, or is redundant
+    - improve_tool: Tool has potential but needs fixes or refinement
+    - unclear: Insufficient evidence to make a confident decision (need more test cases)
+  "#)
+
+  confidence "high" | "medium" | "low" @description(#"
+    Confidence level in this assessment:
+    - high: Clear evidence from execution history supports the assessment
+    - medium: Strong indicators but some ambiguity or edge cases
+    - low: Limited evidence or conflicting signals
+  "#)
+}

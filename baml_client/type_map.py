@@ -46,6 +46,9 @@ type_map = {
     "types.FunctionImplementation": types.FunctionImplementation,
     "stream_types.FunctionImplementation": stream_types.FunctionImplementation,
 
+    "types.HelperFunctionAssessment": types.HelperFunctionAssessment,
+    "stream_types.HelperFunctionAssessment": stream_types.HelperFunctionAssessment,
+
     "types.ImprovedImplementation": types.ImprovedImplementation,
     "stream_types.ImprovedImplementation": stream_types.ImprovedImplementation,
 

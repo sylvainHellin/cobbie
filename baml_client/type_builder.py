@@ -20,7 +20,7 @@ from .globals import DO_NOT_USE_DIRECTLY_UNLESS_YOU_KNOW_WHAT_YOURE_DOING_RUNTIM
 class TypeBuilder(type_builder.TypeBuilder):
     def __init__(self):
         super().__init__(classes=set(
-          ["AlignedQAPair","AnswerEvaluationResult","AssessmentResult","CategoryValidationResult","CleanedCode","CodeAction","ErrorAnalysisResult","FaultyToolAnalysis","FinalAnswer","FunctionImplementation","ImprovedImplementation","NewHelperFunction","NewToolAnalysis","SimilarityResult","TestAndImproveError","TestAndImproveSuccess","ToolCreationResult","ToolOptimizationResult","UpdatedHelperFunction",]
+          ["AlignedQAPair","AnswerEvaluationResult","AssessmentResult","CategoryValidationResult","CleanedCode","CodeAction","ErrorAnalysisResult","FaultyToolAnalysis","FinalAnswer","FunctionImplementation","HelperFunctionAssessment","ImprovedImplementation","NewHelperFunction","NewToolAnalysis","SimilarityResult","TestAndImproveError","TestAndImproveSuccess","ToolCreationResult","ToolOptimizationResult","UpdatedHelperFunction",]
         ), enums=set(
           ["QuestionCategory",]
         ), runtime=DO_NOT_USE_DIRECTLY_UNLESS_YOU_KNOW_WHAT_YOURE_DOING_RUNTIME)
@@ -35,7 +35,7 @@ class TypeBuilder(type_builder.TypeBuilder):
 
 
     # #########################################################################
-    # Generated classes 19
+    # Generated classes 20
     # #########################################################################
 
     @property
@@ -77,6 +77,10 @@ class TypeBuilder(type_builder.TypeBuilder):
     @property
     def FunctionImplementation(self) -> "FunctionImplementationViewer":
         return FunctionImplementationViewer(self)
+
+    @property
+    def HelperFunctionAssessment(self) -> "HelperFunctionAssessmentViewer":
+        return HelperFunctionAssessmentViewer(self)
 
     @property
     def ImprovedImplementation(self) -> "ImprovedImplementationViewer":
@@ -172,7 +176,7 @@ class QuestionCategoryValues:
 
 
 # #########################################################################
-# Generated classes 19
+# Generated classes 20
 # #########################################################################
 
 class AlignedQAPairAst:
@@ -645,6 +649,65 @@ class FunctionImplementationProperties:
     @property
     def needs_improvement(self) -> type_builder.ClassPropertyViewer:
         return type_builder.ClassPropertyViewer(self.__bldr.property("needs_improvement"))
+    
+    
+
+
+class HelperFunctionAssessmentAst:
+    def __init__(self, tb: type_builder.TypeBuilder):
+        _tb = tb._tb # type: ignore (we know how to use this private attribute)
+        self._bldr = _tb.class_("HelperFunctionAssessment")
+        self._properties: typing.Set[str] = set([  "thoughts",  "tool_was_used",  "tool_usage_quality",  "usage_details",  "recommendation",  "confidence",  ])
+        self._props = HelperFunctionAssessmentProperties(self._bldr, self._properties)
+
+    def type(self) -> baml_py.FieldType:
+        return self._bldr.field()
+
+    @property
+    def props(self) -> "HelperFunctionAssessmentProperties":
+        return self._props
+
+
+class HelperFunctionAssessmentViewer(HelperFunctionAssessmentAst):
+    def __init__(self, tb: type_builder.TypeBuilder):
+        super().__init__(tb)
+
+    
+    def list_properties(self) -> typing.List[typing.Tuple[str, type_builder.ClassPropertyViewer]]:
+        return [(name, type_builder.ClassPropertyViewer(self._bldr.property(name))) for name in self._properties]
+    
+
+
+class HelperFunctionAssessmentProperties:
+    def __init__(self, bldr: baml_py.ClassBuilder, properties: typing.Set[str]):
+        self.__bldr = bldr
+        self.__properties = properties # type: ignore (we know how to use this private attribute) # noqa: F821
+
+    
+    
+    @property
+    def thoughts(self) -> type_builder.ClassPropertyViewer:
+        return type_builder.ClassPropertyViewer(self.__bldr.property("thoughts"))
+    
+    @property
+    def tool_was_used(self) -> type_builder.ClassPropertyViewer:
+        return type_builder.ClassPropertyViewer(self.__bldr.property("tool_was_used"))
+    
+    @property
+    def tool_usage_quality(self) -> type_builder.ClassPropertyViewer:
+        return type_builder.ClassPropertyViewer(self.__bldr.property("tool_usage_quality"))
+    
+    @property
+    def usage_details(self) -> type_builder.ClassPropertyViewer:
+        return type_builder.ClassPropertyViewer(self.__bldr.property("usage_details"))
+    
+    @property
+    def recommendation(self) -> type_builder.ClassPropertyViewer:
+        return type_builder.ClassPropertyViewer(self.__bldr.property("recommendation"))
+    
+    @property
+    def confidence(self) -> type_builder.ClassPropertyViewer:
+        return type_builder.ClassPropertyViewer(self.__bldr.property("confidence"))
     
     
 

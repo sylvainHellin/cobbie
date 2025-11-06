@@ -47,7 +47,7 @@ class QuestionCategory(str, Enum):
     Category4 = "Category4"
 
 # #########################################################################
-# Generated classes (19)
+# Generated classes (20)
 # #########################################################################
 
 class AlignedQAPair(BaseModel):
@@ -100,6 +100,14 @@ class FunctionImplementation(BaseModel):
     function_implementation: str
     confidence: typing.Optional[float] = None
     needs_improvement: bool
+
+class HelperFunctionAssessment(BaseModel):
+    thoughts: str
+    tool_was_used: bool
+    tool_usage_quality: typing.Union[typing_extensions.Literal['helpful'], typing_extensions.Literal['not_used'], typing_extensions.Literal['ignored'], typing_extensions.Literal['misused'], typing_extensions.Literal['harmful']]
+    usage_details: str
+    recommendation: typing.Union[typing_extensions.Literal['keep_tool'], typing_extensions.Literal['discard_tool'], typing_extensions.Literal['improve_tool'], typing_extensions.Literal['unclear']]
+    confidence: typing.Union[typing_extensions.Literal['high'], typing_extensions.Literal['medium'], typing_extensions.Literal['low']]
 
 class ImprovedImplementation(BaseModel):
     function_implementation: str
