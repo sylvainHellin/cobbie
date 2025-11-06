@@ -1,5 +1,5 @@
 """
-BAML-based QA pair alignment functions.
+Agent that ensure QA pairs in the dataset are aligned.
 Ensures questions and answers are properly aligned in structure and scope.
 """
 

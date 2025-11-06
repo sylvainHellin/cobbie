@@ -1,5 +1,5 @@
 """
-BAML-based helper function identification.
+Agent that identify new helper functions.
 Analyzes successful Cobbie executions to identify reusable helper functions.
 """
 

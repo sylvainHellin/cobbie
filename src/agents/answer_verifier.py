@@ -1,5 +1,5 @@
 """
-BAML-based answer verification functions.
+Agent that verify the provided answers align with the one from the dataset.
 Provides classification, justification, and confidence for answer evaluation.
 """
 

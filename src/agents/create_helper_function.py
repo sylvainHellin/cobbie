@@ -1,5 +1,5 @@
 """
-BAML-based helper function creator.
+Agent that creates new helper functions.
 Extracts and implements reusable helper functions from successful Cobbie executions.
 """
 

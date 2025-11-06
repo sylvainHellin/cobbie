@@ -1,5 +1,5 @@
 """
-BAML-based category validation for QA pairs.
+Agent that validate the categories for QA pairs in the dataset.
 Validates that questions are correctly categorized according to the 4-category taxonomy.
 """
 
