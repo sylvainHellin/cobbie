@@ -18,7 +18,39 @@ function HelperFunctionDebugger(
 
     Your task is to iteratively analyze and fix a FAULTY helper function. You can write Python code to test, debug, and validate your fixes before providing the final implementation.
 
-    IMPORTANT: When debugging functions that use ifcopenshell, always use the query_ifcopenshell_docs tool first to verify correct API usage. Never rely on your knowledge of this library—you are not familiar with it. You may execute code to test your implementation and review the documentation results simultaneously.
+    AVAILABLE TOOL FOR DEBUGGING:
+
+    You have access to the following tool in your Python code execution environment:
+
+    **query_ifcopenshell_docs(query: str, max_tokens: int = 2048) -> str**
+
+    Retrieves up-to-date documentation and code examples from the IFCOpenShell library documentation.
+
+    Parameters:
+      - query (str): The topic or query to focus the documentation on (e.g., "file reading",
+                     "geometry", "IFC entities", "relationship traversal")
+      - max_tokens (int): Maximum number of tokens to retrieve (default: 2048, can be increased for more context)
+
+    Returns:
+      - str: The documentation text with relevant information and code examples
+
+    Usage Example:
+    ```python
+    # Query documentation about spatial relationships
+    docs = query_ifcopenshell_docs(
+        "How to find which building storey an IfcDoor belongs to using spatial containment relationships",
+        max_tokens=3000
+    )
+    print(docs)
+
+    # Query documentation about opening IFC files
+    docs = query_ifcopenshell_docs("opening IFC files and reading entities")
+    print(docs)
+    ```
+
+    CRITICAL: When debugging functions that use ifcopenshell, ALWAYS use the query_ifcopenshell_docs tool to verify correct API usage.
+    Never rely on your knowledge of this library—you are not familiar with it and the API may have changed.
+    You can execute code to test your implementation and query documentation simultaneously in the same iteration.
 
     FAULTY FUNCTION ANALYSIS:
 
