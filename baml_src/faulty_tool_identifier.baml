@@ -1,8 +1,8 @@
-// FaultyToolIdentifier - Analyzes wrong answers from Cobbie to identify faulty tools
+// FaultyNewToolAnalysis - Analyzes wrong answers from Cobbie to identify faulty tools
 // This agent examines failed question-answering sessions where the answer was classified as "wrong"
 // to determine if the failure was caused by a faulty helper function
 
-function FaultyToolIdentifier(
+function FaultyNewToolAnalysis(
   history: string @description("Complete execution history from Cobbie: thoughts, code, results, and final answer"),
   question: string @description("The question that Cobbie attempted to answer"),
   ground_truth: string @description("The correct/expected answer to the question"),
@@ -108,7 +108,7 @@ function FaultyToolIdentifier(
 
 // Test case 1: Faulty tool - function returns incorrect count
 test FaultyToolPositiveTest {
-  functions [FaultyToolIdentifier]
+  functions [FaultyNewToolAnalysis]
   args {
     question "How many doors have a fire rating of at least 30 minutes?"
     ground_truth "There are 3 doors with a fire rating of at least 30 minutes."
@@ -152,7 +152,7 @@ test FaultyToolPositiveTest {
 
 // Test case 2: Not a faulty tool - missing tool scenario
 test FaultyToolNegativeTest_MissingTool {
-  functions [FaultyToolIdentifier]
+  functions [FaultyNewToolAnalysis]
   args {
     question "What is the total thermal resistance (R-value) of the exterior walls?"
     ground_truth "The total thermal resistance of the exterior walls is 4.5 m²K/W."
@@ -211,7 +211,7 @@ test FaultyToolNegativeTest_MissingTool {
 
 // Test case 3: Not a faulty tool - reasoning error by Cobbie
 test FaultyToolNegativeTest_ReasoningError {
-  functions [FaultyToolIdentifier]
+  functions [FaultyNewToolAnalysis]
   args {
     question "How many windows are on the north-facing facade?"
     ground_truth "There are 8 windows on the north-facing facade."

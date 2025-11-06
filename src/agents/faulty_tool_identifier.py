@@ -59,7 +59,7 @@ def identify_faulty_tool(
     start = time.time()
 
     # Create collector for token tracking
-    collector = Collector(name="FaultyToolIdentifier")
+    collector = Collector(name="FaultyNewToolAnalysis")
 
     # Add collector to kwargs for BAML calls
     if "baml_options" not in kwargs:
@@ -67,7 +67,7 @@ def identify_faulty_tool(
     kwargs["baml_options"]["collector"] = collector
 
     with mlflow.start_span(
-        name="FaultyToolIdentifier", span_type="LLM"
+        name="FaultyNewToolAnalysis", span_type="LLM"
     ) as identifier_span:
         identifier_span.set_inputs(
             {
@@ -84,7 +84,7 @@ def identify_faulty_tool(
         try:
             faulty_tool_analysis = b.with_options(
                 **kwargs.pop("baml_options", {})
-            ).FaultyToolIdentifier(
+            ).FaultyNewToolAnalysis(
                 history=history,
                 question=question,
                 ground_truth=ground_truth,
@@ -155,23 +155,23 @@ if __name__ == "__main__":
     def count_doors_by_floor(ifc_file_path: str, floor_name: str) -> int:
         """
         Count the number of doors on a specific building floor.
-        
+
         Args:
             ifc_file_path: Path to the IFC file
             floor_name: Name of the floor/storey (e.g., 'Level 1', 'Ground Floor')
-        
+
         Returns:
             Number of doors on the specified floor
         """
         ifc_file = ifcopenshell.open(ifc_file_path)
         doors = ifc_file.by_type('IfcDoor')
-        
+
         # BUG: Returns ALL doors instead of filtering by floor_name
         return len(doors)
 
     # Try to set up MLflow tracking, but don't fail if server is not available
     mlflow.set_tracking_uri("http://127.0.0.1:5000")
-    mlflow.set_experiment("FaultyToolIdentifier")
+    mlflow.set_experiment("FaultyNewToolAnalysis")
 
     # Setup tools for cobbie - INCLUDING THE FAULTY TOOL
     tools_dict = {
@@ -183,7 +183,7 @@ if __name__ == "__main__":
     # Test question that Cobbie will answer incorrectly due to the faulty tool
     test_question = "How many doors are on the ground floor?"
     model_path = TEST_IFC_PATH
-    
+
     # Ground truth: there are actually 6 doors on Level 1 (ground floor)
     # But the faulty tool will return 14 (all doors in the building)
     ground_truth = "There are 6 doors on the ground floor."
@@ -196,7 +196,7 @@ if __name__ == "__main__":
     print(f"Ground Truth: {ground_truth}\n")
 
     # Run cobbie to get the answer and execution history
-    with mlflow.start_run(run_name="FaultyToolIdentifier_Test"):
+    with mlflow.start_run(run_name="FaultyNewToolAnalysis_Test"):
         cobbie_result, cobbie_collector, execution_history = cobbie(
             user_input=test_question,
             tools=tools_dict,
@@ -250,11 +250,11 @@ def web_search(query: str) -> str:
 
 def count_doors_by_floor(ifc_file_path: str, floor_name: str) -> int:
     '''Count the number of doors on a specific building floor.
-    
+
     Args:
         ifc_file_path: Path to the IFC file
         floor_name: Name of the floor/storey (e.g., 'Level 1', 'Ground Floor')
-    
+
     Returns:
         Number of doors on the specified floor
     '''
@@ -294,7 +294,7 @@ def count_doors_by_floor(ifc_file_path: str, floor_name: str) -> int:
             print(f"Answer Verifier - Input: {verification_collector.usage.input_tokens if verification_collector.usage else 0}, "
                   f"Output: {verification_collector.usage.output_tokens if verification_collector.usage else 0}")
             print(f"Faulty Tool Identifier - Input: {faulty_tool_input_tokens}, Output: {faulty_tool_output_tokens}")
-            
+
             total_input = (
                 (cobbie_collector.usage.input_tokens if cobbie_collector.usage else 0) +
                 (verification_collector.usage.input_tokens if verification_collector.usage else 0) +

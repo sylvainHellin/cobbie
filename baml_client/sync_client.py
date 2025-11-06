@@ -147,17 +147,17 @@ class BamlSyncClient:
                 "question": question,"category": category,"ground_truth": ground_truth,"system_response": system_response,
             })
             return typing.cast(types.AnswerEvaluationResult, result.cast_to(types, types, stream_types, False, __runtime__))
-    def FaultyToolIdentifier(self, history: str,question: str,ground_truth: str,provided_answer: str,justification: str,existing_helper_functions: str,
+    def FaultyNewToolAnalysis(self, history: str,question: str,ground_truth: str,provided_answer: str,justification: str,existing_helper_functions: str,
         baml_options: BamlCallOptions = {},
     ) -> types.FaultyToolAnalysis:
         # Check if on_tick is provided
         if 'on_tick' in baml_options:
-            stream = self.stream.FaultyToolIdentifier(history=history,question=question,ground_truth=ground_truth,provided_answer=provided_answer,justification=justification,existing_helper_functions=existing_helper_functions,
+            stream = self.stream.FaultyNewToolAnalysis(history=history,question=question,ground_truth=ground_truth,provided_answer=provided_answer,justification=justification,existing_helper_functions=existing_helper_functions,
                 baml_options=baml_options)
             return stream.get_final_response()
         else:
             # Original non-streaming code
-            result = self.__options.merge_options(baml_options).call_function_sync(function_name="FaultyToolIdentifier", args={
+            result = self.__options.merge_options(baml_options).call_function_sync(function_name="FaultyNewToolAnalysis", args={
                 "history": history,"question": question,"ground_truth": ground_truth,"provided_answer": provided_answer,"justification": justification,"existing_helper_functions": existing_helper_functions,
             })
             return typing.cast(types.FaultyToolAnalysis, result.cast_to(types, types, stream_types, False, __runtime__))
@@ -330,10 +330,10 @@ class BamlStreamClient:
           lambda x: typing.cast(types.AnswerEvaluationResult, x.cast_to(types, types, stream_types, False, __runtime__)),
           ctx,
         )
-    def FaultyToolIdentifier(self, history: str,question: str,ground_truth: str,provided_answer: str,justification: str,existing_helper_functions: str,
+    def FaultyNewToolAnalysis(self, history: str,question: str,ground_truth: str,provided_answer: str,justification: str,existing_helper_functions: str,
         baml_options: BamlCallOptions = {},
     ) -> baml_py.BamlSyncStream[stream_types.FaultyToolAnalysis, types.FaultyToolAnalysis]:
-        ctx, result = self.__options.merge_options(baml_options).create_sync_stream(function_name="FaultyToolIdentifier", args={
+        ctx, result = self.__options.merge_options(baml_options).create_sync_stream(function_name="FaultyNewToolAnalysis", args={
             "history": history,"question": question,"ground_truth": ground_truth,"provided_answer": provided_answer,"justification": justification,"existing_helper_functions": existing_helper_functions,
         })
         return baml_py.BamlSyncStream[stream_types.FaultyToolAnalysis, types.FaultyToolAnalysis](
@@ -474,10 +474,10 @@ class BamlHttpRequestClient:
             "question": question,"category": category,"ground_truth": ground_truth,"system_response": system_response,
         }, mode="request")
         return result
-    def FaultyToolIdentifier(self, history: str,question: str,ground_truth: str,provided_answer: str,justification: str,existing_helper_functions: str,
+    def FaultyNewToolAnalysis(self, history: str,question: str,ground_truth: str,provided_answer: str,justification: str,existing_helper_functions: str,
         baml_options: BamlCallOptions = {},
     ) -> baml_py.baml_py.HTTPRequest:
-        result = self.__options.merge_options(baml_options).create_http_request_sync(function_name="FaultyToolIdentifier", args={
+        result = self.__options.merge_options(baml_options).create_http_request_sync(function_name="FaultyNewToolAnalysis", args={
             "history": history,"question": question,"ground_truth": ground_truth,"provided_answer": provided_answer,"justification": justification,"existing_helper_functions": existing_helper_functions,
         }, mode="request")
         return result
@@ -573,10 +573,10 @@ class BamlHttpStreamRequestClient:
             "question": question,"category": category,"ground_truth": ground_truth,"system_response": system_response,
         }, mode="stream")
         return result
-    def FaultyToolIdentifier(self, history: str,question: str,ground_truth: str,provided_answer: str,justification: str,existing_helper_functions: str,
+    def FaultyNewToolAnalysis(self, history: str,question: str,ground_truth: str,provided_answer: str,justification: str,existing_helper_functions: str,
         baml_options: BamlCallOptions = {},
     ) -> baml_py.baml_py.HTTPRequest:
-        result = self.__options.merge_options(baml_options).create_http_request_sync(function_name="FaultyToolIdentifier", args={
+        result = self.__options.merge_options(baml_options).create_http_request_sync(function_name="FaultyNewToolAnalysis", args={
             "history": history,"question": question,"ground_truth": ground_truth,"provided_answer": provided_answer,"justification": justification,"existing_helper_functions": existing_helper_functions,
         }, mode="stream")
         return result

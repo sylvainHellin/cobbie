@@ -59,7 +59,7 @@ class ToolCorrectorConfig(BaseAgentConfig, CodeActConfig):
     pass  # Inherits all defaults from parent classes
 
 
-class ToolIdentifierConfig(BaseAgentConfig):
+class NewToolAnalysisConfig(BaseAgentConfig):
     """Configuration for FunctionIdentifier agent."""
 
     pass  # Inherits all defaults from parent class
@@ -229,8 +229,8 @@ class AgentConfigs(BaseModel):
     tool_debugger: ToolDebuggerConfig = Field(default_factory=ToolDebuggerConfig)
     tool_assessor: ToolAssessorConfig = Field(default_factory=ToolAssessorConfig)
     tool_corrector: ToolCorrectorConfig = Field(default_factory=ToolCorrectorConfig)
-    function_identifier: ToolIdentifierConfig = Field(
-        default_factory=ToolIdentifierConfig
+    function_identifier: NewToolAnalysisConfig = Field(
+        default_factory=NewToolAnalysisConfig
     )
     tool_optimizer: ToolOptimizerConfig = Field(default_factory=ToolOptimizerConfig)
     error_analyst: ErrorAnalystConfig = Field(default_factory=ErrorAnalystConfig)

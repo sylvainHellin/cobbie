@@ -1,12 +1,12 @@
 import dspy
 from typing import Optional
 
-from src.config.agents import AGENT_CONFIGS, ToolIdentifierConfig
+from src.config.agents import AGENT_CONFIGS, NewToolAnalysisConfig
 from src.engine.schemas import ModuleOutput, AgentOutput
 from src.engine.util import get_logger, get_tools_description
 
 
-class ToolIdentifierSignature(dspy.Signature):
+class NewToolAnalysisSignature(dspy.Signature):
     """
     Analyze a chat history between a user and a helpful AI assistant specialized in BIM/IFC models to identify if a new Python function could be created to answer similar questions in the future.
 
@@ -47,14 +47,14 @@ class ToolIdentifierSignature(dspy.Signature):
     )
 
 
-class ToolIdentifier(dspy.Module):
+class NewToolAnalysis(dspy.Module):
     """
     A DSPy module that identifies potentially useful new Python functions from chat history.
     """
 
     def __init__(
         self,
-        config: Optional[ToolIdentifierConfig] = None,
+        config: Optional[NewToolAnalysisConfig] = None,
         lm: Optional[dspy.LM] = None,
     ):
         super().__init__()
@@ -62,7 +62,7 @@ class ToolIdentifier(dspy.Module):
         self.config = config or AGENT_CONFIGS.function_identifier
         self.lm = lm or self.config.llm.get_llm()
 
-        self.tool_identifier = dspy.ChainOfThought(ToolIdentifierSignature)
+        self.tool_identifier = dspy.ChainOfThought(NewToolAnalysisSignature)
         self.log_level = self.config.log_level
         self.logger = get_logger(name="FunctionIdentifier", log_level=self.log_level)
 
