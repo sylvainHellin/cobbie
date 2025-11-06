@@ -284,7 +284,7 @@ def _cobbie(
 def cobbie(
     user_input: str,
     tools: Dict[str, Callable],
-    max_iterations: int = 10,
+    max_iterations: int = 15,
     model_path: Optional[str] = None,
     add_code_prefix: bool = True,
     llm_provider: str = "zai",
@@ -561,7 +561,7 @@ if __name__ == "__main__":
     result, collector, execution_history = cobbie(
         user_input=test_question,
         tools=tools_dict,
-        max_iterations=5,
+        max_iterations=15,
         model_path=model_path,
         llm_provider="zai",
         llm_name="GLM-4.6",
