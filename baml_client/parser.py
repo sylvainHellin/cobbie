@@ -62,9 +62,9 @@ class LlmResponseParser:
 
     def HelperFunctionDebugger(
         self, llm_response: str, baml_options: BamlCallOptions = {},
-    ) -> typing.Union["types.CodeAction", "types.ToolFixed"]:
+    ) -> typing.Union["types.CodeAction", "types.UpdatedHelperFunction"]:
         result = self.__options.merge_options(baml_options).parse_response(function_name="HelperFunctionDebugger", llm_response=llm_response, mode="request")
-        return typing.cast(typing.Union["types.CodeAction", "types.ToolFixed"], result)
+        return typing.cast(typing.Union["types.CodeAction", "types.UpdatedHelperFunction"], result)
 
     def HelperFunctionIdentifier(
         self, llm_response: str, baml_options: BamlCallOptions = {},
@@ -102,7 +102,7 @@ class LlmResponseParser:
         result = self.__options.merge_options(baml_options).parse_response(function_name="ValidateQuestionCategory", llm_response=llm_response, mode="request")
         return typing.cast(types.CategoryValidationResult, result)
 
-    
+
 
 class LlmStreamParser:
     __options: DoNotUseDirectlyCallManager
@@ -148,9 +148,9 @@ class LlmStreamParser:
 
     def HelperFunctionDebugger(
         self, llm_response: str, baml_options: BamlCallOptions = {},
-    ) -> typing.Union["stream_types.CodeAction", "stream_types.ToolFixed"]:
+    ) -> typing.Union["stream_types.CodeAction", "stream_types.UpdatedHelperFunction"]:
         result = self.__options.merge_options(baml_options).parse_response(function_name="HelperFunctionDebugger", llm_response=llm_response, mode="stream")
-        return typing.cast(typing.Union["stream_types.CodeAction", "stream_types.ToolFixed"], result)
+        return typing.cast(typing.Union["stream_types.CodeAction", "stream_types.UpdatedHelperFunction"], result)
 
     def HelperFunctionIdentifier(
         self, llm_response: str, baml_options: BamlCallOptions = {},
@@ -187,5 +187,3 @@ class LlmStreamParser:
     ) -> stream_types.CategoryValidationResult:
         result = self.__options.merge_options(baml_options).parse_response(function_name="ValidateQuestionCategory", llm_response=llm_response, mode="stream")
         return typing.cast(stream_types.CategoryValidationResult, result)
-
-    

@@ -140,7 +140,7 @@ class FaultyToolAnalysis {
 }
 
 // Tool fixing result - analyzes and fixes faulty helper functions
-class ToolFixed {
+class UpdatedHelperFunction {
   thoughts string @description("Analysis of the faulty function and explanation of the fixing process")
   fixed_implementation string @description("Fixed Python function implementation that addresses the identified issues")
   changes_summary string @description("Summary of the main changes made to fix the function")

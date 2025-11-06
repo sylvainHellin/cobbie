@@ -12,7 +12,7 @@ from typing import List, Optional, Tuple
 import mlflow
 from baml_py.baml_py import Collector
 
-from baml_client.types import CodeAction, ToolFixed
+from baml_client.types import CodeAction, UpdatedHelperFunction
 from src.config import LOG_LEVEL
 from src.engine.tools.primordial import query_ifcopenshell_docs
 from src.engine.util.code_act_inner_loop import _execute_code_action
@@ -32,7 +32,7 @@ def _helper_function_debugger_iter(
     other_bim_models_for_testing: Optional[List[str]] = None,
     previous_attempts: Optional[str] = None,
     **kwargs,
-) -> CodeAction | ToolFixed:
+) -> CodeAction | UpdatedHelperFunction:
     """
     Execute a single iteration of the helper function debugger.
 
@@ -50,7 +50,7 @@ def _helper_function_debugger_iter(
         **kwargs: Additional arguments for BAML function (including baml_options)
 
     Returns:
-        CodeAction to continue debugging or ToolFixed when complete
+        CodeAction to continue debugging or UpdatedHelperFunction when complete
     """
     from baml_client import b
 
@@ -81,7 +81,7 @@ def _helper_function_debugger_iter(
             )
     except Exception as e:
         _logger.error(f"Error in HelperFunctionDebugger iteration: {e}")
-        result = ToolFixed(
+        result = UpdatedHelperFunction(
             thoughts=f"An Exception occurred when trying to debug the helper function. Exception:\n{e}",
             fixed_implementation="",
             changes_summary="Error occurred during debugging",
@@ -103,7 +103,7 @@ def _debug_helper_function(
     llm_name: str = "GLM-4.6",
     llm_provider: str = "zai",
     **kwargs,
-) -> Tuple[ToolFixed, str]:
+) -> Tuple[UpdatedHelperFunction, str]:
     """
     Main helper function debugger orchestration with iteration loop.
 
@@ -123,7 +123,7 @@ def _debug_helper_function(
         **kwargs: Additional arguments passed to BAML function
 
     Returns:
-        Tuple of (ToolFixed, execution_history) where execution_history contains
+        Tuple of (UpdatedHelperFunction, execution_history) where execution_history contains
         the complete iteration-by-iteration trace of debugging
     """
     _logger.info(f"Starting helper function debugging for: {faulty_function_name}")
@@ -251,10 +251,10 @@ def _debug_helper_function(
                             "python_code": result.python_code,
                         }
                     )
-                elif isinstance(result, ToolFixed):
+                elif isinstance(result, UpdatedHelperFunction):
                     llm_span.set_outputs(
                         {
-                            "result_type": "ToolFixed",
+                            "result_type": "UpdatedHelperFunction",
                             "thoughts": result.thoughts,
                             "fixed_implementation": result.fixed_implementation,
                             "changes_summary": result.changes_summary,
@@ -263,7 +263,7 @@ def _debug_helper_function(
                     )
 
             # Handle union type flow control
-            if isinstance(result, ToolFixed):
+            if isinstance(result, UpdatedHelperFunction):
                 _logger.info(
                     f"Helper function debugging completed after {iteration + 1} iterations"
                 )
@@ -357,7 +357,7 @@ def _debug_helper_function(
             }
         )
 
-        final_result = ToolFixed(
+        final_result = UpdatedHelperFunction(
             thoughts=f"Reached maximum iteration limit ({max_iterations}) without completing the fix. "
             f"Summary:\n"
             f"- Total iterations: {max_iterations}\n"
@@ -394,11 +394,11 @@ def debug_helper_function(
     llm_provider: str = "zai",
     llm_name: str = "GLM-4.6",
     **kwargs,
-) -> Tuple[ToolFixed, Collector, str]:
+) -> Tuple[UpdatedHelperFunction, Collector, str]:
     """
     Execute helper function debugger with comprehensive metrics collection.
 
-    Returns ToolFixed, Collector, and execution history for performance tracking.
+    Returns UpdatedHelperFunction, Collector, and execution history for performance tracking.
 
     Args:
         faulty_function_name: Name of the identified faulty function
@@ -413,7 +413,7 @@ def debug_helper_function(
         **kwargs: Additional arguments passed to BAML function
 
     Returns:
-        Tuple of (ToolFixed, Collector, execution_history) where execution_history
+        Tuple of (UpdatedHelperFunction, Collector, execution_history) where execution_history
         contains the complete iteration-by-iteration trace of debugging
     """
     # Create collector for token tracking

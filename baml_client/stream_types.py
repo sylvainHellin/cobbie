@@ -109,7 +109,7 @@ class ToolCreationResult(BaseModel):
     function_implementation: typing.Optional[str] = None
     success: typing.Optional[bool] = None
 
-class ToolFixed(BaseModel):
+class UpdatedHelperFunction(BaseModel):
     thoughts: typing.Optional[str] = None
     fixed_implementation: typing.Optional[str] = None
     changes_summary: typing.Optional[str] = None

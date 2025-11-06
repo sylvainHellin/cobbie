@@ -11,7 +11,7 @@ function HelperFunctionDebugger(
   ifc_model_path: string @description("Path to the IFC model where the failure occurred for testing purposes"),
   other_bim_models_for_testing: string[]? @description("List of paths to other available BIM models for testing generalization. If not provided, the system will automatically discover other IFC files in the bim_models directory."),
   previous_attempts: string? @description("Previous code execution results and attempts, if any")
-) -> CodeAction | ToolFixed {
+) -> CodeAction | UpdatedHelperFunction {
   client GLM_4_6
   prompt #"
     You are an expert Python developer and software architect specializing in BIM (Building Information Modeling) systems.
@@ -90,7 +90,7 @@ function HelperFunctionDebugger(
     3. **Write and Test Code**: Use Python code to implement and test your fixes
     4. **Validate Results**: Test against the error scenarios to ensure the fix works
     5. **Iterate**: Continue refining until the fix is robust and correct
-    6. **Provide Final Implementation**: Only provide ToolFixed when thoroughly tested
+    6. **Provide Final Implementation**: Only provide UpdatedHelperFunction when thoroughly tested
 
     COMMON TYPES OF ISSUES TO LOOK FOR:
 
@@ -137,7 +137,7 @@ function HelperFunctionDebugger(
     - Validate against test cases from the error description
     - Refine the implementation based on testing results
 
-    Use ToolFixed only when:
+    Use UpdatedHelperFunction only when:
     - You have thoroughly tested the implementation
     - All test cases from the error description pass
     - The function handles edge cases correctly

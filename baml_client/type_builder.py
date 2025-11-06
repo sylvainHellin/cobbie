@@ -20,7 +20,7 @@ from .globals import DO_NOT_USE_DIRECTLY_UNLESS_YOU_KNOW_WHAT_YOURE_DOING_RUNTIM
 class TypeBuilder(type_builder.TypeBuilder):
     def __init__(self):
         super().__init__(classes=set(
-          ["AlignedQAPair","AnswerEvaluationResult","AssessmentResult","CategoryValidationResult","CleanedCode","CodeAction","ErrorAnalysisResult","FaultyToolAnalysis","FinalAnswer","FunctionImplementation","ImprovedImplementation","NewHelperFunction","SimilarityResult","TestAndImproveError","TestAndImproveSuccess","ToolCreationResult","ToolFixed","ToolIdentified","ToolOptimizationResult",]
+          ["AlignedQAPair","AnswerEvaluationResult","AssessmentResult","CategoryValidationResult","CleanedCode","CodeAction","ErrorAnalysisResult","FaultyToolAnalysis","FinalAnswer","FunctionImplementation","ImprovedImplementation","NewHelperFunction","SimilarityResult","TestAndImproveError","TestAndImproveSuccess","ToolCreationResult","UpdatedHelperFunction","ToolIdentified","ToolOptimizationResult",]
         ), enums=set(
           ["QuestionCategory",]
         ), runtime=DO_NOT_USE_DIRECTLY_UNLESS_YOU_KNOW_WHAT_YOURE_DOING_RUNTIME)
@@ -103,8 +103,8 @@ class TypeBuilder(type_builder.TypeBuilder):
         return ToolCreationResultViewer(self)
 
     @property
-    def ToolFixed(self) -> "ToolFixedViewer":
-        return ToolFixedViewer(self)
+    def UpdatedHelperFunction(self) -> "UpdatedHelperFunctionViewer":
+        return UpdatedHelperFunctionViewer(self)
 
     @property
     def ToolIdentified(self) -> "ToolIdentifiedViewer":
@@ -139,35 +139,35 @@ class QuestionCategoryViewer(QuestionCategoryAst):
     def __init__(self, tb: type_builder.TypeBuilder):
         super().__init__(tb)
 
-    
+
     def list_values(self) -> typing.List[typing.Tuple[str, type_builder.EnumValueViewer]]:
         return [(name, type_builder.EnumValueViewer(self._bldr.value(name))) for name in self._values]
-    
+
 
 class QuestionCategoryValues:
     def __init__(self, enum_bldr: baml_py.EnumBuilder, values: typing.Set[str]):
         self.__bldr = enum_bldr
         self.__values = values # type: ignore (we know how to use this private attribute) # noqa: F821
 
-    
-    
+
+
     @property
     def Category1(self) -> type_builder.EnumValueViewer:
         return type_builder.EnumValueViewer(self.__bldr.value("Category1"))
-    
+
     @property
     def Category2(self) -> type_builder.EnumValueViewer:
         return type_builder.EnumValueViewer(self.__bldr.value("Category2"))
-    
+
     @property
     def Category3(self) -> type_builder.EnumValueViewer:
         return type_builder.EnumValueViewer(self.__bldr.value("Category3"))
-    
+
     @property
     def Category4(self) -> type_builder.EnumValueViewer:
         return type_builder.EnumValueViewer(self.__bldr.value("Category4"))
-    
-    
+
+
 
 
 
@@ -194,10 +194,10 @@ class AlignedQAPairViewer(AlignedQAPairAst):
     def __init__(self, tb: type_builder.TypeBuilder):
         super().__init__(tb)
 
-    
+
     def list_properties(self) -> typing.List[typing.Tuple[str, type_builder.ClassPropertyViewer]]:
         return [(name, type_builder.ClassPropertyViewer(self._bldr.property(name))) for name in self._properties]
-    
+
 
 
 class AlignedQAPairProperties:
@@ -205,25 +205,25 @@ class AlignedQAPairProperties:
         self.__bldr = bldr
         self.__properties = properties # type: ignore (we know how to use this private attribute) # noqa: F821
 
-    
-    
+
+
     @property
     def thought(self) -> type_builder.ClassPropertyViewer:
         return type_builder.ClassPropertyViewer(self.__bldr.property("thought"))
-    
+
     @property
     def aligned_question(self) -> type_builder.ClassPropertyViewer:
         return type_builder.ClassPropertyViewer(self.__bldr.property("aligned_question"))
-    
+
     @property
     def aligned_answer(self) -> type_builder.ClassPropertyViewer:
         return type_builder.ClassPropertyViewer(self.__bldr.property("aligned_answer"))
-    
+
     @property
     def was_modified(self) -> type_builder.ClassPropertyViewer:
         return type_builder.ClassPropertyViewer(self.__bldr.property("was_modified"))
-    
-    
+
+
 
 
 class AnswerEvaluationResultAst:
@@ -245,10 +245,10 @@ class AnswerEvaluationResultViewer(AnswerEvaluationResultAst):
     def __init__(self, tb: type_builder.TypeBuilder):
         super().__init__(tb)
 
-    
+
     def list_properties(self) -> typing.List[typing.Tuple[str, type_builder.ClassPropertyViewer]]:
         return [(name, type_builder.ClassPropertyViewer(self._bldr.property(name))) for name in self._properties]
-    
+
 
 
 class AnswerEvaluationResultProperties:
@@ -256,21 +256,21 @@ class AnswerEvaluationResultProperties:
         self.__bldr = bldr
         self.__properties = properties # type: ignore (we know how to use this private attribute) # noqa: F821
 
-    
-    
+
+
     @property
     def classification(self) -> type_builder.ClassPropertyViewer:
         return type_builder.ClassPropertyViewer(self.__bldr.property("classification"))
-    
+
     @property
     def justification(self) -> type_builder.ClassPropertyViewer:
         return type_builder.ClassPropertyViewer(self.__bldr.property("justification"))
-    
+
     @property
     def confidence(self) -> type_builder.ClassPropertyViewer:
         return type_builder.ClassPropertyViewer(self.__bldr.property("confidence"))
-    
-    
+
+
 
 
 class AssessmentResultAst:
@@ -292,10 +292,10 @@ class AssessmentResultViewer(AssessmentResultAst):
     def __init__(self, tb: type_builder.TypeBuilder):
         super().__init__(tb)
 
-    
+
     def list_properties(self) -> typing.List[typing.Tuple[str, type_builder.ClassPropertyViewer]]:
         return [(name, type_builder.ClassPropertyViewer(self._bldr.property(name))) for name in self._properties]
-    
+
 
 
 class AssessmentResultProperties:
@@ -303,21 +303,21 @@ class AssessmentResultProperties:
         self.__bldr = bldr
         self.__properties = properties # type: ignore (we know how to use this private attribute) # noqa: F821
 
-    
-    
+
+
     @property
     def assessment_status(self) -> type_builder.ClassPropertyViewer:
         return type_builder.ClassPropertyViewer(self.__bldr.property("assessment_status"))
-    
+
     @property
     def assessment_details(self) -> type_builder.ClassPropertyViewer:
         return type_builder.ClassPropertyViewer(self.__bldr.property("assessment_details"))
-    
+
     @property
     def test_execution_log(self) -> type_builder.ClassPropertyViewer:
         return type_builder.ClassPropertyViewer(self.__bldr.property("test_execution_log"))
-    
-    
+
+
 
 
 class CategoryValidationResultAst:
@@ -339,10 +339,10 @@ class CategoryValidationResultViewer(CategoryValidationResultAst):
     def __init__(self, tb: type_builder.TypeBuilder):
         super().__init__(tb)
 
-    
+
     def list_properties(self) -> typing.List[typing.Tuple[str, type_builder.ClassPropertyViewer]]:
         return [(name, type_builder.ClassPropertyViewer(self._bldr.property(name))) for name in self._properties]
-    
+
 
 
 class CategoryValidationResultProperties:
@@ -350,21 +350,21 @@ class CategoryValidationResultProperties:
         self.__bldr = bldr
         self.__properties = properties # type: ignore (we know how to use this private attribute) # noqa: F821
 
-    
-    
+
+
     @property
     def validated_category(self) -> type_builder.ClassPropertyViewer:
         return type_builder.ClassPropertyViewer(self.__bldr.property("validated_category"))
-    
+
     @property
     def updated(self) -> type_builder.ClassPropertyViewer:
         return type_builder.ClassPropertyViewer(self.__bldr.property("updated"))
-    
+
     @property
     def thought(self) -> type_builder.ClassPropertyViewer:
         return type_builder.ClassPropertyViewer(self.__bldr.property("thought"))
-    
-    
+
+
 
 
 class CleanedCodeAst:
@@ -386,10 +386,10 @@ class CleanedCodeViewer(CleanedCodeAst):
     def __init__(self, tb: type_builder.TypeBuilder):
         super().__init__(tb)
 
-    
+
     def list_properties(self) -> typing.List[typing.Tuple[str, type_builder.ClassPropertyViewer]]:
         return [(name, type_builder.ClassPropertyViewer(self._bldr.property(name))) for name in self._properties]
-    
+
 
 
 class CleanedCodeProperties:
@@ -397,21 +397,21 @@ class CleanedCodeProperties:
         self.__bldr = bldr
         self.__properties = properties # type: ignore (we know how to use this private attribute) # noqa: F821
 
-    
-    
+
+
     @property
     def function_implementation(self) -> type_builder.ClassPropertyViewer:
         return type_builder.ClassPropertyViewer(self.__bldr.property("function_implementation"))
-    
+
     @property
     def reasoning(self) -> type_builder.ClassPropertyViewer:
         return type_builder.ClassPropertyViewer(self.__bldr.property("reasoning"))
-    
+
     @property
     def success(self) -> type_builder.ClassPropertyViewer:
         return type_builder.ClassPropertyViewer(self.__bldr.property("success"))
-    
-    
+
+
 
 
 class CodeActionAst:
@@ -433,10 +433,10 @@ class CodeActionViewer(CodeActionAst):
     def __init__(self, tb: type_builder.TypeBuilder):
         super().__init__(tb)
 
-    
+
     def list_properties(self) -> typing.List[typing.Tuple[str, type_builder.ClassPropertyViewer]]:
         return [(name, type_builder.ClassPropertyViewer(self._bldr.property(name))) for name in self._properties]
-    
+
 
 
 class CodeActionProperties:
@@ -444,17 +444,17 @@ class CodeActionProperties:
         self.__bldr = bldr
         self.__properties = properties # type: ignore (we know how to use this private attribute) # noqa: F821
 
-    
-    
+
+
     @property
     def thoughts(self) -> type_builder.ClassPropertyViewer:
         return type_builder.ClassPropertyViewer(self.__bldr.property("thoughts"))
-    
+
     @property
     def python_code(self) -> type_builder.ClassPropertyViewer:
         return type_builder.ClassPropertyViewer(self.__bldr.property("python_code"))
-    
-    
+
+
 
 
 class ErrorAnalysisResultAst:
@@ -476,10 +476,10 @@ class ErrorAnalysisResultViewer(ErrorAnalysisResultAst):
     def __init__(self, tb: type_builder.TypeBuilder):
         super().__init__(tb)
 
-    
+
     def list_properties(self) -> typing.List[typing.Tuple[str, type_builder.ClassPropertyViewer]]:
         return [(name, type_builder.ClassPropertyViewer(self._bldr.property(name))) for name in self._properties]
-    
+
 
 
 class ErrorAnalysisResultProperties:
@@ -487,21 +487,21 @@ class ErrorAnalysisResultProperties:
         self.__bldr = bldr
         self.__properties = properties # type: ignore (we know how to use this private attribute) # noqa: F821
 
-    
-    
+
+
     @property
     def error_category(self) -> type_builder.ClassPropertyViewer:
         return type_builder.ClassPropertyViewer(self.__bldr.property("error_category"))
-    
+
     @property
     def function_name(self) -> type_builder.ClassPropertyViewer:
         return type_builder.ClassPropertyViewer(self.__bldr.property("function_name"))
-    
+
     @property
     def needs_new_tool(self) -> type_builder.ClassPropertyViewer:
         return type_builder.ClassPropertyViewer(self.__bldr.property("needs_new_tool"))
-    
-    
+
+
 
 
 class FaultyToolAnalysisAst:
@@ -523,10 +523,10 @@ class FaultyToolAnalysisViewer(FaultyToolAnalysisAst):
     def __init__(self, tb: type_builder.TypeBuilder):
         super().__init__(tb)
 
-    
+
     def list_properties(self) -> typing.List[typing.Tuple[str, type_builder.ClassPropertyViewer]]:
         return [(name, type_builder.ClassPropertyViewer(self._bldr.property(name))) for name in self._properties]
-    
+
 
 
 class FaultyToolAnalysisProperties:
@@ -534,29 +534,29 @@ class FaultyToolAnalysisProperties:
         self.__bldr = bldr
         self.__properties = properties # type: ignore (we know how to use this private attribute) # noqa: F821
 
-    
-    
+
+
     @property
     def thoughts(self) -> type_builder.ClassPropertyViewer:
         return type_builder.ClassPropertyViewer(self.__bldr.property("thoughts"))
-    
+
     @property
     def faulty_tool(self) -> type_builder.ClassPropertyViewer:
         return type_builder.ClassPropertyViewer(self.__bldr.property("faulty_tool"))
-    
+
     @property
     def faulty_tool_name(self) -> type_builder.ClassPropertyViewer:
         return type_builder.ClassPropertyViewer(self.__bldr.property("faulty_tool_name"))
-    
+
     @property
     def error_description(self) -> type_builder.ClassPropertyViewer:
         return type_builder.ClassPropertyViewer(self.__bldr.property("error_description"))
-    
+
     @property
     def confidence(self) -> type_builder.ClassPropertyViewer:
         return type_builder.ClassPropertyViewer(self.__bldr.property("confidence"))
-    
-    
+
+
 
 
 class FinalAnswerAst:
@@ -578,10 +578,10 @@ class FinalAnswerViewer(FinalAnswerAst):
     def __init__(self, tb: type_builder.TypeBuilder):
         super().__init__(tb)
 
-    
+
     def list_properties(self) -> typing.List[typing.Tuple[str, type_builder.ClassPropertyViewer]]:
         return [(name, type_builder.ClassPropertyViewer(self._bldr.property(name))) for name in self._properties]
-    
+
 
 
 class FinalAnswerProperties:
@@ -589,17 +589,17 @@ class FinalAnswerProperties:
         self.__bldr = bldr
         self.__properties = properties # type: ignore (we know how to use this private attribute) # noqa: F821
 
-    
-    
+
+
     @property
     def thoughts(self) -> type_builder.ClassPropertyViewer:
         return type_builder.ClassPropertyViewer(self.__bldr.property("thoughts"))
-    
+
     @property
     def answer(self) -> type_builder.ClassPropertyViewer:
         return type_builder.ClassPropertyViewer(self.__bldr.property("answer"))
-    
-    
+
+
 
 
 class FunctionImplementationAst:
@@ -621,10 +621,10 @@ class FunctionImplementationViewer(FunctionImplementationAst):
     def __init__(self, tb: type_builder.TypeBuilder):
         super().__init__(tb)
 
-    
+
     def list_properties(self) -> typing.List[typing.Tuple[str, type_builder.ClassPropertyViewer]]:
         return [(name, type_builder.ClassPropertyViewer(self._bldr.property(name))) for name in self._properties]
-    
+
 
 
 class FunctionImplementationProperties:
@@ -632,21 +632,21 @@ class FunctionImplementationProperties:
         self.__bldr = bldr
         self.__properties = properties # type: ignore (we know how to use this private attribute) # noqa: F821
 
-    
-    
+
+
     @property
     def function_implementation(self) -> type_builder.ClassPropertyViewer:
         return type_builder.ClassPropertyViewer(self.__bldr.property("function_implementation"))
-    
+
     @property
     def confidence(self) -> type_builder.ClassPropertyViewer:
         return type_builder.ClassPropertyViewer(self.__bldr.property("confidence"))
-    
+
     @property
     def needs_improvement(self) -> type_builder.ClassPropertyViewer:
         return type_builder.ClassPropertyViewer(self.__bldr.property("needs_improvement"))
-    
-    
+
+
 
 
 class ImprovedImplementationAst:
@@ -668,10 +668,10 @@ class ImprovedImplementationViewer(ImprovedImplementationAst):
     def __init__(self, tb: type_builder.TypeBuilder):
         super().__init__(tb)
 
-    
+
     def list_properties(self) -> typing.List[typing.Tuple[str, type_builder.ClassPropertyViewer]]:
         return [(name, type_builder.ClassPropertyViewer(self._bldr.property(name))) for name in self._properties]
-    
+
 
 
 class ImprovedImplementationProperties:
@@ -679,21 +679,21 @@ class ImprovedImplementationProperties:
         self.__bldr = bldr
         self.__properties = properties # type: ignore (we know how to use this private attribute) # noqa: F821
 
-    
-    
+
+
     @property
     def function_implementation(self) -> type_builder.ClassPropertyViewer:
         return type_builder.ClassPropertyViewer(self.__bldr.property("function_implementation"))
-    
+
     @property
     def reasoning(self) -> type_builder.ClassPropertyViewer:
         return type_builder.ClassPropertyViewer(self.__bldr.property("reasoning"))
-    
+
     @property
     def changes_summary(self) -> type_builder.ClassPropertyViewer:
         return type_builder.ClassPropertyViewer(self.__bldr.property("changes_summary"))
-    
-    
+
+
 
 
 class NewHelperFunctionAst:
@@ -715,10 +715,10 @@ class NewHelperFunctionViewer(NewHelperFunctionAst):
     def __init__(self, tb: type_builder.TypeBuilder):
         super().__init__(tb)
 
-    
+
     def list_properties(self) -> typing.List[typing.Tuple[str, type_builder.ClassPropertyViewer]]:
         return [(name, type_builder.ClassPropertyViewer(self._bldr.property(name))) for name in self._properties]
-    
+
 
 
 class NewHelperFunctionProperties:
@@ -726,21 +726,21 @@ class NewHelperFunctionProperties:
         self.__bldr = bldr
         self.__properties = properties # type: ignore (we know how to use this private attribute) # noqa: F821
 
-    
-    
+
+
     @property
     def thoughts(self) -> type_builder.ClassPropertyViewer:
         return type_builder.ClassPropertyViewer(self.__bldr.property("thoughts"))
-    
+
     @property
     def function_implementation(self) -> type_builder.ClassPropertyViewer:
         return type_builder.ClassPropertyViewer(self.__bldr.property("function_implementation"))
-    
+
     @property
     def success(self) -> type_builder.ClassPropertyViewer:
         return type_builder.ClassPropertyViewer(self.__bldr.property("success"))
-    
-    
+
+
 
 
 class SimilarityResultAst:
@@ -762,10 +762,10 @@ class SimilarityResultViewer(SimilarityResultAst):
     def __init__(self, tb: type_builder.TypeBuilder):
         super().__init__(tb)
 
-    
+
     def list_properties(self) -> typing.List[typing.Tuple[str, type_builder.ClassPropertyViewer]]:
         return [(name, type_builder.ClassPropertyViewer(self._bldr.property(name))) for name in self._properties]
-    
+
 
 
 class SimilarityResultProperties:
@@ -773,21 +773,21 @@ class SimilarityResultProperties:
         self.__bldr = bldr
         self.__properties = properties # type: ignore (we know how to use this private attribute) # noqa: F821
 
-    
-    
+
+
     @property
     def similarity_score(self) -> type_builder.ClassPropertyViewer:
         return type_builder.ClassPropertyViewer(self.__bldr.property("similarity_score"))
-    
+
     @property
     def correct_answer(self) -> type_builder.ClassPropertyViewer:
         return type_builder.ClassPropertyViewer(self.__bldr.property("correct_answer"))
-    
+
     @property
     def reasoning(self) -> type_builder.ClassPropertyViewer:
         return type_builder.ClassPropertyViewer(self.__bldr.property("reasoning"))
-    
-    
+
+
 
 
 class TestAndImproveErrorAst:
@@ -809,10 +809,10 @@ class TestAndImproveErrorViewer(TestAndImproveErrorAst):
     def __init__(self, tb: type_builder.TypeBuilder):
         super().__init__(tb)
 
-    
+
     def list_properties(self) -> typing.List[typing.Tuple[str, type_builder.ClassPropertyViewer]]:
         return [(name, type_builder.ClassPropertyViewer(self._bldr.property(name))) for name in self._properties]
-    
+
 
 
 class TestAndImproveErrorProperties:
@@ -820,25 +820,25 @@ class TestAndImproveErrorProperties:
         self.__bldr = bldr
         self.__properties = properties # type: ignore (we know how to use this private attribute) # noqa: F821
 
-    
-    
+
+
     @property
     def error_message(self) -> type_builder.ClassPropertyViewer:
         return type_builder.ClassPropertyViewer(self.__bldr.property("error_message"))
-    
+
     @property
     def iterations_completed(self) -> type_builder.ClassPropertyViewer:
         return type_builder.ClassPropertyViewer(self.__bldr.property("iterations_completed"))
-    
+
     @property
     def final_assessment_status(self) -> type_builder.ClassPropertyViewer:
         return type_builder.ClassPropertyViewer(self.__bldr.property("final_assessment_status"))
-    
+
     @property
     def partial_function_implementation(self) -> type_builder.ClassPropertyViewer:
         return type_builder.ClassPropertyViewer(self.__bldr.property("partial_function_implementation"))
-    
-    
+
+
 
 
 class TestAndImproveSuccessAst:
@@ -860,10 +860,10 @@ class TestAndImproveSuccessViewer(TestAndImproveSuccessAst):
     def __init__(self, tb: type_builder.TypeBuilder):
         super().__init__(tb)
 
-    
+
     def list_properties(self) -> typing.List[typing.Tuple[str, type_builder.ClassPropertyViewer]]:
         return [(name, type_builder.ClassPropertyViewer(self._bldr.property(name))) for name in self._properties]
-    
+
 
 
 class TestAndImproveSuccessProperties:
@@ -871,25 +871,25 @@ class TestAndImproveSuccessProperties:
         self.__bldr = bldr
         self.__properties = properties # type: ignore (we know how to use this private attribute) # noqa: F821
 
-    
-    
+
+
     @property
     def function_implementation(self) -> type_builder.ClassPropertyViewer:
         return type_builder.ClassPropertyViewer(self.__bldr.property("function_implementation"))
-    
+
     @property
     def assessment_details(self) -> type_builder.ClassPropertyViewer:
         return type_builder.ClassPropertyViewer(self.__bldr.property("assessment_details"))
-    
+
     @property
     def iterations_used(self) -> type_builder.ClassPropertyViewer:
         return type_builder.ClassPropertyViewer(self.__bldr.property("iterations_used"))
-    
+
     @property
     def total_time_seconds(self) -> type_builder.ClassPropertyViewer:
         return type_builder.ClassPropertyViewer(self.__bldr.property("total_time_seconds"))
-    
-    
+
+
 
 
 class ToolCreationResultAst:
@@ -911,10 +911,10 @@ class ToolCreationResultViewer(ToolCreationResultAst):
     def __init__(self, tb: type_builder.TypeBuilder):
         super().__init__(tb)
 
-    
+
     def list_properties(self) -> typing.List[typing.Tuple[str, type_builder.ClassPropertyViewer]]:
         return [(name, type_builder.ClassPropertyViewer(self._bldr.property(name))) for name in self._properties]
-    
+
 
 
 class ToolCreationResultProperties:
@@ -922,76 +922,76 @@ class ToolCreationResultProperties:
         self.__bldr = bldr
         self.__properties = properties # type: ignore (we know how to use this private attribute) # noqa: F821
 
-    
-    
+
+
     @property
     def function_name(self) -> type_builder.ClassPropertyViewer:
         return type_builder.ClassPropertyViewer(self.__bldr.property("function_name"))
-    
+
     @property
     def function_implementation(self) -> type_builder.ClassPropertyViewer:
         return type_builder.ClassPropertyViewer(self.__bldr.property("function_implementation"))
-    
+
     @property
     def success(self) -> type_builder.ClassPropertyViewer:
         return type_builder.ClassPropertyViewer(self.__bldr.property("success"))
-    
-    
 
 
-class ToolFixedAst:
+
+
+class UpdatedHelperFunctionAst:
     def __init__(self, tb: type_builder.TypeBuilder):
         _tb = tb._tb # type: ignore (we know how to use this private attribute)
-        self._bldr = _tb.class_("ToolFixed")
+        self._bldr = _tb.class_("UpdatedHelperFunction")
         self._properties: typing.Set[str] = set([  "thoughts",  "fixed_implementation",  "changes_summary",  "success",  "test_cases_provided",  ])
-        self._props = ToolFixedProperties(self._bldr, self._properties)
+        self._props = UpdatedHelperFunctionProperties(self._bldr, self._properties)
 
     def type(self) -> baml_py.FieldType:
         return self._bldr.field()
 
     @property
-    def props(self) -> "ToolFixedProperties":
+    def props(self) -> "UpdatedHelperFunctionProperties":
         return self._props
 
 
-class ToolFixedViewer(ToolFixedAst):
+class UpdatedHelperFunctionViewer(UpdatedHelperFunctionAst):
     def __init__(self, tb: type_builder.TypeBuilder):
         super().__init__(tb)
 
-    
+
     def list_properties(self) -> typing.List[typing.Tuple[str, type_builder.ClassPropertyViewer]]:
         return [(name, type_builder.ClassPropertyViewer(self._bldr.property(name))) for name in self._properties]
-    
 
 
-class ToolFixedProperties:
+
+class UpdatedHelperFunctionProperties:
     def __init__(self, bldr: baml_py.ClassBuilder, properties: typing.Set[str]):
         self.__bldr = bldr
         self.__properties = properties # type: ignore (we know how to use this private attribute) # noqa: F821
 
-    
-    
+
+
     @property
     def thoughts(self) -> type_builder.ClassPropertyViewer:
         return type_builder.ClassPropertyViewer(self.__bldr.property("thoughts"))
-    
+
     @property
     def fixed_implementation(self) -> type_builder.ClassPropertyViewer:
         return type_builder.ClassPropertyViewer(self.__bldr.property("fixed_implementation"))
-    
+
     @property
     def changes_summary(self) -> type_builder.ClassPropertyViewer:
         return type_builder.ClassPropertyViewer(self.__bldr.property("changes_summary"))
-    
+
     @property
     def success(self) -> type_builder.ClassPropertyViewer:
         return type_builder.ClassPropertyViewer(self.__bldr.property("success"))
-    
+
     @property
     def test_cases_provided(self) -> type_builder.ClassPropertyViewer:
         return type_builder.ClassPropertyViewer(self.__bldr.property("test_cases_provided"))
-    
-    
+
+
 
 
 class ToolIdentifiedAst:
@@ -1013,10 +1013,10 @@ class ToolIdentifiedViewer(ToolIdentifiedAst):
     def __init__(self, tb: type_builder.TypeBuilder):
         super().__init__(tb)
 
-    
+
     def list_properties(self) -> typing.List[typing.Tuple[str, type_builder.ClassPropertyViewer]]:
         return [(name, type_builder.ClassPropertyViewer(self._bldr.property(name))) for name in self._properties]
-    
+
 
 
 class ToolIdentifiedProperties:
@@ -1024,25 +1024,25 @@ class ToolIdentifiedProperties:
         self.__bldr = bldr
         self.__properties = properties # type: ignore (we know how to use this private attribute) # noqa: F821
 
-    
-    
+
+
     @property
     def thoughts(self) -> type_builder.ClassPropertyViewer:
         return type_builder.ClassPropertyViewer(self.__bldr.property("thoughts"))
-    
+
     @property
     def new_tool(self) -> type_builder.ClassPropertyViewer:
         return type_builder.ClassPropertyViewer(self.__bldr.property("new_tool"))
-    
+
     @property
     def new_tool_name(self) -> type_builder.ClassPropertyViewer:
         return type_builder.ClassPropertyViewer(self.__bldr.property("new_tool_name"))
-    
+
     @property
     def new_tool_description(self) -> type_builder.ClassPropertyViewer:
         return type_builder.ClassPropertyViewer(self.__bldr.property("new_tool_description"))
-    
-    
+
+
 
 
 class ToolOptimizationResultAst:
@@ -1064,10 +1064,10 @@ class ToolOptimizationResultViewer(ToolOptimizationResultAst):
     def __init__(self, tb: type_builder.TypeBuilder):
         super().__init__(tb)
 
-    
+
     def list_properties(self) -> typing.List[typing.Tuple[str, type_builder.ClassPropertyViewer]]:
         return [(name, type_builder.ClassPropertyViewer(self._bldr.property(name))) for name in self._properties]
-    
+
 
 
 class ToolOptimizationResultProperties:
@@ -1075,23 +1075,20 @@ class ToolOptimizationResultProperties:
         self.__bldr = bldr
         self.__properties = properties # type: ignore (we know how to use this private attribute) # noqa: F821
 
-    
-    
+
+
     @property
     def improvement(self) -> type_builder.ClassPropertyViewer:
         return type_builder.ClassPropertyViewer(self.__bldr.property("improvement"))
-    
+
     @property
     def function_name(self) -> type_builder.ClassPropertyViewer:
         return type_builder.ClassPropertyViewer(self.__bldr.property("function_name"))
-    
+
     @property
     def function_requirements(self) -> type_builder.ClassPropertyViewer:
         return type_builder.ClassPropertyViewer(self.__bldr.property("function_requirements"))
-    
+
     @property
     def existing_tool_names(self) -> type_builder.ClassPropertyViewer:
         return type_builder.ClassPropertyViewer(self.__bldr.property("existing_tool_names"))
-    
-    
-

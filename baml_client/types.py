@@ -133,7 +133,7 @@ class ToolCreationResult(BaseModel):
     function_implementation: str
     success: bool
 
-class ToolFixed(BaseModel):
+class UpdatedHelperFunction(BaseModel):
     thoughts: str
     fixed_implementation: str
     changes_summary: str

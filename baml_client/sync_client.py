@@ -90,7 +90,7 @@ class BamlSyncClient:
     @property
     def parse_stream(self):
       return self.__llm_stream_parser
-    
+
     def Cobbie(self, user_input: str,available_tools: str,previous_attempts: typing.Optional[str] = None,model_path: typing.Optional[str] = None,
         baml_options: BamlCallOptions = {},
     ) -> typing.Union["types.CodeAction", "types.FinalAnswer"]:
@@ -177,7 +177,7 @@ class BamlSyncClient:
             return typing.cast(typing.Union["types.CodeAction", "types.NewHelperFunction"], result.cast_to(types, types, stream_types, False, __runtime__))
     def HelperFunctionDebugger(self, faulty_function_name: str,faulty_function_implementation: str,history_faulty_tool_use: typing.Optional[str],error_description: str,ifc_model_path: str,other_bim_models_for_testing: typing.Optional[typing.List[str]] = None,previous_attempts: typing.Optional[str] = None,
         baml_options: BamlCallOptions = {},
-    ) -> typing.Union["types.CodeAction", "types.ToolFixed"]:
+    ) -> typing.Union["types.CodeAction", "types.UpdatedHelperFunction"]:
         # Check if on_tick is provided
         if 'on_tick' in baml_options:
             stream = self.stream.HelperFunctionDebugger(faulty_function_name=faulty_function_name,faulty_function_implementation=faulty_function_implementation,history_faulty_tool_use=history_faulty_tool_use,error_description=error_description,ifc_model_path=ifc_model_path,other_bim_models_for_testing=other_bim_models_for_testing,previous_attempts=previous_attempts,
@@ -188,7 +188,7 @@ class BamlSyncClient:
             result = self.__options.merge_options(baml_options).call_function_sync(function_name="HelperFunctionDebugger", args={
                 "faulty_function_name": faulty_function_name,"faulty_function_implementation": faulty_function_implementation,"history_faulty_tool_use": history_faulty_tool_use,"error_description": error_description,"ifc_model_path": ifc_model_path,"other_bim_models_for_testing": other_bim_models_for_testing,"previous_attempts": previous_attempts,
             })
-            return typing.cast(typing.Union["types.CodeAction", "types.ToolFixed"], result.cast_to(types, types, stream_types, False, __runtime__))
+            return typing.cast(typing.Union["types.CodeAction", "types.UpdatedHelperFunction"], result.cast_to(types, types, stream_types, False, __runtime__))
     def HelperFunctionIdentifier(self, history: str,example_question: str,existing_helper_functions: str,
         baml_options: BamlCallOptions = {},
     ) -> types.ToolIdentified:
@@ -273,7 +273,7 @@ class BamlSyncClient:
                 "question": question,"answer": answer,"current_category": current_category,
             })
             return typing.cast(types.CategoryValidationResult, result.cast_to(types, types, stream_types, False, __runtime__))
-    
+
 
 
 class BamlStreamClient:
@@ -356,14 +356,14 @@ class BamlStreamClient:
         )
     def HelperFunctionDebugger(self, faulty_function_name: str,faulty_function_implementation: str,history_faulty_tool_use: typing.Optional[str],error_description: str,ifc_model_path: str,other_bim_models_for_testing: typing.Optional[typing.List[str]] = None,previous_attempts: typing.Optional[str] = None,
         baml_options: BamlCallOptions = {},
-    ) -> baml_py.BamlSyncStream[typing.Union["stream_types.CodeAction", "stream_types.ToolFixed"], typing.Union["types.CodeAction", "types.ToolFixed"]]:
+    ) -> baml_py.BamlSyncStream[typing.Union["stream_types.CodeAction", "stream_types.UpdatedHelperFunction"], typing.Union["types.CodeAction", "types.UpdatedHelperFunction"]]:
         ctx, result = self.__options.merge_options(baml_options).create_sync_stream(function_name="HelperFunctionDebugger", args={
             "faulty_function_name": faulty_function_name,"faulty_function_implementation": faulty_function_implementation,"history_faulty_tool_use": history_faulty_tool_use,"error_description": error_description,"ifc_model_path": ifc_model_path,"other_bim_models_for_testing": other_bim_models_for_testing,"previous_attempts": previous_attempts,
         })
-        return baml_py.BamlSyncStream[typing.Union["stream_types.CodeAction", "stream_types.ToolFixed"], typing.Union["types.CodeAction", "types.ToolFixed"]](
+        return baml_py.BamlSyncStream[typing.Union["stream_types.CodeAction", "stream_types.UpdatedHelperFunction"], typing.Union["types.CodeAction", "types.UpdatedHelperFunction"]](
           result,
-          lambda x: typing.cast(typing.Union["stream_types.CodeAction", "stream_types.ToolFixed"], x.cast_to(types, types, stream_types, True, __runtime__)),
-          lambda x: typing.cast(typing.Union["types.CodeAction", "types.ToolFixed"], x.cast_to(types, types, stream_types, False, __runtime__)),
+          lambda x: typing.cast(typing.Union["stream_types.CodeAction", "stream_types.UpdatedHelperFunction"], x.cast_to(types, types, stream_types, True, __runtime__)),
+          lambda x: typing.cast(typing.Union["types.CodeAction", "types.UpdatedHelperFunction"], x.cast_to(types, types, stream_types, False, __runtime__)),
           ctx,
         )
     def HelperFunctionIdentifier(self, history: str,example_question: str,existing_helper_functions: str,
@@ -438,7 +438,7 @@ class BamlStreamClient:
           lambda x: typing.cast(types.CategoryValidationResult, x.cast_to(types, types, stream_types, False, __runtime__)),
           ctx,
         )
-    
+
 
 class BamlHttpRequestClient:
     __options: DoNotUseDirectlyCallManager
@@ -537,7 +537,7 @@ class BamlHttpRequestClient:
             "question": question,"answer": answer,"current_category": current_category,
         }, mode="request")
         return result
-    
+
 
 class BamlHttpStreamRequestClient:
     __options: DoNotUseDirectlyCallManager
@@ -636,6 +636,6 @@ class BamlHttpStreamRequestClient:
             "question": question,"answer": answer,"current_category": current_category,
         }, mode="stream")
         return result
-    
+
 
 b = BamlSyncClient(DoNotUseDirectlyCallManager({}))

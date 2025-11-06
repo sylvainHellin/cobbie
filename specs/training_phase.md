@@ -34,7 +34,7 @@ This document specifies the implementation of the training phase for Cobbie's mu
 | `identify_helper_function` | `src.agents.identify_helper_function` | Identifies new tool opportunities | `Tuple[ToolIdentified, Collector]` |
 | `create_helper_function` | `src.agents.create_helper_function` | Creates new tools | `Tuple[NewHelperFunction, Collector, str]` |
 | `identify_faulty_tool` | `src.agents.faulty_tool_identifier` | Identifies faulty tools | `Tuple[FaultyToolAnalysis, Collector]` |
-| `debug_helper_function` | `src.agents.debug_helper_function` | Fixes faulty tools | `Tuple[ToolFixed, Collector, str]` |
+| `debug_helper_function` | `src.agents.debug_helper_function` | Fixes faulty tools | `Tuple[UpdatedHelperFunction, Collector, str]` |
 
 ### Available Utility Functions
 
@@ -101,8 +101,8 @@ END (Move to next QA pair)
 2. **DEBUG_FAULTY_TOOL** (if `faulty_tool == True`):
    - Get faulty tool source code with `get_function_code()`
    - Call `debug_helper_function()` to fix the tool
-   - Input: Faulty function name/implementation, error description, **IFC model path from QA pair**
-   - Output: `ToolFixed` with fixed implementation and success status
+   - Input: Faulty function name/implementation, error description, **IFC model path from QA pair**, history
+   - Output: `UpdatedHelperFunction` with fixed implementation and success status
    - If `success == True`: Save corrected tool with `save_new_tool()`, reload tools
    - If `success == False`: Log error, move to ERROR state
 
@@ -169,7 +169,7 @@ from baml_client.types import (
     ToolIdentified,
     NewHelperFunction,
     FaultyToolAnalysis,
-    ToolFixed,
+    UpdatedHelperFunction,
 )
 from src.experiment.db.models import IfcBench
 
@@ -206,7 +206,7 @@ class Context(BaseModel):
     identify_faulty_duration: float = 0.0
 
     # Debug helper function results (Path B)
-    debug_tool_result: Optional[ToolFixed] = None
+    debug_tool_result: Optional[UpdatedHelperFunction] = None
     debug_tool_collector: Optional[Collector] = None
     debug_tool_history: str = ""
     debug_tool_duration: float = 0.0

@@ -64,8 +64,8 @@ type_map = {
     "types.ToolCreationResult": types.ToolCreationResult,
     "stream_types.ToolCreationResult": stream_types.ToolCreationResult,
 
-    "types.ToolFixed": types.ToolFixed,
-    "stream_types.ToolFixed": stream_types.ToolFixed,
+    "types.UpdatedHelperFunction": types.UpdatedHelperFunction,
+    "stream_types.UpdatedHelperFunction": stream_types.UpdatedHelperFunction,
 
     "types.ToolIdentified": types.ToolIdentified,
     "stream_types.ToolIdentified": stream_types.ToolIdentified,
