@@ -494,7 +494,7 @@ def cobbie_forward(
 
     # Execute COBBIE
     try:
-        final_answer = _cobbie(
+        final_answer, _ = _cobbie(
             question=question,
             tools=tools_dict,
             max_iterations=config.max_iters,
