@@ -4,8 +4,14 @@
 function HelperFunctionDebugger(
   faulty_function_name: string @description("Name of the identified faulty function"),
   faulty_function_implementation: string @description("Current (faulty) implementation of the function that needs to be fixed"),
+  history_faulty_tool_use: string? @description(#"
+    The full trace of thoughts, code and result of Cobbie, where the faulty helper function was used.
+  "#),
   error_description: string @description("Detailed description of what's wrong with the function and test cases showing the failure"),
   ifc_model_path: string @description("Path to the IFC model where the failure occurred for testing purposes"),
+  other_bim_models_for_testing: string? @description(#"
+    List of paths to other available BIM models for testing generalization.
+  "#),
   previous_attempts: string? @description("Previous code execution results and attempts, if any")
 ) -> CodeAction | ToolFixed {
   client GLM_4_6
@@ -28,8 +34,18 @@ function HelperFunctionDebugger(
     Error Description:
     {{ error_description }}
 
+    {% if history_faulty_tool_use %}
+    HISTORY OF THE FAULTY TOO USE:
+    {{ history_faulty_tool_use }}
+
+    {% endif %}
     IFC Model Path: {{ ifc_model_path }}
 
+    {% if other_bim_models_for_testing %}
+    OTHER BIM MODELS PATH FOR TESTING:
+    {{other_bim_models_for_testing}}
+    
+    {% endif %}
     {% if previous_attempts %}
     PREVIOUS ATTEMPTS:
     {{ previous_attempts }}
