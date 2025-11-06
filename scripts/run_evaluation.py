@@ -103,7 +103,6 @@ def calculate_and_log_metrics(question_results: List[Dict]) -> Dict:
 
     # Prepare results summary by extending base metrics with engine info
     results_summary = {
-        "engine_type": "baml",
         "model_name": "glm-4.6",
         "provider_name": "zai",
         "num_samples": total_questions,
@@ -123,7 +122,6 @@ def print_results(results_summary: Dict):
     print("EVALUATION RESULTS")
     print("=" * 80)
 
-    print(f"Engine: {results_summary['engine_type'].upper()}")
     print(f"Model: {results_summary['model_name']} ({results_summary['provider_name']})")
     print(f"Samples: {results_summary['num_samples']}")
     print()
@@ -211,7 +209,6 @@ def process_question(
             "ground_truth": ground_truth,
             "category": category,
             "question_id": question_id,
-            "engine_type": "baml",
             "llm": "glm-4.6",
             "provider_name": "zai",
             "model_path": ifc_path or "None",

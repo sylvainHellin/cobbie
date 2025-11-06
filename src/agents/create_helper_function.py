@@ -439,7 +439,6 @@ def create_helper_function(
         mlflow.log_params(
             {
                 "component": "HelperFunctionCreator",
-                "engine_type": "baml",
                 "max_iterations": max_iterations,
                 "function_name": function_name,
                 "example_bim_model": example_bim_model,

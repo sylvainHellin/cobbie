@@ -136,7 +136,6 @@ def process_question(
             "ground_truth": ground_truth,
             "category": category,
             "question_id": question_id,
-            "engine_type": "baml",
             "component": "COBBIE",
             "llm": "glm-4.6",
             "provider_name": "zai",
@@ -381,7 +380,6 @@ Examples:
 
         # Log parameters
         mlflow.log_params({
-            "engine_type": "baml",
             "component": "COBBIE",
             "model_name": "glm-4.6",
             "provider_name": "zai",
@@ -450,7 +448,6 @@ Examples:
 
         # Set tags
         mlflow.set_tag("processing_status", "completed")
-        mlflow.set_tag("engine_type", "baml")
         mlflow.set_tag("component", "COBBIE")
 
         logger.info("Processing completed successfully")

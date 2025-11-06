@@ -36,10 +36,6 @@ The project is migrating from DSPy to BAML:
 - **Configuration**: Hierarchical config system in `src/config/` (for the legacy DSPy implementation ; not used for new BAML implementation)
 - **Data Pipeline**: SQLite database with MLflow tracking
 
-### Engine Types
-Configure via `ENGINE_TYPE` environment variable:
-- **BAML Engine** (default): Uses Z.AI GLM-4.6, simplified functional architecture
-- **DSPy Engine**: Multi-provider LLM support, advanced optimization capabilities
 
 ## Development Notes
 

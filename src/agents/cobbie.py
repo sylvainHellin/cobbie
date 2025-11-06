@@ -329,7 +329,6 @@ def cobbie(
         mlflow.log_params(
             {
                 "component": "COBBIE",
-                "engine_type": "baml",
                 "max_iterations": max_iterations,
                 "add_code_prefix": add_code_prefix,
                 "model_path": model_path or "None",

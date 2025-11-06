@@ -438,7 +438,6 @@ def debug_helper_function(
             mlflow.log_params(
                 {
                     "component": "HelperFunctionDebugger",
-                    "engine_type": "baml",
                     "max_iterations": max_iterations,
                     "faulty_function_name": faulty_function_name,
                     "ifc_model_path": ifc_model_path,

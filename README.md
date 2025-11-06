@@ -33,10 +33,6 @@ Choose your engine type before starting:
 uvicorn api.main:app --host 127.0.0.1 --port 8000 --reload
 ```
 
-**BAML Engine**:
-```zsh
-ENGINE_TYPE=baml uvicorn api.main:app --host 127.0.0.1 --port 8000 --reload
-```
 
 The BAML engine uses Z.AI GLM-4.6 and requires a valid Z.AI API key in your `.env` file.
 
