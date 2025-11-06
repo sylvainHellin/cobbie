@@ -1,7 +1,7 @@
 from .engine import IfcAnswerEngine, BIMQASEngine, create_engine
 from .components.tool_creator import ToolCreator
 from .components.extract_function_name import NameExtractor
-from .components.tool_identifier import ToolIdentifier
+from .components.tool_identifier import NewToolAnalysis
 from .components.error_analyst import ErrorAnalyst
 from .components.tool_debugger import ToolDebugger
 from .components.answer_verifier import AnswerVerifier
@@ -15,7 +15,7 @@ __all__ = [
     "create_engine",
     "ToolCreator",
     "NameExtractor",
-    "ToolIdentifier",
+    "NewToolAnalysis",
     "ErrorAnalyst",
     "ToolDebugger",
     "AnswerVerifier",
