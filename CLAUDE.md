@@ -7,14 +7,13 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 ### Backend (Python)
 - **Dev Server**: `uv run python api/start_server.py` or `uv run uvicorn api.main:app --host 127.0.0.1 --port 8000 --reload`
 - **Lint**: `uv run ruff check .`
-- **Type Check**: `uv run mypy .`
+- **Type Check**: `uvx ty check`
 
 ### MLflow Tracking
 - **Start MLflow**: `uv run mlflow server --host 127.0.0.1 --port 5000 --backend-store-uri sqlite:///mlflow.sqlite`
 
 ### Training & Evaluation
-- **Training**: `uv run scripts/run_training.py --model glm-4.6 --provider zai --no-cache`
-- **Batch training**: `uv run scripts/run_training.py --model glm-4.6 --provider zai --batch-size 30`
+- **Training**: `uv run scripts/run_training_phase.py --start 0 --end 10`
 - **Evaluation**: `uv run scripts/run_evaluation.py --start 0 --nb-samples 5`
 
 ### Testing
@@ -79,4 +78,4 @@ The system supports multiple LLM providers:
 - Start MLflow server before training/evaluation
 - Use BAML components for new development (not DSPy)
 - API supports both engines via environment variable configuration
-- Use mypy to check for type errors whenever you implement something, before claiming it is finished.
+- Use `uvx ty check <relative_path_to_file>` (e.g. `uvx ty check src/agents/cobbie.py`) to check for type errors whenever you implement something, before claiming it is finished.
