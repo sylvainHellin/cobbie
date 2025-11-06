@@ -45,6 +45,9 @@ where = ["src"]
 [tool.pytest.ini_options]
 pythonpath = [".", "src"]
 
+[tool.ty.rules]
+possibly-missing-attribute = "ignore"
+
 [project.optional-dependencies]
 dev = [
     "ty>=0.0.1a6",
