@@ -12,10 +12,13 @@ from fastapi.responses import FileResponse
 from starlette.concurrency import run_in_threadpool
 
 from api.models import QuestionRequest, QuestionResponse
+from src.agents.cobbie import cobbie
 from src.config import MLFLOW_URI
 
 # from src.db.query_db import get_ifc_models
 from src.db.query import get_ifc_model, get_ifc_models
+from src.tools.initial import query_ifcopenshell_docs, web_search
+from src.util import get_created_tools
 
 app = FastAPI(
     title="IFC Answer Engine API",
@@ -35,6 +38,17 @@ app.add_middleware(
 # Configure MLflow for API tracking
 mlflow.set_tracking_uri(MLFLOW_URI)
 mlflow.set_experiment("API")
+
+
+def load_tools():
+    """Load both initial and created tools for COBBIE."""
+    # Start with initial tools
+    initial_tools = [query_ifcopenshell_docs, web_search]
+
+    # Load dynamically created tools from src/tools/created/
+    all_tools = get_created_tools(tools=initial_tools)
+
+    return all_tools
 
 
 
@@ -62,10 +76,10 @@ async def ask_question(request: QuestionRequest) -> QuestionResponse:
     # Set the experiment and start an MLflow run to properly capture traces
     mlflow.set_experiment("API")
     run_name = f"API_Question_{datetime.now().strftime('%Y%m%d_%H%M%S')}"
-    with mlflow.start_run(run_name=run_name) as run:
+    with mlflow.start_run(run_name=run_name):
         # Create a nested run for the engine execution (this is where traces will be stored)
         engine_run_name = f"Engine_{request.model_id}_{datetime.now().strftime('%H%M%S')}"
-        with mlflow.start_run(run_name=engine_run_name, nested=True) as engine_run:
+        with mlflow.start_run(run_name=engine_run_name, nested=True):
             with mlflow.start_span(name="API_ask_question", span_type="API") as span:
                 # Log the inputs
                 span.set_inputs(
@@ -115,10 +129,19 @@ async def ask_question(request: QuestionRequest) -> QuestionResponse:
                         }
                     )
 
-                    # Use the engine to answer the question (run in threadpool)
-                    result = await run_in_threadpool(
+                    # Load tools for COBBIE
+                    tools = load_tools()
+
+                    # Use COBBIE to answer the question (run in threadpool)
+                    final_answer, collector, execution_history = await run_in_threadpool(
                         partial(
-                            # TODO: implement
+                            cobbie,
+                            user_input=request.question,
+                            tools=tools,
+                            max_iterations=15,
+                            model_path=ifc_model.model_path,
+                            llm_provider="zai",
+                            llm_name="GLM-4.6",
                         )
                     )
 
@@ -132,21 +155,44 @@ async def ask_question(request: QuestionRequest) -> QuestionResponse:
 
                     duration = (datetime.now() - start_time).total_seconds()
 
+                    # Determine status based on answer content
+                    status = (
+                        "success"
+                        if "iteration limit" not in final_answer.answer.lower()
+                        else "error"
+                    )
+                    error_msg = (
+                        final_answer.answer
+                        if status == "error"
+                        else None
+                    )
+
+                    # Extract token usage from collector
+                    input_tokens = 0
+                    output_tokens = 0
+                    if collector and hasattr(collector, "usage") and collector.usage:
+                        usage = collector.usage
+                        input_tokens = usage.input_tokens or 0
+                        output_tokens = usage.output_tokens or 0
+
                     # Log the outputs
                     span.set_outputs(
                         {
-                            "status":
-                            "answer":
-                            "error_msg":
+                            "status": status,
+                            "answer": final_answer.answer if status == "success" else None,
+                            "error_msg": error_msg,
                             "duration_seconds": duration,
                             "model_info": model_info,
+                            "input_tokens": input_tokens,
+                            "output_tokens": output_tokens,
+                            "total_tokens": input_tokens + output_tokens,
                         }
                     )
 
                     return QuestionResponse(
-                        status=result.status,
-                        answer=result.result.answer,
-                        error_msg=result.error_msg,
+                        status=status,
+                        answer=final_answer.answer if status == "success" else None,
+                        error_msg=error_msg,
                         model_info=model_info,
                     )
 
