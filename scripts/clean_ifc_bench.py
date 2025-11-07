@@ -37,10 +37,10 @@ from tqdm import tqdm
 from src.agents.category_validator import validate_category
 from src.agents.qa_pair_aligner import align_qa_pair
 from src.config import LOG_LEVEL
-from src.engine.util import get_logger
-from src.experiment.db import DB_ENGINE
-from src.experiment.db.models import IfcBench
-from src.experiment.db.query import get_dataset
+from src.util import get_logger
+from src.db import DB_ENGINE
+from src.db.models import IfcBench
+from src.db.query import get_dataset
 
 # Setup logging
 logging.basicConfig(level=logging.INFO)

@@ -15,9 +15,9 @@ from baml_py.baml_py import Collector
 from baml_client.types import CodeAction, NewHelperFunction
 from src.config import LOG_LEVEL
 from src.tools.initial import query_ifcopenshell_docs
-from src.engine.util.code_act_inner_loop import _execute_code_action
-from src.engine.util.generate_tools_docs import generate_tools_docs
-from src.engine.util.get_logger import get_logger
+from src.util.code_act_inner_loop import _execute_code_action
+from src.util.generate_tools_docs import generate_tools_docs
+from src.util.get_logger import get_logger
 
 # Initialize logger
 _logger = get_logger(name="baml_helper_function_creator", log_level=LOG_LEVEL)
@@ -57,7 +57,11 @@ def _helper_function_creator_iter(
     from baml_client import b
 
     # Extract baml_options if provided for collector integration
-    baml_options = kwargs.pop("baml_options", {})
+    baml_options = kwargs.get("baml_options", {})
+
+    # Create a clean copy of kwargs for the BAML call (remove baml_options)
+    kwargs_copy = kwargs.copy()
+    kwargs_copy.pop("baml_options", None)
 
     # Call BAML function with union return type
     try:
@@ -71,6 +75,7 @@ def _helper_function_creator_iter(
                 function_name=function_name,
                 function_description=function_description,
                 previous_attempts=previous_attempts,
+                **kwargs_copy,
             )
         else:
             result = b.HelperFunctionCreator(
@@ -82,6 +87,7 @@ def _helper_function_creator_iter(
                 function_name=function_name,
                 function_description=function_description,
                 previous_attempts=previous_attempts,
+                **kwargs_copy,
             )
     except Exception as e:
         _logger.error(f"Error in HelperFunctionCreator iteration: {e}")
@@ -197,6 +203,7 @@ def _create_helper_function(
                     }
                 )
 
+                # Call the function and capture the full prompt from kwargs
                 result = _helper_function_creator_iter(
                     history=history,
                     example_question=example_question,
@@ -212,9 +219,44 @@ def _create_helper_function(
                 iteration_duration = time.time() - iteration_start
                 llm_calls += 1
 
-                # Get collector from kwargs to extract token usage
+                # Get collector from kwargs to extract token usage and prompt
                 baml_options = kwargs.get("baml_options", {})
                 collector = baml_options.get("collector")
+
+                # Extract the actual full prompt from collector
+                full_prompt = ""
+                if collector and collector.last and hasattr(collector.last, 'calls') and collector.last.calls:
+                    try:
+                        last_call = collector.last.calls[-1]
+                        if hasattr(last_call, 'http_request') and hasattr(last_call.http_request, 'body'):
+                            body = last_call.http_request.body
+                            if hasattr(body, 'json'):
+                                request_json = body.json()
+                                if 'messages' in request_json:
+                                    # Reconstruct the full prompt from messages
+                                    message_parts = []
+                                    for message in request_json['messages']:
+                                        if 'content' in message:
+                                            content = message['content']
+                                            if isinstance(content, str):
+                                                message_parts.append(f"{message.get('role', 'unknown')}: {content}")
+                                            elif isinstance(content, list):
+                                                for part in content:
+                                                    if 'text' in part:
+                                                        message_parts.append(f"{message.get('role', 'unknown')}: {part['text']}")
+
+                                    full_prompt = "\n\n".join(message_parts)
+                                    _logger.info(f"Successfully extracted full prompt from collector: {len(full_prompt)} characters")
+                                else:
+                                    _logger.warning("No messages found in collector request JSON")
+                            else:
+                                _logger.warning("HTTP body does not have json method")
+                        else:
+                            _logger.warning("Last call does not have http_request or body")
+                    except Exception as e:
+                        _logger.error(f"Error extracting full prompt from collector: {e}")
+                else:
+                    _logger.warning("No collector data available for prompt extraction")
 
                 if collector and collector.last and collector.last.usage:
                     usage = collector.last.usage
@@ -235,6 +277,10 @@ def _create_helper_function(
                         "llm.model": llm_name,
                     }
                 )
+
+                # Log the full prompt as a span attribute if available
+                if full_prompt:
+                    llm_span.set_attribute("full_prompt", full_prompt)
 
                 # Log usage metrics
                 llm_span.set_attributes(
@@ -576,7 +622,7 @@ if __name__ == "__main__":
 
     # Try to set up MLflow tracking
     mlflow.set_tracking_uri("http://127.0.0.1:5000")
-    mlflow.set_experiment("HelperFunctionCreator")
+    mlflow.set_experiment("CreateHelperFunction")
 
     # Setup tools for Cobbie
     tools_dict = {
@@ -591,7 +637,7 @@ if __name__ == "__main__":
 
     # Get list of available BIM models for testing
     import os
-    bim_models_dir = "/Users/sylvainhellin/GitHub/4_phd/cobbie/src/experiment/bim_models"
+    bim_models_dir = "/Users/sylvainhellin/GitHub/4_phd/cobbie/src/db/bim_models"
     print("=" * 80)
     print("STEP 1: Running Cobbie to answer question")
     print("=" * 80)
@@ -618,7 +664,7 @@ if __name__ == "__main__":
     print("=" * 80)
 
     # Get existing helper functions
-    from src.engine.util.generate_tools_docs import generate_tools_docs
+    from src.util.generate_tools_docs import generate_tools_docs
     existing_helpers = generate_tools_docs(tools_dict)
 
     # Identify helper function

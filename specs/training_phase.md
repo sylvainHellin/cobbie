@@ -52,7 +52,7 @@ This document specifies the implementation of the training phase for Cobbie's mu
 ### Missing Utilities
 
 - **Tool reloading**: No dedicated reload function, but can workaround by calling `get_created_tools()` again
-- **Single tool deletion**: `delete_tools()` only deletes exactly 2 tools (not needed for new workflow)
+- **Single tool deletion**
 
 ---
 
@@ -175,7 +175,7 @@ from baml_client.types import (
     FaultyToolAnalysis,
     UpdatedHelperFunction,
 )
-from src.experiment.db.models import IfcBench
+from src.db.models import IfcBench
 
 class Context(BaseModel):
     # Core data
@@ -315,7 +315,7 @@ def handle_start_state(context: Context) -> Tuple[TrainingState, Context]:
     Returns:
         Next state: RUN_COBBIE
     """
-    from src.engine.util import get_created_tools
+    from src.util import get_created_tools
 
     # Load all available tools
     context.tools = get_created_tools()
@@ -343,7 +343,7 @@ def handle_run_cobbie(context: Context) -> Tuple[TrainingState, Context]:
     """
     import time
     from src.agents import cobbie
-    from src.engine.util import generate_tools_docs
+    from src.util import generate_tools_docs
 
     # Get IFC model path
     ifc_path = context.qa_pair.ifc.model_path if context.qa_pair.ifc else None
@@ -486,7 +486,7 @@ def handle_identify_new_tool(context: Context) -> Tuple[TrainingState, Context]:
     """
     import time
     from src.agents import identify_helper_function
-    from src.engine.util import generate_tools_docs
+    from src.util import generate_tools_docs
 
     with mlflow.start_span(name="IdentifyHelperFunction", span_type="LLM") as span:
         start_time = time.time()
@@ -567,7 +567,7 @@ def handle_create_new_tool(context: Context) -> Tuple[TrainingState, Context]:
     import time
     import os
     from src.agents import create_helper_function
-    from src.engine.util import save_new_tool, get_created_tools
+    from src.util import save_new_tool, get_created_tools
 
     with mlflow.start_span(name="CreateHelperFunction", span_type="CHAIN") as span:
         start_time = time.time()
@@ -582,7 +582,7 @@ def handle_create_new_tool(context: Context) -> Tuple[TrainingState, Context]:
             # Get other BIM models for testing (from bim_models directory)
             # Import ROOT_PATH from env for configurable path
             from src.config import ROOT_PATH
-            bim_models_dir = os.path.join(ROOT_PATH, "src/experiment/bim_models")
+            bim_models_dir = os.path.join(ROOT_PATH, "src/db/bim_models")
             other_models = [
                 os.path.join(bim_models_dir, f)
                 for f in os.listdir(bim_models_dir)
@@ -685,7 +685,7 @@ def handle_identify_faulty_tool(context: Context) -> Tuple[TrainingState, Contex
     """
     import time
     from src.agents import identify_faulty_tool
-    from src.engine.util import generate_tools_docs
+    from src.util import generate_tools_docs
 
     with mlflow.start_span(name="IdentifyFaultyTool", span_type="LLM") as span:
         start_time = time.time()
@@ -769,7 +769,7 @@ def handle_debug_faulty_tool(context: Context) -> Tuple[TrainingState, Context]:
     """
     import time
     from src.agents import debug_helper_function
-    from src.engine.util import get_function_code, save_new_tool, get_created_tools
+    from src.util import get_function_code, save_new_tool, get_created_tools
 
     with mlflow.start_span(name="DebugHelperFunction", span_type="CHAIN") as span:
         start_time = time.time()
@@ -872,10 +872,10 @@ def handle_debug_faulty_tool(context: Context) -> Tuple[TrainingState, Context]:
 def log_qa_metrics(context: Context) -> dict:
     """
     Extract and log metrics for a single QA pair to MLflow.
-    
+
     Args:
         context: Context object with all agent results
-        
+
     Returns:
         Dictionary with metrics for aggregate calculation
     """
@@ -886,16 +886,16 @@ def log_qa_metrics(context: Context) -> dict:
     create_tool_input, create_tool_output, create_tool_total = extract_token_metrics(context.create_tool_collector)
     identify_faulty_input, identify_faulty_output, identify_faulty_total = extract_token_metrics(context.identify_faulty_collector)
     debug_tool_input, debug_tool_output, debug_tool_total = extract_token_metrics(context.debug_tool_collector)
-    
+
     # Calculate totals
     total_tokens = cobbie_total + verify_total + identify_tool_total + create_tool_total + identify_faulty_total + debug_tool_total
-    total_duration = (context.cobbie_duration + context.verify_duration + 
+    total_duration = (context.cobbie_duration + context.verify_duration +
                      context.identify_tool_duration + context.create_tool_duration +
                      context.identify_faulty_duration + context.debug_tool_duration)
-    
+
     # Get classification
     classification = context.verify_result.classification if context.verify_result else "unknown"
-    
+
     # Build metrics dictionary
     metrics = {
         "cobbie_duration": context.cobbie_duration,
@@ -915,7 +915,7 @@ def log_qa_metrics(context: Context) -> dict:
         "tool_updated": 1 if context.tool_updated else 0,
         "error": 1 if context.error_message else 0,
     }
-    
+
     # Add Path A metrics if applicable
     if context.identify_tool_result:
         metrics.update({
@@ -924,7 +924,7 @@ def log_qa_metrics(context: Context) -> dict:
             "identify_tool_output_tokens": identify_tool_output,
             "identify_tool_total_tokens": identify_tool_total,
         })
-    
+
     if context.create_tool_result:
         metrics.update({
             "create_tool_duration": context.create_tool_duration,
@@ -932,7 +932,7 @@ def log_qa_metrics(context: Context) -> dict:
             "create_tool_output_tokens": create_tool_output,
             "create_tool_total_tokens": create_tool_total,
         })
-    
+
     # Add Path B metrics if applicable
     if context.identify_faulty_result:
         metrics.update({
@@ -941,7 +941,7 @@ def log_qa_metrics(context: Context) -> dict:
             "identify_faulty_output_tokens": identify_faulty_output,
             "identify_faulty_total_tokens": identify_faulty_total,
         })
-    
+
     if context.debug_tool_result:
         metrics.update({
             "debug_tool_duration": context.debug_tool_duration,
@@ -949,10 +949,10 @@ def log_qa_metrics(context: Context) -> dict:
             "debug_tool_output_tokens": debug_tool_output,
             "debug_tool_total_tokens": debug_tool_total,
         })
-    
+
     # Log to MLflow
     mlflow.log_metrics(metrics)
-    
+
     # Return dictionary for aggregate calculation
     return {
         "question_id": context.qa_pair.id,
@@ -1044,8 +1044,8 @@ def main():
     """Main training loop."""
     import argparse
     from datetime import datetime
-    from src.experiment.datasets import load_train_dev_split
-    from src.engine.util import get_logger
+    from src.db import load_train_dev_split
+    from src.util import get_logger
 
     # Parse arguments
     parser = argparse.ArgumentParser(description="Run training phase")

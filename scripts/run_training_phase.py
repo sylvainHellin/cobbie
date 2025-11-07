@@ -33,15 +33,15 @@ from src.agents import (
     verify_answer,
 )
 from src.config import LOG_LEVEL, ROOT_PATH
-from src.engine.util import (
+from src.util import (
     generate_tools_docs,
     get_created_tools,
     get_function_code,
     get_logger,
     save_new_tool,
 )
-from src.experiment.datasets import load_train_dev_split
-from src.experiment.db.models import IfcBench
+from src.db import load_train_dev_split
+from src.db.models import IfcBench
 
 # Initialize logger
 _logger = get_logger(name="TrainingPhase", log_level=LOG_LEVEL)
@@ -671,7 +671,7 @@ def handle_create_new_tool(context: Context) -> Tuple[TrainingState, Context]:
             raise ValueError("No IFC model path available for tool creation")
 
         # Get other BIM models for testing (from bim_models directory)
-        bim_models_dir = os.path.join(ROOT_PATH, "src/experiment/bim_models")
+        bim_models_dir = os.path.join(ROOT_PATH, "src/db/bim_models")
         other_models = []
         if os.path.exists(bim_models_dir):
             other_models = [
@@ -928,7 +928,7 @@ def handle_test_tool_with_cobbie(context: Context) -> Tuple[TrainingState, Conte
             raise ValueError("No tool implementation available for testing")
 
         # Temporarily add the tool to the tools dictionary
-        from src.engine.util import _create_function_from_source_code
+        from src.util import _create_function_from_source_code
 
         creation_result = _create_function_from_source_code(
             function_name=context.tool_name,

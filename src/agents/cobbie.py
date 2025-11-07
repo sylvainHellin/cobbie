@@ -12,10 +12,8 @@ import mlflow
 from baml_py.baml_py import Collector
 
 from baml_client.types import CodeAction, FinalAnswer
-from src.config import IfcAnswerEngineConfig
-from src.engine.schemas import ModuleOutput
-from src.engine.util.code_act_inner_loop import _code_act_iter, _execute_code_action
-from src.engine.util.generate_tools_docs import generate_tools_docs
+from src.util.code_act_inner_loop import _code_act_iter, _execute_code_action
+from src.util.generate_tools_docs import generate_tools_docs
 
 logger = logging.getLogger(__name__)
 
@@ -319,9 +317,7 @@ def cobbie(
     # Check if we're already in an MLflow run, if not start one
     active_run = mlflow.active_run()
     run_context_manager = (
-        nullcontext()
-        if active_run
-        else mlflow.start_run(run_name="Cobbie")
+        nullcontext() if active_run else mlflow.start_run(run_name="Cobbie")
     )
 
     with run_context_manager:
@@ -455,82 +451,6 @@ def cobbie(
             return final_answer, collector, execution_history
 
 
-def cobbie_forward(
-    question: str,
-    path_ifc_model: str = "",
-    config: Optional[IfcAnswerEngineConfig] = None,
-    tools: Optional[list[Callable]] = None,
-) -> ModuleOutput:
-    """
-    Backward compatibility wrapper that returns ModuleOutput.
-
-    This function provides compatibility with the existing IfcAnswerEngine interface.
-    Can be removed when all calling code is updated to use FinalAnswer directly.
-
-    Args:
-        question: The question to answer
-        path_ifc_model: Path to the IFC model file
-        config: Optional engine configuration
-        tools: Optional list of tools (if None, default tools will be used)
-
-    Returns:
-        ModuleOutput compatible with existing interface
-    """
-    # Use provided config or create default
-    if config is None:
-        config = IfcAnswerEngineConfig()
-
-    # Setup tools if not provided
-    if tools is None:
-        from src.tools.initial import (
-            query_ifcopenshell_docs,
-            web_search,
-        )
-
-        tools = [query_ifcopenshell_docs, web_search]
-
-    # Convert tools list to dictionary for internal use
-    tools_dict = {getattr(tool, '__name__', None): tool for tool in tools if callable(tool)}
-
-    # Execute COBBIE
-    try:
-        final_answer, _ = _cobbie(
-            question=question,
-            tools=tools_dict,
-            max_iterations=config.max_iters,
-            model_path=path_ifc_model or None,
-            add_code_prefix=config.add_code_prefix,
-        )
-
-        # Convert FinalAnswer to ModuleOutput for compatibility
-        return _final_answer_to_module_output(final_answer)
-
-    except Exception as e:
-        # Handle errors gracefully
-        logger.error(f"Error in cobbie_forward: {e}")
-        output = ModuleOutput()
-        output.status = "error"
-        output.error_msg = f"COBBIE execution failed: {str(e)}"
-        return output
-
-
-def _final_answer_to_module_output(final_answer: FinalAnswer) -> ModuleOutput:
-    """
-    Convert FinalAnswer to ModuleOutput for backward compatibility.
-
-    Args:
-        final_answer: The FinalAnswer result from COBBIE
-
-    Returns:
-        ModuleOutput compatible with existing interface
-    """
-    output = ModuleOutput()
-    output.status = "success"
-    output.result.answer = final_answer.answer
-    output.result.reasoning = final_answer.thoughts
-    return output
-
-
 if __name__ == "__main__":
     import mlflow
 
@@ -588,4 +508,6 @@ if __name__ == "__main__":
     print(f"Input Tokens: {input_tokens}")
     print(f"Output Tokens: {output_tokens}")
     print(f"Total Tokens: {total_tokens}")
-    print(f"Number of LLM Calls: {len(collector.logs) if hasattr(collector, 'logs') else 'N/A'}")
+    print(
+        f"Number of LLM Calls: {len(collector.logs) if hasattr(collector, 'logs') else 'N/A'}"
+    )

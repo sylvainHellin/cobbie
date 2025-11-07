@@ -61,7 +61,7 @@ The project is migrating from DSPy to BAML:
 - System works with .ifc files (BIM model format)
 - IFC models registered in SQLite database (`ifcmodels` table)
 - File paths stored in database reference actual .ifc files
-- Test models available in `src/experiment/bim_models/`
+- Test models available in `src/db/bim_models/`
 
 ### Multi-LLM Support
 The system supports multiple LLM providers:

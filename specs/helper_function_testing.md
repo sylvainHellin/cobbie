@@ -55,9 +55,9 @@ Following the naming pattern (`NewToolAnalysis`, `FaultyToolAnalysis`), we add:
 // Helper function usage assessment - analyzes if a specific tool was helpful during execution
 class HelperFunctionAssessment {
   thoughts string @description("Detailed analysis of how the tool was used during execution")
-  
+
   tool_was_used bool @description("Whether the tool was actually called during execution")
-  
+
   tool_usage_quality "helpful" | "not_used" | "ignored" | "misused" | "harmful" @description(#"
     Assessment of how the tool contributed to the answer:
     - helpful: Tool was used correctly and contributed to producing the correct answer
@@ -66,7 +66,7 @@ class HelperFunctionAssessment {
     - misused: Tool was used incorrectly (wrong parameters, wrong context, misunderstood purpose)
     - harmful: Tool was used and led to incorrect results or wrong reasoning
   "#)
-  
+
   usage_details string @description(#"
     Detailed explanation of tool usage patterns and outcomes:
     - If helpful: How the tool contributed to the correct answer
@@ -75,7 +75,7 @@ class HelperFunctionAssessment {
     - If misused: What parameters were wrong or how the usage was incorrect
     - If harmful: How the tool's output led to the wrong answer
   "#)
-  
+
   recommendation "keep_tool" | "discard_tool" | "improve_tool" | "unclear" @description(#"
     Final recommendation based on usage analysis:
     - keep_tool: Tool was helpful and should be saved permanently
@@ -83,7 +83,7 @@ class HelperFunctionAssessment {
     - improve_tool: Tool has potential but needs fixes or refinement
     - unclear: Insufficient evidence to make a confident decision (need more test cases)
   "#)
-  
+
   confidence "high" | "medium" | "low" @description(#"
     Confidence level in this assessment:
     - high: Clear evidence from execution history supports the assessment
@@ -179,18 +179,18 @@ function HelperFunctionAssessor(
     - **keep_tool** if:
       - Tool was used correctly and helped produce correct answer
       - Tool was not used this time but seems generally useful (not applicable to this specific question)
-    
+
     - **discard_tool** if:
       - Tool was used and produced harmful results
       - Tool was not used because a better approach exists
       - Tool is redundant with existing tools
       - Tool is too specific and unlikely to be useful elsewhere
-    
+
     - **improve_tool** if:
       - Tool was misused but seems to have potential with better interface/docs
       - Tool was used but produced incorrect results (bug in implementation)
       - Tool concept is good but needs refinement
-    
+
     - **unclear** if:
       - Tool wasn't used and it's ambiguous whether it should have been
       - Mixed signals (some helpful aspects, some harmful)
@@ -367,7 +367,7 @@ from baml_py.baml_py import Collector
 from baml_client import b
 from baml_client.types import HelperFunctionAssessment
 from src.config import LOG_LEVEL
-from src.engine.util import get_logger
+from src.util import get_logger
 
 # Initialize logger
 _logger = get_logger(name="baml_helper_function_assessor", log_level=LOG_LEVEL)
@@ -621,13 +621,13 @@ class Context(BaseModel):
 
 **Path A Flow (Correct Answer):**
 ```python
-IDENTIFY_NEW_TOOL → CREATE_NEW_TOOL 
+IDENTIFY_NEW_TOOL → CREATE_NEW_TOOL
   → TEST_TOOL_WITH_COBBIE → ASSESS_TOOL_USAGE → DECIDE_TOOL_FATE → END
 ```
 
 **Path B Flow (Wrong Answer):**
 ```python
-IDENTIFY_FAULTY_TOOL → DEBUG_FAULTY_TOOL 
+IDENTIFY_FAULTY_TOOL → DEBUG_FAULTY_TOOL
   → TEST_TOOL_WITH_COBBIE → ASSESS_TOOL_USAGE → DECIDE_TOOL_FATE → END
 ```
 
@@ -639,19 +639,19 @@ IDENTIFY_FAULTY_TOOL → DEBUG_FAULTY_TOOL
 def handle_create_new_tool(context: Context) -> Tuple[TrainingState, Context]:
     """
     Create a new helper function (Path A: Correct answer).
-    
+
     CHANGED: No longer saves the tool immediately.
     Instead, transitions to TEST_TOOL_WITH_COBBIE for validation.
     """
     # ... existing code to create the tool ...
-    
+
     if result.success:
         # Store the implementation but DON'T save to disk yet
         context.create_tool_result = result
         context.tool_created = True  # Mark as created (pending validation)
-        
+
         _logger.info(f"Tool '{context.tool_name}' created successfully, proceeding to testing")
-        
+
         # Transition to testing instead of saving immediately
         return TrainingState.TEST_TOOL_WITH_COBBIE, context
     else:
@@ -668,19 +668,19 @@ def handle_create_new_tool(context: Context) -> Tuple[TrainingState, Context]:
 def handle_debug_faulty_tool(context: Context) -> Tuple[TrainingState, Context]:
     """
     Debug and fix a faulty helper function (Path B: Wrong answer).
-    
+
     CHANGED: No longer saves the tool immediately.
     Instead, transitions to TEST_TOOL_WITH_COBBIE for validation.
     """
     # ... existing code to debug the tool ...
-    
+
     if result.success:
         # Store the fixed implementation but DON'T save to disk yet
         context.debug_tool_result = result
         context.tool_updated = True  # Mark as updated (pending validation)
-        
+
         _logger.info(f"Tool '{context.tool_name}' debugged successfully, proceeding to testing")
-        
+
         # Transition to testing instead of saving immediately
         return TrainingState.TEST_TOOL_WITH_COBBIE, context
     else:
@@ -728,26 +728,26 @@ def handle_test_tool_with_cobbie(context: Context) -> Tuple[TrainingState, Conte
                 raise ValueError("No tool implementation available for testing")
 
             # Temporarily add the tool to the tools dictionary
-            from src.engine.util import _create_function_from_source_code
-            
+            from src.util import _create_function_from_source_code
+
             creation_result = _create_function_from_source_code(
                 function_name=context.tool_name,
                 code=tool_implementation,
             )
-            
+
             if creation_result.is_err():
                 error_msg = f"Failed to create function for testing: {creation_result.unwrap_err()}"
                 _logger.error(error_msg)
                 context.error_message = error_msg
                 span.set_status("ERROR")
                 return TrainingState.ERROR, context
-            
+
             new_tool = creation_result.unwrap()
-            
+
             # Create a copy of tools with the new tool added
             test_tools = context.tools.copy()
             test_tools[context.tool_name] = new_tool
-            
+
             _logger.info(f"Tool '{context.tool_name}' added to test environment. Total tools: {len(test_tools)}")
 
             # Enhance the question to guide tool usage
@@ -884,7 +884,7 @@ def handle_assess_tool_usage(context: Context) -> Tuple[TrainingState, Context]:
             # Extract and log token metrics
             verify_input, verify_output, verify_total = extract_token_metrics(verify_collector)
             assess_input, assess_output, assess_total = extract_token_metrics(assessment_collector)
-            
+
             span.set_attributes({
                 "verify_input_tokens": verify_input,
                 "verify_output_tokens": verify_output,
@@ -925,7 +925,7 @@ def handle_decide_tool_fate(context: Context) -> Tuple[TrainingState, Context]:
     Returns:
         Next state: END
     """
-    from src.engine.util import save_new_tool, get_created_tools
+    from src.util import save_new_tool, get_created_tools
 
     with mlflow.start_span(name="DecideToolFate", span_type="CHAIN") as span:
         try:
@@ -1064,7 +1064,7 @@ def handle_decide_tool_fate(context: Context) -> Tuple[TrainingState, Context]:
 ```python
 def process_state(state: TrainingState, context: Context) -> Tuple[TrainingState, Context]:
     """Process a single state in the training state machine."""
-    
+
     handlers = {
         TrainingState.START: handle_start_state,
         TrainingState.RUN_COBBIE: handle_run_cobbie,
@@ -1077,7 +1077,7 @@ def process_state(state: TrainingState, context: Context) -> Tuple[TrainingState
         TrainingState.ASSESS_TOOL_USAGE: handle_assess_tool_usage,
         TrainingState.DECIDE_TOOL_FATE: handle_decide_tool_fate,
     }
-    
+
     handler = handlers.get(state)
     if handler:
         return handler(context)
@@ -1093,7 +1093,7 @@ def process_state(state: TrainingState, context: Context) -> Tuple[TrainingState
 ```python
 def log_qa_metrics(context: Context) -> dict:
     """Extract and log metrics for a single QA pair to MLflow."""
-    
+
     # Extract token metrics from all collectors
     cobbie_input, cobbie_output, cobbie_total = extract_token_metrics(context.cobbie_collector)
     verify_input, verify_output, verify_total = extract_token_metrics(context.verify_collector)
@@ -1101,12 +1101,12 @@ def log_qa_metrics(context: Context) -> dict:
     create_tool_input, create_tool_output, create_tool_total = extract_token_metrics(context.create_tool_collector)
     identify_faulty_input, identify_faulty_output, identify_faulty_total = extract_token_metrics(context.identify_faulty_collector)
     debug_tool_input, debug_tool_output, debug_tool_total = extract_token_metrics(context.debug_tool_collector)
-    
+
     # NEW: Extract test and assessment metrics
     test_cobbie_input, test_cobbie_output, test_cobbie_total = extract_token_metrics(context.test_cobbie_collector)
     test_verify_input, test_verify_output, test_verify_total = extract_token_metrics(context.test_verify_collector)
     tool_assess_input, tool_assess_output, tool_assess_total = extract_token_metrics(context.tool_assessment_collector)
-    
+
     # Calculate totals (including new components)
     total_tokens = (
         cobbie_total + verify_total + identify_tool_total + create_tool_total +
@@ -1120,10 +1120,10 @@ def log_qa_metrics(context: Context) -> dict:
         context.test_cobbie_duration + context.test_verify_duration +
         context.tool_assessment_duration
     )
-    
+
     # Get classification
     classification = context.verify_result.classification if context.verify_result else "unknown"
-    
+
     # Build metrics dictionary
     metrics = {
         # Original metrics
@@ -1145,7 +1145,7 @@ def log_qa_metrics(context: Context) -> dict:
         "tool_saved": 1 if context.tool_saved else 0,  # NEW
         "error": 1 if context.error_message else 0,
     }
-    
+
     # Add Path A metrics if applicable
     if context.identify_tool_result:
         metrics.update({
@@ -1154,7 +1154,7 @@ def log_qa_metrics(context: Context) -> dict:
             "identify_tool_output_tokens": identify_tool_output,
             "identify_tool_total_tokens": identify_tool_total,
         })
-    
+
     if context.create_tool_result:
         metrics.update({
             "create_tool_duration": context.create_tool_duration,
@@ -1162,7 +1162,7 @@ def log_qa_metrics(context: Context) -> dict:
             "create_tool_output_tokens": create_tool_output,
             "create_tool_total_tokens": create_tool_total,
         })
-    
+
     # Add Path B metrics if applicable
     if context.identify_faulty_result:
         metrics.update({
@@ -1171,7 +1171,7 @@ def log_qa_metrics(context: Context) -> dict:
             "identify_faulty_output_tokens": identify_faulty_output,
             "identify_faulty_total_tokens": identify_faulty_total,
         })
-    
+
     if context.debug_tool_result:
         metrics.update({
             "debug_tool_duration": context.debug_tool_duration,
@@ -1179,7 +1179,7 @@ def log_qa_metrics(context: Context) -> dict:
             "debug_tool_output_tokens": debug_tool_output,
             "debug_tool_total_tokens": debug_tool_total,
         })
-    
+
     # NEW: Add tool testing metrics
     if context.test_cobbie_result:
         metrics.update({
@@ -1192,7 +1192,7 @@ def log_qa_metrics(context: Context) -> dict:
             "test_verify_output_tokens": test_verify_output,
             "test_verify_total_tokens": test_verify_total,
         })
-    
+
     # NEW: Add tool assessment metrics
     if context.tool_assessment:
         metrics.update({
@@ -1206,10 +1206,10 @@ def log_qa_metrics(context: Context) -> dict:
             "tool_recommendation_keep": 1 if context.tool_assessment.recommendation == "keep_tool" else 0,
             "tool_recommendation_discard": 1 if context.tool_assessment.recommendation == "discard_tool" else 0,
         })
-    
+
     # Log to MLflow
     mlflow.log_metrics(metrics)
-    
+
     # Return dictionary for aggregate calculation
     return {
         "question_id": context.qa_pair.id,
@@ -1232,7 +1232,7 @@ def log_qa_metrics(context: Context) -> dict:
 ```python
 def calculate_aggregate_metrics(qa_results: List[dict]) -> dict:
     """Calculate aggregate metrics across all QA pairs."""
-    
+
     total_count = len(qa_results)
     correct_count = sum(1 for r in qa_results if r.get("classification") == "correct")
     wrong_count = sum(1 for r in qa_results if r.get("classification") == "wrong")
@@ -1374,21 +1374,21 @@ Test the full flow:
 
 1. **Path A (Correct Answer) with Tool Testing:**
    ```
-   START → RUN_COBBIE (correct) → IDENTIFY_NEW_TOOL (yes) 
-     → CREATE_NEW_TOOL (success) → TEST_TOOL_WITH_COBBIE 
+   START → RUN_COBBIE (correct) → IDENTIFY_NEW_TOOL (yes)
+     → CREATE_NEW_TOOL (success) → TEST_TOOL_WITH_COBBIE
      → ASSESS_TOOL_USAGE → DECIDE_TOOL_FATE (keep) → END
    ```
 
 2. **Path B (Wrong Answer) with Tool Testing:**
    ```
-   START → RUN_COBBIE (wrong) → IDENTIFY_FAULTY_TOOL (yes) 
-     → DEBUG_FAULTY_TOOL (success) → TEST_TOOL_WITH_COBBIE 
+   START → RUN_COBBIE (wrong) → IDENTIFY_FAULTY_TOOL (yes)
+     → DEBUG_FAULTY_TOOL (success) → TEST_TOOL_WITH_COBBIE
      → ASSESS_TOOL_USAGE → DECIDE_TOOL_FATE (keep) → END
    ```
 
 3. **Tool Discarding Scenario:**
    ```
-   CREATE_NEW_TOOL → TEST_TOOL_WITH_COBBIE 
+   CREATE_NEW_TOOL → TEST_TOOL_WITH_COBBIE
      → ASSESS_TOOL_USAGE (harmful) → DECIDE_TOOL_FATE (discard) → END
    ```
 
@@ -1490,14 +1490,14 @@ def handle_test_tool_with_multiple_questions(context: Context):
     """Test tool with 3-5 similar QA pairs from the dataset."""
     # Retrieve similar questions from database
     similar_qa_pairs = get_similar_questions(context.qa_pair, limit=3)
-    
+
     # Test tool with each question
     test_results = []
     for qa in similar_qa_pairs:
         # Run Cobbie with enhanced question
         result = test_with_question(qa, context.tool_name)
         test_results.append(result)
-    
+
     # Aggregate assessment across all tests
     return aggregate_assessments(test_results)
 ```
@@ -1540,7 +1540,7 @@ if assessment.recommendation == "improve_tool":
         error_description=assessment.usage_details,
         # ... other params
     )
-    
+
     # Re-test improved version
     return TrainingState.TEST_TOOL_WITH_COBBIE, context
 ```
@@ -1730,7 +1730,7 @@ How many doors are on the ground floor?
 ```
 How many doors are on the ground floor?
 
-NOTE: A helper function `get_elements_by_building_storey` was recently created. 
+NOTE: A helper function `get_elements_by_building_storey` was recently created.
 If it seems relevant, consider using it to help answer this question.
 ```
 

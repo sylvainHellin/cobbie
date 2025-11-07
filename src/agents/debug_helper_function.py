@@ -15,9 +15,9 @@ from baml_py.baml_py import Collector
 from baml_client.types import CodeAction, UpdatedHelperFunction
 from src.config import LOG_LEVEL
 from src.tools.initial import query_ifcopenshell_docs
-from src.engine.util.code_act_inner_loop import _execute_code_action
-from src.engine.util.generate_tools_docs import generate_tools_docs
-from src.engine.util.get_logger import get_logger
+from src.util.code_act_inner_loop import _execute_code_action
+from src.util.generate_tools_docs import generate_tools_docs
+from src.util.get_logger import get_logger
 
 # Initialize logger
 _logger = get_logger(name="baml_helper_function_debugger", log_level=LOG_LEVEL)

@@ -13,10 +13,9 @@ from starlette.concurrency import run_in_threadpool
 
 from api.models import QuestionRequest, QuestionResponse
 from src.config import MLFLOW_URI
-from src.engine import create_engine
 
-# from src.experiment.db.query_db import get_ifc_models
-from src.experiment.db.query import get_ifc_model, get_ifc_models
+# from src.db.query_db import get_ifc_models
+from src.db.query import get_ifc_model, get_ifc_models
 
 app = FastAPI(
     title="IFC Answer Engine API",
@@ -54,8 +53,6 @@ if engine_type == "dspy":
     # llm = LLM(model_name="qwen-3-coder-480b", provider_name="cerebras").get_llm()
     pass
 
-# Create engine using factory function
-engine = create_engine(engine_type=engine_type, llm=llm)
 
 
 @app.get("/")
@@ -136,9 +133,7 @@ async def ask_question(request: QuestionRequest) -> QuestionResponse:
                     # Use the engine to answer the question (run in threadpool)
                     result = await run_in_threadpool(
                         partial(
-                            engine.forward,
-                            question=request.question,
-                            path_ifc_model=ifc_model.model_path,
+                            # TODO: implement
                         )
                     )
 
@@ -155,9 +150,9 @@ async def ask_question(request: QuestionRequest) -> QuestionResponse:
                     # Log the outputs
                     span.set_outputs(
                         {
-                            "status": result.status,
-                            "answer": result.result.answer,
-                            "error_msg": result.error_msg,
+                            "status":
+                            "answer":
+                            "error_msg":
                             "duration_seconds": duration,
                             "model_info": model_info,
                         }

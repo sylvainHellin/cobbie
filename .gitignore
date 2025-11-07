@@ -26,9 +26,9 @@ wheels/
 
 # no need to upload
 src/bim_models
-src/experiment/datasets/*.txt
-src/experiment/datasets/*.csv
-src/experiment/bim_models
+src.db/*.txt
+src.db/*.csv
+src/db/bim_models
 pyrightconfig.json
 sandbox.ipynb
 sandbox.py

@@ -11,7 +11,7 @@ from typing import Any, Callable, Dict, Optional
 import tiktoken
 
 from src.config import LOG_LEVEL
-from src.engine.util import get_logger
+from src.util import get_logger
 
 
 def custom_print(*args, **kwargs):

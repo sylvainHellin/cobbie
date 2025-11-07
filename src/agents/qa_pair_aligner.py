@@ -11,8 +11,8 @@ from baml_py.baml_py import Collector
 
 from baml_client import b
 from src.config import LOG_LEVEL
-from src.engine.util import get_logger
-from src.experiment.db.models import IfcBench
+from src.util import get_logger
+from src.db.models import IfcBench
 
 # Initialize logger
 _logger = get_logger(name="qa_pair_aligner", log_level=LOG_LEVEL)

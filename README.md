@@ -433,7 +433,7 @@ print(result.result.answer)
 #### Training Mode
 ```python
 from src.experiment.training.training import TrainingModule
-from src.experiment.datasets import load_train_dev_split
+from src.db import load_train_dev_split
 
 # Initialize training module with state machine
 training = TrainingModule()

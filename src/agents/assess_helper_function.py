@@ -11,7 +11,7 @@ from baml_py.baml_py import Collector
 from baml_client import b
 from baml_client.types import HelperFunctionAssessment
 from src.config import LOG_LEVEL
-from src.engine.util import get_logger
+from src.util import get_logger
 
 # Initialize logger
 _logger = get_logger(name="baml_helper_function_assessor", log_level=LOG_LEVEL)

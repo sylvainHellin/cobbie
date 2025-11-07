@@ -335,7 +335,7 @@ from baml_py.baml_py import Collector
 from baml_client import b
 from baml_client.types import ToolUsageAnalysis
 from src.config import LOG_LEVEL
-from src.engine.util import get_logger
+from src.util import get_logger
 
 # Initialize logger
 _logger = get_logger(name="baml_assess_helper_function", log_level=LOG_LEVEL)
@@ -765,7 +765,7 @@ def handle_decide_tool_fate(context: Context) -> Tuple[TrainingState, Context]:
     This state processes the assessment results and implements the keep/discard decision,
     updating the tool registry accordingly.
     """
-    from src.engine.util import save_new_tool, get_created_tools
+    from src.util import save_new_tool, get_created_tools
 
     with mlflow.start_span(name="DecideToolFate", span_type="CHAIN") as span:
         try:

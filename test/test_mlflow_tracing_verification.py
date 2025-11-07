@@ -25,7 +25,7 @@ mlflow.set_experiment("BIMQAS_BAML_Tracing_Verification")
 from src.engine.components.bim_qas import BIM_QAS
 
 # Path to IFC file
-ifc_model_path = "src/experiment/bim_models/duplex/arc.ifc"
+ifc_model_path = "src/db/bim_models/duplex/arc.ifc"
 
 # Test with a simple question
 test_question = "How many walls are in the building?"

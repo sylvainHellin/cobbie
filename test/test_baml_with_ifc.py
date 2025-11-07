@@ -40,7 +40,7 @@ mlflow.set_tracking_uri("http://127.0.0.1:5000")
 mlflow.set_experiment("BIMQAS_BAML_TEST")
 
 # Path to IFC file
-ifc_model_path = "src/experiment/bim_models/duplex/arc.ifc"
+ifc_model_path = "src/db/bim_models/duplex/arc.ifc"
 
 # Test with a simple question
 test_question = "How many walls are in the building?"
