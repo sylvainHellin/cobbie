@@ -37,3 +37,4 @@ mlruns
 logs.log
 .cursor
 reports
+scripts/text_count_tokens.txt
