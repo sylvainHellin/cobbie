@@ -17,7 +17,7 @@ import argparse
 import logging
 import time
 from datetime import datetime
-from typing import Callable, Dict, List, Optional
+from typing import Callable, Dict, List
 
 import mlflow
 import mlflow.dspy
@@ -25,9 +25,9 @@ from tqdm import tqdm
 
 from src.agents.answer_verifier import verify_answer
 from src.agents.cobbie import cobbie
-from src.tools.initial import query_ifcopenshell_docs, web_search
 from src.engine.util import get_created_tools
 from src.experiment.datasets import DEVSET
+from src.tools.initial import query_ifcopenshell_docs, web_search
 
 # Setup logging
 logging.basicConfig(level=logging.INFO)
@@ -47,21 +47,35 @@ def calculate_and_log_metrics(question_results: List[Dict]) -> Dict:
     successful_results = [r for r in question_results if r["status"] == "success"]
 
     # Basic success metrics
-    success_rate = len(successful_results) / total_questions if total_questions > 0 else 0.0
+    success_rate = (
+        len(successful_results) / total_questions if total_questions > 0 else 0.0
+    )
 
     # Classification metrics
-    classifications = [r["classification"] for r in successful_results if r["classification"] is not None]
+    classifications = [
+        r["classification"]
+        for r in successful_results
+        if r["classification"] is not None
+    ]
     correct_count = sum(1 for c in classifications if c == "correct")
     wrong_count = sum(1 for c in classifications if c == "wrong")
     abstained_count = sum(1 for c in classifications if c == "abstained")
 
     # Calculate accuracy and abstainance rate
-    accuracy = correct_count / (correct_count + wrong_count) if (correct_count + wrong_count) > 0 else 0.0
-    abstainance_rate = abstained_count / len(classifications) if classifications else 0.0
+    accuracy = (
+        correct_count / (correct_count + wrong_count)
+        if (correct_count + wrong_count) > 0
+        else 0.0
+    )
+    abstainance_rate = (
+        abstained_count / len(classifications) if classifications else 0.0
+    )
 
     # Performance metrics
     total_execution_time = sum(r["execution_time"] for r in question_results)
-    avg_execution_time = total_execution_time / total_questions if total_questions > 0 else 0.0
+    avg_execution_time = (
+        total_execution_time / total_questions if total_questions > 0 else 0.0
+    )
 
     # Token metrics
     total_input_tokens = sum(r["input_tokens"] for r in question_results)
@@ -75,7 +89,6 @@ def calculate_and_log_metrics(question_results: List[Dict]) -> Dict:
         "successful_answers": len(successful_results),
         "failed_answers": total_questions - len(successful_results),
         "total_questions": total_questions,
-
         # Classification metrics
         "accuracy": accuracy,
         "abstainance_rate": abstainance_rate,
@@ -83,19 +96,20 @@ def calculate_and_log_metrics(question_results: List[Dict]) -> Dict:
         "wrong_count": wrong_count,
         "abstained_count": abstained_count,
         "total_evaluated": len(classifications),
-
         # Performance metrics
         "total_execution_time": total_execution_time,
         "avg_execution_time": avg_execution_time,
-
         # Token metrics
         "total_input_tokens": total_input_tokens,
         "total_output_tokens": total_output_tokens,
         "total_tokens": total_tokens,
-        "avg_tokens_per_question": total_tokens / total_questions if total_questions > 0 else 0.0,
-
+        "avg_tokens_per_question": total_tokens / total_questions
+        if total_questions > 0
+        else 0.0,
         # Tokens per second
-        "tokens_per_second": total_output_tokens / total_execution_time if total_execution_time > 0 else 0.0,
+        "tokens_per_second": total_output_tokens / total_execution_time
+        if total_execution_time > 0
+        else 0.0,
     }
 
     # Log comprehensive metrics to MLflow
@@ -106,7 +120,7 @@ def calculate_and_log_metrics(question_results: List[Dict]) -> Dict:
         "model_name": "glm-4.6",
         "provider_name": "zai",
         "num_samples": total_questions,
-        **metrics
+        **metrics,
     }
 
     return results_summary
@@ -122,7 +136,9 @@ def print_results(results_summary: Dict):
     print("EVALUATION RESULTS")
     print("=" * 80)
 
-    print(f"Model: {results_summary['model_name']} ({results_summary['provider_name']})")
+    print(
+        f"Model: {results_summary['model_name']} ({results_summary['provider_name']})"
+    )
     print(f"Samples: {results_summary['num_samples']}")
     print()
 
@@ -144,7 +160,9 @@ def print_results(results_summary: Dict):
 
     print("Performance:")
     print(f"  Total Execution Time: {results_summary['total_execution_time']:.1f}s")
-    print(f"  Avg Execution Time/Question: {results_summary['avg_execution_time']:.1f}s")
+    print(
+        f"  Avg Execution Time/Question: {results_summary['avg_execution_time']:.1f}s"
+    )
     print(f"  Tokens/Second: {results_summary['tokens_per_second']:.1f}")
     print()
 
@@ -171,9 +189,11 @@ def process_question(
         Dictionary containing question processing results
     """
     question = question_data.question
-    ground_truth = getattr(question_data, 'answer', '') or getattr(question_data, 'ground_truth', '')
-    category = getattr(question_data, 'category', None)
-    question_id = getattr(question_data, 'id', f'q_{question_index + 1}')
+    ground_truth = getattr(question_data, "answer", "") or getattr(
+        question_data, "ground_truth", ""
+    )
+    category = getattr(question_data, "category", None)
+    question_id = getattr(question_data, "id", f"q_{question_index + 1}")
     ifc_path = question_data.ifc.model_path if question_data.ifc else None
 
     # Skip question if category is not provided
@@ -204,30 +224,36 @@ def process_question(
 
     with mlflow.start_run(run_name=run_name, nested=True) as question_run:
         # Log question parameters
-        mlflow.log_params({
-            "question": question,
-            "ground_truth": ground_truth,
-            "category": category,
-            "question_id": question_id,
-            "llm": "glm-4.6",
-            "provider_name": "zai",
-            "model_path": ifc_path or "None",
-        })
-
-        # Create main span for this question processing
-        with mlflow.start_span(name="COBBIE", span_type="CHAIN") as question_span:
-            question_span.set_inputs({
+        mlflow.log_params(
+            {
                 "question": question,
                 "ground_truth": ground_truth,
                 "category": category,
-                "question_index": question_index + 1,
+                "question_id": question_id,
+                "llm": "glm-4.6",
+                "provider_name": "zai",
                 "model_path": ifc_path or "None",
-            })
-            question_span.set_attributes({
-                "engine": "baml",
-                "model": "glm-4.6",
-                "provider": "zai",
-            })
+            }
+        )
+
+        # Create main span for this question processing
+        with mlflow.start_span(name="COBBIE", span_type="CHAIN") as question_span:
+            question_span.set_inputs(
+                {
+                    "question": question,
+                    "ground_truth": ground_truth,
+                    "category": category,
+                    "question_index": question_index + 1,
+                    "model_path": ifc_path or "None",
+                }
+            )
+            question_span.set_attributes(
+                {
+                    "engine": "baml",
+                    "model": "glm-4.6",
+                    "provider": "zai",
+                }
+            )
 
             start_time_cobbie = time.time()
 
@@ -244,7 +270,7 @@ def process_question(
             cobbie_output_tokens = 0
             cobbie_total_tokens = 0
 
-            if collector and hasattr(collector, 'usage') and collector.usage:
+            if collector and hasattr(collector, "usage") and collector.usage:
                 usage = collector.usage
                 cobbie_input_tokens = usage.input_tokens or 0
                 cobbie_output_tokens = usage.output_tokens or 0
@@ -278,17 +304,20 @@ def process_question(
                     verifier_output_tokens = collector.usage.output_tokens or 0
 
             # Log question-level metrics
-            mlflow.log_metrics({
-                "cobbie_duration": cobbie_duration,
-                "verifier_duration": verifier_duration,
-                "cobbie_input_tokens": cobbie_input_tokens,
-                "cobbie_output_tokens": cobbie_output_tokens,
-                "verifier_input_tokens": verifier_input_tokens,
-                "verifier_output_tokens": verifier_output_tokens,
-                "total_input_tokens": cobbie_input_tokens + verifier_input_tokens,
-                "total_output_tokens": cobbie_output_tokens + verifier_output_tokens,
-                "success": 1,
-            })
+            mlflow.log_metrics(
+                {
+                    "cobbie_duration": cobbie_duration,
+                    "verifier_duration": verifier_duration,
+                    "cobbie_input_tokens": cobbie_input_tokens,
+                    "cobbie_output_tokens": cobbie_output_tokens,
+                    "verifier_input_tokens": verifier_input_tokens,
+                    "verifier_output_tokens": verifier_output_tokens,
+                    "total_input_tokens": cobbie_input_tokens + verifier_input_tokens,
+                    "total_output_tokens": cobbie_output_tokens
+                    + verifier_output_tokens,
+                    "success": 1,
+                }
+            )
 
             # Prepare question span outputs
             question_outputs = {
@@ -311,21 +340,27 @@ def process_question(
 
             question_span.set_outputs(question_outputs)
             question_span.set_status("OK")
-            question_span.set_attributes({
-                "question.status": "success",
-                "question.category": category,
-                "classification": classification or "not_evaluated",
-            })
+            question_span.set_attributes(
+                {
+                    "question.status": "success",
+                    "question.category": category,
+                    "classification": classification or "not_evaluated",
+                }
+            )
 
-            logger.info(f"Question {question_index + 1} completed: success in {cobbie_duration:.2f}s, classification: {classification}")
+            logger.info(
+                f"Question {question_index + 1} completed: success in {cobbie_duration:.2f}s, classification: {classification}"
+            )
 
             # Log LLM outputs as parameters
-            mlflow.log_params({
-                "answer": final_answer.answer,
-                "classification": classification or "not_evaluated",
-                "justification": justification or "not_evaluated",
-                "confidence": confidence or "not_evaluated",
-            })
+            mlflow.log_params(
+                {
+                    "answer": final_answer.answer,
+                    "classification": classification or "not_evaluated",
+                    "justification": justification or "not_evaluated",
+                    "confidence": confidence or "not_evaluated",
+                }
+            )
 
             return {
                 "question": question,
@@ -347,6 +382,7 @@ def process_question(
                 "mlflow_run_id": question_run.info.run_id,
             }
 
+
 def main():
     """Main function to run the evaluation."""
     parser = argparse.ArgumentParser(
@@ -362,7 +398,7 @@ Examples:
 
   # Evaluate with debug logging
   uv run scripts/run_evaluation.py --start 0 --nb-samples 3 --log-level DEBUG
-        """
+        """,
     )
 
     # Core parameters
@@ -370,21 +406,21 @@ Examples:
         "--start",
         type=int,
         default=0,
-        help="Start index of samples to process (default: 0)"
+        help="Start index of samples to process (default: 0)",
     )
 
     parser.add_argument(
         "--nb-samples",
         type=int,
         default=10,
-        help="Number of samples to process (default: 10)"
+        help="Number of samples to process (default: 10)",
     )
 
     parser.add_argument(
         "--log-level",
         default="INFO",
         choices=["DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"],
-        help="Logging level (default: INFO)"
+        help="Logging level (default: INFO)",
     )
 
     args = parser.parse_args()
@@ -405,7 +441,9 @@ Examples:
     end_index = min(args.start + args.nb_samples, len(DEVSET))
     actual_samples = end_index - args.start
 
-    print(f"Processing {actual_samples} samples from index {args.start} to {end_index - 1}")
+    print(
+        f"Processing {actual_samples} samples from index {args.start} to {end_index - 1}"
+    )
 
     # Setup logging level
     logger.setLevel(getattr(logging, args.log_level))
@@ -429,11 +467,11 @@ Examples:
         logger.warning(f"Could not load created tools: {e}")
 
     # Prepare dataset
-    dataset = DEVSET[args.start:end_index]
+    dataset = DEVSET[args.start : end_index]
     logger.info(f"Using {len(dataset)} samples for evaluation")
 
     # Start MLflow run
-    run_name = f"BAML_COBBIE_{datetime.now().strftime('%Y-%m-%d-%H-%M-%S')}_samples_{args.start}_{end_index-1}"
+    run_name = f"BAML_COBBIE_{datetime.now().strftime('%Y-%m-%d-%H-%M-%S')}_samples_{args.start}_{end_index - 1}"
     logger.info(f"Starting MLflow run: {run_name}")
 
     with mlflow.start_run(run_name=run_name) as run:
@@ -441,16 +479,18 @@ Examples:
         logger.info(f"MLflow run started with ID: {run_id}")
 
         # Log parameters
-        mlflow.log_params({
-            "model_name": "glm-4.6",
-            "provider_name": "zai",
-            "component": "COBBIE",
-            "start_index": args.start,
-            "end_index": end_index,
-            "num_samples": len(dataset),
-            "tools": ", ".join(tools_dict.keys()),
-            "tools_count": len(tools_dict),
-        })
+        mlflow.log_params(
+            {
+                "model_name": "glm-4.6",
+                "provider_name": "zai",
+                "component": "COBBIE",
+                "start_index": args.start,
+                "end_index": end_index,
+                "num_samples": len(dataset),
+                "tools": ", ".join(tools_dict.keys()),
+                "tools_count": len(tools_dict),
+            }
+        )
 
         # Time the evaluation
         start_time = time.time()
