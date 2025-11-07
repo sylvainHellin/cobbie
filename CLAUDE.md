@@ -79,3 +79,16 @@ The system supports multiple LLM providers:
 - Use BAML components for new development (not DSPy)
 - API supports both engines via environment variable configuration
 - Use `uvx ty check <relative_path_to_file>` (e.g. `uvx ty check src/agents/cobbie.py`) to check for type errors whenever you implement something, before claiming it is finished.
+
+## Code review
+Before stating that you are done, you need to review each file you create or change, using the following tools: ruff, ty and pyright. You can use them together in a single command, as shown below:
+
+```bash
+uvx ruff check {relative_path_to_file}
+uvx ty check {relative_path_to_file}
+uvx pyright {relative_path_to_file}
+```
+
+## Access to documentation for modules or libraries.
+You have a basic knowledge of most of the libraries and modules that we use here (e.g. BAML, MLFlow and SQLModel), but you are not aware of the latest developments in their respective APIs.
+To address this, you should use context7. Ideally, you should do this before writing any code to ensure that you are using the correct API, or at least do so if you encounter any kind of syntax error.
