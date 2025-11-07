@@ -88,6 +88,12 @@ uvx pyright {relative_path_to_file}
 You have a basic knowledge of most of the libraries and modules that we use here (e.g. BAML, MLFlow and SQLModel), but you are not aware of the latest developments in their respective APIs.
 To address this, you should use context7. Ideally, you should do this before writing any code to ensure that you are using the correct API, or at least do so if you encounter any kind of syntax error.
 
+### Context7 Libraries:
+- mlflow:
+  - name: "/mlflow/mlflow"
+  - example usage: `context7 - get-library-docs (MCP)(context7CompatibleLibraryID: "/mlflow/mlflow", topic: "start_run continuation tracking", tokens: 2048)`
+
+
 ## Assumptions
 Don't make any assumptions ; ask for clarifications if anything is unclear.
 I would much rather you asked questions up front than made decisions on your own without knowing the full context.
