@@ -36,22 +36,7 @@ app.add_middleware(
 mlflow.set_tracking_uri(MLFLOW_URI)
 mlflow.set_experiment("API")
 
-# Initialize the IFC Answer Engine with configurable type
-# Engine type can be set via ENGINE_TYPE environment variable ("dspy" or "baml")
-# Default is "dspy" for backward compatibility
-engine_type = os.getenv("ENGINE_TYPE", "baml").lower()
 
-if engine_type not in ["dspy", "baml"]:
-    raise ValueError(f"Invalid ENGINE_TYPE: {engine_type}. Must be 'dspy' or 'baml'")
-
-print(f"🚀 Starting API with {engine_type.upper()} engine")
-
-# Optional LLM override for DSPy engine
-llm = None
-if engine_type == "dspy":
-    # Uncomment and configure if you want to use a specific LLM for DSPy
-    # llm = LLM(model_name="qwen-3-coder-480b", provider_name="cerebras").get_llm()
-    pass
 
 
 

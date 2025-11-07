@@ -20,7 +20,6 @@ from datetime import datetime
 from typing import Callable, Dict, List
 
 import mlflow
-import mlflow.dspy
 from tqdm import tqdm
 
 from src.agents.answer_verifier import verify_answer

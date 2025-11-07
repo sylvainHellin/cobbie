@@ -106,7 +106,7 @@ def _create_function_from_source_code(
         # Set the function name and docstring for the tool
         tool_wrapper.__name__ = function_name
 
-        # Create a more descriptive docstring for DSPy using extracted metadata
+        # Create a more descriptive docstring
         args_description = ""
         if metadata.args:
             args_list = []

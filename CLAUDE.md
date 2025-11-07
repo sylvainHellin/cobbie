@@ -23,16 +23,11 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 This is a sophisticated AI System named Cobbie (COde Based BIM Information Extraction) for BIM Information Extraction, using an LLM-based multi-agent architecture. The system supports both training and inference modes, with dynamic tool creation capabilities during training to answer questions about IFC (Industry Foundation Classes) building models.
 
-### Dual Framework Architecture
-The project is migrating from DSPy to BAML:
-- **Legacy DSPy**: Located in `src/engine/components/` (OOP-based agents)
-- **Current BAML**: Located in `src/agents/` and `baml_src/` (functional agents)
 
 ### Core Components
 - **Main Agents**: `src/agents/cobbie.py` (primary BIM extraction), `src/agents/answer_verifier.py`
 - **Tool Ecosystem**: `src.tools.initial/` (base tools) and `src.tools/created/` (dynamically generated)
-- **Web API**: FastAPI application in `api/main.py` with dual engine support (DSPy/BAML)
-- **Configuration**: Hierarchical config system in `src/config/` (for the legacy DSPy implementation ; not used for new BAML implementation)
+- **Web API**: FastAPI application in `api/main.py`
 - **Data Pipeline**: SQLite database with MLflow tracking
 
 
@@ -76,7 +71,7 @@ The system supports multiple LLM providers:
 ## Important Guidelines
 - Use `uv run` prefix for all Python commands
 - Start MLflow server before training/evaluation
-- Use BAML components for new development (not DSPy)
+- Use BAML components for new development
 - API supports both engines via environment variable configuration
 - Use `uvx ty check <relative_path_to_file>` (e.g. `uvx ty check src/agents/cobbie.py`) to check for type errors whenever you implement something, before claiming it is finished.
 
