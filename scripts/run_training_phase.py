@@ -42,6 +42,7 @@ from src.util import (
 )
 from src.db import load_train_dev_split
 from src.db.models import IfcBench
+from src.utils.mlflow_utils import determine_run_id
 
 # Initialize logger
 _logger = get_logger(name="TrainingPhase", log_level=LOG_LEVEL)
@@ -1259,6 +1260,8 @@ def main():
     parser = argparse.ArgumentParser(description="Run training phase")
     parser.add_argument("--start", type=int, default=0, help="Start index")
     parser.add_argument("--end", type=int, default=None, help="End index")
+    parser.add_argument("--continue", dest="continue_run", nargs="?", const=True,
+                       help="Continue most recent run or specific run ID")
     args = parser.parse_args()
 
     # Load dataset
@@ -1273,10 +1276,18 @@ def main():
     mlflow.set_tracking_uri("http://127.0.0.1:5000")
     mlflow.set_experiment("Training")
 
-    run_name = f"TRAINING_{datetime.now().strftime('%Y-%m-%d-%H-%M-%S')}_samples_{args.start}_{end_index - 1}"
+    # Determine run_id based on --continue flag
+    run_id = determine_run_id(args.continue_run)
+
+    if run_id:
+        _logger.info(f"Continuing existing MLflow run: {run_id}")
+        run_name = None  # Don't set a new name when continuing
+    else:
+        run_name = f"TRAINING_{datetime.now().strftime('%Y-%m-%d-%H-%M-%S')}_samples_{args.start}_{end_index - 1}"
+        _logger.info(f"Creating new MLflow run: {run_name}")
 
     # Main MLflow run
-    with mlflow.start_run(run_name=run_name):
+    with mlflow.start_run(run_id=run_id, run_name=run_name):
         # Log main-level parameters
         initial_tools = get_created_tools()
         mlflow.log_params(
