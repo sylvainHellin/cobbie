@@ -537,6 +537,14 @@ def handle_verify_answer(context: Context) -> Tuple[TrainingState, Context]:
         )
         _logger.info(f"Justification: {result.justification}")
 
+        # Log the answer and the justification as parameter for later access for evaluation
+        mlflow.log_params(
+            {
+                "justification": result.justification,
+                "cobbie_answer": context.cobbie_result.answer,
+            }
+        )
+
         # Determine next state based on classification
         if result.classification == "correct":
             context.path_taken = "correct"
