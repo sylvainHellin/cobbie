@@ -10,7 +10,9 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 - **Type Check**: `uvx ty check`
 
 ### MLflow Tracking
-- **Start MLflow**: `uv run mlflow server --host 127.0.0.1 --port 5000 --backend-store-uri sqlite:///mlflow.sqlite`
+- **Start MLflow**: `uv run mlflow server --host 127.0.0.1 --port 5000 --backend-store-uri sqlite:///mlflow.sqlite --gunicorn-opts "--timeout=120 -w 1"`
+  - **Important**: Use single worker (`-w 1`) to avoid SQLite database locking issues with concurrent writes
+  - The `--timeout=120` option prevents timeouts for long-running operations
 
 ### Training & Evaluation
 - **Training**: `uv run scripts/run_training_phase.py --start 0 --end 10`

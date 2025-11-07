@@ -1288,17 +1288,32 @@ def main():
 
     # Main MLflow run
     with mlflow.start_run(run_id=run_id, run_name=run_name):
-        # Log main-level parameters
         initial_tools = get_created_tools()
-        mlflow.log_params(
+
+        # Log immutable configuration parameters (only for new runs)
+        if run_id is None:
+            mlflow.log_params(
+                {
+                    "model_name": "glm-4.6",
+                    "provider_name": "zai",
+                    "component": "Training",
+                }
+            )
+
+        # Log/update batch information as metrics (works for both new and continued runs)
+        # Get previous total if continuing
+        previous_total = 0
+        if run_id is not None:
+            active_run = mlflow.active_run()
+            previous_total = int(active_run.data.metrics.get("total_samples_processed", 0))
+
+        mlflow.log_metrics(
             {
-                "model_name": "glm-4.6",
-                "provider_name": "zai",
-                "component": "Training",
-                "start_index": args.start,
-                "end_index": end_index,
-                "num_samples": len(dataset),
-                "initial_tools_count": len(initial_tools),
+                "batch_start_index": args.start,
+                "batch_end_index": end_index - 1,  # Inclusive end
+                "batch_size": len(dataset),
+                "total_samples_processed": previous_total + len(dataset),
+                "current_tools_count": len(initial_tools),
             }
         )
 

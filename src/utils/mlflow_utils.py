@@ -15,10 +15,10 @@ _logger = get_logger(name="MLflowUtils", log_level="INFO")
 
 def get_most_recent_training_run() -> Optional[str]:
     """
-    Find the most recent run in the "Training" experiment.
+    Find the most recent PARENT run in the "Training" experiment.
 
     Returns:
-        The run_id of the most recent run, or None if no runs exist
+        The run_id of the most recent parent run, or None if no runs exist
 
     Raises:
         ValueError: If no runs exist in the Training experiment
@@ -31,26 +31,47 @@ def get_most_recent_training_run() -> Optional[str]:
 
         experiment_id = experiment.experiment_id
 
-        # Search for runs in the Training experiment, ordered by start time (most recent first)
-        runs = mlflow.search_runs(
+        # First, get all runs sorted by start time (most recent first)
+        all_runs = mlflow.search_runs(
             experiment_ids=[experiment_id],
             order_by=["start_time DESC"],
-            max_results=1
+            max_results=100  # Get more runs to filter through
         )
 
-        if runs.empty:
+        if all_runs.empty:
             raise ValueError(
                 "No runs found in 'Training' experiment. "
                 "Please create an initial run first using: "
                 "uv run scripts/run_training_phase.py --start 0 --end 10"
             )
 
-        most_recent_run_id = runs.iloc[0]['run_id']
-        _logger.info(f"Found most recent training run: {most_recent_run_id}")
+        # Filter for parent runs by checking if they don't have mlflow.parentRunId tag
+        # Convert to pandas DataFrame and filter
+        import pandas as pd
+
+        # Convert to DataFrame if it's not already
+        runs_df = pd.DataFrame(all_runs) if not isinstance(all_runs, pd.DataFrame) else all_runs
+
+        # Filter for parent runs - look for rows where mlflow.parentRunId is NaN/None
+        if 'tags.mlflow.parentRunId' in runs_df.columns:
+            parent_runs = runs_df[runs_df['tags.mlflow.parentRunId'].isna()]
+        else:
+            # If the column doesn't exist, all runs are parent runs
+            parent_runs = runs_df
+
+        if parent_runs.empty:
+            raise ValueError(
+                "No parent runs found in 'Training' experiment. "
+                "Please create an initial run first using: "
+                "uv run scripts/run_training_phase.py --start 0 --end 10"
+            )
+
+        most_recent_run_id = parent_runs.iloc[0]['run_id']
+        _logger.info(f"Found most recent parent training run: {most_recent_run_id}")
         return most_recent_run_id
 
     except Exception as e:
-        _logger.error(f"Error finding most recent training run: {e}")
+        _logger.error(f"Error finding most recent parent training run: {e}")
         raise
 
 

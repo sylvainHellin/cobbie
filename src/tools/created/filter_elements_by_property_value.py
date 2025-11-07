@@ -62,15 +62,42 @@ def filter_elements_by_property_value(
         
         for element in elements:
             try:
-                # Get all property sets for this element
-                psets = ifcopenshell.util.element.get_psets(element)
+                # Get all property sets for this element (includes inherited properties)
+                element_psets = ifcopenshell.util.element.get_psets(element)
+                actual_value = None
+                property_source = None
                 
-                # Check if the filter property set exists and has the filter property
-                filter_pset = psets.get(filter_property_set, {})
-                actual_value = filter_pset.get(filter_property_name)
+                # Check if the filter property set exists and has the filter property on element
+                if filter_property_set in element_psets:
+                    filter_pset = element_psets[filter_property_set]
+                    if filter_property_name in filter_pset:
+                        actual_value = filter_pset[filter_property_name]
+                        property_source = 'element'
+                
+                # If not found on element, check type object for inherited properties
+                if actual_value is None:
+                    type_object = ifcopenshell.util.element.get_type(element)
+                    if type_object:
+                        type_psets = ifcopenshell.util.element.get_psets(type_object)
+                        if filter_property_set in type_psets:
+                            filter_pset = type_psets[filter_property_set]
+                            if filter_property_name in filter_pset:
+                                actual_value = filter_pset[filter_property_name]
+                                property_source = 'type'
                 
                 # Check if the filter property matches the desired value
+                matches_filter = False
                 if actual_value == filter_property_value:
+                    matches_filter = True
+                # Special handling for LoadBearing=False: treat undefined as False
+                elif (filter_property_value is False and 
+                      filter_property_name == 'LoadBearing' and 
+                      actual_value is None):
+                    matches_filter = True
+                    actual_value = False
+                    property_source = 'inferred'
+                
+                if matches_filter:
                     # Create result dictionary
                     result = {}
                     
@@ -81,9 +108,20 @@ def filter_elements_by_property_value(
                         result['ObjectType'] = getattr(element, 'ObjectType', None)
                         result['GlobalId'] = getattr(element, 'GlobalId', None)
                     
-                    # Extract requested properties
+                    # Extract requested properties (check element first, then type)
                     for pset_name in extract_property_sets:
-                        pset = psets.get(pset_name, {})
+                        # Get property set from element or type
+                        if pset_name in element_psets:
+                            pset = element_psets[pset_name]
+                        else:
+                            # Check type object
+                            type_object = ifcopenshell.util.element.get_type(element)
+                            if type_object:
+                                type_psets = ifcopenshell.util.element.get_psets(type_object)
+                                pset = type_psets.get(pset_name, {})
+                            else:
+                                pset = {}
+                        
                         for prop_name in extract_property_names:
                             # Create a key that combines the property set and property name
                             # to avoid conflicts when extracting from multiple property sets
