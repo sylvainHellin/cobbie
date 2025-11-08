@@ -13,190 +13,253 @@ def discover_building_systems_comprehensive(
 ) -> Dict[str, Any]:
     """
     Comprehensively discovers and analyzes building systems in an IFC model using a multi-strategy approach.
+    
     This function systematically searches for systems that may be represented as standard element types,
-    BuildingElementProxy elements, or through property-based classifications.
+    BuildingElementProxy elements, or through property-based classifications. It implements the workflow
+    that proved necessary for lighting system discovery: 1) Analyzes what element types exist in the model,
+    2) Searches for domain-specific element types with schema compatibility handling, 3) Performs keyword-based
+    searches across element names, object types, and properties, 4) Deep-dives into BuildingElementProxy elements
+    examining their property sets and classifications, 5) Checks for related systems and distribution elements,
+    6) Provides categorized results with counts and detailed examples.
     
     Args:
         ifc_file: Loaded IFC model (ifcopenshell.file)
-        system_keywords: List of keywords related to the target system (e.g., ['heiz', 'heating', 'wärme', 'warm', 'heater', 'boiler', 'radiator'] for heating)
-        target_element_types: Optional list of specific IFC element types to search (default: common MEP types)
-        include_related_types: Whether to search related element types like BuildingElementProxy (default: True)
-        include_systems: Whether to analyze IfcSystem elements (default: True)
-        include_details: Whether to include detailed element information (default: True)
+        system_keywords: List of keywords related to the target system (e.g., ['light', 'licht', 'leuchte', 'lamp', 'beleuchtung', 'luminaire'] for lighting)
+        target_element_types: Optional list of specific element types to prioritize (e.g., ['IfcLightFixture', 'IfcLamp'])
+        include_related_types: Boolean to include analysis of related element types (default: True)
+        include_systems: Boolean to include IfcSystem and IfcDistributionSystem analysis (default: True)
+        include_details: Boolean to include detailed property analysis (default: True)
     
     Returns:
         Dict containing:
-        - system_elements: Dict of found elements by element type and category
-        - total_elements: Total number of system-related elements found
-        - element_types_present: List of element types that exist in the model
-        - systems_found: List of IfcSystem elements related to the target system
-        - discovery_summary: Summary of which discovery strategies succeeded
+        - element_types_found: Dict of element types that exist in the model with counts
+        - domain_elements: Elements matching domain keywords with counts and details
+        - proxy_elements: BuildingElementProxy elements matching domain criteria
+        - systems: Related systems found
+        - summary: Overall findings and recommendations
     
     Example:
         >>> import ifcopenshell
         >>> model = ifcopenshell.open('building.ifc')
-        >>> heating_keywords = ['heiz', 'heating', 'wärme', 'warm', 'heater', 'boiler', 'radiator']
-        >>> result = discover_building_systems_comprehensive(model, heating_keywords)
-        >>> print(f"Found {result['total_elements']} heating elements")
+        >>> result = discover_building_systems_comprehensive(
+        ...     model,
+        ...     system_keywords=['light', 'lamp', 'luminaire'],
+        ...     target_element_types=['IfcLightFixture', 'IfcLamp']
+        ... )
+        >>> print(f"Found {len(result['domain_elements'])} lighting elements")
     """
     
-    # Initialize result structure
     result = {
-        'system_elements': {},
-        'total_elements': 0,
-        'element_types_present': [],
-        'systems_found': [],
-        'discovery_summary': {
-            'standard_types': False,
-            'flow_terminals': False,
-            'building_element_proxy': False,
-            'systems': False,
-            'keyword_search': False
+        'element_types_found': {},
+        'domain_elements': [],
+        'proxy_elements': [],
+        'systems': [],
+        'summary': {
+            'total_elements_analyzed': 0,
+            'domain_matches': 0,
+            'proxy_matches': 0,
+            'systems_found': 0,
+            'recommendations': []
         }
     }
     
-    # Default target element types for MEP systems
-    if target_element_types is None:
-        target_element_types = [
-            'IfcFlowTerminal',
-            'IfcDistributionControlElement', 
-            'IfcEnergyConversionDevice',
-            'IfcFlowController',
-            'IfcFlowMovingDevice',
-            'IfcFlowStorageDevice',
-            'IfcElectricDistributionPoint',
-            'IfcElectricDistributionBoard',
-            'IfcProtectiveDevice',
-            'IfcSwitchingDevice',
-            'IfcController',
-            'IfcSensor',
-            'IfcActuator'
-        ]
-    
-    # Related types to search if include_related_types is True
-    related_types = ['IfcBuildingElementProxy'] if include_related_types else []
-    
-    # Combine all element types to search
-    all_search_types = target_element_types + related_types
-    
-    # Strategy 1: Search for standard element types
     try:
-        for element_type in all_search_types:
-            try:
-                elements = ifc_file.by_type(element_type)
-                if elements:
-                    result['element_types_present'].append(element_type)
-                    
-                    # Filter elements by keywords
-                    matching_elements = []
-                    for element in elements:
-                        element_info = {
-                            'id': element.id(),
-                            'GlobalId': element.GlobalId if hasattr(element, 'GlobalId') else None,
-                            'Name': element.Name if element.Name else 'No Name',
-                            'ObjectType': element.ObjectType if hasattr(element, 'ObjectType') and element.ObjectType else 'No ObjectType',
-                            'PredefinedType': element.PredefinedType if hasattr(element, 'PredefinedType') and element.PredefinedType else None
-                        }
-                        
-                        # Check keywords in name, object type, and predefined type
-                        text_to_search = ' '.join([
-                            element_info['Name'].lower(),
-                            element_info['ObjectType'].lower(),
-                            (element_info['PredefinedType'] or '').lower()
-                        ])
-                        
-                        if any(keyword.lower() in text_to_search for keyword in system_keywords):
-                            matching_elements.append(element_info)
+        # Step 1: Analyze what element types exist in the model
+        all_elements = ifc_file.by_type('IfcObjectDefinition')
+        element_types = {}
+        for element in all_elements:
+            elem_type = element.is_a()
+            if elem_type not in element_types:
+                element_types[elem_type] = 0
+            element_types[elem_type] += 1
+        
+        result['element_types_found'] = {k: v for k, v in element_types.items() if v > 0}
+        result['summary']['total_elements_analyzed'] = sum(element_types.values())
+        
+        # Step 2: Search for domain-specific element types with schema compatibility handling
+        domain_elements = []
+        
+        # Check target element types first
+        if target_element_types:
+            for elem_type in target_element_types:
+                try:
+                    elements = ifc_file.by_type(elem_type)
+                    if elements:
+                        for elem in elements:
+                            elem_info = {
+                                'id': elem.id(),
+                                'type': elem.is_a(),
+                                'name': getattr(elem, 'Name', None),
+                                'object_type': getattr(elem, 'ObjectType', None),
+                                'description': getattr(elem, 'Description', None),
+                                'match_reason': 'target_type'
+                            }
+                            domain_elements.append(elem_info)
+                except RuntimeError:
+                    # Schema doesn't support this element type
+                    pass
+        
+        # Step 3: Perform keyword-based searches across all elements
+        if include_related_types and system_keywords:
+            for elem_type, count in result['element_types_found'].items():
+                if count > 0 and elem_type not in ['IfcProject', 'IfcSite', 'IfcBuilding', 'IfcBuildingStorey']:
+                    try:
+                        elements = ifc_file.by_type(elem_type)
+                        for elem in elements:
+                            # Check if element matches domain keywords
+                            text_to_check = ' '.join(filter(None, [
+                                getattr(elem, 'Name', ''),
+                                getattr(elem, 'ObjectType', ''),
+                                getattr(elem, 'Description', '')
+                            ])).lower()
                             
-                            # Add property details if requested
-                            if include_details:
-                                try:
-                                    psets = ifcopenshell.util.element.get_psets(element)
-                                    element_info['property_sets'] = psets
-                                except:
-                                    element_info['property_sets'] = {}
-                    
-                    if matching_elements:
-                        result['system_elements'][element_type] = matching_elements
-                        result['total_elements'] += len(matching_elements)
-                        result['discovery_summary']['standard_types'] = True
-                        result['discovery_summary']['keyword_search'] = True
-                        
-                        # Mark specific strategies as successful
-                        if element_type == 'IfcFlowTerminal':
-                            result['discovery_summary']['flow_terminals'] = True
-                        elif element_type == 'IfcBuildingElementProxy':
-                            result['discovery_summary']['building_element_proxy'] = True
-                            
-            except Exception as e:
-                # Element type might not exist in schema, continue to next
-                continue
-                
-    except Exception as e:
-        pass
-    
-    # Strategy 2: Search for IfcSystem elements
-    if include_systems:
-        try:
-            systems = ifc_file.by_type('IfcSystem')
-            matching_systems = []
+                            if any(keyword.lower() in text_to_check for keyword in system_keywords):
+                                elem_info = {
+                                    'id': elem.id(),
+                                    'type': elem.is_a(),
+                                    'name': getattr(elem, 'Name', None),
+                                    'object_type': getattr(elem, 'ObjectType', None),
+                                    'description': getattr(elem, 'Description', None),
+                                    'match_reason': 'keyword_match'
+                                }
+                                
+                                # Add property details if requested
+                                if include_details:
+                                    try:
+                                        psets = ifcopenshell.util.element.get_psets(elem)
+                                        elem_info['property_sets'] = psets
+                                    except:
+                                        elem_info['property_sets'] = {}
+                                
+                                domain_elements.append(elem_info)
+                    except RuntimeError:
+                        # Skip unsupported element types
+                        continue
+        
+        result['domain_elements'] = domain_elements
+        result['summary']['domain_matches'] = len(domain_elements)
+        
+        # Step 4: Deep-dive into BuildingElementProxy elements
+        proxy_matches = []
+        if 'IfcBuildingElementProxy' in result['element_types_found'] and system_keywords:
+            proxy_elements = ifc_file.by_type('IfcBuildingElementProxy')
             
-            for system in systems:
-                system_info = {
-                    'id': system.id(),
-                    'GlobalId': system.GlobalId if hasattr(system, 'GlobalId') else None,
-                    'Name': system.Name if system.Name else 'No Name',
-                    'ObjectType': system.ObjectType if hasattr(system, 'ObjectType') and system.ObjectType else 'No ObjectType',
-                    'Description': system.Description if hasattr(system, 'Description') and system.Description else None
+            for element in proxy_elements:
+                element_info = {
+                    'id': element.id(),
+                    'name': getattr(element, 'Name', None),
+                    'object_type': getattr(element, 'ObjectType', None),
+                    'description': getattr(element, 'Description', None),
+                    'property_sets': {},
+                    'classifications': [],
+                    'indicators': []
                 }
                 
-                # Check keywords in system name and description
-                text_to_search = ' '.join([
-                    system_info['Name'].lower(),
-                    system_info['ObjectType'].lower(),
-                    (system_info['Description'] or '').lower()
-                ])
+                # Extract property sets
+                if include_details:
+                    try:
+                        psets = ifcopenshell.util.element.get_psets(element)
+                        element_info['property_sets'] = psets
+                        
+                        # Look for domain-related indicators in properties
+                        for prop_set_name, props in psets.items():
+                            for prop_name, prop_value in props.items():
+                                if isinstance(prop_value, str):
+                                    prop_lower = prop_value.lower()
+                                    if any(term in prop_lower for term in system_keywords):
+                                        element_info['indicators'].append(f"{prop_set_name}.{prop_name}={prop_value}")
+                    except:
+                        pass
                 
-                if any(keyword.lower() in text_to_search for keyword in system_keywords):
-                    matching_systems.append(system_info)
-                    result['discovery_summary']['systems'] = True
-            
-            result['systems_found'] = matching_systems
-            
-        except Exception as e:
-            pass
-    
-    # Strategy 3: Advanced keyword search using selector if standard search didn't find much
-    if result['total_elements'] == 0 and system_keywords:
-        try:
-            # Try to find elements using selector syntax with keywords
-            for keyword in system_keywords:
+                # Check associations (classifications)
                 try:
-                    # This is a more advanced search that might catch elements missed by standard search
-                    query = f"*[{keyword}]"
-                    elements = ifcopenshell.util.selector.filter_elements(ifc_file, query)
-                    
-                    if elements:
-                        for element in elements:
-                            element_type = element.is_a()
-                            if element_type not in result['system_elements']:
-                                result['system_elements'][element_type] = []
-                            
-                            element_info = {
-                                'id': element.id(),
-                                'GlobalId': element.GlobalId if hasattr(element, 'GlobalId') else None,
-                                'Name': element.Name if element.Name else 'No Name',
-                                'ObjectType': element.ObjectType if hasattr(element, 'ObjectType') and element.ObjectType else 'No ObjectType'
-                            }
-                            
-                            result['system_elements'][element_type].append(element_info)
-                            result['total_elements'] += 1
-                            result['discovery_summary']['keyword_search'] = True
-                            
+                    for association in element.HasAssociations:
+                        if association.is_a('IfcRelAssociatesClassification'):
+                            classification = association.RelatingClassification
+                            if hasattr(classification, 'Name'):
+                                element_info['classifications'].append(classification.Name)
+                                if any(term in classification.Name.lower() for term in system_keywords):
+                                    element_info['indicators'].append(f"Classification={classification.Name}")
                 except:
-                    continue
+                    pass
+                
+                # Check ObjectType and Name for domain terms
+                for field, value in [('Name', element_info['name']), ('ObjectType', element_info['object_type'])]:
+                    if value and any(term in value.lower() for term in system_keywords):
+                        element_info['indicators'].append(f"{field}={value}")
+                
+                if element_info['indicators']:
+                    proxy_matches.append(element_info)
+            
+            result['proxy_elements'] = proxy_matches
+            result['summary']['proxy_matches'] = len(proxy_matches)
+        
+        # Step 5: Check for related systems
+        if include_systems and system_keywords:
+            systems_found = []
+            
+            # Check IfcSystem elements
+            try:
+                systems = ifc_file.by_type('IfcSystem')
+                for system in systems:
+                    system_text = ' '.join(filter(None, [
+                        getattr(system, 'Name', ''),
+                        getattr(system, 'ObjectType', ''),
+                        getattr(system, 'Description', '')
+                    ])).lower()
                     
-        except Exception as e:
-            pass
+                    if any(keyword.lower() in system_text for keyword in system_keywords):
+                        systems_found.append({
+                            'id': system.id(),
+                            'type': system.is_a(),
+                            'name': getattr(system, 'Name', None),
+                            'object_type': getattr(system, 'ObjectType', None)
+                        })
+            except:
+                pass
+            
+            # Check IfcDistributionSystem elements
+            try:
+                distribution_systems = ifc_file.by_type('IfcDistributionSystem')
+                for system in distribution_systems:
+                    system_text = ' '.join(filter(None, [
+                        getattr(system, 'Name', ''),
+                        getattr(system, 'ObjectType', ''),
+                        getattr(system, 'Description', '')
+                    ])).lower()
+                    
+                    if any(keyword.lower() in system_text for keyword in system_keywords):
+                        systems_found.append({
+                            'id': system.id(),
+                            'type': system.is_a(),
+                            'name': getattr(system, 'Name', None),
+                            'object_type': getattr(system, 'ObjectType', None)
+                        })
+            except:
+                pass
+            
+            result['systems'] = systems_found
+            result['summary']['systems_found'] = len(systems_found)
+        
+        # Step 6: Generate summary and recommendations
+        total_matches = result['summary']['domain_matches'] + result['summary']['proxy_matches'] + result['summary']['systems_found']
+        
+        if total_matches == 0:
+            if system_keywords:
+                result['summary']['recommendations'].append(
+                    f"No {system_keywords[0]}-related elements found. The system may not be modeled or may use non-standard representations."
+                )
+                if 'IfcBuildingElementProxy' in result['element_types_found']:
+                    result['summary']['recommendations'].append(
+                        f"Consider examining the {result['element_types_found']['IfcBuildingElementProxy']} BuildingElementProxy elements for potential system components."
+                    )
+        else:
+            if system_keywords:
+                result['summary']['recommendations'].append(
+                    f"Found {total_matches} {system_keywords[0]}-related elements across multiple categories."
+                )
+        
+    except Exception as e:
+        result['summary']['recommendations'].append(f"Error during analysis: {str(e)}")
     
     return result
