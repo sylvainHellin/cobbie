@@ -17,7 +17,7 @@ import argparse
 import logging
 import time
 from datetime import datetime
-from typing import Callable, Dict, List
+from typing import Callable, Dict, List, Optional
 
 import mlflow
 from tqdm import tqdm
@@ -27,88 +27,122 @@ from src.agents.cobbie import cobbie
 from src.util import get_created_tools
 from src.db import DEVSET
 from src.tools.initial import query_ifcopenshell_docs, web_search
+from src.utils.mlflow_utils import determine_evaluation_run_id
 
 # Setup logging
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 
-def calculate_and_log_metrics(question_results: List[Dict]) -> Dict:
+def calculate_and_log_metrics(
+    question_results: List[Dict], previous_metrics: Optional[Dict] = None
+) -> Dict:
     """Calculate comprehensive evaluation metrics and log to MLflow.
 
     Args:
-        question_results: List of results from processed questions
+        question_results: List of results from current batch
+        previous_metrics: Metrics from previous batches (if continuing)
 
     Returns:
-        Dictionary containing calculated metrics
+        Dictionary containing calculated cumulative metrics
     """
+    # Calculate current batch metrics
     total_questions = len(question_results)
     successful_results = [r for r in question_results if r["status"] == "success"]
 
-    # Basic success metrics
+    # Basic success metrics for current batch
     success_rate = (
         len(successful_results) / total_questions if total_questions > 0 else 0.0
     )
 
-    # Classification metrics
+    # Classification metrics for current batch
     classifications = [
         r["classification"]
         for r in successful_results
         if r["classification"] is not None
     ]
-    correct_count = sum(1 for c in classifications if c == "correct")
-    wrong_count = sum(1 for c in classifications if c == "wrong")
-    abstained_count = sum(1 for c in classifications if c == "abstained")
+    batch_correct_count = sum(1 for c in classifications if c == "correct")
+    batch_wrong_count = sum(1 for c in classifications if c == "wrong")
+    batch_abstained_count = sum(1 for c in classifications if c == "abstained")
 
-    # Calculate accuracy and abstainance rate
-    accuracy = (
-        correct_count / (correct_count + wrong_count)
-        if (correct_count + wrong_count) > 0
+    # Performance metrics for current batch
+    batch_execution_time = sum(r["execution_time"] for r in question_results)
+
+    # Token metrics for current batch
+    batch_input_tokens = sum(r["input_tokens"] for r in question_results)
+    batch_output_tokens = sum(r["output_tokens"] for r in question_results)
+
+    # Accumulate with previous metrics if continuing
+    if previous_metrics:
+        cumulative_total_questions = previous_metrics["total_questions"] + total_questions
+        cumulative_correct_count = previous_metrics["correct_count"] + batch_correct_count
+        cumulative_wrong_count = previous_metrics["wrong_count"] + batch_wrong_count
+        cumulative_abstained_count = previous_metrics["abstained_count"] + batch_abstained_count
+        cumulative_input_tokens = previous_metrics["total_input_tokens"] + batch_input_tokens
+        cumulative_output_tokens = previous_metrics["total_output_tokens"] + batch_output_tokens
+        cumulative_execution_time = previous_metrics["total_execution_time"] + batch_execution_time
+    else:
+        cumulative_total_questions = total_questions
+        cumulative_correct_count = batch_correct_count
+        cumulative_wrong_count = batch_wrong_count
+        cumulative_abstained_count = batch_abstained_count
+        cumulative_input_tokens = batch_input_tokens
+        cumulative_output_tokens = batch_output_tokens
+        cumulative_execution_time = batch_execution_time
+
+    # Calculate derived metrics from cumulative totals
+    cumulative_total_tokens = cumulative_input_tokens + cumulative_output_tokens
+    cumulative_total_evaluated = cumulative_correct_count + cumulative_wrong_count + cumulative_abstained_count
+
+    cumulative_accuracy = (
+        cumulative_correct_count / (cumulative_correct_count + cumulative_wrong_count)
+        if (cumulative_correct_count + cumulative_wrong_count) > 0
         else 0.0
     )
-    abstainance_rate = (
-        abstained_count / len(classifications) if classifications else 0.0
+    cumulative_abstainance_rate = (
+        cumulative_abstained_count / cumulative_total_evaluated
+        if cumulative_total_evaluated > 0
+        else 0.0
+    )
+    cumulative_avg_execution_time = (
+        cumulative_execution_time / cumulative_total_questions
+        if cumulative_total_questions > 0
+        else 0.0
+    )
+    cumulative_avg_tokens_per_question = (
+        cumulative_total_tokens / cumulative_total_questions
+        if cumulative_total_questions > 0
+        else 0.0
+    )
+    cumulative_tokens_per_second = (
+        cumulative_output_tokens / cumulative_execution_time
+        if cumulative_execution_time > 0
+        else 0.0
     )
 
-    # Performance metrics
-    total_execution_time = sum(r["execution_time"] for r in question_results)
-    avg_execution_time = (
-        total_execution_time / total_questions if total_questions > 0 else 0.0
-    )
-
-    # Token metrics
-    total_input_tokens = sum(r["input_tokens"] for r in question_results)
-    total_output_tokens = sum(r["output_tokens"] for r in question_results)
-    total_tokens = total_input_tokens + total_output_tokens
-
-    # Create base metrics dictionary
+    # Create cumulative metrics dictionary
     metrics = {
-        # Success metrics
+        # Success metrics (current batch)
         "success_rate": success_rate,
         "successful_answers": len(successful_results),
         "failed_answers": total_questions - len(successful_results),
-        "total_questions": total_questions,
-        # Classification metrics
-        "accuracy": accuracy,
-        "abstainance_rate": abstainance_rate,
-        "correct_count": correct_count,
-        "wrong_count": wrong_count,
-        "abstained_count": abstained_count,
-        "total_evaluated": len(classifications),
-        # Performance metrics
-        "total_execution_time": total_execution_time,
-        "avg_execution_time": avg_execution_time,
-        # Token metrics
-        "total_input_tokens": total_input_tokens,
-        "total_output_tokens": total_output_tokens,
-        "total_tokens": total_tokens,
-        "avg_tokens_per_question": total_tokens / total_questions
-        if total_questions > 0
-        else 0.0,
-        # Tokens per second
-        "tokens_per_second": total_output_tokens / total_execution_time
-        if total_execution_time > 0
-        else 0.0,
+        # Classification metrics (cumulative)
+        "total_questions": cumulative_total_questions,
+        "accuracy": cumulative_accuracy,
+        "abstainance_rate": cumulative_abstainance_rate,
+        "correct_count": cumulative_correct_count,
+        "wrong_count": cumulative_wrong_count,
+        "abstained_count": cumulative_abstained_count,
+        "total_evaluated": cumulative_total_evaluated,
+        # Performance metrics (cumulative)
+        "total_execution_time": cumulative_execution_time,
+        "avg_execution_time": cumulative_avg_execution_time,
+        # Token metrics (cumulative)
+        "total_input_tokens": cumulative_input_tokens,
+        "total_output_tokens": cumulative_output_tokens,
+        "total_tokens": cumulative_total_tokens,
+        "avg_tokens_per_question": cumulative_avg_tokens_per_question,
+        "tokens_per_second": cumulative_tokens_per_second,
     }
 
     # Log comprehensive metrics to MLflow
@@ -422,6 +456,14 @@ Examples:
         help="Logging level (default: INFO)",
     )
 
+    parser.add_argument(
+        "--continue",
+        dest="continue_run",
+        nargs="?",
+        const=True,
+        help="Continue most recent evaluation run or specific run ID",
+    )
+
     args = parser.parse_args()
 
     # Validate arguments
@@ -469,27 +511,48 @@ Examples:
     dataset = DEVSET[args.start : end_index]
     logger.info(f"Using {len(dataset)} samples for evaluation")
 
+    # Determine run_id based on --continue flag
+    run_id = determine_evaluation_run_id(args.continue_run)
+
+    if run_id:
+        logger.info(f"Continuing existing MLflow run: {run_id}")
+        run_name = None  # Don't set a new name when continuing
+    else:
+        run_name = f"BAML_COBBIE_{datetime.now().strftime('%Y-%m-%d-%H-%M-%S')}_samples_{args.start}_{end_index - 1}"
+        logger.info(f"Creating new MLflow run: {run_name}")
+
     # Start MLflow run
-    run_name = f"BAML_COBBIE_{datetime.now().strftime('%Y-%m-%d-%H-%M-%S')}_samples_{args.start}_{end_index - 1}"
-    logger.info(f"Starting MLflow run: {run_name}")
+    with mlflow.start_run(run_id=run_id, run_name=run_name) as run:
+        current_run_id = run.info.run_id
+        logger.info(f"MLflow run started with ID: {current_run_id}")
 
-    with mlflow.start_run(run_name=run_name) as run:
-        run_id = run.info.run_id
-        logger.info(f"MLflow run started with ID: {run_id}")
+        # Log immutable configuration parameters (only for new runs)
+        if run_id is None:
+            mlflow.log_params(
+                {
+                    "model_name": "glm-4.6",
+                    "provider_name": "zai",
+                    "component": "COBBIE",
+                    "tools": ", ".join(tools_dict.keys()),
+                    "tools_count": len(tools_dict),
+                }
+            )
 
-        # Log parameters
-        mlflow.log_params(
-            {
-                "model_name": "glm-4.6",
-                "provider_name": "zai",
-                "component": "COBBIE",
-                "start_index": args.start,
-                "end_index": end_index,
-                "num_samples": len(dataset),
-                "tools": ", ".join(tools_dict.keys()),
-                "tools_count": len(tools_dict),
-            }
-        )
+        # Get previous metrics if continuing
+        previous_metrics: Optional[Dict] = None
+        if run_id is not None:
+            active_run = mlflow.active_run()
+            if active_run:
+                previous_metrics = {
+                    "total_questions": int(active_run.data.metrics.get("total_questions", 0)),
+                    "correct_count": int(active_run.data.metrics.get("correct_count", 0)),
+                    "wrong_count": int(active_run.data.metrics.get("wrong_count", 0)),
+                    "abstained_count": int(active_run.data.metrics.get("abstained_count", 0)),
+                    "total_input_tokens": int(active_run.data.metrics.get("total_input_tokens", 0)),
+                    "total_output_tokens": int(active_run.data.metrics.get("total_output_tokens", 0)),
+                    "total_execution_time": float(active_run.data.metrics.get("total_execution_time", 0.0)),
+                }
+                logger.info(f"Continuing run with previous metrics: {previous_metrics}")
 
         # Time the evaluation
         start_time = time.time()
@@ -510,8 +573,16 @@ Examples:
         total_evaluation_time = end_time - start_time
 
         # Calculate and log metrics for the main evaluation run
-        results_summary = calculate_and_log_metrics(question_results)
+        results_summary = calculate_and_log_metrics(question_results, previous_metrics)
         results_summary["total_evaluation_time"] = total_evaluation_time
+
+        # Log batch tracking metrics
+        batch_metrics = {
+            "batch_start_index": args.start,
+            "batch_end_index": end_index - 1,
+            "batch_size": len(dataset),
+        }
+        mlflow.log_metrics(batch_metrics)
 
         # Log additional info to main run
         mlflow.set_tag("evaluation_status", "completed")

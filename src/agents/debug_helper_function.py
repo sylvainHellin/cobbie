@@ -13,7 +13,7 @@ import mlflow
 from baml_py.baml_py import Collector
 
 from baml_client.types import CodeAction, UpdatedHelperFunction
-from src.config import LOG_LEVEL
+from src.config import LOG_LEVEL, DIRECTORY_IFC_MODELS_PATH, ROOT_PATH
 from src.tools.initial import query_ifcopenshell_docs
 from src.util.code_act_inner_loop import _execute_code_action
 from src.util.generate_tools_docs import generate_tools_docs
@@ -136,7 +136,7 @@ def _debug_helper_function(
     # Prepare the paths to the other BIM models
     if other_bim_models_for_testing is None:
         # Get the absolute path to the BIM models directory
-        bim_models_dir = Path(__file__).parent.parent / "experiment" / "bim_models"
+        bim_models_dir = Path(DIRECTORY_IFC_MODELS_PATH)
 
         if bim_models_dir.exists():
             # Find all .ifc files recursively in the directory

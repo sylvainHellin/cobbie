@@ -11,6 +11,7 @@ Usage:
 """
 
 import argparse
+import re
 import sqlite3
 from datetime import datetime
 from typing import Dict, List
@@ -30,6 +31,27 @@ CATEGORY_NAMES = {
     3: "Computation",
     4: "Estimation/Unavailable",
 }
+
+
+def sanitize_for_excel(text: str) -> str:
+    """
+    Sanitize text to remove characters that are illegal in Excel cells.
+
+    Excel/openpyxl doesn't allow certain control characters (0x00-0x1F except tab, newline, carriage return).
+
+    Args:
+        text: Input text string
+
+    Returns:
+        Sanitized text safe for Excel
+    """
+    if not isinstance(text, str):
+        return text
+
+    # Remove illegal XML characters (Excel uses XML internally)
+    # Keep only: tab (0x09), newline (0x0A), carriage return (0x0D), and printable characters (>= 0x20)
+    illegal_chars = re.compile(r'[\x00-\x08\x0B\x0C\x0E-\x1F]')
+    return illegal_chars.sub('', text)
 
 
 def fetch_nested_runs(client: MlflowClient, parent_run_id: str, experiment_id: str) -> List:
@@ -185,19 +207,19 @@ def build_dataframe(run_data_list: List[Dict], question_data: Dict[int, Dict]) -
         # Build MLflow URL
         mlflow_url = f"{MLFLOW_URI}/#/experiments/{run_data['experiment_id']}/runs/{run_data['run_id']}"
 
-        # Combine all data
+        # Combine all data (sanitize text fields for Excel compatibility)
         row = {
             "question_id": question_id,
-            "question": q_data.get("question", "N/A"),
-            "ground_truth": q_data.get("ground_truth", "N/A"),
+            "question": sanitize_for_excel(q_data.get("question", "N/A")),
+            "ground_truth": sanitize_for_excel(q_data.get("ground_truth", "N/A")),
             "category": q_data.get("category", "N/A"),
             "category_name": CATEGORY_NAMES.get(q_data.get("category", 0), "Unknown"),
-            "project_name": q_data.get("project_name", "N/A"),
-            "model_name": q_data.get("model_name", "N/A"),
-            "classification": run_data["classification"],
-            "cobbie_answer": run_data["cobbie_answer"],
-            "justification": run_data["justification"],
-            "confidence": run_data["confidence"],
+            "project_name": sanitize_for_excel(q_data.get("project_name", "N/A")),
+            "model_name": sanitize_for_excel(q_data.get("model_name", "N/A")),
+            "classification": sanitize_for_excel(run_data["classification"]),
+            "cobbie_answer": sanitize_for_excel(run_data["cobbie_answer"]),
+            "justification": sanitize_for_excel(run_data["justification"]),
+            "confidence": sanitize_for_excel(run_data["confidence"]),
             "cobbie_duration": run_data["cobbie_duration"],
             "verifier_duration": run_data["verifier_duration"],
             "total_duration": run_data["total_duration"],

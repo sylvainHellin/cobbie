@@ -9,7 +9,7 @@ ROOT_PATH = os.environ["ROOT_PATH"]
 SRC_PATH = os.path.join(ROOT_PATH, "src")
 TEST_IFC_PATH = os.path.join(ROOT_PATH, "src/db/bim_models/duplex/arc.ifc")
 DB_PATH = os.path.join(ROOT_PATH, "src/db/db.db")
-DIRECTORY_IFC_MODELS_PATH = os.path.join(ROOT_PATH, "src/bim_models")
+DIRECTORY_IFC_MODELS_PATH = os.path.join(ROOT_PATH, "src/db/bim_models")
 CREATED_TOOLS_PATH = os.path.join(ROOT_PATH, "src/tools/created")
 
 # URI
