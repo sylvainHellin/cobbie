@@ -287,6 +287,7 @@ def cobbie(
     add_code_prefix: bool = True,
     llm_provider: str = "zai",
     llm_name: str = "glm-4.6",
+    mlflow_run_id: Optional[str] = None,
     **kwargs,
 ) -> Tuple[FinalAnswer, Collector, str]:
     """
@@ -314,11 +315,16 @@ def cobbie(
         kwargs["baml_options"] = {}
     kwargs["baml_options"]["collector"] = collector
 
-    # Check if we're already in an MLflow run, if not start one
+    # Check if we're already in an MLflow run, or if a run_id was provided
     active_run = mlflow.active_run()
-    run_context_manager = (
-        nullcontext() if active_run else mlflow.start_run(run_name="Cobbie")
-    )
+
+    # If a run_id is provided, use that run; otherwise check for active run or create new one
+    if mlflow_run_id:
+        run_context_manager = mlflow.start_run(run_id=mlflow_run_id)
+    elif active_run:
+        run_context_manager = nullcontext()
+    else:
+        run_context_manager = mlflow.start_run(run_name="Cobbie")
 
     with run_context_manager:
         # Only log parameters if we created a new run (not when running in existing run)
