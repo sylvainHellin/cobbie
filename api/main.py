@@ -1,5 +1,6 @@
 """FastAPI application for the IFC Answer Engine."""
 
+import asyncio
 import os
 import traceback
 from datetime import datetime
@@ -76,149 +77,160 @@ async def ask_question(request: QuestionRequest) -> QuestionResponse:
     # Set the experiment and start an MLflow run to properly capture traces
     mlflow.set_experiment("API")
     run_name = f"API_Question_{datetime.now().strftime('%Y%m%d_%H%M%S')}"
-    with mlflow.start_run(run_name=run_name):
-        # Create a nested run for the engine execution (this is where traces will be stored)
-        engine_run_name = f"Engine_{request.model_id}_{datetime.now().strftime('%H%M%S')}"
-        with mlflow.start_run(run_name=engine_run_name, nested=True):
-            with mlflow.start_span(name="API_ask_question", span_type="API") as span:
-                # Log the inputs
-                span.set_inputs(
-                    {
-                        "question": request.question,
-                        "model_id": request.model_id,
-                        "timestamp": start_time.isoformat(),
-                    }
-                )
+    with mlflow.start_run(run_name=run_name) as run:
+        # Store the run_id to pass to cobbie
+        run_id = run.info.run_id
 
-                try:
-                    # Get the IFC model information from the database (run in threadpool)
-                    ifc_model = get_ifc_model(id=request.model_id)
+        # Log API-level parameters
+        mlflow.log_params(
+            {
+                "endpoint": "/ask",
+                "model_id": request.model_id,
+                "question": request.question,
+            }
+        )
 
-                    if not ifc_model:
-                        error_msg = f"BIM model with ID {request.model_id} not found"
-                        span.set_outputs(
-                            {
-                                "status": "error",
-                                "error_msg": error_msg,
-                                "duration_seconds": (
-                                    datetime.now() - start_time
-                                ).total_seconds(),
-                            }
-                        )
-                        raise HTTPException(status_code=404, detail=error_msg)
+        # Create a span for the entire API request handling
+        with mlflow.start_span(name="API_Request", span_type="API") as span:
+            # Log the inputs
+            span.set_inputs(
+                {
+                    "question": request.question,
+                    "model_id": request.model_id,
+                    "timestamp": start_time.isoformat(),
+                }
+            )
 
-                    if not ifc_model.model_path or not os.path.exists(ifc_model.model_path):
-                        error_msg = f"BIM model file not found at path: {ifc_model.model_path}"
-                        span.set_outputs(
-                            {
-                                "status": "error",
-                                "error_msg": error_msg,
-                                "duration_seconds": (
-                                    datetime.now() - start_time
-                                ).total_seconds(),
-                            }
-                        )
-                        raise HTTPException(status_code=404, detail=error_msg)
+            try:
+                # Get the IFC model information from the database (run in threadpool)
+                ifc_model = get_ifc_model(id=request.model_id)
 
-                    # Log model information
-                    span.set_attributes(
-                        {
-                            "model_path": ifc_model.model_path,
-                            "project_name": ifc_model.project_name,
-                            "model_name": ifc_model.model_name,
-                        }
-                    )
-
-                    # Load tools for COBBIE
-                    tools = load_tools()
-
-                    # Use COBBIE to answer the question (run in threadpool)
-                    final_answer, collector, execution_history = await run_in_threadpool(
-                        partial(
-                            cobbie,
-                            user_input=request.question,
-                            tools=tools,
-                            max_iterations=15,
-                            model_path=ifc_model.model_path,
-                            llm_provider="zai",
-                            llm_name="GLM-4.6",
-                        )
-                    )
-
-                    # Prepare model information
-                    model_info = {
-                        "id": ifc_model.id,
-                        "project_name": ifc_model.project_name,
-                        "model_name": ifc_model.model_name,
-                        "model_description": ifc_model.model_description,
-                    }
-
-                    duration = (datetime.now() - start_time).total_seconds()
-
-                    # Determine status based on answer content
-                    status = (
-                        "success"
-                        if "iteration limit" not in final_answer.answer.lower()
-                        else "error"
-                    )
-                    error_msg = (
-                        final_answer.answer
-                        if status == "error"
-                        else None
-                    )
-
-                    # Extract token usage from collector
-                    input_tokens = 0
-                    output_tokens = 0
-                    if collector and hasattr(collector, "usage") and collector.usage:
-                        usage = collector.usage
-                        input_tokens = usage.input_tokens or 0
-                        output_tokens = usage.output_tokens or 0
-
-                    # Log the outputs
-                    span.set_outputs(
-                        {
-                            "status": status,
-                            "answer": final_answer.answer if status == "success" else None,
-                            "error_msg": error_msg,
-                            "duration_seconds": duration,
-                            "model_info": model_info,
-                            "input_tokens": input_tokens,
-                            "output_tokens": output_tokens,
-                            "total_tokens": input_tokens + output_tokens,
-                        }
-                    )
-
-                    return QuestionResponse(
-                        status=status,
-                        answer=final_answer.answer if status == "success" else None,
-                        error_msg=error_msg,
-                        model_info=model_info,
-                    )
-
-                except HTTPException:
-                    # Re-raise HTTP exceptions
-                    raise
-                except Exception as e:
-                    # Handle any other unexpected errors
-                    error_msg = f"An unexpected error occurred: {str(e)}"
-                    duration = (datetime.now() - start_time).total_seconds()
-
+                if not ifc_model:
+                    error_msg = f"BIM model with ID {request.model_id} not found"
                     span.set_outputs(
                         {
                             "status": "error",
                             "error_msg": error_msg,
-                            "duration_seconds": duration,
-                            "exception": str(e),
+                            "duration_seconds": (
+                                datetime.now() - start_time
+                            ).total_seconds(),
                         }
                     )
+                    raise HTTPException(status_code=404, detail=error_msg)
 
-                    print(f"Error in ask_question: {error_msg}")
-                    print(f"Traceback: {traceback.format_exc()}")
-
-                    return QuestionResponse(
-                        status="error", answer=None, error_msg=error_msg, model_info=None
+                if not ifc_model.model_path or not os.path.exists(ifc_model.model_path):
+                    error_msg = f"BIM model file not found at path: {ifc_model.model_path}"
+                    span.set_outputs(
+                        {
+                            "status": "error",
+                            "error_msg": error_msg,
+                            "duration_seconds": (
+                                datetime.now() - start_time
+                            ).total_seconds(),
+                        }
                     )
+                    raise HTTPException(status_code=404, detail=error_msg)
+
+                # Log model information
+                span.set_attributes(
+                    {
+                        "model_path": ifc_model.model_path,
+                        "project_name": ifc_model.project_name,
+                        "model_name": ifc_model.model_name,
+                    }
+                )
+
+                # Load tools for COBBIE
+                tools = load_tools()
+
+                # Call COBBIE in a thread, passing the run_id to ensure it uses the same run
+                # This avoids creating a separate "Cobbie" run
+                final_answer, collector, execution_history = await asyncio.to_thread(
+                    cobbie,
+                    user_input=request.question,
+                    tools=tools,
+                    max_iterations=15,
+                    model_path=ifc_model.model_path,
+                    add_code_prefix=True,
+                    llm_provider="zai",
+                    llm_name="GLM-4.6",
+                    mlflow_run_id=run_id,
+                )
+
+                # Prepare model information
+                model_info = {
+                    "id": ifc_model.id,
+                    "project_name": ifc_model.project_name,
+                    "model_name": ifc_model.model_name,
+                    "model_description": ifc_model.model_description,
+                }
+
+                duration = (datetime.now() - start_time).total_seconds()
+
+                # Determine status based on answer content
+                status = (
+                    "success"
+                    if "iteration limit" not in final_answer.answer.lower()
+                    else "error"
+                )
+                error_msg = (
+                    final_answer.answer
+                    if status == "error"
+                    else None
+                )
+
+                # Extract token usage from collector
+                input_tokens = 0
+                output_tokens = 0
+                if collector and hasattr(collector, "usage") and collector.usage:
+                    usage = collector.usage
+                    input_tokens = usage.input_tokens or 0
+                    output_tokens = usage.output_tokens or 0
+
+                # Log the outputs
+                span.set_outputs(
+                    {
+                        "status": status,
+                        "answer": final_answer.answer if status == "success" else None,
+                        "error_msg": error_msg,
+                        "duration_seconds": duration,
+                        "model_info": model_info,
+                        "input_tokens": input_tokens,
+                        "output_tokens": output_tokens,
+                        "total_tokens": input_tokens + output_tokens,
+                    }
+                )
+
+                return QuestionResponse(
+                    status=status,
+                    answer=final_answer.answer if status == "success" else None,
+                    error_msg=error_msg,
+                    model_info=model_info,
+                )
+
+            except HTTPException:
+                # Re-raise HTTP exceptions
+                raise
+            except Exception as e:
+                # Handle any other unexpected errors
+                error_msg = f"An unexpected error occurred: {str(e)}"
+                duration = (datetime.now() - start_time).total_seconds()
+
+                span.set_outputs(
+                    {
+                        "status": "error",
+                        "error_msg": error_msg,
+                        "duration_seconds": duration,
+                        "exception": str(e),
+                    }
+                )
+
+                print(f"Error in ask_question: {error_msg}")
+                print(f"Traceback: {traceback.format_exc()}")
+
+                return QuestionResponse(
+                    status="error", answer=None, error_msg=error_msg, model_info=None
+                )
 
 
 @app.get("/models")
