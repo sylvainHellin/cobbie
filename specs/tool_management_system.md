@@ -34,7 +34,7 @@ All metrics track question counts (not time-based), making them robust to irregu
 
 ### Grace Period
 
-New tools are immune from deletion for the first N questions (default: 20). This accommodates:
+New tools are immune from deletion for the first N questions (default: 25). This accommodates:
 - Diverse question types (tools may be specialized)
 - Sporadic usage patterns (tools may be needed infrequently)
 - Fair evaluation period (sufficient opportunities to prove value)
