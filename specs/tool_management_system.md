@@ -316,6 +316,6 @@ if args.continue_run:
 | Parameter | Default | Rationale |
 |-----------|---------|-----------|
 | `--max-tools` | 32 | Balance between capability and context window |
-| `--grace-period` | 20 | Sufficient questions to span diverse types |
+| `--grace-period` | 25 | Sufficient questions to span diverse types |
 
 Both parameters are configurable via CLI for tuning based on dataset characteristics.
