@@ -1,6 +1,6 @@
 from typing import Optional
 
-from sqlalchemy import CheckConstraint, Column, ForeignKey, Integer, Text
+from sqlalchemy import CheckConstraint, Column, ForeignKey, Integer, Text, text
 from sqlmodel import Field, Relationship, SQLModel
 
 class Ifcmodels(SQLModel, table=True):
@@ -13,8 +13,20 @@ class Ifcmodels(SQLModel, table=True):
     ifc_bench: list['IfcBench'] = Relationship(back_populates='ifc')
 
 
+class ToolUsageStats(SQLModel, table=True):
+    __tablename__ = 'tool_usage_stats'
+
+    tool_name: Optional[str] = Field(default=None, sa_column=Column('tool_name', Text, primary_key=True))
+    questions_when_included: Optional[int] = Field(default=None, sa_column=Column('questions_when_included', Integer, server_default=text('0')))
+    questions_when_called: Optional[int] = Field(default=None, sa_column=Column('questions_when_called', Integer, server_default=text('0')))
+    questions_correct_contribution: Optional[int] = Field(default=None, sa_column=Column('questions_correct_contribution', Integer, server_default=text('0')))
+    questions_wrong_contribution: Optional[int] = Field(default=None, sa_column=Column('questions_wrong_contribution', Integer, server_default=text('0')))
+    created_at_question: Optional[int] = Field(default=None, sa_column=Column('created_at_question', Integer, server_default=text('0')))
+    last_question_processed: Optional[int] = Field(default=None, sa_column=Column('last_question_processed', Integer, server_default=text('0')))
+
+
 class IfcBench(SQLModel, table=True):
-    __tablename__ = 'ifc_bench' # type: ignore
+    __tablename__ = 'ifc_bench'
     __table_args__ = (
         CheckConstraint('category BETWEEN 1 AND 4'),
     )

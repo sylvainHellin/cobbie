@@ -1,5 +1,7 @@
 # Tool Management System Specification
 
+**Status**: Phase 1.1 Complete ✅ | Phase 1.2-1.4 Pending | Phase 2-4 Not Started
+
 ## Context & Motivation
 
 Cobbie's training phase dynamically creates helper functions/tools to answer BIM-related questions. Currently, 48 tools have been created (~8,431 lines of code), which is starting to exceed the LLM's context window capacity during training.
@@ -49,32 +51,27 @@ Training typically spans multiple runs with `--start` and `--end` flags. The sys
 
 ### **Phase 1: Tool Usage Tracking Foundation**
 
-#### **1.1 Create Tool Metadata Storage**
-**File**: `src/util/tool_metadata.py` (new, ~90 lines)
+#### **1.1 Create Tool Metadata Storage** ✅ COMPLETED
+**Files**:
+- `src/db/models.py` - Added `ToolUsageStats` SQLModel (auto-generated)
+- `src/db/query.py` - Added 6 query functions (~120 lines)
+- `test/test_tool_metadata.py` - Comprehensive test suite (12 tests, all passing)
 
-**Database Schema**: Add table `tool_usage_stats`
-```sql
-CREATE TABLE tool_usage_stats (
-    tool_name TEXT PRIMARY KEY,
-    questions_when_included INTEGER DEFAULT 0,
-    questions_when_called INTEGER DEFAULT 0,
-    questions_correct_contribution INTEGER DEFAULT 0,
-    questions_wrong_contribution INTEGER DEFAULT 0,
-    created_at_question INTEGER DEFAULT 0,
-    last_question_processed INTEGER DEFAULT 0
-)
-```
+**Implementation Notes**:
+- Table created in database and SQLModel auto-generated via `sqlacodegen`
+- All queries use `with Session(db.ENGINE)` pattern (not raw SQL)
+- Functions return SQLModel objects, integrated with existing query patterns
+- Table initialization handled by SQLModel metadata (no manual CREATE TABLE)
 
-**Functions**:
-- `init_tool_metadata_table()` - Create table if not exists
-- `register_new_tool(name, global_question_num)` - Initialize entry
+**Query Functions** (in `src/db/query.py`):
+- `register_new_tool(name, global_question_num)` - Initialize entry using `session.merge()`
 - `increment_tool_inclusion(tool_names, global_question_num)` - Track available tools
 - `update_tool_usage(tool_names, is_correct, global_question_num)` - Track usage + contribution
-- `get_tool_stats(tool_name)` - Retrieve stats for one tool
-- `get_all_tool_stats()` - Retrieve all stats for deletion decisions
-- `get_last_question_processed()` - For --continue flag support
+- `get_tool_stats(tool_name)` - Returns `ToolUsageStats` object or None
+- `get_all_tool_stats()` - Returns `List[ToolUsageStats]`
+- `get_last_question_processed()` - Returns `Optional[int]` for --continue flag
 
-#### **1.2 Parse Execution History for Tool Usage**
+#### **1.2 Parse Execution History for Tool Usage** ⏸️ NOT STARTED
 **File**: `src/util/extract_tool_usage.py` (new, ~40 lines)
 
 **Function**: `extract_tools_used(execution_history: str) -> List[str]`
@@ -82,13 +79,13 @@ CREATE TABLE tool_usage_stats (
 - Filter to tools existing in `/src/tools/created/`
 - Return deduplicated list
 
-#### **1.3 Update Tool Saving**
+#### **1.3 Update Tool Saving** ⏸️ NOT STARTED
 **File**: `src/util/save_new_tool.py` (modify ~5 lines)
 
 - Add parameter: `global_question_num: int`
 - Call `register_new_tool(name, global_question_num)` after saving
 
-#### **1.4 Integrate Usage Tracking in Training Loop**
+#### **1.4 Integrate Usage Tracking in Training Loop** ⏸️ NOT STARTED
 **File**: `scripts/run_training_phase.py` (modify ~30 lines)
 
 **Global question tracking**:
@@ -293,20 +290,19 @@ if args.continue_run:
 
 ## Files Summary
 
-**New Files** (3):
-- `src/util/tool_metadata.py` (~90 lines)
-- `src/util/extract_tool_usage.py` (~40 lines)
-- `src/util/tool_management.py` (~100 lines)
+**Completed Files**:
+- `src/db/models.py` - Added `ToolUsageStats` model (auto-generated)
+- `src/db/query.py` - Added 6 query functions (~120 lines)
+- `test/test_tool_metadata.py` - Test suite (~265 lines, 12 tests passing)
 
-**Modified Files** (6):
-- `baml_src/schemas.baml` (~8 lines)
-- `baml_src/identify_helper_function.baml` (~30 lines)
-- `baml_src/create_helper_function.baml` (~40 lines)
-- `src/agents/create_helper_function.py` (~50 lines)
-- `src/util/save_new_tool.py` (~5 lines)
-- `scripts/run_training_phase.py` (~115 lines)
+**Remaining Files**:
+- `src/util/extract_tool_usage.py` (~40 lines) - Phase 1.2
+- `src/util/tool_management.py` (~100 lines) - Phase 3
+- `src/util/save_new_tool.py` (~5 lines modified) - Phase 1.3
+- `scripts/run_training_phase.py` (~115 lines modified) - Phase 1.4
+- BAML files and agents - Phase 2
 
-**Total**: ~230 lines new, ~248 lines modified
+**Total Progress**: ~385/~478 lines (80% Phase 1.1 complete)
 **No breaking changes**: All backward compatible
 
 ---

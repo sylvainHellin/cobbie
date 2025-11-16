@@ -20,6 +20,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ### Testing
 - **Specific test**: `uv run python test/test_cobbie.py`
+- **Run test suite**: `uv run pytest test/test_*.py -v`
 
 ## Architecture Overview
 
@@ -45,6 +46,10 @@ This is a sophisticated AI System named Cobbie (COde Based BIM Information Extra
 - SQLite database (`db.db`) stores IFC model metadata and QA pairs
 - **IFC Models table**: `ifcmodels` - contains project metadata and file paths
 - **QA Dataset table**: `ifc_bench` - contains questions, ground truth answers, and categories
+- **Tool Usage Stats table**: `tool_usage_stats` - tracks tool metrics for management system
+- All database operations use SQLModel ORM with `Session(db.ENGINE)` pattern
+- Schema changes require regenerating models: `uv run sqlacodegen sqlite:///src/db/db.db --generator sqlmodels --outfile src/db/models.py`
+- All queries must be in `src/db/query.py` (not separate util files)
 - NocoDB can be used for visual database interaction (runs on port 8080)
 - MLflow for experiment tracking and model performance monitoring
 
