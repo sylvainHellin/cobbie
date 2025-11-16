@@ -30,18 +30,6 @@ class LlmResponseParser:
         result = self.__options.merge_options(baml_options).parse_response(function_name="Cobbie", llm_response=llm_response, mode="request")
         return typing.cast(typing.Union["types.CodeAction", "types.FinalAnswer"], result)
 
-    def CodeCleaner(
-        self, llm_response: str, baml_options: BamlCallOptions = {},
-    ) -> types.CleanedCode:
-        result = self.__options.merge_options(baml_options).parse_response(function_name="CodeCleaner", llm_response=llm_response, mode="request")
-        return typing.cast(types.CleanedCode, result)
-
-    def CodeExtractor(
-        self, llm_response: str, baml_options: BamlCallOptions = {},
-    ) -> types.FunctionImplementation:
-        result = self.__options.merge_options(baml_options).parse_response(function_name="CodeExtractor", llm_response=llm_response, mode="request")
-        return typing.cast(types.FunctionImplementation, result)
-
     def EvaluateResponse(
         self, llm_response: str, baml_options: BamlCallOptions = {},
     ) -> types.AnswerEvaluationResult:
@@ -84,24 +72,6 @@ class LlmResponseParser:
         result = self.__options.merge_options(baml_options).parse_response(function_name="QuestionAnswerAlignment", llm_response=llm_response, mode="request")
         return typing.cast(types.AlignedQAPair, result)
 
-    def ToolAssessor(
-        self, llm_response: str, baml_options: BamlCallOptions = {},
-    ) -> typing.Union["types.CodeAction", "types.AssessmentResult"]:
-        result = self.__options.merge_options(baml_options).parse_response(function_name="ToolAssessor", llm_response=llm_response, mode="request")
-        return typing.cast(typing.Union["types.CodeAction", "types.AssessmentResult"], result)
-
-    def ToolCorrector(
-        self, llm_response: str, baml_options: BamlCallOptions = {},
-    ) -> typing.Union["types.CodeAction", "types.ImprovedImplementation"]:
-        result = self.__options.merge_options(baml_options).parse_response(function_name="ToolCorrector", llm_response=llm_response, mode="request")
-        return typing.cast(typing.Union["types.CodeAction", "types.ImprovedImplementation"], result)
-
-    def ToolCreator(
-        self, llm_response: str, baml_options: BamlCallOptions = {},
-    ) -> typing.Union["types.CodeAction", "types.FunctionImplementation"]:
-        result = self.__options.merge_options(baml_options).parse_response(function_name="ToolCreator", llm_response=llm_response, mode="request")
-        return typing.cast(typing.Union["types.CodeAction", "types.FunctionImplementation"], result)
-
     def ValidateQuestionCategory(
         self, llm_response: str, baml_options: BamlCallOptions = {},
     ) -> types.CategoryValidationResult:
@@ -121,18 +91,6 @@ class LlmStreamParser:
     ) -> typing.Union["stream_types.CodeAction", "stream_types.FinalAnswer"]:
         result = self.__options.merge_options(baml_options).parse_response(function_name="Cobbie", llm_response=llm_response, mode="stream")
         return typing.cast(typing.Union["stream_types.CodeAction", "stream_types.FinalAnswer"], result)
-
-    def CodeCleaner(
-        self, llm_response: str, baml_options: BamlCallOptions = {},
-    ) -> stream_types.CleanedCode:
-        result = self.__options.merge_options(baml_options).parse_response(function_name="CodeCleaner", llm_response=llm_response, mode="stream")
-        return typing.cast(stream_types.CleanedCode, result)
-
-    def CodeExtractor(
-        self, llm_response: str, baml_options: BamlCallOptions = {},
-    ) -> stream_types.FunctionImplementation:
-        result = self.__options.merge_options(baml_options).parse_response(function_name="CodeExtractor", llm_response=llm_response, mode="stream")
-        return typing.cast(stream_types.FunctionImplementation, result)
 
     def EvaluateResponse(
         self, llm_response: str, baml_options: BamlCallOptions = {},
@@ -175,24 +133,6 @@ class LlmStreamParser:
     ) -> stream_types.AlignedQAPair:
         result = self.__options.merge_options(baml_options).parse_response(function_name="QuestionAnswerAlignment", llm_response=llm_response, mode="stream")
         return typing.cast(stream_types.AlignedQAPair, result)
-
-    def ToolAssessor(
-        self, llm_response: str, baml_options: BamlCallOptions = {},
-    ) -> typing.Union["stream_types.CodeAction", "stream_types.AssessmentResult"]:
-        result = self.__options.merge_options(baml_options).parse_response(function_name="ToolAssessor", llm_response=llm_response, mode="stream")
-        return typing.cast(typing.Union["stream_types.CodeAction", "stream_types.AssessmentResult"], result)
-
-    def ToolCorrector(
-        self, llm_response: str, baml_options: BamlCallOptions = {},
-    ) -> typing.Union["stream_types.CodeAction", "stream_types.ImprovedImplementation"]:
-        result = self.__options.merge_options(baml_options).parse_response(function_name="ToolCorrector", llm_response=llm_response, mode="stream")
-        return typing.cast(typing.Union["stream_types.CodeAction", "stream_types.ImprovedImplementation"], result)
-
-    def ToolCreator(
-        self, llm_response: str, baml_options: BamlCallOptions = {},
-    ) -> typing.Union["stream_types.CodeAction", "stream_types.FunctionImplementation"]:
-        result = self.__options.merge_options(baml_options).parse_response(function_name="ToolCreator", llm_response=llm_response, mode="stream")
-        return typing.cast(typing.Union["stream_types.CodeAction", "stream_types.FunctionImplementation"], result)
 
     def ValidateQuestionCategory(
         self, llm_response: str, baml_options: BamlCallOptions = {},

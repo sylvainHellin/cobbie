@@ -77,12 +77,6 @@ class ImprovedImplementation {
   changes_summary string? @description("Brief summary of the main changes made")
 }
 
-// Cleaned code from CodeCleaner - fixes syntax and compilation errors
-class CleanedCode {
-  function_implementation string @description("Python code with syntax errors fixed")
-  reasoning string @description("Explanation of syntax fixes and corrections applied")
-  success bool @description("Whether the cleaning was successful")
-}
 
 // Aligned question-answer pair for dataset cleaning
 class AlignedQAPair {

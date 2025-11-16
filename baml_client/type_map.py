@@ -28,9 +28,6 @@ type_map = {
     "types.CategoryValidationResult": types.CategoryValidationResult,
     "stream_types.CategoryValidationResult": stream_types.CategoryValidationResult,
 
-    "types.CleanedCode": types.CleanedCode,
-    "stream_types.CleanedCode": stream_types.CleanedCode,
-
     "types.CodeAction": types.CodeAction,
     "stream_types.CodeAction": stream_types.CodeAction,
 

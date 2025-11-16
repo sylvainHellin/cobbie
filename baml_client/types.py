@@ -47,7 +47,7 @@ class QuestionCategory(str, Enum):
     Category4 = "Category4"
 
 # #########################################################################
-# Generated classes (20)
+# Generated classes (19)
 # #########################################################################
 
 class AlignedQAPair(BaseModel):
@@ -70,11 +70,6 @@ class CategoryValidationResult(BaseModel):
     validated_category: str
     updated: bool
     thought: str
-
-class CleanedCode(BaseModel):
-    function_implementation: str
-    reasoning: str
-    success: bool
 
 class CodeAction(BaseModel):
     thoughts: str
