@@ -1,6 +1,6 @@
 # Tool Management System Specification
 
-**Status**: Phase 1.1 Complete ✅ | Phase 1.2-1.4 Pending | Phase 2-4 Not Started
+**Status**: Phase 1 Complete ✅ | Phase 2-4 Not Started
 
 ## Context & Motivation
 
@@ -71,42 +71,45 @@ Training typically spans multiple runs with `--start` and `--end` flags. The sys
 - `get_all_tool_stats()` - Returns `List[ToolUsageStats]`
 - `get_last_question_processed()` - Returns `Optional[int]` for --continue flag
 
-#### **1.2 Parse Execution History for Tool Usage** ⏸️ NOT STARTED
-**File**: `src/util/extract_tool_usage.py` (new, ~40 lines)
+#### **1.2 Parse Execution History for Tool Usage** ✅ COMPLETED
+**File**: `src/util/extract_tool_usage.py` (new, ~60 lines)
+**Test**: `test/test_extract_tool_usage.py` (manual test suite)
+
+**Implementation Notes**:
+- Uses `CREATED_TOOLS_PATH` from config for absolute paths (robust across environments)
+- Explicitly documented to expect `execution_history` (not full conversation history)
+- Prevents false positives from tools listed in system prompts
+- Tested with both mock and real Cobbie execution histories
 
 **Function**: `extract_tools_used(execution_history: str) -> List[str]`
 - Regex pattern: `r'\b([a-z_][a-z0-9_]*)\s*\('` (function calls only)
-- Filter to tools existing in `/src/tools/created/`
-- Return deduplicated list
+- Filter to tools existing in `CREATED_TOOLS_PATH`
+- Return deduplicated list (preserves order of first occurrence)
+- All code review checks passed (ruff, ty, pyright)
 
-#### **1.3 Update Tool Saving** ⏸️ NOT STARTED
-**File**: `src/util/save_new_tool.py` (modify ~5 lines)
+#### **1.3 Update Tool Saving** ✅ COMPLETED
+**File**: `src/util/save_new_tool.py` (modified ~8 lines)
 
-- Add parameter: `global_question_num: int`
-- Call `register_new_tool(name, global_question_num)` after saving
+**Implementation Notes**:
+- Added optional parameter: `global_question_num: Optional[int] = None`
+- Added import: `from src.db.query import register_new_tool`
+- Calls `register_new_tool(name, global_question_num)` when parameter provided
+- Updated docstring with parameter documentation
+- Backward compatible (global_question_num is optional)
 
-#### **1.4 Integrate Usage Tracking in Training Loop** ⏸️ NOT STARTED
-**File**: `scripts/run_training_phase.py` (modify ~30 lines)
+#### **1.4 Integrate Usage Tracking in Training Loop** ✅ COMPLETED
+**File**: `scripts/run_training_phase.py` (modified ~25 lines)
 
-**Global question tracking**:
-```python
-global_question_num = args.start  # Start from --start flag
-for idx in range(args.start, args.end):
-    global_question_num = idx
-```
-
-**Before Cobbie execution**:
-```python
-available_tools = [f.stem for f in Path("src/tools/created").glob("*.py")]
-increment_tool_inclusion(available_tools, global_question_num)
-```
-
-**After answer verification**:
-```python
-tools_used = extract_tools_used(execution_history)
-update_tool_usage(tools_used, is_correct, global_question_num)
-mlflow.log_metric("num_tools_used", len(tools_used), step=global_question_num)
-```
+**Implementation Notes**:
+- Added imports: `extract_tools_used`, `increment_tool_inclusion`, `update_tool_usage`
+- Added `global_question_num: int` field to `Context` class
+- Updated `handle_start_state`: Tracks tool inclusion via `increment_tool_inclusion()`
+- Updated `handle_verify_answer`: Extracts and tracks tool usage via `update_tool_usage()`
+- Updated `handle_decide_tool_fate`: Passes `global_question_num` to `save_new_tool()` (2 locations)
+- Updated main loop: Initializes Context with `global_question_num = args.start + idx`
+- Added MLflow metric logging: `mlflow.log_metric("num_tools_used", len(tools_used), step=global_question_num)`
+- Fixed type safety issue: Added None check for `mlflow.active_run()` in previous_total calculation
+- All code review checks passed (ruff, ty, pyright)
 
 ---
 
@@ -294,15 +297,16 @@ if args.continue_run:
 - `src/db/models.py` - Added `ToolUsageStats` model (auto-generated)
 - `src/db/query.py` - Added 6 query functions (~120 lines)
 - `test/test_tool_metadata.py` - Test suite (~265 lines, 12 tests passing)
+- `src/util/extract_tool_usage.py` - Tool usage extractor (~60 lines)
+- `test/test_extract_tool_usage.py` - Manual test suite for real Cobbie runs
+- `src/util/save_new_tool.py` - Updated to register tools (~8 lines modified)
+- `scripts/run_training_phase.py` - Integrated usage tracking (~25 lines modified)
 
 **Remaining Files**:
-- `src/util/extract_tool_usage.py` (~40 lines) - Phase 1.2
 - `src/util/tool_management.py` (~100 lines) - Phase 3
-- `src/util/save_new_tool.py` (~5 lines modified) - Phase 1.3
-- `scripts/run_training_phase.py` (~115 lines modified) - Phase 1.4
-- BAML files and agents - Phase 2
+- BAML files and agents (~150 lines modified) - Phase 2
 
-**Total Progress**: ~385/~478 lines (80% Phase 1.1 complete)
+**Total Progress**: ~538/~788 lines (68% - Phase 1 complete ✅)
 **No breaking changes**: All backward compatible
 
 ---

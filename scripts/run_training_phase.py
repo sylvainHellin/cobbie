@@ -40,8 +40,10 @@ from src.util import (
     get_logger,
     save_new_tool,
 )
+from src.util.extract_tool_usage import extract_tools_used
 from src.db import load_train_dev_split
 from src.db.models import IfcBench
+from src.db.query import increment_tool_inclusion, update_tool_usage
 from src.utils.mlflow_utils import determine_run_id
 
 # Initialize logger
@@ -78,6 +80,7 @@ class Context(BaseModel):
 
     # Core data
     qa_pair: IfcBench
+    global_question_num: int  # Global question number across all training runs
     tools: Dict[str, Callable] = {}
 
     # Cobbie agent results
@@ -434,7 +437,8 @@ def handle_start_state(context: Context) -> Tuple[TrainingState, Context]:
     Actions:
     1. Load all created tools with get_created_tools()
     2. Store in context
-    3. Log initial tool count
+    3. Track tool inclusion in database
+    4. Log initial tool count
 
     Returns:
         Next state: RUN_COBBIE
@@ -442,7 +446,12 @@ def handle_start_state(context: Context) -> Tuple[TrainingState, Context]:
     # Load all available tools
     context.tools = get_created_tools()
 
+    # Track that these tools were available for this question
+    available_tool_names = list(context.tools.keys())
+    increment_tool_inclusion(available_tool_names, context.global_question_num)
+
     _logger.info(f"Loaded {len(context.tools)} tools for question {context.qa_pair.id}")
+    _logger.info(f"Tracked inclusion of {len(available_tool_names)} tools at global question {context.global_question_num}")
 
     return TrainingState.RUN_COBBIE, context
 
@@ -545,6 +554,16 @@ def handle_verify_answer(context: Context) -> Tuple[TrainingState, Context]:
                 "cobbie_answer": context.cobbie_result.answer,
             }
         )
+
+        # Track tool usage for this question
+        tools_used = extract_tools_used(context.cobbie_history)
+        is_correct = result.classification == "correct"
+        update_tool_usage(tools_used, is_correct, context.global_question_num)
+
+        # Log tool usage metrics to MLflow
+        mlflow.log_metric("num_tools_used", len(tools_used), step=context.global_question_num)
+
+        _logger.info(f"Tracked usage of {len(tools_used)} tools: {tools_used}")
 
         # Determine next state based on classification
         if result.classification == "correct":
@@ -1132,6 +1151,7 @@ def handle_decide_tool_fate(context: Context) -> Tuple[TrainingState, Context]:
             save_success = save_new_tool(
                 function_name=context.tool_name,
                 function_implementation=tool_implementation,
+                global_question_num=context.global_question_num,
             )
 
             if save_success:
@@ -1180,6 +1200,7 @@ def handle_decide_tool_fate(context: Context) -> Tuple[TrainingState, Context]:
             save_success = save_new_tool(
                 function_name=context.tool_name,
                 function_implementation=tool_implementation,
+                global_question_num=context.global_question_num,
             )
 
             if save_success:
@@ -1305,7 +1326,8 @@ def main():
         previous_total = 0
         if run_id is not None:
             active_run = mlflow.active_run()
-            previous_total = int(active_run.data.metrics.get("total_samples_processed", 0))
+            if active_run is not None:
+                previous_total = int(active_run.data.metrics.get("total_samples_processed", 0))
 
         mlflow.log_metrics(
             {
@@ -1346,7 +1368,8 @@ def main():
                 )
 
                 # Initialize context and state
-                context = Context(qa_pair=qa_pair)
+                global_question_num = args.start + idx
+                context = Context(qa_pair=qa_pair, global_question_num=global_question_num)
                 state = TrainingState.START
 
                 # State machine loop with single main span
