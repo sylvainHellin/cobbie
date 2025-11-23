@@ -18,7 +18,7 @@ An intelligent engine that answers questions about BIM models in .ifc format usi
 
 Start MLflow server for experiment tracking:
 ```bash
-mlflow server --host 127.0.0.1 --port 5000 --backend-store-uri sqlite:///mlflow.sqlite
+uv run mlflow server --host 127.0.0.1 --port 5000 --backend-store-uri sqlite:///mlflow.sqlite --gunicorn-opts "--timeout=120 -w 1"
 ```
 
 ### FastAPI backend
