@@ -92,9 +92,10 @@ class NewHelperFunction(BaseModel):
 
 class NewToolAnalysis(BaseModel):
     thoughts: typing.Optional[str] = None
-    new_tool: typing.Optional[bool] = None
-    new_tool_name: typing.Optional[str] = None
-    new_tool_description: typing.Optional[str] = None
+    action: typing.Optional[typing.Union[str, str, str]] = None
+    tool_name: typing.Optional[str] = None
+    tool_description: typing.Optional[str] = None
+    existing_tool_for_enhancement: typing.Optional[str] = None
 
 class SimilarityResult(BaseModel):
     similarity_score: typing.Optional[float] = None

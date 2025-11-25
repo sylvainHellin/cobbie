@@ -139,19 +139,19 @@ class BamlAsyncClient:
                 "execution_history": execution_history,"original_question": original_question,"ground_truth_answer": ground_truth_answer,"tested_tool_name": tested_tool_name,"tested_tool_description": tested_tool_description,"final_answer": final_answer,"answer_correctness": answer_correctness,
             })
             return typing.cast(types.HelperFunctionAssessment, result.cast_to(types, types, stream_types, False, __runtime__))
-    async def HelperFunctionCreator(self, history: str,example_question: str,example_answer: str,example_bim_model: str,other_bim_models_for_testing: typing.Optional[typing.List[str]],function_name: str,function_description: str,previous_attempts: typing.Optional[str] = None,
+    async def HelperFunctionCreator(self, history: str,example_question: str,example_answer: str,example_bim_model: str,other_bim_models_for_testing: typing.Optional[typing.List[str]],function_name: str,function_description: str,is_enhancement: bool,existing_implementation: typing.Optional[str] = None,previous_attempts: typing.Optional[str] = None,
         baml_options: BamlCallOptions = {},
     ) -> typing.Union["types.CodeAction", "types.NewHelperFunction"]:
         # Check if on_tick is provided
         if 'on_tick' in baml_options:
             # Use streaming internally when on_tick is provided
-            stream = self.stream.HelperFunctionCreator(history=history,example_question=example_question,example_answer=example_answer,example_bim_model=example_bim_model,other_bim_models_for_testing=other_bim_models_for_testing,function_name=function_name,function_description=function_description,previous_attempts=previous_attempts,
+            stream = self.stream.HelperFunctionCreator(history=history,example_question=example_question,example_answer=example_answer,example_bim_model=example_bim_model,other_bim_models_for_testing=other_bim_models_for_testing,function_name=function_name,function_description=function_description,is_enhancement=is_enhancement,existing_implementation=existing_implementation,previous_attempts=previous_attempts,
                 baml_options=baml_options)
             return await stream.get_final_response()
         else:
             # Original non-streaming code
             result = await self.__options.merge_options(baml_options).call_function_async(function_name="HelperFunctionCreator", args={
-                "history": history,"example_question": example_question,"example_answer": example_answer,"example_bim_model": example_bim_model,"other_bim_models_for_testing": other_bim_models_for_testing,"function_name": function_name,"function_description": function_description,"previous_attempts": previous_attempts,
+                "history": history,"example_question": example_question,"example_answer": example_answer,"example_bim_model": example_bim_model,"other_bim_models_for_testing": other_bim_models_for_testing,"function_name": function_name,"function_description": function_description,"is_enhancement": is_enhancement,"existing_implementation": existing_implementation,"previous_attempts": previous_attempts,
             })
             return typing.cast(typing.Union["types.CodeAction", "types.NewHelperFunction"], result.cast_to(types, types, stream_types, False, __runtime__))
     async def HelperFunctionDebugger(self, faulty_function_name: str,faulty_function_implementation: str,history_faulty_tool_use: typing.Optional[str],error_description: str,ifc_model_path: str,other_bim_models_for_testing: typing.Optional[typing.List[str]] = None,previous_attempts: typing.Optional[str] = None,
@@ -271,11 +271,11 @@ class BamlStreamClient:
           lambda x: typing.cast(types.HelperFunctionAssessment, x.cast_to(types, types, stream_types, False, __runtime__)),
           ctx,
         )
-    def HelperFunctionCreator(self, history: str,example_question: str,example_answer: str,example_bim_model: str,other_bim_models_for_testing: typing.Optional[typing.List[str]],function_name: str,function_description: str,previous_attempts: typing.Optional[str] = None,
+    def HelperFunctionCreator(self, history: str,example_question: str,example_answer: str,example_bim_model: str,other_bim_models_for_testing: typing.Optional[typing.List[str]],function_name: str,function_description: str,is_enhancement: bool,existing_implementation: typing.Optional[str] = None,previous_attempts: typing.Optional[str] = None,
         baml_options: BamlCallOptions = {},
     ) -> baml_py.BamlStream[typing.Union["stream_types.CodeAction", "stream_types.NewHelperFunction"], typing.Union["types.CodeAction", "types.NewHelperFunction"]]:
         ctx, result = self.__options.merge_options(baml_options).create_async_stream(function_name="HelperFunctionCreator", args={
-            "history": history,"example_question": example_question,"example_answer": example_answer,"example_bim_model": example_bim_model,"other_bim_models_for_testing": other_bim_models_for_testing,"function_name": function_name,"function_description": function_description,"previous_attempts": previous_attempts,
+            "history": history,"example_question": example_question,"example_answer": example_answer,"example_bim_model": example_bim_model,"other_bim_models_for_testing": other_bim_models_for_testing,"function_name": function_name,"function_description": function_description,"is_enhancement": is_enhancement,"existing_implementation": existing_implementation,"previous_attempts": previous_attempts,
         })
         return baml_py.BamlStream[typing.Union["stream_types.CodeAction", "stream_types.NewHelperFunction"], typing.Union["types.CodeAction", "types.NewHelperFunction"]](
           result,
@@ -367,11 +367,11 @@ class BamlHttpRequestClient:
             "execution_history": execution_history,"original_question": original_question,"ground_truth_answer": ground_truth_answer,"tested_tool_name": tested_tool_name,"tested_tool_description": tested_tool_description,"final_answer": final_answer,"answer_correctness": answer_correctness,
         }, mode="request")
         return result
-    async def HelperFunctionCreator(self, history: str,example_question: str,example_answer: str,example_bim_model: str,other_bim_models_for_testing: typing.Optional[typing.List[str]],function_name: str,function_description: str,previous_attempts: typing.Optional[str] = None,
+    async def HelperFunctionCreator(self, history: str,example_question: str,example_answer: str,example_bim_model: str,other_bim_models_for_testing: typing.Optional[typing.List[str]],function_name: str,function_description: str,is_enhancement: bool,existing_implementation: typing.Optional[str] = None,previous_attempts: typing.Optional[str] = None,
         baml_options: BamlCallOptions = {},
     ) -> baml_py.baml_py.HTTPRequest:
         result = await self.__options.merge_options(baml_options).create_http_request_async(function_name="HelperFunctionCreator", args={
-            "history": history,"example_question": example_question,"example_answer": example_answer,"example_bim_model": example_bim_model,"other_bim_models_for_testing": other_bim_models_for_testing,"function_name": function_name,"function_description": function_description,"previous_attempts": previous_attempts,
+            "history": history,"example_question": example_question,"example_answer": example_answer,"example_bim_model": example_bim_model,"other_bim_models_for_testing": other_bim_models_for_testing,"function_name": function_name,"function_description": function_description,"is_enhancement": is_enhancement,"existing_implementation": existing_implementation,"previous_attempts": previous_attempts,
         }, mode="request")
         return result
     async def HelperFunctionDebugger(self, faulty_function_name: str,faulty_function_implementation: str,history_faulty_tool_use: typing.Optional[str],error_description: str,ifc_model_path: str,other_bim_models_for_testing: typing.Optional[typing.List[str]] = None,previous_attempts: typing.Optional[str] = None,
@@ -438,11 +438,11 @@ class BamlHttpStreamRequestClient:
             "execution_history": execution_history,"original_question": original_question,"ground_truth_answer": ground_truth_answer,"tested_tool_name": tested_tool_name,"tested_tool_description": tested_tool_description,"final_answer": final_answer,"answer_correctness": answer_correctness,
         }, mode="stream")
         return result
-    async def HelperFunctionCreator(self, history: str,example_question: str,example_answer: str,example_bim_model: str,other_bim_models_for_testing: typing.Optional[typing.List[str]],function_name: str,function_description: str,previous_attempts: typing.Optional[str] = None,
+    async def HelperFunctionCreator(self, history: str,example_question: str,example_answer: str,example_bim_model: str,other_bim_models_for_testing: typing.Optional[typing.List[str]],function_name: str,function_description: str,is_enhancement: bool,existing_implementation: typing.Optional[str] = None,previous_attempts: typing.Optional[str] = None,
         baml_options: BamlCallOptions = {},
     ) -> baml_py.baml_py.HTTPRequest:
         result = await self.__options.merge_options(baml_options).create_http_request_async(function_name="HelperFunctionCreator", args={
-            "history": history,"example_question": example_question,"example_answer": example_answer,"example_bim_model": example_bim_model,"other_bim_models_for_testing": other_bim_models_for_testing,"function_name": function_name,"function_description": function_description,"previous_attempts": previous_attempts,
+            "history": history,"example_question": example_question,"example_answer": example_answer,"example_bim_model": example_bim_model,"other_bim_models_for_testing": other_bim_models_for_testing,"function_name": function_name,"function_description": function_description,"is_enhancement": is_enhancement,"existing_implementation": existing_implementation,"previous_attempts": previous_attempts,
         }, mode="stream")
         return result
     async def HelperFunctionDebugger(self, faulty_function_name: str,faulty_function_implementation: str,history_faulty_tool_use: typing.Optional[str],error_description: str,ifc_model_path: str,other_bim_models_for_testing: typing.Optional[typing.List[str]] = None,previous_attempts: typing.Optional[str] = None,

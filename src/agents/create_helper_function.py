@@ -31,6 +31,8 @@ def _helper_function_creator_iter(
     other_bim_models_for_testing: List[str],
     function_name: str,
     function_description: str,
+    is_enhancement: bool = False,
+    existing_implementation: Optional[str] = None,
     previous_attempts: Optional[str] = None,
     **kwargs,
 ) -> CodeAction | NewHelperFunction:
@@ -46,8 +48,10 @@ def _helper_function_creator_iter(
         example_answer: Ground truth answer
         example_bim_model: Path to BIM model used in example
         other_bim_models_for_testing: List of other BIM models for testing
-        function_name: Name of the function to create
-        function_description: Description of the function
+        function_name: Name of the function to create or enhance
+        function_description: Description of the function (or enhancement)
+        is_enhancement: True if enhancing existing tool, False if creating new
+        existing_implementation: Current tool implementation (if enhancing)
         previous_attempts: Results from previous iterations
         **kwargs: Additional arguments for BAML function (including baml_options)
 
@@ -74,6 +78,8 @@ def _helper_function_creator_iter(
                 other_bim_models_for_testing=other_bim_models_for_testing,
                 function_name=function_name,
                 function_description=function_description,
+                is_enhancement=is_enhancement,
+                existing_implementation=existing_implementation,
                 previous_attempts=previous_attempts,
                 **kwargs_copy,
             )
@@ -86,6 +92,8 @@ def _helper_function_creator_iter(
                 other_bim_models_for_testing=other_bim_models_for_testing,
                 function_name=function_name,
                 function_description=function_description,
+                is_enhancement=is_enhancement,
+                existing_implementation=existing_implementation,
                 previous_attempts=previous_attempts,
                 **kwargs_copy,
             )
@@ -107,6 +115,8 @@ def _create_helper_function(
     example_bim_model: str,
     function_name: str,
     function_description: str,
+    is_enhancement: bool = False,
+    existing_implementation: Optional[str] = None,
     other_bim_models_for_testing: Optional[List[str]] = None,
     max_iterations: int = 15,
     llm_name: str = "GLM-4.6",
@@ -124,9 +134,11 @@ def _create_helper_function(
         example_question: Question answered by Cobbie
         example_answer: Ground truth answer
         example_bim_model: Path to BIM model used in example
+        function_name: Name of the function to create or enhance
+        function_description: Description of the function (or enhancement)
+        is_enhancement: True if enhancing existing tool, False if creating new
+        existing_implementation: Current tool implementation (if enhancing)
         other_bim_models_for_testing: List of other BIM models for testing
-        function_name: Name of the function to create
-        function_description: Description of the function
         max_iterations: Maximum number of iterations (default: 15)
         llm_name: LLM model name (default: "GLM-4.6")
         llm_provider: LLM provider (default: "zai")
@@ -212,6 +224,8 @@ def _create_helper_function(
                     other_bim_models_for_testing=other_bim_models_for_testing,
                     function_name=function_name,
                     function_description=function_description,
+                    is_enhancement=is_enhancement,
+                    existing_implementation=existing_implementation,
                     previous_attempts=previous_attempts,
                     **kwargs,
                 )
@@ -436,6 +450,8 @@ def create_helper_function(
     example_bim_model: str,
     function_name: str,
     function_description: str,
+    is_enhancement: bool = False,
+    existing_implementation: Optional[str] = None,
     other_bim_models_for_testing: Optional[List[str]] = None,
     max_iterations: int = 15,
     llm_provider: str = "zai",
@@ -452,9 +468,11 @@ def create_helper_function(
         example_question: Question answered by Cobbie
         example_answer: Ground truth answer
         example_bim_model: Path to BIM model used in example
+        function_name: Name of the function to create or enhance
+        function_description: Description of the function (or enhancement)
+        is_enhancement: True if enhancing existing tool, False if creating new
+        existing_implementation: Current tool implementation (if enhancing)
         other_bim_models_for_testing: List of other BIM models for testing
-        function_name: Name of the function to create
-        function_description: Description of the function
         max_iterations: Maximum number of iterations (default: 15)
         llm_provider: LLM provider (default: "zai")
         llm_name: LLM model name (default: "GLM-4.6")
@@ -520,6 +538,8 @@ def create_helper_function(
                 other_bim_models_for_testing=other_bim_models_for_testing,
                 function_name=function_name,
                 function_description=function_description,
+                is_enhancement=is_enhancement,
+                existing_implementation=existing_implementation,
                 max_iterations=max_iterations,
                 llm_name=llm_name,
                 llm_provider=llm_provider,
@@ -676,11 +696,11 @@ if __name__ == "__main__":
         llm_name="GLM-4.6",
     )
 
-    print(f"Should create tool: {tool_identified.new_tool}")
-    print(f"Tool name: {tool_identified.new_tool_name}")
-    print(f"Tool description: {tool_identified.new_tool_description}\n")
+    print(f"Tool management action: {tool_identified.action}")
+    print(f"Tool name: {tool_identified.tool_name}")
+    print(f"Tool description: {tool_identified.tool_description}\n")
 
-    if tool_identified.new_tool:
+    if tool_identified.action == "create_new":
         print("=" * 80)
         print("STEP 3: Creating helper function")
         print("=" * 80)
@@ -691,8 +711,8 @@ if __name__ == "__main__":
             example_question=test_question,
             example_answer=ground_truth,
             example_bim_model=model_path,
-            function_name=tool_identified.new_tool_name,
-            function_description=tool_identified.new_tool_description,
+            function_name=tool_identified.tool_name,
+            function_description=tool_identified.tool_description,
             max_iterations=15,
             llm_provider="zai",
             llm_name="GLM-4.6",

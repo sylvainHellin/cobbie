@@ -116,9 +116,10 @@ class NewHelperFunction(BaseModel):
 
 class NewToolAnalysis(BaseModel):
     thoughts: str
-    new_tool: bool
-    new_tool_name: str
-    new_tool_description: str
+    action: typing.Union[typing_extensions.Literal['create_new'], typing_extensions.Literal['enhance_existing'], typing_extensions.Literal['none']]
+    tool_name: str
+    tool_description: str
+    existing_tool_for_enhancement: typing.Optional[str] = None
 
 class SimilarityResult(BaseModel):
     similarity_score: float

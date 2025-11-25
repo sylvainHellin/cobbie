@@ -7,8 +7,10 @@ function HelperFunctionCreator(
   example_answer: string @description("The ground truth answer to the example question"),
   example_bim_model: string @description("Path to the BIM model used to answer the example question"),
   other_bim_models_for_testing: string[]? @description("List of paths to other available BIM models for testing generalization. If not provided, the system will automatically discover other IFC files in the bim_models directory."),
-  function_name: string @description("Name of the helper function to create"),
-  function_description: string @description("Detailed description of what the helper function should do, including parameters and return type"),
+  function_name: string @description("Name of the helper function to create or enhance"),
+  function_description: string @description("Detailed description of what the helper function should do (for new) or what enhancement to add (for enhancement), including parameters and return type"),
+  is_enhancement: bool @description("True if enhancing existing tool, False if creating new"),
+  existing_implementation: string? @description("Current tool implementation (empty if new)"),
   previous_attempts: string? @description("Previous code execution results and attempts, if any")
 ) -> CodeAction | NewHelperFunction {
   client GLM_4_6
@@ -29,9 +31,27 @@ function HelperFunctionCreator(
     {{ history }}
 
     YOUR TASK:
-    Create a reusable helper function with:
+    {% if is_enhancement %}
+    Enhance existing helper function:
+    - Name: {{ function_name }}
+    - Enhancement: {{ function_description }}
+    - Current Implementation:
+    ```python
+    {{ existing_implementation }}
+    ```
+
+    ENHANCEMENT REQUIREMENTS:
+    1. Add optional parameters with sensible defaults (backward compatible)
+    2. Existing behavior unchanged when new parameters not provided
+    3. Extended functionality when new parameters used
+    4. Update docstring with new parameters
+    5. Test both old usage (without new params) and new usage
+
+    {% else %}
+    Create new helper function:
     - Name: {{ function_name }}
     - Description: {{ function_description }}
+    {% endif %}
 
     REQUIREMENTS:
     1. **Type Safety**: Use proper type hints (typing.List, typing.Dict, etc.) for all parameters and return types

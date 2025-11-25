@@ -24,15 +24,36 @@ function HelperFunctionIdentifier(
     Existing Helper Functions:
     {{ existing_helper_functions }}
 
+    ENHANCEMENT VS CREATION DECISION:
+
+    Before recommending a new tool, check if an existing tool could be ENHANCED instead.
+
+    **Consider ENHANCEMENT (action="enhance_existing") if:**
+    1. Existing tool provides 70%+ of needed functionality
+    2. Missing functionality can be added via optional parameters with sensible defaults
+    3. Enhancement maintains backward compatibility (existing code works unchanged)
+    4. Combined tool remains focused and understandable
+
+    **Choose CREATION (action="create_new") if:**
+    1. No existing tool provides 70%+ overlap
+    2. Pattern is fundamentally different from existing tools
+    3. Enhancement would make existing tool too complex
+    4. New functionality is orthogonal to existing tools
+
+    **Choose NONE (action="none") if:**
+    1. Existing tools already handle this adequately
+    2. Pattern is too specific to this question
+    3. Direct ifcopenshell calls are clearer
+
     YOUR ANALYSIS CRITERIA:
 
-    A helper function SHOULD be created if:
-    1. **Generalizability**: The code pattern can be applied to similar questions (not just this specific case)
-    2. **Abstraction Level**: It provides a higher-level abstraction than direct ifcopenshell calls
-    3. **Reusability**: Multiple future questions could benefit from this function
-    4. **Complexity Reduction**: It simplifies common BIM analysis tasks
-    5. **Distinctness**: It's significantly different from existing helper functions
-    6. **Clear Interface**: It can be defined with clear parameters and return types
+    A helper function SHOULD be created OR enhanced if:
+    1. **Generalizability**: Pattern applies to similar questions
+    2. **Abstraction Level**: Higher-level than direct ifcopenshell calls
+    3. **Reusability**: Multiple future questions could benefit
+    4. **Enhancement Opportunity**: Existing tool is close but missing one feature
+    5. **Clear Interface**: Clear parameters with sensible defaults
+    6. **Complexity Reduction**: It simplifies common BIM analysis tasks
 
     A helper function SHOULD NOT be created if:
     1. **Overfitting**: The code is too specific to this exact question or model
@@ -71,6 +92,22 @@ function HelperFunctionIdentifier(
     - Avoid creating functions that are just thin wrappers (e.g., "get_all_walls" if it just calls model.by_type('IfcWall'))
     - Focus on patterns that appeared necessary because ifcopenshell documentation queries were made
     - Think about what would help COBBIE solve similar questions faster in the future
+
+    OUTPUT REQUIREMENTS:
+
+    1. Set `action` to "create_new", "enhance_existing", or "none"
+    2. For "enhance_existing":
+       - `tool_name` = existing tool to enhance
+       - `tool_description` = what parameters to add and how they extend functionality
+       - `existing_tool_for_enhancement` = same as tool_name
+    3. For "create_new":
+       - `tool_name` = new function name
+       - `tool_description` = full specification including parameters, return type, and use cases
+       - `existing_tool_for_enhancement` = null
+    4. For "none":
+       - `tool_name` = empty string
+       - `tool_description` = empty string
+       - `existing_tool_for_enhancement` = null
 
     {{ ctx.output_format }}
   "#

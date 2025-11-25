@@ -759,7 +759,7 @@ class NewToolAnalysisAst:
     def __init__(self, tb: type_builder.TypeBuilder):
         _tb = tb._tb # type: ignore (we know how to use this private attribute)
         self._bldr = _tb.class_("NewToolAnalysis")
-        self._properties: typing.Set[str] = set([  "thoughts",  "new_tool",  "new_tool_name",  "new_tool_description",  ])
+        self._properties: typing.Set[str] = set([  "thoughts",  "action",  "tool_name",  "tool_description",  "existing_tool_for_enhancement",  ])
         self._props = NewToolAnalysisProperties(self._bldr, self._properties)
 
     def type(self) -> baml_py.FieldType:
@@ -792,16 +792,20 @@ class NewToolAnalysisProperties:
         return type_builder.ClassPropertyViewer(self.__bldr.property("thoughts"))
     
     @property
-    def new_tool(self) -> type_builder.ClassPropertyViewer:
-        return type_builder.ClassPropertyViewer(self.__bldr.property("new_tool"))
+    def action(self) -> type_builder.ClassPropertyViewer:
+        return type_builder.ClassPropertyViewer(self.__bldr.property("action"))
     
     @property
-    def new_tool_name(self) -> type_builder.ClassPropertyViewer:
-        return type_builder.ClassPropertyViewer(self.__bldr.property("new_tool_name"))
+    def tool_name(self) -> type_builder.ClassPropertyViewer:
+        return type_builder.ClassPropertyViewer(self.__bldr.property("tool_name"))
     
     @property
-    def new_tool_description(self) -> type_builder.ClassPropertyViewer:
-        return type_builder.ClassPropertyViewer(self.__bldr.property("new_tool_description"))
+    def tool_description(self) -> type_builder.ClassPropertyViewer:
+        return type_builder.ClassPropertyViewer(self.__bldr.property("tool_description"))
+    
+    @property
+    def existing_tool_for_enhancement(self) -> type_builder.ClassPropertyViewer:
+        return type_builder.ClassPropertyViewer(self.__bldr.property("existing_tool_for_enhancement"))
     
     
 

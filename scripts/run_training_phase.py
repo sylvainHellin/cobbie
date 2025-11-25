@@ -136,6 +136,7 @@ class Context(BaseModel):
     tool_updated: bool = False
     tool_saved: bool = False
     tool_name: Optional[str] = None
+    is_enhancement: bool = False  # Track if current operation is enhancement
     path_taken: Optional[str] = None  # "correct" or "wrong" or "abstained"
 
 
@@ -632,18 +633,25 @@ def handle_identify_new_tool(context: Context) -> Tuple[TrainingState, Context]:
         context.identify_tool_collector = collector
         context.identify_tool_duration = time.time() - start_time
 
-        _logger.info(f"New tool needed: {result.new_tool}")
-        if result.new_tool:
-            _logger.info(f"Tool name: {result.new_tool_name}")
-            _logger.info(f"Tool description: {result.new_tool_description}")
+        _logger.info(f"Tool management action: {result.action}")
+        _logger.info(f"Tool name: {result.tool_name}")
+        _logger.info(f"Tool description: {result.tool_description}")
 
-        # Decide next state
-        if result.new_tool:
-            if not result.new_tool_name:
-                raise ValueError("New tool name is None")
-            context.tool_name = result.new_tool_name
+        # Handle new action field
+        if result.action == "create_new":
+            _logger.info(f"Creating new tool: {result.tool_name}")
+            context.tool_name = result.tool_name
+            context.is_enhancement = False
             return TrainingState.CREATE_NEW_TOOL, context
-        else:
+
+        elif result.action == "enhance_existing":
+            _logger.info(f"Enhancing existing tool: {result.tool_name}")
+            context.tool_name = result.tool_name
+            context.is_enhancement = True
+            return TrainingState.CREATE_NEW_TOOL, context
+
+        else:  # "none"
+            _logger.info("No tool creation or enhancement needed")
             return TrainingState.END, context
 
     except Exception as e:
@@ -655,7 +663,7 @@ def handle_identify_new_tool(context: Context) -> Tuple[TrainingState, Context]:
 
 def handle_create_new_tool(context: Context) -> Tuple[TrainingState, Context]:
     """
-    Create a new helper function (Path A: Correct answer).
+    Create new tool OR enhance existing tool (Path A: Correct answer).
 
     CHANGED: No longer saves the tool immediately.
     Instead, transitions to TEST_TOOL_WITH_COBBIE for validation.
@@ -663,16 +671,18 @@ def handle_create_new_tool(context: Context) -> Tuple[TrainingState, Context]:
     Actions:
     1. Get IFC model path from QA pair
     2. Get other BIM models for testing
-    3. Call create_helper_function()
-    4. If success: Mark as created, transition to testing
-    5. If failure: Log error
+    3. If enhancing: Get existing implementation
+    4. Call create_helper_function()
+    5. If success: Mark as created/updated, transition to testing
+    6. If failure: Log error
 
     Returns:
         Next state:
         - TEST_TOOL_WITH_COBBIE if success
         - ERROR if failure
     """
-    _logger.info(f"Creating new tool: {context.tool_name}...")
+    action_verb = "Enhancing" if context.is_enhancement else "Creating"
+    _logger.info(f"{action_verb} tool: {context.tool_name}...")
 
     start_time = time.time()
 
@@ -709,14 +719,25 @@ def handle_create_new_tool(context: Context) -> Tuple[TrainingState, Context]:
             f"Answer: {context.cobbie_result.answer}"
         )
 
+        # Get existing implementation if enhancing
+        existing_implementation = None
+        if context.is_enhancement:
+            from src.util import get_function_code
+            code_result = get_function_code(context.tool_name)
+            if code_result.is_err():
+                raise ValueError(f"Could not retrieve tool code: {code_result.unwrap_err()}")
+            existing_implementation = code_result.unwrap()
+
         result, collector, creation_history = create_helper_function(
             history=full_history,
             example_question=context.qa_pair.question,
             example_answer=context.qa_pair.ground_truth,
             example_bim_model=ifc_model_path,
             other_bim_models_for_testing=other_models,
-            function_name=context.identify_tool_result.new_tool_name,
-            function_description=context.identify_tool_result.new_tool_description,
+            function_name=context.identify_tool_result.tool_name,
+            function_description=context.identify_tool_result.tool_description,
+            is_enhancement=context.is_enhancement,
+            existing_implementation=existing_implementation,
             max_iterations=15,
             llm_provider="zai",
             llm_name="GLM-4.6",
@@ -731,10 +752,16 @@ def handle_create_new_tool(context: Context) -> Tuple[TrainingState, Context]:
 
         if result.success:
             # Don't save immediately - proceed to testing first
-            _logger.info(
-                f"New tool created: {context.tool_name}, proceeding to testing"
-            )
-            context.tool_created = True
+            if context.is_enhancement:
+                _logger.info(
+                    f"Tool enhanced: {context.tool_name}, proceeding to testing"
+                )
+                context.tool_updated = True
+            else:
+                _logger.info(
+                    f"New tool created: {context.tool_name}, proceeding to testing"
+                )
+                context.tool_created = True
 
             return TrainingState.TEST_TOOL_WITH_COBBIE, context
         else:
@@ -1065,7 +1092,7 @@ def handle_assess_tool_usage(context: Context) -> Tuple[TrainingState, Context]:
         # Get tool description based on path
         if context.create_tool_result:
             assert context.identify_tool_result is not None
-            tool_description = context.identify_tool_result.new_tool_description
+            tool_description = context.identify_tool_result.tool_description
         elif context.debug_tool_result:
             assert context.identify_faulty_result is not None
             tool_description = context.identify_faulty_result.error_description

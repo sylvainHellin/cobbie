@@ -112,9 +112,29 @@ class CategoryValidationResult {
 // Helper function identification result from successful Cobbie executions
 class NewToolAnalysis {
   thoughts string @description("Step-by-step analysis of the execution history to identify reusable patterns")
-  new_tool bool @description("Whether a new helper function should be created (true) or not (false)")
-  new_tool_name string @description("Suggested name for the new helper function (empty string if new_tool is false)")
-  new_tool_description string @description("Detailed description of what the helper function should do, its parameters, return type, and use cases (empty string if new_tool is false)")
+
+  action "create_new" | "enhance_existing" | "none" @description(#"
+    Decision on tool management:
+    - create_new: Create a completely new helper function
+    - enhance_existing: Enhance existing tool with optional parameters
+    - none: No tool creation or enhancement needed
+  "#)
+
+  tool_name string @description(#"
+    For create_new: Name for new function
+    For enhance_existing: Name of existing tool to enhance
+    For none: Empty string
+  "#)
+
+  tool_description string @description(#"
+    For create_new: Full function specification
+    For enhance_existing: Enhancement description (what parameters to add)
+    For none: Empty string
+  "#)
+
+  existing_tool_for_enhancement string? @description(#"
+    Only for enhance_existing: Name of tool to enhance (same as tool_name)
+  "#)
 }
 
 // Helper function implementation result - final output from HelperFunctionCreator
