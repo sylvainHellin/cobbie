@@ -104,3 +104,10 @@ To address this, you should use context7. Ideally, you should do this before wri
 ## Assumptions
 Don't make any assumptions ; ask for clarifications if anything is unclear.
 I would much rather you asked questions up front than made decisions on your own without knowing the full context.
+
+## Writing guidelines
+
+**IMPORTANT**
+
+- Keep your responses and plans concise. Be brief and to the point, but make sure you include all the important information, especially the assumptions.
+- The same applies when writing code. Write robust code, but remember that this is not a production-grade application, so there is no need to be overly defensive. Write code that is easy to understand, review and maintain.
