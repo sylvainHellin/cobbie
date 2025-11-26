@@ -1,6 +1,6 @@
 # Tool Management System Specification
 
-**Status**: Phase 1 Complete ✅ | Phase 2-4 Not Started
+**Status**: ✅ ALL PHASES COMPLETE (Phases 1-4)
 
 ## Context & Motivation
 
@@ -113,10 +113,10 @@ Training typically spans multiple runs with `--start` and `--end` flags. The sys
 
 ---
 
-### **Phase 2: Unified Tool Creation/Enhancement Agent**
+### **Phase 2: Unified Tool Creation/Enhancement Agent** ✅ COMPLETED
 
-#### **2.1 Update NewToolAnalysis Schema**
-**File**: `baml_src/schemas.baml` (modify ~8 lines)
+#### **2.1 Update NewToolAnalysis Schema** ✅ COMPLETED
+**File**: `baml_src/schemas.baml` (modified)
 
 ```baml
 class NewToolAnalysis {
@@ -127,10 +127,11 @@ class NewToolAnalysis {
 }
 ```
 
-Remove legacy `new_tool` field for clarity.
+Legacy `new_tool` field removed for clarity.
 
-#### **2.2 Update identify_helper_function.baml**
-**File**: `baml_src/identify_helper_function.baml` (modify ~30 lines)
+#### **2.2 Update identify_helper_function.baml** ✅ COMPLETED
+**File**: `baml_src/identify_helper_function.baml` (modified ~30 lines)
+**File**: `src/agents/identify_helper_function.py` (fixed to use new schema)
 
 Add tool management strategy to instructions:
 - Consider enhancing existing tools with optional parameters
@@ -138,9 +139,14 @@ Add tool management strategy to instructions:
 - Enhancement must maintain backward compatibility
 - Set `action` field appropriately
 
-#### **2.3 Unify create_helper_function with Enhancement**
-**File**: `src/agents/create_helper_function.py` (modify ~50 lines)
-**File**: `baml_src/create_helper_function.baml` (modify ~40 lines)
+**Implementation Notes**:
+- Updated BAML prompt with enhancement vs creation decision criteria
+- Fixed `identify_helper_function.py` to use `action`, `tool_name`, `tool_description` fields
+- Fixed type errors in test code
+
+#### **2.3 Unify create_helper_function with Enhancement** ✅ COMPLETED
+**File**: `src/agents/create_helper_function.py` (modified ~50 lines)
+**File**: `baml_src/create_helper_function.baml` (modified ~40 lines)
 
 **Add optional parameter**:
 ```python
@@ -162,8 +168,8 @@ def create_helper_function(
 [... common instructions ...]
 ```
 
-#### **2.4 Update Training State Machine**
-**File**: `scripts/run_training_phase.py` (modify ~40 lines)
+#### **2.4 Update Training State Machine** ✅ COMPLETED
+**File**: `scripts/run_training_phase.py` (modified ~40 lines)
 
 **Handle enhancement action**:
 ```python
@@ -183,75 +189,158 @@ elif tool_analysis.action == "create_new":
 
 ---
 
-### **Phase 3: Usage-Based Tool Deletion**
+### **Phase 3: Usage-Based Tool Deletion** ✅ COMPLETED
 
-#### **3.1 Consolidated Tool Management**
-**File**: `src/util/tool_management.py` (new, ~100 lines)
+#### **3.1 Deletion Score Calculation** ✅ COMPLETED
+**File**: `src/db/query.py` (added ~113 lines)
+**File**: `src/util/delete_tool.py` (new, ~35 lines)
+**File**: `src/util/__init__.py` (updated exports)
+**Test**: `test/test_tool_deletion.py` (6 tests, all passing)
 
-**Deletion Score Formula**:
+**Implementation Notes**:
+- Deletion score ranges 0-100 (higher = more deletable)
+- Grace period protection: score = 0.0 if age < grace_period
+- Never included tools: score = 100.0 (instant deletion)
+- Weighted formula combines age, call rate, success rate, failure penalty
+- All type checks passed (ruff, ty, pyright)
+
+**Deletion Score Formula** (implemented):
 ```python
-questions_since_creation = current_question_num - created_at_question
+age = current_question_num - created_at_question
 
-if questions_since_creation < grace_period:
-    score = float('inf')  # Immune
+if age < grace_period:
+    return 0.0  # Protected
 elif questions_when_included == 0:
-    score = 0  # Never included
-elif questions_when_called == 0:
-    score = 0.01  # Never used
-else:
-    inclusion_rate = questions_when_included / questions_since_creation
-    usage_rate = questions_when_called / questions_when_included
-    success_rate = questions_correct / (questions_correct + questions_wrong) if total > 0 else 0.5
+    return 100.0  # Never used
 
-    score = inclusion_rate × usage_rate × (1 + success_rate)
+# Calculate rates
+call_rate = questions_when_called / questions_when_included
+success_rate = questions_correct / questions_when_called if questions_when_called > 0 else 0.0
+failure_rate = questions_wrong / questions_when_called if questions_when_called > 0 else 0.0
+
+# Weighted score (0-100)
+age_score = min(age / 100.0, 1.0) * 20
+call_score = (1.0 - call_rate) * 30
+success_score = (1.0 - success_rate) * 25
+failure_score = failure_rate * 25
+
+return min(age_score + call_score + success_score + failure_score, 100.0)
 ```
 
-**Functions**:
-- `calculate_deletion_scores(current_question_num, grace_period)` - Score all tools
-- `select_tools_for_deletion(num_to_delete, current_question_num, grace_period)` - Return lowest-scored tools
-- `delete_tools(tool_names, current_question_num, reason)` - Delete files and log
+**Functions** (in `src/db/query.py`):
+- `calculate_deletion_score(tool_stats, current_question_num, grace_period)` - Calculate score for one tool
+- `get_tools_ranked_by_deletion_score(current_question_num, grace_period)` - Return ranked list
+- `delete_tool_from_db(tool_name)` - Delete metadata from database
+- `initialize_tool_metadata(global_question_num)` - Initialize existing tools
 
-#### **3.2 Integrate Deletion Check in Training Loop**
-**File**: `scripts/run_training_phase.py` (modify ~20 lines)
+**Utility Function** (in `src/util/delete_tool.py`):
+- `delete_tool(tool_name)` - Delete tool from filesystem and database
 
-**At start of each question**:
+#### **3.2 Integrate Deletion Check in Training Loop** ✅ COMPLETED
+**File**: `scripts/run_training_phase.py` (modified ~40 lines)
+
+**Implementation Notes**:
+- Added `max_tools` and `grace_period` fields to `Context` class
+- Updated `handle_start_state()` to check tool count before loading
+- Deletes lowest-scoring tools when count exceeds `max_tools`
+- Logs deletion metrics to MLflow
+- All type checks passed
+
+**Deletion check** (in `handle_start_state`):
 ```python
-current_tool_count = len(list(Path("src/tools/created").glob("*.py")))
+if len(current_tools) > context.max_tools:
+    num_to_delete = len(current_tools) - context.max_tools
+    ranked_tools = get_tools_ranked_by_deletion_score(
+        current_question_num=context.global_question_num,
+        grace_period=context.grace_period
+    )
 
-if current_tool_count > MAX_TOOLS:
-    num_to_delete = current_tool_count - MAX_TOOLS
-    tools_to_delete = select_tools_for_deletion(num_to_delete, global_question_num, GRACE_PERIOD)
-    delete_tools(tools_to_delete, global_question_num, reason=f"Exceeded max ({MAX_TOOLS})")
+    # Delete top N by score
+    for tool_name, score in ranked_tools[:num_to_delete]:
+        delete_tool(tool_name)
+
+    # Log to MLflow
+    mlflow.log_metrics({
+        f"tools_deleted_at_q{context.global_question_num}": deleted_count,
+        "current_tool_count": len(get_created_tools())
+    })
 ```
 
 ---
 
-### **Phase 4: Configuration & Integration**
+### **Phase 4: Configuration & Integration** ✅ COMPLETED
 
-#### **4.1 Add CLI Parameters**
-**File**: `scripts/run_training_phase.py` (modify ~20 lines)
+#### **4.1 Add CLI Parameters** ✅ COMPLETED
+**File**: `scripts/run_training_phase.py` (modified)
 
-```python
-parser.add_argument("--max-tools", type=int, default=32)
-parser.add_argument("--grace-period", type=int, default=20)
-```
-
-#### **4.2 Initialize Metadata on Training Start**
-**File**: `scripts/run_training_phase.py` (modify ~5 lines)
+**Implementation Notes**:
+- Added `--max-tools` argument (default: 32)
+- Added `--grace-period` argument (default: 25)
+- Parameters logged to MLflow for tracking
+- Passed to Context initialization
 
 ```python
-from src.util.tool_metadata import init_tool_metadata_table
-init_tool_metadata_table()
+parser.add_argument("--max-tools", type=int, default=32,
+                   help="Maximum number of tools to maintain (default: 32)")
+parser.add_argument("--grace-period", type=int, default=25,
+                   help="Questions to protect new tools from deletion (default: 25)")
+
+# Log to MLflow
+mlflow.log_params({
+    "max_tools": args.max_tools,
+    "grace_period": args.grace_period,
+})
+
+# Pass to Context
+context = Context(
+    qa_pair=qa_pair,
+    global_question_num=global_question_num,
+    max_tools=args.max_tools,
+    grace_period=args.grace_period,
+)
 ```
 
-#### **4.3 Support --continue Flag Enhancement**
-**File**: `scripts/run_training_phase.py` (modify ~10 lines)
+#### **4.2 Initialize Metadata on Training Start** ✅ COMPLETED
+**File**: `scripts/run_training_phase.py` (modified)
+**File**: `src/db/query.py` (added `initialize_tool_metadata()`)
+
+**Implementation Notes**:
+- Initializes metadata for existing tools without database entries
+- Called at start of training run after MLflow setup
+- Logs count of initialized tools
+
+```python
+from src.db.query import initialize_tool_metadata
+
+initialized_count = initialize_tool_metadata(args.start)
+if initialized_count > 0:
+    _logger.info(f"Initialized metadata for {initialized_count} existing tools")
+```
+
+#### **4.3 Support --continue Flag Enhancement** ✅ COMPLETED
+**File**: `scripts/run_training_phase.py` (modified ~20 lines)
+
+**Implementation Notes**:
+- Auto-detects last processed question from database
+- Resumes training from correct index
+- Overrides `--start` parameter when appropriate
+- Works with existing `--continue` flag and MLflow run continuation
 
 ```python
 if args.continue_run:
+    from src.db.query import get_last_question_processed
+
     last_processed = get_last_question_processed()
-    if last_processed is not None and last_processed >= args.start:
-        args.start = last_processed + 1
+    if last_processed is not None:
+        resume_index = last_processed + 1
+        _logger.info(f"--continue: resuming from question {resume_index}")
+
+        # Override start if not explicitly provided
+        if args.start == 0:  # Default value
+            args.start = resume_index
+            _logger.info(f"Auto-adjusted start index to {args.start}")
+    else:
+        _logger.info("--continue: no previous progress found")
 ```
 
 ---
@@ -293,21 +382,37 @@ if args.continue_run:
 
 ## Files Summary
 
-**Completed Files**:
+**All Files Completed** ✅:
+
+**Phase 1 Files**:
 - `src/db/models.py` - Added `ToolUsageStats` model (auto-generated)
-- `src/db/query.py` - Added 6 query functions (~120 lines)
+- `src/db/query.py` - Added 6 tracking query functions (~120 lines)
 - `test/test_tool_metadata.py` - Test suite (~265 lines, 12 tests passing)
 - `src/util/extract_tool_usage.py` - Tool usage extractor (~60 lines)
 - `test/test_extract_tool_usage.py` - Manual test suite for real Cobbie runs
 - `src/util/save_new_tool.py` - Updated to register tools (~8 lines modified)
 - `scripts/run_training_phase.py` - Integrated usage tracking (~25 lines modified)
 
-**Remaining Files**:
-- `src/util/tool_management.py` (~100 lines) - Phase 3
-- BAML files and agents (~150 lines modified) - Phase 2
+**Phase 2 Files**:
+- `baml_src/schemas.baml` - Updated `NewToolAnalysis` schema
+- `baml_src/identify_helper_function.baml` - Added enhancement decision logic
+- `src/agents/identify_helper_function.py` - Fixed to use new schema fields
+- `baml_src/create_helper_function.baml` - Added enhancement mode support
+- `src/agents/create_helper_function.py` - Unified creation/enhancement
 
-**Total Progress**: ~538/~788 lines (68% - Phase 1 complete ✅)
+**Phase 3 Files**:
+- `src/db/query.py` - Added 4 deletion functions (~113 lines)
+- `src/util/delete_tool.py` - Tool deletion utility (new, ~35 lines)
+- `src/util/__init__.py` - Updated exports
+- `test/test_tool_deletion.py` - Deletion test suite (new, ~110 lines, 6 tests passing)
+- `scripts/run_training_phase.py` - Integrated deletion check (~40 lines modified)
+
+**Phase 4 Files**:
+- `scripts/run_training_phase.py` - CLI params, metadata init, --continue enhancement (~35 lines modified)
+
+**Total Implementation**: All phases complete (100%)
 **No breaking changes**: All backward compatible
+**All tests passing**: 18 tests across 2 test files
 
 ---
 
@@ -319,3 +424,27 @@ if args.continue_run:
 | `--grace-period` | 25 | Sufficient questions to span diverse types |
 
 Both parameters are configurable via CLI for tuning based on dataset characteristics.
+
+---
+
+## Usage
+
+```bash
+# Start new training with tool management
+uv run scripts/run_training_phase.py --start 0 --end 50 --max-tools 32 --grace-period 25
+
+# Continue previous training (auto-resumes from last processed question)
+uv run scripts/run_training_phase.py --continue --end 100
+
+# Adjust tool management parameters
+uv run scripts/run_training_phase.py --start 0 --end 50 --max-tools 20 --grace-period 30
+```
+
+---
+
+## Bug Fixes
+
+**Fixed during Phase 3/4 implementation**:
+- `src/agents/identify_helper_function.py` - Updated to use new `action`, `tool_name`, `tool_description` fields instead of legacy `new_tool`, `new_tool_name`, `new_tool_description`
+- Fixed type errors in test code (token metrics calculation)
+- All code review checks passing (ruff, ty, pyright)

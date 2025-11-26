@@ -57,21 +57,44 @@ def get_element_types_by_semantic_criteria(
                 'summary': f'No elements of type {element_type} found in the model.'
             }
         
-        # Filter elements by semantic keywords
-        filtered_elements = []
+        # Prepare keywords for matching
         keywords_to_check = semantic_keywords if case_sensitive else [kw.lower() for kw in semantic_keywords]
         
+        # Filter elements by semantic keywords
+        filtered_elements = []
+        
         for element in all_elements:
-            # Get the categorization field value
-            field_value = getattr(element, categorization_field, None)
-            if field_value is None:
-                continue
-                
-            field_str = str(field_value)
-            search_str = field_str if case_sensitive else field_str.lower()
+            found_match = False
             
-            # Check if any semantic keyword matches
-            if any(keyword in search_str for keyword in keywords_to_check):
+            # Check direct attributes first
+            for attr_name in ['Name', 'ObjectType', 'Description']:
+                attr_value = getattr(element, attr_name, None)
+                if attr_value:
+                    attr_str = str(attr_value)
+                    search_str = attr_str if case_sensitive else attr_str.lower()
+                    if any(keyword in search_str for keyword in keywords_to_check):
+                        found_match = True
+                        break
+            
+            # If not found in direct attributes, check property sets
+            if not found_match:
+                try:
+                    psets = ifcopenshell.util.element.get_psets(element)
+                    for pset_name, pset_data in psets.items():
+                        for prop_name, prop_value in pset_data.items():
+                            if prop_value is not None:
+                                prop_str = str(prop_value)
+                                search_str = prop_str if case_sensitive else prop_str.lower()
+                                if any(keyword in search_str for keyword in keywords_to_check):
+                                    found_match = True
+                                    break
+                        if found_match:
+                            break
+                except:
+                    # If property sets can't be accessed, continue
+                    pass
+            
+            if found_match:
                 filtered_elements.append(element)
         
         if not filtered_elements:
@@ -85,10 +108,26 @@ def get_element_types_by_semantic_criteria(
         categories = {}
         
         for element in filtered_elements:
-            # Get categorization value
+            # Get categorization value - try multiple sources
+            category_value = None
+            
+            # Try direct attribute first
             category_value = getattr(element, categorization_field, None)
+            
+            # If not found, try property sets
             if category_value is None:
-                category_value = 'Unknown'
+                try:
+                    psets = ifcopenshell.util.element.get_psets(element)
+                    for pset_name, pset_data in psets.items():
+                        if categorization_field in pset_data:
+                            category_value = pset_data[categorization_field]
+                            break
+                except:
+                    pass
+            
+            # If still not found, use element name
+            if category_value is None:
+                category_value = getattr(element, 'Name', 'Unknown')
             
             category_name = str(category_value)
             
@@ -124,6 +163,13 @@ def get_element_types_by_semantic_criteria(
                     element_type_obj = ifcopenshell.util.element.get_type(sample_element)
                     if element_type_obj:
                         sample_details['TypeName'] = getattr(element_type_obj, 'Name', None)
+                except:
+                    pass
+                
+                # Add property set information
+                try:
+                    psets = ifcopenshell.util.element.get_psets(sample_element)
+                    sample_details['PropertySets'] = list(psets.keys())
                 except:
                     pass
                 

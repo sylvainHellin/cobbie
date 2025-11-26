@@ -212,3 +212,116 @@ def get_last_question_processed() -> Optional[int]:
         ).limit(1)
         result = session.exec(statement).first()
         return result.last_question_processed if result else None
+
+
+def calculate_deletion_score(
+    tool_stats: ToolUsageStats,
+    current_question_num: int,
+    grace_period: int = 25
+) -> float:
+    """
+    Calculate deletion score (0-100, higher = more deletable).
+
+    Formula combines:
+    - Age factor (older = more opportunity to prove value)
+    - Call rate (how often used when available)
+    - Success rate (contribution to correct answers)
+    - Failure penalty (contribution to wrong answers)
+
+    Returns:
+        0.0 if within grace period
+        100.0 if never used
+        <20.0 for high-value tools
+        >70.0 for harmful tools
+    """
+    created_at = tool_stats.created_at_question or 0
+    age = current_question_num - created_at
+    included = tool_stats.questions_when_included or 0
+    called = tool_stats.questions_when_called or 0
+    correct = tool_stats.questions_correct_contribution or 0
+    wrong = tool_stats.questions_wrong_contribution or 0
+
+    # Grace period protection
+    if age < grace_period:
+        return 0.0
+
+    # Never included = instant deletion
+    if included == 0:
+        return 100.0
+
+    # Calculate rates
+    call_rate = called / included
+    success_rate = correct / called if called > 0 else 0.0
+    failure_rate = wrong / called if called > 0 else 0.0
+
+    # Weighted score (0-100)
+    age_score = min(age / 100.0, 1.0) * 20
+    call_score = (1.0 - call_rate) * 30
+    success_score = (1.0 - success_rate) * 25
+    failure_score = failure_rate * 25
+
+    return min(age_score + call_score + success_score + failure_score, 100.0)
+
+
+def get_tools_ranked_by_deletion_score(
+    current_question_num: int,
+    grace_period: int = 25
+) -> List[tuple[str, float]]:
+    """
+    Get all tools ranked by deletion score (highest first).
+
+    Returns:
+        List of (tool_name, score) tuples, sorted descending
+    """
+    all_stats = get_all_tool_stats()
+
+    scored_tools: List[tuple[str, float]] = [
+        (stats.tool_name, calculate_deletion_score(stats, current_question_num, grace_period))
+        for stats in all_stats
+        if stats.tool_name is not None
+    ]
+
+    scored_tools.sort(key=lambda x: x[1], reverse=True)
+    return scored_tools
+
+
+def delete_tool_from_db(tool_name: str) -> None:
+    """Delete tool metadata from database."""
+    with Session(db.ENGINE) as session:
+        tool_stats = session.get(ToolUsageStats, tool_name)
+        if tool_stats:
+            session.delete(tool_stats)
+            session.commit()
+
+
+def initialize_tool_metadata(global_question_num: int) -> int:
+    """
+    Initialize metadata for existing tools without entries.
+
+    Returns:
+        Number of tools initialized
+    """
+    from src.util import get_created_tools
+
+    existing_tools = get_created_tools()
+    initialized_count = 0
+
+    with Session(db.ENGINE) as session:
+        for tool_name in existing_tools.keys():
+            existing_stats = session.get(ToolUsageStats, tool_name)
+            if not existing_stats:
+                tool_stats = ToolUsageStats(
+                    tool_name=tool_name,
+                    questions_when_included=0,
+                    questions_when_called=0,
+                    questions_correct_contribution=0,
+                    questions_wrong_contribution=0,
+                    created_at_question=global_question_num,
+                    last_question_processed=global_question_num,
+                )
+                session.add(tool_stats)
+                initialized_count += 1
+
+        session.commit()
+
+    return initialized_count

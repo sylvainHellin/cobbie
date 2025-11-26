@@ -83,6 +83,10 @@ class Context(BaseModel):
     global_question_num: int  # Global question number across all training runs
     tools: Dict[str, Callable] = {}
 
+    # Tool management configuration
+    max_tools: int = 32
+    grace_period: int = 25
+
     # Cobbie agent results
     cobbie_result: Optional[FinalAnswer] = None
     cobbie_collector: Optional[Collector] = None
@@ -435,24 +439,56 @@ def handle_start_state(context: Context) -> Tuple[TrainingState, Context]:
     """
     Initialize tools for this QA pair.
 
-    Actions:
-    1. Load all created tools with get_created_tools()
-    2. Store in context
-    3. Track tool inclusion in database
-    4. Log initial tool count
+    Steps:
+    1. Check if tool count exceeds MAX_TOOLS
+    2. Delete lowest-value tools if necessary
+    3. Load remaining tools
+    4. Track tool inclusion in database
 
     Returns:
         Next state: RUN_COBBIE
     """
-    # Load all available tools
+    from src.db.query import get_tools_ranked_by_deletion_score
+    from src.util import delete_tool
+
+    # Check tool count
+    current_tools = get_created_tools()
+
+    if len(current_tools) > context.max_tools:
+        num_to_delete = len(current_tools) - context.max_tools
+        _logger.info(f"Tool count ({len(current_tools)}) exceeds MAX_TOOLS ({context.max_tools})")
+        _logger.info(f"Deleting {num_to_delete} lowest-value tools...")
+
+        # Get ranked tools by deletion score
+        ranked_tools = get_tools_ranked_by_deletion_score(
+            current_question_num=context.global_question_num,
+            grace_period=context.grace_period
+        )
+
+        # Delete top N by score
+        deleted_count = 0
+        for tool_name, score in ranked_tools[:num_to_delete]:
+            _logger.info(f"  Deleting '{tool_name}' (score={score:.1f})")
+            if delete_tool(tool_name):
+                deleted_count += 1
+
+        _logger.info(f"Deleted {deleted_count}/{num_to_delete} tools")
+
+        # Log to MLflow
+        if mlflow.active_run():
+            mlflow.log_metrics({
+                f"tools_deleted_at_q{context.global_question_num}": deleted_count,
+                "current_tool_count": len(get_created_tools())
+            })
+
+    # Load available tools
     context.tools = get_created_tools()
 
-    # Track that these tools were available for this question
+    # Track tool inclusion
     available_tool_names = list(context.tools.keys())
     increment_tool_inclusion(available_tool_names, context.global_question_num)
 
     _logger.info(f"Loaded {len(context.tools)} tools for question {context.qa_pair.id}")
-    _logger.info(f"Tracked inclusion of {len(available_tool_names)} tools at global question {context.global_question_num}")
 
     return TrainingState.RUN_COBBIE, context
 
@@ -1310,10 +1346,31 @@ def main():
     parser.add_argument("--end", type=int, default=None, help="End index")
     parser.add_argument("--continue", dest="continue_run", nargs="?", const=True,
                        help="Continue most recent run or specific run ID")
+    parser.add_argument("--max-tools", type=int, default=32,
+                       help="Maximum number of tools to maintain (default: 32)")
+    parser.add_argument("--grace-period", type=int, default=25,
+                       help="Questions to protect new tools from deletion (default: 25)")
     args = parser.parse_args()
 
     # Load dataset
     devset, trainset = load_train_dev_split()
+
+    # Handle --continue flag
+    if args.continue_run:
+        from src.db.query import get_last_question_processed
+
+        last_processed = get_last_question_processed()
+        if last_processed is not None:
+            resume_index = last_processed + 1
+            _logger.info(f"--continue: resuming from question {resume_index}")
+
+            # Override start if not explicitly provided
+            if args.start == 0:  # Default value
+                args.start = resume_index
+                _logger.info(f"Auto-adjusted start index to {args.start}")
+        else:
+            _logger.info("--continue: no previous progress found")
+
     end_index = args.end if args.end else len(trainset)
     dataset = trainset[args.start : end_index]
 
@@ -1336,6 +1393,13 @@ def main():
 
     # Main MLflow run
     with mlflow.start_run(run_id=run_id, run_name=run_name):
+        # Initialize tool metadata for existing tools
+        from src.db.query import initialize_tool_metadata
+
+        initialized_count = initialize_tool_metadata(args.start)
+        if initialized_count > 0:
+            _logger.info(f"Initialized metadata for {initialized_count} existing tools")
+
         initial_tools = get_created_tools()
 
         # Log immutable configuration parameters (only for new runs)
@@ -1345,6 +1409,8 @@ def main():
                     "model_name": "glm-4.6",
                     "provider_name": "zai",
                     "component": "Training",
+                    "max_tools": args.max_tools,
+                    "grace_period": args.grace_period,
                 }
             )
 
@@ -1396,7 +1462,12 @@ def main():
 
                 # Initialize context and state
                 global_question_num = args.start + idx
-                context = Context(qa_pair=qa_pair, global_question_num=global_question_num)
+                context = Context(
+                    qa_pair=qa_pair,
+                    global_question_num=global_question_num,
+                    max_tools=args.max_tools,
+                    grace_period=args.grace_period,
+                )
                 state = TrainingState.START
 
                 # State machine loop with single main span

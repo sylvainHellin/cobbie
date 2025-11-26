@@ -39,9 +39,9 @@ def identify_helper_function(
     Returns:
         Tuple of (NewToolAnalysis, Collector) where NewToolAnalysis contains:
         - thoughts: Step-by-step analysis of the execution history
-        - new_tool: Whether a new helper function should be created
-        - new_tool_name: Suggested name for the new helper function
-        - new_tool_description: Detailed description of the helper function
+        - action: "create_new", "enhance_existing", or "none"
+        - tool_name: Name for new function or existing tool to enhance
+        - tool_description: Function specification or enhancement description
     """
     # Start timer
     start = time.time()
@@ -79,18 +79,18 @@ def identify_helper_function(
             _logger.error(f"Error identifying helper function: {e}")
             tool_identification = NewToolAnalysis(
                 thoughts=f"An Exception occurred when trying to identify helper function. Exception:\n{e}",
-                new_tool=False,
-                new_tool_name="",
-                new_tool_description="",
+                action="none",
+                tool_name="",
+                tool_description="",
             )
 
         # Log outputs
         identifier_span.set_outputs(
             {
                 "thoughts": tool_identification.thoughts,
-                "new_tool": tool_identification.new_tool,
-                "new_tool_name": tool_identification.new_tool_name,
-                "new_tool_description": tool_identification.new_tool_description,
+                "action": tool_identification.action,
+                "tool_name": tool_identification.tool_name,
+                "tool_description": tool_identification.tool_description,
             }
         )
 
@@ -192,10 +192,10 @@ def web_search(query: str) -> str:
 
         print("\nBAML Helper Function Identifier Test Results:")
         print(f"\nThoughts:\n{result.thoughts}")
-        print(f"\nShould create new tool: {result.new_tool}")
-        if result.new_tool:
-            print(f"Tool name: {result.new_tool_name}")
-            print(f"\nTool description:\n{result.new_tool_description}")
+        print(f"\nAction: {result.action}")
+        if result.action in ("create_new", "enhance_existing"):
+            print(f"Tool name: {result.tool_name}")
+            print(f"\nTool description:\n{result.tool_description}")
 
         # Extract metrics
         input_tokens = 0
@@ -210,9 +210,11 @@ def web_search(query: str) -> str:
 
         print("\n" + "="*80)
         print("Metrics:")
-        print(f"Cobbie - Input Tokens: {cobbie_collector.usage.input_tokens if cobbie_collector.usage else 0}")
-        print(f"Cobbie - Output Tokens: {cobbie_collector.usage.output_tokens if cobbie_collector.usage else 0}")
+        cobbie_input = cobbie_collector.usage.input_tokens if cobbie_collector.usage else 0
+        cobbie_output = cobbie_collector.usage.output_tokens if cobbie_collector.usage else 0
+        print(f"Cobbie - Input Tokens: {cobbie_input}")
+        print(f"Cobbie - Output Tokens: {cobbie_output}")
         print(f"Helper Function Identifier - Input Tokens: {input_tokens}")
         print(f"Helper Function Identifier - Output Tokens: {output_tokens}")
-        print(f"Total Tokens: {(cobbie_collector.usage.input_tokens if cobbie_collector.usage else 0) + (cobbie_collector.usage.output_tokens if cobbie_collector.usage else 0) + total_tokens}")
+        print(f"Total Tokens: {(cobbie_input or 0) + (cobbie_output or 0) + total_tokens}")
         print("="*80)
