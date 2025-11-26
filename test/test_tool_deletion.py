@@ -13,7 +13,6 @@ def test_grace_period_protection():
         questions_when_called=5,
         questions_correct_contribution=5,
         questions_wrong_contribution=0,
-        last_question_processed=115,
     )
 
     score = calculate_deletion_score(stats, current_question_num=115, grace_period=25)
@@ -29,7 +28,6 @@ def test_never_used_tool():
         questions_when_called=0,
         questions_correct_contribution=0,
         questions_wrong_contribution=0,
-        last_question_processed=50,
     )
 
     score = calculate_deletion_score(stats, current_question_num=200, grace_period=25)
@@ -45,7 +43,6 @@ def test_high_value_tool():
         questions_when_called=38,
         questions_correct_contribution=37,
         questions_wrong_contribution=1,
-        last_question_processed=190,
     )
 
     score = calculate_deletion_score(stats, current_question_num=200, grace_period=25)
@@ -63,7 +60,6 @@ def test_low_usage_tool():
         questions_when_called=5,
         questions_correct_contribution=2,
         questions_wrong_contribution=3,
-        last_question_processed=150,
     )
 
     score = calculate_deletion_score(stats, current_question_num=200, grace_period=25)
@@ -79,7 +75,6 @@ def test_harmful_tool():
         questions_when_called=50,
         questions_correct_contribution=5,
         questions_wrong_contribution=45,
-        last_question_processed=150,
     )
 
     score = calculate_deletion_score(stats, current_question_num=200, grace_period=25)
@@ -95,7 +90,6 @@ def test_tool_at_grace_period_boundary():
         questions_when_called=5,
         questions_correct_contribution=5,
         questions_wrong_contribution=0,
-        last_question_processed=199,
     )
 
     # At boundary (age = 24, grace_period = 25)

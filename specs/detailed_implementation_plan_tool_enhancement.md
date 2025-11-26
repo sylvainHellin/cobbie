@@ -561,7 +561,6 @@ def initialize_tool_metadata(global_question_num: int) -> int:
                  questions_correct_contribution=0,
                  questions_wrong_contribution=0,
                  created_at_question=global_question_num,
-                 last_question_processed=global_question_num,
              )
              session.add(tool_stats)
              initialized_count += 1
@@ -586,33 +585,29 @@ tools")
  # ... rest of training loop ...
 
 ---
-4.3: Support --continue Flag Enhancement
+4.3: Support --continue Flag Enhancement (REMOVED)
 
-File: scripts/run_training_phase.py
+**Note**: This feature has been removed to support parallel training sessions.
 
-Action: Update dataset loading in main() (lines 1287-1295):
+**Old Behavior** (Removed):
+- Auto-detected last processed question from database
+- Automatically resumed from that point
+- Could cause conflicts with parallel training sessions
 
-# Load dataset
-devset, trainset = load_train_dev_split()
+**New Behavior**:
+- `--continue` flag now requires an explicit run_id parameter
+- `--start` parameter is now required (no auto-resumption)
+- Enables safe parallel training on different question ranges
 
-# Handle --continue flag
-if args.continue_run:
- from src.db.query import get_last_question_processed
+**New Usage**:
+```bash
+# Continue an existing run with explicit parameters
+uv run scripts/run_training_phase.py --continue <run_id> --start 100 --end 200
 
- last_processed = get_last_question_processed()
- if last_processed is not None:
-     resume_index = last_processed + 1
-     _logger.info(f"--continue: resuming from question {resume_index}")
-
-     # Override start if not explicitly provided
-     if args.start == 0:  # Default value
-         args.start = resume_index
-         _logger.info(f"Auto-adjusted start index to {args.start}")
- else:
-     _logger.info("--continue: no previous progress found")
-
-end_index = args.end if args.end else len(trainset)
-dataset = trainset[args.start : end_index]
+# Parallel training sessions (no conflicts)
+uv run scripts/run_training_phase.py --start 0 --end 100    # Session 1
+uv run scripts/run_training_phase.py --start 100 --end 200  # Session 2
+```
 
 ---
 Testing & Validation

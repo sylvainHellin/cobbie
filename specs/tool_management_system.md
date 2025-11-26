@@ -69,7 +69,6 @@ Training typically spans multiple runs with `--start` and `--end` flags. The sys
 - `update_tool_usage(tool_names, is_correct, global_question_num)` - Track usage + contribution
 - `get_tool_stats(tool_name)` - Returns `ToolUsageStats` object or None
 - `get_all_tool_stats()` - Returns `List[ToolUsageStats]`
-- `get_last_question_processed()` - Returns `Optional[int]` for --continue flag
 
 #### **1.2 Parse Execution History for Tool Usage** ✅ COMPLETED
 **File**: `src/util/extract_tool_usage.py` (new, ~60 lines)
@@ -317,30 +316,23 @@ if initialized_count > 0:
     _logger.info(f"Initialized metadata for {initialized_count} existing tools")
 ```
 
-#### **4.3 Support --continue Flag Enhancement** ✅ COMPLETED
-**File**: `scripts/run_training_phase.py` (modified ~20 lines)
+#### **4.3 Support --continue Flag Enhancement** ✅ REMOVED
+**File**: `scripts/run_training_phase.py` (modified)
 
 **Implementation Notes**:
-- Auto-detects last processed question from database
-- Resumes training from correct index
-- Overrides `--start` parameter when appropriate
-- Works with existing `--continue` flag and MLflow run continuation
+- **REMOVED**: Auto-detection of last processed question from database
+- **NEW**: The `--continue` flag now requires an explicit run_id parameter
+- **NEW**: The `--start` parameter is now required (no auto-resumption)
+- This change supports parallel training sessions on different question ranges
 
-```python
-if args.continue_run:
-    from src.db.query import get_last_question_processed
+**New Usage**:
+```bash
+# Continue an existing run with explicit parameters
+uv run scripts/run_training_phase.py --continue <run_id> --start 100 --end 200
 
-    last_processed = get_last_question_processed()
-    if last_processed is not None:
-        resume_index = last_processed + 1
-        _logger.info(f"--continue: resuming from question {resume_index}")
-
-        # Override start if not explicitly provided
-        if args.start == 0:  # Default value
-            args.start = resume_index
-            _logger.info(f"Auto-adjusted start index to {args.start}")
-    else:
-        _logger.info("--continue: no previous progress found")
+# Parallel training sessions (no conflicts)
+uv run scripts/run_training_phase.py --start 0 --end 100    # Session 1
+uv run scripts/run_training_phase.py --start 100 --end 200  # Session 2
 ```
 
 ---

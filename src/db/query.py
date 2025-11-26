@@ -106,7 +106,6 @@ def register_new_tool(name: str, global_question_num: int) -> None:
             questions_correct_contribution=0,
             questions_wrong_contribution=0,
             created_at_question=global_question_num,
-            last_question_processed=global_question_num,
         )
         session.merge(tool_stats)  # Use merge to handle INSERT OR REPLACE
         session.commit()
@@ -128,7 +127,6 @@ def increment_tool_inclusion(tool_names: List[str], global_question_num: int) ->
             tool_stats = session.get(ToolUsageStats, tool_name)
             if tool_stats:
                 tool_stats.questions_when_included = (tool_stats.questions_when_included or 0) + 1
-                tool_stats.last_question_processed = global_question_num
                 session.add(tool_stats)
         session.commit()
 
@@ -162,7 +160,6 @@ def update_tool_usage(
                     tool_stats.questions_wrong_contribution = (
                         tool_stats.questions_wrong_contribution or 0
                     ) + 1
-                tool_stats.last_question_processed = global_question_num
                 session.add(tool_stats)
         session.commit()
 
@@ -196,22 +193,6 @@ def get_all_tool_stats() -> List[ToolUsageStats]:
         statement = select(ToolUsageStats).order_by(col(ToolUsageStats.tool_name).asc())
         results = session.exec(statement)
         return [stat for stat in results]
-
-
-def get_last_question_processed() -> Optional[int]:
-    """
-    Get the highest last_question_processed value across all tools.
-    Useful for resuming training with --continue flag.
-
-    Returns:
-        Last processed question number, or None if no tools exist
-    """
-    with Session(db.ENGINE) as session:
-        statement = select(ToolUsageStats).order_by(
-            col(ToolUsageStats.last_question_processed).desc()
-        ).limit(1)
-        result = session.exec(statement).first()
-        return result.last_question_processed if result else None
 
 
 def calculate_deletion_score(
@@ -317,7 +298,6 @@ def initialize_tool_metadata(global_question_num: int) -> int:
                     questions_correct_contribution=0,
                     questions_wrong_contribution=0,
                     created_at_question=global_question_num,
-                    last_question_processed=global_question_num,
                 )
                 session.add(tool_stats)
                 initialized_count += 1

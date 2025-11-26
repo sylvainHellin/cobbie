@@ -17,7 +17,6 @@ from src.db.query import (
     update_tool_usage,
     get_tool_stats,
     get_all_tool_stats,
-    get_last_question_processed,
 )
 
 
@@ -68,7 +67,6 @@ def test_register_new_tool(temp_db: str) -> None:
     assert stats.questions_correct_contribution == 0
     assert stats.questions_wrong_contribution == 0
     assert stats.created_at_question == 5
-    assert stats.last_question_processed == 5
 
 
 def test_register_multiple_tools(temp_db: str) -> None:
@@ -98,12 +96,10 @@ def test_increment_tool_inclusion(temp_db: str) -> None:
     walls_stats = get_tool_stats("get_walls")
     assert walls_stats is not None
     assert walls_stats.questions_when_included == 3
-    assert walls_stats.last_question_processed == 3
 
     doors_stats = get_tool_stats("get_doors")
     assert doors_stats is not None
     assert doors_stats.questions_when_included == 3
-    assert doors_stats.last_question_processed == 3
 
 
 def test_update_tool_usage_correct(temp_db: str) -> None:
@@ -118,7 +114,6 @@ def test_update_tool_usage_correct(temp_db: str) -> None:
     assert stats.questions_when_called == 1
     assert stats.questions_correct_contribution == 1
     assert stats.questions_wrong_contribution == 0
-    assert stats.last_question_processed == 5
 
 
 def test_update_tool_usage_wrong(temp_db: str) -> None:
@@ -188,22 +183,6 @@ def test_full_question_lifecycle(temp_db: str) -> None:
     assert doors_stats.questions_wrong_contribution == 1
 
 
-def test_get_last_question_processed(temp_db: str) -> None:
-    """Test retrieving the last processed question number."""
-    # Initially should return None
-    assert get_last_question_processed() is None
-
-    # Register and use tools at different questions
-    register_new_tool("tool1", global_question_num=5)
-    register_new_tool("tool2", global_question_num=10)
-
-    increment_tool_inclusion(["tool1"], global_question_num=15)
-    increment_tool_inclusion(["tool2"], global_question_num=20)
-
-    # Should return the maximum
-    assert get_last_question_processed() == 20
-
-
 def test_get_nonexistent_tool(temp_db: str) -> None:
     """Test retrieving stats for a tool that doesn't exist."""
     stats = get_tool_stats("nonexistent_tool")
@@ -218,7 +197,7 @@ def test_empty_tool_list_operations(temp_db: str) -> None:
 
 
 def test_cross_run_scenario(temp_db: str) -> None:
-    """Test a scenario simulating multiple training runs with --continue flag."""
+    """Test a scenario simulating multiple training runs."""
     # Run 1: Questions 0-9
     register_new_tool("get_walls", global_question_num=0)
     for q in range(1, 10):
@@ -226,10 +205,7 @@ def test_cross_run_scenario(temp_db: str) -> None:
         if q % 2 == 0:  # Use tool every other question
             update_tool_usage(["get_walls"], is_correct=True, global_question_num=q)
 
-    last_processed = get_last_question_processed()
-    assert last_processed == 9
-
-    # Run 2: Questions 10-19 (simulating --continue)
+    # Run 2: Questions 10-19 (simulating continuation with different question range)
     for q in range(10, 20):
         increment_tool_inclusion(["get_walls"], global_question_num=q)
         if q % 2 == 0:
@@ -241,7 +217,6 @@ def test_cross_run_scenario(temp_db: str) -> None:
     assert stats.questions_when_included == 19  # Questions 1-19
     assert stats.questions_when_called == 9     # Even questions 2,4,6,8,10,12,14,16,18
     assert stats.questions_correct_contribution == 9
-    assert stats.last_question_processed == 19
 
 
 if __name__ == "__main__":

@@ -1342,10 +1342,10 @@ def main():
     """Main training loop."""
     # Parse arguments
     parser = argparse.ArgumentParser(description="Run training phase")
-    parser.add_argument("--start", type=int, default=0, help="Start index")
-    parser.add_argument("--end", type=int, default=None, help="End index")
-    parser.add_argument("--continue", dest="continue_run", nargs="?", const=True,
-                       help="Continue most recent run or specific run ID")
+    parser.add_argument("--start", type=int, required=True, help="Start index (required)")
+    parser.add_argument("--end", type=int, default=None, help="End index (optional, defaults to end of trainset)")
+    parser.add_argument("--continue", dest="continue_run", type=str, required=False,
+                       help="Continue specific run ID (requires --start and --end)")
     parser.add_argument("--max-tools", type=int, default=32,
                        help="Maximum number of tools to maintain (default: 32)")
     parser.add_argument("--grace-period", type=int, default=25,
@@ -1355,22 +1355,7 @@ def main():
     # Load dataset
     devset, trainset = load_train_dev_split()
 
-    # Handle --continue flag
-    if args.continue_run:
-        from src.db.query import get_last_question_processed
-
-        last_processed = get_last_question_processed()
-        if last_processed is not None:
-            resume_index = last_processed + 1
-            _logger.info(f"--continue: resuming from question {resume_index}")
-
-            # Override start if not explicitly provided
-            if args.start == 0:  # Default value
-                args.start = resume_index
-                _logger.info(f"Auto-adjusted start index to {args.start}")
-        else:
-            _logger.info("--continue: no previous progress found")
-
+    # Set default end if not provided
     end_index = args.end if args.end else len(trainset)
     dataset = trainset[args.start : end_index]
 
@@ -1381,13 +1366,16 @@ def main():
     mlflow.set_tracking_uri("http://127.0.0.1:5000")
     mlflow.set_experiment("Training")
 
-    # Determine run_id based on --continue flag
-    run_id = determine_run_id(args.continue_run)
-
-    if run_id:
-        _logger.info(f"Continuing existing MLflow run: {run_id}")
+    # Determine run ID and name
+    if args.continue_run:
+        # Continuing existing run with explicit run_id
+        run_id = determine_run_id(args.continue_run)
         run_name = None  # Don't set a new name when continuing
+        _logger.info(f"Continuing existing MLflow run: {run_id}")
+        _logger.info(f"Processing questions {args.start} to {end_index - 1}")
     else:
+        # Creating new run
+        run_id = None
         run_name = f"TRAINING_{datetime.now().strftime('%Y-%m-%d-%H-%M-%S')}_samples_{args.start}_{end_index - 1}"
         _logger.info(f"Creating new MLflow run: {run_name}")
 

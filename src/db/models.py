@@ -22,7 +22,6 @@ class ToolUsageStats(SQLModel, table=True):
     questions_correct_contribution: Optional[int] = Field(default=None, sa_column=Column('questions_correct_contribution', Integer, server_default=text('0')))
     questions_wrong_contribution: Optional[int] = Field(default=None, sa_column=Column('questions_wrong_contribution', Integer, server_default=text('0')))
     created_at_question: Optional[int] = Field(default=None, sa_column=Column('created_at_question', Integer, server_default=text('0')))
-    last_question_processed: Optional[int] = Field(default=None, sa_column=Column('last_question_processed', Integer, server_default=text('0')))
 
 
 class IfcBench(SQLModel, table=True):
