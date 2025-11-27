@@ -6,7 +6,7 @@ import random
 from src.db.models import IfcBench
 
 def load_train_dev_split(
-    frac: float = 0.75, seed: int = 42
+    frac: float = 0.5, seed: int = 42
 ) -> Tuple[List[IfcBench], List[IfcBench]]:
     """Load the dataset and split it into a train and dev set."""
     # Load the dataset table from SQLite database
