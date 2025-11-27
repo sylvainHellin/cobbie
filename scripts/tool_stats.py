@@ -2,12 +2,14 @@
 Display statistics for all tools in the database.
 
 Usage:
-    uv run scripts/display_tool_stats.py              # Show only existing tools (default)
-    uv run scripts/display_tool_stats.py --all        # Show all tools (including deleted)
+    uv run scripts/tool_stats.py                              # Show only existing tools (default)
+    uv run scripts/tool_stats.py --all                        # Show all tools (including deleted)
+    uv run scripts/tool_stats.py --sort-by called             # Sort by number of times called
+    uv run scripts/tool_stats.py --sort-by success-rate       # Sort by success rate (descending)
 """
 
 import argparse
-from typing import List
+from typing import Any, List, Tuple
 
 from tabulate import tabulate
 
@@ -16,13 +18,14 @@ from src.db.query import get_all_tool_stats
 from src.util.get_created_tools import get_created_tools
 
 
-def display_tool_stats(show_all: bool = False) -> None:
+def display_tool_stats(show_all: bool = False, sort_by: str = "name") -> None:
     """
     Display statistics for all tools.
 
     Args:
         show_all: If True, display stats for all tools in the database (including deleted).
                   If False, only display stats for tools that currently exist in the filesystem.
+        sort_by: Column to sort by. Options: name, created, included, called, call-rate, correct, wrong, success-rate
     """
     # Get all tool stats from database
     all_stats: List[ToolUsageStats] = get_all_tool_stats()
@@ -52,9 +55,10 @@ def display_tool_stats(show_all: bool = False) -> None:
     print(f"  Existing tools: {len(existing_tool_names)}")
     print(f"  Deleted tools: {deleted_count}")
     print(f"  Displaying: {len(all_stats)} tool(s) {'(all tools)' if show_all else '(existing only)'}")
+    print(f"  Sorted by: {sort_by}")
 
-    # Prepare table data
-    table_data = []
+    # Prepare table data with sorting
+    table_data: List[Tuple[Any, ...]] = []
     for stat in all_stats:
         tool_name = stat.tool_name or "Unknown"
         created_at = stat.created_at_question or 0
@@ -70,21 +74,55 @@ def display_tool_stats(show_all: bool = False) -> None:
         # Mark deleted tools
         status = "🗑️" if tool_name not in existing_tool_names else ""
 
-        table_data.append([
+        table_data.append((
             f"{tool_name}{' ' + status if status else ''}",
             created_at,
             included,
             called,
-            f"{call_rate:.1f}%" if included > 0 else "N/A",
+            call_rate,
             correct,
             wrong,
-            f"{success_rate:.1f}%" if called > 0 else "N/A"
+            success_rate,
+            # Store raw values for sorting
+            tool_name,
+        ))
+
+    # Sort the data
+    sort_key_map = {
+        "name": lambda x: x[8].lower(),  # Sort by raw tool name (case-insensitive)
+        "created": lambda x: x[1],
+        "included": lambda x: x[2],
+        "called": lambda x: x[3],
+        "call-rate": lambda x: x[4],
+        "correct": lambda x: x[5],
+        "wrong": lambda x: x[6],
+        "success-rate": lambda x: x[7],
+    }
+
+    # Determine sort order (descending for most metrics, ascending for name)
+    reverse = sort_by != "name"
+
+    if sort_by in sort_key_map:
+        table_data.sort(key=sort_key_map[sort_by], reverse=reverse)
+
+    # Format table data for display
+    formatted_table = []
+    for row in table_data:
+        formatted_table.append([
+            row[0],  # Tool name with status
+            row[1],  # Created
+            row[2],  # Included
+            row[3],  # Called
+            f"{row[4]:.1f}%" if row[2] > 0 else "N/A",  # Call rate
+            row[5],  # Correct
+            row[6],  # Wrong
+            f"{row[7]:.1f}%" if row[3] > 0 else "N/A",  # Success rate
         ])
 
     # Print table
     print("\n🔧 Tool Statistics:")
     headers = ["Tool Name", "Created", "Included", "Called", "Call Rate", "Correct", "Wrong", "Success Rate"]
-    print(tabulate(table_data, headers=headers, tablefmt="grid"))
+    print(tabulate(formatted_table, headers=headers, tablefmt="grid"))
 
     # Calculate and print summary statistics
     total_included = sum(stat.questions_when_included or 0 for stat in all_stats)
@@ -117,8 +155,11 @@ def main() -> None:
         formatter_class=argparse.RawDescriptionHelpFormatter,
         epilog="""
 Examples:
-  uv run scripts/display_tool_stats.py              # Show only existing tools (default)
-  uv run scripts/display_tool_stats.py --all        # Show all tools (including deleted)
+  uv run scripts/tool_stats.py                              # Show only existing tools (default)
+  uv run scripts/tool_stats.py --all                        # Show all tools (including deleted)
+  uv run scripts/tool_stats.py --sort-by called             # Sort by number of times called
+  uv run scripts/tool_stats.py --sort-by success-rate       # Sort by success rate (descending)
+  uv run scripts/tool_stats.py --all --sort-by call-rate    # Combine filters and sorting
         """
     )
 
@@ -128,8 +169,15 @@ Examples:
         help="Display all tools including deleted ones (default: show only existing tools)"
     )
 
+    parser.add_argument(
+        "--sort-by",
+        choices=["name", "created", "included", "called", "call-rate", "correct", "wrong", "success-rate"],
+        default="name",
+        help="Column to sort by (default: name). Most columns sort descending except 'name' which sorts ascending."
+    )
+
     args = parser.parse_args()
-    display_tool_stats(show_all=args.all)
+    display_tool_stats(show_all=args.all, sort_by=args.sort_by)
 
 
 if __name__ == "__main__":
