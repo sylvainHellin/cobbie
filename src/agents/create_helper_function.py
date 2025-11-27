@@ -260,7 +260,7 @@ def _create_helper_function(
                                                         message_parts.append(f"{message.get('role', 'unknown')}: {part['text']}")
 
                                     full_prompt = "\n\n".join(message_parts)
-                                    _logger.info(f"Successfully extracted full prompt from collector: {len(full_prompt)} characters")
+                                    _logger.debug(f"Successfully extracted full prompt from collector: {len(full_prompt)} characters")
                                 else:
                                     _logger.warning("No messages found in collector request JSON")
                             else:
@@ -574,7 +574,7 @@ def create_helper_function(
                             last_usage.output_tokens or 0
                         )
 
-                    _logger.info(
+                    _logger.debug(
                         f"Token tracking - Cumulative: {total_tokens} (in: {input_tokens}, out: {output_tokens}), Last call: {last_call_tokens}"
                     )
 
@@ -622,7 +622,7 @@ def create_helper_function(
                 }
             )
 
-            _logger.info(
+            _logger.debug(
                 f"Helper function creator completed. Tokens: {total_tokens}, Time: {execution_time:.2f}s, Success: {final_result.success}"
             )
 
