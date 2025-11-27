@@ -1376,7 +1376,7 @@ def main():
     else:
         # Creating new run
         run_id = None
-        run_name = f"TRAINING_{datetime.now().strftime('%Y-%m-%d-%H-%M-%S')}_samples_{args.start}_{end_index - 1}"
+        run_name = f"TRAINING_{datetime.now().strftime('%Y-%m-%d-%H-%M-%S')}"
         _logger.info(f"Creating new MLflow run: {run_name}")
 
     # Main MLflow run
@@ -1432,7 +1432,7 @@ def main():
             _logger.info(f"{'=' * 80}")
 
             # Create nested run for this QA pair
-            qa_run_name = f"question_{qa_pair.id}"
+            qa_run_name = f"question_{idx + args.start}_{qa_pair.id}"
 
             with mlflow.start_run(run_name=qa_run_name, nested=True):
                 # Log QA-level parameters
