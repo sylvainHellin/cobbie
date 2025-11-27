@@ -39,11 +39,18 @@ from src.util import (
     get_function_code,
     get_logger,
     save_new_tool,
+    delete_tool,
+    _create_function_from_source_code,
 )
 from src.util.extract_tool_usage import extract_tools_used
 from src.db import load_train_dev_split
 from src.db.models import IfcBench
-from src.db.query import increment_tool_inclusion, update_tool_usage
+from src.db.query import (
+    increment_tool_inclusion,
+    update_tool_usage,
+    get_tools_ranked_by_deletion_score,
+    initialize_tool_metadata,
+)
 from src.utils.mlflow_utils import determine_run_id
 
 # Initialize logger
@@ -141,7 +148,7 @@ class Context(BaseModel):
     tool_saved: bool = False
     tool_name: Optional[str] = None
     is_enhancement: bool = False  # Track if current operation is enhancement
-    path_taken: Optional[str] = None  # "correct" or "wrong" or "abstained"
+    path_taken: Optional[Literal["correct", "wrong", "abstained"]] = None
 
 
 # ============================================================================
@@ -448,21 +455,20 @@ def handle_start_state(context: Context) -> Tuple[TrainingState, Context]:
     Returns:
         Next state: RUN_COBBIE
     """
-    from src.db.query import get_tools_ranked_by_deletion_score
-    from src.util import delete_tool
-
     # Check tool count
     current_tools = get_created_tools()
 
     if len(current_tools) > context.max_tools:
         num_to_delete = len(current_tools) - context.max_tools
-        _logger.info(f"Tool count ({len(current_tools)}) exceeds MAX_TOOLS ({context.max_tools})")
+        _logger.info(
+            f"Tool count ({len(current_tools)}) exceeds MAX_TOOLS ({context.max_tools})"
+        )
         _logger.info(f"Deleting {num_to_delete} lowest-value tools...")
 
         # Get ranked tools by deletion score
         ranked_tools = get_tools_ranked_by_deletion_score(
             current_question_num=context.global_question_num,
-            grace_period=context.grace_period
+            grace_period=context.grace_period,
         )
 
         # Delete top N by score
@@ -476,10 +482,12 @@ def handle_start_state(context: Context) -> Tuple[TrainingState, Context]:
 
         # Log to MLflow
         if mlflow.active_run():
-            mlflow.log_metrics({
-                f"tools_deleted_at_q{context.global_question_num}": deleted_count,
-                "current_tool_count": len(get_created_tools())
-            })
+            mlflow.log_metrics(
+                {
+                    f"tools_deleted_at_q{context.global_question_num}": deleted_count,
+                    "current_tool_count": len(get_created_tools()),
+                }
+            )
 
     # Load available tools
     context.tools = get_created_tools()
@@ -598,7 +606,9 @@ def handle_verify_answer(context: Context) -> Tuple[TrainingState, Context]:
         update_tool_usage(tools_used, is_correct, context.global_question_num)
 
         # Log tool usage metrics to MLflow
-        mlflow.log_metric("num_tools_used", len(tools_used), step=context.global_question_num)
+        mlflow.log_metric(
+            "num_tools_used", len(tools_used), step=context.global_question_num
+        )
 
         _logger.info(f"Tracked usage of {len(tools_used)} tools: {tools_used}")
 
@@ -758,10 +768,11 @@ def handle_create_new_tool(context: Context) -> Tuple[TrainingState, Context]:
         # Get existing implementation if enhancing
         existing_implementation = None
         if context.is_enhancement:
-            from src.util import get_function_code
             code_result = get_function_code(context.tool_name)
             if code_result.is_err():
-                raise ValueError(f"Could not retrieve tool code: {code_result.unwrap_err()}")
+                raise ValueError(
+                    f"Could not retrieve tool code: {code_result.unwrap_err()}"
+                )
             existing_implementation = code_result.unwrap()
 
         result, collector, creation_history = create_helper_function(
@@ -1010,9 +1021,6 @@ def handle_test_tool_with_cobbie(context: Context) -> Tuple[TrainingState, Conte
         else:
             raise ValueError("No tool implementation available for testing")
 
-        # Temporarily add the tool to the tools dictionary
-        from src.util import _create_function_from_source_code
-
         creation_result = _create_function_from_source_code(
             function_name=context.tool_name,
             code=tool_implementation,
@@ -1239,49 +1247,125 @@ def handle_decide_tool_fate(context: Context) -> Tuple[TrainingState, Context]:
         elif assessment.recommendation == "discard_tool":
             # Tool is not useful or harmful, discard it
             context.tool_saved = False
-            _logger.info(
-                f"❌ Tool '{context.tool_name}' discarded\n"
-                f"   Quality: {assessment.tool_usage_quality}\n"
-                f"   Confidence: {assessment.confidence}\n"
-                f"   Reason: {assessment.usage_details[:200]}..."
-            )
+
+            # If we were debugging a faulty tool (Path B), delete it from disk
+            if context.path_taken == "wrong":
+                delete_success = delete_tool(context.tool_name)
+                if delete_success:
+                    _logger.info(
+                        f"❌ Tool '{context.tool_name}' discarded and deleted from disk\n"
+                        f"   Quality: {assessment.tool_usage_quality}\n"
+                        f"   Confidence: {assessment.confidence}\n"
+                        f"   Reason: {assessment.usage_details[:200]}..."
+                    )
+                else:
+                    _logger.error(
+                        f"Failed to delete discarded tool: {context.tool_name}"
+                    )
+                    context.error_message = (
+                        f"Failed to delete discarded tool: {context.tool_name}"
+                    )
+                    return TrainingState.ERROR, context
+            else:
+                # Path A enhancement failed - keep original working version
+                _logger.info(
+                    f"❌ Tool '{context.tool_name}' enhancement discarded (original preserved)\n"
+                    f"   Quality: {assessment.tool_usage_quality}\n"
+                    f"   Confidence: {assessment.confidence}\n"
+                    f"   Reason: {assessment.usage_details[:200]}..."
+                )
+
             return TrainingState.END, context
 
         elif assessment.recommendation == "improve_tool":
             # Tool has potential but needs work
             context.tool_saved = False
-            _logger.info(
-                f"⚠️  Tool '{context.tool_name}' needs improvement (not saved)\n"
-                f"   Quality: {assessment.tool_usage_quality}\n"
-                f"   Confidence: {assessment.confidence}\n"
-                f"   Issues: {assessment.usage_details[:200]}..."
-            )
+
+            # If we were debugging a faulty tool (Path B), delete it from disk
+            if context.path_taken == "wrong":
+                delete_success = delete_tool(context.tool_name)
+                if delete_success:
+                    _logger.info(
+                        f"⚠️  Tool '{context.tool_name}' needs improvement - deleted from disk\n"
+                        f"   Quality: {assessment.tool_usage_quality}\n"
+                        f"   Confidence: {assessment.confidence}\n"
+                        f"   Issues: {assessment.usage_details[:200]}..."
+                    )
+                else:
+                    _logger.error(
+                        f"Failed to delete tool needing improvement: {context.tool_name}"
+                    )
+                    context.error_message = (
+                        f"Failed to delete tool: {context.tool_name}"
+                    )
+                    return TrainingState.ERROR, context
+            else:
+                # Path A enhancement needs work - keep original working version
+                _logger.info(
+                    f"⚠️  Tool '{context.tool_name}' enhancement needs improvement (original preserved)\n"
+                    f"   Quality: {assessment.tool_usage_quality}\n"
+                    f"   Confidence: {assessment.confidence}\n"
+                    f"   Issues: {assessment.usage_details[:200]}..."
+                )
+
             return TrainingState.END, context
 
         else:  # unclear
-            # Conservative: keep it tentatively with low confidence
-            save_success = save_new_tool(
-                function_name=context.tool_name,
-                function_implementation=tool_implementation,
-                global_question_num=context.global_question_num,
-            )
+            # Path B (faulty tool): Delete it - defensive approach
+            if context.path_taken == "wrong":
+                context.tool_saved = False
+                delete_success = delete_tool(context.tool_name)
+                if delete_success:
+                    _logger.info(
+                        f"❓ Tool '{context.tool_name}' assessment unclear - deleted (defensive)\n"
+                        f"   Quality: {assessment.tool_usage_quality}\n"
+                        f"   Confidence: {assessment.confidence}\n"
+                        f"   Note: {assessment.usage_details[:200]}..."
+                    )
+                else:
+                    _logger.error(f"Failed to delete unclear tool: {context.tool_name}")
+                    context.error_message = (
+                        f"Failed to delete tool: {context.tool_name}"
+                    )
+                    return TrainingState.ERROR, context
 
-            if save_success:
-                context.tool_saved = True
+                return TrainingState.END, context
+
+            # Path A enhancement: Keep original working version (don't save unclear enhancement)
+            elif context.is_enhancement:
+                context.tool_saved = False
                 _logger.info(
-                    f"❓ Tool '{context.tool_name}' assessment unclear, saved tentatively\n"
+                    f"❓ Tool '{context.tool_name}' enhancement unclear - original preserved\n"
                     f"   Quality: {assessment.tool_usage_quality}\n"
                     f"   Confidence: {assessment.confidence}\n"
                     f"   Note: {assessment.usage_details[:200]}..."
                 )
-
-                # Reload tools
-                context.tools = get_created_tools()
                 return TrainingState.END, context
+
+            # Path A create_new: Save tentatively with benefit of doubt
             else:
-                _logger.error(f"Failed to save tool: {context.tool_name}")
-                context.error_message = f"Failed to save tool: {context.tool_name}"
-                return TrainingState.ERROR, context
+                save_success = save_new_tool(
+                    function_name=context.tool_name,
+                    function_implementation=tool_implementation,
+                    global_question_num=context.global_question_num,
+                )
+
+                if save_success:
+                    context.tool_saved = True
+                    _logger.info(
+                        f"❓ New tool '{context.tool_name}' assessment unclear, saved tentatively\n"
+                        f"   Quality: {assessment.tool_usage_quality}\n"
+                        f"   Confidence: {assessment.confidence}\n"
+                        f"   Note: {assessment.usage_details[:200]}..."
+                    )
+
+                    # Reload tools
+                    context.tools = get_created_tools()
+                    return TrainingState.END, context
+                else:
+                    _logger.error(f"Failed to save tool: {context.tool_name}")
+                    context.error_message = f"Failed to save tool: {context.tool_name}"
+                    return TrainingState.ERROR, context
 
     except Exception as e:
         _logger.error(f"Error deciding tool fate: {e}")
@@ -1342,18 +1426,38 @@ def main():
     """Main training loop."""
     # Parse arguments
     parser = argparse.ArgumentParser(description="Run training phase")
-    parser.add_argument("--start", type=int, required=True, help="Start index (required)")
-    parser.add_argument("--end", type=int, default=None, help="End index (optional, defaults to end of trainset)")
-    parser.add_argument("--continue", dest="continue_run", type=str, required=False,
-                       help="Continue specific run ID (requires --start and --end)")
-    parser.add_argument("--max-tools", type=int, default=32,
-                       help="Maximum number of tools to maintain (default: 32)")
-    parser.add_argument("--grace-period", type=int, default=25,
-                       help="Questions to protect new tools from deletion (default: 25)")
+    parser.add_argument(
+        "--start", type=int, required=True, help="Start index (required)"
+    )
+    parser.add_argument(
+        "--end",
+        type=int,
+        default=None,
+        help="End index (optional, defaults to end of trainset)",
+    )
+    parser.add_argument(
+        "--continue",
+        dest="continue_run",
+        type=str,
+        required=False,
+        help="Continue specific run ID (requires --start and --end)",
+    )
+    parser.add_argument(
+        "--max-tools",
+        type=int,
+        default=32,
+        help="Maximum number of tools to maintain (default: 32)",
+    )
+    parser.add_argument(
+        "--grace-period",
+        type=int,
+        default=25,
+        help="Questions to protect new tools from deletion (default: 25)",
+    )
     args = parser.parse_args()
 
     # Load dataset
-    devset, trainset = load_train_dev_split()
+    _, trainset = load_train_dev_split()
 
     # Set default end if not provided
     end_index = args.end if args.end else len(trainset)
@@ -1382,8 +1486,6 @@ def main():
     # Main MLflow run
     with mlflow.start_run(run_id=run_id, run_name=run_name):
         # Initialize tool metadata for existing tools
-        from src.db.query import initialize_tool_metadata
-
         initialized_count = initialize_tool_metadata(args.start)
         if initialized_count > 0:
             _logger.info(f"Initialized metadata for {initialized_count} existing tools")
@@ -1408,7 +1510,9 @@ def main():
         if run_id is not None:
             active_run = mlflow.active_run()
             if active_run is not None:
-                previous_total = int(active_run.data.metrics.get("total_samples_processed", 0))
+                previous_total = int(
+                    active_run.data.metrics.get("total_samples_processed", 0)
+                )
 
         mlflow.log_metrics(
             {
