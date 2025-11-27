@@ -7,7 +7,10 @@ def extract_element_materials_comprehensive(
     elements: Union[List[ifcopenshell.entity_instance], str],
     material_property_keywords: List[str] = ['material', 'finish', 'surface', 'coating'],
     include_property_details: bool = True,
-    max_examples: int = 10
+    max_examples: int = 10,
+    element_filter_keywords: Optional[List[str]] = None,
+    element_filter_fields: List[str] = ['Name', 'ObjectType'],
+    case_sensitive_filter: bool = False
 ) -> Dict[str, Any]:
     """
     Extracts comprehensive material information from IFC elements by checking multiple sources:
@@ -23,6 +26,9 @@ def extract_element_materials_comprehensive(
         material_property_keywords: List of keywords to identify material-related properties
         include_property_details: Whether to include property set details
         max_examples: Maximum number of detailed examples to show
+        element_filter_keywords: Keywords to filter elements by name/properties (optional)
+        element_filter_fields: Fields to search for filter keywords (default ['Name', 'ObjectType'])
+        case_sensitive_filter: Case sensitivity for keyword filtering (default False)
     
     Returns:
         Dict containing:
@@ -30,14 +36,19 @@ def extract_element_materials_comprehensive(
         - material_details: List of material associations with element names and types
         - property_materials: Materials found in property sets
         - summary: Count of elements with materials and total materials found
+        - filtered_elements: Number of elements after filtering (if filtering applied)
+        - original_elements: Number of elements before filtering (if filtering applied)
     
     Example:
         >>> import ifcopenshell
         >>> ifc_file = ifcopenshell.open('model.ifc')
-        >>> # Get interior walls first
-        >>> walls = ifc_file.by_type('IfcWall')
-        >>> interior_walls = [w for w in walls if is_interior_wall(w)]
-        >>> result = extract_element_materials_comprehensive(ifc_file, interior_walls)
+        >>> # Get interior walls by filtering for 'Int' in names
+        >>> result = extract_element_materials_comprehensive(
+        ...     ifc_file, 
+        ...     'IfcWall',
+        ...     element_filter_keywords=['Int'],
+        ...     element_filter_fields=['Name']
+        ... )
         >>> print(f"Found {len(result['materials'])} materials: {result['materials']}")
     """
     # Helper function to filter out non-material values
@@ -62,10 +73,38 @@ def extract_element_materials_comprehensive(
             return False
         return True
     
+    # Helper function to check if element matches filter keywords
+    def element_matches_filter(element: ifcopenshell.entity_instance) -> bool:
+        """Check if element matches any of the filter keywords in specified fields"""
+        if not element_filter_keywords:
+            return True  # No filtering applied
+        
+        for field in element_filter_fields:
+            if hasattr(element, field):
+                field_value = getattr(element, field)
+                if field_value is not None:
+                    field_str = str(field_value)
+                    for keyword in element_filter_keywords:
+                        if case_sensitive_filter:
+                            if keyword in field_str:
+                                return True
+                        else:
+                            if keyword.lower() in field_str.lower():
+                                return True
+        return False
+    
     # Handle elements parameter
     if isinstance(elements, str):
         # Auto-fetch elements by type
-        elements = ifc_file.by_type(elements)
+        all_elements = ifc_file.by_type(elements)
+    else:
+        all_elements = elements
+    
+    # Apply semantic filtering if keywords provided
+    if element_filter_keywords:
+        elements = [elem for elem in all_elements if element_matches_filter(elem)]
+    else:
+        elements = all_elements
     
     # Initialize result structures
     materials_found: Set[str] = set()
@@ -102,11 +141,25 @@ def extract_element_materials_comprehensive(
             for rel in element.HasAssociations:
                 if hasattr(rel, 'RelatingMaterial'):
                     material = rel.RelatingMaterial
-                    if hasattr(material, 'ForMaterialLayerSet'):
-                        layer_set = material.ForMaterialLayerSet
+                    if material.is_a('IfcMaterialLayerSetUsage'):
+                        layer_set = material.ForLayerSet
                         if layer_set and hasattr(layer_set, 'MaterialLayers'):
                             has_materials = True
                             for layer in layer_set.MaterialLayers:
+                                if hasattr(layer, 'Material') and layer.Material:
+                                    layer_material_name = layer.Material.Name if hasattr(layer.Material, 'Name') else 'Unknown Layer Material'
+                                    if is_likely_material(layer_material_name):
+                                        materials_found.add(layer_material_name)
+                                        material_details.append({
+                                            'element_name': element_name,
+                                            'element_type': element_type,
+                                            'material': layer_material_name,
+                                            'source': 'material_layer'
+                                        })
+                    elif material.is_a('IfcMaterialLayerSet'):
+                        if hasattr(material, 'MaterialLayers'):
+                            has_materials = True
+                            for layer in material.MaterialLayers:
                                 if hasattr(layer, 'Material') and layer.Material:
                                     layer_material_name = layer.Material.Name if hasattr(layer.Material, 'Name') else 'Unknown Layer Material'
                                     if is_likely_material(layer_material_name):
@@ -163,9 +216,16 @@ def extract_element_materials_comprehensive(
         'property_materials': len(property_materials)
     }
     
-    return {
+    # Add filtering info if applied
+    result = {
         'materials': materials_found,
         'material_details': material_details,
         'property_materials': property_materials,
         'summary': summary
     }
+    
+    if element_filter_keywords:
+        result['filtered_elements'] = len(elements)
+        result['original_elements'] = len(all_elements)
+    
+    return result
