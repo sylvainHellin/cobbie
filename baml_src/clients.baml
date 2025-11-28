@@ -37,10 +37,10 @@ retry_policy Constant {
 }
 
 retry_policy Exponential {
-  max_retries 7
+  max_retries 5
   strategy {
     type exponential_backoff
-    delay_ms 200
+    delay_ms 1000
     multiplier 2
     max_delay_ms 40000
   }
