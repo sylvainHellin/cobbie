@@ -89,30 +89,25 @@ Health check endpoint.
 
 There are several ways to run the API server:
 
-### Option 1: From the project root directory
+### Option 1: Using the startup script (Recommended)
 ```bash
-python ./api/main.py
+uv run python api/start_server.py
 ```
 
-### Option 2: Using the startup script
+### Option 2: Using uvicorn directly
 ```bash
-python ./api/start_server.py
+uv run uvicorn api.main:app --host 127.0.0.1 --port 8000 --reload
 ```
 
-### Option 3: Using uvicorn directly
-```bash
-uvicorn api.main:app --host 127.0.0.1 --port 8000 --reload
-```
-
-### Option 4: From the api directory
+### Option 3: From the api directory
 ```bash
 cd api
-python main.py
+uv run python main.py
 ```
 
 The API will be available at `http://127.0.0.1:8000`
 
-**Note**: Make sure you have the project dependencies installed and that you're running from the project root directory or that the Python path is properly configured.
+**Note**: Make sure you have the project dependencies installed using `uv`. All Python commands should use the `uv run` prefix to ensure proper dependency management.
 
 ## MLflow Tracking
 

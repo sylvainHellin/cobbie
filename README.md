@@ -21,15 +21,24 @@ Start MLflow server for experiment tracking:
 uv run mlflow server --host 127.0.0.1 --port 5000 --backend-store-uri sqlite:///mlflow.sqlite --gunicorn-opts "--timeout=120 -w 1"
 ```
 
-### FastAPI backend
+### FastAPI Backend
 
-Choose your engine type before starting:
+Start the FastAPI server:
 
-
+```bash
+uv run python api/start_server.py
 ```
 
+Or using uvicorn directly:
+```bash
+uv run uvicorn api.main:app --host 127.0.0.1 --port 8000 --reload
+```
 
-The BAML engine uses Z.AI GLM-4.6 and requires a valid Z.AI API key in your `.env` file.
+The API will be available at `http://127.0.0.1:8000`
+
+Access the interactive API documentation:
+- **Swagger UI**: `http://127.0.0.1:8000/docs`
+- **ReDoc**: `http://127.0.0.1:8000/redoc`
 
 ### Frontend
 
