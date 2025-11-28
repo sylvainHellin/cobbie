@@ -6,10 +6,10 @@ from typing import List, Dict, Any, Optional, Tuple
 def get_spaces_by_level_with_flexible_properties(
     ifc_file: ifcopenshell.file,
     level_name: str,
-    level_property_sets: List[str] = ['Pset_SpaceCustom', 'Abhängigkeiten', 'Pset_SpaceCommon'],
-    level_property_names: List[str] = ['Ebene', 'Level', 'Storey'],
-    area_property_sets: List[str] = ['Pset_SpaceCustom', 'BaseQuantities', 'PSet_Room', 'BIM.fundamentals'],
-    area_property_names: List[str] = ['Area', 'GrossFloorArea', 'NetFloorArea'],
+    level_property_sets: List[str] = ['Pset_SpaceCommon', 'Abhängigkeiten', 'Pset_SpaceCustom', 'ArchiCADProperties'],
+    level_property_names: List[str] = ['Level', 'Storey', 'Ebene', 'StoreyName'],
+    area_property_sets: List[str] = ['BaseQuantities', 'Pset_SpaceCommon', 'PSet_Room', 'BIM.fundamentals', 'ArchiCADQuantities'],
+    area_property_names: List[str] = ['Area', 'GrossFloorArea', 'NetFloorArea', 'FloorArea', 'Measured Area'],
     name_field: str = 'LongName',
     case_sensitive: bool = False,
     use_spatial_relationships: bool = True,
@@ -28,10 +28,14 @@ def get_spaces_by_level_with_flexible_properties(
     Args:
         ifc_file: Loaded IFC model (ifcopenshell.file)
         level_name: Name of the level to filter by (e.g., 'Ground Floor', 'Erdgeschoss')
-        level_property_sets: List of property set names to search for level information
-        level_property_names: List of property names to search for level information
-        area_property_sets: List of property set names to search for area information
-        area_property_names: List of property names to search for area information
+        level_property_sets: List of property set names to search for level information. 
+            Defaults to common IFC property sets for level information.
+        level_property_names: List of property names to search for level information.
+            Defaults to common property names for level data.
+        area_property_sets: List of property set names to search for area information.
+            Defaults to common IFC property sets for area data.
+        area_property_names: List of property names to search for area information.
+            Defaults to common property names for area data.
         name_field: Field to use for space name display (default: 'LongName')
         case_sensitive: Whether level matching should be case sensitive (default: False)
         use_spatial_relationships: Whether to use spatial relationships as primary filtering method (default: True)

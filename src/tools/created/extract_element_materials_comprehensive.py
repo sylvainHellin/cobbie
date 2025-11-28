@@ -1,6 +1,6 @@
 import ifcopenshell
 import ifcopenshell.util.element
-from typing import List, Dict, Set, Union, Optional, Any
+from typing import List, Dict, Set, Union, Optional, Any, Tuple
 
 def extract_element_materials_comprehensive(
     ifc_file: ifcopenshell.file,
@@ -10,7 +10,8 @@ def extract_element_materials_comprehensive(
     max_examples: int = 10,
     element_filter_keywords: Optional[List[str]] = None,
     element_filter_fields: List[str] = ['Name', 'ObjectType'],
-    case_sensitive_filter: bool = False
+    case_sensitive_filter: bool = False,
+    element_property_filters: Optional[List[Tuple[str, str, Any]]] = None
 ) -> Dict[str, Any]:
     """
     Extracts comprehensive material information from IFC elements by checking multiple sources:
@@ -29,6 +30,8 @@ def extract_element_materials_comprehensive(
         element_filter_keywords: Keywords to filter elements by name/properties (optional)
         element_filter_fields: Fields to search for filter keywords (default ['Name', 'ObjectType'])
         case_sensitive_filter: Case sensitivity for keyword filtering (default False)
+        element_property_filters: List of tuples (property_set_name, property_name, property_value) 
+                                to filter elements by specific property values (optional)
     
     Returns:
         Dict containing:
@@ -42,14 +45,21 @@ def extract_element_materials_comprehensive(
     Example:
         >>> import ifcopenshell
         >>> ifc_file = ifcopenshell.open('model.ifc')
-        >>> # Get interior walls by filtering for 'Int' in names
+        >>> # Get exterior walls by filtering for IsExternal=True property
+        >>> result = extract_element_materials_comprehensive(
+        ...     ifc_file, 
+        ...     'IfcWall',
+        ...     element_property_filters=[('Pset_WallCommon', 'IsExternal', True)]
+        ... )
+        >>> print(f"Found {len(result['materials'])} materials: {result['materials']}")
+        
+        >>> # Get interior walls by combining keyword and property filtering
         >>> result = extract_element_materials_comprehensive(
         ...     ifc_file, 
         ...     'IfcWall',
         ...     element_filter_keywords=['Int'],
-        ...     element_filter_fields=['Name']
+        ...     element_property_filters=[('Pset_WallCommon', 'IsExternal', False)]
         ... )
-        >>> print(f"Found {len(result['materials'])} materials: {result['materials']}")
     """
     # Helper function to filter out non-material values
     def is_likely_material(value: str) -> bool:
@@ -77,7 +87,7 @@ def extract_element_materials_comprehensive(
     def element_matches_filter(element: ifcopenshell.entity_instance) -> bool:
         """Check if element matches any of the filter keywords in specified fields"""
         if not element_filter_keywords:
-            return True  # No filtering applied
+            return True  # No keyword filtering applied
         
         for field in element_filter_fields:
             if hasattr(element, field):
@@ -93,6 +103,52 @@ def extract_element_materials_comprehensive(
                                 return True
         return False
     
+    # Helper function to check if element matches property filters
+    def element_matches_property_filters(element: ifcopenshell.entity_instance) -> bool:
+        """Check if element matches all specified property filters"""
+        if not element_property_filters:
+            return True  # No property filtering applied
+        
+        try:
+            psets = ifcopenshell.util.element.get_psets(element)
+            
+            for pset_name, prop_name, expected_value in element_property_filters:
+                # Check if property set exists
+                if pset_name not in psets:
+                    return False
+                
+                pset_data = psets[pset_name]
+                if not isinstance(pset_data, dict):
+                    return False
+                
+                # Check if property exists
+                if prop_name not in pset_data:
+                    return False
+                
+                actual_value = pset_data[prop_name]
+                
+                # Handle boolean comparisons (case insensitive for strings)
+                if isinstance(expected_value, bool):
+                    if isinstance(actual_value, bool):
+                        if actual_value != expected_value:
+                            return False
+                    elif isinstance(actual_value, str):
+                        actual_bool = actual_value.lower() in ['true', '1', 'yes', 'on']
+                        if actual_bool != expected_value:
+                            return False
+                    else:
+                        if bool(actual_value) != expected_value:
+                            return False
+                else:
+                    # For non-boolean values, compare directly
+                    if actual_value != expected_value:
+                        return False
+            
+            return True  # All property filters matched
+            
+        except Exception:
+            return False  # If property access fails, element doesn't match
+    
     # Handle elements parameter
     if isinstance(elements, str):
         # Auto-fetch elements by type
@@ -100,11 +156,16 @@ def extract_element_materials_comprehensive(
     else:
         all_elements = elements
     
-    # Apply semantic filtering if keywords provided
+    # Apply filtering
+    elements = all_elements
+    
+    # Apply keyword filtering if provided
     if element_filter_keywords:
-        elements = [elem for elem in all_elements if element_matches_filter(elem)]
-    else:
-        elements = all_elements
+        elements = [elem for elem in elements if element_matches_filter(elem)]
+    
+    # Apply property filtering if provided
+    if element_property_filters:
+        elements = [elem for elem in elements if element_matches_property_filters(elem)]
     
     # Initialize result structures
     materials_found: Set[str] = set()
@@ -224,7 +285,7 @@ def extract_element_materials_comprehensive(
         'summary': summary
     }
     
-    if element_filter_keywords:
+    if element_filter_keywords or element_property_filters:
         result['filtered_elements'] = len(elements)
         result['original_elements'] = len(all_elements)
     
