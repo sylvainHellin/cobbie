@@ -22,6 +22,17 @@ class ToolUsageStats(SQLModel, table=True):
     questions_correct_contribution: Optional[int] = Field(default=None, sa_column=Column('questions_correct_contribution', Integer, server_default=text('0')))
     questions_wrong_contribution: Optional[int] = Field(default=None, sa_column=Column('questions_wrong_contribution', Integer, server_default=text('0')))
     created_at_question: Optional[int] = Field(default=None, sa_column=Column('created_at_question', Integer, server_default=text('0')))
+    last_question_processed: Optional[int] = Field(default=None, sa_column=Column('last_question_processed', Integer, server_default=text('0')))
+
+
+class ToolUsageStatsEval(SQLModel, table=True):
+    __tablename__ = 'tool_usage_stats_eval'
+
+    tool_name: str = Field(sa_column=Column('tool_name', Text, primary_key=True))
+    questions_when_included: int = Field(sa_column=Column('questions_when_included', Integer, nullable=False, server_default=text('0')))
+    questions_when_called: int = Field(sa_column=Column('questions_when_called', Integer, nullable=False, server_default=text('0')))
+    questions_correct_contribution: int = Field(sa_column=Column('questions_correct_contribution', Integer, nullable=False, server_default=text('0')))
+    questions_wrong_contribution: int = Field(sa_column=Column('questions_wrong_contribution', Integer, nullable=False, server_default=text('0')))
 
 
 class IfcBench(SQLModel, table=True):
