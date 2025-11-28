@@ -25,7 +25,14 @@ from tqdm import tqdm
 from src.agents.answer_verifier import verify_answer
 from src.agents.cobbie import cobbie
 from src.util import get_created_tools
+from src.util.extract_tool_usage import extract_tools_used
 from src.db import DEVSET
+from src.db.query import (
+    increment_eval_tool_inclusion,
+    update_eval_tool_usage,
+    get_all_eval_tool_stats,
+    clear_eval_tool_stats,
+)
 from src.tools.initial import query_ifcopenshell_docs, web_search
 from src.utils.mlflow_utils import determine_evaluation_run_id
 
@@ -209,6 +216,7 @@ def process_question(
     question_data,
     question_index: int,
     tools_dict: Dict[str, Callable],
+    args,
 ) -> Dict:
     """Process a single question with COBBIE and verification.
 
@@ -253,7 +261,7 @@ def process_question(
     logger.info(f"Processing question {question_index + 1}: {question[:100]}...")
 
     # Create individual MLflow run (nested run) for this question
-    run_name = f"question_{question_id}"
+    run_name = f"question_{question_index}_{question_id}"
 
     with mlflow.start_run(run_name=run_name, nested=True) as question_run:
         # Log question parameters
@@ -291,7 +299,7 @@ def process_question(
             start_time_cobbie = time.time()
 
             # Run COBBIE with metrics
-            final_answer, collector, _ = cobbie(
+            final_answer, collector, execution_history = cobbie(
                 user_input=question,
                 tools=tools_dict,
                 model_path=ifc_path,
@@ -335,6 +343,21 @@ def process_question(
                 if collector.last:
                     verifier_input_tokens = collector.usage.input_tokens or 0
                     verifier_output_tokens = collector.usage.output_tokens or 0
+
+            # Track tool usage (after answer verification)
+            if args.track_tools:
+                # Track tools that were available for this question
+                available_tools = list(tools_dict.keys())
+                increment_eval_tool_inclusion(available_tools)
+
+                # Track tools that were actually used
+                tools_used = extract_tools_used(execution_history)
+                is_correct = classification == "correct"
+                update_eval_tool_usage(tools_used, is_correct)
+
+                # Log to MLflow
+                mlflow.log_metric("num_tools_used", len(tools_used))
+                logger.info(f"Tracked usage of {len(tools_used)} tools: {tools_used}")
 
             # Log question-level metrics
             mlflow.log_metrics(
@@ -416,6 +439,58 @@ def process_question(
             }
 
 
+def print_tool_metrics_summary():
+    """Print summary of tool usage metrics from evaluation."""
+    eval_stats = get_all_eval_tool_stats()
+
+    if not eval_stats:
+        print("\nNo tool usage metrics available.")
+        return
+
+    print("\n" + "=" * 90)
+    print("TOOL USAGE METRICS (EVALUATION)")
+    print("=" * 90)
+
+    # Sort by usage frequency
+    sorted_stats = sorted(
+        eval_stats,
+        key=lambda s: s.questions_when_called or 0,
+        reverse=True
+    )
+
+    # Calculate column widths
+    max_tool_name_len = max(len(stat.tool_name or "N/A") for stat in eval_stats)
+    max_tool_name_len = max(max_tool_name_len, 20)  # Minimum width for header
+    tool_col_width = max_tool_name_len + 2
+
+    # Print header with proper alignment
+    header = f"{'Tool Name':<{tool_col_width}} │ {'Included':>8} │ {'Called':>7} │ {'Correct':>8} │ {'Wrong':>7} │ {'Call Rate':>9}"
+    print(header)
+    print("─" * len(header))
+
+    # Print each tool's statistics
+    for stat in sorted_stats:
+        tool_name = stat.tool_name or "N/A"
+        included = stat.questions_when_included or 0
+        called = stat.questions_when_called or 0
+        correct = stat.questions_correct_contribution or 0
+        wrong = stat.questions_wrong_contribution or 0
+        call_rate = (called / included * 100) if included > 0 else 0
+
+        row = f"{tool_name:<{tool_col_width}} │ {included:>8} │ {called:>7} │ {correct:>8} │ {wrong:>7} │ {call_rate:>8.1f}%"
+        print(row)
+
+    # Summary statistics
+    total_included = sum(s.questions_when_included or 0 for s in eval_stats)
+    total_called = sum(s.questions_when_called or 0 for s in eval_stats)
+    total_correct = sum(s.questions_correct_contribution or 0 for s in eval_stats)
+    total_wrong = sum(s.questions_wrong_contribution or 0 for s in eval_stats)
+
+    print("─" * len(header))
+    print(f"{'TOTAL':<{tool_col_width}} │ {total_included:>8} │ {total_called:>7} │ {total_correct:>8} │ {total_wrong:>7} │ {'':>9}")
+    print("=" * 90)
+
+
 def main():
     """Main function to run the evaluation."""
     parser = argparse.ArgumentParser(
@@ -464,6 +539,19 @@ Examples:
         help="Continue most recent evaluation run or specific run ID",
     )
 
+    parser.add_argument(
+        "--track-tools",
+        type=lambda x: x.lower() == "true",
+        default=True,
+        help="Enable/disable tool usage tracking (default: true)",
+    )
+
+    parser.add_argument(
+        "--reset-tool-metrics",
+        action="store_true",
+        help="Clear all evaluation tool metrics before starting",
+    )
+
     args = parser.parse_args()
 
     # Validate arguments
@@ -488,6 +576,11 @@ Examples:
 
     # Setup logging level
     logger.setLevel(getattr(logging, args.log_level))
+
+    # Handle tool metrics reset
+    if args.reset_tool_metrics:
+        deleted_count = clear_eval_tool_stats()
+        logger.info(f"Cleared {deleted_count} evaluation tool metric entries")
 
     # Setup MLflow tracking URI and experiment
     mlflow.set_tracking_uri("http://127.0.0.1:5000")
@@ -565,6 +658,7 @@ Examples:
                     question_data=question_data,
                     question_index=args.start + i,
                     tools_dict=tools_dict,
+                    args=args,
                 )
                 question_results.append(result)
                 pbar.update(1)
@@ -598,6 +692,10 @@ Examples:
 
         # Print results
         print_results(results_summary)
+
+        # Print tool metrics summary
+        if args.track_tools:
+            print_tool_metrics_summary()
 
     print("\nEvaluation completed successfully!")
     return 0

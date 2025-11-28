@@ -198,27 +198,9 @@ if args.track_tools:
 
 ## Implementation Steps
 
-### Step 1: Create Database Table
+### Step 1: Create Database Table - DONE
 
-```bash
-# Create SQL file
-mkdir -p migrations
-
-cat > migrations/create_tool_usage_stats_eval.sql << 'EOF'
-CREATE TABLE IF NOT EXISTS tool_usage_stats_eval (
-    tool_name TEXT PRIMARY KEY NOT NULL,
-    questions_when_included INTEGER DEFAULT 0 NOT NULL,
-    questions_when_called INTEGER DEFAULT 0 NOT NULL,
-    questions_correct_contribution INTEGER DEFAULT 0 NOT NULL,
-    questions_wrong_contribution INTEGER DEFAULT 0 NOT NULL
-);
-EOF
-
-# Execute SQL
-sqlite3 src/db/db.db < migrations/create_tool_usage_stats_eval.sql
-```
-
-### Step 2: Regenerate Models
+### Step 2: Regenerate Models - DONE
 
 ```bash
 sqlacodegen sqlite:///src/db/db.db --generator sqlmodels --outfile src/db/models.py
@@ -322,14 +304,3 @@ TOTAL                          200        86         74         12
 3. **Tool Validation**: Identify tools that work well in training but fail in evaluation
 4. **Debugging**: Track which tools contribute to wrong answers
 5. **Optimization**: Identify unused tools that could be removed
-
-## Future Enhancements
-
-Potential future additions (out of scope for this spec):
-
-- Per-run granularity (separate stats per evaluation run)
-- Tool execution time tracking
-- Abstained answer tracking
-- Export metrics to CSV/JSON
-- Visualization dashboards
-- Comparison reports (training vs. evaluation)

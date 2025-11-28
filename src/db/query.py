@@ -16,6 +16,7 @@ from src.db.models import (
     IfcBench,
     Ifcmodels,
     ToolUsageStats,
+    ToolUsageStatsEval,
 )
 
 T = TypeVar("T")
@@ -305,3 +306,95 @@ def initialize_tool_metadata(global_question_num: int) -> int:
         session.commit()
 
     return initialized_count
+
+
+# Evaluation Tool Usage Stats Functions
+
+def increment_eval_tool_inclusion(tool_names: List[str]) -> None:
+    """
+    Increment the inclusion counter for all tools available in this evaluation question.
+
+    Args:
+        tool_names: List of tool names that were in the available toolbox
+    """
+    if not tool_names:
+        return
+
+    with Session(db.ENGINE) as session:
+        for tool_name in tool_names:
+            tool_stats = session.get(ToolUsageStatsEval, tool_name)
+            if tool_stats:
+                tool_stats.questions_when_included = (tool_stats.questions_when_included or 0) + 1
+                session.add(tool_stats)
+            else:
+                # Create new entry if tool doesn't exist
+                tool_stats = ToolUsageStatsEval(
+                    tool_name=tool_name,
+                    questions_when_included=1,
+                    questions_when_called=0,
+                    questions_correct_contribution=0,
+                    questions_wrong_contribution=0,
+                )
+                session.add(tool_stats)
+        session.commit()
+
+
+def update_eval_tool_usage(tool_names: List[str], is_correct: bool) -> None:
+    """
+    Update usage statistics for tools that were actually called in this evaluation question.
+
+    Args:
+        tool_names: List of tool names that were invoked during execution
+        is_correct: Whether the final answer was correct
+    """
+    if not tool_names:
+        return
+
+    with Session(db.ENGINE) as session:
+        for tool_name in tool_names:
+            tool_stats = session.get(ToolUsageStatsEval, tool_name)
+            if tool_stats:
+                tool_stats.questions_when_called = (tool_stats.questions_when_called or 0) + 1
+                if is_correct:
+                    tool_stats.questions_correct_contribution = (
+                        tool_stats.questions_correct_contribution or 0
+                    ) + 1
+                else:
+                    tool_stats.questions_wrong_contribution = (
+                        tool_stats.questions_wrong_contribution or 0
+                    ) + 1
+                session.add(tool_stats)
+        session.commit()
+
+
+def get_all_eval_tool_stats() -> List[ToolUsageStatsEval]:
+    """
+    Retrieve statistics for all evaluation tools.
+
+    Returns:
+        List of ToolUsageStatsEval objects, ordered by tool name
+    """
+    with Session(db.ENGINE) as session:
+        statement = select(ToolUsageStatsEval).order_by(col(ToolUsageStatsEval.tool_name).asc())
+        results = session.exec(statement)
+        return [stat for stat in results]
+
+
+def clear_eval_tool_stats() -> int:
+    """
+    Clear all evaluation tool statistics.
+
+    Returns:
+        Number of rows deleted
+    """
+    with Session(db.ENGINE) as session:
+        statement = select(ToolUsageStatsEval)
+        results = session.exec(statement)
+        stats_to_delete = [stat for stat in results]
+
+        count = len(stats_to_delete)
+        for stat in stats_to_delete:
+            session.delete(stat)
+
+        session.commit()
+        return count
