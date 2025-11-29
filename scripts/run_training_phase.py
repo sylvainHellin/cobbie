@@ -899,9 +899,6 @@ def handle_debug_faulty_tool(context: Context) -> Tuple[TrainingState, Context]:
     """
     Debug and fix a faulty helper function (Path B: Wrong answer).
 
-    CHANGED: No longer saves the tool immediately.
-    Instead, transitions to TEST_TOOL_WITH_COBBIE for validation.
-
     Actions:
     1. Get faulty tool source code with get_function_code()
     2. Get IFC model path from QA pair
