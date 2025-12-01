@@ -13,7 +13,6 @@ Usage:
 import argparse
 import re
 import sqlite3
-from datetime import datetime
 from typing import Dict, List
 
 import mlflow
@@ -114,6 +113,8 @@ def extract_run_data(run) -> Dict:
         "cobbie_answer": params.get("answer", ""),
         "justification": params.get("justification", ""),
         "confidence": params.get("confidence", ""),
+        # Iteration count (number of BAML calls made by Cobbie)
+        "num_iterations": int(metrics.get("cobbie_calls_count", 0)),
         # Latency metrics
         "cobbie_duration": metrics.get("cobbie_duration", 0),
         "verifier_duration": metrics.get("verifier_duration", 0),
@@ -220,6 +221,7 @@ def build_dataframe(run_data_list: List[Dict], question_data: Dict[int, Dict]) -
             "cobbie_answer": sanitize_for_excel(run_data["cobbie_answer"]),
             "justification": sanitize_for_excel(run_data["justification"]),
             "confidence": sanitize_for_excel(run_data["confidence"]),
+            "num_iterations": run_data["num_iterations"],
             "cobbie_duration": run_data["cobbie_duration"],
             "verifier_duration": run_data["verifier_duration"],
             "total_duration": run_data["total_duration"],
@@ -267,6 +269,13 @@ def calculate_statistics(df: pd.DataFrame) -> Dict:
     stats["accuracy"] = stats["correct_answers"] / evaluated if evaluated > 0 else 0
     stats["abstention_rate"] = stats["abstained_answers"] / len(successful_df) if len(successful_df) > 0 else 0
 
+    # Iteration statistics
+    stats["avg_iterations"] = df["num_iterations"].mean()
+    stats["median_iterations"] = df["num_iterations"].median()
+    stats["max_iterations"] = df["num_iterations"].max()
+    stats["min_iterations"] = df["num_iterations"].min()
+    stats["total_iterations"] = df["num_iterations"].sum()
+
     # Latency statistics
     stats["avg_latency"] = df["total_duration"].mean()
     stats["median_latency"] = df["total_duration"].median()
@@ -306,6 +315,7 @@ def calculate_statistics(df: pd.DataFrame) -> Dict:
             "wrong": cat_wrong,
             "abstained": (category_successful["classification"] == "abstained").sum(),
             "accuracy": cat_accuracy,
+            "avg_iterations": category_df["num_iterations"].mean(),
             "avg_latency": category_df["total_duration"].mean(),
             "avg_tokens": (category_df["total_input_tokens"] + category_df["total_output_tokens"]).mean(),
         }
@@ -329,6 +339,7 @@ def calculate_statistics(df: pd.DataFrame) -> Dict:
             "wrong": proj_wrong,
             "abstained": (project_successful["classification"] == "abstained").sum(),
             "accuracy": proj_accuracy,
+            "avg_iterations": project_df["num_iterations"].mean(),
             "avg_latency": project_df["total_duration"].mean(),
             "avg_tokens": (project_df["total_input_tokens"] + project_df["total_output_tokens"]).mean(),
         }
@@ -370,6 +381,7 @@ def print_statistics(stats: Dict) -> None:
                 cat_stats["correct"],
                 cat_stats["wrong"],
                 cat_stats["abstained"],
+                f"{cat_stats['avg_iterations']:.1f}",
                 f"{cat_stats['avg_latency']:.1f}s",
                 f"{cat_stats['avg_tokens']:.0f}",
             ]
@@ -377,7 +389,7 @@ def print_statistics(stats: Dict) -> None:
     print(
         tabulate(
             category_table,
-            headers=["Category", "Count", "Accuracy", "Correct", "Wrong", "Abstained", "Avg Latency", "Avg Tokens"],
+            headers=["Category", "Count", "Accuracy", "Correct", "Wrong", "Abstained", "Avg Iters", "Avg Latency", "Avg Tokens"],
             tablefmt="grid",
         )
     )
@@ -395,6 +407,7 @@ def print_statistics(stats: Dict) -> None:
                     proj_stats["correct"],
                     proj_stats["wrong"],
                     proj_stats["abstained"],
+                    f"{proj_stats['avg_iterations']:.1f}",
                     f"{proj_stats['avg_latency']:.1f}s",
                     f"{proj_stats['avg_tokens']:.0f}",
                 ]
@@ -402,10 +415,18 @@ def print_statistics(stats: Dict) -> None:
         print(
             tabulate(
                 project_table,
-                headers=["Project", "Count", "Accuracy", "Correct", "Wrong", "Abstained", "Avg Latency", "Avg Tokens"],
+                headers=["Project", "Count", "Accuracy", "Correct", "Wrong", "Abstained", "Avg Iters", "Avg Latency", "Avg Tokens"],
                 tablefmt="grid",
             )
         )
+
+    # Iteration statistics
+    print("\n🔄 Iteration Statistics:")
+    print(f"  Total Iterations: {stats['total_iterations']:.0f}")
+    print(f"  Average Iterations: {stats['avg_iterations']:.2f}")
+    print(f"  Median Iterations: {stats['median_iterations']:.0f}")
+    print(f"  Min Iterations: {stats['min_iterations']:.0f}")
+    print(f"  Max Iterations: {stats['max_iterations']:.0f}")
 
     # Latency statistics
     print("\n⏱️  Latency Statistics:")
@@ -508,7 +529,6 @@ Examples:
     print_statistics(stats)
 
     # Export to Excel
-    timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
     output_filename = f"{REPORTS_DIR}/{run_name}.xlsx"
     print(f"\nExporting to Excel: {output_filename}")
 
@@ -527,6 +547,9 @@ Examples:
                 "Abstained Answers",
                 "Accuracy",
                 "Abstention Rate",
+                "Total Iterations",
+                "Average Iterations",
+                "Median Iterations",
                 "Average Latency (s)",
                 "Median Latency (s)",
                 "Average COBBIE Duration (s)",
@@ -546,6 +569,9 @@ Examples:
                 stats["abstained_answers"],
                 f"{stats['accuracy']:.2%}",
                 f"{stats['abstention_rate']:.2%}",
+                f"{stats['total_iterations']:.0f}",
+                f"{stats['avg_iterations']:.2f}",
+                f"{stats['median_iterations']:.0f}",
                 f"{stats['avg_latency']:.2f}",
                 f"{stats['median_latency']:.2f}",
                 f"{stats['avg_cobbie_duration']:.2f}",
@@ -572,6 +598,7 @@ Examples:
                     "Wrong": cat_stats["wrong"],
                     "Abstained": cat_stats["abstained"],
                     "Accuracy": f"{cat_stats['accuracy']:.2%}",
+                    "Avg Iterations": f"{cat_stats['avg_iterations']:.2f}",
                     "Avg Latency (s)": f"{cat_stats['avg_latency']:.2f}",
                     "Avg Tokens": f"{cat_stats['avg_tokens']:.0f}",
                 }
@@ -591,6 +618,7 @@ Examples:
                         "Wrong": proj_stats["wrong"],
                         "Abstained": proj_stats["abstained"],
                         "Accuracy": f"{proj_stats['accuracy']:.2%}",
+                        "Avg Iterations": f"{proj_stats['avg_iterations']:.2f}",
                         "Avg Latency (s)": f"{proj_stats['avg_latency']:.2f}",
                         "Avg Tokens": f"{proj_stats['avg_tokens']:.0f}",
                     }
