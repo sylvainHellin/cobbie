@@ -198,38 +198,34 @@ def get_all_tool_stats() -> List[ToolUsageStats]:
 
 def calculate_deletion_score(
     tool_stats: ToolUsageStats,
-    current_question_num: int,
-    grace_period: int = 25
+    grace_period: int = 16
 ) -> float:
     """
     Calculate deletion score (0-100, higher = more deletable).
 
     Formula combines:
-    - Age factor (older = more opportunity to prove value)
     - Call rate (how often used when available)
     - Success rate (contribution to correct answers)
     - Failure penalty (contribution to wrong answers)
 
     Returns:
-        0.0 if within grace period
-        100.0 if never used
+        0.0 if within grace period (fewer inclusions than grace_period)
+        100.0 if never called after grace period
         <20.0 for high-value tools
         >70.0 for harmful tools
     """
-    created_at = tool_stats.created_at_question or 0
-    age = current_question_num - created_at
     included = tool_stats.questions_when_included or 0
     called = tool_stats.questions_when_called or 0
     correct = tool_stats.questions_correct_contribution or 0
     wrong = tool_stats.questions_wrong_contribution or 0
 
-    # Grace period protection
-    if age < grace_period:
+    # Grace period protection - protect tools that haven't had enough opportunities
+    if included < grace_period:
         return 0.0
 
-    # Never included = instant deletion
-    if included == 0:
-        return 100.0
+    # Never called after grace period = high deletion score
+    if called == 0:
+        return (100.0 - 1/included)
 
     # Calculate rates
     call_rate = called / included
@@ -237,20 +233,22 @@ def calculate_deletion_score(
     failure_rate = wrong / called if called > 0 else 0.0
 
     # Weighted score (0-100)
-    age_score = min(age / 100.0, 1.0) * 20
-    call_score = (1.0 - call_rate) * 30
+    # Increased weight on call_rate since we removed age_score
+    call_score = (1.0 - call_rate) * 50
     success_score = (1.0 - success_rate) * 25
     failure_score = failure_rate * 25
 
-    return min(age_score + call_score + success_score + failure_score, 100.0)
+    return min(call_score + success_score + failure_score, 100.0)
 
 
 def get_tools_ranked_by_deletion_score(
-    current_question_num: int,
-    grace_period: int = 25
+    grace_period: int = 16
 ) -> List[tuple[str, float]]:
     """
     Get all tools ranked by deletion score (highest first).
+
+    Args:
+        grace_period: Number of inclusions to protect new tools from deletion
 
     Returns:
         List of (tool_name, score) tuples, sorted descending
@@ -258,7 +256,7 @@ def get_tools_ranked_by_deletion_score(
     all_stats = get_all_tool_stats()
 
     scored_tools: List[tuple[str, float]] = [
-        (stats.tool_name, calculate_deletion_score(stats, current_question_num, grace_period))
+        (stats.tool_name, calculate_deletion_score(stats, grace_period))
         for stats in all_stats
         if stats.tool_name is not None
     ]
