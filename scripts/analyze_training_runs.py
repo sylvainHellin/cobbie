@@ -1,19 +1,18 @@
 #!/usr/bin/env python3
 """
-Analyze Training Runs from MLflow
+Analyze Training Run from MLflow
 
 This script extracts detailed training run data from MLflow, enriches it with database
 information, and generates an Excel report with comprehensive statistics.
 
 Usage:
-    uv run scripts/analyze_training_runs.py --run-ids <run_id1> <run_id2> ...
-    uv run scripts/analyze_training_runs.py --run-ids c0f5d69f17b3400093fa63204c70adc3 21d1966df8dc47d3a5753cbb9bbbb0e3
+    uv run scripts/analyze_training_runs.py --run-id <run_id>
+    uv run scripts/analyze_training_runs.py --run-id c0f5d69f17b3400093fa63204c70adc3
 """
 
 import argparse
 import re
 import sqlite3
-from datetime import datetime
 from typing import Dict, List
 
 import mlflow
@@ -45,9 +44,6 @@ def sanitize_for_excel(text: str) -> str:
     Returns:
         Sanitized text safe for Excel
     """
-    if not isinstance(text, str):
-        return text
-
     # Remove illegal XML characters (Excel uses XML internally)
     # Keep only: tab (0x09), newline (0x0A), carriage return (0x0D), and printable characters (>= 0x20)
     illegal_chars = re.compile(r'[\x00-\x08\x0B\x0C\x0E-\x1F]')
@@ -88,12 +84,13 @@ def extract_run_data(run) -> Dict:
     metrics = run.data.metrics
     tags = run.data.tags
 
-    # Get question ID from run name (e.g., "question_909" -> 909)
+    # Get question ID from run name (e.g., "question_203_909" -> 909)
+    # First digit in the question index (from the trainset)
     run_name = tags.get("mlflow.runName", "")
     question_id = None
     if run_name.startswith("question_"):
         try:
-            question_id = int(run_name.split("_")[1])
+            question_id = int(run_name.split("_")[2])
         except (IndexError, ValueError):
             question_id = params.get("question_id")
     else:
@@ -196,7 +193,7 @@ def fetch_question_data(question_ids: List[int]) -> Dict[int, Dict]:
     # Build query with JOIN to get project and model names
     placeholders = ",".join("?" * len(question_ids))
     query = f"""
-        SELECT 
+        SELECT
             ib.id,
             ib.question,
             ib.ground_truth,
@@ -441,23 +438,19 @@ def print_statistics(stats: Dict) -> None:
 def main():
     """Main function."""
     parser = argparse.ArgumentParser(
-        description="Analyze MLflow training runs and generate Excel report",
+        description="Analyze MLflow training run and generate Excel report",
         formatter_class=argparse.RawDescriptionHelpFormatter,
         epilog="""
-Examples:
-  # Analyze specific runs
-  uv run scripts/analyze_training_runs.py --run-ids c0f5d69f17b3400093fa63204c70adc3 21d1966df8dc47d3a5753cbb9bbbb0e3
-
+Example:
   # Analyze a single run
-  uv run scripts/analyze_training_runs.py --run-ids c0f5d69f17b3400093fa63204c70adc3
+  uv run scripts/analyze_training_runs.py --run-id c0f5d69f17b3400093fa63204c70adc3
         """,
     )
 
     parser.add_argument(
-        "--run-ids",
-        nargs="+",
+        "--run-id",
         required=True,
-        help="MLflow run IDs to analyze (space-separated)",
+        help="MLflow run ID to analyze",
     )
 
     args = parser.parse_args()
@@ -465,38 +458,28 @@ Examples:
     print("=" * 80)
     print("MLflow Training Run Analysis")
     print("=" * 80)
-    print(f"\nAnalyzing {len(args.run_ids)} run(s)...")
+    print(f"\nAnalyzing run: {args.run_id}")
 
     # Setup MLflow
     mlflow.set_tracking_uri(MLFLOW_URI)
     client = MlflowClient()
 
-    # Collect all run data
+    # Get main run info
+    main_run = client.get_run(args.run_id)
+    experiment_id = main_run.info.experiment_id
+    run_name = main_run.data.tags.get("mlflow.runName", "Unknown")
+    print(f"  Run Name: {run_name}")
+    print(f"  Experiment ID: {experiment_id}")
+
+    # Fetch nested runs
+    nested_runs = fetch_nested_runs(client, args.run_id, experiment_id)
+    print(f"  Found {len(nested_runs)} nested runs (questions)")
+
+    # Extract data from each nested run
     all_run_data = []
-
-    for run_id in args.run_ids:
-        print(f"\nProcessing run: {run_id}")
-
-        # Get main run info
-        try:
-            main_run = client.get_run(run_id)
-            experiment_id = main_run.info.experiment_id
-            run_name = main_run.data.tags.get("mlflow.runName", "Unknown")
-            print(f"  Run Name: {run_name}")
-            print(f"  Experiment ID: {experiment_id}")
-
-            # Fetch nested runs
-            nested_runs = fetch_nested_runs(client, run_id, experiment_id)
-            print(f"  Found {len(nested_runs)} nested runs (questions)")
-
-            # Extract data from each nested run
-            for nested_run in nested_runs:
-                run_data = extract_run_data(nested_run)
-                all_run_data.append(run_data)
-
-        except Exception as e:
-            print(f"  Error processing run {run_id}: {e}")
-            continue
+    for nested_run in nested_runs:
+        run_data = extract_run_data(nested_run)
+        all_run_data.append(run_data)
 
     print(f"\nTotal questions collected: {len(all_run_data)}")
 
@@ -517,8 +500,7 @@ Examples:
     print_statistics(stats)
 
     # Export to Excel
-    timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-    output_filename = f"{REPORTS_DIR}/training_analysis_{timestamp}.xlsx"
+    output_filename = f"{REPORTS_DIR}/{run_name}.xlsx"
     print(f"\nExporting to Excel: {output_filename}")
 
     with pd.ExcelWriter(output_filename, engine="openpyxl") as writer:
