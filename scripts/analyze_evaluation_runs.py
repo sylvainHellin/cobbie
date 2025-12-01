@@ -299,7 +299,7 @@ def calculate_statistics(df: pd.DataFrame) -> Dict:
     # Category breakdown
     stats["by_category"] = {}
     for category in df["category"].unique():
-        if category == "N/A":
+        if category == "N/A" or category is None:
             continue
         category_df = df[df["category"] == category]
         category_successful = category_df[category_df["success"]]
