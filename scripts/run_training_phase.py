@@ -92,8 +92,8 @@ class Context(BaseModel):
     tools: Dict[str, Callable] = {}
 
     # Tool management configuration
-    max_tools: int = 32
-    grace_period: int = 16
+    max_tools: int = 16
+    grace_period: int = 8
 
     # Cobbie agent results
     cobbie_result: Optional[FinalAnswer] = None
@@ -1442,14 +1442,14 @@ def main():
     parser.add_argument(
         "--max-tools",
         type=int,
-        default=32,
-        help="Maximum number of tools to maintain (default: 32)",
+        default=16,
+        help="Maximum number of tools to maintain (default: 16)",
     )
     parser.add_argument(
         "--grace-period",
         type=int,
-        default=25,
-        help="Questions to protect new tools from deletion (default: 25)",
+        default=8,
+        help="Questions to protect new tools from deletion (default: 8)",
     )
     args = parser.parse_args()
 
