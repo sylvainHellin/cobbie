@@ -509,7 +509,7 @@ Examples:
 
     # Export to Excel
     timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-    output_filename = f"{REPORTS_DIR}/evaluation_analysis_{timestamp}.xlsx"
+    output_filename = f"{REPORTS_DIR}/{run_name}.xlsx"
     print(f"\nExporting to Excel: {output_filename}")
 
     with pd.ExcelWriter(output_filename, engine="openpyxl") as writer:
