@@ -6,6 +6,8 @@ Usage:
     uv run scripts/tool_stats.py --all                        # Show all tools (including deleted)
     uv run scripts/tool_stats.py --sort-by called             # Sort by number of times called
     uv run scripts/tool_stats.py --sort-by success-rate       # Sort by success rate (descending)
+    uv run scripts/tool_stats.py --sort-by deletion-score     # Sort by deletion score (descending)
+    uv run scripts/tool_stats.py --grace-period 30            # Use grace period of 30 inclusions
 """
 
 import argparse
@@ -14,18 +16,19 @@ from typing import Any, List, Tuple
 from tabulate import tabulate
 
 from src.db.models import ToolUsageStats
-from src.db.query import get_all_tool_stats
+from src.db.query import calculate_deletion_score, get_all_tool_stats
 from src.util.get_created_tools import get_created_tools
 
 
-def display_tool_stats(show_all: bool = False, sort_by: str = "name") -> None:
+def display_tool_stats(show_all: bool = False, sort_by: str = "name", grace_period: int = 25) -> None:
     """
     Display statistics for all tools.
 
     Args:
         show_all: If True, display stats for all tools in the database (including deleted).
                   If False, only display stats for tools that currently exist in the filesystem.
-        sort_by: Column to sort by. Options: name, created, included, called, call-rate, correct, wrong, success-rate
+        sort_by: Column to sort by. Options: name, created, included, called, call-rate, correct, wrong, success-rate, deletion-score
+        grace_period: Number of inclusions to protect new tools from deletion (default: 25)
     """
     # Get all tool stats from database
     all_stats: List[ToolUsageStats] = get_all_tool_stats()
@@ -56,6 +59,7 @@ def display_tool_stats(show_all: bool = False, sort_by: str = "name") -> None:
     print(f"  Deleted tools: {deleted_count}")
     print(f"  Displaying: {len(all_stats)} tool(s) {'(all tools)' if show_all else '(existing only)'}")
     print(f"  Sorted by: {sort_by}")
+    print(f"  Grace period: {grace_period} inclusions")
 
     # Prepare table data with sorting
     table_data: List[Tuple[Any, ...]] = []
@@ -70,6 +74,7 @@ def display_tool_stats(show_all: bool = False, sort_by: str = "name") -> None:
         # Calculate derived metrics
         call_rate = (called / included * 100) if included > 0 else 0
         success_rate = (correct / called * 100) if called > 0 else 0
+        deletion_score = calculate_deletion_score(stat, grace_period)
 
         # Mark deleted tools
         status = "🗑️" if tool_name not in existing_tool_names else ""
@@ -83,13 +88,14 @@ def display_tool_stats(show_all: bool = False, sort_by: str = "name") -> None:
             correct,
             wrong,
             success_rate,
+            deletion_score,
             # Store raw values for sorting
             tool_name,
         ))
 
     # Sort the data
     sort_key_map = {
-        "name": lambda x: x[8].lower(),  # Sort by raw tool name (case-insensitive)
+        "name": lambda x: x[9].lower(),  # Sort by raw tool name (case-insensitive)
         "created": lambda x: x[1],
         "included": lambda x: x[2],
         "called": lambda x: x[3],
@@ -97,6 +103,7 @@ def display_tool_stats(show_all: bool = False, sort_by: str = "name") -> None:
         "correct": lambda x: x[5],
         "wrong": lambda x: x[6],
         "success-rate": lambda x: x[7],
+        "deletion-score": lambda x: x[8],
     }
 
     # Determine sort order (descending for most metrics, ascending for name)
@@ -117,11 +124,12 @@ def display_tool_stats(show_all: bool = False, sort_by: str = "name") -> None:
             row[5],  # Correct
             row[6],  # Wrong
             f"{row[7]:.1f}%" if row[3] > 0 else "N/A",  # Success rate
+            f"{row[8]:.1f}" if row[2] >= grace_period else "Protected",  # Deletion score
         ])
 
     # Print table
     print("\n🔧 Tool Statistics:")
-    headers = ["Tool Name", "Created", "Included", "Called", "Call Rate", "Correct", "Wrong", "Success Rate"]
+    headers = ["Tool Name", "Created", "Included", "Called", "Call Rate", "Correct", "Wrong", "Success Rate", "Del Score"]
     print(tabulate(formatted_table, headers=headers, tablefmt="grid"))
 
     # Calculate and print summary statistics
@@ -159,6 +167,8 @@ Examples:
   uv run scripts/tool_stats.py --all                        # Show all tools (including deleted)
   uv run scripts/tool_stats.py --sort-by called             # Sort by number of times called
   uv run scripts/tool_stats.py --sort-by success-rate       # Sort by success rate (descending)
+  uv run scripts/tool_stats.py --sort-by deletion-score     # Sort by deletion score (descending)
+  uv run scripts/tool_stats.py --grace-period 30            # Use grace period of 30 inclusions
   uv run scripts/tool_stats.py --all --sort-by call-rate    # Combine filters and sorting
         """
     )
@@ -171,13 +181,20 @@ Examples:
 
     parser.add_argument(
         "--sort-by",
-        choices=["name", "created", "included", "called", "call-rate", "correct", "wrong", "success-rate"],
+        choices=["name", "created", "included", "called", "call-rate", "correct", "wrong", "success-rate", "deletion-score"],
         default="name",
         help="Column to sort by (default: name). Most columns sort descending except 'name' which sorts ascending."
     )
 
+    parser.add_argument(
+        "--grace-period",
+        type=int,
+        default=25,
+        help="Number of inclusions to protect new tools from deletion (default: 25)"
+    )
+
     args = parser.parse_args()
-    display_tool_stats(show_all=args.all, sort_by=args.sort_by)
+    display_tool_stats(show_all=args.all, sort_by=args.sort_by, grace_period=args.grace_period)
 
 
 if __name__ == "__main__":
