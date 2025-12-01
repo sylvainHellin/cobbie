@@ -1,5 +1,12 @@
 import ifcopenshell
 import ifcopenshell.util.element
+import ifcopenshell.util.shape
+import ifcopenshell.util.placement
+import ifcopenshell.util.geolocation
+import ifcopenshell.util.system
+import ifcopenshell.geom
+import math
+import json
 from typing import List, Dict, Tuple, Optional, Any, Union
 
 def analyze_space_allocation_by_function(
@@ -14,14 +21,19 @@ def analyze_space_allocation_by_function(
     # Enhanced parameters with defaults for backward compatibility
     enable_attribute_access: bool = True,
     fallback_to_attributes: bool = True,
-    additional_area_sources: Optional[List[Tuple[str, str]]] = None
+    additional_area_sources: Optional[List[Tuple[str, str]]] = None,
+    # New geometric fallback parameters
+    enable_geometric_fallback: bool = True,
+    geometric_area_factor: float = 0.3,
+    geometric_settings: Optional[ifcopenshell.geom.settings] = None
 ) -> Dict[str, Any]:
     """
     Analyzes space allocation by functional classification in a BIM model.
     
     This function systematically discovers functional classifications from multiple sources including
     element fields and property sets, extracts area information, and provides comprehensive statistics
-    about space allocation.
+    about space allocation. When property-based area extraction fails, it can calculate areas from
+    space geometries as a fallback.
     
     Args:
         ifc_file: Loaded IFC model (ifcopenshell.file)
@@ -35,6 +47,9 @@ def analyze_space_allocation_by_function(
         enable_attribute_access: Boolean to enable direct IFC attribute access using ('__attribute__', 'AttributeName') syntax
         fallback_to_attributes: Boolean to enable fallback to basic attributes when property sets don't contain needed data
         additional_area_sources: Optional list of additional (property_set, property_name) tuples for area sources
+        enable_geometric_fallback: Boolean to enable geometric area calculation when property-based extraction fails
+        geometric_area_factor: Float factor to convert geometric surface area to floor area (default: 0.3)
+        geometric_settings: Optional custom geometry settings object (default: creates standard settings)
     
     Returns:
         Dict containing:
@@ -43,6 +58,7 @@ def analyze_space_allocation_by_function(
         - 'function_allocation': Dict of function names to allocation data (count, area, percentage, spaces)
         - 'space_details': List of individual space data (if include_details=True)
         - 'classification_sources': Dict showing which sources were used for each function
+        - 'geometric_fallback_used': Boolean indicating if geometric calculation was used
     
     Example:
         >>> import ifcopenshell
@@ -59,7 +75,8 @@ def analyze_space_allocation_by_function(
             'total_area': 0.0,
             'function_allocation': {},
             'space_details': [],
-            'classification_sources': {}
+            'classification_sources': {},
+            'geometric_fallback_used': False
         }
         
         # Get all IfcSpace elements
@@ -93,6 +110,8 @@ def analyze_space_allocation_by_function(
             enhanced_area_sources.extend(additional_area_sources)
         
         # Process each space
+        spaces_without_areas = []
+        
         for space in spaces:
             space_data = {
                 'id': space.id(),
@@ -202,7 +221,7 @@ def analyze_space_allocation_by_function(
                 except:
                     pass
             
-            # Add to results if area was found
+            # Add to results if area was found or store for geometric fallback
             if space_data['area'] is not None:
                 result['total_area'] += space_data['area']
                 
@@ -230,6 +249,94 @@ def analyze_space_allocation_by_function(
                 # Add space details if requested
                 if include_details:
                     result['space_details'].append(space_data)
+            else:
+                # Store space for geometric fallback
+                spaces_without_areas.append(space_data)
+        
+        # Geometric fallback if enabled and we have spaces without areas
+        if enable_geometric_fallback and spaces_without_areas:
+            result['geometric_fallback_used'] = True
+            
+            # Setup geometry settings
+            if geometric_settings is None:
+                geom_settings = ifcopenshell.geom.settings()
+                geom_settings.set(geom_settings.USE_WORLD_COORDS, True)
+            else:
+                geom_settings = geometric_settings
+            
+            # Calculate geometric areas for spaces without property-based areas
+            for space_data in spaces_without_areas:
+                space_id = space_data['id']
+                space = ifc_file.by_id(space_id)
+                
+                try:
+                    # Get shape representation
+                    shape = ifcopenshell.geom.create_shape(geom_settings, space)
+                    if shape and shape.geometry:
+                        # Get vertices and faces
+                        verts = shape.geometry.verts
+                        faces = shape.geometry.faces
+                        
+                        # Calculate area from faces using triangle method
+                        area = 0.0
+                        for i in range(0, len(faces), 3):
+                            if i + 2 < len(faces):
+                                # Get triangle vertices
+                                v1 = [verts[faces[i]*3], verts[faces[i]*3+1], verts[faces[i]*3+2]]
+                                v2 = [verts[faces[i+1]*3], verts[faces[i+1]*3+1], verts[faces[i+1]*3+2]]
+                                v3 = [verts[faces[i+2]*3], verts[faces[i+2]*3+1], verts[faces[i+2]*3+2]]
+                                
+                                # Calculate triangle area using cross product
+                                edge1 = [v2[0]-v1[0], v2[1]-v1[1], v2[2]-v1[2]]
+                                edge2 = [v3[0]-v1[0], v3[1]-v1[1], v3[2]-v1[2]]
+                                
+                                # Cross product
+                                cross = [
+                                    edge1[1]*edge2[2] - edge1[2]*edge2[1],
+                                    edge1[2]*edge2[0] - edge1[0]*edge2[2],
+                                    edge1[0]*edge2[1] - edge1[1]*edge2[0]
+                                ]
+                                
+                                # Triangle area
+                                triangle_area = 0.5 * math.sqrt(cross[0]**2 + cross[1]**2 + cross[2]**2)
+                                area += triangle_area
+                        
+                        # Apply geometric area factor for floor area approximation
+                        floor_area = area * geometric_area_factor
+                        
+                        space_data['area'] = floor_area
+                        space_data['area_source'] = 'geometric_calculation'
+                        
+                        result['total_area'] += floor_area
+                        
+                        # Add to function allocation
+                        func = space_data['function']
+                        if func not in result['function_allocation']:
+                            result['function_allocation'][func] = {
+                                'count': 0,
+                                'area': 0.0,
+                                'percentage': 0.0,
+                                'spaces': [],
+                                'sources': set()
+                            }
+                        
+                        result['function_allocation'][func]['count'] += 1
+                        result['function_allocation'][func]['area'] += floor_area
+                        result['function_allocation'][func]['spaces'].append(space_data['id'])
+                        result['function_allocation'][func]['sources'].add(space_data['function_source'])
+                        
+                        # Track classification sources
+                        if func not in result['classification_sources']:
+                            result['classification_sources'][func] = set()
+                        result['classification_sources'][func].add(space_data['function_source'])
+                        
+                        # Add space details if requested
+                        if include_details:
+                            result['space_details'].append(space_data)
+                    
+                except Exception as e:
+                    # If geometric calculation fails, continue with next space
+                    continue
         
         # Calculate percentages
         if result['total_area'] > 0:
@@ -264,5 +371,6 @@ def analyze_space_allocation_by_function(
             'total_area': 0.0,
             'function_allocation': {},
             'space_details': [],
-            'classification_sources': {}
+            'classification_sources': {},
+            'geometric_fallback_used': False
         }

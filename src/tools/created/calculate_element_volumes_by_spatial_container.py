@@ -37,7 +37,7 @@ def calculate_element_volumes_by_spatial_container(
         calculation_method_preference: Strategy for volume calculation ('property_first', 'geometry_first', 
                                       'property_only', 'geometry_only', 'auto')
         include_debug_info: Whether to include detailed breakdown of calculation methods
-        volume_unit_conversion: Optional conversion factor for volume units (None = auto-detect)
+        volume_unit_conversion: Optional conversion factor for volume units (None = no conversion)
     
     Returns:
         Dict containing:
@@ -78,7 +78,8 @@ def calculate_element_volumes_by_spatial_container(
             'elements_by_method': {'properties': [], 'geometry': [], 'none': [], 'error': []},
             'method_counts': {'properties': 0, 'geometry': 0, 'none': 0, 'error': 0},
             'unit_conversion_applied': False,
-            'unit_conversion_factor': None
+            'unit_conversion_factor': None,
+            'length_unit_scale': None
         }
     
     # Get elements of specified type
@@ -97,16 +98,26 @@ def calculate_element_volumes_by_spatial_container(
     if not elements:
         return result
     
-    # Calculate unit conversion if not provided
-    unit_scale = volume_unit_conversion
-    if unit_scale is None:
+    # Handle unit conversion - only apply if explicitly provided
+    length_unit_scale = 1.0
+    volume_unit_scale = 1.0
+    
+    if volume_unit_conversion is not None:
+        # Custom conversion factor provided
+        volume_unit_scale = volume_unit_conversion
+        if include_debug_info:
+            result['debug_info']['unit_conversion_applied'] = True
+            result['debug_info']['unit_conversion_factor'] = volume_unit_scale
+    else:
+        # No conversion by default - property and geometry volumes are already in correct units
         try:
-            unit_scale = ifcopenshell.util.unit.calculate_unit_scale(ifc_file)
+            length_unit_scale = ifcopenshell.util.unit.calculate_unit_scale(ifc_file)
             if include_debug_info:
-                result['debug_info']['unit_conversion_factor'] = unit_scale
-                result['debug_info']['unit_conversion_applied'] = True
+                result['debug_info']['length_unit_scale'] = length_unit_scale
+                result['debug_info']['unit_conversion_factor'] = 1.0  # No conversion applied
+                result['debug_info']['unit_conversion_applied'] = False
         except Exception:
-            unit_scale = 1.0  # Default to meters if unit detection fails
+            length_unit_scale = 1.0
     
     # Initialize geometry settings if needed
     geometry_settings = None
@@ -185,6 +196,10 @@ def calculate_element_volumes_by_spatial_container(
                         calc_volume += signed_volume
                 
                 geometry_volume = abs(calc_volume)
+                # Apply unit conversion only if explicitly requested
+                if volume_unit_scale != 1.0:
+                    geometry_volume = geometry_volume * volume_unit_scale
+                    
             except Exception:
                 geometry_volume = 0.0
         
@@ -217,9 +232,9 @@ def calculate_element_volumes_by_spatial_container(
                 volume = geometry_volume
                 volume_source = 'geometry'
         
-        # Apply unit conversion if needed
-        if volume > 0 and unit_scale != 1.0:
-            volume = volume * unit_scale
+        # Apply unit conversion to property volumes only if explicitly requested
+        if volume_source == 'properties' and volume_unit_scale != 1.0:
+            volume = volume * volume_unit_scale
         
         # Update calculation method tracking
         if volume_source == 'properties':

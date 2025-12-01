@@ -9,7 +9,8 @@ def calculate_floor_to_floor_heights(
     calculate_all_consecutive: bool = False,
     specific_floors: Optional[List[Tuple[str, str]]] = None,
     case_sensitive: bool = False,
-    include_level_details: bool = True
+    include_level_details: bool = True,
+    semantic_floor_mapping: Optional[Dict[str, List[str]]] = None
 ) -> Dict[str, Any]:
     """
     Calculates floor-to-floor heights between building levels with flexible floor identification.
@@ -28,6 +29,9 @@ def calculate_floor_to_floor_heights(
             (e.g., [('ground', 'first')])
         case_sensitive: Boolean for name matching
         include_level_details: Boolean to include full level information in results
+        semantic_floor_mapping: Dict mapping semantic floor names to lists of possible level names
+            (e.g., {'ground': ['Level 1', 'Ground Floor'], 'first': ['Level 2', 'First Floor']})
+            This takes precedence over floor_identifiers when specified.
     
     Returns:
         Dict containing:
@@ -40,7 +44,7 @@ def calculate_floor_to_floor_heights(
         >>> model = ifcopenshell.open('building.ifc')
         >>> result = calculate_floor_to_floor_heights(
         ...     model,
-        ...     floor_identifiers={'ground': ['ground', '0', 'eg'], 'first': ['first', '1', 'og']},
+        ...     semantic_floor_mapping={'ground': ['Level 1'], 'first': ['Level 2']},
         ...     specific_floors=[('ground', 'first')]
         ... )
         >>> print(result['floor_heights'])
@@ -78,9 +82,16 @@ def calculate_floor_to_floor_heights(
         floor_heights = []
         unidentified_floors = []
         
-        # Default floor identifiers if not provided
-        if floor_identifiers is None:
-            floor_identifiers = {
+        # Use semantic_floor_mapping if provided, otherwise use floor_identifiers or defaults
+        if semantic_floor_mapping is not None:
+            # Use semantic mapping with precedence
+            effective_identifiers = semantic_floor_mapping
+        elif floor_identifiers is not None:
+            # Use provided floor identifiers
+            effective_identifiers = floor_identifiers
+        else:
+            # Default floor identifiers
+            effective_identifiers = {
                 'ground': ['ground', '0', 'eg'],
                 'first': ['first', '1', 'og'],
                 'second': ['second', '2', 'dg'],
@@ -92,7 +103,7 @@ def calculate_floor_to_floor_heights(
         floor_mapping = {}
         used_levels = set()  # Track levels that have been matched to avoid conflicts
         
-        for floor_type, patterns in floor_identifiers.items():
+        for floor_type, patterns in effective_identifiers.items():
             matched_level = None
             for level in levels_data:
                 if level['Name'] in used_levels:
@@ -174,6 +185,6 @@ def calculate_floor_to_floor_heights(
     except Exception as e:
         return {
             'floor_heights': [],
-            'unidentified_floors': list(floor_identifiers.keys()) if floor_identifiers else [],
+            'unidentified_floors': list(effective_identifiers.keys()) if 'effective_identifiers' in locals() else [],
             'error': str(e)
         }

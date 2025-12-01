@@ -70,14 +70,19 @@ def get_spaces_by_name_pattern(
         space_names = []
         
         for space in spaces:
-            if not space.Name:
+            # Get both Name and LongName attributes
+            space_name = getattr(space, 'Name', None) or ''
+            space_long_name = getattr(space, 'LongName', None) or ''
+            
+            # Skip if both are empty
+            if not space_name and not space_long_name:
                 continue
             
-            space_name = space.Name
-            name_to_check = space_name.lower() if not case_sensitive else space_name
-            
-            # Apply pattern matching
+            # Check pattern matching in both Name and LongName
             is_match = False
+            
+            # Check Name field
+            name_to_check = space_name.lower() if not case_sensitive else space_name
             if pattern_type == 'startswith':
                 is_match = name_to_check.startswith(pattern_to_match)
             elif pattern_type == 'endswith':
@@ -87,9 +92,23 @@ def get_spaces_by_name_pattern(
             elif pattern_type == 'regex':
                 is_match = bool(regex_pattern.search(space_name))
             
+            # If not found in Name, check LongName
+            if not is_match and space_long_name:
+                long_name_to_check = space_long_name.lower() if not case_sensitive else space_long_name
+                if pattern_type == 'startswith':
+                    is_match = long_name_to_check.startswith(pattern_to_match)
+                elif pattern_type == 'endswith':
+                    is_match = long_name_to_check.endswith(pattern_to_match)
+                elif pattern_type == 'contains':
+                    is_match = pattern_to_match in long_name_to_check
+                elif pattern_type == 'regex':
+                    is_match = bool(regex_pattern.search(space_long_name))
+            
             if is_match:
                 matching_spaces.append(space)
-                space_names.append(space_name)
+                # Use a combined display name for clarity
+                display_name = f"{space_name} | {space_long_name}" if space_name and space_long_name else (space_name or space_long_name)
+                space_names.append(display_name)
         
         # Prepare space details if requested
         space_details = []
