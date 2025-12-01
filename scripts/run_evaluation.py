@@ -611,7 +611,7 @@ Examples:
         logger.info(f"Continuing existing MLflow run: {run_id}")
         run_name = None  # Don't set a new name when continuing
     else:
-        run_name = f"BAML_COBBIE_{datetime.now().strftime('%Y-%m-%d-%H-%M-%S')}_samples_{args.start}_{end_index - 1}"
+        run_name = f"Evaluation_{datetime.now().strftime('%Y-%m-%d-%H-%M-%S')}"
         logger.info(f"Creating new MLflow run: {run_name}")
 
     # Start MLflow run
