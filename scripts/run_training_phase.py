@@ -41,8 +41,9 @@ from src.util import (
     save_new_tool,
     delete_tool,
     _create_function_from_source_code,
+    extract_tools_used,
+
 )
-from src.util.extract_tool_usage import extract_tools_used
 from src.db import load_train_dev_split
 from src.db.models import IfcBench
 from src.db.query import (
@@ -92,7 +93,7 @@ class Context(BaseModel):
 
     # Tool management configuration
     max_tools: int = 32
-    grace_period: int = 25
+    grace_period: int = 16
 
     # Cobbie agent results
     cobbie_result: Optional[FinalAnswer] = None
@@ -467,7 +468,6 @@ def handle_start_state(context: Context) -> Tuple[TrainingState, Context]:
 
         # Get ranked tools by deletion score
         ranked_tools = get_tools_ranked_by_deletion_score(
-            current_question_num=context.global_question_num,
             grace_period=context.grace_period,
         )
 
