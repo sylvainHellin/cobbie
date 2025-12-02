@@ -6,8 +6,10 @@ Usage:
     uv run scripts/tool_stats.py --all                        # Show all tools (including deleted)
     uv run scripts/tool_stats.py --sort-by called             # Sort by number of times called
     uv run scripts/tool_stats.py --sort-by success-rate       # Sort by success rate (descending)
-    uv run scripts/tool_stats.py --sort-by deletion-score     # Sort by deletion score (descending)
+    uv run scripts/tool_stats.py --sort-by deletion-score     # Sort by linear deletion score (descending)
+    uv run scripts/tool_stats.py --sort-by exp-score          # Sort by exponential deletion score (descending)
     uv run scripts/tool_stats.py --grace-period 30            # Use grace period of 30 inclusions
+    uv run scripts/tool_stats.py --alpha 3 --beta 2 --gamma 1 # Adjust exponential formula parameters
 """
 
 import argparse
@@ -16,19 +18,33 @@ from typing import Any, List, Tuple
 from tabulate import tabulate
 
 from src.db.models import ToolUsageStats
-from src.db.query import calculate_deletion_score, get_all_tool_stats
+from src.db.query import (
+    calculate_deletion_score,
+    calculate_deletion_score_exponential,
+    get_all_tool_stats,
+)
 from src.util.get_created_tools import get_created_tools
 
 
-def display_tool_stats(show_all: bool = False, sort_by: str = "name", grace_period: int = 8) -> None:
+def display_tool_stats(
+    show_all: bool = False,
+    sort_by: str = "name",
+    grace_period: int = 8,
+    alpha: float = 3.0,
+    beta: float = 1.0,
+    gamma: float = 0.0,
+) -> None:
     """
     Display statistics for all tools.
 
     Args:
         show_all: If True, display stats for all tools in the database (including deleted).
                   If False, only display stats for tools that currently exist in the filesystem.
-        sort_by: Column to sort by. Options: name, created, included, called, call-rate, correct, wrong, success-rate, deletion-score
+        sort_by: Column to sort by. Options: name, created, included, called, call-rate, correct, wrong, success-rate, deletion-score, exp-score
         grace_period: Number of inclusions to protect new tools from deletion (default: 8)
+        alpha: Parameter α for exponential formula (controls sensitivity to call rate)
+        beta: Parameter β for exponential formula (controls sensitivity to success rate)
+        gamma: Parameter γ for exponential formula (controls sensitivity to failure rate)
     """
     # Get all tool stats from database
     all_stats: List[ToolUsageStats] = get_all_tool_stats()
@@ -53,13 +69,14 @@ def display_tool_stats(show_all: bool = False, sort_by: str = "name", grace_peri
     print("TOOL USAGE STATISTICS")
     print("=" * 80)
 
-    # Print summary counts
+        # Print summary counts
     print("\n📊 Overview:")
     print(f"  Existing tools: {len(existing_tool_names)}")
     print(f"  Deleted tools: {deleted_count}")
     print(f"  Displaying: {len(all_stats)} tool(s) {'(all tools)' if show_all else '(existing only)'}")
     print(f"  Sorted by: {sort_by}")
     print(f"  Grace period: {grace_period} inclusions")
+    print(f"  Exponential params: α={alpha}, β={beta}, γ={gamma}")
 
     # Prepare table data with sorting
     table_data: List[Tuple[Any, ...]] = []
@@ -74,7 +91,10 @@ def display_tool_stats(show_all: bool = False, sort_by: str = "name", grace_peri
         # Calculate derived metrics
         call_rate = (called / included * 100) if included > 0 else 0
         success_rate = (correct / called * 100) if called > 0 else 0
-        deletion_score = calculate_deletion_score(stat, grace_period)
+        deletion_score_linear = calculate_deletion_score(stat, grace_period)
+        deletion_score_exp = calculate_deletion_score_exponential(
+            stat, grace_period, alpha, beta, gamma
+        )
 
         # Mark deleted tools
         status = "🗑️" if tool_name not in existing_tool_names else ""
@@ -88,14 +108,15 @@ def display_tool_stats(show_all: bool = False, sort_by: str = "name", grace_peri
             correct,
             wrong,
             success_rate,
-            deletion_score,
+            deletion_score_linear,
+            deletion_score_exp,
             # Store raw values for sorting
             tool_name,
         ))
 
     # Sort the data
     sort_key_map = {
-        "name": lambda x: x[9].lower(),  # Sort by raw tool name (case-insensitive)
+        "name": lambda x: x[10].lower(),  # Sort by raw tool name (case-insensitive)
         "created": lambda x: x[1],
         "included": lambda x: x[2],
         "called": lambda x: x[3],
@@ -104,6 +125,7 @@ def display_tool_stats(show_all: bool = False, sort_by: str = "name", grace_peri
         "wrong": lambda x: x[6],
         "success-rate": lambda x: x[7],
         "deletion-score": lambda x: x[8],
+        "exp-score": lambda x: x[9],
     }
 
     # Determine sort order (descending for most metrics, ascending for name)
@@ -124,12 +146,13 @@ def display_tool_stats(show_all: bool = False, sort_by: str = "name", grace_peri
             row[5],  # Correct
             row[6],  # Wrong
             f"{row[7]:.1f}%" if row[3] > 0 else "N/A",  # Success rate
-            f"{row[8]:.1f}" if row[2] >= grace_period else "Protected",  # Deletion score
+            f"{row[8]:.1f}" if row[2] >= grace_period else "Protected",  # Linear deletion score
+            f"{row[9]:.1f}" if row[2] >= grace_period else "Protected",  # Exponential deletion score
         ])
 
     # Print table
     print("\n🔧 Tool Statistics:")
-    headers = ["Tool Name", "Created", "Included", "Called", "Call Rate", "Correct", "Wrong", "Success Rate", "Del Score"]
+    headers = ["Tool Name", "Created", "Included", "Called", "Call Rate", "Correct", "Wrong", "Success Rate", "Linear", "Exp"]
     print(tabulate(formatted_table, headers=headers, tablefmt="grid"))
 
     # Calculate and print summary statistics
@@ -167,8 +190,10 @@ Examples:
   uv run scripts/tool_stats.py --all                        # Show all tools (including deleted)
   uv run scripts/tool_stats.py --sort-by called             # Sort by number of times called
   uv run scripts/tool_stats.py --sort-by success-rate       # Sort by success rate (descending)
-  uv run scripts/tool_stats.py --sort-by deletion-score     # Sort by deletion score (descending)
+  uv run scripts/tool_stats.py --sort-by deletion-score     # Sort by linear deletion score (descending)
+  uv run scripts/tool_stats.py --sort-by exp-score          # Sort by exponential deletion score (descending)
   uv run scripts/tool_stats.py --grace-period 30            # Use grace period of 30 inclusions
+  uv run scripts/tool_stats.py --alpha 3 --beta 2 --gamma 1 # Adjust exponential formula parameters
   uv run scripts/tool_stats.py --all --sort-by call-rate    # Combine filters and sorting
         """
     )
@@ -181,7 +206,7 @@ Examples:
 
     parser.add_argument(
         "--sort-by",
-        choices=["name", "created", "included", "called", "call-rate", "correct", "wrong", "success-rate", "deletion-score"],
+        choices=["name", "created", "included", "called", "call-rate", "correct", "wrong", "success-rate", "deletion-score", "exp-score"],
         default="name",
         help="Column to sort by (default: name). Most columns sort descending except 'name' which sorts ascending."
     )
@@ -190,11 +215,39 @@ Examples:
         "--grace-period",
         type=int,
         default=8,
-        help="Number of inclusions to protect new tools from deletion (default: 25)"
+        help="Number of inclusions to protect new tools from deletion (default: 8)"
+    )
+
+    parser.add_argument(
+        "--alpha",
+        type=float,
+        default=2.0,
+        help="Parameter α for exponential formula (controls sensitivity to call rate, default: 2.0)"
+    )
+
+    parser.add_argument(
+        "--beta",
+        type=float,
+        default=2.0,
+        help="Parameter β for exponential formula (controls sensitivity to success rate, default: 2.0)"
+    )
+
+    parser.add_argument(
+        "--gamma",
+        type=float,
+        default=2.0,
+        help="Parameter γ for exponential formula (controls sensitivity to failure rate, default: 2.0)"
     )
 
     args = parser.parse_args()
-    display_tool_stats(show_all=args.all, sort_by=args.sort_by, grace_period=args.grace_period)
+    display_tool_stats(
+        show_all=args.all,
+        sort_by=args.sort_by,
+        grace_period=args.grace_period,
+        alpha=args.alpha,
+        beta=args.beta,
+        gamma=args.gamma,
+    )
 
 
 if __name__ == "__main__":
