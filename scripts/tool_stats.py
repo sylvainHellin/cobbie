@@ -20,7 +20,7 @@ from src.db.query import calculate_deletion_score, get_all_tool_stats
 from src.util.get_created_tools import get_created_tools
 
 
-def display_tool_stats(show_all: bool = False, sort_by: str = "name", grace_period: int = 25) -> None:
+def display_tool_stats(show_all: bool = False, sort_by: str = "name", grace_period: int = 8) -> None:
     """
     Display statistics for all tools.
 
@@ -28,7 +28,7 @@ def display_tool_stats(show_all: bool = False, sort_by: str = "name", grace_peri
         show_all: If True, display stats for all tools in the database (including deleted).
                   If False, only display stats for tools that currently exist in the filesystem.
         sort_by: Column to sort by. Options: name, created, included, called, call-rate, correct, wrong, success-rate, deletion-score
-        grace_period: Number of inclusions to protect new tools from deletion (default: 25)
+        grace_period: Number of inclusions to protect new tools from deletion (default: 8)
     """
     # Get all tool stats from database
     all_stats: List[ToolUsageStats] = get_all_tool_stats()
@@ -189,7 +189,7 @@ Examples:
     parser.add_argument(
         "--grace-period",
         type=int,
-        default=25,
+        default=8,
         help="Number of inclusions to protect new tools from deletion (default: 25)"
     )
 
