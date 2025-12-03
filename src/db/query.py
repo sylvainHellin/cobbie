@@ -267,23 +267,23 @@ def get_tools_ranked_by_deletion_score(
 
 def calculate_deletion_score_exponential(
     tool_stats: ToolUsageStats,
-    grace_period: int = 16,
+    grace_period: int = 8,
     alpha: float = 2.0,
-    beta: float = 1.0,
-    gamma: float = 1.0,
+    beta: float = 2.0,
 ) -> float:
     """
-    Calculate deletion score using exponential/logarithmic formula (0-100, higher = more deletable).
+    Calculate deletion score using exponential formula (higher = more deletable).
 
-    Formula: score = (exp(-α × call_rate) + exp(-β × success_rate) + exp(γ × failure_rate))
+    Formula: score = exp(exp(-α × call_rate) + exp(-β × success_rate))
 
     Where:
     - call_rate: called / included (how often used when available, 0-1)
     - success_rate: correct / called (success when used, 0-1)
-    - failure_rate: wrong / called (failure when used, 0-1)
-    - α, β, γ: tunable parameters controlling sensitivity to each rate
+    - α: controls sensitivity to usage rate (higher α = more penalty for low usage)
+    - β: controls sensitivity to success rate (higher β = more penalty for low success)
 
-    α influence the usage term, β the success rate, and γ the failure rate.
+    Note: failure_rate is redundant since failure_rate = 1 - success_rate
+    (correct + wrong always equals called in our tracking system)
 
     Returns:
         0.0 if within grace period (fewer inclusions than grace_period)
@@ -294,7 +294,6 @@ def calculate_deletion_score_exponential(
     included = tool_stats.questions_when_included or 0
     called = tool_stats.questions_when_called or 0
     correct = tool_stats.questions_correct_contribution or 0
-    wrong = tool_stats.questions_wrong_contribution or 0
 
     # Grace period protection
     if included < grace_period:
@@ -303,18 +302,16 @@ def calculate_deletion_score_exponential(
     # Calculate rates
     call_rate = called / included
     success_rate = correct / called if called > 0 else 0.0
-    failure_rate = wrong / called if called > 0 else 0.0
 
     # Exponential terms
     # - exp(-α × call_rate): high (→1) when call_rate is low (→0), low (→0) when call_rate is high (→1)
-    # - exp(-β × success_rate): high when success_rate is low, low when success_rate is high
-    # - exp(γ × failure_rate): low (→1) when failure_rate is low (→0), high (→e^γ) when failure_rate is high (→1)
+    # - exp(-β × success_rate): high (→1) when success_rate is low (→0), low (→0) when success_rate is high (→1)
     usage_term = math.exp(-alpha * call_rate)
     success_term = math.exp(-beta * success_rate)
-    failure_term = math.exp(gamma * failure_rate)
+
     # Combined score
-    # Three terms sum to range [1, 1+1+e^γ] ≈ [1, 2+e^2] ≈ [1, 9.4] for γ=2
-    raw_score = (usage_term + success_term + failure_term)
+    # Two terms sum to range [0, 2] approximately
+    raw_score = usage_term + success_term
     final_score = math.exp(raw_score)
 
     return final_score

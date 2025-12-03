@@ -9,7 +9,7 @@ Usage:
     uv run scripts/tool_stats.py --sort-by deletion-score     # Sort by linear deletion score (descending)
     uv run scripts/tool_stats.py --sort-by exp-score          # Sort by exponential deletion score (descending)
     uv run scripts/tool_stats.py --grace-period 30            # Use grace period of 30 inclusions
-    uv run scripts/tool_stats.py --alpha 3 --beta 2 --gamma 1 # Adjust exponential formula parameters
+    uv run scripts/tool_stats.py --alpha 3 --beta 2           # Adjust exponential formula parameters
 """
 
 import argparse
@@ -30,9 +30,8 @@ def display_tool_stats(
     show_all: bool = False,
     sort_by: str = "name",
     grace_period: int = 8,
-    alpha: float = 3.0,
-    beta: float = 1.0,
-    gamma: float = 0.0,
+    alpha: float = 2.0,
+    beta: float = 2.0,
 ) -> None:
     """
     Display statistics for all tools.
@@ -44,7 +43,6 @@ def display_tool_stats(
         grace_period: Number of inclusions to protect new tools from deletion (default: 8)
         alpha: Parameter α for exponential formula (controls sensitivity to call rate)
         beta: Parameter β for exponential formula (controls sensitivity to success rate)
-        gamma: Parameter γ for exponential formula (controls sensitivity to failure rate)
     """
     # Get all tool stats from database
     all_stats: List[ToolUsageStats] = get_all_tool_stats()
@@ -76,7 +74,7 @@ def display_tool_stats(
     print(f"  Displaying: {len(all_stats)} tool(s) {'(all tools)' if show_all else '(existing only)'}")
     print(f"  Sorted by: {sort_by}")
     print(f"  Grace period: {grace_period} inclusions")
-    print(f"  Exponential params: α={alpha}, β={beta}, γ={gamma}")
+    print(f"  Exponential params: α={alpha}, β={beta}")
 
     # Prepare table data with sorting
     table_data: List[Tuple[Any, ...]] = []
@@ -93,7 +91,7 @@ def display_tool_stats(
         success_rate = (correct / called * 100) if called > 0 else 0
         deletion_score_linear = calculate_deletion_score(stat, grace_period)
         deletion_score_exp = calculate_deletion_score_exponential(
-            stat, grace_period, alpha, beta, gamma
+            stat, grace_period, alpha, beta
         )
 
         # Mark deleted tools
@@ -193,7 +191,7 @@ Examples:
   uv run scripts/tool_stats.py --sort-by deletion-score     # Sort by linear deletion score (descending)
   uv run scripts/tool_stats.py --sort-by exp-score          # Sort by exponential deletion score (descending)
   uv run scripts/tool_stats.py --grace-period 30            # Use grace period of 30 inclusions
-  uv run scripts/tool_stats.py --alpha 3 --beta 2 --gamma 1 # Adjust exponential formula parameters
+  uv run scripts/tool_stats.py --alpha 3 --beta 2           # Adjust exponential formula parameters
   uv run scripts/tool_stats.py --all --sort-by call-rate    # Combine filters and sorting
         """
     )
@@ -232,13 +230,6 @@ Examples:
         help="Parameter β for exponential formula (controls sensitivity to success rate, default: 2.0)"
     )
 
-    parser.add_argument(
-        "--gamma",
-        type=float,
-        default=2.0,
-        help="Parameter γ for exponential formula (controls sensitivity to failure rate, default: 2.0)"
-    )
-
     args = parser.parse_args()
     display_tool_stats(
         show_all=args.all,
@@ -246,7 +237,6 @@ Examples:
         grace_period=args.grace_period,
         alpha=args.alpha,
         beta=args.beta,
-        gamma=args.gamma,
     )
 
 
