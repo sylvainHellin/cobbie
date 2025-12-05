@@ -237,8 +237,6 @@ After implementation, test these scenarios:
 
 ## Potential Issues
 
-1. **Manual tools may have import issues** - Some manual tools import local modules (e.g., `state.py`). May need to verify these imports work with dynamic loading.
-
 2. **Name collisions** - If same function name exists in multiple directories, last loaded wins. Document this behavior.
 
 3. **Performance** - Loading 50+ created + 26 manual tools might be slow, but training already does this, so should be fine.
