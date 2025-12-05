@@ -1,27 +1,20 @@
 # python packages
-import sys
-import os
 import json
-sys.path.insert(0, os.path.dirname(os.getcwd()))
-
-# state management
-from state import get_model_path
 
 # ifcopenshell
 import ifcopenshell
 
-def get_type_definitions_and_instances(model: str = None, type_definition_class: str = None) -> str:
+def get_type_definitions_and_instances(model_path: str, type_definition_class: str | None = None) -> str:
     """Gets all type definitions and their instances for a specific IFC type.
-    
+
     This method helps analyze type-instance relationships in an IFC model by:
     1. Finding all type definitions of a specified IFC type class
     2. For each type, collecting all instances/occurrences in the model
     3. Returning structured data about both types and their instances
-    
+
     Args:
-        model (str, optional): The type of model to analyze - e.g. 'arc' for architectural 
-            or 'mep' for MEP model. If None, uses the model from the current state.
-        type_definition_class (str): The IFC type definition class to search for. 
+        model_path (str): Absolute path to the IFC model file to analyze.
+        type_definition_class (str, optional): The IFC type definition class to search for. 
             Must be a valid IFC type class name ending in 'Type'.
             Common examples:
             - 'IfcDoorType' for door types
@@ -58,7 +51,7 @@ def get_type_definitions_and_instances(model: str = None, type_definition_class:
             "error": "No type definition class provided"
         }, indent=2)
     
-    ifc_model = ifcopenshell.open(get_model_path(model=model))
+    ifc_model = ifcopenshell.open(model_path)
     
     try:
         # Get all types of the specified class
@@ -76,14 +69,8 @@ def get_type_definitions_and_instances(model: str = None, type_definition_class:
         
         # For each type, get its information and related instances
         for type_def in types:
-            type_info = {
-                "name": type_def.Name if hasattr(type_def, "Name") else "Unnamed",
-                "guid": type_def.GlobalId,
-                "predefined_type": getattr(type_def, "PredefinedType", None),
-                "instances": [],
-                "instance_count": 0
-            }
-            
+            instances: list[dict[str, str]] = []
+
             # Get all elements of this type using inverse relationships
             rel_objects = ifc_model.get_inverse(type_def)
             for rel in rel_objects:
@@ -94,9 +81,16 @@ def get_type_definitions_and_instances(model: str = None, type_definition_class:
                             "guid": instance.GlobalId,
                             "type": instance.is_a()
                         }
-                        type_info["instances"].append(instance_info)
-                        type_info["instance_count"] += 1
-            
+                        instances.append(instance_info)
+
+            type_info = {
+                "name": type_def.Name if hasattr(type_def, "Name") else "Unnamed",
+                "guid": type_def.GlobalId,
+                "predefined_type": getattr(type_def, "PredefinedType", None),
+                "instances": instances,
+                "instance_count": len(instances)
+            }
+
             result["types"].append(type_info)
             
         return json.dumps(result, indent=2)
@@ -104,32 +98,4 @@ def get_type_definitions_and_instances(model: str = None, type_definition_class:
     except Exception as e:
         return json.dumps({
             "error": f"Error getting type instances: {str(e)}"
-        }, indent=2)
-
-if __name__ == "__main__":
-    # Test with common type classes
-    test_types = [
-        "IfcDoorType",
-        "IfcWindowType",
-        "IfcWallType",
-        "IfcFurnitureType",
-        "IfcLightFixtureType"
-    ]
-    
-    print("\nTesting with architectural model:")
-    for type_class in test_types:
-        print(f"\nGetting instances for {type_class}:")
-        print(get_type_definitions_and_instances(model="arc", type_definition_class=type_class))
-
-    print(f"\n{"#"*20}Testing with mep model:\n{"#"*20}")
-    for type_class in test_types:
-        print(f"\nGetting instances for {type_class}:")
-        print(get_type_definitions_and_instances(model="mep", type_definition_class=type_class))
-    
-    # Test with invalid type
-    print("\nTesting with invalid type:")
-    print(get_type_definitions_and_instances(model="arc", type_definition_class="InvalidType"))
-    
-    # Test with no type
-    print("\nTesting with no type:")
-    print(get_type_definitions_and_instances(model="arc")) 
+        }, indent=2) 

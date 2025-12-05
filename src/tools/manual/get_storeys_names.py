@@ -1,21 +1,14 @@
 # python packages
-import sys
-import os
 import json
-sys.path.insert(0, os.path.dirname(os.getcwd()))
-
-# state management
-from state import get_model_path
 
 # ifcopenshell
 import ifcopenshell
 
-def get_storeys_names(model: str = None) -> str:
+def get_storeys_names(model_path: str) -> str:
     """Gets a list of all building storey names in the model.
-    
+
     Args:
-        model (str, optional): The type of model to analyze - e.g. 'arc' for architectural 
-            or 'mep' for MEP model. If None, uses the model from the current state.
+        model_path (str): Absolute path to the IFC model file to analyze.
     
     Returns:
         str: JSON string containing:
@@ -31,7 +24,7 @@ def get_storeys_names(model: str = None) -> str:
             }
             Storeys are sorted by elevation.
     """
-    ifc_model = ifcopenshell.open(get_model_path(model=model))
+    ifc_model = ifcopenshell.open(model_path)
     
     try:
         # Get all building storeys
@@ -59,13 +52,4 @@ def get_storeys_names(model: str = None) -> str:
         return json.dumps({"storeys": storey_info}, indent=2)
         
     except Exception as e:
-        return json.dumps({"error": f"Error getting storey names: {str(e)}"}, indent=2)
-
-if __name__ == "__main__":
-    # Test with architectural model
-    print("\nTesting architectural model:")
-    print(get_storeys_names(model="arc"))
-    
-    # Test with MEP model
-    print("\nTesting MEP model:")
-    print(get_storeys_names(model="mep")) 
+        return json.dumps({"error": f"Error getting storey names: {str(e)}"}, indent=2) 

@@ -1,22 +1,13 @@
-# python packages
-import sys
-import os
-import json
-sys.path.insert(0, os.path.dirname(os.getcwd()))
-
-# state management
-from state import get_model_path
-
 # ifcopenshell
 import ifcopenshell
 import ifcopenshell.util.element
+import json
 
-def get_containing_rooms_for_entity_guids(model: str = None, guids: list[str] = None) -> str:
+def get_containing_rooms_for_entity_guids(model_path: str, guids: list[str] | None = None) -> str:
     """Gets the rooms/spaces where the entities with specified GUIDs are located.
-    
+
     Args:
-        model (str, optional): The type of model to analyze - e.g. 'arc' for architectural 
-            or 'mep' for MEP model. If None, uses the model from the current state.
+        model_path (str): Absolute path to the IFC model file to analyze.
         guids (list[str]): List of entity Global IDs to check
             Example: ["2O2Fr$t4X7Zf8NOew3FNhv", "3hKe29vjL9pPkxwvnQ$KUw"]
             
@@ -48,8 +39,8 @@ def get_containing_rooms_for_entity_guids(model: str = None, guids: list[str] = 
             "status": "error",
             "message": "No GUIDs provided"
         }, indent=2)
-    
-    ifc_model = ifcopenshell.open(get_model_path(model=model))
+
+    ifc_model = ifcopenshell.open(model_path)
     
     try:
         # Initialize result structure
@@ -98,7 +89,9 @@ def get_containing_rooms_for_entity_guids(model: str = None, guids: list[str] = 
                         })
                 
                 result["entities"].append(entity_info)
-                result["total_count"] += 1
+                count: int = result["total_count"]  # type: ignore
+                count = count + 1
+                result["total_count"] = count
                 
             except Exception as e:
                 print(f"Warning: Could not process GUID {guid}: {str(e)}")
@@ -116,19 +109,4 @@ def get_containing_rooms_for_entity_guids(model: str = None, guids: list[str] = 
         return json.dumps({
             "status": "error",
             "message": f"Error finding containing rooms: {str(e)}"
-        }, indent=2)
-
-if __name__ == "__main__":
-    # Test with some example GUIDs (update these for your model)
-    test_guids = [
-        "1hOSvn6df7F8_7GcBWlRGQ",  # Example door GUID
-        "1hOSvn6df7F8_7GcBWlSDm",  # Example window GUID
-        "invalid_guid"  # Test error handling
-    ]
-    
-    print("\nTesting with example GUIDs:")
-    print(get_containing_rooms_for_entity_guids(model="arc", guids=test_guids))
-    
-    # Test with empty list
-    print("\nTesting with empty GUID list:")
-    print(get_containing_rooms_for_entity_guids(model="arc", guids=[])) 
+        }, indent=2) 

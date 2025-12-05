@@ -1,10 +1,3 @@
-import sys
-import os
-sys.path.insert(0, os.path.dirname(os.getcwd()))
-
-# state management
-from state import get_model_path
-
 # ifcopenshell
 import ifcopenshell
 import ifcopenshell.util.element
@@ -19,13 +12,12 @@ def get_containing_storey(space, ifc_model):
                 return rel.RelatingObject
     return None
 
-def list_rooms(model: str = None, storey: str = None):
+def list_rooms(model_path: str, storey: str | None = None):
     """Lists all rooms/spaces in an IFC model with their GUID, short name, and long name.
-    
+
     Args:
-        model (str, optional): The type of model to analyze - e.g. 'arc' for architectural 
-            or 'mep' for MEP model. If None, uses the model from the current state.
-        storey (str, optional): Name of the storey to filter rooms by. If None, returns 
+        model_path (str): Absolute path to the IFC model file to analyze.
+        storey (str, optional): Name of the storey to filter rooms by. If None, returns
             rooms from all storeys.
 
     Returns:
@@ -35,7 +27,7 @@ def list_rooms(model: str = None, storey: str = None):
             - long_name: The long name from various possible sources in the IFC file
             - storey: The name of the building storey containing this space
     """
-    ifc_model = ifcopenshell.open(get_model_path(model=model))
+    ifc_model = ifcopenshell.open(model_path)
     
     # Get all spaces/rooms in the model
     spaces = [space for space in ifc_model.by_type("IfcSpace")]
@@ -83,26 +75,5 @@ def list_rooms(model: str = None, storey: str = None):
             "storey": storey_name
         }
         rooms_info.append(room_data)
-    
-    return rooms_info
 
-if __name__ == "__main__":
-    # Test the function with the architectural model
-    print("All rooms:")
-    rooms = list_rooms(model="arc")
-    for room in rooms:
-        print(f"GUID: {room['guid']}")
-        print(f"Name: {room['name']}")
-        print(f"Long Name: {room['long_name']}")
-        print(f"Storey: {room['storey']}")
-        print("-" * 50)
-        
-    print("\nRooms in specific storey:")
-    # Example filtering rooms in storey "Level 2"
-    rooms = list_rooms(model="arc", storey="Level 2")
-    for room in rooms:
-        print(f"GUID: {room['guid']}")
-        print(f"Name: {room['name']}")
-        print(f"Long Name: {room['long_name']}")
-        print(f"Storey: {room['storey']}")
-        print("-" * 50) 
+    return rooms_info 

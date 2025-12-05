@@ -1,31 +1,22 @@
-# python packages
-import sys
-import os
-sys.path.insert(0, os.path.dirname(os.getcwd()))
-
-# state management
-from state import get_model_path
-
 # ifcopenshell
 import ifcopenshell
 import ifcopenshell.util.element
 
-def check_door_accessibility(model: str = None) -> str:
+def check_door_accessibility(model_path: str) -> str:
     """Checks if internal doors meet basic accessibility requirements.
-    
+
     Analyzes door dimensions against common accessibility standards:
     - Minimum clear width of 32 inches (0.813 meters)
-    
+
     Args:
-        model (str, optional): The type of model to analyze - e.g. 'arc' for architectural 
-            or 'mep' for MEP model. If None, uses the model from the current state.
+        model_path (str): Absolute path to the IFC model file to analyze.
     
     Returns:
         str: A summary string containing:
             - Whether all doors meet requirements
             - List of non-compliant doors with their issues
     """
-    ifc_model = ifcopenshell.open(get_model_path(model=model))
+    ifc_model = ifcopenshell.open(model_path)
     
     # Get all doors
     doors = ifc_model.by_type("IfcDoor")
@@ -63,21 +54,14 @@ def check_door_accessibility(model: str = None) -> str:
         results['details'].append(door_info)
     
     # Create summary
-    if results['compliant']:
+    compliant: bool = results['compliant']  # type: ignore
+    if compliant:
         summary = "All internal doors meet basic accessibility requirements"
     else:
         summary = "Some doors do not meet accessibility requirements:\n"
-        for door in results['details']:
+        details: list = results['details']  # type: ignore
+        for door in details:
             if not door['compliant']:
                 summary += f"- {door['name']}: {door['issue']}\n"
-    
-    return summary.strip()
 
-if __name__ == "__main__":
-    # Test the function with the architectural model
-    print("\nChecking door accessibility in architectural model:")
-    print(check_door_accessibility(model="arc"))
-    
-    # Test with MEP model (might not have doors)
-    print("\nChecking door accessibility in MEP model:")
-    print(check_door_accessibility(model="mep")) 
+    return summary.strip() 

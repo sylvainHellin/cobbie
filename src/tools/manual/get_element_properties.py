@@ -1,11 +1,5 @@
 # python packages
-import sys
-import os
 import json
-sys.path.insert(0, os.path.dirname(os.getcwd()))
-
-# state management
-from state import get_model_path
 
 # ifcopenshell
 import ifcopenshell
@@ -34,13 +28,12 @@ def extract_quantity_from_property_sets(properties):
             }
     return quantities
 
-def get_element_properties(model: str = None, element_guid: str = None) -> str:
+def get_element_properties(model_path: str, element_guid: str | None = None) -> str:
     """Gets detailed properties for a specific element including dimensions if available.
-    
+
     Args:
-        model (str, optional): The type of model to analyze - e.g. 'arc' for architectural 
-            or 'mep' for MEP model. If None, uses the model from the current state.
-        element_guid (str): The GUID of the element to get properties for
+        model_path (str): Absolute path to the IFC model file to analyze.
+        element_guid (str, optional): The GUID of the element to get properties for
             Example: "2O2Fr$t4X7Zf8NOew3FNhv"
             
     Returns:
@@ -75,7 +68,7 @@ def get_element_properties(model: str = None, element_guid: str = None) -> str:
     if not element_guid:
         return json.dumps({"error": "No element GUID provided"}, indent=2)
     
-    ifc_model = ifcopenshell.open(get_model_path(model=model))
+    ifc_model = ifcopenshell.open(model_path)
     
     try:
         # Get the element by GUID
@@ -140,21 +133,4 @@ def get_element_properties(model: str = None, element_guid: str = None) -> str:
     except Exception as e:
         return json.dumps({
             "error": f"Error getting element properties: {str(e)}"
-        }, indent=2)
-
-if __name__ == "__main__":
-    # Test with some example GUIDs (update these for your model)
-    test_guids = [
-        "1hOSvn6df7F8_7GcBWlRGQ",  # Example door GUID
-        "2O2Fr$t4X7Zf8NOew3FNr2",  # Example wall GUID
-        "invalid_guid"  # Test error handling
-    ]
-    
-    print("\nTesting with example GUIDs:")
-    for guid in test_guids:
-        print(f"\nGetting properties for {guid}:")
-        print(get_element_properties(model="arc", element_guid=guid))
-    
-    # Test with no GUID
-    print("\nTesting with no GUID:")
-    print(get_element_properties(model="arc")) 
+        }, indent=2) 

@@ -1,22 +1,13 @@
-# python packages
-import sys
-import os
-import json
-sys.path.insert(0, os.path.dirname(os.getcwd()))
-
-# state management
-from state import get_model_path
-
 # ifcopenshell
 import ifcopenshell
 import ifcopenshell.util.element
+import json
 
-def analyze_elements_exterior_classification(model: str = None, element_guids: list[str] = None) -> str:
+def analyze_elements_exterior_classification(model_path: str, element_guids: list[str] | None = None) -> str:
     """Determines which elements from a list face the exterior.
-    
+
     Args:
-        model (str, optional): The type of model to analyze - e.g. 'arc' for architectural 
-            or 'mep' for MEP model. If None, uses the model from the current state.
+        model_path (str): Absolute path to the IFC model file to analyze.
         element_guids (list[str]): List of element Global IDs to check
             Example: ["2O2Fr$t4X7Zf8NOew3FNhv", "3hKe29vjL9pPkxwvnQ$KUw"]
                 
@@ -39,8 +30,8 @@ def analyze_elements_exterior_classification(model: str = None, element_guids: l
     """
     if not element_guids:
         return json.dumps({"error": "No element GUIDs provided"}, indent=2)
-    
-    ifc_model = ifcopenshell.open(get_model_path(model=model))
+
+    ifc_model = ifcopenshell.open(model_path)
     
     try:
         # Initialize results structure
@@ -99,12 +90,16 @@ def analyze_elements_exterior_classification(model: str = None, element_guids: l
                     "is_exterior": is_exterior
                 }
                 result["elements"].append(element_info)
-                
-                # Update totals
+
+                # Update totals using local variables with proper typing
+                total_exterior: int = result["total_exterior"]  # type: ignore
+                total_interior: int = result["total_interior"]  # type: ignore
                 if is_exterior:
-                    result["total_exterior"] += 1
+                    total_exterior = total_exterior + 1
                 else:
-                    result["total_interior"] += 1
+                    total_interior = total_interior + 1
+                result["total_exterior"] = total_exterior
+                result["total_interior"] = total_interior
                     
             except Exception as e:
                 result["errors"].append({
@@ -117,19 +112,4 @@ def analyze_elements_exterior_classification(model: str = None, element_guids: l
     except Exception as e:
         return json.dumps({
             "error": f"Error checking exterior elements: {str(e)}"
-        }, indent=2)
-
-if __name__ == "__main__":
-    # Test with some example GUIDs (update these for your model)
-    test_guids = [
-        "1hOSvn6df7F8_7GcBWlRGQ",  # Example door GUID
-        "1hOSvn6df7F8_7GcBWlSDm",  # Example window GUID
-        "invalid_guid"  # Test error handling
-    ]
-    
-    print("\nAnalyzing elements in architectural model:")
-    print(analyze_elements_exterior_classification(model="arc", element_guids=test_guids))
-    
-    # Test with empty list
-    print("\nTesting with empty GUID list:")
-    print(analyze_elements_exterior_classification(model="arc", element_guids=[])) 
+        }, indent=2) 

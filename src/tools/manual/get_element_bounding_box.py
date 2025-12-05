@@ -1,26 +1,19 @@
 # python packages
-import sys
-import os
 import json
-sys.path.insert(0, os.path.dirname(os.getcwd()))
-
-# state management
-from state import get_model_path
 
 # ifcopenshell
 import ifcopenshell
 import ifcopenshell.geom
 
-def get_element_bounding_box(model: str = None, element_guid: str = None) -> str:
+def get_element_bounding_box(model_path: str, element_guid: str | None = None) -> str:
     """Gets the bounding box coordinates of an IFC element.
-    
-    Calculates the minimum and maximum coordinates that form a box 
+
+    Calculates the minimum and maximum coordinates that form a box
     containing the entire element geometry.
-    
+
     Args:
-        model (str, optional): The type of model to analyze - e.g. 'arc' for architectural 
-            or 'mep' for MEP model. If None, uses the model from the current state.
-        element_guid (str): The Global ID of the IFC element
+        model_path (str): Absolute path to the IFC model file to analyze.
+        element_guid (str, optional): The Global ID of the IFC element
             Example: "2O2Fr$t4X7Zf8NOew3FNhv"
             
     Returns:
@@ -39,7 +32,7 @@ def get_element_bounding_box(model: str = None, element_guid: str = None) -> str
     if not element_guid:
         return json.dumps({"error": "No element GUID provided"}, indent=2)
     
-    ifc_model = ifcopenshell.open(get_model_path(model=model))
+    ifc_model = ifcopenshell.open(model_path)
     
     try:
         # Get element by GUID
@@ -100,21 +93,4 @@ def get_element_bounding_box(model: str = None, element_guid: str = None) -> str
     except Exception as e:
         return json.dumps({
             "error": f"Error calculating bounding box: {str(e)}"
-        }, indent=2)
-
-if __name__ == "__main__":
-    # Test with some example GUIDs (update these for your model)
-    test_guids = [
-        "1hOSvn6df7F8_7GcBWlRGQ",  # Example door GUID
-        "1hOSvn6df7F8_7GcBWlSDm",  # Example window GUID
-        "invalid_guid"  # Test error handling
-    ]
-    
-    print("\nTesting with example GUIDs:")
-    for guid in test_guids:
-        print(f"\nGetting bounding box for {guid}:")
-        print(get_element_bounding_box(model="arc", element_guid=guid))
-    
-    # Test with no GUID
-    print("\nTesting with no GUID:")
-    print(get_element_bounding_box(model="arc")) 
+        }, indent=2) 

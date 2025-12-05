@@ -1,21 +1,13 @@
-# python packages
-import sys
-import os
-import json
-sys.path.insert(0, os.path.dirname(os.getcwd()))
-
-# state management
-from state import get_model_path
-
 # ifcopenshell
 import ifcopenshell
 import ifcopenshell.util.element
-def get_rooms_with_outdoor_access(model: str = None, depth: int = 1) -> str:
+import json
+
+def get_rooms_with_outdoor_access(model_path: str, depth: int = 1) -> str:
     """Find rooms that have direct access to outdoor spaces.
-    
+
     Args:
-        model (str, optional): The type of model to analyze - e.g. 'arc' for architectural 
-            or 'mep' for MEP model. If None, uses the model from the current state.
+        model_path (str): Absolute path to the IFC model file to analyze.
         depth (int): Detail level for the output (1 or 2).
                     1: Only rooms with exterior doors
                     2: All rooms with exterior access (doors and/or windows)
@@ -29,7 +21,7 @@ def get_rooms_with_outdoor_access(model: str = None, depth: int = 1) -> str:
                 - total_rooms_with_doors: Number of rooms with exterior doors
                 - total_rooms_with_windows_only: Number of rooms with only exterior windows
     """
-    ifc_model = ifcopenshell.open(get_model_path(model=model))
+    ifc_model = ifcopenshell.open(model_path)
     
     # Initialize results dictionaries
     rooms_with_doors = {}
@@ -102,27 +94,5 @@ def get_rooms_with_outdoor_access(model: str = None, depth: int = 1) -> str:
             for room_name, global_id in sorted(rooms_with_windows.items())
             if room_name not in rooms_with_doors
         ]
-    
-    return json.dumps(result, indent=2)
 
-if __name__ == "__main__":
-    try:
-        # Test with depth 1 (doors only)
-        print("\nAnalyzing rooms with outdoor door access (depth=1):")
-        result_doors = get_rooms_with_outdoor_access(model="arc", depth=1)
-        print(result_doors)
-        
-        # Test with depth 2 (doors and windows)
-        print("\nAnalyzing rooms with outdoor door and window access (depth=2):")
-        result_full = get_rooms_with_outdoor_access(model="arc", depth=2)
-        print(result_full)
-        
-        # Test with default parameters
-        print("\nTesting with default parameters:")
-        result_default = get_rooms_with_outdoor_access()
-        print(result_default)
-        
-    except FileNotFoundError as e:
-        print(f"Error: Could not find the IFC model file.\nDetails: {e}")
-    except Exception as e:
-        print(f"An unexpected error occurred:\nDetails: {e}")
+    return json.dumps(result, indent=2)

@@ -1,27 +1,18 @@
-# python packages
-import sys
-import os
-import json
-sys.path.insert(0, os.path.dirname(os.getcwd()))
-
-# state management
-from state import get_model_path
-
 # ifcopenshell
 import ifcopenshell
 import ifcopenshell.util.shape
 import ifcopenshell.geom
+import json
 
-def get_elements_area(model: str = None, guids: list[str] = None) -> str:
+def get_elements_area(model_path: str, guids: list[str] | None = None) -> str:
     """Gets the area of specified elements by their GUIDs.
-    
+
     Calculates the area of each element and provides a total area.
     For each element, calculates projected areas on each axis and uses the largest value.
     Useful for quantity takeoffs and material area calculations.
-    
+
     Args:
-        model (str, optional): The type of model to analyze - e.g. 'arc' for architectural 
-            or 'mep' for MEP model. If None, uses the model from the current state.
+        model_path (str): Absolute path to the IFC model file to analyze.
         guids (list[str]): List of element Global IDs to calculate areas for
             Example: ["2O2Fr$t4X7Zf8NOew3FNhv", "3hKe29vjL9pPkxwvnQ$KUw"]
             
@@ -43,8 +34,8 @@ def get_elements_area(model: str = None, guids: list[str] = None) -> str:
     """
     if not guids:
         return json.dumps({"error": "No element GUIDs provided"}, indent=2)
-    
-    ifc_model = ifcopenshell.open(get_model_path(model=model))
+
+    ifc_model = ifcopenshell.open(model_path)
     
     try:
         # Initialize results structure
@@ -81,8 +72,9 @@ def get_elements_area(model: str = None, guids: list[str] = None) -> str:
                 
                 # Calculate projected area for each axis and keep the highest value
                 projected_areas = []
-                for axis in ["X", "Y", "Z"]:
-                    area = ifcopenshell.util.shape.get_side_area(shape.geometry, axis=axis)
+                geom = shape.geometry()
+                for axis_str in ["X", "Y", "Z"]:
+                    area = ifcopenshell.util.shape.get_side_area(geom, axis=axis_str)  # type: ignore
                     projected_areas.append(area)
 
                 # select the largest projection
@@ -96,7 +88,9 @@ def get_elements_area(model: str = None, guids: list[str] = None) -> str:
                     "area": round(area, 3)  # Round to 3 decimal places
                 }
                 result["elements"].append(element_info)
-                result["total_area"] += area
+                total = result["total_area"]
+                total += area
+                result["total_area"] = total
                 
             except Exception as e:
                 result["errors"].append({
@@ -105,26 +99,12 @@ def get_elements_area(model: str = None, guids: list[str] = None) -> str:
                 })
         
         # Round total area
-        result["total_area"] = round(result["total_area"], 3)
+        total_value: float = result["total_area"]  # type: ignore
+        result["total_area"] = round(total_value, 3)
         
         return json.dumps(result, indent=2)
         
     except Exception as e:
         return json.dumps({
             "error": f"Error calculating areas: {str(e)}"
-        }, indent=2)
-
-if __name__ == "__main__":
-    # Test with some example GUIDs (update these for your model)
-    test_guids = [
-        "2O2Fr$t4X7Zf8NOew3FNr2",  # Example wall GUID
-        "2OBrcmyk58NupXoVOHUtxr",  # Example floor GUID
-        "invalid_guid"  # Test error handling
-    ]
-    
-    print("\nTesting with example GUIDs:")
-    print(get_elements_area(model="arc", guids=test_guids))
-    
-    # Test with empty list
-    print("\nTesting with empty GUID list:")
-    print(get_elements_area(model="arc", guids=[])) 
+        }, indent=2) 

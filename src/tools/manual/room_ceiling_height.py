@@ -1,31 +1,21 @@
-#%%
-# python packages
-import sys
-import os
-sys.path.insert(0, os.path.dirname(os.getcwd()))
-
-# state management
-from state import get_model_path
-
 # ifcopenshell
 import ifcopenshell
 import ifcopenshell.util.element
 import ifcopenshell.util.shape
 import ifcopenshell.geom
 
-def get_room_ceiling_height(name: str = None, guid: str = None, model: str = None):
+def get_room_ceiling_height(model_path: str, name: str | None = None, guid: str | None = None):
     """Gets the ceiling height of a specific room in an IFC model.
-    
-    Finds a room/space by either its GUID or by searching its identifiers (name, description, 
-    or long name) for a matching string. Once found, calculates the vertical dimension of 
+
+    Finds a room/space by either its GUID or by searching its identifiers (name, description,
+    or long name) for a matching string. Once found, calculates the vertical dimension of
     the space using its geometric representation.
 
     Args:
-        name (str, optional): String to search for in room identifiers. Can be a full or 
+        model_path (str): Absolute path to the IFC model file to analyze.
+        name (str, optional): String to search for in room identifiers. Can be a full or
             partial match. Case-insensitive.
         guid (str, optional): Global unique identifier of the space. Provides direct lookup.
-        model (str, optional): The type of model to analyze - e.g. 'arc' for architectural 
-            or 'mep' for MEP model. If None, uses the model from the current state.
 
     Returns:
         str: The ceiling height in meters, rounded to 2 decimal places. Returns None if the
@@ -42,8 +32,8 @@ def get_room_ceiling_height(name: str = None, guid: str = None, model: str = Non
     """
     if name is None and guid is None:
         raise ValueError("Either name or guid must be provided")
-        
-    ifc_model = ifcopenshell.open(get_model_path(model=model))
+
+    ifc_model = ifcopenshell.open(model_path)
     
     # Get all spaces/rooms in the models
     spaces = [space for space in ifc_model.by_type("IfcSpace")]
@@ -85,18 +75,11 @@ def get_room_ceiling_height(name: str = None, guid: str = None, model: str = Non
     
     try:
         shape = ifcopenshell.geom.create_shape(settings, target_space)
-        geometry = shape.geometry
+        geometry = shape.geometry()
         # Get the height (Z dimension) of the space
         height = ifcopenshell.util.shape.get_z(geometry)
         return str(round(height, 2))
-        
+
+
     except RuntimeError:
         return None
-
-if __name__ == "__main__":
-    # Test the function with a room from the architectural model
-    height = get_room_ceiling_height(guid="0BTBFw6f90Nfh9rP1dlXr2", model="arc")
-    print(height) 
-    height = get_room_ceiling_height(name="R301", model="arc")
-    print(height) 
-# %%

@@ -1,28 +1,17 @@
-# python packages
-import sys
-import os
-import json
-from typing import Optional, List
-
-sys.path.insert(0, os.path.dirname(os.getcwd()))
-
-# state management
-from state import get_model_path
-
 # ifcopenshell
 import ifcopenshell
 import ifcopenshell.util.element
+import json
 
 
 def get_containing_rooms_for_entities_type(
-    entities: List[str],
-    model: Optional[str] = None,
+    model_path: str,
+    entities: list[str],
 ) -> str:
     """Gets the rooms/spaces where the specified entity types are located.
 
     Args:
-        model (str, optional): The type of model to analyze - e.g. 'arc' for architectural
-            or 'mep' for MEP model. If None, uses the model from the current state.
+        model_path (str): Absolute path to the IFC model file to analyze.
         entities (list[str]): List of IFC entity type names
             (e.g., ["IfcFlowTerminal", "IfcFlowController"])
 
@@ -54,7 +43,7 @@ def get_containing_rooms_for_entities_type(
             {"status": "error", "message": "No entity types provided"}, indent=2
         )
 
-    ifc_model = ifcopenshell.open(get_model_path(model=model))
+    ifc_model = ifcopenshell.open(model_path)
 
     try:
         # Initialize result structure
@@ -99,7 +88,9 @@ def get_containing_rooms_for_entities_type(
                         )
 
                 result["entities"].append(entity_info)
-                result["total_count"] += 1
+                count: int = result["total_count"]  # type: ignore
+                count = count + 1
+                result["total_count"] = count
 
         if not result["entities"]:
             return json.dumps(
@@ -117,25 +108,3 @@ def get_containing_rooms_for_entities_type(
             {"status": "error", "message": f"Error finding containing rooms: {str(e)}"},
             indent=2,
         )
-
-
-if __name__ == "__main__":
-    # Test with MEP elements
-    print("\nTesting MEP elements in architectural model:")
-    print(
-        get_containing_rooms_for_entities_type(
-            model="arc", entities=["IfcFlowTerminal", "IfcFlowController"]
-        )
-    )
-
-    # Test with architectural elements
-    print("\nTesting architectural elements:")
-    print(
-        get_containing_rooms_for_entities_type(
-            model="arc", entities=["IfcDoor", "IfcWindow"]
-        )
-    )
-
-    # Test with empty list
-    print("\nTesting with empty entity list:")
-    print(get_containing_rooms_for_entities_type(model="arc", entities=[]))

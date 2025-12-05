@@ -1,22 +1,15 @@
 # python packages
-import sys
-import os
 import json
-sys.path.insert(0, os.path.dirname(os.getcwd()))
-
-# state management
-from state import get_model_path
 
 # ifcopenshell
 import ifcopenshell
 
-def find_elements_by_ifc_class(model: str = None, element_type: str = None) -> str:
+def find_elements_by_ifc_class(model_path: str, element_type: str | None = None) -> str:
     """Retrieves basic information about all elements of a specified IFC type from the model.
-    
+
     Args:
-        model (str, optional): The type of model to analyze - e.g. 'arc' for architectural 
-            or 'mep' for MEP model. If None, uses the model from the current state.
-        element_type (str): The IFC entity type to search for (e.g., 'IfcWall', 'IfcDoor')
+        model_path (str): Absolute path to the IFC model file to analyze.
+        element_type (str, optional): The IFC entity type to search for (e.g., 'IfcWall', 'IfcDoor')
             Must be a valid IFC entity type name.
             
     Returns:
@@ -40,7 +33,7 @@ def find_elements_by_ifc_class(model: str = None, element_type: str = None) -> s
             "error": "No element type specified"
         }, indent=2)
     
-    ifc_model = ifcopenshell.open(get_model_path(model=model))
+    ifc_model = ifcopenshell.open(model_path)
     
     try:
         # Get all elements of the specified type
@@ -75,27 +68,4 @@ def find_elements_by_ifc_class(model: str = None, element_type: str = None) -> s
     except Exception as e:
         return json.dumps({
             "error": f"Error finding elements: {str(e)}"
-        }, indent=2)
-
-if __name__ == "__main__":
-    # Test with common IFC classes
-    test_types = [
-        "IfcWall",
-        "IfcDoor",
-        "IfcWindow",
-        "IfcSpace",
-        "IfcFlowTerminal"  # MEP element
-    ]
-    
-    print("\nTesting with architectural model:")
-    for element_type in test_types:
-        print(f"\nSearching for {element_type}:")
-        print(find_elements_by_ifc_class(model="arc", element_type=element_type))
-    
-    # Test with invalid type
-    print("\nTesting with invalid type:")
-    print(find_elements_by_ifc_class(model="arc", element_type="InvalidType"))
-    
-    # Test with no type
-    print("\nTesting with no type:")
-    print(find_elements_by_ifc_class(model="arc")) 
+        }, indent=2) 

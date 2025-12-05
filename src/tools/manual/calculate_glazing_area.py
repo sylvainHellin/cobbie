@@ -1,29 +1,20 @@
-# python packages
-import sys
-import os
-sys.path.insert(0, os.path.dirname(os.getcwd()))
-
-# state management
-from state import get_model_path
-
 # ifcopenshell
 import ifcopenshell
 import ifcopenshell.util.element
 
-def calculate_glazing_area(model: str = None) -> str:
+def calculate_glazing_area(model_path: str) -> str:
     """Calculates the total glazing area of all windows in the model.
-    
+
     Args:
-        model (str, optional): The type of model to analyze - e.g. 'arc' for architectural 
-            or 'mep' for MEP model. If None, uses the model from the current state.
-    
+        model_path (str): Absolute path to the IFC model file to analyze.
+
     Returns:
         str: A string containing:
             - Total glazing area in square meters (rounded to 2 decimal places)
             - Note if the area includes frame area
             - Error message if calculation fails
     """
-    ifc_model = ifcopenshell.open(get_model_path(model=model))
+    ifc_model = ifcopenshell.open(model_path)
     
     try:
         # Get all windows in the model
@@ -80,17 +71,4 @@ def calculate_glazing_area(model: str = None) -> str:
             return f"{round(total_glazing_area, 2)} m² (glazing area only, frame areas subtracted)"
         
     except Exception as e:
-        return f"Error calculating glazing area: {str(e)}"
-
-if __name__ == "__main__":
-    # Test with architectural model
-    print("\nCalculating glazing area in architectural model:")
-    print(calculate_glazing_area(model="arc"))
-    
-    # Test with MEP model (might not have windows)
-    print("\nCalculating glazing area in MEP model:")
-    print(calculate_glazing_area(model="mep")) 
-
-    # Test without information about the model
-    print("\nCalculating glazing area in default settings:")
-    print(calculate_glazing_area()) 
+        return f"Error calculating glazing area: {str(e)}" 

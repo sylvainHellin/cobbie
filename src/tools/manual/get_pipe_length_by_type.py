@@ -1,26 +1,17 @@
-# python packages
-import sys
-import os
-import json
-sys.path.insert(0, os.path.dirname(os.getcwd()))
-
-# state management
-from state import get_model_path
-
 # ifcopenshell
 import ifcopenshell
 import ifcopenshell.util.element
 import ifcopenshell.util.system
 import ifcopenshell.util.shape
 import ifcopenshell.geom
+import json
 
-def get_pipe_length_by_type(model: str = None, pipe_types: list[str] = None, depth: int = 2) -> str:
+def get_pipe_length_by_type(model_path: str, pipe_types: list[str] | None = None, depth: int = 2) -> str:
     """Calculates the total length of pipes in the model that match specified type names.
-    
+
     Args:
-        model (str, optional): The type of model to analyze - e.g. 'arc' for architectural 
-            or 'mep' for MEP model. If None, uses the model from the current state.
-        pipe_types (list[str]): List of type names to search for in pipe properties 
+        model_path (str): Absolute path to the IFC model file to analyze.
+        pipe_types (list[str]): List of type names to search for in pipe properties
             (e.g. ['cold water', 'hot water', 'waste'])
         depth (int, optional): Level of detail in the results:
             0: Only total length for all types
@@ -57,8 +48,8 @@ def get_pipe_length_by_type(model: str = None, pipe_types: list[str] = None, dep
     """
     if not pipe_types:
         return json.dumps({"error": "No pipe types provided"}, indent=2)
-    
-    ifc_model = ifcopenshell.open(get_model_path(model=model))
+
+    ifc_model = ifcopenshell.open(model_path)
     
     try:
         pipes = ifc_model.by_type("IfcFlowSegment")
@@ -110,16 +101,23 @@ def get_pipe_length_by_type(model: str = None, pipe_types: list[str] = None, dep
             if matched_type:
                 try:
                     shape = ifcopenshell.geom.create_shape(settings, pipe)
-                    length = ifcopenshell.util.shape.get_total_edge_length(shape.geometry)
-                    
-                    # Update total length
-                    result["total_length"] += length
-                    
+                    geom = shape.geometry()
+                    length = ifcopenshell.util.shape.get_total_edge_length(geom)
+
+                    # Update total length using local variable
+                    total = result["total_length"]
+                    total += length
+                    result["total_length"] = total
+
                     # Update type breakdown if depth >= 1
                     if depth >= 1:
-                        if matched_type not in result["type_breakdown"]:
-                            result["type_breakdown"][matched_type] = 0
-                        result["type_breakdown"][matched_type] += length
+                        type_breakdown: dict = result["type_breakdown"]  # type: ignore
+                        if matched_type not in type_breakdown:
+                            type_breakdown[matched_type] = 0.0
+                        current_val: float = type_breakdown[matched_type]  # type: ignore
+                        current_val = current_val + length
+                        type_breakdown[matched_type] = current_val
+                        result["type_breakdown"] = type_breakdown
                     
                     # Add detailed pipe info if depth >= 2
                     if depth >= 2:
@@ -130,7 +128,9 @@ def get_pipe_length_by_type(model: str = None, pipe_types: list[str] = None, dep
                             "length": round(length, 3)
                         }
                         result["matching_pipes"].append(pipe_info)
-                        result["total_count"] += 1
+                        count = result["total_count"]
+                        count += 1
+                        result["total_count"] = count
                     
                 except RuntimeError:
                     continue
@@ -145,25 +145,4 @@ def get_pipe_length_by_type(model: str = None, pipe_types: list[str] = None, dep
     except Exception as e:
         return json.dumps({
             "error": f"Error calculating pipe lengths: {str(e)}"
-        }, indent=2)
-
-if __name__ == "__main__":
-    # Test with common pipe types
-    pipe_types = ["Mechanical Pipe", "Cold Water", "Hot Water", "Waste", "PVC"]
-    
-    print("\nAnalyzing pipe lengths in MEP model (depth=0):")
-    print(get_pipe_length_by_type(model="mep", pipe_types=pipe_types, depth=0))
-    
-    print("\nAnalyzing pipe lengths in MEP model (depth=1):")
-    print(get_pipe_length_by_type(model="mep", pipe_types=pipe_types, depth=1))
-    
-    print("\nAnalyzing pipe lengths in MEP model (depth=2):")
-    print(get_pipe_length_by_type(model="mep", pipe_types=pipe_types, depth=2))
-    
-    # Test with architectural model (shouldn't have pipes)
-    print("\nTesting with architectural model:")
-    print(get_pipe_length_by_type(model="arc", pipe_types=pipe_types))
-    
-    # Test with empty list
-    print("\nTesting with empty pipe types list:")
-    print(get_pipe_length_by_type(model="mep", pipe_types=[])) 
+        }, indent=2) 

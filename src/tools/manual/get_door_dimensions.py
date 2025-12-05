@@ -1,21 +1,14 @@
 # python packages
-import sys
-import os
 import json
-sys.path.insert(0, os.path.dirname(os.getcwd()))
-
-# state management
-from state import get_model_path
 
 # ifcopenshell
 import ifcopenshell
 
-def get_door_dimensions(model: str = None, door_id: str = None, door_name: str = None) -> str:
+def get_door_dimensions(model_path: str, door_id: str | None = None, door_name: str | None = None) -> str:
     """Gets the overall width and height of doors from an IFC model.
-    
+
     Args:
-        model (str, optional): The type of model to analyze - e.g. 'arc' for architectural 
-            or 'mep' for MEP model. If None, uses the model from the current state.
+        model_path (str): Absolute path to the IFC model file to analyze.
         door_id (str, optional): ID or GlobalId of specific door.
             Can be any of:
             - GlobalId (e.g., "1s1jVhK8z0pgKYcr9jt781")
@@ -43,7 +36,7 @@ def get_door_dimensions(model: str = None, door_id: str = None, door_name: str =
                 ...
             ]
     """
-    ifc_model = ifcopenshell.open(get_model_path(model=model))
+    ifc_model = ifcopenshell.open(model_path)
     doors = ifc_model.by_type("IfcDoor")
     
     # Function to get dimensions for a single door
@@ -74,22 +67,3 @@ def get_door_dimensions(model: str = None, door_id: str = None, door_name: str =
     # If no specific door requested, return all doors
     all_doors_data = [get_single_door_data(door) for door in doors]
     return json.dumps(all_doors_data, indent=2)
-
-#%%
-if __name__ == "__main__":
-    # Test with no parameters (first door)
-    print("\nTesting with no parameters (all doors):")
-    print(get_door_dimensions(model="arc"))
-    
-    # Test with a door ID (you may need to update this ID for your model)
-    print("\nTesting with a specific door ID:")
-    print(get_door_dimensions(model="arc", door_id="1hOSvn6df7F8_7GcBWlRGQ"))
-    
-    # Test with a door name (you may need to update this name for your model)
-    print("\nTesting with a door name:")
-    print(get_door_dimensions(model="arc", door_name="M_Single-Glass 1:0813 x 2420mm:0813 x 2420mm:171975"))
-    
-    # Test with an invalid ID
-    print("\nTesting with an invalid door ID:")
-    print(get_door_dimensions(model="arc", door_id="invalid_id")) 
-# %%

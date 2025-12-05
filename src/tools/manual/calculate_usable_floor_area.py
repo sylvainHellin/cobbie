@@ -1,17 +1,8 @@
-#%%
-# python packages
-import sys
-import os
-import json
-sys.path.insert(0, os.path.dirname(os.getcwd()))
-
-# state management
-from state import get_model_path, set_state, get_state, get_available_models
-
 # ifcopenshell
 import ifcopenshell.util.element
 import ifcopenshell.util.shape
 import ifcopenshell.geom
+import json
 
 # Define keywords for spaces to exclude (case-insensitive)
 EXCLUDED_KEYWORDS = [
@@ -96,9 +87,9 @@ EXCLUDED_KEYWORDS = [
     "outside",
 ]
 
-def calculate_usable_floor_area(model: str = None, depth: int = 1, 
-                              exclude_room_name_contains: list[str] = None, 
-                              only_include_room_name_contains: list[str] = None,
+def calculate_usable_floor_area(model_path: str, depth: int = 1,
+                              exclude_room_name_contains: list[str] | None = None,
+                              only_include_room_name_contains: list[str] | None = None,
                               use_default_exclusions: bool = True):
     """Calculate the Usable Floor Area (UFA) of a building from an IFC model.
 
@@ -107,7 +98,7 @@ def calculate_usable_floor_area(model: str = None, depth: int = 1,
     The calculation can be customized through various parameters to include or exclude specific spaces.
 
     Args:
-        model (str, optional): The name of the IFC model to analyze. If None, uses the currently active model.
+        model_path (str): Absolute path to the IFC model file to analyze.
         depth (int, optional): The level of detail in the results. Defaults to 1.
             - 0: Returns only the total UFA
             - 1: Returns UFA and lists of included/excluded spaces
@@ -143,7 +134,7 @@ def calculate_usable_floor_area(model: str = None, depth: int = 1,
         - Spaces marked with IsUsable=False in their Pset_SpaceCommon are automatically excluded.
         - All area values in the output are rounded to 2 decimal places.
     """
-    ifc_model = ifcopenshell.open(get_model_path(model=model))
+    ifc_model = ifcopenshell.open(model_path)
     
     # Get all spaces in the building
     spaces = ifc_model.by_type("IfcSpace")
@@ -216,7 +207,7 @@ def calculate_usable_floor_area(model: str = None, depth: int = 1,
             else:
                 # Calculate the area if not defined
                 shape = ifcopenshell.geom.create_shape(settings, space)
-                geometry = shape.geometry
+                geometry = shape.geometry()
                 area = ifcopenshell.util.shape.get_footprint_area(geometry, axis='Z')
             
             total_area += area
@@ -265,28 +256,6 @@ def calculate_usable_floor_area(model: str = None, depth: int = 1,
         # Sort excluded spaces by name for consistency
         excluded_space_details.sort(key=lambda x: x["name"])
         result["excluded_spaces"] = excluded_space_details
-    
+
     return json.dumps(result, indent=2)
-
-if __name__ == "__main__":
-    # Test the function with different depth values
-    set_state(project="dental_clinic", model="arc")
-    # question = "What is the ratio of UFA to GFA?"
-    question = "What is the UFA ?"
-    state = get_state()
-    project = state["project"]
-    available_ifc_models = get_available_models(project=project)
-
-
-    print("Basic result (depth=0):")
-    print(calculate_usable_floor_area(model="arc", depth=2, only_include_room_name_contains=[
-        "DENT", "LAB", "MED", "CONSULT", "TEST", "X-RAY","IMMUNIZ", "TRMT", "PEDIATRIC", "WTS & MEAS. ROOM", "INTERACTION STATION", "CLEAN", "RADIOGRAPHIC", "BLOOD", ]))
-    # print("\nIncluded/Excluded spaces (depth=1):")
-    # print(calculate_usable_floor_area(model="arc", depth=1))
-# %% 
-    print("\nDetailed result (depth=1), excluding x-ray")
-    print(calculate_usable_floor_area(model="arc", depth=1, exclude_room_name_contains=["x-ray"]))
-# %%
-    print("\nSimple results, only include office")
-    print(calculate_usable_floor_area(model="arc", depth=1,only_include_room_name_contains=["office"]))
 

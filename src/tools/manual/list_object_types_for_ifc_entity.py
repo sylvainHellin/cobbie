@@ -1,21 +1,12 @@
-# python packages
-import sys
-import os
-sys.path.insert(0, os.path.dirname(os.getcwd()))
-
-# state management
-from state import get_model_path
-
 # ifcopenshell
 import ifcopenshell
 
-def list_object_types_for_ifc_entity(model: str = None, entity_type: str = None) -> str:
+def list_object_types_for_ifc_entity(model_path: str, entity_type: str | None = None) -> str:
     """Gets all unique types/categories found for a given IFC entity class in the model.
-    
+
     Args:
-        model (str, optional): The type of model to analyze - e.g. 'arc' for architectural 
-            or 'mep' for MEP model. If None, uses the model from the current state.
-        entity_type (str): The IFC entity class to search for (e.g. 'IfcFlowSegment', 'IfcWall')
+        model_path (str): Absolute path to the IFC model file to analyze.
+        entity_type (str, optional): The IFC entity class to search for (e.g. 'IfcFlowSegment', 'IfcWall')
             
     Returns:
         str: A formatted string listing all unique types found, including:
@@ -26,7 +17,7 @@ def list_object_types_for_ifc_entity(model: str = None, entity_type: str = None)
     if not entity_type:
         return "No entity type specified"
     
-    ifc_model = ifcopenshell.open(get_model_path(model=model))
+    ifc_model = ifcopenshell.open(model_path)
     
     try:
         # Get all entities of the specified type
@@ -58,29 +49,4 @@ def list_object_types_for_ifc_entity(model: str = None, entity_type: str = None)
         return "\n".join(output)
         
     except Exception as e:
-        return f"Error getting entity types: {str(e)}"
-
-if __name__ == "__main__":
-    # Test with common entity types
-    test_entities = [
-        "IfcWall",
-        "IfcDoor",
-        "IfcWindow",
-        "IfcFlowSegment"  # For MEP elements
-    ]
-    
-    # Test architectural model
-    print("\nTesting architectural model:")
-    for entity in test_entities:
-        print(f"\nChecking {entity}:")
-        print(list_object_types_for_ifc_entity(model="arc", entity_type=entity))
-    
-    # Test MEP model
-    print("\nTesting MEP model:")
-    for entity in test_entities:
-        print(f"\nChecking {entity}:")
-        print(list_object_types_for_ifc_entity(model="mep", entity_type=entity))
-    
-    # Test with invalid entity type
-    print("\nTesting with invalid entity type:")
-    print(list_object_types_for_ifc_entity(model="arc", entity_type="InvalidType")) 
+        return f"Error getting entity types: {str(e)}" 

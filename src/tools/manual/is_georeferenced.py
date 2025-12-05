@@ -1,26 +1,17 @@
-# python packages
-import sys
-import os
-sys.path.insert(0, os.path.dirname(os.getcwd()))
-
-# state management
-from state import get_model_path
-
 # ifcopenshell
 import ifcopenshell
 import ifcopenshell.util.element
 
-def is_georeferenced(model: str = None) -> bool:
+def is_georeferenced(model_path: str) -> bool:
     """Check if an IFC model has georeferencing information.
-    
+
     Args:
-        model (str, optional): The type of model to analyze - e.g. 'arc' for architectural 
-            or 'mep' for MEP model. If None, uses the model from the current state.
+        model_path (str): Absolute path to the IFC model file to analyze.
             
     Returns:
         bool: True if the model has georeferencing information, False otherwise
     """
-    ifc_model = ifcopenshell.open(get_model_path(model=model))
+    ifc_model = ifcopenshell.open(model_path)
     
     try:
         # Try to get map conversion parameters
@@ -60,12 +51,4 @@ def is_georeferenced(model: str = None) -> bool:
 
     except Exception as e:
         print(f"Error checking georeferencing: {e}")
-        return False
-
-if __name__ == "__main__":
-    # Test the function with both architectural and MEP models
-    print("\nTesting architectural model:")
-    print(is_georeferenced(model="arc"))
-    
-    print("\nTesting MEP model:")
-    print(is_georeferenced(model="mep")) 
+        return False 
