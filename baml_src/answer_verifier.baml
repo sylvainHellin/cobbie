@@ -29,7 +29,7 @@ function EvaluateResponse(
     Note: This reference answer represents one valid answer from a human expert labeler,
     but is NOT absolute truth. The labeler may have:
     - Used different extraction methods (manual calculation, proxy measurements)
-    - Made reasonable inferences not directly in the IFC model
+    - Made reasonable inferences for information not stored directly in the BIM model.
     - Missed information that the system found
     - Applied domain knowledge or workarounds
 
@@ -50,11 +50,9 @@ function EvaluateResponse(
 
     CORE EVALUATION PRINCIPLE:
 
-    Mark as WRONG only if the response contains factually incorrect information that
-    contradicts verifiable facts from the reference answer or the IFC model.
+    Mark as WRONG only if the response contains factually incorrect information that contradicts verifiable facts from the reference answer or the IFC model.
 
-    Different approaches, additional information, alternative extraction methods, or
-    finding data the labeler missed are all ACCEPTABLE and should be marked CORRECT.
+    Different approaches, additional information, alternative extraction methods, or finding data the labeler missed are all ACCEPTABLE and should be marked CORRECT.
 
     ---
 
