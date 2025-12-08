@@ -3,6 +3,7 @@ TODOs:
 - update the analyze evaluation script: track the number of iteration from Cobbie for answering each question.
 - update the ./scripts/run_evaluation.py to have the tool categories in run title
 - add a --run-name to the ./scripts/run_evaluation.py script. Check that either --run-name or --continue is passed. Cannot run without one of those (and, cannot run with both.)
+- Start with the implementation of the ./specs/tool_flag.md
 
 
 
