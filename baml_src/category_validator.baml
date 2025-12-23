@@ -6,7 +6,7 @@ function ValidateQuestionCategory(
   answer: string,
   current_category: string
 ) -> CategoryValidationResult {
-  client GLM_4_6
+  client GLM_4_7
 
   prompt #"
     You are a BIM dataset quality specialist responsible for validating question categorization according to a strict 4-category taxonomy.

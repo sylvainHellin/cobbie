@@ -90,133 +90,133 @@ class BamlSyncClient:
     @property
     def parse_stream(self):
       return self.__llm_stream_parser
-    
+
     def Cobbie(self, user_input: str,available_tools: str,previous_attempts: typing.Optional[str] = None,model_path: typing.Optional[str] = None,
         baml_options: BamlCallOptions = {},
     ) -> typing.Union["types.CodeAction", "types.FinalAnswer"]:
         # Check if on_tick is provided
         if 'on_tick' in baml_options:
-            stream = self.stream.Cobbie(user_input=user_input,available_tools=available_tools,previous_attempts=previous_attempts,model_path=model_path,
+            __stream__ = self.stream.Cobbie(user_input=user_input,available_tools=available_tools,previous_attempts=previous_attempts,model_path=model_path,
                 baml_options=baml_options)
-            return stream.get_final_response()
+            return __stream__.get_final_response()
         else:
             # Original non-streaming code
-            result = self.__options.merge_options(baml_options).call_function_sync(function_name="Cobbie", args={
+            __result__ = self.__options.merge_options(baml_options).call_function_sync(function_name="Cobbie", args={
                 "user_input": user_input,"available_tools": available_tools,"previous_attempts": previous_attempts,"model_path": model_path,
             })
-            return typing.cast(typing.Union["types.CodeAction", "types.FinalAnswer"], result.cast_to(types, types, stream_types, False, __runtime__))
+            return typing.cast(typing.Union["types.CodeAction", "types.FinalAnswer"], __result__.cast_to(types, types, stream_types, False, __runtime__))
     def EvaluateResponse(self, question: str,category: types.QuestionCategory,ground_truth: str,system_response: str,
         baml_options: BamlCallOptions = {},
     ) -> types.AnswerEvaluationResult:
         # Check if on_tick is provided
         if 'on_tick' in baml_options:
-            stream = self.stream.EvaluateResponse(question=question,category=category,ground_truth=ground_truth,system_response=system_response,
+            __stream__ = self.stream.EvaluateResponse(question=question,category=category,ground_truth=ground_truth,system_response=system_response,
                 baml_options=baml_options)
-            return stream.get_final_response()
+            return __stream__.get_final_response()
         else:
             # Original non-streaming code
-            result = self.__options.merge_options(baml_options).call_function_sync(function_name="EvaluateResponse", args={
+            __result__ = self.__options.merge_options(baml_options).call_function_sync(function_name="EvaluateResponse", args={
                 "question": question,"category": category,"ground_truth": ground_truth,"system_response": system_response,
             })
-            return typing.cast(types.AnswerEvaluationResult, result.cast_to(types, types, stream_types, False, __runtime__))
+            return typing.cast(types.AnswerEvaluationResult, __result__.cast_to(types, types, stream_types, False, __runtime__))
     def FaultyNewToolAnalysis(self, history: str,question: str,ground_truth: str,provided_answer: str,justification: str,existing_helper_functions: str,
         baml_options: BamlCallOptions = {},
     ) -> types.FaultyToolAnalysis:
         # Check if on_tick is provided
         if 'on_tick' in baml_options:
-            stream = self.stream.FaultyNewToolAnalysis(history=history,question=question,ground_truth=ground_truth,provided_answer=provided_answer,justification=justification,existing_helper_functions=existing_helper_functions,
+            __stream__ = self.stream.FaultyNewToolAnalysis(history=history,question=question,ground_truth=ground_truth,provided_answer=provided_answer,justification=justification,existing_helper_functions=existing_helper_functions,
                 baml_options=baml_options)
-            return stream.get_final_response()
+            return __stream__.get_final_response()
         else:
             # Original non-streaming code
-            result = self.__options.merge_options(baml_options).call_function_sync(function_name="FaultyNewToolAnalysis", args={
+            __result__ = self.__options.merge_options(baml_options).call_function_sync(function_name="FaultyNewToolAnalysis", args={
                 "history": history,"question": question,"ground_truth": ground_truth,"provided_answer": provided_answer,"justification": justification,"existing_helper_functions": existing_helper_functions,
             })
-            return typing.cast(types.FaultyToolAnalysis, result.cast_to(types, types, stream_types, False, __runtime__))
+            return typing.cast(types.FaultyToolAnalysis, __result__.cast_to(types, types, stream_types, False, __runtime__))
     def HelperFunctionAssessor(self, execution_history: str,original_question: str,ground_truth_answer: str,tested_tool_name: str,tested_tool_description: str,final_answer: str,answer_correctness: typing.Union[typing_extensions.Literal['correct'], typing_extensions.Literal['wrong'], typing_extensions.Literal['abstained']],
         baml_options: BamlCallOptions = {},
     ) -> types.HelperFunctionAssessment:
         # Check if on_tick is provided
         if 'on_tick' in baml_options:
-            stream = self.stream.HelperFunctionAssessor(execution_history=execution_history,original_question=original_question,ground_truth_answer=ground_truth_answer,tested_tool_name=tested_tool_name,tested_tool_description=tested_tool_description,final_answer=final_answer,answer_correctness=answer_correctness,
+            __stream__ = self.stream.HelperFunctionAssessor(execution_history=execution_history,original_question=original_question,ground_truth_answer=ground_truth_answer,tested_tool_name=tested_tool_name,tested_tool_description=tested_tool_description,final_answer=final_answer,answer_correctness=answer_correctness,
                 baml_options=baml_options)
-            return stream.get_final_response()
+            return __stream__.get_final_response()
         else:
             # Original non-streaming code
-            result = self.__options.merge_options(baml_options).call_function_sync(function_name="HelperFunctionAssessor", args={
+            __result__ = self.__options.merge_options(baml_options).call_function_sync(function_name="HelperFunctionAssessor", args={
                 "execution_history": execution_history,"original_question": original_question,"ground_truth_answer": ground_truth_answer,"tested_tool_name": tested_tool_name,"tested_tool_description": tested_tool_description,"final_answer": final_answer,"answer_correctness": answer_correctness,
             })
-            return typing.cast(types.HelperFunctionAssessment, result.cast_to(types, types, stream_types, False, __runtime__))
+            return typing.cast(types.HelperFunctionAssessment, __result__.cast_to(types, types, stream_types, False, __runtime__))
     def HelperFunctionCreator(self, history: str,example_question: str,example_answer: str,example_bim_model: str,other_bim_models_for_testing: typing.Optional[typing.List[str]],function_name: str,function_description: str,is_enhancement: bool,existing_implementation: typing.Optional[str] = None,previous_attempts: typing.Optional[str] = None,
         baml_options: BamlCallOptions = {},
     ) -> typing.Union["types.CodeAction", "types.NewHelperFunction"]:
         # Check if on_tick is provided
         if 'on_tick' in baml_options:
-            stream = self.stream.HelperFunctionCreator(history=history,example_question=example_question,example_answer=example_answer,example_bim_model=example_bim_model,other_bim_models_for_testing=other_bim_models_for_testing,function_name=function_name,function_description=function_description,is_enhancement=is_enhancement,existing_implementation=existing_implementation,previous_attempts=previous_attempts,
+            __stream__ = self.stream.HelperFunctionCreator(history=history,example_question=example_question,example_answer=example_answer,example_bim_model=example_bim_model,other_bim_models_for_testing=other_bim_models_for_testing,function_name=function_name,function_description=function_description,is_enhancement=is_enhancement,existing_implementation=existing_implementation,previous_attempts=previous_attempts,
                 baml_options=baml_options)
-            return stream.get_final_response()
+            return __stream__.get_final_response()
         else:
             # Original non-streaming code
-            result = self.__options.merge_options(baml_options).call_function_sync(function_name="HelperFunctionCreator", args={
+            __result__ = self.__options.merge_options(baml_options).call_function_sync(function_name="HelperFunctionCreator", args={
                 "history": history,"example_question": example_question,"example_answer": example_answer,"example_bim_model": example_bim_model,"other_bim_models_for_testing": other_bim_models_for_testing,"function_name": function_name,"function_description": function_description,"is_enhancement": is_enhancement,"existing_implementation": existing_implementation,"previous_attempts": previous_attempts,
             })
-            return typing.cast(typing.Union["types.CodeAction", "types.NewHelperFunction"], result.cast_to(types, types, stream_types, False, __runtime__))
+            return typing.cast(typing.Union["types.CodeAction", "types.NewHelperFunction"], __result__.cast_to(types, types, stream_types, False, __runtime__))
     def HelperFunctionDebugger(self, faulty_function_name: str,faulty_function_implementation: str,history_faulty_tool_use: typing.Optional[str],error_description: str,ifc_model_path: str,other_bim_models_for_testing: typing.Optional[typing.List[str]] = None,previous_attempts: typing.Optional[str] = None,
         baml_options: BamlCallOptions = {},
     ) -> typing.Union["types.CodeAction", "types.UpdatedHelperFunction"]:
         # Check if on_tick is provided
         if 'on_tick' in baml_options:
-            stream = self.stream.HelperFunctionDebugger(faulty_function_name=faulty_function_name,faulty_function_implementation=faulty_function_implementation,history_faulty_tool_use=history_faulty_tool_use,error_description=error_description,ifc_model_path=ifc_model_path,other_bim_models_for_testing=other_bim_models_for_testing,previous_attempts=previous_attempts,
+            __stream__ = self.stream.HelperFunctionDebugger(faulty_function_name=faulty_function_name,faulty_function_implementation=faulty_function_implementation,history_faulty_tool_use=history_faulty_tool_use,error_description=error_description,ifc_model_path=ifc_model_path,other_bim_models_for_testing=other_bim_models_for_testing,previous_attempts=previous_attempts,
                 baml_options=baml_options)
-            return stream.get_final_response()
+            return __stream__.get_final_response()
         else:
             # Original non-streaming code
-            result = self.__options.merge_options(baml_options).call_function_sync(function_name="HelperFunctionDebugger", args={
+            __result__ = self.__options.merge_options(baml_options).call_function_sync(function_name="HelperFunctionDebugger", args={
                 "faulty_function_name": faulty_function_name,"faulty_function_implementation": faulty_function_implementation,"history_faulty_tool_use": history_faulty_tool_use,"error_description": error_description,"ifc_model_path": ifc_model_path,"other_bim_models_for_testing": other_bim_models_for_testing,"previous_attempts": previous_attempts,
             })
-            return typing.cast(typing.Union["types.CodeAction", "types.UpdatedHelperFunction"], result.cast_to(types, types, stream_types, False, __runtime__))
+            return typing.cast(typing.Union["types.CodeAction", "types.UpdatedHelperFunction"], __result__.cast_to(types, types, stream_types, False, __runtime__))
     def HelperFunctionIdentifier(self, history: str,example_question: str,existing_helper_functions: str,
         baml_options: BamlCallOptions = {},
     ) -> types.NewToolAnalysis:
         # Check if on_tick is provided
         if 'on_tick' in baml_options:
-            stream = self.stream.HelperFunctionIdentifier(history=history,example_question=example_question,existing_helper_functions=existing_helper_functions,
+            __stream__ = self.stream.HelperFunctionIdentifier(history=history,example_question=example_question,existing_helper_functions=existing_helper_functions,
                 baml_options=baml_options)
-            return stream.get_final_response()
+            return __stream__.get_final_response()
         else:
             # Original non-streaming code
-            result = self.__options.merge_options(baml_options).call_function_sync(function_name="HelperFunctionIdentifier", args={
+            __result__ = self.__options.merge_options(baml_options).call_function_sync(function_name="HelperFunctionIdentifier", args={
                 "history": history,"example_question": example_question,"existing_helper_functions": existing_helper_functions,
             })
-            return typing.cast(types.NewToolAnalysis, result.cast_to(types, types, stream_types, False, __runtime__))
+            return typing.cast(types.NewToolAnalysis, __result__.cast_to(types, types, stream_types, False, __runtime__))
     def QuestionAnswerAlignment(self, question: str,answer: str,
         baml_options: BamlCallOptions = {},
     ) -> types.AlignedQAPair:
         # Check if on_tick is provided
         if 'on_tick' in baml_options:
-            stream = self.stream.QuestionAnswerAlignment(question=question,answer=answer,
+            __stream__ = self.stream.QuestionAnswerAlignment(question=question,answer=answer,
                 baml_options=baml_options)
-            return stream.get_final_response()
+            return __stream__.get_final_response()
         else:
             # Original non-streaming code
-            result = self.__options.merge_options(baml_options).call_function_sync(function_name="QuestionAnswerAlignment", args={
+            __result__ = self.__options.merge_options(baml_options).call_function_sync(function_name="QuestionAnswerAlignment", args={
                 "question": question,"answer": answer,
             })
-            return typing.cast(types.AlignedQAPair, result.cast_to(types, types, stream_types, False, __runtime__))
+            return typing.cast(types.AlignedQAPair, __result__.cast_to(types, types, stream_types, False, __runtime__))
     def ValidateQuestionCategory(self, question: str,answer: str,current_category: str,
         baml_options: BamlCallOptions = {},
     ) -> types.CategoryValidationResult:
         # Check if on_tick is provided
         if 'on_tick' in baml_options:
-            stream = self.stream.ValidateQuestionCategory(question=question,answer=answer,current_category=current_category,
+            __stream__ = self.stream.ValidateQuestionCategory(question=question,answer=answer,current_category=current_category,
                 baml_options=baml_options)
-            return stream.get_final_response()
+            return __stream__.get_final_response()
         else:
             # Original non-streaming code
-            result = self.__options.merge_options(baml_options).call_function_sync(function_name="ValidateQuestionCategory", args={
+            __result__ = self.__options.merge_options(baml_options).call_function_sync(function_name="ValidateQuestionCategory", args={
                 "question": question,"answer": answer,"current_category": current_category,
             })
-            return typing.cast(types.CategoryValidationResult, result.cast_to(types, types, stream_types, False, __runtime__))
+            return typing.cast(types.CategoryValidationResult, __result__.cast_to(types, types, stream_types, False, __runtime__))
     
 
 
@@ -229,110 +229,110 @@ class BamlStreamClient:
     def Cobbie(self, user_input: str,available_tools: str,previous_attempts: typing.Optional[str] = None,model_path: typing.Optional[str] = None,
         baml_options: BamlCallOptions = {},
     ) -> baml_py.BamlSyncStream[typing.Union["stream_types.CodeAction", "stream_types.FinalAnswer"], typing.Union["types.CodeAction", "types.FinalAnswer"]]:
-        ctx, result = self.__options.merge_options(baml_options).create_sync_stream(function_name="Cobbie", args={
+        __ctx__, __result__ = self.__options.merge_options(baml_options).create_sync_stream(function_name="Cobbie", args={
             "user_input": user_input,"available_tools": available_tools,"previous_attempts": previous_attempts,"model_path": model_path,
         })
         return baml_py.BamlSyncStream[typing.Union["stream_types.CodeAction", "stream_types.FinalAnswer"], typing.Union["types.CodeAction", "types.FinalAnswer"]](
-          result,
+          __result__,
           lambda x: typing.cast(typing.Union["stream_types.CodeAction", "stream_types.FinalAnswer"], x.cast_to(types, types, stream_types, True, __runtime__)),
           lambda x: typing.cast(typing.Union["types.CodeAction", "types.FinalAnswer"], x.cast_to(types, types, stream_types, False, __runtime__)),
-          ctx,
+          __ctx__,
         )
     def EvaluateResponse(self, question: str,category: types.QuestionCategory,ground_truth: str,system_response: str,
         baml_options: BamlCallOptions = {},
     ) -> baml_py.BamlSyncStream[stream_types.AnswerEvaluationResult, types.AnswerEvaluationResult]:
-        ctx, result = self.__options.merge_options(baml_options).create_sync_stream(function_name="EvaluateResponse", args={
+        __ctx__, __result__ = self.__options.merge_options(baml_options).create_sync_stream(function_name="EvaluateResponse", args={
             "question": question,"category": category,"ground_truth": ground_truth,"system_response": system_response,
         })
         return baml_py.BamlSyncStream[stream_types.AnswerEvaluationResult, types.AnswerEvaluationResult](
-          result,
+          __result__,
           lambda x: typing.cast(stream_types.AnswerEvaluationResult, x.cast_to(types, types, stream_types, True, __runtime__)),
           lambda x: typing.cast(types.AnswerEvaluationResult, x.cast_to(types, types, stream_types, False, __runtime__)),
-          ctx,
+          __ctx__,
         )
     def FaultyNewToolAnalysis(self, history: str,question: str,ground_truth: str,provided_answer: str,justification: str,existing_helper_functions: str,
         baml_options: BamlCallOptions = {},
     ) -> baml_py.BamlSyncStream[stream_types.FaultyToolAnalysis, types.FaultyToolAnalysis]:
-        ctx, result = self.__options.merge_options(baml_options).create_sync_stream(function_name="FaultyNewToolAnalysis", args={
+        __ctx__, __result__ = self.__options.merge_options(baml_options).create_sync_stream(function_name="FaultyNewToolAnalysis", args={
             "history": history,"question": question,"ground_truth": ground_truth,"provided_answer": provided_answer,"justification": justification,"existing_helper_functions": existing_helper_functions,
         })
         return baml_py.BamlSyncStream[stream_types.FaultyToolAnalysis, types.FaultyToolAnalysis](
-          result,
+          __result__,
           lambda x: typing.cast(stream_types.FaultyToolAnalysis, x.cast_to(types, types, stream_types, True, __runtime__)),
           lambda x: typing.cast(types.FaultyToolAnalysis, x.cast_to(types, types, stream_types, False, __runtime__)),
-          ctx,
+          __ctx__,
         )
     def HelperFunctionAssessor(self, execution_history: str,original_question: str,ground_truth_answer: str,tested_tool_name: str,tested_tool_description: str,final_answer: str,answer_correctness: typing.Union[typing_extensions.Literal['correct'], typing_extensions.Literal['wrong'], typing_extensions.Literal['abstained']],
         baml_options: BamlCallOptions = {},
     ) -> baml_py.BamlSyncStream[stream_types.HelperFunctionAssessment, types.HelperFunctionAssessment]:
-        ctx, result = self.__options.merge_options(baml_options).create_sync_stream(function_name="HelperFunctionAssessor", args={
+        __ctx__, __result__ = self.__options.merge_options(baml_options).create_sync_stream(function_name="HelperFunctionAssessor", args={
             "execution_history": execution_history,"original_question": original_question,"ground_truth_answer": ground_truth_answer,"tested_tool_name": tested_tool_name,"tested_tool_description": tested_tool_description,"final_answer": final_answer,"answer_correctness": answer_correctness,
         })
         return baml_py.BamlSyncStream[stream_types.HelperFunctionAssessment, types.HelperFunctionAssessment](
-          result,
+          __result__,
           lambda x: typing.cast(stream_types.HelperFunctionAssessment, x.cast_to(types, types, stream_types, True, __runtime__)),
           lambda x: typing.cast(types.HelperFunctionAssessment, x.cast_to(types, types, stream_types, False, __runtime__)),
-          ctx,
+          __ctx__,
         )
     def HelperFunctionCreator(self, history: str,example_question: str,example_answer: str,example_bim_model: str,other_bim_models_for_testing: typing.Optional[typing.List[str]],function_name: str,function_description: str,is_enhancement: bool,existing_implementation: typing.Optional[str] = None,previous_attempts: typing.Optional[str] = None,
         baml_options: BamlCallOptions = {},
     ) -> baml_py.BamlSyncStream[typing.Union["stream_types.CodeAction", "stream_types.NewHelperFunction"], typing.Union["types.CodeAction", "types.NewHelperFunction"]]:
-        ctx, result = self.__options.merge_options(baml_options).create_sync_stream(function_name="HelperFunctionCreator", args={
+        __ctx__, __result__ = self.__options.merge_options(baml_options).create_sync_stream(function_name="HelperFunctionCreator", args={
             "history": history,"example_question": example_question,"example_answer": example_answer,"example_bim_model": example_bim_model,"other_bim_models_for_testing": other_bim_models_for_testing,"function_name": function_name,"function_description": function_description,"is_enhancement": is_enhancement,"existing_implementation": existing_implementation,"previous_attempts": previous_attempts,
         })
         return baml_py.BamlSyncStream[typing.Union["stream_types.CodeAction", "stream_types.NewHelperFunction"], typing.Union["types.CodeAction", "types.NewHelperFunction"]](
-          result,
+          __result__,
           lambda x: typing.cast(typing.Union["stream_types.CodeAction", "stream_types.NewHelperFunction"], x.cast_to(types, types, stream_types, True, __runtime__)),
           lambda x: typing.cast(typing.Union["types.CodeAction", "types.NewHelperFunction"], x.cast_to(types, types, stream_types, False, __runtime__)),
-          ctx,
+          __ctx__,
         )
     def HelperFunctionDebugger(self, faulty_function_name: str,faulty_function_implementation: str,history_faulty_tool_use: typing.Optional[str],error_description: str,ifc_model_path: str,other_bim_models_for_testing: typing.Optional[typing.List[str]] = None,previous_attempts: typing.Optional[str] = None,
         baml_options: BamlCallOptions = {},
     ) -> baml_py.BamlSyncStream[typing.Union["stream_types.CodeAction", "stream_types.UpdatedHelperFunction"], typing.Union["types.CodeAction", "types.UpdatedHelperFunction"]]:
-        ctx, result = self.__options.merge_options(baml_options).create_sync_stream(function_name="HelperFunctionDebugger", args={
+        __ctx__, __result__ = self.__options.merge_options(baml_options).create_sync_stream(function_name="HelperFunctionDebugger", args={
             "faulty_function_name": faulty_function_name,"faulty_function_implementation": faulty_function_implementation,"history_faulty_tool_use": history_faulty_tool_use,"error_description": error_description,"ifc_model_path": ifc_model_path,"other_bim_models_for_testing": other_bim_models_for_testing,"previous_attempts": previous_attempts,
         })
         return baml_py.BamlSyncStream[typing.Union["stream_types.CodeAction", "stream_types.UpdatedHelperFunction"], typing.Union["types.CodeAction", "types.UpdatedHelperFunction"]](
-          result,
+          __result__,
           lambda x: typing.cast(typing.Union["stream_types.CodeAction", "stream_types.UpdatedHelperFunction"], x.cast_to(types, types, stream_types, True, __runtime__)),
           lambda x: typing.cast(typing.Union["types.CodeAction", "types.UpdatedHelperFunction"], x.cast_to(types, types, stream_types, False, __runtime__)),
-          ctx,
+          __ctx__,
         )
     def HelperFunctionIdentifier(self, history: str,example_question: str,existing_helper_functions: str,
         baml_options: BamlCallOptions = {},
     ) -> baml_py.BamlSyncStream[stream_types.NewToolAnalysis, types.NewToolAnalysis]:
-        ctx, result = self.__options.merge_options(baml_options).create_sync_stream(function_name="HelperFunctionIdentifier", args={
+        __ctx__, __result__ = self.__options.merge_options(baml_options).create_sync_stream(function_name="HelperFunctionIdentifier", args={
             "history": history,"example_question": example_question,"existing_helper_functions": existing_helper_functions,
         })
         return baml_py.BamlSyncStream[stream_types.NewToolAnalysis, types.NewToolAnalysis](
-          result,
+          __result__,
           lambda x: typing.cast(stream_types.NewToolAnalysis, x.cast_to(types, types, stream_types, True, __runtime__)),
           lambda x: typing.cast(types.NewToolAnalysis, x.cast_to(types, types, stream_types, False, __runtime__)),
-          ctx,
+          __ctx__,
         )
     def QuestionAnswerAlignment(self, question: str,answer: str,
         baml_options: BamlCallOptions = {},
     ) -> baml_py.BamlSyncStream[stream_types.AlignedQAPair, types.AlignedQAPair]:
-        ctx, result = self.__options.merge_options(baml_options).create_sync_stream(function_name="QuestionAnswerAlignment", args={
+        __ctx__, __result__ = self.__options.merge_options(baml_options).create_sync_stream(function_name="QuestionAnswerAlignment", args={
             "question": question,"answer": answer,
         })
         return baml_py.BamlSyncStream[stream_types.AlignedQAPair, types.AlignedQAPair](
-          result,
+          __result__,
           lambda x: typing.cast(stream_types.AlignedQAPair, x.cast_to(types, types, stream_types, True, __runtime__)),
           lambda x: typing.cast(types.AlignedQAPair, x.cast_to(types, types, stream_types, False, __runtime__)),
-          ctx,
+          __ctx__,
         )
     def ValidateQuestionCategory(self, question: str,answer: str,current_category: str,
         baml_options: BamlCallOptions = {},
     ) -> baml_py.BamlSyncStream[stream_types.CategoryValidationResult, types.CategoryValidationResult]:
-        ctx, result = self.__options.merge_options(baml_options).create_sync_stream(function_name="ValidateQuestionCategory", args={
+        __ctx__, __result__ = self.__options.merge_options(baml_options).create_sync_stream(function_name="ValidateQuestionCategory", args={
             "question": question,"answer": answer,"current_category": current_category,
         })
         return baml_py.BamlSyncStream[stream_types.CategoryValidationResult, types.CategoryValidationResult](
-          result,
+          __result__,
           lambda x: typing.cast(stream_types.CategoryValidationResult, x.cast_to(types, types, stream_types, True, __runtime__)),
           lambda x: typing.cast(types.CategoryValidationResult, x.cast_to(types, types, stream_types, False, __runtime__)),
-          ctx,
+          __ctx__,
         )
     
 
@@ -345,66 +345,66 @@ class BamlHttpRequestClient:
     def Cobbie(self, user_input: str,available_tools: str,previous_attempts: typing.Optional[str] = None,model_path: typing.Optional[str] = None,
         baml_options: BamlCallOptions = {},
     ) -> baml_py.baml_py.HTTPRequest:
-        result = self.__options.merge_options(baml_options).create_http_request_sync(function_name="Cobbie", args={
+        __result__ = self.__options.merge_options(baml_options).create_http_request_sync(function_name="Cobbie", args={
             "user_input": user_input,"available_tools": available_tools,"previous_attempts": previous_attempts,"model_path": model_path,
         }, mode="request")
-        return result
+        return __result__
     def EvaluateResponse(self, question: str,category: types.QuestionCategory,ground_truth: str,system_response: str,
         baml_options: BamlCallOptions = {},
     ) -> baml_py.baml_py.HTTPRequest:
-        result = self.__options.merge_options(baml_options).create_http_request_sync(function_name="EvaluateResponse", args={
+        __result__ = self.__options.merge_options(baml_options).create_http_request_sync(function_name="EvaluateResponse", args={
             "question": question,"category": category,"ground_truth": ground_truth,"system_response": system_response,
         }, mode="request")
-        return result
+        return __result__
     def FaultyNewToolAnalysis(self, history: str,question: str,ground_truth: str,provided_answer: str,justification: str,existing_helper_functions: str,
         baml_options: BamlCallOptions = {},
     ) -> baml_py.baml_py.HTTPRequest:
-        result = self.__options.merge_options(baml_options).create_http_request_sync(function_name="FaultyNewToolAnalysis", args={
+        __result__ = self.__options.merge_options(baml_options).create_http_request_sync(function_name="FaultyNewToolAnalysis", args={
             "history": history,"question": question,"ground_truth": ground_truth,"provided_answer": provided_answer,"justification": justification,"existing_helper_functions": existing_helper_functions,
         }, mode="request")
-        return result
+        return __result__
     def HelperFunctionAssessor(self, execution_history: str,original_question: str,ground_truth_answer: str,tested_tool_name: str,tested_tool_description: str,final_answer: str,answer_correctness: typing.Union[typing_extensions.Literal['correct'], typing_extensions.Literal['wrong'], typing_extensions.Literal['abstained']],
         baml_options: BamlCallOptions = {},
     ) -> baml_py.baml_py.HTTPRequest:
-        result = self.__options.merge_options(baml_options).create_http_request_sync(function_name="HelperFunctionAssessor", args={
+        __result__ = self.__options.merge_options(baml_options).create_http_request_sync(function_name="HelperFunctionAssessor", args={
             "execution_history": execution_history,"original_question": original_question,"ground_truth_answer": ground_truth_answer,"tested_tool_name": tested_tool_name,"tested_tool_description": tested_tool_description,"final_answer": final_answer,"answer_correctness": answer_correctness,
         }, mode="request")
-        return result
+        return __result__
     def HelperFunctionCreator(self, history: str,example_question: str,example_answer: str,example_bim_model: str,other_bim_models_for_testing: typing.Optional[typing.List[str]],function_name: str,function_description: str,is_enhancement: bool,existing_implementation: typing.Optional[str] = None,previous_attempts: typing.Optional[str] = None,
         baml_options: BamlCallOptions = {},
     ) -> baml_py.baml_py.HTTPRequest:
-        result = self.__options.merge_options(baml_options).create_http_request_sync(function_name="HelperFunctionCreator", args={
+        __result__ = self.__options.merge_options(baml_options).create_http_request_sync(function_name="HelperFunctionCreator", args={
             "history": history,"example_question": example_question,"example_answer": example_answer,"example_bim_model": example_bim_model,"other_bim_models_for_testing": other_bim_models_for_testing,"function_name": function_name,"function_description": function_description,"is_enhancement": is_enhancement,"existing_implementation": existing_implementation,"previous_attempts": previous_attempts,
         }, mode="request")
-        return result
+        return __result__
     def HelperFunctionDebugger(self, faulty_function_name: str,faulty_function_implementation: str,history_faulty_tool_use: typing.Optional[str],error_description: str,ifc_model_path: str,other_bim_models_for_testing: typing.Optional[typing.List[str]] = None,previous_attempts: typing.Optional[str] = None,
         baml_options: BamlCallOptions = {},
     ) -> baml_py.baml_py.HTTPRequest:
-        result = self.__options.merge_options(baml_options).create_http_request_sync(function_name="HelperFunctionDebugger", args={
+        __result__ = self.__options.merge_options(baml_options).create_http_request_sync(function_name="HelperFunctionDebugger", args={
             "faulty_function_name": faulty_function_name,"faulty_function_implementation": faulty_function_implementation,"history_faulty_tool_use": history_faulty_tool_use,"error_description": error_description,"ifc_model_path": ifc_model_path,"other_bim_models_for_testing": other_bim_models_for_testing,"previous_attempts": previous_attempts,
         }, mode="request")
-        return result
+        return __result__
     def HelperFunctionIdentifier(self, history: str,example_question: str,existing_helper_functions: str,
         baml_options: BamlCallOptions = {},
     ) -> baml_py.baml_py.HTTPRequest:
-        result = self.__options.merge_options(baml_options).create_http_request_sync(function_name="HelperFunctionIdentifier", args={
+        __result__ = self.__options.merge_options(baml_options).create_http_request_sync(function_name="HelperFunctionIdentifier", args={
             "history": history,"example_question": example_question,"existing_helper_functions": existing_helper_functions,
         }, mode="request")
-        return result
+        return __result__
     def QuestionAnswerAlignment(self, question: str,answer: str,
         baml_options: BamlCallOptions = {},
     ) -> baml_py.baml_py.HTTPRequest:
-        result = self.__options.merge_options(baml_options).create_http_request_sync(function_name="QuestionAnswerAlignment", args={
+        __result__ = self.__options.merge_options(baml_options).create_http_request_sync(function_name="QuestionAnswerAlignment", args={
             "question": question,"answer": answer,
         }, mode="request")
-        return result
+        return __result__
     def ValidateQuestionCategory(self, question: str,answer: str,current_category: str,
         baml_options: BamlCallOptions = {},
     ) -> baml_py.baml_py.HTTPRequest:
-        result = self.__options.merge_options(baml_options).create_http_request_sync(function_name="ValidateQuestionCategory", args={
+        __result__ = self.__options.merge_options(baml_options).create_http_request_sync(function_name="ValidateQuestionCategory", args={
             "question": question,"answer": answer,"current_category": current_category,
         }, mode="request")
-        return result
+        return __result__
     
 
 class BamlHttpStreamRequestClient:
@@ -416,66 +416,66 @@ class BamlHttpStreamRequestClient:
     def Cobbie(self, user_input: str,available_tools: str,previous_attempts: typing.Optional[str] = None,model_path: typing.Optional[str] = None,
         baml_options: BamlCallOptions = {},
     ) -> baml_py.baml_py.HTTPRequest:
-        result = self.__options.merge_options(baml_options).create_http_request_sync(function_name="Cobbie", args={
+        __result__ = self.__options.merge_options(baml_options).create_http_request_sync(function_name="Cobbie", args={
             "user_input": user_input,"available_tools": available_tools,"previous_attempts": previous_attempts,"model_path": model_path,
         }, mode="stream")
-        return result
+        return __result__
     def EvaluateResponse(self, question: str,category: types.QuestionCategory,ground_truth: str,system_response: str,
         baml_options: BamlCallOptions = {},
     ) -> baml_py.baml_py.HTTPRequest:
-        result = self.__options.merge_options(baml_options).create_http_request_sync(function_name="EvaluateResponse", args={
+        __result__ = self.__options.merge_options(baml_options).create_http_request_sync(function_name="EvaluateResponse", args={
             "question": question,"category": category,"ground_truth": ground_truth,"system_response": system_response,
         }, mode="stream")
-        return result
+        return __result__
     def FaultyNewToolAnalysis(self, history: str,question: str,ground_truth: str,provided_answer: str,justification: str,existing_helper_functions: str,
         baml_options: BamlCallOptions = {},
     ) -> baml_py.baml_py.HTTPRequest:
-        result = self.__options.merge_options(baml_options).create_http_request_sync(function_name="FaultyNewToolAnalysis", args={
+        __result__ = self.__options.merge_options(baml_options).create_http_request_sync(function_name="FaultyNewToolAnalysis", args={
             "history": history,"question": question,"ground_truth": ground_truth,"provided_answer": provided_answer,"justification": justification,"existing_helper_functions": existing_helper_functions,
         }, mode="stream")
-        return result
+        return __result__
     def HelperFunctionAssessor(self, execution_history: str,original_question: str,ground_truth_answer: str,tested_tool_name: str,tested_tool_description: str,final_answer: str,answer_correctness: typing.Union[typing_extensions.Literal['correct'], typing_extensions.Literal['wrong'], typing_extensions.Literal['abstained']],
         baml_options: BamlCallOptions = {},
     ) -> baml_py.baml_py.HTTPRequest:
-        result = self.__options.merge_options(baml_options).create_http_request_sync(function_name="HelperFunctionAssessor", args={
+        __result__ = self.__options.merge_options(baml_options).create_http_request_sync(function_name="HelperFunctionAssessor", args={
             "execution_history": execution_history,"original_question": original_question,"ground_truth_answer": ground_truth_answer,"tested_tool_name": tested_tool_name,"tested_tool_description": tested_tool_description,"final_answer": final_answer,"answer_correctness": answer_correctness,
         }, mode="stream")
-        return result
+        return __result__
     def HelperFunctionCreator(self, history: str,example_question: str,example_answer: str,example_bim_model: str,other_bim_models_for_testing: typing.Optional[typing.List[str]],function_name: str,function_description: str,is_enhancement: bool,existing_implementation: typing.Optional[str] = None,previous_attempts: typing.Optional[str] = None,
         baml_options: BamlCallOptions = {},
     ) -> baml_py.baml_py.HTTPRequest:
-        result = self.__options.merge_options(baml_options).create_http_request_sync(function_name="HelperFunctionCreator", args={
+        __result__ = self.__options.merge_options(baml_options).create_http_request_sync(function_name="HelperFunctionCreator", args={
             "history": history,"example_question": example_question,"example_answer": example_answer,"example_bim_model": example_bim_model,"other_bim_models_for_testing": other_bim_models_for_testing,"function_name": function_name,"function_description": function_description,"is_enhancement": is_enhancement,"existing_implementation": existing_implementation,"previous_attempts": previous_attempts,
         }, mode="stream")
-        return result
+        return __result__
     def HelperFunctionDebugger(self, faulty_function_name: str,faulty_function_implementation: str,history_faulty_tool_use: typing.Optional[str],error_description: str,ifc_model_path: str,other_bim_models_for_testing: typing.Optional[typing.List[str]] = None,previous_attempts: typing.Optional[str] = None,
         baml_options: BamlCallOptions = {},
     ) -> baml_py.baml_py.HTTPRequest:
-        result = self.__options.merge_options(baml_options).create_http_request_sync(function_name="HelperFunctionDebugger", args={
+        __result__ = self.__options.merge_options(baml_options).create_http_request_sync(function_name="HelperFunctionDebugger", args={
             "faulty_function_name": faulty_function_name,"faulty_function_implementation": faulty_function_implementation,"history_faulty_tool_use": history_faulty_tool_use,"error_description": error_description,"ifc_model_path": ifc_model_path,"other_bim_models_for_testing": other_bim_models_for_testing,"previous_attempts": previous_attempts,
         }, mode="stream")
-        return result
+        return __result__
     def HelperFunctionIdentifier(self, history: str,example_question: str,existing_helper_functions: str,
         baml_options: BamlCallOptions = {},
     ) -> baml_py.baml_py.HTTPRequest:
-        result = self.__options.merge_options(baml_options).create_http_request_sync(function_name="HelperFunctionIdentifier", args={
+        __result__ = self.__options.merge_options(baml_options).create_http_request_sync(function_name="HelperFunctionIdentifier", args={
             "history": history,"example_question": example_question,"existing_helper_functions": existing_helper_functions,
         }, mode="stream")
-        return result
+        return __result__
     def QuestionAnswerAlignment(self, question: str,answer: str,
         baml_options: BamlCallOptions = {},
     ) -> baml_py.baml_py.HTTPRequest:
-        result = self.__options.merge_options(baml_options).create_http_request_sync(function_name="QuestionAnswerAlignment", args={
+        __result__ = self.__options.merge_options(baml_options).create_http_request_sync(function_name="QuestionAnswerAlignment", args={
             "question": question,"answer": answer,
         }, mode="stream")
-        return result
+        return __result__
     def ValidateQuestionCategory(self, question: str,answer: str,current_category: str,
         baml_options: BamlCallOptions = {},
     ) -> baml_py.baml_py.HTTPRequest:
-        result = self.__options.merge_options(baml_options).create_http_request_sync(function_name="ValidateQuestionCategory", args={
+        __result__ = self.__options.merge_options(baml_options).create_http_request_sync(function_name="ValidateQuestionCategory", args={
             "question": question,"answer": answer,"current_category": current_category,
         }, mode="stream")
-        return result
+        return __result__
     
 
 b = BamlSyncClient(DoNotUseDirectlyCallManager({}))

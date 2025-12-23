@@ -33,12 +33,12 @@ class AlignedQAPair(BaseModel):
     was_modified: typing.Optional[bool] = None
 
 class AnswerEvaluationResult(BaseModel):
-    classification: typing.Optional[typing.Union[str, str, str]] = None
+    classification: typing.Optional[typing.Union[typing_extensions.Literal['correct'], typing_extensions.Literal['wrong'], typing_extensions.Literal['abstained']]] = None
     justification: typing.Optional[str] = None
-    confidence: typing.Optional[typing.Union[str, str, str]] = None
+    confidence: typing.Optional[typing.Union[typing_extensions.Literal['high'], typing_extensions.Literal['medium'], typing_extensions.Literal['low']]] = None
 
 class AssessmentResult(BaseModel):
-    assessment_status: typing.Optional[typing.Union[str, str]] = None
+    assessment_status: typing.Optional[typing.Union[typing_extensions.Literal['ok'], typing_extensions.Literal['needs_improvement']]] = None
     assessment_details: typing.Optional[str] = None
     test_execution_log: typing.Optional[str] = None
 
@@ -61,7 +61,7 @@ class FaultyToolAnalysis(BaseModel):
     faulty_tool: typing.Optional[bool] = None
     faulty_tool_name: typing.Optional[str] = None
     error_description: typing.Optional[str] = None
-    confidence: typing.Optional[typing.Union[str, str, str]] = None
+    confidence: typing.Optional[typing.Union[typing_extensions.Literal['high'], typing_extensions.Literal['medium'], typing_extensions.Literal['low']]] = None
 
 class FinalAnswer(BaseModel):
     thoughts: typing.Optional[str] = None
@@ -75,10 +75,10 @@ class FunctionImplementation(BaseModel):
 class HelperFunctionAssessment(BaseModel):
     thoughts: typing.Optional[str] = None
     tool_was_used: typing.Optional[bool] = None
-    tool_usage_quality: typing.Optional[typing.Union[str, str, str, str, str]] = None
+    tool_usage_quality: typing.Optional[typing.Union[typing_extensions.Literal['helpful'], typing_extensions.Literal['not_used'], typing_extensions.Literal['ignored'], typing_extensions.Literal['misused'], typing_extensions.Literal['harmful']]] = None
     usage_details: typing.Optional[str] = None
-    recommendation: typing.Optional[typing.Union[str, str, str, str]] = None
-    confidence: typing.Optional[typing.Union[str, str, str]] = None
+    recommendation: typing.Optional[typing.Union[typing_extensions.Literal['keep_tool'], typing_extensions.Literal['discard_tool'], typing_extensions.Literal['improve_tool'], typing_extensions.Literal['unclear']]] = None
+    confidence: typing.Optional[typing.Union[typing_extensions.Literal['high'], typing_extensions.Literal['medium'], typing_extensions.Literal['low']]] = None
 
 class ImprovedImplementation(BaseModel):
     function_implementation: typing.Optional[str] = None
@@ -92,7 +92,7 @@ class NewHelperFunction(BaseModel):
 
 class NewToolAnalysis(BaseModel):
     thoughts: typing.Optional[str] = None
-    action: typing.Optional[typing.Union[str, str, str]] = None
+    action: typing.Optional[typing.Union[typing_extensions.Literal['create_new'], typing_extensions.Literal['enhance_existing'], typing_extensions.Literal['none']]] = None
     tool_name: typing.Optional[str] = None
     tool_description: typing.Optional[str] = None
     existing_tool_for_enhancement: typing.Optional[str] = None

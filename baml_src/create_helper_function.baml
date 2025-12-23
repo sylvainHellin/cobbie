@@ -13,7 +13,7 @@ function HelperFunctionCreator(
   existing_implementation: string? @description("Current tool implementation (empty if new)"),
   previous_attempts: string? @description("Previous code execution results and attempts, if any")
 ) -> CodeAction | NewHelperFunction {
-  client GLM_4_6
+  client GLM_4_7
   prompt #"
     You are an expert Python programmer specializing in creating reusable helper functions for BIM (Building Information Modeling) analysis using the IfcOpenShell library.
 
@@ -173,5 +173,6 @@ test HelperFunctionCreatorTest {
     other_bim_models_for_testing ["/path/to/model2.ifc", "/path/to/model3.ifc"]
     function_name "get_elements_by_building_storey"
     function_description "Get IFC elements grouped by their containing IfcBuildingStorey. Takes an IFC model path and element type, returns a dictionary mapping floor names to lists of elements."
+    is_enhancement = False
   }
 }

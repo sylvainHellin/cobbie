@@ -140,7 +140,7 @@ def process_question(
                 "category": category,
                 "question_id": question_id,
                 "component": "COBBIE",
-                "llm": "glm-4.6",
+                "llm": "glm-4.7",
                 "provider_name": "zai",
                 "model_path": ifc_path or "None",
             }
@@ -412,7 +412,7 @@ Examples:
         mlflow.log_params(
             {
                 "component": "COBBIE",
-                "model_name": "glm-4.6",
+                "model_name": "glm-4.7",
                 "provider_name": "zai",
                 "start_index": args.start,
                 "end_index": end_index,

@@ -10,7 +10,7 @@ function FaultyNewToolAnalysis(
   justification: string @description("Justification from the answer verifier explaining why the answer was classified as wrong"),
   existing_helper_functions: string @description("List of all existing helper functions with their docstrings and signatures")
 ) -> FaultyToolAnalysis {
-  client GLM_4_6
+  client GLM_4_7
   prompt #"
     You are an expert Python developer and software architect specializing in BIM (Building Information Modeling) systems.
 

@@ -11,7 +11,7 @@ function HelperFunctionAssessor(
   final_answer: string @description("The final answer provided by Cobbie after using (or not using) the tool"),
   answer_correctness: "correct" | "wrong" | "abstained" @description("Classification of the final answer from answer verifier")
 ) -> HelperFunctionAssessment {
-  client GLM_4_6
+  client GLM_4_7
   prompt #"
     You are an expert Python developer and software architect specializing in BIM (Building Information Modeling) systems.
 

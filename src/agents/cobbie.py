@@ -286,7 +286,7 @@ def cobbie(
     model_path: Optional[str] = None,
     add_code_prefix: bool = True,
     llm_provider: str = "zai",
-    llm_name: str = "glm-4.6",
+    llm_name: str = "glm-4.7",
     mlflow_run_id: Optional[str] = None,
     **kwargs,
 ) -> Tuple[FinalAnswer, Collector, str]:

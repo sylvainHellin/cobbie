@@ -4,7 +4,7 @@ function QuestionAnswerAlignment(
   question: string,
   answer: string
 ) -> AlignedQAPair {
-  client GLM_4_6
+  client GLM_4_7
 
   prompt #"
     You are a dataset quality specialist focused on ensuring alignment between questions and answers in a BIM (Building Information Modeling) question-answering dataset.

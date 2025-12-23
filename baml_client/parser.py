@@ -27,56 +27,56 @@ class LlmResponseParser:
     def Cobbie(
         self, llm_response: str, baml_options: BamlCallOptions = {},
     ) -> typing.Union["types.CodeAction", "types.FinalAnswer"]:
-        result = self.__options.merge_options(baml_options).parse_response(function_name="Cobbie", llm_response=llm_response, mode="request")
-        return typing.cast(typing.Union["types.CodeAction", "types.FinalAnswer"], result)
+        __result__ = self.__options.merge_options(baml_options).parse_response(function_name="Cobbie", llm_response=llm_response, mode="request")
+        return typing.cast(typing.Union["types.CodeAction", "types.FinalAnswer"], __result__)
 
     def EvaluateResponse(
         self, llm_response: str, baml_options: BamlCallOptions = {},
     ) -> types.AnswerEvaluationResult:
-        result = self.__options.merge_options(baml_options).parse_response(function_name="EvaluateResponse", llm_response=llm_response, mode="request")
-        return typing.cast(types.AnswerEvaluationResult, result)
+        __result__ = self.__options.merge_options(baml_options).parse_response(function_name="EvaluateResponse", llm_response=llm_response, mode="request")
+        return typing.cast(types.AnswerEvaluationResult, __result__)
 
     def FaultyNewToolAnalysis(
         self, llm_response: str, baml_options: BamlCallOptions = {},
     ) -> types.FaultyToolAnalysis:
-        result = self.__options.merge_options(baml_options).parse_response(function_name="FaultyNewToolAnalysis", llm_response=llm_response, mode="request")
-        return typing.cast(types.FaultyToolAnalysis, result)
+        __result__ = self.__options.merge_options(baml_options).parse_response(function_name="FaultyNewToolAnalysis", llm_response=llm_response, mode="request")
+        return typing.cast(types.FaultyToolAnalysis, __result__)
 
     def HelperFunctionAssessor(
         self, llm_response: str, baml_options: BamlCallOptions = {},
     ) -> types.HelperFunctionAssessment:
-        result = self.__options.merge_options(baml_options).parse_response(function_name="HelperFunctionAssessor", llm_response=llm_response, mode="request")
-        return typing.cast(types.HelperFunctionAssessment, result)
+        __result__ = self.__options.merge_options(baml_options).parse_response(function_name="HelperFunctionAssessor", llm_response=llm_response, mode="request")
+        return typing.cast(types.HelperFunctionAssessment, __result__)
 
     def HelperFunctionCreator(
         self, llm_response: str, baml_options: BamlCallOptions = {},
     ) -> typing.Union["types.CodeAction", "types.NewHelperFunction"]:
-        result = self.__options.merge_options(baml_options).parse_response(function_name="HelperFunctionCreator", llm_response=llm_response, mode="request")
-        return typing.cast(typing.Union["types.CodeAction", "types.NewHelperFunction"], result)
+        __result__ = self.__options.merge_options(baml_options).parse_response(function_name="HelperFunctionCreator", llm_response=llm_response, mode="request")
+        return typing.cast(typing.Union["types.CodeAction", "types.NewHelperFunction"], __result__)
 
     def HelperFunctionDebugger(
         self, llm_response: str, baml_options: BamlCallOptions = {},
     ) -> typing.Union["types.CodeAction", "types.UpdatedHelperFunction"]:
-        result = self.__options.merge_options(baml_options).parse_response(function_name="HelperFunctionDebugger", llm_response=llm_response, mode="request")
-        return typing.cast(typing.Union["types.CodeAction", "types.UpdatedHelperFunction"], result)
+        __result__ = self.__options.merge_options(baml_options).parse_response(function_name="HelperFunctionDebugger", llm_response=llm_response, mode="request")
+        return typing.cast(typing.Union["types.CodeAction", "types.UpdatedHelperFunction"], __result__)
 
     def HelperFunctionIdentifier(
         self, llm_response: str, baml_options: BamlCallOptions = {},
     ) -> types.NewToolAnalysis:
-        result = self.__options.merge_options(baml_options).parse_response(function_name="HelperFunctionIdentifier", llm_response=llm_response, mode="request")
-        return typing.cast(types.NewToolAnalysis, result)
+        __result__ = self.__options.merge_options(baml_options).parse_response(function_name="HelperFunctionIdentifier", llm_response=llm_response, mode="request")
+        return typing.cast(types.NewToolAnalysis, __result__)
 
     def QuestionAnswerAlignment(
         self, llm_response: str, baml_options: BamlCallOptions = {},
     ) -> types.AlignedQAPair:
-        result = self.__options.merge_options(baml_options).parse_response(function_name="QuestionAnswerAlignment", llm_response=llm_response, mode="request")
-        return typing.cast(types.AlignedQAPair, result)
+        __result__ = self.__options.merge_options(baml_options).parse_response(function_name="QuestionAnswerAlignment", llm_response=llm_response, mode="request")
+        return typing.cast(types.AlignedQAPair, __result__)
 
     def ValidateQuestionCategory(
         self, llm_response: str, baml_options: BamlCallOptions = {},
     ) -> types.CategoryValidationResult:
-        result = self.__options.merge_options(baml_options).parse_response(function_name="ValidateQuestionCategory", llm_response=llm_response, mode="request")
-        return typing.cast(types.CategoryValidationResult, result)
+        __result__ = self.__options.merge_options(baml_options).parse_response(function_name="ValidateQuestionCategory", llm_response=llm_response, mode="request")
+        return typing.cast(types.CategoryValidationResult, __result__)
 
     
 
@@ -89,55 +89,55 @@ class LlmStreamParser:
     def Cobbie(
         self, llm_response: str, baml_options: BamlCallOptions = {},
     ) -> typing.Union["stream_types.CodeAction", "stream_types.FinalAnswer"]:
-        result = self.__options.merge_options(baml_options).parse_response(function_name="Cobbie", llm_response=llm_response, mode="stream")
-        return typing.cast(typing.Union["stream_types.CodeAction", "stream_types.FinalAnswer"], result)
+        __result__ = self.__options.merge_options(baml_options).parse_response(function_name="Cobbie", llm_response=llm_response, mode="stream")
+        return typing.cast(typing.Union["stream_types.CodeAction", "stream_types.FinalAnswer"], __result__)
 
     def EvaluateResponse(
         self, llm_response: str, baml_options: BamlCallOptions = {},
     ) -> stream_types.AnswerEvaluationResult:
-        result = self.__options.merge_options(baml_options).parse_response(function_name="EvaluateResponse", llm_response=llm_response, mode="stream")
-        return typing.cast(stream_types.AnswerEvaluationResult, result)
+        __result__ = self.__options.merge_options(baml_options).parse_response(function_name="EvaluateResponse", llm_response=llm_response, mode="stream")
+        return typing.cast(stream_types.AnswerEvaluationResult, __result__)
 
     def FaultyNewToolAnalysis(
         self, llm_response: str, baml_options: BamlCallOptions = {},
     ) -> stream_types.FaultyToolAnalysis:
-        result = self.__options.merge_options(baml_options).parse_response(function_name="FaultyNewToolAnalysis", llm_response=llm_response, mode="stream")
-        return typing.cast(stream_types.FaultyToolAnalysis, result)
+        __result__ = self.__options.merge_options(baml_options).parse_response(function_name="FaultyNewToolAnalysis", llm_response=llm_response, mode="stream")
+        return typing.cast(stream_types.FaultyToolAnalysis, __result__)
 
     def HelperFunctionAssessor(
         self, llm_response: str, baml_options: BamlCallOptions = {},
     ) -> stream_types.HelperFunctionAssessment:
-        result = self.__options.merge_options(baml_options).parse_response(function_name="HelperFunctionAssessor", llm_response=llm_response, mode="stream")
-        return typing.cast(stream_types.HelperFunctionAssessment, result)
+        __result__ = self.__options.merge_options(baml_options).parse_response(function_name="HelperFunctionAssessor", llm_response=llm_response, mode="stream")
+        return typing.cast(stream_types.HelperFunctionAssessment, __result__)
 
     def HelperFunctionCreator(
         self, llm_response: str, baml_options: BamlCallOptions = {},
     ) -> typing.Union["stream_types.CodeAction", "stream_types.NewHelperFunction"]:
-        result = self.__options.merge_options(baml_options).parse_response(function_name="HelperFunctionCreator", llm_response=llm_response, mode="stream")
-        return typing.cast(typing.Union["stream_types.CodeAction", "stream_types.NewHelperFunction"], result)
+        __result__ = self.__options.merge_options(baml_options).parse_response(function_name="HelperFunctionCreator", llm_response=llm_response, mode="stream")
+        return typing.cast(typing.Union["stream_types.CodeAction", "stream_types.NewHelperFunction"], __result__)
 
     def HelperFunctionDebugger(
         self, llm_response: str, baml_options: BamlCallOptions = {},
     ) -> typing.Union["stream_types.CodeAction", "stream_types.UpdatedHelperFunction"]:
-        result = self.__options.merge_options(baml_options).parse_response(function_name="HelperFunctionDebugger", llm_response=llm_response, mode="stream")
-        return typing.cast(typing.Union["stream_types.CodeAction", "stream_types.UpdatedHelperFunction"], result)
+        __result__ = self.__options.merge_options(baml_options).parse_response(function_name="HelperFunctionDebugger", llm_response=llm_response, mode="stream")
+        return typing.cast(typing.Union["stream_types.CodeAction", "stream_types.UpdatedHelperFunction"], __result__)
 
     def HelperFunctionIdentifier(
         self, llm_response: str, baml_options: BamlCallOptions = {},
     ) -> stream_types.NewToolAnalysis:
-        result = self.__options.merge_options(baml_options).parse_response(function_name="HelperFunctionIdentifier", llm_response=llm_response, mode="stream")
-        return typing.cast(stream_types.NewToolAnalysis, result)
+        __result__ = self.__options.merge_options(baml_options).parse_response(function_name="HelperFunctionIdentifier", llm_response=llm_response, mode="stream")
+        return typing.cast(stream_types.NewToolAnalysis, __result__)
 
     def QuestionAnswerAlignment(
         self, llm_response: str, baml_options: BamlCallOptions = {},
     ) -> stream_types.AlignedQAPair:
-        result = self.__options.merge_options(baml_options).parse_response(function_name="QuestionAnswerAlignment", llm_response=llm_response, mode="stream")
-        return typing.cast(stream_types.AlignedQAPair, result)
+        __result__ = self.__options.merge_options(baml_options).parse_response(function_name="QuestionAnswerAlignment", llm_response=llm_response, mode="stream")
+        return typing.cast(stream_types.AlignedQAPair, __result__)
 
     def ValidateQuestionCategory(
         self, llm_response: str, baml_options: BamlCallOptions = {},
     ) -> stream_types.CategoryValidationResult:
-        result = self.__options.merge_options(baml_options).parse_response(function_name="ValidateQuestionCategory", llm_response=llm_response, mode="stream")
-        return typing.cast(stream_types.CategoryValidationResult, result)
+        __result__ = self.__options.merge_options(baml_options).parse_response(function_name="ValidateQuestionCategory", llm_response=llm_response, mode="stream")
+        return typing.cast(stream_types.CategoryValidationResult, __result__)
 
     

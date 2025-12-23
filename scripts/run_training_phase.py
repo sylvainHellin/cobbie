@@ -42,7 +42,6 @@ from src.util import (
     delete_tool,
     _create_function_from_source_code,
     extract_tools_used,
-
 )
 from src.db import load_train_dev_split
 from src.db.models import IfcBench
@@ -1493,7 +1492,7 @@ def main():
         if run_id is None:
             mlflow.log_params(
                 {
-                    "model_name": "glm-4.6",
+                    "model_name": "glm-4.7",
                     "provider_name": "zai",
                     "component": "Training",
                     "max_tools": args.max_tools,

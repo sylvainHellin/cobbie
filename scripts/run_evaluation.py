@@ -81,13 +81,25 @@ def calculate_and_log_metrics(
 
     # Accumulate with previous metrics if continuing
     if previous_metrics:
-        cumulative_total_questions = previous_metrics["total_questions"] + total_questions
-        cumulative_correct_count = previous_metrics["correct_count"] + batch_correct_count
+        cumulative_total_questions = (
+            previous_metrics["total_questions"] + total_questions
+        )
+        cumulative_correct_count = (
+            previous_metrics["correct_count"] + batch_correct_count
+        )
         cumulative_wrong_count = previous_metrics["wrong_count"] + batch_wrong_count
-        cumulative_abstained_count = previous_metrics["abstained_count"] + batch_abstained_count
-        cumulative_input_tokens = previous_metrics["total_input_tokens"] + batch_input_tokens
-        cumulative_output_tokens = previous_metrics["total_output_tokens"] + batch_output_tokens
-        cumulative_execution_time = previous_metrics["total_execution_time"] + batch_execution_time
+        cumulative_abstained_count = (
+            previous_metrics["abstained_count"] + batch_abstained_count
+        )
+        cumulative_input_tokens = (
+            previous_metrics["total_input_tokens"] + batch_input_tokens
+        )
+        cumulative_output_tokens = (
+            previous_metrics["total_output_tokens"] + batch_output_tokens
+        )
+        cumulative_execution_time = (
+            previous_metrics["total_execution_time"] + batch_execution_time
+        )
     else:
         cumulative_total_questions = total_questions
         cumulative_correct_count = batch_correct_count
@@ -99,7 +111,9 @@ def calculate_and_log_metrics(
 
     # Calculate derived metrics from cumulative totals
     cumulative_total_tokens = cumulative_input_tokens + cumulative_output_tokens
-    cumulative_total_evaluated = cumulative_correct_count + cumulative_wrong_count + cumulative_abstained_count
+    cumulative_total_evaluated = (
+        cumulative_correct_count + cumulative_wrong_count + cumulative_abstained_count
+    )
 
     cumulative_accuracy = (
         cumulative_correct_count / (cumulative_correct_count + cumulative_wrong_count)
@@ -157,7 +171,7 @@ def calculate_and_log_metrics(
 
     # Prepare results summary by extending base metrics with engine info
     results_summary = {
-        "model_name": "glm-4.6",
+        "model_name": "glm-4.7",
         "provider_name": "zai",
         "num_samples": total_questions,
         **metrics,
@@ -271,7 +285,7 @@ def process_question(
                 "ground_truth": ground_truth,
                 "category": category,
                 "question_id": question_id,
-                "llm": "glm-4.6",
+                "llm": "glm-4.7",
                 "provider_name": "zai",
                 "model_path": ifc_path or "None",
             }
@@ -291,7 +305,7 @@ def process_question(
             question_span.set_attributes(
                 {
                     "engine": "baml",
-                    "model": "glm-4.6",
+                    "model": "glm-4.7",
                     "provider": "zai",
                 }
             )
@@ -453,9 +467,7 @@ def print_tool_metrics_summary():
 
     # Sort by usage frequency
     sorted_stats = sorted(
-        eval_stats,
-        key=lambda s: s.questions_when_called or 0,
-        reverse=True
+        eval_stats, key=lambda s: s.questions_when_called or 0, reverse=True
     )
 
     # Calculate column widths
@@ -487,7 +499,9 @@ def print_tool_metrics_summary():
     total_wrong = sum(s.questions_wrong_contribution or 0 for s in eval_stats)
 
     print("─" * len(header))
-    print(f"{'TOTAL':<{tool_col_width}} │ {total_included:>8} │ {total_called:>7} │ {total_correct:>8} │ {total_wrong:>7} │ {'':>9}")
+    print(
+        f"{'TOTAL':<{tool_col_width}} │ {total_included:>8} │ {total_called:>7} │ {total_correct:>8} │ {total_wrong:>7} │ {'':>9}"
+    )
     print("=" * 90)
 
 
@@ -623,7 +637,7 @@ Examples:
         if run_id is None:
             mlflow.log_params(
                 {
-                    "model_name": "glm-4.6",
+                    "model_name": "glm-4.7",
                     "provider_name": "zai",
                     "component": "COBBIE",
                     "tools": ", ".join(tools_dict.keys()),
@@ -637,13 +651,25 @@ Examples:
             active_run = mlflow.active_run()
             if active_run:
                 previous_metrics = {
-                    "total_questions": int(active_run.data.metrics.get("total_questions", 0)),
-                    "correct_count": int(active_run.data.metrics.get("correct_count", 0)),
+                    "total_questions": int(
+                        active_run.data.metrics.get("total_questions", 0)
+                    ),
+                    "correct_count": int(
+                        active_run.data.metrics.get("correct_count", 0)
+                    ),
                     "wrong_count": int(active_run.data.metrics.get("wrong_count", 0)),
-                    "abstained_count": int(active_run.data.metrics.get("abstained_count", 0)),
-                    "total_input_tokens": int(active_run.data.metrics.get("total_input_tokens", 0)),
-                    "total_output_tokens": int(active_run.data.metrics.get("total_output_tokens", 0)),
-                    "total_execution_time": float(active_run.data.metrics.get("total_execution_time", 0.0)),
+                    "abstained_count": int(
+                        active_run.data.metrics.get("abstained_count", 0)
+                    ),
+                    "total_input_tokens": int(
+                        active_run.data.metrics.get("total_input_tokens", 0)
+                    ),
+                    "total_output_tokens": int(
+                        active_run.data.metrics.get("total_output_tokens", 0)
+                    ),
+                    "total_execution_time": float(
+                        active_run.data.metrics.get("total_execution_time", 0.0)
+                    ),
                 }
                 logger.info(f"Continuing run with previous metrics: {previous_metrics}")
 
@@ -652,7 +678,7 @@ Examples:
 
         # Process each question (each creates its own MLflow run)
         question_results = []
-        with tqdm(total=len(dataset), desc="Evaluating BAML COBBIE glm-4.6") as pbar:
+        with tqdm(total=len(dataset), desc="Evaluating BAML COBBIE glm-4.7") as pbar:
             for i, question_data in enumerate(dataset):
                 result = process_question(
                     question_data=question_data,

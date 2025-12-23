@@ -12,7 +12,7 @@ function HelperFunctionDebugger(
   other_bim_models_for_testing: string[]? @description("List of paths to other available BIM models for testing generalization. If not provided, the system will automatically discover other IFC files in the bim_models directory."),
   previous_attempts: string? @description("Previous code execution results and attempts, if any")
 ) -> CodeAction | UpdatedHelperFunction {
-  client GLM_4_6
+  client GLM_4_7
   prompt #"
     You are an expert Python developer and software architect specializing in BIM (Building Information Modeling) systems.
 

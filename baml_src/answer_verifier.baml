@@ -16,7 +16,7 @@ function EvaluateResponse(
   ground_truth: string,
   system_response: string,
 ) -> AnswerEvaluationResult {
-  client GLM_4_6
+  client GLM_4_7
 
   prompt #"
     You are evaluating a BIM information extraction system's response to a question.
