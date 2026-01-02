@@ -93,6 +93,7 @@ def setup_interpreter(
         interpreter = InteractiveInterpreter(interpreter_globals)
 
         logger.info(f"Interpreter setup with {len(tools) if tools else 0} tools")
+        logger.debug(tool for tool in tools or [])
         if model_path:
             logger.info(f"Model path set: {model_path}")
 
