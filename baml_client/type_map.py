@@ -74,6 +74,8 @@ type_map = {
     "stream_types.UpdatedHelperFunction": stream_types.UpdatedHelperFunction,
 
 
+    "types.CriterionResult": types.CriterionResult,
+
     "types.QuestionCategory": types.QuestionCategory,
 
 }

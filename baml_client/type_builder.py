@@ -22,12 +22,16 @@ class TypeBuilder(type_builder.TypeBuilder):
         super().__init__(classes=set(
           ["AlignedQAPair","AnswerEvaluationResult","AssessmentResult","CategoryValidationResult","CodeAction","ErrorAnalysisResult","FaultyToolAnalysis","FinalAnswer","FunctionImplementation","HelperFunctionAssessment","ImprovedImplementation","NewHelperFunction","NewToolAnalysis","SimilarityResult","TestAndImproveError","TestAndImproveSuccess","ToolCreationResult","ToolOptimizationResult","UpdatedHelperFunction",]
         ), enums=set(
-          ["QuestionCategory",]
+          ["CriterionResult","QuestionCategory",]
         ), runtime=DO_NOT_USE_DIRECTLY_UNLESS_YOU_KNOW_WHAT_YOURE_DOING_RUNTIME)
 
     # #########################################################################
-    # Generated enums 1
+    # Generated enums 2
     # #########################################################################
+
+    @property
+    def CriterionResult(self) -> "CriterionResultViewer":
+        return CriterionResultViewer(self)
 
     @property
     def QuestionCategory(self) -> "QuestionCategoryViewer":
@@ -117,8 +121,54 @@ class TypeBuilder(type_builder.TypeBuilder):
 
 
 # #########################################################################
-# Generated enums 1
+# Generated enums 2
 # #########################################################################
+
+class CriterionResultAst:
+    def __init__(self, tb: type_builder.TypeBuilder):
+        _tb = tb._tb # type: ignore (we know how to use this private attribute)
+        self._bldr = _tb.enum("CriterionResult")
+        self._values: typing.Set[str] = set([  "Yes",  "No",  "Na",  ])
+        self._vals = CriterionResultValues(self._bldr, self._values)
+
+    def type(self) -> baml_py.FieldType:
+        return self._bldr.field()
+
+    @property
+    def values(self) -> "CriterionResultValues":
+        return self._vals
+
+
+class CriterionResultViewer(CriterionResultAst):
+    def __init__(self, tb: type_builder.TypeBuilder):
+        super().__init__(tb)
+
+    
+    def list_values(self) -> typing.List[typing.Tuple[str, type_builder.EnumValueViewer]]:
+        return [(name, type_builder.EnumValueViewer(self._bldr.value(name))) for name in self._values]
+    
+
+class CriterionResultValues:
+    def __init__(self, enum_bldr: baml_py.EnumBuilder, values: typing.Set[str]):
+        self.__bldr = enum_bldr
+        self.__values = values # type: ignore (we know how to use this private attribute) # noqa: F821
+
+    
+    
+    @property
+    def Yes(self) -> type_builder.EnumValueViewer:
+        return type_builder.EnumValueViewer(self.__bldr.value("Yes"))
+    
+    @property
+    def No(self) -> type_builder.EnumValueViewer:
+        return type_builder.EnumValueViewer(self.__bldr.value("No"))
+    
+    @property
+    def Na(self) -> type_builder.EnumValueViewer:
+        return type_builder.EnumValueViewer(self.__bldr.value("Na"))
+    
+    
+
 
 class QuestionCategoryAst:
     def __init__(self, tb: type_builder.TypeBuilder):
@@ -230,7 +280,7 @@ class AnswerEvaluationResultAst:
     def __init__(self, tb: type_builder.TypeBuilder):
         _tb = tb._tb # type: ignore (we know how to use this private attribute)
         self._bldr = _tb.class_("AnswerEvaluationResult")
-        self._properties: typing.Set[str] = set([  "classification",  "justification",  "confidence",  ])
+        self._properties: typing.Set[str] = set([  "abstention",  "faithfulness",  "completeness",  "transparency",  "relevance",  "justification",  ])
         self._props = AnswerEvaluationResultProperties(self._bldr, self._properties)
 
     def type(self) -> baml_py.FieldType:
@@ -259,16 +309,28 @@ class AnswerEvaluationResultProperties:
     
     
     @property
-    def classification(self) -> type_builder.ClassPropertyViewer:
-        return type_builder.ClassPropertyViewer(self.__bldr.property("classification"))
+    def abstention(self) -> type_builder.ClassPropertyViewer:
+        return type_builder.ClassPropertyViewer(self.__bldr.property("abstention"))
+    
+    @property
+    def faithfulness(self) -> type_builder.ClassPropertyViewer:
+        return type_builder.ClassPropertyViewer(self.__bldr.property("faithfulness"))
+    
+    @property
+    def completeness(self) -> type_builder.ClassPropertyViewer:
+        return type_builder.ClassPropertyViewer(self.__bldr.property("completeness"))
+    
+    @property
+    def transparency(self) -> type_builder.ClassPropertyViewer:
+        return type_builder.ClassPropertyViewer(self.__bldr.property("transparency"))
+    
+    @property
+    def relevance(self) -> type_builder.ClassPropertyViewer:
+        return type_builder.ClassPropertyViewer(self.__bldr.property("relevance"))
     
     @property
     def justification(self) -> type_builder.ClassPropertyViewer:
         return type_builder.ClassPropertyViewer(self.__bldr.property("justification"))
-    
-    @property
-    def confidence(self) -> type_builder.ClassPropertyViewer:
-        return type_builder.ClassPropertyViewer(self.__bldr.property("confidence"))
     
     
 
