@@ -92,10 +92,10 @@ def setup_interpreter(
         # Create interpreter
         interpreter = InteractiveInterpreter(interpreter_globals)
 
-        logger.info(f"Interpreter setup with {len(tools) if tools else 0} tools")
+        logger.debug(f"Interpreter setup with {len(tools) if tools else 0} tools")
         logger.debug(tool for tool in tools or [])
         if model_path:
-            logger.info(f"Model path set: {model_path}")
+            logger.debug(f"Model path set: {model_path}")
 
         return interpreter
 
@@ -161,6 +161,8 @@ def execute_python(
         result = truncate_to_tokens(result, max_tokens)
 
         logger.debug(f"Python execution completed. Output length: {len(result)}")
+
+        logger.info(f"Python code executed successfully. Ouput: {result[:50]}...")
         return result
 
     except Exception as e:
