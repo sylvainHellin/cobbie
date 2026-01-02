@@ -4,13 +4,13 @@ Provides classification, justification, and confidence for answer evaluation.
 """
 
 import time
-from typing import Literal, Optional, Tuple
+from typing import Literal, Tuple
 
 import mlflow
 from baml_py.baml_py import Collector
 
 from baml_client import b
-from baml_client.types import AnswerEvaluationResult, QuestionCategory
+from baml_client.types import AnswerEvaluationResult, CriterionResult, QuestionCategory
 from src.config import LOG_LEVEL
 from src.util import get_logger
 
@@ -29,13 +29,48 @@ def _map_category_to_baml(category: Literal[1, 2, 3, 4]) -> QuestionCategory:
     return category_mapping[category]
 
 
+def derive_binary_classification(
+    result: AnswerEvaluationResult,
+) -> Literal["correct", "wrong", "abstained"]:
+    """
+    Derive binary classification from multi-criteria evaluation for backward compatibility.
+
+    This function maps the 5-criterion evaluation (abstention, faithfulness, completeness,
+    transparency, relevance) back to the legacy 3-class classification system used by
+    training and evaluation scripts.
+
+    Classification logic:
+    - "abstained": System explicitly declined to answer (abstention = True)
+    - "correct": Answer provided AND faithful AND complete (both = Yes)
+    - "wrong": Answer provided but fails faithfulness OR completeness
+
+    Note: Transparency and relevance criteria are not used for backward compatibility
+    classification, but are logged separately for analysis.
+
+    Args:
+        result: AnswerEvaluationResult with 5-criterion evaluation
+
+    Returns:
+        Binary classification: "correct", "wrong", or "abstained"
+    """
+    if result.abstention:
+        return "abstained"
+    elif (
+        result.faithfulness == CriterionResult.Yes
+        and result.completeness == CriterionResult.Yes
+    ):
+        return "correct"
+    else:
+        return "wrong"
+
+
 def verify_answer(
     question: str,
     category: Literal[1, 2, 3, 4],
     ground_truth: str,
     system_response: str,
     llm_provider: str = "zai",
-    llm_name: str = "GLM-4.6",
+    llm_name: str = "GLM-4.7",
     **kwargs,
 ) -> Tuple[AnswerEvaluationResult, Collector]:
     """
@@ -92,17 +127,23 @@ def verify_answer(
             )
         except Exception as e:
             answer_classification = AnswerEvaluationResult(
-                classification="abstained",
+                abstention=True,
+                faithfulness=CriterionResult.Na,
+                completeness=CriterionResult.Na,
+                transparency=CriterionResult.Na,
+                relevance=CriterionResult.Na,
                 justification=f"An Exception occured when trying to classify this answer. Exception:\n{e}",
-                confidence="low",
             )
 
         # Log outputs
         verifier_span.set_outputs(
             {
-                "classification": answer_classification.classification,
+                "abstention": answer_classification.abstention,
+                "faithfulness": str(answer_classification.faithfulness),
+                "completeness": str(answer_classification.completeness),
+                "transparency": str(answer_classification.transparency),
+                "relevance": str(answer_classification.relevance),
                 "justification": answer_classification.justification,
-                "confidence": answer_classification.confidence,
             }
         )
 
@@ -148,9 +189,13 @@ if __name__ == "__main__":
     )
 
     print("BAML Answer Verifier Test Results:")
-    print(f"Classification: {result.classification}")
+    print(f"Abstention: {result.abstention}")
+    print(f"Faithfulness: {result.faithfulness}")
+    print(f"Completeness: {result.completeness}")
+    print(f"Transparency: {result.transparency}")
+    print(f"Relevance: {result.relevance}")
     print(f"Justification: {result.justification}")
-    print(f"Confidence: {result.confidence}")
+    print(f"Derived Classification: {derive_binary_classification(result)}")
 
     # Extract metrics
     input_tokens = 0
@@ -172,8 +217,12 @@ if __name__ == "__main__":
     )
 
     print("\nBAML Answer Verifier with Metrics Test Results:")
-    print(f"Classification: {result_with_metrics.classification}")
+    print(f"Abstention: {result_with_metrics.abstention}")
+    print(f"Faithfulness: {result_with_metrics.faithfulness}")
+    print(f"Completeness: {result_with_metrics.completeness}")
+    print(f"Transparency: {result_with_metrics.transparency}")
+    print(f"Relevance: {result_with_metrics.relevance}")
     print(f"Justification: {result_with_metrics.justification}")
-    print(f"Confidence: {result_with_metrics.confidence}")
+    print(f"Derived Classification: {derive_binary_classification(result_with_metrics)}")
     print(f"Input Tokens: {input_tokens}")
     print(f"Output Tokens: {output_tokens}")

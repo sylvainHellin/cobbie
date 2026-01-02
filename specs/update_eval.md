@@ -80,7 +80,7 @@ uv run baml-cli generate
 
 1. Add helper function:
 ```python
-def derive_classification(result: AnswerEvaluationResult) -> Literal["correct", "wrong", "abstained"]:
+def derive_binary_classification(result: AnswerEvaluationResult) -> Literal["correct", "wrong", "abstained"]:
     if result.abstention:
         return "abstained"
     if result.faithfulness == CriterionResult.yes and result.completeness == CriterionResult.yes:
