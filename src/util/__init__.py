@@ -9,7 +9,8 @@ from .get_created_tools import get_created_tools, get_tools_description, get_too
 from .get_usage_openrouter import get_usage_openrouter
 from .generate_tools_docs import generate_tools_docs
 from .delete_tool import delete_tool
-from.extract_tool_usage import extract_tools_used
+from .extract_tool_usage import extract_tools_used
+from .metrics import log_qa_metrics, calculate_aggregate_metrics, extract_token_metrics
 
 __all__ = [
     "get_logger",
@@ -26,4 +27,7 @@ __all__ = [
     "generate_tools_docs",
     "delete_tool",
     "extract_tools_used",
+    "log_qa_metrics",
+    "calculate_aggregate_metrics",
+    "extract_token_metrics"
 ]
