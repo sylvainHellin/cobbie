@@ -649,7 +649,7 @@ def print_tool_metrics_summary():
 def main():
     """Main function to run the evaluation."""
     parser = argparse.ArgumentParser(
-        description="Run evaluation experiments on BIM QAS System using BAML COBBIE",
+        description="Run evaluation experiments on Cobbie",
         formatter_class=argparse.RawDescriptionHelpFormatter,
         epilog="""
 Examples:
