@@ -6,11 +6,17 @@ Functional approach using BAML COBBIE component for evaluation.
 Replaces the complex OOP implementation with a clean, functional design.
 
 Usage:
-    # Basic evaluation
+    # Basic evaluation (default: initial + created tools)
     uv run scripts/run_evaluation.py --start 0 --nb-samples 5
 
     # Evaluate with different range
     uv run scripts/run_evaluation.py --start 10 --nb-samples 10
+
+    # Evaluate with specific tool directories
+    uv run scripts/run_evaluation.py --start 0 --nb-samples 5 --tools manual
+
+    # Evaluate with all tool directories
+    uv run scripts/run_evaluation.py --start 0 --nb-samples 5 --tools initial created manual
 """
 
 import argparse
@@ -24,7 +30,7 @@ from tqdm import tqdm
 
 from src.agents.answer_verifier import verify_answer, derive_binary_classification
 from src.agents.cobbie import cobbie
-from src.util import get_created_tools
+from src.util.get_tools import get_tools
 from src.util.extract_tool_usage import extract_tools_used
 from src.db import DEVSET
 from src.db.query import (
@@ -33,7 +39,6 @@ from src.db.query import (
     get_all_eval_tool_stats,
     clear_eval_tool_stats,
 )
-from src.tools.initial import query_ifcopenshell_docs, web_search
 from src.utils.mlflow_utils import determine_evaluation_run_id
 
 # Setup logging
@@ -707,6 +712,14 @@ Examples:
         help="Clear all evaluation tool metrics before starting",
     )
 
+    parser.add_argument(
+        "--tools",
+        nargs="+",
+        choices=["initial", "created", "manual"],
+        default=["initial", "created"],
+        help="Tool directories to load (space-separated). Options: initial, created, manual. Default: initial created"
+    )
+
     args = parser.parse_args()
 
     # Validate arguments
@@ -722,12 +735,27 @@ Examples:
         print(f"Error: --start ({args.start}) exceeds dataset size ({len(DEVSET)})")
         return 1
 
+    # Validate and deduplicate tools argument
+    if not args.tools:
+        print("Error: At least one tool directory must be specified")
+        return 1
+
+    # Remove duplicates while preserving order
+    seen = set()
+    unique_tools = []
+    for tool_dir in args.tools:
+        if tool_dir not in seen:
+            seen.add(tool_dir)
+            unique_tools.append(tool_dir)
+    args.tools = unique_tools
+
     end_index = min(args.start + args.nb_samples, len(DEVSET))
     actual_samples = end_index - args.start
 
     print(
         f"Processing {actual_samples} samples from index {args.start} to {end_index - 1}"
     )
+    logger.info(f"Loading tools from directories: {', '.join(args.tools)}")
 
     # Setup logging level
     logger.setLevel(getattr(logging, args.log_level))
@@ -741,19 +769,16 @@ Examples:
     mlflow.set_tracking_uri("http://127.0.0.1:5000")
     mlflow.set_experiment("Evaluation")
 
-    # Prepare tools for COBBIE
-    tools_dict = {
-        "query_ifcopenshell_docs": query_ifcopenshell_docs,
-        "web_search": web_search,
-    }
-
-    # Add all created tools from src.tools/created/
+    # Prepare tools for COBBIE based on --tools argument
     try:
-        created_tools = get_created_tools()
-        tools_dict.update(created_tools)
-        logger.info(f"Loaded {len(created_tools)} created tools for COBBIE")
+        tools_dict = get_tools(
+            directories=args.tools,
+            allow_created_deletion=True
+        )
+        logger.info(f"Loaded {len(tools_dict)} total tools from directories: {', '.join(args.tools)}")
     except Exception as e:
-        logger.warning(f"Could not load created tools: {e}")
+        logger.error(f"Failed to load tools: {e}")
+        return 1
 
     # Prepare dataset
     dataset = DEVSET[args.start : end_index]

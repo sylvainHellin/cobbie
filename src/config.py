@@ -11,6 +11,8 @@ TEST_IFC_PATH = os.path.join(ROOT_PATH, "src/db/bim_models/duplex/arc.ifc")
 DB_PATH = os.path.join(ROOT_PATH, "src/db/db.db")
 DIRECTORY_IFC_MODELS_PATH = os.path.join(ROOT_PATH, "src/db/bim_models")
 CREATED_TOOLS_PATH = os.path.join(ROOT_PATH, "src/tools/created")
+INITIAL_TOOLS_PATH = os.path.join(ROOT_PATH, "src/tools/initial")
+MANUAL_TOOLS_PATH = os.path.join(ROOT_PATH, "src/tools/manual")
 
 # URI
 MLFLOW_URI = "http://127.0.0.1:5000"
