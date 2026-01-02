@@ -43,7 +43,7 @@ from src.util import (
     _create_function_from_source_code,
     extract_tools_used,
 )
-from src.db import load_train_dev_split
+from src.db import TRAINSET
 from src.db.models import IfcBench
 from src.db.query import (
     increment_tool_inclusion,
@@ -1452,12 +1452,9 @@ def main():
     )
     args = parser.parse_args()
 
-    # Load dataset
-    _, trainset = load_train_dev_split()
-
     # Set default end if not provided
-    end_index = args.end if args.end else len(trainset)
-    dataset = trainset[args.start : end_index]
+    end_index = args.end if args.end else len(TRAINSET)
+    dataset = TRAINSET[args.start : end_index]
 
     _logger.info(f"Starting training phase with {len(dataset)} QA pairs")
     _logger.info(f"Dataset range: {args.start} to {end_index - 1}")
