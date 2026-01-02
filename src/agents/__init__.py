@@ -1,4 +1,4 @@
-from src.agents.answer_verifier import verify_answer
+from src.agents.answer_verifier import verify_answer, derive_binary_classification
 from src.agents.assess_helper_function import assess_helper_function
 from src.agents.cobbie import cobbie
 from src.agents.create_helper_function import create_helper_function
@@ -14,4 +14,5 @@ __all__ = [
     "identify_faulty_tool",
     "debug_helper_function",
     "assess_helper_function",
+    "derive_binary_classification",
 ]
