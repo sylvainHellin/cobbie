@@ -40,9 +40,8 @@ from src.util import (
     get_function_code,
     get_logger,
     save_new_tool,
-    calculate_aggregate_metrics,
-    log_qa_metrics
 )
+from src.util.metrics import calculate_aggregate_metrics, log_qa_metrics
 from src.utils.mlflow_utils import determine_run_id
 
 # Initialize logger

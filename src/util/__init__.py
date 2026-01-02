@@ -10,7 +10,8 @@ from .get_usage_openrouter import get_usage_openrouter
 from .generate_tools_docs import generate_tools_docs
 from .delete_tool import delete_tool
 from .extract_tool_usage import extract_tools_used
-from .metrics import log_qa_metrics, calculate_aggregate_metrics, extract_token_metrics
+# NOTE: metrics module not imported here to avoid circular import with answer_verifier
+# Import directly from src.util.metrics if needed
 
 __all__ = [
     "get_logger",
@@ -27,7 +28,4 @@ __all__ = [
     "generate_tools_docs",
     "delete_tool",
     "extract_tools_used",
-    "log_qa_metrics",
-    "calculate_aggregate_metrics",
-    "extract_token_metrics"
 ]
