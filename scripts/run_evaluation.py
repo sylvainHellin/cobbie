@@ -480,10 +480,10 @@ def process_question(
 
                 # Extract all 5 criteria
                 abstention = verifier_result.abstention
-                faithfulness = str(verifier_result.faithfulness)
-                completeness = str(verifier_result.completeness)
-                transparency = str(verifier_result.transparency)
-                relevance = str(verifier_result.relevance)
+                faithfulness = verifier_result.faithfulness.value
+                completeness = verifier_result.completeness.value
+                transparency = verifier_result.transparency.value
+                relevance = verifier_result.relevance.value
                 justification = verifier_result.justification
 
                 verifier_input_tokens = 0
@@ -495,11 +495,11 @@ def process_question(
             # Track tool usage (after answer verification)
             if args.track_tools:
                 # Track tools that were available for this question
-                available_tools = list(tools_dict.keys())
-                increment_eval_tool_inclusion(available_tools)
+                available_tool_names = list(tools_dict.keys())
+                increment_eval_tool_inclusion(available_tool_names)
 
                 # Track tools that were actually used
-                tools_used = extract_tools_used(execution_history)
+                tools_used = extract_tools_used(execution_history, available_tool_names)
                 is_correct = classification == "correct"
                 update_eval_tool_usage(tools_used, is_correct)
 
@@ -835,6 +835,46 @@ Examples:
                     ),
                     "total_execution_time": float(
                         active_run.data.metrics.get("total_execution_time", 0.0)
+                    ),
+                    # Criterion-level counts
+                    "abstention_count": int(
+                        active_run.data.metrics.get("abstention_count", 0)
+                    ),
+                    "faithfulness_yes_count": int(
+                        active_run.data.metrics.get("faithfulness_yes_count", 0)
+                    ),
+                    "faithfulness_no_count": int(
+                        active_run.data.metrics.get("faithfulness_no_count", 0)
+                    ),
+                    "faithfulness_na_count": int(
+                        active_run.data.metrics.get("faithfulness_na_count", 0)
+                    ),
+                    "completeness_yes_count": int(
+                        active_run.data.metrics.get("completeness_yes_count", 0)
+                    ),
+                    "completeness_no_count": int(
+                        active_run.data.metrics.get("completeness_no_count", 0)
+                    ),
+                    "completeness_na_count": int(
+                        active_run.data.metrics.get("completeness_na_count", 0)
+                    ),
+                    "transparency_yes_count": int(
+                        active_run.data.metrics.get("transparency_yes_count", 0)
+                    ),
+                    "transparency_no_count": int(
+                        active_run.data.metrics.get("transparency_no_count", 0)
+                    ),
+                    "transparency_na_count": int(
+                        active_run.data.metrics.get("transparency_na_count", 0)
+                    ),
+                    "relevance_yes_count": int(
+                        active_run.data.metrics.get("relevance_yes_count", 0)
+                    ),
+                    "relevance_no_count": int(
+                        active_run.data.metrics.get("relevance_no_count", 0)
+                    ),
+                    "relevance_na_count": int(
+                        active_run.data.metrics.get("relevance_na_count", 0)
                     ),
                 }
                 logger.info(f"Continuing run with previous metrics: {previous_metrics}")

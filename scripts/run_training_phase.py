@@ -240,7 +240,8 @@ def handle_verify_answer(context: Context) -> Tuple[TrainingState, Context]:
         )
 
         # Track tool usage for this question
-        tools_used = extract_tools_used(context.cobbie_history)
+        available_tool_names = list(context.tools.keys())
+        tools_used = extract_tools_used(context.cobbie_history, available_tool_names)
         is_correct = classification == "correct"
         update_tool_usage(tools_used, is_correct, context.global_question_num)
 
