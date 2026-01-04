@@ -14,7 +14,7 @@ from src.config import LOG_LEVEL
 from src.util import get_logger
 
 # Initialize logger
-_logger = get_logger(name="baml_faulty_tool_identifier", log_level=LOG_LEVEL)
+_logger = get_logger(name="faulty_tool_identifier", log_level=LOG_LEVEL)
 
 
 def identify_faulty_tool(

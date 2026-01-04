@@ -14,7 +14,7 @@ from src.config import LOG_LEVEL
 from src.util import get_logger
 
 # Initialize logger
-_logger = get_logger(name="baml_helper_function_identifier", log_level=LOG_LEVEL)
+_logger = get_logger(name="helper_function_identifier", log_level=LOG_LEVEL)
 
 
 def identify_helper_function(

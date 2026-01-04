@@ -24,7 +24,7 @@ def _cobbie(
     max_iterations: int = 15,
     model_path: Optional[str] = None,
     add_code_prefix: bool = True,
-    llm_name: str = "GLM-4.6",
+    llm_name: str = "GLM-4.7",
     llm_provider: str = "zai",
     **kwargs,
 ) -> Tuple[FinalAnswer, str]:

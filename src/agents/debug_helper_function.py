@@ -20,7 +20,7 @@ from src.util.generate_tools_docs import generate_tools_docs
 from src.util.get_logger import get_logger
 
 # Initialize logger
-_logger = get_logger(name="baml_helper_function_debugger", log_level=LOG_LEVEL)
+_logger = get_logger(name="helper_function_debugger", log_level=LOG_LEVEL)
 
 
 def _helper_function_debugger_iter(

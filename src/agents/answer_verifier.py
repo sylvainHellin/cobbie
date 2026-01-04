@@ -15,7 +15,7 @@ from src.config import LOG_LEVEL
 from src.util import get_logger
 
 # Initialize logger for the functional approach
-_logger = get_logger(name="baml_answer_verifier", log_level=LOG_LEVEL)
+_logger = get_logger(name="answer_verifier", log_level=LOG_LEVEL)
 
 
 def _map_category_to_baml(category: Literal[1, 2, 3, 4]) -> QuestionCategory:
