@@ -100,12 +100,13 @@ def fetch_nested_runs(client: MlflowClient, parent_run_id: str, experiment_id: s
     return nested_runs
 
 
-def extract_evaluation_data(run) -> Dict:
+def extract_evaluation_data(run, parent_model_name: str = "Unknown") -> Dict:
     """
     Extract evaluation data from a single nested run.
 
     Args:
         run: MLflow run object
+        parent_model_name: Model name from parent run
 
     Returns:
         Dictionary with extracted evaluation data
@@ -142,8 +143,8 @@ def extract_evaluation_data(run) -> Dict:
     answer = params.get("answer", "")
     justification = params.get("justification", "")
 
-    # Get model info from parent run tags
-    model_name = params.get("model_name", tags.get("model_name", "Unknown"))
+    # Use model name from parent run
+    model_name = parent_model_name
 
     data = {
         "question_id": question_id,
@@ -519,7 +520,7 @@ def create_instructions_sheet(wb: Workbook) -> None:
         ["  - Relevance (Yes/No/Na): Does the answer directly address the question?", ""],
         ["", ""],
         ["2. How to Use This Sheet", ""],
-        ["  1. Review the 'LLM Judge' sheet to see how the LLM evaluated each answer", ""],
+        ["  1. Go to your corresponding evaluation sheet", ""],
         ["  2. Fill in your evaluation in either 'Human Judge 1' or 'Human Judge 2' sheet", ""],
         ["  3. Use the dropdown menus for Faithfulness, Completeness, Transparency, Relevance", ""],
         ["  4. Check/uncheck the Abstention box as appropriate", ""],
@@ -667,20 +668,16 @@ def create_judge_sheet(wb: Workbook, sheet_name: str, df: pd.DataFrame, judge_pr
             binary_formula = f'=IF(I{row_idx},"abstained",IF(AND(J{row_idx}="Yes",K{row_idx}="Yes"),"correct","wrong"))'
             ws.cell(row=row_idx, column=15, value=binary_formula)
         else:
-            # Leave empty for human judges, but add formulas and validation
-            # Abstention - default to FALSE
-            ws.cell(row=row_idx, column=9, value=False)
+            # Leave empty for human judges to fill in
+            # All criteria cells are left blank (no default values)
+            ws.cell(row=row_idx, column=9, value=None)  # Abstention
+            ws.cell(row=row_idx, column=10, value=None)  # Faithfulness
+            ws.cell(row=row_idx, column=11, value=None)  # Completeness
+            ws.cell(row=row_idx, column=12, value=None)  # Transparency
+            ws.cell(row=row_idx, column=13, value=None)  # Relevance
+            ws.cell(row=row_idx, column=14, value="").alignment = Alignment(wrap_text=True)  # Justification
 
-            # Criteria - default to Na
-            ws.cell(row=row_idx, column=10, value="Na")
-            ws.cell(row=row_idx, column=11, value="Na")
-            ws.cell(row=row_idx, column=12, value="Na")
-            ws.cell(row=row_idx, column=13, value="Na")
-
-            # Justification - empty
-            ws.cell(row=row_idx, column=14, value="").alignment = Alignment(wrap_text=True)
-
-            # Binary classification formula
+            # Binary classification formula (will show errors until human fills criteria)
             binary_formula = f'=IF(I{row_idx},"abstained",IF(AND(J{row_idx}="Yes",K{row_idx}="Yes"),"correct","wrong"))'
             ws.cell(row=row_idx, column=15, value=binary_formula)
 
@@ -920,8 +917,14 @@ Examples:
             main_run = client.get_run(run_id)
             experiment_id = main_run.info.experiment_id
             run_name = main_run.data.tags.get("mlflow.runName", "Unknown")
+
+            # Extract model name from parent run
+            parent_model_name = main_run.data.params.get("model_name",
+                                main_run.data.tags.get("model_name", "Unknown"))
+
             print(f"  Run Name: {run_name}")
             print(f"  Experiment ID: {experiment_id}")
+            print(f"  Model: {parent_model_name}")
 
             # Fetch nested runs
             nested_runs = fetch_nested_runs(client, run_id, experiment_id)
@@ -929,7 +932,7 @@ Examples:
 
             # Extract evaluation data from each nested run
             for nested_run in nested_runs:
-                run_data = extract_evaluation_data(nested_run)
+                run_data = extract_evaluation_data(nested_run, parent_model_name)
                 all_runs_data.append(run_data)
 
         except Exception as e:
