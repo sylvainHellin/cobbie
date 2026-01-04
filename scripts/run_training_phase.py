@@ -46,6 +46,7 @@ from src.utils.mlflow_utils import determine_run_id
 
 # Initialize logger
 _logger = get_logger(name="TrainingPhase", log_level=LOG_LEVEL)
+LLM_NAME = "GLM 4.7"
 
 
 # Enum to implement the state machine pattern for orchestrating the control flow of the training phase
@@ -162,7 +163,7 @@ def handle_run_cobbie(context: Context) -> Tuple[TrainingState, Context]:
             max_iterations=10,
             model_path=ifc_path,
             llm_provider="zai",
-            llm_name="GLM-4.6",
+            llm_name=LLM_NAME,
         )
 
         context.cobbie_result = result
@@ -214,7 +215,7 @@ def handle_verify_answer(context: Context) -> Tuple[TrainingState, Context]:
             ground_truth=context.qa_pair.ground_truth,
             system_response=context.cobbie_result.answer,
             llm_provider="zai",
-            llm_name="GLM-4.7",
+            llm_name=LLM_NAME,
         )
 
         context.verify_result = result
@@ -312,7 +313,7 @@ def handle_identify_new_tool(context: Context) -> Tuple[TrainingState, Context]:
             example_question=context.qa_pair.question,
             existing_helper_functions=existing_tools_docs,
             llm_provider="zai",
-            llm_name="GLM-4.6",
+            llm_name=LLM_NAME,
         )
 
         context.identify_tool_result = result
@@ -427,7 +428,7 @@ def handle_create_new_tool(context: Context) -> Tuple[TrainingState, Context]:
             existing_implementation=existing_implementation,
             max_iterations=15,
             llm_provider="zai",
-            llm_name="GLM-4.6",
+            llm_name=LLM_NAME,
         )
 
         context.create_tool_result = result
@@ -507,7 +508,7 @@ def handle_identify_faulty_tool(context: Context) -> Tuple[TrainingState, Contex
             justification=context.verify_result.justification,
             existing_helper_functions=existing_tools_docs,
             llm_provider="zai",
-            llm_name="GLM-4.6",
+            llm_name=LLM_NAME,
         )
 
         context.identify_faulty_result = result
@@ -595,7 +596,7 @@ def handle_debug_faulty_tool(context: Context) -> Tuple[TrainingState, Context]:
             ifc_model_path=ifc_model_path,
             max_iterations=15,
             llm_provider="zai",
-            llm_name="GLM-4.6",
+            llm_name=LLM_NAME,
         )
 
         context.debug_tool_result = result
@@ -698,7 +699,7 @@ def handle_test_tool_with_cobbie(context: Context) -> Tuple[TrainingState, Conte
             max_iterations=10,
             model_path=ifc_path,
             llm_provider="zai",
-            llm_name="GLM-4.6",
+            llm_name=LLM_NAME,
         )
 
         context.test_cobbie_result = result
@@ -760,7 +761,7 @@ def handle_assess_tool_usage(context: Context) -> Tuple[TrainingState, Context]:
             ground_truth=context.qa_pair.ground_truth,
             system_response=context.test_cobbie_result.answer,
             llm_provider="zai",
-            llm_name="GLM-4.6",
+            llm_name=LLM_NAME,
         )
         context.test_verify_result = verify_result
         context.test_verify_collector = verify_collector
@@ -798,7 +799,7 @@ def handle_assess_tool_usage(context: Context) -> Tuple[TrainingState, Context]:
             final_answer=context.test_cobbie_result.answer,
             answer_correctness=classification,
             llm_provider="zai",
-            llm_name="GLM-4.6",
+            llm_name=LLM_NAME,
         )
         context.tool_assessment = assessment
         context.tool_assessment_collector = assessment_collector
@@ -1129,7 +1130,7 @@ def main():
         if run_id is None:
             mlflow.log_params(
                 {
-                    "model_name": "glm-4.7",
+                    "model_name": LLM_NAME,
                     "provider_name": "zai",
                     "component": "Training",
                     "max_tools": args.max_tools,
