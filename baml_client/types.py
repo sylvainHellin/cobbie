@@ -37,8 +37,13 @@ def get_checks(checks: typing.Dict[CheckName, Check]) -> typing.List[Check]:
 def all_succeeded(checks: typing.Dict[CheckName, Check]) -> bool:
     return all(check.status == "succeeded" for check in get_checks(checks))
 # #########################################################################
-# Generated enums (1)
+# Generated enums (2)
 # #########################################################################
+
+class CriterionResult(str, Enum):
+    Yes = "Yes"
+    No = "No"
+    Na = "Na"
 
 class QuestionCategory(str, Enum):
     Category1 = "Category1"
@@ -57,9 +62,12 @@ class AlignedQAPair(BaseModel):
     was_modified: bool
 
 class AnswerEvaluationResult(BaseModel):
-    classification: typing.Union[typing_extensions.Literal['correct'], typing_extensions.Literal['wrong'], typing_extensions.Literal['abstained']]
+    abstention: bool
+    faithfulness: CriterionResult
+    completeness: CriterionResult
+    transparency: CriterionResult
+    relevance: CriterionResult
     justification: str
-    confidence: typing.Union[typing_extensions.Literal['high'], typing_extensions.Literal['medium'], typing_extensions.Literal['low']]
 
 class AssessmentResult(BaseModel):
     assessment_status: typing.Union[typing_extensions.Literal['ok'], typing_extensions.Literal['needs_improvement']]

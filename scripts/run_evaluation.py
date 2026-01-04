@@ -6,11 +6,17 @@ Functional approach using BAML COBBIE component for evaluation.
 Replaces the complex OOP implementation with a clean, functional design.
 
 Usage:
-    # Basic evaluation
+    # Basic evaluation (default: initial + created tools)
     uv run scripts/run_evaluation.py --start 0 --nb-samples 5
 
     # Evaluate with different range
     uv run scripts/run_evaluation.py --start 10 --nb-samples 10
+
+    # Evaluate with specific tool directories
+    uv run scripts/run_evaluation.py --start 0 --nb-samples 5 --tools manual
+
+    # Evaluate with all tool directories
+    uv run scripts/run_evaluation.py --start 0 --nb-samples 5 --tools initial created manual
 """
 
 import argparse
@@ -22,9 +28,9 @@ from typing import Callable, Dict, List, Optional
 import mlflow
 from tqdm import tqdm
 
-from src.agents.answer_verifier import verify_answer
+from src.agents.answer_verifier import verify_answer, derive_binary_classification
 from src.agents.cobbie import cobbie
-from src.util import get_created_tools
+from src.util.get_tools import get_tools
 from src.util.extract_tool_usage import extract_tools_used
 from src.db import DEVSET
 from src.db.query import (
@@ -33,7 +39,6 @@ from src.db.query import (
     get_all_eval_tool_stats,
     clear_eval_tool_stats,
 )
-from src.tools.initial import query_ifcopenshell_docs, web_search
 from src.utils.mlflow_utils import determine_evaluation_run_id
 
 # Setup logging
@@ -141,6 +146,78 @@ def calculate_and_log_metrics(
         else 0.0
     )
 
+    # Calculate criterion-level metrics for current batch
+    batch_abstention_count = sum(1 for r in successful_results if r.get("abstention"))
+    batch_faithfulness_yes = sum(1 for r in successful_results if r.get("faithfulness") == "Yes")
+    batch_faithfulness_no = sum(1 for r in successful_results if r.get("faithfulness") == "No")
+    batch_faithfulness_na = sum(1 for r in successful_results if r.get("faithfulness") == "Na")
+    batch_completeness_yes = sum(1 for r in successful_results if r.get("completeness") == "Yes")
+    batch_completeness_no = sum(1 for r in successful_results if r.get("completeness") == "No")
+    batch_completeness_na = sum(1 for r in successful_results if r.get("completeness") == "Na")
+    batch_transparency_yes = sum(1 for r in successful_results if r.get("transparency") == "Yes")
+    batch_transparency_no = sum(1 for r in successful_results if r.get("transparency") == "No")
+    batch_transparency_na = sum(1 for r in successful_results if r.get("transparency") == "Na")
+    batch_relevance_yes = sum(1 for r in successful_results if r.get("relevance") == "Yes")
+    batch_relevance_no = sum(1 for r in successful_results if r.get("relevance") == "No")
+    batch_relevance_na = sum(1 for r in successful_results if r.get("relevance") == "Na")
+
+    # Accumulate criterion metrics with previous if continuing
+    if previous_metrics:
+        cumulative_abstention_count = previous_metrics.get("abstention_count", 0) + batch_abstention_count
+        cumulative_faithfulness_yes = previous_metrics.get("faithfulness_yes_count", 0) + batch_faithfulness_yes
+        cumulative_faithfulness_no = previous_metrics.get("faithfulness_no_count", 0) + batch_faithfulness_no
+        cumulative_faithfulness_na = previous_metrics.get("faithfulness_na_count", 0) + batch_faithfulness_na
+        cumulative_completeness_yes = previous_metrics.get("completeness_yes_count", 0) + batch_completeness_yes
+        cumulative_completeness_no = previous_metrics.get("completeness_no_count", 0) + batch_completeness_no
+        cumulative_completeness_na = previous_metrics.get("completeness_na_count", 0) + batch_completeness_na
+        cumulative_transparency_yes = previous_metrics.get("transparency_yes_count", 0) + batch_transparency_yes
+        cumulative_transparency_no = previous_metrics.get("transparency_no_count", 0) + batch_transparency_no
+        cumulative_transparency_na = previous_metrics.get("transparency_na_count", 0) + batch_transparency_na
+        cumulative_relevance_yes = previous_metrics.get("relevance_yes_count", 0) + batch_relevance_yes
+        cumulative_relevance_no = previous_metrics.get("relevance_no_count", 0) + batch_relevance_no
+        cumulative_relevance_na = previous_metrics.get("relevance_na_count", 0) + batch_relevance_na
+    else:
+        cumulative_abstention_count = batch_abstention_count
+        cumulative_faithfulness_yes = batch_faithfulness_yes
+        cumulative_faithfulness_no = batch_faithfulness_no
+        cumulative_faithfulness_na = batch_faithfulness_na
+        cumulative_completeness_yes = batch_completeness_yes
+        cumulative_completeness_no = batch_completeness_no
+        cumulative_completeness_na = batch_completeness_na
+        cumulative_transparency_yes = batch_transparency_yes
+        cumulative_transparency_no = batch_transparency_no
+        cumulative_transparency_na = batch_transparency_na
+        cumulative_relevance_yes = batch_relevance_yes
+        cumulative_relevance_no = batch_relevance_no
+        cumulative_relevance_na = batch_relevance_na
+
+    # Calculate criterion rates (yes / (yes + no))
+    cumulative_abstention_rate = (
+        cumulative_abstention_count / cumulative_total_evaluated
+        if cumulative_total_evaluated > 0
+        else 0.0
+    )
+    cumulative_faithfulness_rate = (
+        cumulative_faithfulness_yes / (cumulative_faithfulness_yes + cumulative_faithfulness_no)
+        if (cumulative_faithfulness_yes + cumulative_faithfulness_no) > 0
+        else 0.0
+    )
+    cumulative_completeness_rate = (
+        cumulative_completeness_yes / (cumulative_completeness_yes + cumulative_completeness_no)
+        if (cumulative_completeness_yes + cumulative_completeness_no) > 0
+        else 0.0
+    )
+    cumulative_transparency_rate = (
+        cumulative_transparency_yes / (cumulative_transparency_yes + cumulative_transparency_no)
+        if (cumulative_transparency_yes + cumulative_transparency_no) > 0
+        else 0.0
+    )
+    cumulative_relevance_rate = (
+        cumulative_relevance_yes / (cumulative_relevance_yes + cumulative_relevance_no)
+        if (cumulative_relevance_yes + cumulative_relevance_no) > 0
+        else 0.0
+    )
+
     # Create cumulative metrics dictionary
     metrics = {
         # Success metrics (current batch)
@@ -164,6 +241,26 @@ def calculate_and_log_metrics(
         "total_tokens": cumulative_total_tokens,
         "avg_tokens_per_question": cumulative_avg_tokens_per_question,
         "tokens_per_second": cumulative_tokens_per_second,
+        # Criterion-level counts (cumulative)
+        "abstention_count": cumulative_abstention_count,
+        "faithfulness_yes_count": cumulative_faithfulness_yes,
+        "faithfulness_no_count": cumulative_faithfulness_no,
+        "faithfulness_na_count": cumulative_faithfulness_na,
+        "completeness_yes_count": cumulative_completeness_yes,
+        "completeness_no_count": cumulative_completeness_no,
+        "completeness_na_count": cumulative_completeness_na,
+        "transparency_yes_count": cumulative_transparency_yes,
+        "transparency_no_count": cumulative_transparency_no,
+        "transparency_na_count": cumulative_transparency_na,
+        "relevance_yes_count": cumulative_relevance_yes,
+        "relevance_no_count": cumulative_relevance_no,
+        "relevance_na_count": cumulative_relevance_na,
+        # Criterion-level rates (cumulative)
+        "abstention_rate": cumulative_abstention_rate,
+        "faithfulness_rate": cumulative_faithfulness_rate,
+        "completeness_rate": cumulative_completeness_rate,
+        "transparency_rate": cumulative_transparency_rate,
+        "relevance_rate": cumulative_relevance_rate,
     }
 
     # Log comprehensive metrics to MLflow
@@ -196,13 +293,37 @@ def print_results(results_summary: Dict):
     print(f"Samples: {results_summary['num_samples']}")
     print()
 
-    print("Classification Metrics:")
+    print("Classification Metrics (Derived):")
     print(f"  Accuracy: {results_summary['accuracy']:.3f}")
-    print(f"  Abstainance Rate: {results_summary['abstainance_rate']:.3f}")
     print(f"  Correct Answers: {results_summary['correct_count']}")
     print(f"  Wrong Answers: {results_summary['wrong_count']}")
     print(f"  Abstained Answers: {results_summary['abstained_count']}")
     print(f"  Total Evaluated: {results_summary['total_evaluated']}")
+    print()
+
+    print("Criterion-Level Metrics:")
+    print(f"  Abstention Rate: {results_summary['abstention_rate']:.3f}")
+    print(f"    - Abstained: {results_summary['abstention_count']}")
+    print()
+    print(f"  Faithfulness Rate: {results_summary['faithfulness_rate']:.3f}")
+    print(f"    - Yes: {results_summary['faithfulness_yes_count']}")
+    print(f"    - No: {results_summary['faithfulness_no_count']}")
+    print(f"    - N/A: {results_summary['faithfulness_na_count']}")
+    print()
+    print(f"  Completeness Rate: {results_summary['completeness_rate']:.3f}")
+    print(f"    - Yes: {results_summary['completeness_yes_count']}")
+    print(f"    - No: {results_summary['completeness_no_count']}")
+    print(f"    - N/A: {results_summary['completeness_na_count']}")
+    print()
+    print(f"  Transparency Rate: {results_summary['transparency_rate']:.3f}")
+    print(f"    - Yes: {results_summary['transparency_yes_count']}")
+    print(f"    - No: {results_summary['transparency_no_count']}")
+    print(f"    - N/A: {results_summary['transparency_na_count']}")
+    print()
+    print(f"  Relevance Rate: {results_summary['relevance_rate']:.3f}")
+    print(f"    - Yes: {results_summary['relevance_yes_count']}")
+    print(f"    - No: {results_summary['relevance_no_count']}")
+    print(f"    - N/A: {results_summary['relevance_na_count']}")
     print()
 
     print("Token Usage:")
@@ -334,7 +455,11 @@ def process_question(
             # Now run AnswerVerifier if we have a successful answer
             classification = None
             justification = None
-            confidence = None
+            abstention = None
+            faithfulness = None
+            completeness = None
+            transparency = None
+            relevance = None
             verifier_input_tokens = 0
             verifier_output_tokens = 0
             verifier_duration = 0
@@ -349,9 +474,18 @@ def process_question(
                 )
 
                 verifier_duration = time.time() - verifier_start
-                classification = verifier_result.classification
+
+                # Derive binary classification from 5-criterion evaluation
+                classification = derive_binary_classification(verifier_result)
+
+                # Extract all 5 criteria
+                abstention = verifier_result.abstention
+                faithfulness = verifier_result.faithfulness.value
+                completeness = verifier_result.completeness.value
+                transparency = verifier_result.transparency.value
+                relevance = verifier_result.relevance.value
                 justification = verifier_result.justification
-                confidence = verifier_result.confidence
+
                 verifier_input_tokens = 0
                 verifier_output_tokens = 0
                 if collector.last:
@@ -361,11 +495,11 @@ def process_question(
             # Track tool usage (after answer verification)
             if args.track_tools:
                 # Track tools that were available for this question
-                available_tools = list(tools_dict.keys())
-                increment_eval_tool_inclusion(available_tools)
+                available_tool_names = list(tools_dict.keys())
+                increment_eval_tool_inclusion(available_tool_names)
 
                 # Track tools that were actually used
-                tools_used = extract_tools_used(execution_history)
+                tools_used = extract_tools_used(execution_history, available_tool_names)
                 is_correct = classification == "correct"
                 update_eval_tool_usage(tools_used, is_correct)
 
@@ -405,7 +539,11 @@ def process_question(
                 "total_output_tokens": cobbie_output_tokens + verifier_output_tokens,
                 "classification": classification,
                 "justification": justification,
-                "confidence": confidence,
+                "abstention": abstention,
+                "faithfulness": faithfulness,
+                "completeness": completeness,
+                "transparency": transparency,
+                "relevance": relevance,
             }
 
             question_span.set_outputs(question_outputs)
@@ -428,7 +566,11 @@ def process_question(
                     "answer": final_answer.answer,
                     "classification": classification or "not_evaluated",
                     "justification": justification or "not_evaluated",
-                    "confidence": confidence or "not_evaluated",
+                    "abstention": str(abstention) if abstention is not None else "not_evaluated",
+                    "faithfulness": faithfulness or "not_evaluated",
+                    "completeness": completeness or "not_evaluated",
+                    "transparency": transparency or "not_evaluated",
+                    "relevance": relevance or "not_evaluated",
                 }
             )
 
@@ -442,7 +584,11 @@ def process_question(
                 "execution_time": cobbie_duration,
                 "classification": classification,
                 "justification": justification,
-                "confidence": confidence,
+                "abstention": abstention,
+                "faithfulness": faithfulness,
+                "completeness": completeness,
+                "transparency": transparency,
+                "relevance": relevance,
                 "input_tokens": cobbie_input_tokens + verifier_input_tokens,
                 "output_tokens": cobbie_output_tokens + verifier_output_tokens,
                 "cobbie_input_tokens": cobbie_input_tokens,
@@ -508,7 +654,7 @@ def print_tool_metrics_summary():
 def main():
     """Main function to run the evaluation."""
     parser = argparse.ArgumentParser(
-        description="Run evaluation experiments on BIM QAS System using BAML COBBIE",
+        description="Run evaluation experiments on Cobbie",
         formatter_class=argparse.RawDescriptionHelpFormatter,
         epilog="""
 Examples:
@@ -566,6 +712,14 @@ Examples:
         help="Clear all evaluation tool metrics before starting",
     )
 
+    parser.add_argument(
+        "--tools",
+        nargs="+",
+        choices=["initial", "created", "manual"],
+        default=["initial", "created"],
+        help="Tool directories to load (space-separated). Options: initial, created, manual. Default: initial created"
+    )
+
     args = parser.parse_args()
 
     # Validate arguments
@@ -581,12 +735,27 @@ Examples:
         print(f"Error: --start ({args.start}) exceeds dataset size ({len(DEVSET)})")
         return 1
 
+    # Validate and deduplicate tools argument
+    if not args.tools:
+        print("Error: At least one tool directory must be specified")
+        return 1
+
+    # Remove duplicates while preserving order
+    seen = set()
+    unique_tools = []
+    for tool_dir in args.tools:
+        if tool_dir not in seen:
+            seen.add(tool_dir)
+            unique_tools.append(tool_dir)
+    args.tools = unique_tools
+
     end_index = min(args.start + args.nb_samples, len(DEVSET))
     actual_samples = end_index - args.start
 
     print(
         f"Processing {actual_samples} samples from index {args.start} to {end_index - 1}"
     )
+    logger.info(f"Loading tools from directories: {', '.join(args.tools)}")
 
     # Setup logging level
     logger.setLevel(getattr(logging, args.log_level))
@@ -600,19 +769,16 @@ Examples:
     mlflow.set_tracking_uri("http://127.0.0.1:5000")
     mlflow.set_experiment("Evaluation")
 
-    # Prepare tools for COBBIE
-    tools_dict = {
-        "query_ifcopenshell_docs": query_ifcopenshell_docs,
-        "web_search": web_search,
-    }
-
-    # Add all created tools from src.tools/created/
+    # Prepare tools for COBBIE based on --tools argument
     try:
-        created_tools = get_created_tools()
-        tools_dict.update(created_tools)
-        logger.info(f"Loaded {len(created_tools)} created tools for COBBIE")
+        tools_dict = get_tools(
+            directories=args.tools,
+            allow_created_deletion=True
+        )
+        logger.info(f"Loaded {len(tools_dict)} total tools from directories: {', '.join(args.tools)}")
     except Exception as e:
-        logger.warning(f"Could not load created tools: {e}")
+        logger.error(f"Failed to load tools: {e}")
+        return 1
 
     # Prepare dataset
     dataset = DEVSET[args.start : end_index]
@@ -669,6 +835,46 @@ Examples:
                     ),
                     "total_execution_time": float(
                         active_run.data.metrics.get("total_execution_time", 0.0)
+                    ),
+                    # Criterion-level counts
+                    "abstention_count": int(
+                        active_run.data.metrics.get("abstention_count", 0)
+                    ),
+                    "faithfulness_yes_count": int(
+                        active_run.data.metrics.get("faithfulness_yes_count", 0)
+                    ),
+                    "faithfulness_no_count": int(
+                        active_run.data.metrics.get("faithfulness_no_count", 0)
+                    ),
+                    "faithfulness_na_count": int(
+                        active_run.data.metrics.get("faithfulness_na_count", 0)
+                    ),
+                    "completeness_yes_count": int(
+                        active_run.data.metrics.get("completeness_yes_count", 0)
+                    ),
+                    "completeness_no_count": int(
+                        active_run.data.metrics.get("completeness_no_count", 0)
+                    ),
+                    "completeness_na_count": int(
+                        active_run.data.metrics.get("completeness_na_count", 0)
+                    ),
+                    "transparency_yes_count": int(
+                        active_run.data.metrics.get("transparency_yes_count", 0)
+                    ),
+                    "transparency_no_count": int(
+                        active_run.data.metrics.get("transparency_no_count", 0)
+                    ),
+                    "transparency_na_count": int(
+                        active_run.data.metrics.get("transparency_na_count", 0)
+                    ),
+                    "relevance_yes_count": int(
+                        active_run.data.metrics.get("relevance_yes_count", 0)
+                    ),
+                    "relevance_no_count": int(
+                        active_run.data.metrics.get("relevance_no_count", 0)
+                    ),
+                    "relevance_na_count": int(
+                        active_run.data.metrics.get("relevance_na_count", 0)
                     ),
                 }
                 logger.info(f"Continuing run with previous metrics: {previous_metrics}")

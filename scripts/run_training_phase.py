@@ -8,49 +8,40 @@ import os
 import time
 from datetime import datetime
 from enum import Enum, auto
-from typing import Callable, Dict, List, Literal, Optional, Tuple, cast
+from typing import Literal, Tuple, cast
 
 import mlflow
-from baml_py.baml_py import Collector
-from pydantic import BaseModel, ConfigDict
 
-from baml_client.types import (
-    AnswerEvaluationResult,
-    FaultyToolAnalysis,
-    FinalAnswer,
-    HelperFunctionAssessment,
-    NewHelperFunction,
-    NewToolAnalysis,
-    UpdatedHelperFunction,
-)
 from src.agents import (
     assess_helper_function,
     cobbie,
     create_helper_function,
     debug_helper_function,
+    derive_binary_classification,
     identify_faulty_tool,
     identify_helper_function,
     verify_answer,
 )
 from src.config import LOG_LEVEL, ROOT_PATH
+from src.db import TRAINSET
+from src.db.query import (
+    get_tools_ranked_by_deletion_score,
+    increment_tool_inclusion,
+    initialize_tool_metadata,
+    update_tool_usage,
+)
+from src.schemas.training_context import Context
 from src.util import (
+    _create_function_from_source_code,
+    delete_tool,
+    extract_tools_used,
     generate_tools_docs,
     get_created_tools,
     get_function_code,
     get_logger,
     save_new_tool,
-    delete_tool,
-    _create_function_from_source_code,
-    extract_tools_used,
 )
-from src.db import TRAINSET
-from src.db.models import IfcBench
-from src.db.query import (
-    increment_tool_inclusion,
-    update_tool_usage,
-    get_tools_ranked_by_deletion_score,
-    initialize_tool_metadata,
-)
+from src.util.metrics import calculate_aggregate_metrics, log_qa_metrics
 from src.utils.mlflow_utils import determine_run_id
 
 # Initialize logger
@@ -79,362 +70,6 @@ class TrainingState(Enum):
     # Terminal states
     END = auto()
     ERROR = auto()
-
-
-# Object to handle the context added by each agent for each qa_pair processing
-class Context(BaseModel):
-    model_config = ConfigDict(arbitrary_types_allowed=True)
-
-    # Core data
-    qa_pair: IfcBench
-    global_question_num: int  # Global question number across all training runs
-    tools: Dict[str, Callable] = {}
-
-    # Tool management configuration
-    max_tools: int = 16
-    grace_period: int = 8
-
-    # Cobbie agent results
-    cobbie_result: Optional[FinalAnswer] = None
-    cobbie_collector: Optional[Collector] = None
-    cobbie_history: str = ""
-    cobbie_duration: float = 0.0
-
-    # Answer verifier results
-    verify_result: Optional[AnswerEvaluationResult] = None
-    verify_collector: Optional[Collector] = None
-    verify_duration: float = 0.0
-
-    # Identify helper function results (Path A)
-    identify_tool_result: Optional[NewToolAnalysis] = None
-    identify_tool_collector: Optional[Collector] = None
-    identify_tool_duration: float = 0.0
-
-    # Create helper function results (Path A)
-    create_tool_result: Optional[NewHelperFunction] = None
-    create_tool_collector: Optional[Collector] = None
-    create_tool_history: str = ""
-    create_tool_duration: float = 0.0
-
-    # Identify faulty tool results (Path B)
-    identify_faulty_result: Optional[FaultyToolAnalysis] = None
-    identify_faulty_collector: Optional[Collector] = None
-    identify_faulty_duration: float = 0.0
-
-    # Debug helper function results (Path B)
-    debug_tool_result: Optional[UpdatedHelperFunction] = None
-    debug_tool_collector: Optional[Collector] = None
-    debug_tool_history: str = ""
-    debug_tool_duration: float = 0.0
-
-    # Tool testing results (both paths)
-    test_cobbie_result: Optional[FinalAnswer] = None
-    test_cobbie_collector: Optional[Collector] = None
-    test_cobbie_history: str = ""
-    test_cobbie_duration: float = 0.0
-    test_verify_result: Optional[AnswerEvaluationResult] = None
-    test_verify_collector: Optional[Collector] = None
-    test_verify_duration: float = 0.0
-
-    # Tool assessment results (both paths)
-    tool_assessment: Optional[HelperFunctionAssessment] = None
-    tool_assessment_collector: Optional[Collector] = None
-    tool_assessment_duration: float = 0.0
-
-    # Tracking metadata
-    error_message: Optional[str] = None
-    tool_created: bool = False
-    tool_updated: bool = False
-    tool_saved: bool = False
-    tool_name: Optional[str] = None
-    is_enhancement: bool = False  # Track if current operation is enhancement
-    path_taken: Optional[Literal["correct", "wrong", "abstained"]] = None
-
-
-# ============================================================================
-# Helper Functions
-# ============================================================================
-
-
-def extract_token_metrics(collector: Optional[Collector]) -> Tuple[int, int, int]:
-    """
-    Safely extract token metrics from collector.
-
-    Args:
-        collector: BAML Collector object with token usage info
-
-    Returns:
-        Tuple of (input_tokens, output_tokens, total_tokens)
-    """
-    if not collector:
-        return 0, 0, 0
-
-    try:
-        if hasattr(collector, "usage") and collector.usage:
-            usage = collector.usage
-            input_tokens = usage.input_tokens or 0
-            output_tokens = usage.output_tokens or 0
-            total_tokens = input_tokens + output_tokens
-            return input_tokens, output_tokens, total_tokens
-    except Exception as e:
-        _logger.warning(f"Error extracting token usage: {e}")
-
-    return 0, 0, 0
-
-
-def calculate_aggregate_metrics(qa_results: List[dict]) -> dict:
-    """
-    Calculate aggregate metrics across all QA pairs.
-
-    Args:
-        qa_results: List of dictionaries with per-QA metrics
-
-    Returns:
-        Dictionary with aggregate metrics
-    """
-    total_count = len(qa_results)
-    if total_count == 0:
-        return {}
-
-    correct_count = sum(1 for r in qa_results if r.get("classification") == "correct")
-    wrong_count = sum(1 for r in qa_results if r.get("classification") == "wrong")
-    abstained_count = sum(
-        1 for r in qa_results if r.get("classification") == "abstained"
-    )
-
-    tools_created = sum(1 for r in qa_results if r.get("tool_created"))
-    tools_updated = sum(1 for r in qa_results if r.get("tool_updated"))
-    tools_saved = sum(1 for r in qa_results if r.get("tool_saved"))  # NEW
-    tools_tested = sum(1 for r in qa_results if r.get("tool_was_tested"))  # NEW
-    tools_kept = sum(
-        1 for r in qa_results if r.get("tool_recommendation") == "keep_tool"
-    )  # NEW
-    tools_discarded = sum(
-        1 for r in qa_results if r.get("tool_recommendation") == "discard_tool"
-    )  # NEW
-    errors = sum(1 for r in qa_results if r.get("error"))
-
-    total_tokens = sum(r.get("total_tokens", 0) for r in qa_results)
-    total_duration = sum(r.get("total_duration", 0) for r in qa_results)
-
-    return {
-        "total_qa_pairs": total_count,
-        "correct_answers": correct_count,
-        "wrong_answers": wrong_count,
-        "abstained_answers": abstained_count,
-        "tools_created": tools_created,
-        "tools_updated": tools_updated,
-        "tools_saved": tools_saved,  # NEW
-        "tools_tested": tools_tested,  # NEW
-        "tools_kept": tools_kept,  # NEW
-        "tools_discarded": tools_discarded,  # NEW
-        "errors": errors,
-        "success_rate": correct_count / total_count if total_count > 0 else 0,
-        "tool_creation_rate": tools_created / correct_count if correct_count > 0 else 0,
-        "tool_update_rate": tools_updated / wrong_count if wrong_count > 0 else 0,
-        "tool_save_rate": tools_saved / tools_tested if tools_tested > 0 else 0,  # NEW
-        "tool_keep_rate": tools_kept / tools_tested if tools_tested > 0 else 0,  # NEW
-        "avg_tokens_per_qa": total_tokens / total_count if total_count > 0 else 0,
-        "avg_duration_per_qa": total_duration / total_count if total_count > 0 else 0,
-        "total_tokens": total_tokens,
-        "total_duration": total_duration,
-    }
-
-
-def log_qa_metrics(context: Context) -> dict:
-    """
-    Extract and log metrics for a single QA pair to MLflow.
-
-    Args:
-        context: Context object with all agent results
-
-    Returns:
-        Dictionary with metrics for aggregate calculation
-    """
-    # Extract token metrics from all collectors
-    cobbie_input, cobbie_output, cobbie_total = extract_token_metrics(
-        context.cobbie_collector
-    )
-    verify_input, verify_output, verify_total = extract_token_metrics(
-        context.verify_collector
-    )
-    identify_tool_input, identify_tool_output, identify_tool_total = (
-        extract_token_metrics(context.identify_tool_collector)
-    )
-    create_tool_input, create_tool_output, create_tool_total = extract_token_metrics(
-        context.create_tool_collector
-    )
-    identify_faulty_input, identify_faulty_output, identify_faulty_total = (
-        extract_token_metrics(context.identify_faulty_collector)
-    )
-    debug_tool_input, debug_tool_output, debug_tool_total = extract_token_metrics(
-        context.debug_tool_collector
-    )
-
-    # NEW: Extract test and assessment metrics
-    test_cobbie_input, test_cobbie_output, test_cobbie_total = extract_token_metrics(
-        context.test_cobbie_collector
-    )
-    test_verify_input, test_verify_output, test_verify_total = extract_token_metrics(
-        context.test_verify_collector
-    )
-    tool_assess_input, tool_assess_output, tool_assess_total = extract_token_metrics(
-        context.tool_assessment_collector
-    )
-
-    # Calculate totals (including new components)
-    total_tokens = (
-        cobbie_total
-        + verify_total
-        + identify_tool_total
-        + create_tool_total
-        + identify_faulty_total
-        + debug_tool_total
-        + test_cobbie_total
-        + test_verify_total
-        + tool_assess_total
-    )
-    total_duration = (
-        context.cobbie_duration
-        + context.verify_duration
-        + context.identify_tool_duration
-        + context.create_tool_duration
-        + context.identify_faulty_duration
-        + context.debug_tool_duration
-        + context.test_cobbie_duration
-        + context.test_verify_duration
-        + context.tool_assessment_duration
-    )
-
-    # Get classification
-    classification = (
-        context.verify_result.classification if context.verify_result else "unknown"
-    )
-
-    # Build metrics dictionary
-    metrics = {
-        "cobbie_duration": context.cobbie_duration,
-        "cobbie_input_tokens": cobbie_input,
-        "cobbie_output_tokens": cobbie_output,
-        "cobbie_total_tokens": cobbie_total,
-        "verify_duration": context.verify_duration,
-        "verify_input_tokens": verify_input,
-        "verify_output_tokens": verify_output,
-        "verify_total_tokens": verify_total,
-        "total_tokens": total_tokens,
-        "total_duration": total_duration,
-        "answer_correct": 1 if classification == "correct" else 0,
-        "answer_wrong": 1 if classification == "wrong" else 0,
-        "answer_abstained": 1 if classification == "abstained" else 0,
-        "tool_created": 1 if context.tool_created else 0,
-        "tool_updated": 1 if context.tool_updated else 0,
-        "tool_saved": 1 if context.tool_saved else 0,  # NEW
-        "error": 1 if context.error_message else 0,
-    }
-
-    # Add Path A metrics if applicable
-    if context.identify_tool_result:
-        metrics.update(
-            {
-                "identify_tool_duration": context.identify_tool_duration,
-                "identify_tool_input_tokens": identify_tool_input,
-                "identify_tool_output_tokens": identify_tool_output,
-                "identify_tool_total_tokens": identify_tool_total,
-            }
-        )
-
-    if context.create_tool_result:
-        metrics.update(
-            {
-                "create_tool_duration": context.create_tool_duration,
-                "create_tool_input_tokens": create_tool_input,
-                "create_tool_output_tokens": create_tool_output,
-                "create_tool_total_tokens": create_tool_total,
-            }
-        )
-
-    # Add Path B metrics if applicable
-    if context.identify_faulty_result:
-        metrics.update(
-            {
-                "identify_faulty_duration": context.identify_faulty_duration,
-                "identify_faulty_input_tokens": identify_faulty_input,
-                "identify_faulty_output_tokens": identify_faulty_output,
-                "identify_faulty_total_tokens": identify_faulty_total,
-            }
-        )
-
-    if context.debug_tool_result:
-        metrics.update(
-            {
-                "debug_tool_duration": context.debug_tool_duration,
-                "debug_tool_input_tokens": debug_tool_input,
-                "debug_tool_output_tokens": debug_tool_output,
-                "debug_tool_total_tokens": debug_tool_total,
-            }
-        )
-
-    # NEW: Add tool testing metrics if applicable
-    if context.test_cobbie_result:
-        metrics.update(
-            {
-                "test_cobbie_duration": context.test_cobbie_duration,
-                "test_cobbie_input_tokens": test_cobbie_input,
-                "test_cobbie_output_tokens": test_cobbie_output,
-                "test_cobbie_total_tokens": test_cobbie_total,
-                "test_verify_duration": context.test_verify_duration,
-                "test_verify_input_tokens": test_verify_input,
-                "test_verify_output_tokens": test_verify_output,
-                "test_verify_total_tokens": test_verify_total,
-            }
-        )
-
-    # NEW: Add tool assessment metrics if applicable
-    if context.tool_assessment:
-        metrics.update(
-            {
-                "tool_assessment_duration": context.tool_assessment_duration,
-                "tool_assessment_input_tokens": tool_assess_input,
-                "tool_assessment_output_tokens": tool_assess_output,
-                "tool_assessment_total_tokens": tool_assess_total,
-                "tool_was_used": 1 if context.tool_assessment.tool_was_used else 0,
-                "tool_usage_helpful": 1
-                if context.tool_assessment.tool_usage_quality == "helpful"
-                else 0,
-                "tool_usage_harmful": 1
-                if context.tool_assessment.tool_usage_quality == "harmful"
-                else 0,
-                "tool_recommendation_keep": 1
-                if context.tool_assessment.recommendation == "keep_tool"
-                else 0,
-                "tool_recommendation_discard": 1
-                if context.tool_assessment.recommendation == "discard_tool"
-                else 0,
-            }
-        )
-
-    # Log to MLflow
-    mlflow.log_metrics(metrics)
-
-    # Return dictionary for aggregate calculation
-    return {
-        "question_id": context.qa_pair.id,
-        "classification": classification,
-        "tool_created": context.tool_created,
-        "tool_updated": context.tool_updated,
-        "tool_saved": context.tool_saved,  # NEW
-        "error": bool(context.error_message),
-        "total_tokens": total_tokens,
-        "total_duration": total_duration,
-        # NEW: Tool assessment data
-        "tool_was_tested": bool(context.tool_assessment),
-        "tool_recommendation": context.tool_assessment.recommendation
-        if context.tool_assessment
-        else None,
-        "tool_usage_quality": context.tool_assessment.tool_usage_quality
-        if context.tool_assessment
-        else None,
-    }
 
 
 # ============================================================================
@@ -579,29 +214,35 @@ def handle_verify_answer(context: Context) -> Tuple[TrainingState, Context]:
             ground_truth=context.qa_pair.ground_truth,
             system_response=context.cobbie_result.answer,
             llm_provider="zai",
-            llm_name="GLM-4.6",
+            llm_name="GLM-4.7",
         )
 
         context.verify_result = result
+        classification = derive_binary_classification(result=result)
         context.verify_collector = collector
         context.verify_duration = time.time() - start_time
 
-        _logger.info(
-            f"Verification result: {result.classification} (confidence: {result.confidence})"
-        )
+        _logger.info(f"Verification result: {classification}")
         _logger.info(f"Justification: {result.justification}")
 
-        # Log the answer and the justification as parameter for later access for evaluation
+        # Log the answer and all evaluation criteria for later access
         mlflow.log_params(
             {
                 "justification": result.justification,
                 "cobbie_answer": context.cobbie_result.answer,
+                "abstention": str(result.abstention),
+                "faithfulness": str(result.faithfulness),
+                "completeness": str(result.completeness),
+                "transparency": str(result.transparency),
+                "relevance": str(result.relevance),
+                "derived_classification": classification,
             }
         )
 
         # Track tool usage for this question
-        tools_used = extract_tools_used(context.cobbie_history)
-        is_correct = result.classification == "correct"
+        available_tool_names = list(context.tools.keys())
+        tools_used = extract_tools_used(context.cobbie_history, available_tool_names)
+        is_correct = classification == "correct"
         update_tool_usage(tools_used, is_correct, context.global_question_num)
 
         # Log tool usage metrics to MLflow
@@ -612,11 +253,11 @@ def handle_verify_answer(context: Context) -> Tuple[TrainingState, Context]:
         _logger.info(f"Tracked usage of {len(tools_used)} tools: {tools_used}")
 
         # Determine next state based on classification
-        if result.classification == "correct":
+        if classification == "correct":
             context.path_taken = "correct"
             _logger.info("Answer CORRECT - Following Path A (identify new tool)")
             return TrainingState.IDENTIFY_NEW_TOOL, context
-        elif result.classification == "wrong":
+        elif classification == "wrong":
             context.path_taken = "wrong"
             _logger.info("Answer WRONG - Following Path B (identify faulty tool)")
             return TrainingState.IDENTIFY_FAULTY_TOOL, context
@@ -1125,9 +766,8 @@ def handle_assess_tool_usage(context: Context) -> Tuple[TrainingState, Context]:
         context.test_verify_collector = verify_collector
         context.test_verify_duration = time.time() - verify_start
 
-        _logger.info(
-            f"Test answer verified: {verify_result.classification} (confidence: {verify_result.confidence})"
-        )
+        classification = derive_binary_classification(result=verify_result)
+        _logger.info(f"Test answer verified: {classification}")
 
         # Get tool description based on path
         if context.create_tool_result:
@@ -1156,7 +796,7 @@ def handle_assess_tool_usage(context: Context) -> Tuple[TrainingState, Context]:
             tested_tool_name=context.tool_name,
             tested_tool_description=tool_description,
             final_answer=context.test_cobbie_result.answer,
-            answer_correctness=verify_result.classification,
+            answer_correctness=classification,
             llm_provider="zai",
             llm_name="GLM-4.6",
         )

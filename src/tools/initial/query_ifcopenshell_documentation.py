@@ -11,15 +11,14 @@ def query_ifcopenshell_docs(query: str, max_tokens: int = 2048) -> str:
     Retrieves up-to-date information and code examples related to the provided query from the IFCopenshell documentation.
 
     Args:
-        query: The topic or query to focus the documentation on (e.g., "file reading",
-               "geometry", "IFC entities")
+        query: The topic or query to focus the documentation on (e.g., "finds all entities of type `IfcWall`", "element bounding box", "clash detection", etc.)
         max_tokens: Maximum number of tokens to retrieve (default: 2048)
 
     Returns:
         str: The documentation text as a string
 
     Example:
-        >>> docs = query_ifcopenshell_docs("Using the IfcOpenShell Python API, write a script that opens an IFC4 file, finds all entities of type `IfcWall`, and prints their `GlobalId` attribute. The script should not modify or save the file.")
+        >>> docs = query_ifcopenshell_docs("How to access element properties ")
         >>> print(docs)
     """
     if not CONTEXT7_API_KEY:

@@ -33,9 +33,12 @@ class AlignedQAPair(BaseModel):
     was_modified: typing.Optional[bool] = None
 
 class AnswerEvaluationResult(BaseModel):
-    classification: typing.Optional[typing.Union[typing_extensions.Literal['correct'], typing_extensions.Literal['wrong'], typing_extensions.Literal['abstained']]] = None
+    abstention: typing.Optional[bool] = None
+    faithfulness: typing.Optional[types.CriterionResult] = None
+    completeness: typing.Optional[types.CriterionResult] = None
+    transparency: typing.Optional[types.CriterionResult] = None
+    relevance: typing.Optional[types.CriterionResult] = None
     justification: typing.Optional[str] = None
-    confidence: typing.Optional[typing.Union[typing_extensions.Literal['high'], typing_extensions.Literal['medium'], typing_extensions.Literal['low']]] = None
 
 class AssessmentResult(BaseModel):
     assessment_status: typing.Optional[typing.Union[typing_extensions.Literal['ok'], typing_extensions.Literal['needs_improvement']]] = None

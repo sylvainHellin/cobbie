@@ -19,7 +19,7 @@ function EvaluateResponse(
   client GLM_4_7
 
   prompt #"
-    You are evaluating a BIM information extraction system's response to a question.
+    You are evaluating a BIM information extraction system's response to a question using a multi-criteria assessment framework.
 
     QUESTION CATEGORY: {{ category }}
     QUESTION: {{ question }}
@@ -27,111 +27,171 @@ function EvaluateResponse(
     REFERENCE ANSWER: {{ ground_truth }}
 
     Note: This reference answer represents one valid answer from a human expert labeler,
-    but is NOT absolute truth. The labeler may have:
-    - Used different extraction methods (manual calculation, proxy measurements)
-    - Made reasonable inferences for information not stored directly in the BIM model.
-    - Missed information that the system found
-    - Applied domain knowledge or workarounds
-
-    The system response may differ while still being correct.
+    but is NOT absolute truth. The system response may differ while still being correct.
 
     SYSTEM RESPONSE: {{ system_response }}
 
     ---
 
-    EVALUATION TASK:
+    ## QUESTION CATEGORIES (Background)
 
-    Classify the system response as one of:
-    - "correct": System provided accurate, useful answer
-    - "wrong": System provided factually incorrect information
-    - "abstained": System explicitly declined to answer
-
-    ---
-
-    CORE EVALUATION PRINCIPLE:
-
-    Mark as WRONG only if the response contains factually incorrect information that contradicts verifiable facts from the reference answer or the IFC model.
-
-    Different approaches, additional information, alternative extraction methods, or finding data the labeler missed are all ACCEPTABLE and should be marked CORRECT.
+    Category 1 (Direct Retrieval): Direct information from BIM element properties, no computation
+    Category 2 (Computational Aggregation): Simple unambiguous computations (counting, summing, averaging)
+    Category 3 (Geometric/Spatial): Complex geometric computations from spatial relationships
+    Category 4 (Incomplete Information): Required information not in model, may need assumptions
 
     ---
 
-    EVALUATION CRITERIA:
+    ## EVALUATION WORKFLOW
 
-    ALL CATEGORIES (1, 2, 3, 4):
+    **Step 1: Determine if system ABSTAINED or PROVIDED AN ANSWER**
 
-    CORRECT if the response:
-      * Core facts align with reference answer (different wording/structure is fine)
-      * Provides ADDITIONAL accurate information beyond the reference (this is valuable, not hallucination)
-      * Uses a different but valid extraction method and reaches reasonable conclusions
-      * For geometric/computational questions: uses reasonable methodology and provides plausible results
-      * Transparently explains data limitations or IFC model issues while still providing useful information
-      * Finds information that the reference answer missed (the labeler may have been incomplete)
-      * Makes stated assumptions that are reasonable for the context (especially Category 4)
-      * Would be useful and non-misleading to a BIM professional
+    ABSTAINED if response contains explicit refusal:
+    - "I cannot determine..."
+    - "Insufficient information to answer..."
+    - "This data is not available and I cannot provide an answer..."
+    - "I am unable to answer this question..."
 
-      Special considerations by category:
-      - Category 1 (Direct Retrieval): Core facts should match, but additional context is beneficial
-      - Category 2 (Computational): Allow ~5% numerical variance due to different calculation methods
-      - Category 3 (Geometric): Multiple valid approaches exist (geometry-based vs property-based)
-      - Category 4 (Incomplete Info): Transparency about limitations + useful partial answer is sufficient
+    NOT abstained:
+    - Expressions of uncertainty while providing answer
+    - Conditional statements ("If X, then Y...")
+    - Partial information with explanation of limitations
 
-    WRONG if the response:
-      * Contains factual errors that directly CONTRADICT the reference answer on overlapping information
-      * Fabricates specific data that is demonstrably not in the IFC model and contradicts reference
-      * Provides incorrect numerical values that differ significantly (>5-10%) without explanation
-      * Misidentifies elements, relationships, or properties in a way that contradicts reference
-      * Makes unreasonable assumptions without stating them (Category 4)
-      * Would mislead a BIM professional with false information
+    **If ABSTAINED:**
+    - Set abstention = true
+    - Set ALL other criteria to 'Na'
+    - Provide brief justification
+    - STOP evaluation
 
-      Important: DO NOT mark as wrong if:
-      - The response simply lacks some details from the reference (unless critical)
-      - The response uses different extraction methods but is factually sound
-      - The response provides more information than the reference
-      - The response honestly states that certain data is not accessible in the IFC
-
-    ABSTAINED if the response:
-      * Explicitly refuses to answer with phrases like:
-        - "I cannot determine..."
-        - "Insufficient information to answer..."
-        - "This data is not available and I cannot provide an answer..."
-        - "I am unable to answer this question..."
-        - "Cannot be calculated without..."
-
-      DO NOT count as abstention:
-      - Expressions of uncertainty while still providing an answer
-      - Conditional statements ("If X, then Y...")
-      - Partial information followed by explanation of limitations
-      - "Data not found in standard properties, but here's what I found..."
+    **If PROVIDED AN ANSWER:**
+    - Set abstention = false
+    - Proceed to evaluate 4 quality criteria independently
 
     ---
 
-    EVALUATION PROCESS:
+    ## CRITERION 1: FAITHFULNESS
 
-    When the system response differs from the reference answer:
+    Are all claims grounded in valid sources for this question category?
 
-    1. Identify overlapping claims (what both answers address)
-    2. Check if overlapping claims contradict each other factually
-    3. If yes → Consider WRONG
-    4. If no → Consider CORRECT (differences are acceptable)
+    **Category-Specific Grounding Rules:**
 
-    For additional information in system response not in reference:
-    - Ask: "Is this plausibly derived from an IFC model?"
-    - Ask: "Does this contradict the reference answer?"
-    - If plausible and non-contradictory → CORRECT
-    - If implausible or contradictory → WRONG
+    Category 1: BIM element properties ONLY
+    - All values must exist directly in model
+    - No computations permitted
+
+    Category 2: BIM data + simple unambiguous computations
+    - Computations: counting, summing, averaging, filtering
+    - Must be deterministic
+
+    Category 3: BIM geometry + complex geometric computations
+    - May derive values not explicitly stored
+    - Multiple valid calculation approaches acceptable
+
+    Category 4: BIM data + computations + EXPLICITLY STATED assumptions
+    - Assumptions MUST be disclosed verbatim in answer
+    - "Assuming X..." or "Based on assumption that X..." required
+    - Implied/hedged assumptions → FAIL
+
+    **Numerical Tolerance:**
+
+    For continuous measurements (lengths, areas, volumes):
+    - Accept within 2% of reference answer
+    - Formula: |system_value - ground_truth| / ground_truth ≤ 0.02
+
+    For discrete counts (elements, rooms, floors):
+    - Exact match required
+
+    **Result:**
+    - Yes: All claims grounded appropriately
+    - No: Contains hallucinations, errors, or unstated assumptions (Cat 4)
+    - Na: Only if abstention = true
 
     ---
 
-    IMPORTANT GUIDELINES:
+    ## CRITERION 2: COMPLETENESS
 
-    1. Compare semantic content, not exact wording or structure
-    2. Multiple correct answers can exist, especially for Categories 3 & 4
-    3. Additional accurate context is valuable, not problematic
-    4. The reference answer may be incomplete or use undocumented methods
-    5. Transparency about IFC model limitations is professional and appropriate
-    6. Focus on: "Is this factually wrong?" not "Is this different from reference?"
-    7. When in doubt between CORRECT and WRONG, prefer CORRECT if the response is useful and non-misleading
+    Are all relevant facts included to fully answer the question?
+
+    **When to use 'Na':**
+    - Question is open-ended ("describe", "explain") with no objective standard
+    - Abstention occurred (mandatory)
+
+    **When to use 'No':**
+    - Answer omits critical facts for enumerable questions
+    - Provides only subset of requested items (e.g., lists 2 of 4 adjacent rooms)
+    - Partial answer to multi-part question
+
+    **When to use 'Yes':**
+    - All relevant facts present for enumerable questions
+    - Reasonable detail level for open-ended questions
+
+    **Result:**
+    - Yes: Complete answer
+    - No: Missing relevant facts
+    - Na: Open-ended question OR abstention
+
+    ---
+
+    ## CRITERION 3: TRANSPARENCY
+
+    Are sources/methods explicitly disclosed for each claim?
+
+    **Passes transparency (Yes):**
+    - "Width is 900mm from property Door.Width"
+    - "24 windows counted from IfcWindow elements"
+    - "Area is 245.8 m² calculated using ISO 9836"
+    - "Assuming typical HVAC (20-25 year lifespan)..."
+
+    **Fails transparency (No):**
+    - "Width is 900mm" (no source)
+    - "According to the model..." (too vague)
+    - "Generally..." or "Typically..." (hedging, not explicit)
+
+    Requirement: Every claim must cite specific property, method, or assumption.
+
+    **Result:**
+    - Yes: All claims have explicit source/method disclosure
+    - No: Missing disclosure for any claim
+    - Na: Only if abstention = true
+
+    ---
+
+    ## CRITERION 4: RELEVANCE
+
+    Does the answer directly address the question asked?
+
+    **Passes relevance (Yes):**
+    - Addresses the correct aspect/property requested
+    - Addresses correct scope (e.g., specific room vs. whole building)
+    - May include additional information beyond question
+
+    **Fails relevance (No):**
+    - Answers wrong property (asked width, gave material)
+    - Answers wrong scope (asked south facade, gave whole building)
+    - Misunderstands question intent
+
+    **Result:**
+    - Yes: Directly addresses question
+    - No: Off-topic or misunderstood question
+    - Na: Only if abstention = true
+
+    ---
+
+    ## CRITICAL GUIDELINES
+
+    1. **Evaluate criteria INDEPENDENTLY**: Do not let one judgment influence another
+       - Faithful but incomplete is valid
+       - Complete but unfaithful is valid
+       - All combinations are possible
+
+    2. **Use 'Na' sparingly**: Only for structural reasons (abstention, open-ended completeness)
+       - NOT for uncertainty or difficulty judging
+       - If unsure between Yes/No, choose based on best judgment and explain in justification
+
+    3. **Focus justification on edge cases**:
+       - Explain any 'No' verdicts
+       - Explain borderline decisions
+       - Keep to 2-3 sentences
 
     {{ ctx.output_format }}
   "#
@@ -184,5 +244,82 @@ test pipe_types_with_context_test {
 
       The building appears to have a comprehensive rainwater drainage system with 60 zinc pipe segments and 35 water splash protection elements, all designed for exterior installation and rainwater management.
     "#
+  }
+}
+
+// Test 3: Abstention case - system explicitly declines to answer
+test abstention_test {
+  functions [EvaluateResponse]
+  args {
+    question "What is the fire resistance rating of the walls?"
+    category Category1
+    ground_truth "Fire resistance data not available in model"
+    system_response "I cannot determine the fire resistance rating as this information is not available in the IFC model."
+  }
+}
+
+// Test 4: Numerical tolerance failure - exceeds 2% threshold
+test numerical_tolerance_fail_test {
+  functions [EvaluateResponse]
+  args {
+    question "What is the total floor area?"
+    category Category2
+    ground_truth "The total floor area is 500 m²"
+    system_response "The total floor area is 520 m²"
+  }
+}
+
+// Test 5: Complete but not transparent - no source disclosure
+test no_transparency_test {
+  functions [EvaluateResponse]
+  args {
+    question "How many windows are in the building?"
+    category Category2
+    ground_truth "There are 48 windows in the building"
+    system_response "There are 48 windows"
+  }
+}
+
+// Test 6: Category 4 unstated assumption - fails faithfulness
+test unstated_assumption_test {
+  functions [EvaluateResponse]
+  args {
+    question "What is the expected lifespan of the HVAC system?"
+    category Category4
+    ground_truth "Lifespan data not in model"
+    system_response "Based on typical HVAC systems, the expected lifespan is 20-25 years"
+  }
+}
+
+// Test 7: Category 4 explicit assumption - passes faithfulness
+test explicit_assumption_test {
+  functions [EvaluateResponse]
+  args {
+    question "What is the expected lifespan of the HVAC system?"
+    category Category4
+    ground_truth "Lifespan data not in model. Assuming typical commercial HVAC, 20-25 years."
+    system_response "The lifespan data is not available in the model. Assuming typical commercial HVAC systems, the expected lifespan is 20-25 years."
+  }
+}
+
+// Test 8: Incomplete enumeration - missing some adjacent rooms
+test incomplete_enumeration_test {
+  functions [EvaluateResponse]
+  args {
+    question "Which rooms are adjacent to room A101?"
+    category Category1
+    ground_truth "Rooms A102, A103, hallway, and stairwell are adjacent to A101"
+    system_response "Rooms A102 and A103 are adjacent to A101"
+  }
+}
+
+// Test 9: Irrelevant answer - answers wrong property
+test irrelevant_answer_test {
+  functions [EvaluateResponse]
+  args {
+    question "What is the width of door D101?"
+    category Category1
+    ground_truth "Door D101 has a width of 900mm"
+    system_response "Door D101 is made of wood and has a fire rating of 30 minutes"
   }
 }

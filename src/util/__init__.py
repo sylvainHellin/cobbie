@@ -9,7 +9,9 @@ from .get_created_tools import get_created_tools, get_tools_description, get_too
 from .get_usage_openrouter import get_usage_openrouter
 from .generate_tools_docs import generate_tools_docs
 from .delete_tool import delete_tool
-from.extract_tool_usage import extract_tools_used
+from .extract_tool_usage import extract_tools_used
+# NOTE: metrics module not imported here to avoid circular import with answer_verifier
+# Import directly from src.util.metrics if needed
 
 __all__ = [
     "get_logger",
