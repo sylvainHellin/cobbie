@@ -162,8 +162,7 @@ def handle_run_cobbie(context: Context) -> Tuple[TrainingState, Context]:
             tools=context.tools,
             max_iterations=10,
             model_path=ifc_path,
-            llm_provider="zai",
-            llm_name=LLM_NAME,
+            client="GLM_4_7",
         )
 
         context.cobbie_result = result
@@ -698,8 +697,7 @@ def handle_test_tool_with_cobbie(context: Context) -> Tuple[TrainingState, Conte
             tools=test_tools,
             max_iterations=10,
             model_path=ifc_path,
-            llm_provider="zai",
-            llm_name=LLM_NAME,
+            client="GLM_4_7",
         )
 
         context.test_cobbie_result = result

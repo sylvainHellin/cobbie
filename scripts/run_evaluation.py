@@ -438,6 +438,7 @@ def process_question(
                 user_input=question,
                 tools=tools_dict,
                 model_path=ifc_path,
+                client=args.client,
             )
             cobbie_duration = time.time() - start_time_cobbie
 
@@ -710,6 +711,14 @@ Examples:
         "--reset-tool-metrics",
         action="store_true",
         help="Clear all evaluation tool metrics before starting",
+    )
+
+    parser.add_argument(
+        "--client",
+        type=str,
+        default="GLM_4_7",
+        choices=["GLM_4_7", "GLM_4_5_air", "Devstral"],
+        help="BAML client to use for evaluation (default: GLM_4_7)",
     )
 
     parser.add_argument(
