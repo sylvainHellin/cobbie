@@ -127,5 +127,27 @@ def main():
     print("• Navigate to experiment: COBBIE_Demo")
 
 
+def test_cobbie_with_custom_client():
+    """Test cobbie with custom client parameter."""
+    tools = create_demo_tools()
+    question = "How many walls are there in the building?"
+
+    # Test with GLM_4_5_air client
+    final_answer, collector, _ = cobbie(
+        user_input=question,
+        tools=tools,
+        max_iterations=3,
+        client="GLM_4_5_air",
+    )
+
+    # Verify the result is a FinalAnswer with content
+    assert final_answer is not None
+    assert hasattr(final_answer, 'answer')
+    assert hasattr(final_answer, 'thoughts')
+    assert len(final_answer.answer) > 0
+
+    logger.info(f"Successfully tested cobbie with GLM_4_5_air client")
+
+
 if __name__ == "__main__":
     main()
