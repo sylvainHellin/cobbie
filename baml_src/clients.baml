@@ -28,6 +28,7 @@ client<llm> GLM_4_5_air{
 
 client<llm> Devstral {
   provider "openai-generic"
+  retry_policy Constant
   options {
     base_url "http://localhost:11434/v1"
     model "devstral-small-2:latest"
