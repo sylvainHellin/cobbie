@@ -42,7 +42,7 @@ from src.util import (
     save_new_tool,
 )
 from src.util.metrics import calculate_aggregate_metrics, log_qa_metrics
-from src.utils.mlflow_utils import determine_run_id
+from src.util.mlflow_utils import determine_run_id
 
 # Initialize logger
 _logger = get_logger(name="TrainingPhase", log_level=LOG_LEVEL)

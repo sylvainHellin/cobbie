@@ -39,7 +39,7 @@ from src.db.query import (
     get_all_eval_tool_stats,
     clear_eval_tool_stats,
 )
-from src.utils.mlflow_utils import determine_evaluation_run_id
+from src.util.mlflow_utils import determine_evaluation_run_id
 
 # Setup logging
 logging.basicConfig(level=logging.INFO)
