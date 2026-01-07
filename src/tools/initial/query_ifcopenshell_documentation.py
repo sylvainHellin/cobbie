@@ -6,9 +6,9 @@ load_dotenv(find_dotenv())
 CONTEXT7_API_KEY = os.getenv("CONTEXT7_API_KEY")
 
 
-def query_ifcopenshell_docs(query: str, max_tokens: int = 2048) -> str:
+def query_ifcopenshell_docs(query: str) -> str:
     """
-    Retrieves up-to-date information and code examples related to the provided query from the IFCopenshell documentation.
+    Retrieves and print up-to-date information and code examples related to the provided query from the IFCopenshell documentation.
 
     Args:
         query: The topic or query to focus the documentation on (e.g., "finds all entities of type `IfcWall`", "element bounding box", "clash detection", etc.)
@@ -17,9 +17,11 @@ def query_ifcopenshell_docs(query: str, max_tokens: int = 2048) -> str:
     Returns:
         str: The documentation text as a string
 
+    Side Effect:
+        print the retrieved documentation
+
     Example:
-        >>> docs = query_ifcopenshell_docs("How to access element properties ")
-        >>> print(docs)
+        >>> query_ifcopenshell_docs("How to access element properties")
     """
     if not CONTEXT7_API_KEY:
         return "Could not retrieve the information ; API_KEY missing."
@@ -31,11 +33,10 @@ def query_ifcopenshell_docs(query: str, max_tokens: int = 2048) -> str:
         "id": 1,
         "method": "tools/call",
         "params": {
-            "name": "get-library-docs",
+            "name": "query-docs",
             "arguments": {
-                "context7CompatibleLibraryID": "/ifcopenshell/ifcopenshell",
-                "topic": query,
-                "tokens": max_tokens,
+                "libraryId": "/ifcopenshell/ifcopenshell",
+                "query": query,
             },
         },
     }
@@ -74,6 +75,5 @@ def query_ifcopenshell_docs(query: str, max_tokens: int = 2048) -> str:
 
 if __name__ == "__main__":
     docs = query_ifcopenshell_docs(
-        "reading IFC files and accessing entities", max_tokens=3000
-    )
+        "get bounding box element")
     print(f"Retrieved documentation: \n\n{docs}")
