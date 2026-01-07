@@ -29,6 +29,7 @@ src/bim_models
 src.db/*.txt
 src.db/*.csv
 src/db/bim_models
+src/db/logs/
 pyrightconfig.json
 sandbox.ipynb
 sandbox.py

@@ -1,6 +1,6 @@
 from ._create_function_from_source_code import _create_function_from_source_code
 from ._extract_function_metadata import _extract_function_metadata
-from .get_logger import get_logger
+from .setup_logger import setup_logger
 from .validate_type import validate_type
 from .create_code_prefix import create_code_prefix
 from .save_new_tool import save_new_tool
@@ -14,7 +14,7 @@ from .extract_tool_usage import extract_tools_used
 # Import directly from src.util.metrics if needed
 
 __all__ = [
-    "get_logger",
+    "setup_logger",
     "_create_function_from_source_code",
     "_extract_function_metadata",
     "validate_type",

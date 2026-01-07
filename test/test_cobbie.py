@@ -5,19 +5,18 @@ Demonstrates functional implementation of BIM question answering
 using BAML and CodeAct pattern with MLflow tracing.
 """
 
-import logging
 from typing import Callable, Dict
 
 import mlflow
 import requests
+from loguru import logger
 
 from src.agents import cobbie
-from src.util import get_created_tools
 from src.tools.initial import query_ifcopenshell_docs, web_search
+from src.util import get_created_tools, setup_logger
 
-# Configure logging
-logging.basicConfig(level=logging.INFO)
-logger = logging.getLogger(__name__)
+# Initialize logger
+setup_logger()
 
 
 def create_demo_tools() -> Dict[str, Callable]:

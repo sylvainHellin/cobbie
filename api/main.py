@@ -19,7 +19,10 @@ from src.config import MLFLOW_URI
 # from src.db.query_db import get_ifc_models
 from src.db.query import get_ifc_model, get_ifc_models
 from src.tools.initial import query_ifcopenshell_docs, web_search
-from src.util import get_created_tools
+from src.util import get_created_tools, setup_logger
+
+# Initialize logger for the application
+setup_logger()
 
 app = FastAPI(
     title="IFC Answer Engine API",

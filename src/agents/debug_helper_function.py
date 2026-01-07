@@ -13,14 +13,10 @@ import mlflow
 from baml_py.baml_py import Collector
 
 from baml_client.types import CodeAction, UpdatedHelperFunction
-from src.config import LOG_LEVEL, DIRECTORY_IFC_MODELS_PATH, ROOT_PATH
+from src.config import DIRECTORY_IFC_MODELS_PATH
 from src.tools.initial import query_ifcopenshell_docs
 from src.util.code_act_inner_loop import _execute_code_action
 from src.util.generate_tools_docs import generate_tools_docs
-from src.util.get_logger import get_logger
-
-# Initialize logger
-_logger = get_logger(name="helper_function_debugger", log_level=LOG_LEVEL)
 
 
 def _helper_function_debugger_iter(

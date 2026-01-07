@@ -8,13 +8,9 @@ from typing import Literal, Tuple
 
 import mlflow
 from baml_py.baml_py import Collector
+
 from baml_client import b
 from baml_client.types import HelperFunctionAssessment
-from src.config import LOG_LEVEL
-from src.util import get_logger
-
-# Initialize logger
-_logger = get_logger(name="helper_function_assessor", log_level=LOG_LEVEL)
 
 
 def assess_helper_function(

@@ -2,9 +2,7 @@
 
 from typing import Callable, Dict, List
 
-from src.util.get_logger import get_logger
-
-logger = get_logger(__name__)
+from loguru import logger
 
 
 # Import all functions from each file

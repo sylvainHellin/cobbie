@@ -1,12 +1,11 @@
 """Python execution utilities for COBBIE and other components."""
 
-from typing import Dict, Callable, Optional, Any
 import io
-from contextlib import redirect_stdout, redirect_stderr
-import logging
-import tiktoken
+from contextlib import redirect_stderr, redirect_stdout
+from typing import Any, Callable, Dict, Optional
 
-logger = logging.getLogger(__name__)
+import tiktoken
+from loguru import logger
 
 
 def count_tokens(text: str, model: str = "gpt-3.5-turbo") -> int:

@@ -5,12 +5,10 @@ This module provides helper functions for managing MLflow runs,
 particularly for continuing existing runs to mitigate memory leak issues.
 """
 
-import mlflow
 from typing import Optional
-from src.util import get_logger
 
-
-_logger = get_logger(name="MLflowUtils", log_level="INFO")
+import mlflow
+from loguru import logger
 
 
 def get_most_recent_training_run() -> Optional[str]:
@@ -67,11 +65,11 @@ def get_most_recent_training_run() -> Optional[str]:
             )
 
         most_recent_run_id = parent_runs.iloc[0]['run_id']
-        _logger.info(f"Found most recent parent training run: {most_recent_run_id}")
+        logger.info(f"Found most recent parent training run: {most_recent_run_id}")
         return most_recent_run_id
 
     except Exception as e:
-        _logger.error(f"Error finding most recent parent training run: {e}")
+        logger.error(f"Error finding most recent parent training run: {e}")
         raise
 
 
@@ -91,7 +89,7 @@ def get_run_by_id(run_id: str) -> str:
     try:
         # Try to get the run to validate it exists
         run = mlflow.get_run(run_id)
-        _logger.info(f"Found specified run: {run_id} (status: {run.info.status})")
+        logger.info(f"Found specified run: {run_id} (status: {run.info.status})")
         return run_id
 
     except Exception as e:
@@ -156,11 +154,11 @@ def get_most_recent_evaluation_run() -> Optional[str]:
             )
 
         most_recent_run_id = parent_runs.iloc[0]['run_id']
-        _logger.info(f"Found most recent parent evaluation run: {most_recent_run_id}")
+        logger.info(f"Found most recent parent evaluation run: {most_recent_run_id}")
         return most_recent_run_id
 
     except Exception as e:
-        _logger.error(f"Error finding most recent parent evaluation run: {e}")
+        logger.error(f"Error finding most recent parent evaluation run: {e}")
         raise
 
 
@@ -183,12 +181,12 @@ def determine_run_id(continue_flag: Optional[str]) -> Optional[str]:
 
     elif continue_flag is True:
         # --continue flag without run_id, find most recent run
-        _logger.info("Continuing most recent training run...")
+        logger.info("Continuing most recent training run...")
         return get_most_recent_training_run()
 
     else:
         # --continue flag with specific run_id
-        _logger.info(f"Continuing specific run: {continue_flag}")
+        logger.info(f"Continuing specific run: {continue_flag}")
         return get_run_by_id(continue_flag)
 
 
@@ -211,10 +209,10 @@ def determine_evaluation_run_id(continue_flag: Optional[str]) -> Optional[str]:
 
     elif continue_flag is True:
         # --continue flag without run_id, find most recent run
-        _logger.info("Continuing most recent evaluation run...")
+        logger.info("Continuing most recent evaluation run...")
         return get_most_recent_evaluation_run()
 
     else:
         # --continue flag with specific run_id
-        _logger.info(f"Continuing specific run: {continue_flag}")
+        logger.info(f"Continuing specific run: {continue_flag}")
         return get_run_by_id(continue_flag)

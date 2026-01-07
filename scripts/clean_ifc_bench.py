@@ -24,27 +24,25 @@ Usage:
 
 import argparse
 import csv
-import logging
 import time
 from datetime import datetime
 from pathlib import Path
 from typing import Dict, List
 
 import mlflow
+from loguru import logger
 from sqlmodel import Session
 from tqdm import tqdm
 
 from src.agents.category_validator import validate_category
 from src.agents.qa_pair_aligner import align_qa_pair
-from src.config import LOG_LEVEL
-from src.util import get_logger
 from src.db import DB_ENGINE
 from src.db.models import IfcBench
 from src.db.query import get_dataset
+from src.util import setup_logger
 
-# Setup logging
-logging.basicConfig(level=logging.INFO)
-logger = get_logger(name="clean_ifc_bench", log_level=LOG_LEVEL)
+# Initialize logger
+setup_logger()
 
 
 def process_qa_pair(

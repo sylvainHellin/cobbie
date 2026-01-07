@@ -20,30 +20,32 @@ Usage:
 """
 
 import argparse
-import logging
+import sys
 import time
 from datetime import datetime
 from typing import Callable, Dict, List, Optional
 
 import mlflow
+from loguru import logger
 from tqdm import tqdm
 
 from src.agents.answer_verifier import verify_answer, derive_binary_classification
 from src.agents.cobbie import cobbie
-from src.util.get_tools import get_tools
-from src.util.extract_tool_usage import extract_tools_used
+from src.config import ROOT_PATH
 from src.db import DEVSET
 from src.db.query import (
+    clear_eval_tool_stats,
+    get_all_eval_tool_stats,
     increment_eval_tool_inclusion,
     update_eval_tool_usage,
-    get_all_eval_tool_stats,
-    clear_eval_tool_stats,
 )
+from src.util.extract_tool_usage import extract_tools_used
+from src.util.get_tools import get_tools
 from src.util.mlflow_utils import determine_evaluation_run_id
+from src.util.setup_logger import setup_logger
 
-# Setup logging
-logging.basicConfig(level=logging.INFO)
-logger = logging.getLogger(__name__)
+# Initialize logger
+setup_logger()
 
 
 def calculate_and_log_metrics(
@@ -766,8 +768,28 @@ Examples:
     )
     logger.info(f"Loading tools from directories: {', '.join(args.tools)}")
 
-    # Setup logging level
-    logger.setLevel(getattr(logging, args.log_level))
+    # Setup logging level - reconfigure loguru if non-default level specified
+    if args.log_level != "INFO":
+        from pathlib import Path
+
+        logger.remove()  # Remove default handlers
+        # Re-add console handler with new level
+        logger.add(
+            sys.stderr,
+            format="<green>{time:YYYY-MM-DD HH:mm:ss}</green> | <level>{level: <8}</level> | <cyan>{name}</cyan>:<cyan>{function}</cyan>:<cyan>{line}</cyan> - <level>{message}</level>",
+            level=args.log_level,
+            colorize=True,
+        )
+        # Re-add file handler with new level
+        log_dir = Path(ROOT_PATH) / "src" / "db" / "logs"
+        log_dir.mkdir(parents=True, exist_ok=True)
+        logger.add(
+            log_dir / "cobbie.log",
+            rotation="10 MB",
+            retention=5,
+            level=args.log_level,
+            format="{time:YYYY-MM-DD HH:mm:ss} | {level: <8} | {name}:{function}:{line} - {message}",
+        )
 
     # Handle tool metrics reset
     if args.reset_tool_metrics:

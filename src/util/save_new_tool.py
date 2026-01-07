@@ -1,10 +1,10 @@
 import os
 from typing import Optional
-from src.config import CREATED_TOOLS_PATH, LOG_LEVEL
-from src.util import get_logger
-from src.db.query import register_new_tool
 
-logger = get_logger(name="save_new_function", log_level=LOG_LEVEL)
+from loguru import logger
+
+from src.config import CREATED_TOOLS_PATH
+from src.db.query import register_new_tool
 
 def save_new_tool(function_name: str, function_implementation: str, directory_path:Optional[str] = None, global_question_num: Optional[int] = None)->bool:
     """
