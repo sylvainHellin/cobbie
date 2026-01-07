@@ -63,10 +63,13 @@ def query_ifcopenshell_docs(query: str) -> str:
                 for block in content:
                     if isinstance(block, dict) and "text" in block:
                         doc_text += block["text"]
+                print(doc_text)
                 return doc_text
             elif isinstance(content, dict) and "text" in content:
+                print(content["text"])
                 return content["text"]
 
+        print(str(data.get("result", data)))
         return str(data.get("result", data))
 
     except requests.exceptions.RequestException as e:
@@ -76,4 +79,3 @@ def query_ifcopenshell_docs(query: str) -> str:
 if __name__ == "__main__":
     docs = query_ifcopenshell_docs(
         "get bounding box element")
-    print(f"Retrieved documentation: \n\n{docs}")
