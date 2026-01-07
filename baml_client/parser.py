@@ -30,6 +30,12 @@ class LlmResponseParser:
         __result__ = self.__options.merge_options(baml_options).parse_response(function_name="Cobbie", llm_response=llm_response, mode="request")
         return typing.cast(typing.Union["types.CodeAction", "types.FinalAnswer"], __result__)
 
+    def Cobbie_ollama(
+        self, llm_response: str, baml_options: BamlCallOptions = {},
+    ) -> typing.Union["types.CodeAction", "types.FinalAnswer"]:
+        __result__ = self.__options.merge_options(baml_options).parse_response(function_name="Cobbie_ollama", llm_response=llm_response, mode="request")
+        return typing.cast(typing.Union["types.CodeAction", "types.FinalAnswer"], __result__)
+
     def EvaluateResponse(
         self, llm_response: str, baml_options: BamlCallOptions = {},
     ) -> types.AnswerEvaluationResult:
@@ -90,6 +96,12 @@ class LlmStreamParser:
         self, llm_response: str, baml_options: BamlCallOptions = {},
     ) -> typing.Union["stream_types.CodeAction", "stream_types.FinalAnswer"]:
         __result__ = self.__options.merge_options(baml_options).parse_response(function_name="Cobbie", llm_response=llm_response, mode="stream")
+        return typing.cast(typing.Union["stream_types.CodeAction", "stream_types.FinalAnswer"], __result__)
+
+    def Cobbie_ollama(
+        self, llm_response: str, baml_options: BamlCallOptions = {},
+    ) -> typing.Union["stream_types.CodeAction", "stream_types.FinalAnswer"]:
+        __result__ = self.__options.merge_options(baml_options).parse_response(function_name="Cobbie_ollama", llm_response=llm_response, mode="stream")
         return typing.cast(typing.Union["stream_types.CodeAction", "stream_types.FinalAnswer"], __result__)
 
     def EvaluateResponse(

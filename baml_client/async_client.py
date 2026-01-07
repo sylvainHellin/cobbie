@@ -94,6 +94,21 @@ class BamlAsyncClient:
                 "user_input": user_input,"available_tools": available_tools,"previous_attempts": previous_attempts,"model_path": model_path,
             })
             return typing.cast(typing.Union["types.CodeAction", "types.FinalAnswer"], __result__.cast_to(types, types, stream_types, False, __runtime__))
+    async def Cobbie_ollama(self, user_input: str,
+        baml_options: BamlCallOptions = {},
+    ) -> typing.Union["types.CodeAction", "types.FinalAnswer"]:
+        # Check if on_tick is provided
+        if 'on_tick' in baml_options:
+            # Use streaming internally when on_tick is provided
+            __stream__ = self.stream.Cobbie_ollama(user_input=user_input,
+                baml_options=baml_options)
+            return await __stream__.get_final_response()
+        else:
+            # Original non-streaming code
+            __result__ = await self.__options.merge_options(baml_options).call_function_async(function_name="Cobbie_ollama", args={
+                "user_input": user_input,
+            })
+            return typing.cast(typing.Union["types.CodeAction", "types.FinalAnswer"], __result__.cast_to(types, types, stream_types, False, __runtime__))
     async def EvaluateResponse(self, question: str,category: types.QuestionCategory,ground_truth: str,system_response: str,
         baml_options: BamlCallOptions = {},
     ) -> types.AnswerEvaluationResult:
@@ -235,6 +250,18 @@ class BamlStreamClient:
           lambda x: typing.cast(typing.Union["types.CodeAction", "types.FinalAnswer"], x.cast_to(types, types, stream_types, False, __runtime__)),
           __ctx__,
         )
+    def Cobbie_ollama(self, user_input: str,
+        baml_options: BamlCallOptions = {},
+    ) -> baml_py.BamlStream[typing.Union["stream_types.CodeAction", "stream_types.FinalAnswer"], typing.Union["types.CodeAction", "types.FinalAnswer"]]:
+        __ctx__, __result__ = self.__options.merge_options(baml_options).create_async_stream(function_name="Cobbie_ollama", args={
+            "user_input": user_input,
+        })
+        return baml_py.BamlStream[typing.Union["stream_types.CodeAction", "stream_types.FinalAnswer"], typing.Union["types.CodeAction", "types.FinalAnswer"]](
+          __result__,
+          lambda x: typing.cast(typing.Union["stream_types.CodeAction", "stream_types.FinalAnswer"], x.cast_to(types, types, stream_types, True, __runtime__)),
+          lambda x: typing.cast(typing.Union["types.CodeAction", "types.FinalAnswer"], x.cast_to(types, types, stream_types, False, __runtime__)),
+          __ctx__,
+        )
     def EvaluateResponse(self, question: str,category: types.QuestionCategory,ground_truth: str,system_response: str,
         baml_options: BamlCallOptions = {},
     ) -> baml_py.BamlStream[stream_types.AnswerEvaluationResult, types.AnswerEvaluationResult]:
@@ -346,6 +373,13 @@ class BamlHttpRequestClient:
             "user_input": user_input,"available_tools": available_tools,"previous_attempts": previous_attempts,"model_path": model_path,
         }, mode="request")
         return __result__
+    async def Cobbie_ollama(self, user_input: str,
+        baml_options: BamlCallOptions = {},
+    ) -> baml_py.baml_py.HTTPRequest:
+        __result__ = await self.__options.merge_options(baml_options).create_http_request_async(function_name="Cobbie_ollama", args={
+            "user_input": user_input,
+        }, mode="request")
+        return __result__
     async def EvaluateResponse(self, question: str,category: types.QuestionCategory,ground_truth: str,system_response: str,
         baml_options: BamlCallOptions = {},
     ) -> baml_py.baml_py.HTTPRequest:
@@ -415,6 +449,13 @@ class BamlHttpStreamRequestClient:
     ) -> baml_py.baml_py.HTTPRequest:
         __result__ = await self.__options.merge_options(baml_options).create_http_request_async(function_name="Cobbie", args={
             "user_input": user_input,"available_tools": available_tools,"previous_attempts": previous_attempts,"model_path": model_path,
+        }, mode="stream")
+        return __result__
+    async def Cobbie_ollama(self, user_input: str,
+        baml_options: BamlCallOptions = {},
+    ) -> baml_py.baml_py.HTTPRequest:
+        __result__ = await self.__options.merge_options(baml_options).create_http_request_async(function_name="Cobbie_ollama", args={
+            "user_input": user_input,
         }, mode="stream")
         return __result__
     async def EvaluateResponse(self, question: str,category: types.QuestionCategory,ground_truth: str,system_response: str,

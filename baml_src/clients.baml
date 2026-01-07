@@ -13,16 +13,24 @@ client<llm> GLM_4_7{
   }
 }
 
-// Minimax M2 client
-client<llm> MinimaxM2 {
+// Z.AI GLM 4.5 (with Coding Plan API key)
+client<llm> GLM_4_5_air{
   provider openai
   retry_policy Exponential
   options {
-    base_url "https://api.minimax.chat/v1"
-    model "minimax-m2"
-    api_key env.MINIMAX_API_KEY
+    base_url "https://api.z.ai/api/coding/paas/v4"
+    model "glm-4.5-air"
+    api_key env.Z_AI_API_KEY
     temperature 0.1
     max_tokens 8192
+  }
+}
+
+client<llm> Devstral {
+  provider "openai-generic"
+  options {
+    base_url "http://localhost:11434/v1"
+    model "devstral-small-2:latest"
   }
 }
 

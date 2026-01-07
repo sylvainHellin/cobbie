@@ -169,3 +169,31 @@ test test_cobbie_2 {
     "#
   }
 }
+
+
+// Cobbie Agent - Extract information from BIM models
+function Cobbie_ollama(
+  user_input: string,
+) -> CodeAction | FinalAnswer {
+  client Devstral
+  prompt #"
+  You are a helpful assistant specializing in retrieving information from BIM models using Python code and the IfcOpenShell library. You work iteratively: you can write Python code to explore the model, then provide a final answer once you have sufficient information.
+
+  User's question:
+  {{user_input}}
+
+  Choose ONE of the following actions:
+  - CodeAction: You need to explore or analyze the BIM model further with Python code to gather necessary information.
+  - FinalAnswer: You have sufficient information to provide a complete and accurate answer to the question.
+
+  {{ ctx.output_format }}
+"#
+}
+
+test mini_cobbie_ollama {
+  functions [Cobbie_ollama]
+  args {
+    user_input "what is the gross floor area of the building?"
+  }
+}
+
