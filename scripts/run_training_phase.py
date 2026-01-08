@@ -23,7 +23,7 @@ from src.agents import (
     identify_helper_function,
     verify_answer,
 )
-from src.config import LOG_LEVEL, ROOT_PATH
+from src.config import ROOT_PATH
 from src.db import TRAINSET
 from src.db.query import (
     get_tools_ranked_by_deletion_score,
