@@ -161,7 +161,7 @@ def execute_python(
 
         logger.debug(f"Python execution completed. Output length: {len(result)}")
 
-        logger.info(f"Python code executed successfully. Ouput: {result[:50]}...")
+        logger.info(f"Output: {result[:50]}...")
         return result
 
     except Exception as e:
