@@ -44,7 +44,7 @@ def _cobbie(
         Tuple of (FinalAnswer, execution_history) where execution_history contains
         the complete iteration-by-iteration trace of thoughts, code, and results
     """
-    logger.info(f"Starting COBBIE execution for: {question[:100]}...")
+    logger.info(f"Answering question: {question[:100]}...")
 
     # Prepare execution context
     tools_docs = generate_tools_docs(tools)
@@ -150,7 +150,7 @@ def _cobbie(
             # Handle union type flow control
             if isinstance(result, FinalAnswer):
                 logger.info(
-                    f"COBBIE completed successfully after {iteration + 1} iterations"
+                    f"Number of iterations: {iteration + 1}"
                 )
 
                 # Log final iteration metrics with token usage
@@ -396,7 +396,7 @@ def cobbie(
                         )
 
                     logger.info(
-                        f"Token tracking - Cumulative: {total_tokens} (in: {input_tokens}, out: {output_tokens}), Last call: {last_call_tokens}"
+                        f"Token consumption: {total_tokens} (in: {input_tokens}, out: {output_tokens})"
                     )
 
                 except Exception as e:
@@ -452,7 +452,7 @@ def cobbie(
             )
 
             logger.info(
-                f"COBBIE with metrics completed. Tokens: {total_tokens}, Time: {execution_time:.2f}s"
+                f"Tokens used: {total_tokens} -- Latency: {execution_time:.2f}s"
             )
 
             return final_answer, collector, execution_history
