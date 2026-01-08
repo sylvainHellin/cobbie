@@ -31,7 +31,7 @@ def setup_logger():
     # Console handler with colors and detailed formatting
     logger.add(
         sys.stderr,
-        format="<green>{time:YYYY-MM-DD HH:mm:ss}</green> | <level>{level: <8}</level> | <cyan>{name}</cyan>:<cyan>{function}</cyan>:<cyan>{line}</cyan> - <level>{message}</level>",
+        format="<green>{time:YYYY-MM-DD HH:mm:ss}</green> | <level>{level: <8}</level> | <cyan>{file.name}</cyan>:<cyan>{function}</cyan>:<cyan>{line}</cyan> - <level>{message}</level>",
         level=LOG_LEVEL,
         colorize=True,
     )
@@ -45,7 +45,7 @@ def setup_logger():
         rotation="10 MB",  # Rotate when file reaches 10MB
         retention=5,  # Keep 5 rotated files
         level=LOG_LEVEL,
-        format="{time:YYYY-MM-DD HH:mm:ss} | {level: <8} | {name}:{function}:{line} - {message}",
+        format="{time:YYYY-MM-DD HH:mm:ss} | {level: <8} | {file.name}:{function}:{line} - {message}",
     )
 
     return logger
