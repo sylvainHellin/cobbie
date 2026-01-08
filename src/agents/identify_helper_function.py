@@ -8,9 +8,13 @@ from typing import Tuple
 
 import mlflow
 from baml_py.baml_py import Collector
+from loguru import logger
 
 from baml_client import b
 from baml_client.types import NewToolAnalysis
+from src.util import setup_logger
+
+setup_logger()
 
 
 def identify_helper_function(
@@ -72,7 +76,7 @@ def identify_helper_function(
                 **kwargs,
             )
         except Exception as e:
-            _logger.error(f"Error identifying helper function: {e}")
+            logger.error(f"Error identifying helper function: {e}")
             tool_identification = NewToolAnalysis(
                 thoughts=f"An Exception occurred when trying to identify helper function. Exception:\n{e}",
                 action="none",
@@ -137,9 +141,9 @@ if __name__ == "__main__":
     test_question = "How many doors are on the ground floor?"
     model_path = TEST_IFC_PATH
 
-    print("="*80)
+    print("=" * 80)
     print("STEP 1: Running Cobbie to answer the question")
-    print("="*80)
+    print("=" * 80)
     print(f"Question: {test_question}")
     print(f"Model Path: {model_path}\n")
 
@@ -166,9 +170,9 @@ Thoughts: {cobbie_result.thoughts}
 Answer: {cobbie_result.answer}
         """.strip()
 
-        print("="*80)
+        print("=" * 80)
         print("STEP 2: Analyzing execution to identify helper functions")
-        print("="*80)
+        print("=" * 80)
 
         # Construct existing helper functions string
         test_existing_functions = """
@@ -204,13 +208,19 @@ def web_search(query: str) -> str:
             output_tokens = usage.output_tokens or 0
             total_tokens = input_tokens + output_tokens
 
-        print("\n" + "="*80)
+        print("\n" + "=" * 80)
         print("Metrics:")
-        cobbie_input = cobbie_collector.usage.input_tokens if cobbie_collector.usage else 0
-        cobbie_output = cobbie_collector.usage.output_tokens if cobbie_collector.usage else 0
+        cobbie_input = (
+            cobbie_collector.usage.input_tokens if cobbie_collector.usage else 0
+        )
+        cobbie_output = (
+            cobbie_collector.usage.output_tokens if cobbie_collector.usage else 0
+        )
         print(f"Cobbie - Input Tokens: {cobbie_input}")
         print(f"Cobbie - Output Tokens: {cobbie_output}")
         print(f"Helper Function Identifier - Input Tokens: {input_tokens}")
         print(f"Helper Function Identifier - Output Tokens: {output_tokens}")
-        print(f"Total Tokens: {(cobbie_input or 0) + (cobbie_output or 0) + total_tokens}")
-        print("="*80)
+        print(
+            f"Total Tokens: {(cobbie_input or 0) + (cobbie_output or 0) + total_tokens}"
+        )
+        print("=" * 80)

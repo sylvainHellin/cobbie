@@ -8,9 +8,13 @@ import time
 
 import mlflow
 from baml_py.baml_py import Collector
+from loguru import logger
 
 from baml_client import b
 from src.db.models import IfcBench
+from src.util import setup_logger
+
+setup_logger()
 
 
 def align_qa_pair(
@@ -44,7 +48,9 @@ def align_qa_pair(
 
         try:
             # Call BAML alignment function with collector
-            aligned_result = b.with_options(collector=collector).QuestionAnswerAlignment(
+            aligned_result = b.with_options(
+                collector=collector
+            ).QuestionAnswerAlignment(
                 question=qa_pair.question,
                 answer=qa_pair.ground_truth,
                 **kwargs,
@@ -56,26 +62,34 @@ def align_qa_pair(
                 if collector.last and collector.last.calls:
                     first_call = collector.last.calls[0]
 
-                    if hasattr(first_call, 'http_request') and first_call.http_request:
+                    if hasattr(first_call, "http_request") and first_call.http_request:
                         http_body = first_call.http_request.body
 
                         # Try text method first
-                        if hasattr(http_body, 'text'):
+                        if hasattr(http_body, "text"):
                             try:
                                 body_text = http_body.text()
                                 if body_text:
                                     # Try to parse as JSON to extract messages
                                     try:
                                         body_json = json.loads(body_text)
-                                        if isinstance(body_json, dict) and 'messages' in body_json:
-                                            messages = body_json['messages']
+                                        if (
+                                            isinstance(body_json, dict)
+                                            and "messages" in body_json
+                                        ):
+                                            messages = body_json["messages"]
                                             if messages and len(messages) > 0:
                                                 # Get the system message content
                                                 for msg in messages:
-                                                    if msg.get('role') == 'system':
-                                                        content = msg.get('content', '')
-                                                        if isinstance(content, list) and len(content) > 0:
-                                                            raw_prompt = content[0].get('text', '')
+                                                    if msg.get("role") == "system":
+                                                        content = msg.get("content", "")
+                                                        if (
+                                                            isinstance(content, list)
+                                                            and len(content) > 0
+                                                        ):
+                                                            raw_prompt = content[0].get(
+                                                                "text", ""
+                                                            )
                                                         elif isinstance(content, str):
                                                             raw_prompt = content
                                                         break
@@ -89,18 +103,26 @@ def align_qa_pair(
                                 pass
 
                         # Try json method if text didn't work
-                        if not raw_prompt and hasattr(http_body, 'json'):
+                        if not raw_prompt and hasattr(http_body, "json"):
                             try:
                                 body_json = http_body.json()
-                                if isinstance(body_json, dict) and 'messages' in body_json:
-                                    messages = body_json['messages']
+                                if (
+                                    isinstance(body_json, dict)
+                                    and "messages" in body_json
+                                ):
+                                    messages = body_json["messages"]
                                     if messages and len(messages) > 0:
                                         # Get the system message content
                                         for msg in messages:
-                                            if msg.get('role') == 'system':
-                                                content = msg.get('content', '')
-                                                if isinstance(content, list) and len(content) > 0:
-                                                    raw_prompt = content[0].get('text', '')
+                                            if msg.get("role") == "system":
+                                                content = msg.get("content", "")
+                                                if (
+                                                    isinstance(content, list)
+                                                    and len(content) > 0
+                                                ):
+                                                    raw_prompt = content[0].get(
+                                                        "text", ""
+                                                    )
                                                 elif isinstance(content, str):
                                                     raw_prompt = content
                                                 break
@@ -110,16 +132,16 @@ def align_qa_pair(
                                 pass
 
                         # Try raw method as last resort
-                        if not raw_prompt and hasattr(http_body, 'raw'):
+                        if not raw_prompt and hasattr(http_body, "raw"):
                             try:
                                 body_raw = http_body.raw()
                                 if isinstance(body_raw, bytes):
-                                    body_raw = body_raw.decode('utf-8')
+                                    body_raw = body_raw.decode("utf-8")
                                 raw_prompt = body_raw
                             except Exception:
                                 pass
             except Exception as e:
-                _logger.warning(f"Could not extract raw prompt: {e}")
+                logger.warning(f"Could not extract raw prompt: {e}")
 
             # Create new IfcBench instance with aligned values
             aligned_qa_pair = IfcBench(
@@ -154,7 +176,7 @@ def align_qa_pair(
             return aligned_qa_pair
 
         except Exception as e:
-            _logger.error(f"Error aligning QA pair {qa_pair.id}: {e}")
+            logger.error(f"Error aligning QA pair {qa_pair.id}: {e}")
 
             # Log error
             aligner_span.set_outputs(

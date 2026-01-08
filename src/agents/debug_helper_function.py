@@ -11,12 +11,15 @@ from typing import List, Optional, Tuple
 
 import mlflow
 from baml_py.baml_py import Collector
+from loguru import logger
 
 from baml_client.types import CodeAction, UpdatedHelperFunction
 from src.config import DIRECTORY_IFC_MODELS_PATH
 from src.tools.initial import query_ifcopenshell_docs
-from src.util.code_act_inner_loop import _execute_code_action
-from src.util.generate_tools_docs import generate_tools_docs
+from src.util import _execute_code_action, generate_tools_docs, setup_logger
+from src.agents import derive_binary_classification
+
+setup_logger()
 
 
 def _helper_function_debugger_iter(
@@ -76,7 +79,7 @@ def _helper_function_debugger_iter(
                 previous_attempts=previous_attempts,
             )
     except Exception as e:
-        _logger.error(f"Error in HelperFunctionDebugger iteration: {e}")
+        logger.error(f"Error in HelperFunctionDebugger iteration: {e}")
         result = UpdatedHelperFunction(
             thoughts=f"An Exception occurred when trying to debug the helper function. Exception:\n{e}",
             fixed_implementation="",
@@ -122,7 +125,7 @@ def _debug_helper_function(
         Tuple of (UpdatedHelperFunction, execution_history) where execution_history contains
         the complete iteration-by-iteration trace of debugging
     """
-    _logger.info(f"Starting helper function debugging for: {faulty_function_name}")
+    logger.info(f"Starting helper function debugging for: {faulty_function_name}")
 
     # Prepare tools for code execution
     tools = {
@@ -137,7 +140,7 @@ def _debug_helper_function(
         if bim_models_dir.exists():
             # Find all .ifc files recursively in the directory
             ifc_files = []
-            for root, dirs, files in os.walk(bim_models_dir):
+            for root, _, files in os.walk(bim_models_dir):
                 for file in files:
                     if file.endswith(".ifc"):
                         ifc_path = os.path.join(root, file)
@@ -147,13 +150,13 @@ def _debug_helper_function(
 
             if ifc_files:
                 other_bim_models_for_testing = ifc_files
-                _logger.info(f"Found {len(ifc_files)} other BIM models for testing")
+                logger.info(f"Found {len(ifc_files)} other BIM models for testing")
             else:
                 other_bim_models_for_testing = []
-                _logger.warning("No other BIM models found in bim_models directory")
+                logger.warning("No other BIM models found in bim_models directory")
         else:
             other_bim_models_for_testing = []
-            _logger.warning(f"BIM models directory not found at {bim_models_dir}")
+            logger.warning(f"BIM models directory not found at {bim_models_dir}")
 
     # Initialize execution history
     previous_attempts = ""
@@ -260,7 +263,7 @@ def _debug_helper_function(
 
             # Handle union type flow control
             if isinstance(result, UpdatedHelperFunction):
-                _logger.info(
+                logger.info(
                     f"Helper function debugging completed after {iteration + 1} iterations"
                 )
 
@@ -316,7 +319,7 @@ def _debug_helper_function(
             else:
                 # Handle unexpected result type
                 error_msg = f"Unexpected result type: {type(result)}"
-                _logger.error(error_msg)
+                logger.error(error_msg)
                 previous_attempts += (
                     f"\n--- Iteration {iteration + 1} ---\nError:\n{error_msg}"
                 )
@@ -337,7 +340,7 @@ def _debug_helper_function(
                 continue
 
     # Max iterations reached - return incomplete result
-    _logger.warning(
+    logger.warning(
         f"Helper function debugger reached max iterations ({max_iterations}) without completion"
     )
 
@@ -437,7 +440,9 @@ def debug_helper_function(
                     "max_iterations": max_iterations,
                     "faulty_function_name": faulty_function_name,
                     "ifc_model_path": ifc_model_path,
-                    "other_models_count": len(other_bim_models_for_testing) if other_bim_models_for_testing else 0,
+                    "other_models_count": len(other_bim_models_for_testing)
+                    if other_bim_models_for_testing
+                    else 0,
                     "llm_provider": llm_provider,
                     "llm_model": llm_name,
                 }
@@ -502,12 +507,12 @@ def debug_helper_function(
                             last_usage.output_tokens or 0
                         )
 
-                    _logger.info(
+                    logger.info(
                         f"Token tracking - Cumulative: {total_tokens} (in: {input_tokens}, out: {output_tokens}), Last call: {last_call_tokens}"
                     )
 
                 except Exception as e:
-                    _logger.warning(f"Error extracting token usage from collector: {e}")
+                    logger.warning(f"Error extracting token usage from collector: {e}")
 
             # Log metrics to MLflow
             mlflow.log_metrics(
@@ -552,7 +557,7 @@ def debug_helper_function(
                 }
             )
 
-            _logger.info(
+            logger.info(
                 f"Helper function debugger completed. Tokens: {total_tokens}, Time: {execution_time:.2f}s, Success: {final_result.success}"
             )
 
@@ -647,10 +652,11 @@ if __name__ == "__main__":
             system_response=cobbie_result.answer,
         )
 
-        print(f"Classification: {verification.classification}")
+        classification = derive_binary_classification(result=verification)
+        print(f"Classification: {classification}")
         print(f"Justification: {verification.justification}\n")
 
-        if verification.classification == "wrong":
+        if classification == "wrong":
             print("=" * 80)
             print("STEP 3: Identifying faulty tool")
             print("=" * 80)
