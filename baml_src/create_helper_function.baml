@@ -61,9 +61,51 @@ function HelperFunctionCreator(
        - Returns section with type information
        - Example usage
     3. **Return Type**: Return structured data (lists, dicts, primitives), NOT formatted strings
-    4. **Error Handling**: Use try-except blocks for robust error handling
+    4. **Error Handling**: See CODE QUALITY CHECKLIST below
     5. **Generalization**: The function should work across different BIM models, not just the example
     6. **Testing**: Test the function with multiple BIM models to ensure it's not overfitted
+
+    CODE QUALITY CHECKLIST:
+
+    1. **Exception Handling**:
+       ✅ Catch specific exceptions (AttributeError, KeyError, RuntimeError)
+       ✅ Use try-except ONLY in narrow scopes (not wrapping entire functions)
+       ❌ NEVER use `except Exception: pass` without re-raising or logging
+
+       Example - tracking skipped elements:
+       ```python
+       skipped = 0
+       for elem in elements:
+           try:
+               process(elem)
+           except AttributeError:  # Specific exception
+               skipped += 1
+               continue
+       if skipped > 0:
+           print(f"Warning: Skipped {skipped} elements")
+       ```
+
+    2. **None/Empty Validation**:
+       ✅ Validate inputs at function start: `if not elements: return []`
+       ✅ Check for None in grouping keys: `if key is None: key = "Undefined"`
+       ✅ Use getattr with defaults: `val = getattr(elem, 'attr', 'default')`
+       ❌ Don't create meaningless groups (e.g., grouping by None)
+
+    3. **Result Validation**:
+       ✅ Check results make sense before returning
+       ✅ Document in docstring when function returns empty/partial results
+       ✅ Report data loss (e.g., "Processed 45/50 elements, 5 skipped")
+
+    4. **Defensive Attribute Access**:
+       ✅ Required attributes: Check first with hasattr() or let it fail fast
+       ✅ Optional attributes: Use getattr(elem, 'attr', default)
+       ❌ Don't assume all elements have all attributes
+
+    5. **Edge Cases to Handle**:
+       - Empty input collections → return appropriate empty result
+       - Elements missing expected attributes → skip with counter OR fail fast
+       - None/null values in data → use "Undefined" or "Unknown" labels
+       - Mixed types in collections → handle or document limitations
 
     AVAILABLE FOR TESTING:
     - Example model: {{ example_bim_model }}
