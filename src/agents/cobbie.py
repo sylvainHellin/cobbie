@@ -58,6 +58,9 @@ def _cobbie(
     # Initialize the previous_attempts
     previous_attempts = ""
 
+    # Track schema validation errors for retry logic
+    schema_error_occurred = False
+
     # Main reasoning loop
     for iteration in range(max_iterations):
         iteration_start = time.time()
@@ -84,13 +87,55 @@ def _cobbie(
                     }
                 )
 
-                result = _code_act_iter(
-                    user_input=question,
-                    available_tools=tools_docs,
-                    previous_attempts=previous_attempts,
-                    model_path=model_path,
-                    **kwargs,
-                )
+                try:
+                    result = _code_act_iter(
+                        user_input=question,
+                        available_tools=tools_docs,
+                        previous_attempts=previous_attempts,
+                        model_path=model_path,
+                        **kwargs,
+                    )
+                except Exception as e:
+                    # Schema validation error - allow one retry
+                    if not schema_error_occurred:
+                        schema_error_occurred = True
+
+                        error_feedback = f"""
+--- Iteration {iteration + 1} ---
+SCHEMA ERROR: Your response did not match the required format.
+
+Error: {str(e)}
+
+REMINDER: You must return EXACTLY one of these:
+1. CodeAction with fields: thoughts (string), python_code (string)
+2. FinalAnswer with fields: thoughts (string), answer (string)
+
+Please retry with the correct format.
+"""
+                        previous_attempts += error_feedback
+                        logger.warning(
+                            f"Schema validation error on iteration {iteration + 1}, allowing retry"
+                        )
+
+                        # Log the error in spans
+                        llm_span.set_outputs(
+                            {"error": str(e), "retry_allowed": True}
+                        )
+                        llm_span.set_status("ERROR")
+                        iteration_span.set_status("ERROR")
+
+                        # Continue to next iteration for retry
+                        continue
+                    else:
+                        # Second consecutive error: fail with ERROR answer
+                        logger.error(f"Second consecutive schema error: {e}")
+                        result = FinalAnswer(
+                            answer="ERROR",
+                            thoughts=f"Multiple schema validation failures. Exception:\n{e}",
+                        )
+
+                # Reset flag on successful parse
+                schema_error_occurred = False
 
                 iteration_duration = time.time() - iteration_start
                 llm_calls += 1
