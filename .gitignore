@@ -21,7 +21,6 @@ wheels/
 
 # big files
 *.ifc
-*.db
 *.sqlite
 
 # no need to upload
