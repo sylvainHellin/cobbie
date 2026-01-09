@@ -26,8 +26,8 @@ function EvaluateResponse(
 
     REFERENCE ANSWER: {{ ground_truth }}
 
-    Note: This reference answer represents one valid answer from a human expert labeler,
-    but is NOT absolute truth. The system response may differ while still being correct.
+    Note: This reference answer is one possible response from a human expert labeller.
+    However, it is not necessarily the only valid answer (see the evaluation framework below)..
 
     SYSTEM RESPONSE: {{ system_response }}
 
@@ -71,39 +71,41 @@ function EvaluateResponse(
 
     ## CRITERION 1: FAITHFULNESS
 
-    Are all claims grounded in valid sources for this question category?
+    Are all claims grounded in valid sources and numerically accurate for this question category?
 
-    **Category-Specific Grounding Rules:**
+    **Category-Specific Numerical Accuracy Requirements:**
 
-    Category 1: BIM element properties ONLY
-    - All values must exist directly in model
-    - No computations permitted
+    **Category 1 & 2 (Deterministic):**
+    - Numerical values must match reference answer within tolerance
+    - These categories involve deterministic retrieval/aggregation → should produce same results
+    - Tolerance rules:
+      * Continuous measurements (lengths, areas, volumes): within 2% of reference
+        Formula: |system_value - reference_answer | / reference_answer ≤ 0.02
+      * Discrete counts (elements, rooms, floors): exact match required
+    - Fail if: numerical mismatch beyond tolerance
 
-    Category 2: BIM data + simple unambiguous computations
-    - Computations: counting, summing, averaging, filtering
-    - Must be deterministic
+    **Category 3 (Geometric):**
+    - Numerical values can differ from reference answer
+    - Multiple valid geometric calculation approaches exist
+    - Require: methodology/approach must be explicitly disclosed
+    - Fail if: values are implausible OR methodology not disclosed
 
-    Category 3: BIM geometry + complex geometric computations
-    - May derive values not explicitly stored
-    - Multiple valid calculation approaches acceptable
+    **Category 4 (Incomplete Information):**
+    - Numerical values can differ from reference answer
+    - Answers may involve assumptions leading to different results
+    - Require: ALL assumptions MUST be disclosed verbatim in answer
+      * "Assuming X..." or "Based on assumption that X..." required
+      * Implied/hedged assumptions (e.g., "typically...", "generally...") → FAIL
+    - Fail if: assumptions not explicitly stated OR values implausible
 
-    Category 4: BIM data + computations + EXPLICITLY STATED assumptions
-    - Assumptions MUST be disclosed verbatim in answer
-    - "Assuming X..." or "Based on assumption that X..." required
-    - Implied/hedged assumptions → FAIL
-
-    **Numerical Tolerance:**
-
-    For continuous measurements (lengths, areas, volumes):
-    - Accept within 2% of reference answer
-    - Formula: |system_value - ground_truth| / ground_truth ≤ 0.02
-
-    For discrete counts (elements, rooms, floors):
-    - Exact match required
+    **Source/Method Disclosure (All Categories):**
+    - All claims should cite sources (properties, functions, calculations)
+    - Note: This is primarily assessed in Transparency criterion
+    - For faithfulness, focus on numerical accuracy per category rules above
 
     **Result:**
-    - Yes: All claims grounded appropriately
-    - No: Contains hallucinations, errors, or unstated assumptions (Cat 4)
+    - Yes: Numerically accurate per category rules, no hallucinations
+    - No: Numerical mismatch (Cat 1-2), implausible values, or unstated assumptions (Cat 4)
     - Na: Only if abstention = true
 
     ---
