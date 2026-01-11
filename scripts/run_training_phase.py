@@ -161,7 +161,7 @@ def handle_run_cobbie(context: Context) -> Tuple[TrainingState, Context]:
         result, collector, history = cobbie(
             user_input=context.qa_pair.question,
             tools=context.tools,
-            max_iterations=10,
+            max_iterations=15,
             model_path=ifc_path,
             client="GLM_4_7",
         )
@@ -696,7 +696,7 @@ def handle_test_tool_with_cobbie(context: Context) -> Tuple[TrainingState, Conte
         result, collector, history = cobbie(
             user_input=enhanced_question,
             tools=test_tools,
-            max_iterations=10,
+            max_iterations=15,
             model_path=ifc_path,
             client="GLM_4_7",
         )
