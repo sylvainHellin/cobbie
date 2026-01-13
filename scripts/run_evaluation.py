@@ -731,6 +731,12 @@ Examples:
         help="Tool directories to load (space-separated). Options: initial, created, manual. Default: initial created"
     )
 
+    parser.add_argument(
+        "--no-tools",
+        action="store_true",
+        help="Run evaluation without any tools (baseline test)"
+    )
+
     args = parser.parse_args()
 
     # Validate arguments
@@ -747,18 +753,20 @@ Examples:
         return 1
 
     # Validate and deduplicate tools argument
-    if not args.tools:
-        print("Error: At least one tool directory must be specified")
+    if args.no_tools:
+        args.tools = []
+    elif not args.tools:
+        print("Error: At least one tool directory must be specified (or use --no-tools)")
         return 1
-
-    # Remove duplicates while preserving order
-    seen = set()
-    unique_tools = []
-    for tool_dir in args.tools:
-        if tool_dir not in seen:
-            seen.add(tool_dir)
-            unique_tools.append(tool_dir)
-    args.tools = unique_tools
+    else:
+        # Remove duplicates while preserving order
+        seen = set()
+        unique_tools = []
+        for tool_dir in args.tools:
+            if tool_dir not in seen:
+                seen.add(tool_dir)
+                unique_tools.append(tool_dir)
+        args.tools = unique_tools
 
     end_index = min(args.start + args.nb_samples, len(DEVSET))
     actual_samples = end_index - args.start
@@ -766,7 +774,10 @@ Examples:
     print(
         f"Processing {actual_samples} samples from index {args.start} to {end_index - 1}"
     )
-    logger.info(f"Loading tools from directories: {', '.join(args.tools)}")
+    if args.no_tools:
+        logger.info("Running in no-tools mode (baseline test)")
+    else:
+        logger.info(f"Loading tools from directories: {', '.join(args.tools)}")
 
     # Setup logging level - reconfigure loguru if non-default level specified
     if args.log_level != "INFO":
@@ -801,15 +812,19 @@ Examples:
     mlflow.set_experiment("Evaluation")
 
     # Prepare tools for COBBIE based on --tools argument
-    try:
-        tools_dict = get_tools(
-            directories=args.tools,
-            allow_created_deletion=True
-        )
-        logger.info(f"Loaded {len(tools_dict)} total tools from directories: {', '.join(args.tools)}")
-    except Exception as e:
-        logger.error(f"Failed to load tools: {e}")
-        return 1
+    if args.no_tools:
+        tools_dict = {}
+        logger.info("No tools loaded (baseline mode)")
+    else:
+        try:
+            tools_dict = get_tools(
+                directories=args.tools,
+                allow_created_deletion=True
+            )
+            logger.info(f"Loaded {len(tools_dict)} total tools from directories: {', '.join(args.tools)}")
+        except Exception as e:
+            logger.error(f"Failed to load tools: {e}")
+            return 1
 
     # Prepare dataset
     dataset = DEVSET[args.start : end_index]
