@@ -161,7 +161,7 @@ def handle_run_cobbie(context: Context) -> Tuple[TrainingState, Context]:
         result, collector, history = cobbie(
             user_input=context.qa_pair.question,
             tools=context.tools,
-            max_iterations=15,
+            max_iterations=20,
             model_path=ifc_path,
             client="GLM_4_7",
         )
@@ -426,7 +426,7 @@ def handle_create_new_tool(context: Context) -> Tuple[TrainingState, Context]:
             function_description=context.identify_tool_result.tool_description,
             is_enhancement=context.is_enhancement,
             existing_implementation=existing_implementation,
-            max_iterations=15,
+            max_iterations=20,
             llm_provider="zai",
             llm_name=LLM_NAME,
         )
@@ -594,7 +594,7 @@ def handle_debug_faulty_tool(context: Context) -> Tuple[TrainingState, Context]:
             error_description=context.identify_faulty_result.error_description,
             history_faulty_tool_use=full_history,
             ifc_model_path=ifc_model_path,
-            max_iterations=15,
+            max_iterations=20,
             llm_provider="zai",
             llm_name=LLM_NAME,
         )
@@ -696,7 +696,7 @@ def handle_test_tool_with_cobbie(context: Context) -> Tuple[TrainingState, Conte
         result, collector, history = cobbie(
             user_input=enhanced_question,
             tools=test_tools,
-            max_iterations=15,
+            max_iterations=20,
             model_path=ifc_path,
             client="GLM_4_7",
         )
