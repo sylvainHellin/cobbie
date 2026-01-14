@@ -85,18 +85,15 @@ def extract_run_data(run) -> Dict:
     """
     params = run.data.params
     metrics = run.data.metrics
-    tags = run.data.tags
 
-    # Get question ID from run name (e.g., "question_909" -> 909)
-    run_name = tags.get("mlflow.runName", "")
-    question_id = None
-    if run_name.startswith("question_"):
+    # Get question ID - prefer the explicit parameter
+    # Run name format: "question_{index}_{question_id}"
+    question_id = params.get("question_id")
+    if question_id is not None:
         try:
-            question_id = int(run_name.split("_")[1])
-        except (IndexError, ValueError):
-            question_id = params.get("question_id")
-    else:
-        question_id = params.get("question_id")
+            question_id = int(question_id)
+        except (ValueError, TypeError):
+            pass
 
     # Get classification from parameters
     classification = params.get("classification", "unknown")
