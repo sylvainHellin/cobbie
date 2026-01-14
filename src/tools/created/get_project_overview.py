@@ -2,6 +2,81 @@ import ifcopenshell
 from typing import Any, Dict, List, Optional, Union
 
 
+def get_model_header_info(model: ifcopenshell.file) -> Dict[str, Any]:
+    """
+    Extracts file header metadata from an IFC model.
+    
+    Args:
+        model: The loaded IFC model instance
+        
+    Returns:
+        A dictionary containing file metadata including file_description,
+        file_name, file_schema, applications, and organizations.
+    """
+    result: Dict[str, Any] = {
+        'file_description': {},
+        'file_name': {},
+        'file_schema': {},
+        'applications': [],
+        'organizations': []
+    }
+    
+    try:
+        header = model.header
+        
+        # Extract file_description
+        fd = header.file_description
+        result['file_description']['description'] = list(fd.description) if hasattr(fd, 'description') else []
+        
+        # Extract file_name
+        fn = header.file_name
+        result['file_name'] = {
+            'name': getattr(fn, 'name', None),
+            'author': getattr(fn, 'author', None),
+            'organization': getattr(fn, 'organization', None),
+            'time_stamp': getattr(fn, 'time_stamp', None),
+            'preprocessor_version': getattr(fn, 'preprocessor_version', None),
+            'originating_system': getattr(fn, 'originating_system', None),
+            'authorization': getattr(fn, 'authorization', None)
+        }
+        
+        # Extract file_schema
+        fs = header.file_schema
+        result['file_schema'] = {
+            'schema_identifiers': list(fs.schema_identifiers) if hasattr(fs, 'schema_identifiers') else []
+        }
+    except (AttributeError, TypeError):
+        # If header access fails, return partial results
+        pass
+    
+    # Extract applications from IfcApplication entities
+    try:
+        apps = model.by_type('IfcApplication')
+        for app in apps:
+            app_info = {
+                'identifier': getattr(app, 'ApplicationIdentifier', None),
+                'name': getattr(app, 'ApplicationFullName', None),
+                'version': getattr(app, 'Version', None)
+            }
+            result['applications'].append(app_info)
+    except (AttributeError, TypeError):
+        pass
+    
+    # Extract organizations from IfcOrganization entities
+    try:
+        orgs = model.by_type('IfcOrganization')
+        for org in orgs:
+            org_info = {
+                'name': getattr(org, 'Name', None),
+                'description': getattr(org, 'Description', None)
+            }
+            result['organizations'].append(org_info)
+    except (AttributeError, TypeError):
+        pass
+    
+    return result
+
+
 def get_project_overview(
     model: ifcopenshell.file,
     include_element_counts: bool = True,
@@ -11,7 +86,8 @@ def get_project_overview(
     include_detailed_address: bool = False,
     include_raw_geolocation: bool = False,
     include_floor_heights: bool = False,
-    include_global_ids: bool = False
+    include_global_ids: bool = False,
+    include_file_metadata: bool = False
 ) -> Dict[str, Any]:
     """
     Retrieves a comprehensive overview of project metadata including project name,
@@ -40,6 +116,9 @@ def get_project_overview(
             from_storey, to_storey, and height values. (default: False)
         include_global_ids: If True, adds GlobalId fields to project_info, building_info,
             and location/site dicts. (default: False)
+        include_file_metadata: If True, includes file header metadata such as
+            file_description, file_name, file_schema, applications, and organizations
+            in a 'file_metadata' key. (default: False)
     
     Returns:
         A structured dictionary containing:
@@ -52,6 +131,7 @@ def get_project_overview(
             - floor_heights: List of floor-to-floor height transitions (if requested)
             - element_counts: Dictionary of element type counts (if include_element_counts=True)
             - spaces: Number of spaces in the model
+            - file_metadata: File header metadata (if include_file_metadata=True)
     
     Example usage:
         >>> import ifcopenshell
@@ -65,6 +145,8 @@ def get_project_overview(
         >>> with_heights = get_project_overview(model, include_floor_heights=True)
         >>> for transition in with_heights['floor_heights']:
         ...     print(f"{transition['from_storey']} to {transition['to_storey']}: {transition['height']}m")
+        >>> with_metadata = get_project_overview(model, include_file_metadata=True)
+        >>> print(with_metadata['file_metadata']['file_schema']['schema_identifiers'])
     """
     # If floor heights are requested, we need storey details
     if include_floor_heights:
@@ -279,5 +361,9 @@ def get_project_overview(
             if count > 0:
                 counts[elem_type] = count
         result['element_counts'] = counts
+    
+    # ===== FILE METADATA =====
+    if include_file_metadata:
+        result['file_metadata'] = get_model_header_info(model)
     
     return result
