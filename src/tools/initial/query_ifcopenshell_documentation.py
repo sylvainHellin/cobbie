@@ -1,28 +1,18 @@
 import os
+from typing import Literal
+
 import requests
 from dotenv import find_dotenv, load_dotenv
 
 load_dotenv(find_dotenv())
 CONTEXT7_API_KEY = os.getenv("CONTEXT7_API_KEY")
 
+# Configuration: "context7" uses the external API, "custom" uses local vector store
+DOC_BACKEND: Literal["context7", "custom"] = os.getenv("DOC_BACKEND", "custom")  # type: ignore
 
-def query_ifcopenshell_docs(query: str) -> str:
-    """
-    Retrieves and print up-to-date information and code examples related to the provided query from the IFCopenshell documentation.
 
-    Args:
-        query: The topic or query to focus the documentation on (e.g., "finds all entities of type `IfcWall`", "element bounding box", "clash detection", etc.)
-        max_tokens: Maximum number of tokens to retrieve (default: 2048)
-
-    Returns:
-        str: The documentation text as a string
-
-    Side Effect:
-        print the retrieved documentation
-
-    Example:
-        >>> query_ifcopenshell_docs("How to access element properties")
-    """
+def _query_context7(query: str) -> str:
+    """Query IfcOpenShell docs using Context7 API."""
     if not CONTEXT7_API_KEY:
         return "Could not retrieve the information ; API_KEY missing."
 
@@ -63,19 +53,48 @@ def query_ifcopenshell_docs(query: str) -> str:
                 for block in content:
                     if isinstance(block, dict) and "text" in block:
                         doc_text += block["text"]
-                print(doc_text)
                 return doc_text
             elif isinstance(content, dict) and "text" in content:
-                print(content["text"])
                 return content["text"]
 
-        print(str(data.get("result", data)))
         return str(data.get("result", data))
 
     except requests.exceptions.RequestException as e:
         return f"Failed to query Context7 API: {str(e)}"
 
 
+def _query_custom(query: str) -> str:
+    """Query IfcOpenShell docs using local vector store."""
+    from src.docs_indexer.retriever import query_docs
+
+    return query_docs(query, top_k=5)
+
+
+def query_ifcopenshell_docs(query: str) -> str:
+    """
+    Retrieves and prints up-to-date information and code examples related to the provided query from the IFCopenshell documentation.
+
+    Args:
+        query: The topic or query to focus the documentation on (e.g., "finds all entities of type `IfcWall`", "element bounding box", "clash detection", etc.)
+
+    Returns:
+        str: The documentation text as a string
+
+    Side Effect:
+        print the retrieved documentation
+
+    Example:
+        >>> query_ifcopenshell_docs("How to access element properties")
+    """
+    if DOC_BACKEND == "context7":
+        result = _query_context7(query)
+    else:
+        result = _query_custom(query)
+
+    print(result)
+    return result
+
+
 if __name__ == "__main__":
-    docs = query_ifcopenshell_docs(
-        "get bounding box element")
+    print(f"Using backend: {DOC_BACKEND}")
+    docs = query_ifcopenshell_docs("get bounding box element")
