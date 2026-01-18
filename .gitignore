@@ -38,3 +38,9 @@ logs.log
 .cursor
 reports
 scripts/text_count_tokens.txt
+
+# External cloned repos (for docs indexing)
+external/
+
+# cache
+analysis/data/baseline_cache
