@@ -1,5 +1,16 @@
 // Learn more about clients at https://docs.boundaryml.com/docs/snippets/clients/overview
 
+// Anthropic Claude Haiku - for lightweight tasks like chunk review
+client<llm> ClaudeHaiku {
+  provider anthropic
+  retry_policy Exponential
+  options {
+    model "claude-3-5-haiku-latest"
+    api_key env.ANTHROPIC_API_KEY
+    max_tokens 1024
+  }
+}
+
 // Z.AI GLM 4.7 (with Coding Plan API key)
 client<llm> GLM_4_7{
   provider openai
@@ -35,6 +46,17 @@ client<llm> Devstral {
   }
 }
 
+client<llm> Gemini_2_5_Flash_Lite {
+  provider google-ai
+  retry_policy Exponential
+  options {
+    model "gemini-2.5-flash-lite"
+    api_key env.GEMINI_API_KEY
+    generationConfig {
+      temperature 0.1
+    }
+  }
+}
 
 // https://docs.boundaryml.com/docs/snippets/clients/retry
 retry_policy Constant {

@@ -28,6 +28,12 @@ type_map = {
     "types.CategoryValidationResult": types.CategoryValidationResult,
     "stream_types.CategoryValidationResult": stream_types.CategoryValidationResult,
 
+    "types.ChunkReviewInput": types.ChunkReviewInput,
+    "stream_types.ChunkReviewInput": stream_types.ChunkReviewInput,
+
+    "types.ChunkReviewOutput": types.ChunkReviewOutput,
+    "stream_types.ChunkReviewOutput": stream_types.ChunkReviewOutput,
+
     "types.CodeAction": types.CodeAction,
     "stream_types.CodeAction": stream_types.CodeAction,
 

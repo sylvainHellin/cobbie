@@ -20,7 +20,7 @@ from .globals import DO_NOT_USE_DIRECTLY_UNLESS_YOU_KNOW_WHAT_YOURE_DOING_RUNTIM
 class TypeBuilder(type_builder.TypeBuilder):
     def __init__(self):
         super().__init__(classes=set(
-          ["AlignedQAPair","AnswerEvaluationResult","AssessmentResult","CategoryValidationResult","CodeAction","ErrorAnalysisResult","FaultyToolAnalysis","FinalAnswer","FunctionImplementation","HelperFunctionAssessment","ImprovedImplementation","NewHelperFunction","NewToolAnalysis","SimilarityResult","TestAndImproveError","TestAndImproveSuccess","ToolCreationResult","ToolOptimizationResult","UpdatedHelperFunction",]
+          ["AlignedQAPair","AnswerEvaluationResult","AssessmentResult","CategoryValidationResult","ChunkReviewInput","ChunkReviewOutput","CodeAction","ErrorAnalysisResult","FaultyToolAnalysis","FinalAnswer","FunctionImplementation","HelperFunctionAssessment","ImprovedImplementation","NewHelperFunction","NewToolAnalysis","SimilarityResult","TestAndImproveError","TestAndImproveSuccess","ToolCreationResult","ToolOptimizationResult","UpdatedHelperFunction",]
         ), enums=set(
           ["CriterionResult","QuestionCategory",]
         ), runtime=DO_NOT_USE_DIRECTLY_UNLESS_YOU_KNOW_WHAT_YOURE_DOING_RUNTIME)
@@ -39,7 +39,7 @@ class TypeBuilder(type_builder.TypeBuilder):
 
 
     # #########################################################################
-    # Generated classes 19
+    # Generated classes 21
     # #########################################################################
 
     @property
@@ -57,6 +57,14 @@ class TypeBuilder(type_builder.TypeBuilder):
     @property
     def CategoryValidationResult(self) -> "CategoryValidationResultViewer":
         return CategoryValidationResultViewer(self)
+
+    @property
+    def ChunkReviewInput(self) -> "ChunkReviewInputViewer":
+        return ChunkReviewInputViewer(self)
+
+    @property
+    def ChunkReviewOutput(self) -> "ChunkReviewOutputViewer":
+        return ChunkReviewOutputViewer(self)
 
     @property
     def CodeAction(self) -> "CodeActionViewer":
@@ -222,7 +230,7 @@ class QuestionCategoryValues:
 
 
 # #########################################################################
-# Generated classes 19
+# Generated classes 21
 # #########################################################################
 
 class AlignedQAPairAst:
@@ -425,6 +433,108 @@ class CategoryValidationResultProperties:
     @property
     def thought(self) -> type_builder.ClassPropertyViewer:
         return type_builder.ClassPropertyViewer(self.__bldr.property("thought"))
+    
+    
+
+
+class ChunkReviewInputAst:
+    def __init__(self, tb: type_builder.TypeBuilder):
+        _tb = tb._tb # type: ignore (we know how to use this private attribute)
+        self._bldr = _tb.class_("ChunkReviewInput")
+        self._properties: typing.Set[str] = set([  "chunk_type",  "name",  "module_path",  "signature",  "content",  ])
+        self._props = ChunkReviewInputProperties(self._bldr, self._properties)
+
+    def type(self) -> baml_py.FieldType:
+        return self._bldr.field()
+
+    @property
+    def props(self) -> "ChunkReviewInputProperties":
+        return self._props
+
+
+class ChunkReviewInputViewer(ChunkReviewInputAst):
+    def __init__(self, tb: type_builder.TypeBuilder):
+        super().__init__(tb)
+
+    
+    def list_properties(self) -> typing.List[typing.Tuple[str, type_builder.ClassPropertyViewer]]:
+        return [(name, type_builder.ClassPropertyViewer(self._bldr.property(name))) for name in self._properties]
+    
+
+
+class ChunkReviewInputProperties:
+    def __init__(self, bldr: baml_py.ClassBuilder, properties: typing.Set[str]):
+        self.__bldr = bldr
+        self.__properties = properties # type: ignore (we know how to use this private attribute) # noqa: F821
+
+    
+    
+    @property
+    def chunk_type(self) -> type_builder.ClassPropertyViewer:
+        return type_builder.ClassPropertyViewer(self.__bldr.property("chunk_type"))
+    
+    @property
+    def name(self) -> type_builder.ClassPropertyViewer:
+        return type_builder.ClassPropertyViewer(self.__bldr.property("name"))
+    
+    @property
+    def module_path(self) -> type_builder.ClassPropertyViewer:
+        return type_builder.ClassPropertyViewer(self.__bldr.property("module_path"))
+    
+    @property
+    def signature(self) -> type_builder.ClassPropertyViewer:
+        return type_builder.ClassPropertyViewer(self.__bldr.property("signature"))
+    
+    @property
+    def content(self) -> type_builder.ClassPropertyViewer:
+        return type_builder.ClassPropertyViewer(self.__bldr.property("content"))
+    
+    
+
+
+class ChunkReviewOutputAst:
+    def __init__(self, tb: type_builder.TypeBuilder):
+        _tb = tb._tb # type: ignore (we know how to use this private attribute)
+        self._bldr = _tb.class_("ChunkReviewOutput")
+        self._properties: typing.Set[str] = set([  "useful",  "reason",  "questions",  ])
+        self._props = ChunkReviewOutputProperties(self._bldr, self._properties)
+
+    def type(self) -> baml_py.FieldType:
+        return self._bldr.field()
+
+    @property
+    def props(self) -> "ChunkReviewOutputProperties":
+        return self._props
+
+
+class ChunkReviewOutputViewer(ChunkReviewOutputAst):
+    def __init__(self, tb: type_builder.TypeBuilder):
+        super().__init__(tb)
+
+    
+    def list_properties(self) -> typing.List[typing.Tuple[str, type_builder.ClassPropertyViewer]]:
+        return [(name, type_builder.ClassPropertyViewer(self._bldr.property(name))) for name in self._properties]
+    
+
+
+class ChunkReviewOutputProperties:
+    def __init__(self, bldr: baml_py.ClassBuilder, properties: typing.Set[str]):
+        self.__bldr = bldr
+        self.__properties = properties # type: ignore (we know how to use this private attribute) # noqa: F821
+
+    
+    
+    @property
+    def useful(self) -> type_builder.ClassPropertyViewer:
+        return type_builder.ClassPropertyViewer(self.__bldr.property("useful"))
+    
+    @property
+    def reason(self) -> type_builder.ClassPropertyViewer:
+        return type_builder.ClassPropertyViewer(self.__bldr.property("reason"))
+    
+    @property
+    def questions(self) -> type_builder.ClassPropertyViewer:
+        return type_builder.ClassPropertyViewer(self.__bldr.property("questions"))
     
     
 

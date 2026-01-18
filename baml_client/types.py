@@ -52,7 +52,7 @@ class QuestionCategory(str, Enum):
     Category4 = "Category4"
 
 # #########################################################################
-# Generated classes (19)
+# Generated classes (21)
 # #########################################################################
 
 class AlignedQAPair(BaseModel):
@@ -78,6 +78,18 @@ class CategoryValidationResult(BaseModel):
     validated_category: str
     updated: bool
     thought: str
+
+class ChunkReviewInput(BaseModel):
+    chunk_type: str
+    name: str
+    module_path: typing.Optional[str] = None
+    signature: typing.Optional[str] = None
+    content: str
+
+class ChunkReviewOutput(BaseModel):
+    useful: bool
+    reason: typing.Optional[str] = None
+    questions: typing.List[str]
 
 class CodeAction(BaseModel):
     thoughts: str
