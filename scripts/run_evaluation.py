@@ -2,7 +2,7 @@
 """
 Simplified Evaluation Script for BIM QAS System
 
-Functional approach using BAML COBBIE component for evaluation.
+Functional approach using COBBIE component for evaluation.
 Replaces the complex OOP implementation with a clean, functional design.
 
 Usage:
@@ -50,14 +50,25 @@ from src.util.setup_logger import setup_logger
 # Initialize logger
 setup_logger()
 
+# Mapping from BAML client names to model/provider info for logging
+CLIENT_INFO: Dict[str, Dict[str, str]] = {
+    "GLM_4_7": {"model": "glm-4.7", "provider": "zai"},
+    "GLM_4_5_air": {"model": "glm-4.5-air", "provider": "zai"},
+    "Devstral": {"model": "devstral-small-2", "provider": "ollama"},
+    "Gemini_2_5_Flash_Lite": {"model": "gemini-2.5-flash-lite", "provider": "google"},
+}
+
 
 def calculate_and_log_metrics(
-    question_results: List[Dict], previous_metrics: Optional[Dict] = None
+    question_results: List[Dict],
+    client: str,
+    previous_metrics: Optional[Dict] = None,
 ) -> Dict:
     """Calculate comprehensive evaluation metrics and log to MLflow.
 
     Args:
         question_results: List of results from current batch
+        client: BAML client name used for evaluation
         previous_metrics: Metrics from previous batches (if continuing)
 
     Returns:
@@ -272,9 +283,10 @@ def calculate_and_log_metrics(
     mlflow.log_metrics(metrics)
 
     # Prepare results summary by extending base metrics with engine info
+    client_info = CLIENT_INFO.get(client, {"model": client, "provider": "unknown"})
     results_summary = {
-        "model_name": "glm-4.7",
-        "provider_name": "zai",
+        "model_name": client_info["model"],
+        "provider_name": client_info["provider"],
         "num_samples": total_questions,
         **metrics,
     }
@@ -405,14 +417,15 @@ def process_question(
 
     with mlflow.start_run(run_name=run_name, nested=True) as question_run:
         # Log question parameters
+        client_info = CLIENT_INFO.get(args.client, {"model": args.client, "provider": "unknown"})
         mlflow.log_params(
             {
                 "question": question,
                 "ground_truth": ground_truth,
                 "category": category,
                 "question_id": question_id,
-                "llm": "glm-4.7",
-                "provider_name": "zai",
+                "llm": client_info["model"],
+                "provider_name": client_info["provider"],
                 "model_path": ifc_path or "None",
             }
         )
@@ -430,9 +443,8 @@ def process_question(
             )
             question_span.set_attributes(
                 {
-                    "engine": "baml",
-                    "model": "glm-4.7",
-                    "provider": "zai",
+                    "model": client_info["model"],
+                    "provider": client_info["provider"],
                 }
             )
 
@@ -606,6 +618,240 @@ def process_question(
 
 
 # ============================================================================
+# BASELINE MODE FUNCTION
+# ============================================================================
+
+
+def process_question_baseline(
+    question_data,
+    question_index: int,
+    args,
+) -> Dict:
+    """Process a single question using the baseline (static summary) approach.
+
+    Args:
+        question_data: Dataset question object
+        question_index: Index of the question
+        args: Command line arguments
+
+    Returns:
+        Dictionary containing question processing results
+    """
+    from analysis.baseline_qa.baseline_bim_qas import baseline_bim_qas
+
+    question = question_data.question
+    ground_truth = getattr(question_data, "answer", "") or getattr(
+        question_data, "ground_truth", ""
+    )
+    category = getattr(question_data, "category", None)
+    question_id = getattr(question_data, "id", f"q_{question_index + 1}")
+    ifc_path = question_data.ifc.model_path if question_data.ifc else None
+
+    # Skip question if category is not provided
+    if category is None:
+        error_msg = f"ERROR: Question {question_id} missing required 'category' field. SKIPPING."
+        logger.error(error_msg)
+        return {
+            "question": question,
+            "ground_truth": ground_truth,
+            "category": None,
+            "status": "error",
+            "error_message": "Missing required 'category' field",
+            "execution_time": 0.0,
+            "classification": None,
+            "input_tokens": 0,
+            "output_tokens": 0,
+            "mlflow_run_id": "skipped_no_category",
+        }
+
+    # Skip if no IFC path
+    if ifc_path is None:
+        error_msg = f"ERROR: Question {question_id} has no associated IFC model. SKIPPING."
+        logger.error(error_msg)
+        return {
+            "question": question,
+            "ground_truth": ground_truth,
+            "category": category,
+            "status": "error",
+            "error_message": "No IFC model associated",
+            "execution_time": 0.0,
+            "classification": None,
+            "input_tokens": 0,
+            "output_tokens": 0,
+            "mlflow_run_id": "skipped_no_ifc",
+        }
+
+    logger.info(f"[BASELINE] Processing question {question_index + 1}: {question[:80]}...")
+
+    run_name = f"question_{question_index}_{question_id}_baseline"
+
+    with mlflow.start_run(run_name=run_name, nested=True) as question_run:
+        client_info = CLIENT_INFO.get(args.client, {"model": args.client, "provider": "unknown"})
+        mlflow.log_params(
+            {
+                "question": question,
+                "ground_truth": ground_truth,
+                "category": category,
+                "question_id": question_id,
+                "llm": client_info["model"],
+                "provider_name": client_info["provider"],
+                "model_path": ifc_path,
+                "system": "baseline",
+            }
+        )
+
+        with mlflow.start_span(name="BaselineQA", span_type="CHAIN") as question_span:
+            question_span.set_attributes(
+                {
+                    "system": "baseline",
+                    "model": client_info["model"],
+                    "provider": client_info["provider"],
+                }
+            )
+
+            start_time_baseline = time.time()
+
+            # Get model summary for logging (before calling baseline_bim_qas)
+            from analysis.baseline_qa.ifc_summary import get_or_create_summary
+            model_summary = get_or_create_summary(ifc_path)
+
+            # Log the summary in the span inputs for debugging
+            question_span.set_inputs(
+                {
+                    "question": question,
+                    "ground_truth": ground_truth,
+                    "category": category,
+                    "question_index": question_index + 1,
+                    "model_path": ifc_path,
+                    "model_summary": model_summary,  # Full summary for debugging
+                }
+            )
+
+            # Run baseline QA
+            final_answer, collector, execution_history = baseline_bim_qas(
+                user_input=question,
+                model_path=ifc_path,
+                client=args.client,
+            )
+            baseline_duration = time.time() - start_time_baseline
+
+            # Extract token usage from collector
+            baseline_input_tokens = 0
+            baseline_output_tokens = 0
+
+            if collector and hasattr(collector, "usage") and collector.usage:
+                usage = collector.usage
+                baseline_input_tokens = usage.input_tokens or 0
+                baseline_output_tokens = usage.output_tokens or 0
+
+            # Run AnswerVerifier if we have a successful answer
+            classification = None
+            justification = None
+            abstention = None
+            faithfulness = None
+            completeness = None
+            transparency = None
+            relevance = None
+            verifier_input_tokens = 0
+            verifier_output_tokens = 0
+            verifier_duration = 0.0
+
+            if final_answer.answer and ground_truth:
+                verifier_start = time.time()
+                verifier_result, verifier_collector = verify_answer(
+                    question=question,
+                    category=category,
+                    ground_truth=ground_truth,
+                    system_response=final_answer.answer,
+                )
+                verifier_duration = time.time() - verifier_start
+
+                classification = derive_binary_classification(verifier_result)
+                abstention = verifier_result.abstention
+                faithfulness = verifier_result.faithfulness.value
+                completeness = verifier_result.completeness.value
+                transparency = verifier_result.transparency.value
+                relevance = verifier_result.relevance.value
+                justification = verifier_result.justification
+
+                if verifier_collector and hasattr(verifier_collector, "usage") and verifier_collector.usage:
+                    verifier_input_tokens = verifier_collector.usage.input_tokens or 0
+                    verifier_output_tokens = verifier_collector.usage.output_tokens or 0
+
+            # Log question-level metrics
+            mlflow.log_metrics(
+                {
+                    "baseline_duration": baseline_duration,
+                    "verifier_duration": verifier_duration,
+                    "baseline_input_tokens": baseline_input_tokens,
+                    "baseline_output_tokens": baseline_output_tokens,
+                    "verifier_input_tokens": verifier_input_tokens,
+                    "verifier_output_tokens": verifier_output_tokens,
+                    "total_input_tokens": baseline_input_tokens + verifier_input_tokens,
+                    "total_output_tokens": baseline_output_tokens + verifier_output_tokens,
+                    "success": 1,
+                }
+            )
+
+            question_outputs = {
+                "status": "success",
+                "execution_time": baseline_duration,
+                "answer": final_answer.answer,
+                "reasoning": final_answer.thoughts,
+                "baseline_input_tokens": baseline_input_tokens,
+                "baseline_output_tokens": baseline_output_tokens,
+                "verifier_input_tokens": verifier_input_tokens,
+                "verifier_output_tokens": verifier_output_tokens,
+                "classification": classification,
+            }
+
+            question_span.set_outputs(question_outputs)
+            question_span.set_status("OK")
+
+            logger.info(
+                f"[BASELINE] Question {question_index + 1} completed: classification={classification}, "
+                f"duration={baseline_duration:.2f}s"
+            )
+
+            mlflow.log_params(
+                {
+                    "answer": final_answer.answer,
+                    "classification": classification or "not_evaluated",
+                    "justification": justification or "not_evaluated",
+                    "abstention": str(abstention) if abstention is not None else "not_evaluated",
+                    "faithfulness": faithfulness or "not_evaluated",
+                    "completeness": completeness or "not_evaluated",
+                    "transparency": transparency or "not_evaluated",
+                    "relevance": relevance or "not_evaluated",
+                }
+            )
+
+            return {
+                "question": question,
+                "ground_truth": ground_truth,
+                "category": category,
+                "status": "success",
+                "answer": final_answer.answer,
+                "reasoning": final_answer.thoughts,
+                "execution_time": baseline_duration,
+                "classification": classification,
+                "justification": justification,
+                "abstention": abstention,
+                "faithfulness": faithfulness,
+                "completeness": completeness,
+                "transparency": transparency,
+                "relevance": relevance,
+                "input_tokens": baseline_input_tokens + verifier_input_tokens,
+                "output_tokens": baseline_output_tokens + verifier_output_tokens,
+                "baseline_input_tokens": baseline_input_tokens,
+                "baseline_output_tokens": baseline_output_tokens,
+                "verifier_input_tokens": verifier_input_tokens,
+                "verifier_output_tokens": verifier_output_tokens,
+                "mlflow_run_id": question_run.info.run_id,
+            }
+
+
+# ============================================================================
 # MERGE MODE FUNCTIONS
 # ============================================================================
 
@@ -721,14 +967,15 @@ def process_question_merged(
 
     with mlflow.start_run(run_name=run_name, nested=True) as question_run:
         # Log question parameters
+        client_info = CLIENT_INFO.get(args.client, {"model": args.client, "provider": "unknown"})
         mlflow.log_params(
             {
                 "question": question,
                 "ground_truth": ground_truth,
                 "category": category,
                 "question_id": question_id,
-                "llm": "glm-4.7",
-                "provider_name": "zai",
+                "llm": client_info["model"],
+                "provider_name": client_info["provider"],
                 "model_path": ifc_path or "None",
                 "merge_mode": True,
             }
@@ -1124,8 +1371,8 @@ Examples:
         "--client",
         type=str,
         default="GLM_4_7",
-        choices=["GLM_4_7", "GLM_4_5_air", "Devstral"],
-        help="BAML client to use for evaluation (default: GLM_4_7)",
+        choices=["GLM_4_7", "GLM_4_5_air", "Devstral", "Gemini_2_5_Flash_Lite"],
+        help="Client to use for evaluation (default: GLM_4_7)",
     )
 
     parser.add_argument(
@@ -1134,6 +1381,13 @@ Examples:
         choices=["initial", "created", "manual"],
         default=["initial", "created"],
         help="Tool directories to load (space-separated). Options: initial, created, manual. Default: initial created"
+    )
+
+    parser.add_argument(
+        "--system",
+        choices=["cobbie", "baseline"],
+        default="cobbie",
+        help="QA system to evaluate: 'cobbie' (agentic, default) or 'baseline' (static summary)"
     )
 
     parser.add_argument(
@@ -1167,6 +1421,14 @@ Examples:
     if args.merge and args.no_tools:
         print("Error: --merge and --no-tools are mutually exclusive")
         return 1
+
+    if args.system == "baseline" and args.merge:
+        print("Error: --system baseline and --merge are mutually exclusive")
+        return 1
+
+    if args.system == "baseline" and args.no_tools:
+        print("Note: --no-tools is ignored when --system baseline (baseline doesn't use tools)")
+        args.no_tools = False
 
     # Validate and deduplicate tools argument
     if args.merge:
@@ -1232,7 +1494,14 @@ Examples:
     mlflow.set_experiment("Evaluation")
 
     # Prepare tools for COBBIE based on mode
-    if args.merge:
+    if args.system == "baseline":
+        # Baseline mode: no tools needed
+        tools_dict = {}
+        tools_initial = {}
+        tools_created = {}
+        tools_merger = {}
+        logger.info("[BASELINE] No tools loaded (static summary mode)")
+    elif args.merge:
         # Merge mode: load separate tool sets for each config
         try:
             tools_initial = get_tools(
@@ -1287,7 +1556,12 @@ Examples:
         logger.info(f"Continuing existing MLflow run: {run_id}")
         run_name = None  # Don't set a new name when continuing
     else:
-        mode_suffix = "_MERGE" if args.merge else ""
+        if args.system == "baseline":
+            mode_suffix = "_BASELINE"
+        elif args.merge:
+            mode_suffix = "_MERGE"
+        else:
+            mode_suffix = ""
         run_name = f"Evaluation{mode_suffix}_{datetime.now().strftime('%Y-%m-%d-%H-%M-%S')}"
         logger.info(f"Creating new MLflow run: {run_name}")
 
@@ -1298,11 +1572,14 @@ Examples:
 
         # Log immutable configuration parameters (only for new runs)
         if run_id is None:
+            component_name = "BaselineQA" if args.system == "baseline" else "COBBIE"
+            client_info = CLIENT_INFO.get(args.client, {"model": args.client, "provider": "unknown"})
             params = {
-                "model_name": "glm-4.7",
-                "provider_name": "zai",
-                "component": "COBBIE",
-                "tools": ", ".join(tools_dict.keys()),
+                "model_name": client_info["model"],
+                "provider_name": client_info["provider"],
+                "component": component_name,
+                "system": args.system,
+                "tools": ", ".join(tools_dict.keys()) if tools_dict else "none",
                 "tools_count": len(tools_dict),
                 "merge_mode": str(args.merge),
             }
@@ -1385,10 +1662,23 @@ Examples:
 
         # Process each question (each creates its own MLflow run)
         question_results = []
-        desc = "Evaluating BAML COBBIE glm-4.7 [MERGE]" if args.merge else "Evaluating BAML COBBIE glm-4.7"
+        model_name = CLIENT_INFO.get(args.client, {"model": args.client})["model"]
+        if args.system == "baseline":
+            desc = f"Evaluating Baseline QA {model_name}"
+        elif args.merge:
+            desc = f"Evaluating COBBIE {model_name} [MERGE]"
+        else:
+            desc = f"Evaluating COBBIE {model_name}"
+
         with tqdm(total=len(dataset), desc=desc) as pbar:
             for i, question_data in enumerate(dataset):
-                if args.merge:
+                if args.system == "baseline":
+                    result = process_question_baseline(
+                        question_data=question_data,
+                        question_index=args.start + i,
+                        args=args,
+                    )
+                elif args.merge:
                     result = process_question_merged(
                         question_data=question_data,
                         question_index=args.start + i,
@@ -1411,7 +1701,7 @@ Examples:
         total_evaluation_time = end_time - start_time
 
         # Calculate and log metrics for the main evaluation run
-        results_summary = calculate_and_log_metrics(question_results, previous_metrics)
+        results_summary = calculate_and_log_metrics(question_results, args.client, previous_metrics)
         results_summary["total_evaluation_time"] = total_evaluation_time
 
         # Log batch tracking metrics
@@ -1423,8 +1713,10 @@ Examples:
         mlflow.log_metrics(batch_metrics)
 
         # Log additional info to main run
+        component_tag = "BaselineQA" if args.system == "baseline" else "COBBIE"
         mlflow.set_tag("evaluation_status", "completed")
-        mlflow.set_tag("component", "COBBIE")
+        mlflow.set_tag("component", component_tag)
+        mlflow.set_tag("system", args.system)
         mlflow.set_tag("total_evaluation_time", total_evaluation_time)
         mlflow.set_tag("individual_question_traces", "true")
         mlflow.set_tag("merge_mode", str(args.merge))
@@ -1438,8 +1730,8 @@ Examples:
         # Print results
         print_results(results_summary)
 
-        # Print tool metrics summary
-        if args.track_tools:
+        # Print tool metrics summary (not applicable for baseline)
+        if args.track_tools and args.system != "baseline":
             print_tool_metrics_summary()
 
     print("\nEvaluation completed successfully!")
