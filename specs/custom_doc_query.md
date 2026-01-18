@@ -1,13 +1,24 @@
 # Custom Documentation Query System - Specification
 
+## Status
+
+| Phase | Status | Notes |
+|-------|--------|-------|
+| Phase 1: Indexing Pipeline | ✅ Complete | All components implemented |
+| Phase 2: Query Pipeline | ✅ Complete | Dual search + reranking working |
+| Phase 3: Full Indexing | ⏳ Pending | Need to run with LLM review |
+| Phase 4: Evaluation | ⏳ Pending | Compare custom vs Context7 |
+
+---
+
 ## Background
 
 The current `query_ifcopenshell_docs` tool uses Context7 API, which has rate limits and is a black box. This spec describes a custom implementation with:
 - Full control over the pipeline (valuable for research paper)
 - No external API dependencies
-- Quality-controlled chunks reviewed by Claude
+- Quality-controlled chunks reviewed by LLM (GLM 4.7)
 
-**Config switch**: `DOC_BACKEND: Literal["context7", "custom"]`
+**Config switch**: `DOC_BACKEND` environment variable (`"context7"` or `"custom"`, default: `"custom"`)
 
 ---
 
@@ -15,215 +26,49 @@ The current `query_ifcopenshell_docs` tool uses Context7 API, which has rate lim
 
 ### Repository & Version
 - **Repo**: https://github.com/IfcOpenShell/IfcOpenShell
-- **Tag**: `v0.8.2` (matches `pyproject.toml`)
-- **Clone command**: `git clone --depth 1 --branch v0.8.2 https://github.com/IfcOpenShell/IfcOpenShell.git`
+- **Branch**: `0.8.0` (note: `v0.8.2` tag doesn't exist, using branch instead)
+- **Clone location**: `external/ifcopenshell-docs/` (gitignored)
 
-### Content to Extract
+### Content Extracted
 
-| Type | Location | Format |
+| Type | Location | Chunks |
 |------|----------|--------|
-| User tutorials | `src/ifcopenshell-python/docs/ifcopenshell-python/*.rst` | RST |
-| API docstrings | `src/ifcopenshell-python/ifcopenshell/**/*.py` | Python |
+| RST tutorials | `docs/ifcopenshell-python/*.rst` | 69 |
+| Python docstrings | `ifcopenshell/**/*.py` | 702 |
+| **Total** | | **771** |
 
-**Files to include from tutorials:**
-- `code_examples.rst`
-- `geometry_creation.rst`
-- `geometry_processing.rst`
-- `hello_world.rst`
-- `installation.rst`
-- `schema_querying.rst`
-- `selector_syntax.rst`
-- `validation.rst`
+**Tutorial files parsed:**
+- `code_examples.rst` (16 chunks)
+- `geometry_creation.rst` (15 chunks)
+- `geometry_processing.rst` (5 chunks)
+- `geometry_tree.rst` (8 chunks)
+- `hello_world.rst` (1 chunk)
+- `installation.rst` (12 chunks)
+- `schema_querying.rst` (2 chunks)
+- `selector_syntax.rst` (4 chunks)
+- `validation.rst` (6 chunks)
 
-**Python modules to extract docstrings from:**
-- `ifcopenshell` (core: `file`, `entity_instance`)
-- `ifcopenshell.api.*` (all submodules)
-- `ifcopenshell.util.*` (all submodules)
-- `ifcopenshell.geom`
-- `ifcopenshell.ids`
-- `ifcopenshell.validate`
-
----
-
-## 2. Parsing Strategy
-
-### RST Files (Tutorials)
-```python
-from docutils.core import publish_doctree
-from docutils import nodes
-
-def parse_rst(file_path: str) -> list[dict]:
-    """Parse RST file into sections with code blocks preserved."""
-    with open(file_path) as f:
-        doctree = publish_doctree(f.read())
-
-    # Extract sections by heading
-    # Keep code blocks attached to their explanatory text
-    ...
-```
-
-### Python Files (API Docstrings)
-```python
-import ast
-
-def extract_docstrings(file_path: str) -> list[dict]:
-    """Extract docstrings from Python file using AST."""
-    with open(file_path) as f:
-        tree = ast.parse(f.read())
-
-    chunks = []
-    for node in ast.walk(tree):
-        if isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef, ast.ClassDef)):
-            docstring = ast.get_docstring(node)
-            if docstring:
-                chunks.append({
-                    "type": "class" if isinstance(node, ast.ClassDef) else "function",
-                    "name": node.name,
-                    "signature": get_signature(node),
-                    "docstring": docstring,
-                    "module": get_module_path(file_path),
-                    "line_start": node.lineno,
-                })
-    return chunks
-```
-
-### Chunk Structure
-Each chunk should contain:
-```python
-@dataclass
-class DocChunk:
-    id: str                    # unique identifier
-    content: str               # the actual text (docstring or section)
-    chunk_type: str            # "function" | "class" | "method" | "tutorial_section"
-    name: str                  # function/class name or section title
-    module: str | None         # e.g., "ifcopenshell.util.element"
-    signature: str | None      # for functions/methods
-    source_file: str           # original file path
-    line_start: int | None     # for traceability
-    parent: str | None         # parent class for methods
-```
+**Python modules parsed:**
+- `ifcopenshell` core (53 chunks)
+- `ifcopenshell.api.*` (410 chunks)
+- `ifcopenshell.util.*` (233 chunks)
+- `ifcopenshell.geom/*` (42 chunks - note: some files failed to parse)
 
 ---
 
-## 3. Chunk Review & Question Generation
+## 2. Architecture
 
-### Process (Claude via Haiku sub-agent)
-
-For each extracted chunk:
-1. **Review**: Check if the chunk is meaningful and complete
-2. **Clean**: Fix any formatting issues, remove noise
-3. **Generate questions**: Create 2-5 hypothetical questions that this chunk answers
-
-### Prompt Template
+### Indexing Pipeline
 ```
-You are reviewing documentation chunks for a RAG system about IfcOpenShell (a Python library for working with IFC/BIM files).
-
-## Chunk to review:
-Type: {chunk_type}
-Name: {name}
-Module: {module}
-Signature: {signature}
-
-Content:
-{content}
-
-## Tasks:
-1. Is this chunk useful for answering user questions about IfcOpenShell? (yes/no)
-2. If yes, generate 3-5 questions that a user might ask that this chunk would answer.
-   - Questions should be natural (how users actually phrase things)
-   - Cover different ways to ask about the same functionality
-   - Include both specific ("How do I get all walls?") and conceptual ("How does element filtering work?")
-
-## Output format (JSON):
-{
-  "useful": true/false,
-  "reason": "why not useful" (only if false),
-  "questions": ["question 1", "question 2", ...]
-}
+RST Files ─────┐
+               ├──► Parse ──► Chunks ──► LLM Review ──► Embed ──► sqlite-vec
+Python Files ──┘                           (GLM 4.7)    (mpnet)
+                                              │
+                                              ▼
+                                     Generate Questions ──► Embed ──► sqlite-vec
 ```
 
-### Storage
-Store both:
-- Original chunk embedding
-- Each generated question embedding (linked to chunk ID)
-
----
-
-## 4. Embedding Model
-
-### Choice: `all-mpnet-base-v2`
-- 768 dimensions
-- Best quality among sentence-transformers
-- Pre-computing at index time eliminates speed concerns
-
-```python
-from sentence_transformers import SentenceTransformer
-
-model = SentenceTransformer('all-mpnet-base-v2')
-
-def embed_chunk(chunk: DocChunk) -> np.ndarray:
-    # Combine relevant fields for embedding
-    text = f"{chunk.name}\n{chunk.signature or ''}\n{chunk.content}"
-    return model.encode(text, convert_to_numpy=True)
-
-def embed_questions(questions: list[str]) -> list[np.ndarray]:
-    return model.encode(questions, convert_to_numpy=True)
-```
-
----
-
-## 5. Vector Storage
-
-### Choice: `sqlite-vec`
-- Embedded (no server)
-- Separate file: `src/db/doc_vectors.db`
-- Pure C, runs anywhere
-
-### Schema
-```sql
--- Chunks table
-CREATE TABLE doc_chunks (
-    id TEXT PRIMARY KEY,
-    content TEXT NOT NULL,
-    chunk_type TEXT NOT NULL,
-    name TEXT NOT NULL,
-    module TEXT,
-    signature TEXT,
-    source_file TEXT NOT NULL,
-    line_start INTEGER,
-    parent TEXT
-);
-
--- Chunk embeddings (sqlite-vec virtual table)
-CREATE VIRTUAL TABLE doc_chunk_embeddings USING vec0(
-    chunk_id TEXT PRIMARY KEY,
-    embedding FLOAT[768]
-);
-
--- Generated questions
-CREATE TABLE doc_questions (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    chunk_id TEXT NOT NULL REFERENCES doc_chunks(id),
-    question TEXT NOT NULL
-);
-
--- Question embeddings
-CREATE VIRTUAL TABLE doc_question_embeddings USING vec0(
-    question_id INTEGER PRIMARY KEY,
-    embedding FLOAT[768]
-);
-```
-
-### Installation
-```bash
-uv add sqlite-vec sentence-transformers
-```
-
----
-
-## 6. Retrieval Pipeline
-
-### Query Flow
+### Query Pipeline
 ```
 User Query
     │
@@ -258,99 +103,150 @@ User Query
 └─────────────────┘
 ```
 
-### Reranker: `ms-marco-MiniLM-L-6-v2`
+---
+
+## 3. Components
+
+### Chunk Model
 ```python
-from sentence_transformers import CrossEncoder
+@dataclass
+class DocChunk:
+    id: str                    # SHA256 hash (first 16 chars)
+    content: str               # Docstring or section text
+    chunk_type: str            # "function" | "class" | "method" | "module" | "tutorial_section"
+    name: str                  # Function/class name or section title
+    module: str | None         # e.g., "ifcopenshell.util.element"
+    signature: str | None      # For functions/methods
+    source_file: str           # Relative path
+    line_start: int | None     # For traceability
+    parent: str | None         # Parent class for methods
+    questions: list[str]       # Generated hypothetical questions
+```
 
-reranker = CrossEncoder('cross-encoder/ms-marco-MiniLM-L-6-v2')
+### Embedding Model
+- **Model**: `all-mpnet-base-v2`
+- **Dimensions**: 768
+- **Rationale**: Best quality among sentence-transformers, speed not critical for offline indexing
 
-def retrieve(query: str, top_k: int = 5) -> str:
-    query_emb = model.encode(query)
+### Reranker
+- **Model**: `cross-encoder/ms-marco-MiniLM-L-6-v2`
+- **Purpose**: Re-score top candidates for better precision
 
-    # Search both tables
-    chunk_results = search_chunk_embeddings(query_emb, limit=25)
-    question_results = search_question_embeddings(query_emb, limit=25)
+### LLM for Review
+- **Model**: GLM 4.7 (via Z.AI API)
+- **Client**: Defined in `baml_src/chunk_reviewer.baml`
+- **Task**: Review chunk usefulness + generate 3-5 hypothetical questions per chunk
 
-    # Dedupe by chunk_id, keep best score
-    candidates = dedupe_by_chunk_id(chunk_results + question_results)
+### Vector Storage
+- **Database**: sqlite-vec
+- **Location**: `src/db/doc_vectors.db`
+- **Tables**:
+  - `doc_chunks` - Chunk metadata
+  - `doc_chunk_embeddings` - Chunk vectors (vec0)
+  - `doc_questions` - Generated questions
+  - `doc_question_embeddings` - Question vectors (vec0)
 
-    # Rerank
-    pairs = [(query, get_chunk_content(c.chunk_id)) for c in candidates]
-    scores = reranker.predict(pairs)
+---
 
-    # Return top-k
-    ranked = sorted(zip(candidates, scores), key=lambda x: x[1], reverse=True)
-    return format_results([c for c, s in ranked[:top_k]])
+## 4. File Structure
+
+```
+src/docs_indexer/
+├── __init__.py          # Module exports (query_docs, retrieve, run_indexing)
+├── models.py            # DocChunk dataclass
+├── parser_rst.py        # RST file parsing (regex-based section extraction)
+├── parser_python.py     # Python docstring extraction (AST-based)
+├── chunk_reviewer.py    # GLM 4.7 review via BAML
+├── embedder.py          # all-mpnet-base-v2 embeddings
+├── storage.py           # sqlite-vec storage (DocVectorStore class)
+├── indexer.py           # Main orchestration script
+└── retriever.py         # Query pipeline with reranking
+
+src/db/
+├── doc_vectors.db       # Vector database (generated)
+└── doc_review_cache.json # Cache for LLM review results (avoid re-running)
+
+src/tools/initial/
+└── query_ifcopenshell_documentation.py  # Updated with DOC_BACKEND switch
+
+baml_src/
+└── chunk_reviewer.baml  # BAML function for GLM 4.7 review
+
+external/
+└── ifcopenshell-docs/   # Cloned repo (gitignored)
 ```
 
 ---
 
-## 7. Implementation Plan
+## 5. Usage
 
-### Phase 1: Indexing Pipeline
-1. Clone IfcOpenShell v0.8.2
-2. Implement RST parser
-3. Implement Python docstring extractor
-4. Create chunk review sub-agent (Haiku)
-5. Process all chunks, generate questions
-6. Embed chunks and questions
-7. Store in sqlite-vec
+### Run Full Indexing (with LLM review)
+```bash
+uv run python src/docs_indexer/indexer.py --max-workers 5
+```
+This will:
+1. Parse all documentation (771 chunks)
+2. Review each chunk with GLM 4.7 (uses cache to avoid re-running)
+3. Generate 3-5 hypothetical questions per useful chunk
+4. Embed all chunks and questions
+5. Store in sqlite-vec
 
-### Phase 2: Query Pipeline
-1. Implement dual-search (chunks + questions)
-2. Implement deduplication
-3. Implement reranking
-4. Integrate with existing tool (config switch)
+### Run Indexing Without LLM Review (faster, for testing)
+```bash
+uv run python src/docs_indexer/indexer.py --skip-review
+```
 
-### Phase 3: Evaluation
-1. Run `run_evaluation.py` with `DOC_BACKEND="context7"`
-2. Run `run_evaluation.py` with `DOC_BACKEND="custom"`
-3. Compare results
+### Switch Backend
+```bash
+export DOC_BACKEND=custom   # Use local vector store (default)
+export DOC_BACKEND=context7 # Use Context7 API
+```
+
+### Test Retrieval
+```bash
+uv run python src/docs_indexer/retriever.py
+```
 
 ---
 
-## 8. Dependencies
+## 6. What Remains To Do
+
+### Phase 3: Run Full Indexing with LLM Review
+- [ ] Run `uv run python src/docs_indexer/indexer.py --max-workers 5`
+- [ ] Verify questions are generated and stored
+- [ ] Check cache file is populated (`src/db/doc_review_cache.json`)
+
+**Estimated**: ~771 LLM calls (cached after first run)
+
+### Phase 4: Evaluation
+- [ ] Run evaluation with Context7: `DOC_BACKEND=context7 uv run python scripts/run_evaluation.py ...`
+- [ ] Run evaluation with custom: `DOC_BACKEND=custom uv run python scripts/run_evaluation.py ...`
+- [ ] Compare results (accuracy, latency)
+- [ ] Document findings for paper
+
+---
+
+## 7. Dependencies Added
 
 ```toml
-# pyproject.toml additions
-[project.dependencies]
-sentence-transformers = ">=3.0.0"
-sqlite-vec = ">=0.1.0"
-docutils = ">=0.20"  # RST parsing
+sentence-transformers = ">=3.0.0"  # Embeddings + reranking
+sqlite-vec = ">=0.1.0"             # Vector storage
+docutils = ">=0.20"                # RST parsing (not actually used, regex-based instead)
 ```
 
 ---
 
-## 9. File Structure
+## 8. Design Decisions
 
-```
-src/
-├── docs_indexer/
-│   ├── __init__.py
-│   ├── parser_rst.py        # RST file parsing
-│   ├── parser_python.py     # Python docstring extraction
-│   ├── chunk_reviewer.py    # Haiku sub-agent for review
-│   ├── embedder.py          # Embedding logic
-│   ├── indexer.py           # Main indexing orchestration
-│   └── retriever.py         # Query pipeline
-├── db/
-│   └── doc_vectors.db       # Vector database (generated)
-└── tools/
-    └── initial/
-        └── query_ifcopenshell_documentation.py  # Updated with config switch
-```
-
----
-
-## 10. Open Questions (Resolved)
-
-| Question | Decision |
-|----------|----------|
-| Parse source vs scrape HTML? | Parse source files |
-| Which modules to include? | All of them |
-| Who generates questions? | Claude (Haiku sub-agent) |
-| Version to use? | v0.8.2 (from pyproject.toml) |
-| Vector DB location? | Separate file (`doc_vectors.db`) |
+| Decision | Choice | Rationale |
+|----------|--------|-----------|
+| Parse source vs scrape HTML | Parse source | Cleaner, version-controlled |
+| Chunking strategy | Semantic (1 per function/section) | Better than arbitrary token splits |
+| Question generation | At index time ("Hypothetical Questions") | No query-time LLM cost |
+| LLM for review | GLM 4.7 | Same as Cobbie, lower cost than Claude |
+| Embedding model | all-mpnet-base-v2 | Best quality, speed not critical |
+| Reranker | ms-marco-MiniLM-L-6-v2 | Fast, good quality |
+| Vector DB | sqlite-vec | Embedded, no server, SQLite compatible |
 
 ---
 
@@ -360,5 +256,4 @@ src/
 - [sqlite-vec](https://github.com/asg017/sqlite-vec)
 - [Sentence Transformers](https://www.sbert.net/docs/sentence_transformer/pretrained_models.html)
 - [Hypothetical Questions vs HyDE](https://pixion.co/blog/rag-strategies-hypothetical-questions-hyde)
-- [AST-based code chunking](https://github.com/yilinjz/astchunk)
 - [Cross-encoder reranking](https://www.zeroentropy.dev/articles/ultimate-guide-to-choosing-the-best-reranking-model-in-2025)
