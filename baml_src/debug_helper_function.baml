@@ -125,9 +125,51 @@ function HelperFunctionDebugger(
     - **Correct Logic**: The function must work correctly for the described use case
     - **Proper Filtering**: If it filters data (e.g., by floor), it must actually filter correctly
     - **Type Hints**: Include proper type hints for parameters and return values
-    - **Error Handling**: Handle potential errors gracefully
+    - **Error Handling**: Follow CODE QUALITY CHECKLIST (see below)
     - **Documentation**: Clear docstring explaining what the function does
     - **No Side Effects**: Don't modify the IFC file or have unintended consequences
+
+    CODE QUALITY CHECKLIST:
+
+    1. **Exception Handling**:
+       ✅ Catch specific exceptions (AttributeError, KeyError, RuntimeError)
+       ✅ Use try-except ONLY in narrow scopes (not wrapping entire functions)
+       ❌ NEVER use `except Exception: pass` without re-raising or logging
+
+       Example - tracking skipped elements:
+       ```python
+       skipped = 0
+       for elem in elements:
+           try:
+               process(elem)
+           except AttributeError:  # Specific exception
+               skipped += 1
+               continue
+       if skipped > 0:
+           print(f"Warning: Skipped {skipped} elements")
+       ```
+
+    2. **None/Empty Validation**:
+       ✅ Validate inputs at function start: `if not elements: return []`
+       ✅ Check for None in grouping keys: `if key is None: key = "Undefined"`
+       ✅ Use getattr with defaults: `val = getattr(elem, 'attr', 'default')`
+       ❌ Don't create meaningless groups (e.g., grouping by None)
+
+    3. **Result Validation**:
+       ✅ Check results make sense before returning
+       ✅ Document in docstring when function returns empty/partial results
+       ✅ Report data loss (e.g., "Processed 45/50 elements, 5 skipped")
+
+    4. **Defensive Attribute Access**:
+       ✅ Required attributes: Check first with hasattr() or let it fail fast
+       ✅ Optional attributes: Use getattr(elem, 'attr', default)
+       ❌ Don't assume all elements have all attributes
+
+    5. **Edge Cases to Handle**:
+       - Empty input collections → return appropriate empty result
+       - Elements missing expected attributes → skip with counter OR fail fast
+       - None/null values in data → use "Undefined" or "Unknown" labels
+       - Mixed types in collections → handle or document limitations
 
     ITERATION PROCESS:
 

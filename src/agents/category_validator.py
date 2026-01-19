@@ -8,14 +8,13 @@ import time
 
 import mlflow
 from baml_py.baml_py import Collector
+from loguru import logger
 
 from baml_client import b
-from src.config import LOG_LEVEL
-from src.util import get_logger
 from src.db.models import IfcBench
+from src.util import setup_logger
 
-# Initialize logger
-_logger = get_logger(name="category_validator", log_level=LOG_LEVEL)
+setup_logger()
 
 
 def validate_category(
@@ -49,7 +48,9 @@ def validate_category(
 
         try:
             # Call BAML validation function with collector
-            validation_result = b.with_options(collector=collector).ValidateQuestionCategory(
+            validation_result = b.with_options(
+                collector=collector
+            ).ValidateQuestionCategory(
                 question=qa_pair.question,
                 answer=qa_pair.ground_truth,
                 current_category=str(qa_pair.category),
@@ -62,26 +63,34 @@ def validate_category(
                 if collector.last and collector.last.calls:
                     first_call = collector.last.calls[0]
 
-                    if hasattr(first_call, 'http_request') and first_call.http_request:
+                    if hasattr(first_call, "http_request") and first_call.http_request:
                         http_body = first_call.http_request.body
 
                         # Try text method first
-                        if hasattr(http_body, 'text'):
+                        if hasattr(http_body, "text"):
                             try:
                                 body_text = http_body.text()
                                 if body_text:
                                     # Try to parse as JSON to extract messages
                                     try:
                                         body_json = json.loads(body_text)
-                                        if isinstance(body_json, dict) and 'messages' in body_json:
-                                            messages = body_json['messages']
+                                        if (
+                                            isinstance(body_json, dict)
+                                            and "messages" in body_json
+                                        ):
+                                            messages = body_json["messages"]
                                             if messages and len(messages) > 0:
                                                 # Get the system message content
                                                 for msg in messages:
-                                                    if msg.get('role') == 'system':
-                                                        content = msg.get('content', '')
-                                                        if isinstance(content, list) and len(content) > 0:
-                                                            raw_prompt = content[0].get('text', '')
+                                                    if msg.get("role") == "system":
+                                                        content = msg.get("content", "")
+                                                        if (
+                                                            isinstance(content, list)
+                                                            and len(content) > 0
+                                                        ):
+                                                            raw_prompt = content[0].get(
+                                                                "text", ""
+                                                            )
                                                         elif isinstance(content, str):
                                                             raw_prompt = content
                                                         break
@@ -95,18 +104,26 @@ def validate_category(
                                 pass
 
                         # Try json method if text didn't work
-                        if not raw_prompt and hasattr(http_body, 'json'):
+                        if not raw_prompt and hasattr(http_body, "json"):
                             try:
                                 body_json = http_body.json()
-                                if isinstance(body_json, dict) and 'messages' in body_json:
-                                    messages = body_json['messages']
+                                if (
+                                    isinstance(body_json, dict)
+                                    and "messages" in body_json
+                                ):
+                                    messages = body_json["messages"]
                                     if messages and len(messages) > 0:
                                         # Get the system message content
                                         for msg in messages:
-                                            if msg.get('role') == 'system':
-                                                content = msg.get('content', '')
-                                                if isinstance(content, list) and len(content) > 0:
-                                                    raw_prompt = content[0].get('text', '')
+                                            if msg.get("role") == "system":
+                                                content = msg.get("content", "")
+                                                if (
+                                                    isinstance(content, list)
+                                                    and len(content) > 0
+                                                ):
+                                                    raw_prompt = content[0].get(
+                                                        "text", ""
+                                                    )
                                                 elif isinstance(content, str):
                                                     raw_prompt = content
                                                 break
@@ -116,22 +133,24 @@ def validate_category(
                                 pass
 
                         # Try raw method as last resort
-                        if not raw_prompt and hasattr(http_body, 'raw'):
+                        if not raw_prompt and hasattr(http_body, "raw"):
                             try:
                                 body_raw = http_body.raw()
                                 if isinstance(body_raw, bytes):
-                                    body_raw = body_raw.decode('utf-8')
+                                    body_raw = body_raw.decode("utf-8")
                                 raw_prompt = body_raw
                             except Exception:
                                 pass
             except Exception as e:
-                _logger.warning(f"Could not extract raw prompt: {e}")
+                logger.warning(f"Could not extract raw prompt: {e}")
 
             # Parse validated category to integer
             try:
                 validated_category = int(validation_result.validated_category)
             except ValueError:
-                _logger.error(f"Invalid category format: {validation_result.validated_category}")
+                logger.error(
+                    f"Invalid category format: {validation_result.validated_category}"
+                )
                 validated_category = qa_pair.category
 
             # Create new IfcBench instance with validated category
@@ -172,7 +191,7 @@ def validate_category(
             return validated_qa_pair
 
         except Exception as e:
-            _logger.error(f"Error validating category for QA pair {qa_pair.id}: {e}")
+            logger.error(f"Error validating category for QA pair {qa_pair.id}: {e}")
 
             # Log error
             validator_span.set_outputs(
@@ -216,7 +235,9 @@ if __name__ == "__main__":
     )
 
     print("Test 1: Category 1 - Direct Retrieval (Correctly Classified)")
-    print(f"Original: Question='{test_qa_pair_1.question}', Category={test_qa_pair_1.category}")
+    print(
+        f"Original: Question='{test_qa_pair_1.question}', Category={test_qa_pair_1.category}"
+    )
     validated_1 = validate_category(test_qa_pair_1)
     print(f"Validated: Category={validated_1.category}")
     print()
@@ -231,7 +252,9 @@ if __name__ == "__main__":
     )
 
     print("Test 2: Category 2 - Aggregation (Misclassified as 1)")
-    print(f"Original: Question='{test_qa_pair_2.question}', Category={test_qa_pair_2.category}")
+    print(
+        f"Original: Question='{test_qa_pair_2.question}', Category={test_qa_pair_2.category}"
+    )
     validated_2 = validate_category(test_qa_pair_2)
     print(f"Validated: Category={validated_2.category}")
     print()
@@ -246,7 +269,9 @@ if __name__ == "__main__":
     )
 
     print("Test 3: Category 3 - Geometric Computation (Correctly Classified)")
-    print(f"Original: Question='{test_qa_pair_3.question}', Category={test_qa_pair_3.category}")
+    print(
+        f"Original: Question='{test_qa_pair_3.question}', Category={test_qa_pair_3.category}"
+    )
     validated_3 = validate_category(test_qa_pair_3)
     print(f"Validated: Category={validated_3.category}")
     print()
@@ -261,7 +286,9 @@ if __name__ == "__main__":
     )
 
     print("Test 4: Category 2 - List with Aggregation (Misclassified as 1)")
-    print(f"Original: Question='{test_qa_pair_4.question}', Category={test_qa_pair_4.category}")
+    print(
+        f"Original: Question='{test_qa_pair_4.question}', Category={test_qa_pair_4.category}"
+    )
     validated_4 = validate_category(test_qa_pair_4)
     print(f"Validated: Category={validated_4.category}")
     print()
@@ -276,6 +303,8 @@ if __name__ == "__main__":
     )
 
     print("Test 5: Category 4 - Incomplete Information (Correctly Classified)")
-    print(f"Original: Question='{test_qa_pair_5.question}', Category={test_qa_pair_5.category}")
+    print(
+        f"Original: Question='{test_qa_pair_5.question}', Category={test_qa_pair_5.category}"
+    )
     validated_5 = validate_category(test_qa_pair_5)
     print(f"Validated: Category={validated_5.category}")

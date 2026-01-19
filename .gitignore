@@ -21,7 +21,6 @@ wheels/
 
 # big files
 *.ifc
-*.db
 *.sqlite
 
 # no need to upload
@@ -29,6 +28,7 @@ src/bim_models
 src.db/*.txt
 src.db/*.csv
 src/db/bim_models
+src/db/logs/
 pyrightconfig.json
 sandbox.ipynb
 sandbox.py
@@ -38,3 +38,9 @@ logs.log
 .cursor
 reports
 scripts/text_count_tokens.txt
+
+# External cloned repos (for docs indexing)
+external/
+
+# cache
+analysis/data/baseline_cache

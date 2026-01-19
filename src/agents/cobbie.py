@@ -3,19 +3,18 @@ COBBIE: COde-Based BIM Information Extraction
 Functional implementation using the BAML library and the CodeAct architecture.
 """
 
-import logging
 import time
 from contextlib import nullcontext
 from typing import Callable, Dict, Optional, Tuple
 
 import mlflow
+from baml_py import baml_py
 from baml_py.baml_py import Collector
+from loguru import logger
 
 from baml_client.types import CodeAction, FinalAnswer
 from src.util.code_act_inner_loop import _code_act_iter, _execute_code_action
 from src.util.generate_tools_docs import generate_tools_docs
-
-logger = logging.getLogger(__name__)
 
 
 def _cobbie(
@@ -24,8 +23,7 @@ def _cobbie(
     max_iterations: int = 15,
     model_path: Optional[str] = None,
     add_code_prefix: bool = True,
-    llm_name: str = "GLM-4.6",
-    llm_provider: str = "zai",
+    client: str = "GLM_4_7",
     **kwargs,
 ) -> Tuple[FinalAnswer, str]:
     """
@@ -46,7 +44,7 @@ def _cobbie(
         Tuple of (FinalAnswer, execution_history) where execution_history contains
         the complete iteration-by-iteration trace of thoughts, code, and results
     """
-    logger.info(f"Starting COBBIE execution for: {question[:100]}...")
+    logger.info(f"Answering question: {question[:100]}...")
 
     # Prepare execution context
     tools_docs = generate_tools_docs(tools)
@@ -59,6 +57,9 @@ def _cobbie(
 
     # Initialize the previous_attempts
     previous_attempts = ""
+
+    # Track schema validation errors for retry logic
+    schema_error_occurred = False
 
     # Main reasoning loop
     for iteration in range(max_iterations):
@@ -86,13 +87,55 @@ def _cobbie(
                     }
                 )
 
-                result = _code_act_iter(
-                    user_input=question,
-                    available_tools=tools_docs,
-                    previous_attempts=previous_attempts,
-                    model_path=model_path,
-                    **kwargs,
-                )
+                try:
+                    result = _code_act_iter(
+                        user_input=question,
+                        available_tools=tools_docs,
+                        previous_attempts=previous_attempts,
+                        model_path=model_path,
+                        **kwargs,
+                    )
+                except Exception as e:
+                    # Schema validation error - allow one retry
+                    if not schema_error_occurred:
+                        schema_error_occurred = True
+
+                        error_feedback = f"""
+--- Iteration {iteration + 1} ---
+SCHEMA ERROR: Your response did not match the required format.
+
+Error: {str(e)}
+
+REMINDER: You must return EXACTLY one of these:
+1. CodeAction with fields: thoughts (string), python_code (string)
+2. FinalAnswer with fields: thoughts (string), answer (string)
+
+Please retry with the correct format.
+"""
+                        previous_attempts += error_feedback
+                        logger.warning(
+                            f"Schema validation error on iteration {iteration + 1}, allowing retry"
+                        )
+
+                        # Log the error in spans
+                        llm_span.set_outputs(
+                            {"error": str(e), "retry_allowed": True}
+                        )
+                        llm_span.set_status("ERROR")
+                        iteration_span.set_status("ERROR")
+
+                        # Continue to next iteration for retry
+                        continue
+                    else:
+                        # Second consecutive error: fail with ERROR answer
+                        logger.error(f"Second consecutive schema error: {e}")
+                        result = FinalAnswer(
+                            answer="ERROR",
+                            thoughts=f"Multiple schema validation failures. Exception:\n{e}",
+                        )
+
+                # Reset flag on successful parse
+                schema_error_occurred = False
 
                 iteration_duration = time.time() - iteration_start
                 llm_calls += 1
@@ -116,8 +159,7 @@ def _cobbie(
 
                 llm_span.set_attributes(
                     {
-                        "llm.provider": llm_provider,
-                        "llm.model": llm_name,
+                        "llm.client": client,
                     }
                 )
 
@@ -153,7 +195,7 @@ def _cobbie(
             # Handle union type flow control
             if isinstance(result, FinalAnswer):
                 logger.info(
-                    f"COBBIE completed successfully after {iteration + 1} iterations"
+                    f"Number of iterations: {iteration + 1}"
                 )
 
                 # Log final iteration metrics with token usage
@@ -285,8 +327,7 @@ def cobbie(
     max_iterations: int = 15,
     model_path: Optional[str] = None,
     add_code_prefix: bool = True,
-    llm_provider: str = "zai",
-    llm_name: str = "glm-4.7",
+    client: str = "GLM_4_7",
     mlflow_run_id: Optional[str] = None,
     **kwargs,
 ) -> Tuple[FinalAnswer, Collector, str]:
@@ -310,10 +351,15 @@ def cobbie(
     # Create collector for token tracking
     collector = Collector(name="COBBIE")
 
-    # Add collector to kwargs for BAML calls
+    # Create client registry to override default BAML client
+    client_registry = baml_py.ClientRegistry()
+    client_registry.set_primary(client)
+
+    # Add collector and client_registry to kwargs for BAML calls
     if "baml_options" not in kwargs:
         kwargs["baml_options"] = {}
     kwargs["baml_options"]["collector"] = collector
+    kwargs["baml_options"]["client_registry"] = client_registry
 
     # Check if we're already in an MLflow run, or if a run_id was provided
     active_run = mlflow.active_run()
@@ -336,8 +382,7 @@ def cobbie(
                     "add_code_prefix": add_code_prefix,
                     "model_path": model_path or "None",
                     "tools_count": len(tools),
-                    "llm_provider": llm_provider,
-                    "llm_model": llm_name,
+                    "client": client,
                     "tools": ", ".join(tools.keys()),
                 }
             )
@@ -362,6 +407,7 @@ def cobbie(
                 max_iterations=max_iterations,
                 model_path=model_path,
                 add_code_prefix=add_code_prefix,
+                client=client,
                 **kwargs,
             )
             execution_time = time.time() - start_time
@@ -395,7 +441,7 @@ def cobbie(
                         )
 
                     logger.info(
-                        f"Token tracking - Cumulative: {total_tokens} (in: {input_tokens}, out: {output_tokens}), Last call: {last_call_tokens}"
+                        f"Token consumption: {total_tokens} (in: {input_tokens}, out: {output_tokens})"
                     )
 
                 except Exception as e:
@@ -451,7 +497,7 @@ def cobbie(
             )
 
             logger.info(
-                f"COBBIE with metrics completed. Tokens: {total_tokens}, Time: {execution_time:.2f}s"
+                f"Tokens used: {total_tokens} -- Latency: {execution_time:.2f}s"
             )
 
             return final_answer, collector, execution_history
@@ -484,36 +530,60 @@ if __name__ == "__main__":
     print(f"Question: {test_question}")
     print(f"Model Path: {model_path}\n")
 
-    # Test cobbie_with_metrics for comprehensive tracking
+    # Test 1: GLM_4_7
+    print("\n" + "="*60)
+    print("=== Testing COBBIE with GLM_4_7 ===")
+    print("="*60)
+
     result, collector, execution_history = cobbie(
         user_input=test_question,
         tools=tools_dict,
         max_iterations=15,
         model_path=model_path,
-        llm_provider="zai",
-        llm_name="GLM-4.6",
+        client="GLM_4_7",
     )
 
-    print("COBBIE Test Results:")
+    print("\nCOBBIE Results (GLM_4_7):")
     print(f"Answer: {result.answer}")
-    print(f"\nReasoning: {result.thoughts}")
-    print(f"\nExecution History:\n{execution_history}")
+    print(f"Reasoning: {result.thoughts}")
 
-    # Extract metrics
-    input_tokens = 0
-    output_tokens = 0
-    total_tokens = 0
-
+    # Extract metrics for GLM_4_7
     if collector and hasattr(collector, "usage") and collector.usage:
         usage = collector.usage
         input_tokens = usage.input_tokens or 0
         output_tokens = usage.output_tokens or 0
         total_tokens = input_tokens + output_tokens
+        print("\nMetrics:")
+        print(f"Input Tokens: {input_tokens}")
+        print(f"Output Tokens: {output_tokens}")
+        print(f"Total Tokens: {total_tokens}")
+        print(f"Number of LLM Calls: {len(collector.logs) if hasattr(collector, 'logs') else 'N/A'}")
 
-    print("\nMetrics:")
-    print(f"Input Tokens: {input_tokens}")
-    print(f"Output Tokens: {output_tokens}")
-    print(f"Total Tokens: {total_tokens}")
-    print(
-        f"Number of LLM Calls: {len(collector.logs) if hasattr(collector, 'logs') else 'N/A'}"
+    # Test 2: GLM_4_5_air
+    print("\n" + "="*60)
+    print("=== Testing COBBIE with GLM_4_5_air ===")
+    print("="*60)
+
+    result2, collector2, execution_history2 = cobbie(
+        user_input=test_question,
+        tools=tools_dict,
+        max_iterations=15,
+        model_path=model_path,
+        client="GLM_4_5_air",
     )
+
+    print("\nCOBBIE Results (GLM_4_5_air):")
+    print(f"Answer: {result2.answer}")
+    print(f"Reasoning: {result2.thoughts}")
+
+    # Extract metrics for GLM_4_5_air
+    if collector2 and hasattr(collector2, "usage") and collector2.usage:
+        usage2 = collector2.usage
+        input_tokens2 = usage2.input_tokens or 0
+        output_tokens2 = usage2.output_tokens or 0
+        total_tokens2 = input_tokens2 + output_tokens2
+        print("\nMetrics:")
+        print(f"Input Tokens: {input_tokens2}")
+        print(f"Output Tokens: {output_tokens2}")
+        print(f"Total Tokens: {total_tokens2}")
+        print(f"Number of LLM Calls: {len(collector2.logs) if hasattr(collector2, 'logs') else 'N/A'}")

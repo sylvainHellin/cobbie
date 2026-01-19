@@ -11,11 +11,6 @@ from baml_py.baml_py import Collector
 
 from baml_client import b
 from baml_client.types import AnswerEvaluationResult, CriterionResult, QuestionCategory
-from src.config import LOG_LEVEL
-from src.util import get_logger
-
-# Initialize logger for the functional approach
-_logger = get_logger(name="baml_answer_verifier", log_level=LOG_LEVEL)
 
 
 def _map_category_to_baml(category: Literal[1, 2, 3, 4]) -> QuestionCategory:
@@ -115,25 +110,36 @@ def verify_answer(
         baml_category = _map_category_to_baml(category)
 
         # Classify the answer
-        try:
-            answer_classification = b.with_options(
-                **kwargs.pop("baml_options", {})
-            ).EvaluateResponse(
-                question=question,
-                category=baml_category,
-                ground_truth=ground_truth,
-                system_response=system_response,
-                **kwargs,
-            )
-        except Exception as e:
+        if system_response == "ERROR":
             answer_classification = AnswerEvaluationResult(
                 abstention=True,
                 faithfulness=CriterionResult.Na,
                 completeness=CriterionResult.Na,
                 transparency=CriterionResult.Na,
                 relevance=CriterionResult.Na,
-                justification=f"An Exception occured when trying to classify this answer. Exception:\n{e}",
+                justification="The system could not answer the question",
             )
+        else:
+
+            try:
+                answer_classification = b.with_options(
+                    **kwargs.pop("baml_options", {})
+                ).EvaluateResponse(
+                    question=question,
+                    category=baml_category,
+                    ground_truth=ground_truth,
+                    system_response=system_response,
+                    **kwargs,
+                )
+            except Exception as e:
+                answer_classification = AnswerEvaluationResult(
+                    abstention=True,
+                    faithfulness=CriterionResult.Na,
+                    completeness=CriterionResult.Na,
+                    transparency=CriterionResult.Na,
+                    relevance=CriterionResult.Na,
+                    justification=f"An Exception occured when trying to classify this answer. Exception:\n{e}",
+                )
 
         # Log outputs
         verifier_span.set_outputs(

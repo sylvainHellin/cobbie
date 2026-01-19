@@ -8,14 +8,14 @@ from typing import Literal, Tuple
 
 import mlflow
 from baml_py.baml_py import Collector
+from loguru import logger
+
 from baml_client import b
 from baml_client.types import HelperFunctionAssessment
-from src.config import LOG_LEVEL
-from src.util import get_logger
 
-# Initialize logger
-_logger = get_logger(name="baml_helper_function_assessor", log_level=LOG_LEVEL)
+from src.util import setup_logger
 
+setup_logger()
 
 def assess_helper_function(
     execution_history: str,
@@ -95,7 +95,7 @@ def assess_helper_function(
                 **kwargs,
             )
         except Exception as e:
-            _logger.error(f"Error assessing helper function: {e}")
+            logger.error(f"Error assessing helper function: {e}")
             assessment = HelperFunctionAssessment(
                 thoughts=f"An Exception occurred when trying to assess helper function. Exception:\n{e}",
                 tool_was_used=False,
@@ -140,7 +140,7 @@ def assess_helper_function(
             }
         )
 
-        _logger.info(
+        logger.info(
             f"Helper function assessment completed. Recommendation: {assessment.recommendation}, "
             f"Confidence: {assessment.confidence}, Tokens: {total_tokens}, Duration: {duration:.2f}s"
         )

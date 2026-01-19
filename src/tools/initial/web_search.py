@@ -1,10 +1,10 @@
 # %% SET UP
-import os
-import requests
 import json
-from dotenv import load_dotenv, find_dotenv
-from src.util import get_logger
-from src.config import LOG_LEVEL
+import os
+
+import requests
+from dotenv import find_dotenv, load_dotenv
+from loguru import logger
 
 load_dotenv(find_dotenv())
 
@@ -26,7 +26,6 @@ def web_search(
     Returns:
         str: A natural language response synthesized from web search results.
     """
-    logger = get_logger("web_search", log_level=LOG_LEVEL)
     logger.info("Tool called.")
     logger.debug(f"Query: {query}")
     logger.debug(f"Model: {model}")

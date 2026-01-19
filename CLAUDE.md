@@ -96,8 +96,10 @@ To address this, you should use context7. Ideally, you should do this before wri
 ### Context7 Libraries:
 - mlflow:
   - name: "/mlflow/mlflow"
-  - example usage: `context7 - get-library-docs (MCP)(context7CompatibleLibraryID: "/mlflow/mlflow", topic: "start_run continuation tracking", tokens: 2048)`
-
+  - example usage: `context7 - query-docs (MCP)(context7CompatibleLibraryID: "/mlflow/mlflow", topic: "start_run continuation tracking", tokens: 2048)`
+- baml:
+  - name: "/websites/bourdaryml"
+  - example usage: `context7 - query-docs (MCP)(context7CompatibleLibraryID: "/websites/boundaryml", topic: "use another client for test function", tokens: 2048)`
 
 ## Assumptions
 Don't make any assumptions ; ask for clarifications if anything is unclear.

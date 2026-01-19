@@ -2,14 +2,10 @@ from typing import List, Optional, Tuple
 
 import mlflow
 from baml_py.baml_py import Collector
+from loguru import logger
 
 from src.agents.answer_verifier import derive_binary_classification
-from src.config import LOG_LEVEL
 from src.schemas.training_context import Context
-from src.util import get_logger
-
-# Initialize logger
-_logger = get_logger(name="TrainingPhase", log_level=LOG_LEVEL)
 
 
 def extract_token_metrics(collector: Optional[Collector]) -> Tuple[int, int, int]:
@@ -33,7 +29,7 @@ def extract_token_metrics(collector: Optional[Collector]) -> Tuple[int, int, int
             total_tokens = input_tokens + output_tokens
             return input_tokens, output_tokens, total_tokens
     except Exception as e:
-        _logger.warning(f"Error extracting token usage: {e}")
+        logger.warning(f"Error extracting token usage: {e}")
 
     return 0, 0, 0
 

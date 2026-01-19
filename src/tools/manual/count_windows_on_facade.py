@@ -7,7 +7,7 @@ import math
 from typing import Dict
 
 # local imports
-from tools.is_georeferenced import is_georeferenced
+from src.tools.manual.is_georeferenced import is_georeferenced
 
 def count_windows_on_facade(model_path: str, tolerance_degrees: float = 45, depth: int = 0, use_true_north: bool = True) -> Dict:
     """Count and analyze windows on facades with different levels of detail.

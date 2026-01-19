@@ -11,6 +11,7 @@ from enum import Enum, auto
 from typing import Literal, Tuple, cast
 
 import mlflow
+from loguru import logger
 
 from src.agents import (
     assess_helper_function,
@@ -22,7 +23,7 @@ from src.agents import (
     identify_helper_function,
     verify_answer,
 )
-from src.config import LOG_LEVEL, ROOT_PATH
+from src.config import ROOT_PATH
 from src.db import TRAINSET
 from src.db.query import (
     get_tools_ranked_by_deletion_score,
@@ -38,14 +39,15 @@ from src.util import (
     generate_tools_docs,
     get_created_tools,
     get_function_code,
-    get_logger,
     save_new_tool,
+    setup_logger,
 )
 from src.util.metrics import calculate_aggregate_metrics, log_qa_metrics
-from src.utils.mlflow_utils import determine_run_id
+from src.util.mlflow_utils import determine_run_id
 
 # Initialize logger
-_logger = get_logger(name="TrainingPhase", log_level=LOG_LEVEL)
+setup_logger()
+LLM_NAME = "GLM 4.7"
 
 
 # Enum to implement the state machine pattern for orchestrating the control flow of the training phase
@@ -95,10 +97,10 @@ def handle_start_state(context: Context) -> Tuple[TrainingState, Context]:
 
     if len(current_tools) > context.max_tools:
         num_to_delete = len(current_tools) - context.max_tools
-        _logger.info(
+        logger.info(
             f"Tool count ({len(current_tools)}) exceeds MAX_TOOLS ({context.max_tools})"
         )
-        _logger.info(f"Deleting {num_to_delete} lowest-value tools...")
+        logger.info(f"Deleting {num_to_delete} lowest-value tools...")
 
         # Get ranked tools by deletion score
         ranked_tools = get_tools_ranked_by_deletion_score(
@@ -108,11 +110,11 @@ def handle_start_state(context: Context) -> Tuple[TrainingState, Context]:
         # Delete top N by score
         deleted_count = 0
         for tool_name, score in ranked_tools[:num_to_delete]:
-            _logger.info(f"  Deleting '{tool_name}' (score={score:.1f})")
+            logger.info(f"  Deleting '{tool_name}' (score={score:.1f})")
             if delete_tool(tool_name):
                 deleted_count += 1
 
-        _logger.info(f"Deleted {deleted_count}/{num_to_delete} tools")
+        logger.info(f"Deleted {deleted_count}/{num_to_delete} tools")
 
         # Log to MLflow
         if mlflow.active_run():
@@ -130,7 +132,7 @@ def handle_start_state(context: Context) -> Tuple[TrainingState, Context]:
     available_tool_names = list(context.tools.keys())
     increment_tool_inclusion(available_tool_names, context.global_question_num)
 
-    _logger.info(f"Loaded {len(context.tools)} tools for question {context.qa_pair.id}")
+    logger.info(f"Loaded {len(context.tools)} tools for question {context.qa_pair.id}")
 
     return TrainingState.RUN_COBBIE, context
 
@@ -151,7 +153,7 @@ def handle_run_cobbie(context: Context) -> Tuple[TrainingState, Context]:
     # Get IFC model path
     ifc_path = context.qa_pair.ifc.model_path if context.qa_pair.ifc else None
 
-    _logger.info(f"Running Cobbie for question: {context.qa_pair.question}")
+    logger.info(f"Running Cobbie for question: {context.qa_pair.question}")
 
     start_time = time.time()
 
@@ -159,10 +161,9 @@ def handle_run_cobbie(context: Context) -> Tuple[TrainingState, Context]:
         result, collector, history = cobbie(
             user_input=context.qa_pair.question,
             tools=context.tools,
-            max_iterations=10,
+            max_iterations=20,
             model_path=ifc_path,
-            llm_provider="zai",
-            llm_name="GLM-4.6",
+            client="GLM_4_7",
         )
 
         context.cobbie_result = result
@@ -170,13 +171,13 @@ def handle_run_cobbie(context: Context) -> Tuple[TrainingState, Context]:
         context.cobbie_history = history
         context.cobbie_duration = time.time() - start_time
 
-        _logger.info(f"Cobbie completed in {context.cobbie_duration:.2f}s")
-        _logger.info(f"Cobbie answer: {result.answer}")
+        logger.info(f"Cobbie completed in {context.cobbie_duration:.2f}s")
+        logger.info(f"Cobbie answer: {result.answer}")
 
         return TrainingState.VERIFY_ANSWER, context
 
     except Exception as e:
-        _logger.error(f"Error running Cobbie: {e}")
+        logger.error(f"Error running Cobbie: {e}")
         context.error_message = f"Cobbie error: {e}"
         context.cobbie_duration = time.time() - start_time
         return TrainingState.ERROR, context
@@ -197,7 +198,7 @@ def handle_verify_answer(context: Context) -> Tuple[TrainingState, Context]:
         - IDENTIFY_FAULTY_TOOL if classification == "wrong"
         - END if classification == "abstained"
     """
-    _logger.info("Verifying answer...")
+    logger.info("Verifying answer...")
 
     start_time = time.time()
 
@@ -214,7 +215,7 @@ def handle_verify_answer(context: Context) -> Tuple[TrainingState, Context]:
             ground_truth=context.qa_pair.ground_truth,
             system_response=context.cobbie_result.answer,
             llm_provider="zai",
-            llm_name="GLM-4.7",
+            llm_name=LLM_NAME,
         )
 
         context.verify_result = result
@@ -222,8 +223,8 @@ def handle_verify_answer(context: Context) -> Tuple[TrainingState, Context]:
         context.verify_collector = collector
         context.verify_duration = time.time() - start_time
 
-        _logger.info(f"Verification result: {classification}")
-        _logger.info(f"Justification: {result.justification}")
+        logger.info(f"Verification result: {classification}")
+        logger.info(f"Justification: {result.justification}")
 
         # Log the answer and all evaluation criteria for later access
         mlflow.log_params(
@@ -250,24 +251,24 @@ def handle_verify_answer(context: Context) -> Tuple[TrainingState, Context]:
             "num_tools_used", len(tools_used), step=context.global_question_num
         )
 
-        _logger.info(f"Tracked usage of {len(tools_used)} tools: {tools_used}")
+        logger.info(f"Tracked usage of {len(tools_used)} tools: {tools_used}")
 
         # Determine next state based on classification
         if classification == "correct":
             context.path_taken = "correct"
-            _logger.info("Answer CORRECT - Following Path A (identify new tool)")
+            logger.info("Answer CORRECT - Following Path A (identify new tool)")
             return TrainingState.IDENTIFY_NEW_TOOL, context
         elif classification == "wrong":
             context.path_taken = "wrong"
-            _logger.info("Answer WRONG - Following Path B (identify faulty tool)")
+            logger.info("Answer WRONG - Following Path B (identify faulty tool)")
             return TrainingState.IDENTIFY_FAULTY_TOOL, context
         else:  # "abstained"
             context.path_taken = "abstained"
-            _logger.info("Answer ABSTAINED - Skipping both paths")
+            logger.info("Answer ABSTAINED - Skipping both paths")
             return TrainingState.END, context
 
     except Exception as e:
-        _logger.error(f"Error verifying answer: {e}")
+        logger.error(f"Error verifying answer: {e}")
         context.error_message = f"Answer verification error: {e}"
         context.verify_duration = time.time() - start_time
         return TrainingState.ERROR, context
@@ -288,7 +289,7 @@ def handle_identify_new_tool(context: Context) -> Tuple[TrainingState, Context]:
         - CREATE_NEW_TOOL if new_tool == True
         - END if new_tool == False
     """
-    _logger.info("Identifying potential new tool...")
+    logger.info("Identifying potential new tool...")
 
     start_time = time.time()
 
@@ -312,36 +313,36 @@ def handle_identify_new_tool(context: Context) -> Tuple[TrainingState, Context]:
             example_question=context.qa_pair.question,
             existing_helper_functions=existing_tools_docs,
             llm_provider="zai",
-            llm_name="GLM-4.6",
+            llm_name=LLM_NAME,
         )
 
         context.identify_tool_result = result
         context.identify_tool_collector = collector
         context.identify_tool_duration = time.time() - start_time
 
-        _logger.info(f"Tool management action: {result.action}")
-        _logger.info(f"Tool name: {result.tool_name}")
-        _logger.info(f"Tool description: {result.tool_description}")
+        logger.info(f"Tool management action: {result.action}")
+        logger.info(f"Tool name: {result.tool_name}")
+        logger.info(f"Tool description: {result.tool_description}")
 
         # Handle new action field
         if result.action == "create_new":
-            _logger.info(f"Creating new tool: {result.tool_name}")
+            logger.info(f"Creating new tool: {result.tool_name}")
             context.tool_name = result.tool_name
             context.is_enhancement = False
             return TrainingState.CREATE_NEW_TOOL, context
 
         elif result.action == "enhance_existing":
-            _logger.info(f"Enhancing existing tool: {result.tool_name}")
+            logger.info(f"Enhancing existing tool: {result.tool_name}")
             context.tool_name = result.tool_name
             context.is_enhancement = True
             return TrainingState.CREATE_NEW_TOOL, context
 
         else:  # "none"
-            _logger.info("No tool creation or enhancement needed")
+            logger.info("No tool creation or enhancement needed")
             return TrainingState.END, context
 
     except Exception as e:
-        _logger.error(f"Error identifying new tool: {e}")
+        logger.error(f"Error identifying new tool: {e}")
         context.error_message = f"Identify new tool error: {e}"
         context.identify_tool_duration = time.time() - start_time
         return TrainingState.ERROR, context
@@ -368,7 +369,7 @@ def handle_create_new_tool(context: Context) -> Tuple[TrainingState, Context]:
         - ERROR if failure
     """
     action_verb = "Enhancing" if context.is_enhancement else "Creating"
-    _logger.info(f"{action_verb} tool: {context.tool_name}...")
+    logger.info(f"{action_verb} tool: {context.tool_name}...")
 
     start_time = time.time()
 
@@ -425,9 +426,9 @@ def handle_create_new_tool(context: Context) -> Tuple[TrainingState, Context]:
             function_description=context.identify_tool_result.tool_description,
             is_enhancement=context.is_enhancement,
             existing_implementation=existing_implementation,
-            max_iterations=15,
+            max_iterations=20,
             llm_provider="zai",
-            llm_name="GLM-4.6",
+            llm_name=LLM_NAME,
         )
 
         context.create_tool_result = result
@@ -435,29 +436,29 @@ def handle_create_new_tool(context: Context) -> Tuple[TrainingState, Context]:
         context.create_tool_history = creation_history
         context.create_tool_duration = time.time() - start_time
 
-        _logger.info(f"Tool creation success: {result.success}")
+        logger.info(f"Tool creation success: {result.success}")
 
         if result.success:
             # Don't save immediately - proceed to testing first
             if context.is_enhancement:
-                _logger.info(
+                logger.info(
                     f"Tool enhanced: {context.tool_name}, proceeding to testing"
                 )
                 context.tool_updated = True
             else:
-                _logger.info(
+                logger.info(
                     f"New tool created: {context.tool_name}, proceeding to testing"
                 )
                 context.tool_created = True
 
             return TrainingState.TEST_TOOL_WITH_COBBIE, context
         else:
-            _logger.warning(f"Tool creation was not successful: {result.thoughts}")
+            logger.warning(f"Tool creation was not successful: {result.thoughts}")
             context.error_message = f"Tool creation failed: {result.thoughts}"
             return TrainingState.ERROR, context
 
     except Exception as e:
-        _logger.error(f"Error creating new tool: {e}")
+        logger.error(f"Error creating new tool: {e}")
         context.error_message = f"Create tool error: {e}"
         context.create_tool_duration = time.time() - start_time
         return TrainingState.ERROR, context
@@ -478,7 +479,7 @@ def handle_identify_faulty_tool(context: Context) -> Tuple[TrainingState, Contex
         - DEBUG_FAULTY_TOOL if faulty_tool == True
         - END if faulty_tool == False
     """
-    _logger.info("Identifying faulty tool...")
+    logger.info("Identifying faulty tool...")
 
     start_time = time.time()
 
@@ -507,29 +508,29 @@ def handle_identify_faulty_tool(context: Context) -> Tuple[TrainingState, Contex
             justification=context.verify_result.justification,
             existing_helper_functions=existing_tools_docs,
             llm_provider="zai",
-            llm_name="GLM-4.6",
+            llm_name=LLM_NAME,
         )
 
         context.identify_faulty_result = result
         context.identify_faulty_collector = collector
         context.identify_faulty_duration = time.time() - start_time
 
-        _logger.info(f"Faulty tool identified: {result.faulty_tool}")
+        logger.info(f"Faulty tool identified: {result.faulty_tool}")
         if result.faulty_tool:
-            _logger.info(f"Faulty tool name: {result.faulty_tool_name}")
-            _logger.info(f"Error description: {result.error_description}")
-            _logger.info(f"Confidence: {result.confidence}")
+            logger.info(f"Faulty tool name: {result.faulty_tool_name}")
+            logger.info(f"Error description: {result.error_description}")
+            logger.info(f"Confidence: {result.confidence}")
 
         # Decide next state
         if result.faulty_tool:
             context.tool_name = result.faulty_tool_name
             return TrainingState.DEBUG_FAULTY_TOOL, context
         else:
-            _logger.info("No faulty tool identified - error was due to other reasons")
+            logger.info("No faulty tool identified - error was due to other reasons")
             return TrainingState.END, context
 
     except Exception as e:
-        _logger.error(f"Error identifying faulty tool: {e}")
+        logger.error(f"Error identifying faulty tool: {e}")
         context.error_message = f"Identify faulty tool error: {e}"
         context.identify_faulty_duration = time.time() - start_time
         return TrainingState.ERROR, context
@@ -551,7 +552,7 @@ def handle_debug_faulty_tool(context: Context) -> Tuple[TrainingState, Context]:
         - TEST_TOOL_WITH_COBBIE if success
         - ERROR if failure
     """
-    _logger.info(f"Debugging faulty tool: {context.tool_name}...")
+    logger.info(f"Debugging faulty tool: {context.tool_name}...")
 
     start_time = time.time()
 
@@ -593,9 +594,9 @@ def handle_debug_faulty_tool(context: Context) -> Tuple[TrainingState, Context]:
             error_description=context.identify_faulty_result.error_description,
             history_faulty_tool_use=full_history,
             ifc_model_path=ifc_model_path,
-            max_iterations=15,
+            max_iterations=20,
             llm_provider="zai",
-            llm_name="GLM-4.6",
+            llm_name=LLM_NAME,
         )
 
         context.debug_tool_result = result
@@ -603,24 +604,24 @@ def handle_debug_faulty_tool(context: Context) -> Tuple[TrainingState, Context]:
         context.debug_tool_history = debug_history
         context.debug_tool_duration = time.time() - start_time
 
-        _logger.info(f"Tool debugging success: {result.success}")
+        logger.info(f"Tool debugging success: {result.success}")
 
         if result.success:
             # Don't save immediately - proceed to testing first
-            _logger.info(
+            logger.info(
                 f"Faulty tool debugged: {context.tool_name}, proceeding to testing"
             )
-            _logger.info(f"Changes summary: {result.changes_summary}")
+            logger.info(f"Changes summary: {result.changes_summary}")
             context.tool_updated = True
 
             return TrainingState.TEST_TOOL_WITH_COBBIE, context
         else:
-            _logger.warning(f"Tool debugging was not successful: {result.thoughts}")
+            logger.warning(f"Tool debugging was not successful: {result.thoughts}")
             context.error_message = f"Tool debugging failed: {result.thoughts}"
             return TrainingState.ERROR, context
 
     except Exception as e:
-        _logger.error(f"Error debugging faulty tool: {e}")
+        logger.error(f"Error debugging faulty tool: {e}")
         context.error_message = f"Debug tool error: {e}"
         context.debug_tool_duration = time.time() - start_time
         return TrainingState.ERROR, context
@@ -640,7 +641,7 @@ def handle_test_tool_with_cobbie(context: Context) -> Tuple[TrainingState, Conte
     Returns:
         Next state: ASSESS_TOOL_USAGE
     """
-    _logger.info(f"Testing tool with Cobbie: {context.tool_name}...")
+    logger.info(f"Testing tool with Cobbie: {context.tool_name}...")
 
     start_time = time.time()
 
@@ -651,10 +652,10 @@ def handle_test_tool_with_cobbie(context: Context) -> Tuple[TrainingState, Conte
         # Get the tool implementation
         if context.create_tool_result:
             tool_implementation = context.create_tool_result.function_implementation
-            _logger.info(f"Testing newly created tool: {context.tool_name}")
+            logger.info(f"Testing newly created tool: {context.tool_name}")
         elif context.debug_tool_result:
             tool_implementation = context.debug_tool_result.fixed_implementation
-            _logger.info(f"Testing debugged tool: {context.tool_name}")
+            logger.info(f"Testing debugged tool: {context.tool_name}")
         else:
             raise ValueError("No tool implementation available for testing")
 
@@ -667,7 +668,7 @@ def handle_test_tool_with_cobbie(context: Context) -> Tuple[TrainingState, Conte
             error_msg = (
                 f"Failed to create function for testing: {creation_result.unwrap_err()}"
             )
-            _logger.error(error_msg)
+            logger.error(error_msg)
             context.error_message = error_msg
             return TrainingState.ERROR, context
 
@@ -677,7 +678,7 @@ def handle_test_tool_with_cobbie(context: Context) -> Tuple[TrainingState, Conte
         test_tools = context.tools.copy()
         test_tools[context.tool_name] = new_tool
 
-        _logger.info(
+        logger.info(
             f"Tool '{context.tool_name}' added to test environment. Total tools: {len(test_tools)}"
         )
 
@@ -695,10 +696,9 @@ def handle_test_tool_with_cobbie(context: Context) -> Tuple[TrainingState, Conte
         result, collector, history = cobbie(
             user_input=enhanced_question,
             tools=test_tools,
-            max_iterations=10,
+            max_iterations=20,
             model_path=ifc_path,
-            llm_provider="zai",
-            llm_name="GLM-4.6",
+            client="GLM_4_7",
         )
 
         context.test_cobbie_result = result
@@ -706,11 +706,11 @@ def handle_test_tool_with_cobbie(context: Context) -> Tuple[TrainingState, Conte
         context.test_cobbie_history = history
         context.test_cobbie_duration = time.time() - start_time
 
-        _logger.info(f"Tool testing Cobbie run completed: {result.answer[:100]}...")
+        logger.info(f"Tool testing Cobbie run completed: {result.answer[:100]}...")
         return TrainingState.ASSESS_TOOL_USAGE, context
 
     except Exception as e:
-        _logger.error(f"Error testing tool with Cobbie: {e}")
+        logger.error(f"Error testing tool with Cobbie: {e}")
         context.error_message = f"Tool testing error: {e}"
         context.test_cobbie_duration = time.time() - start_time
         return TrainingState.ERROR, context
@@ -730,7 +730,7 @@ def handle_assess_tool_usage(context: Context) -> Tuple[TrainingState, Context]:
     Returns:
         Next state: DECIDE_TOOL_FATE
     """
-    _logger.info(f"Assessing tool usage: {context.tool_name}...")
+    logger.info(f"Assessing tool usage: {context.tool_name}...")
 
     start_time = time.time()
 
@@ -760,14 +760,14 @@ def handle_assess_tool_usage(context: Context) -> Tuple[TrainingState, Context]:
             ground_truth=context.qa_pair.ground_truth,
             system_response=context.test_cobbie_result.answer,
             llm_provider="zai",
-            llm_name="GLM-4.6",
+            llm_name=LLM_NAME,
         )
         context.test_verify_result = verify_result
         context.test_verify_collector = verify_collector
         context.test_verify_duration = time.time() - verify_start
 
         classification = derive_binary_classification(result=verify_result)
-        _logger.info(f"Test answer verified: {classification}")
+        logger.info(f"Test answer verified: {classification}")
 
         # Get tool description based on path
         if context.create_tool_result:
@@ -798,13 +798,13 @@ def handle_assess_tool_usage(context: Context) -> Tuple[TrainingState, Context]:
             final_answer=context.test_cobbie_result.answer,
             answer_correctness=classification,
             llm_provider="zai",
-            llm_name="GLM-4.6",
+            llm_name=LLM_NAME,
         )
         context.tool_assessment = assessment
         context.tool_assessment_collector = assessment_collector
         context.tool_assessment_duration = time.time() - assess_start
 
-        _logger.info(
+        logger.info(
             f"Tool assessment completed: {assessment.recommendation} "
             f"(quality: {assessment.tool_usage_quality}, confidence: {assessment.confidence})"
         )
@@ -813,7 +813,7 @@ def handle_assess_tool_usage(context: Context) -> Tuple[TrainingState, Context]:
         return TrainingState.DECIDE_TOOL_FATE, context
 
     except Exception as e:
-        _logger.error(f"Error assessing tool usage: {e}")
+        logger.error(f"Error assessing tool usage: {e}")
         context.error_message = f"Tool assessment error: {e}"
         context.tool_assessment_duration = time.time() - start_time
         return TrainingState.ERROR, context
@@ -833,7 +833,7 @@ def handle_decide_tool_fate(context: Context) -> Tuple[TrainingState, Context]:
     Returns:
         Next state: END
     """
-    _logger.info(f"Deciding fate of tool: {context.tool_name}...")
+    logger.info(f"Deciding fate of tool: {context.tool_name}...")
 
     try:
         # Assert tool_name is not None (should be set by previous states)
@@ -863,7 +863,7 @@ def handle_decide_tool_fate(context: Context) -> Tuple[TrainingState, Context]:
 
             if save_success:
                 context.tool_saved = True
-                _logger.info(
+                logger.info(
                     f"✅ Tool '{context.tool_name}' validated and saved permanently\n"
                     f"   Quality: {assessment.tool_usage_quality}\n"
                     f"   Confidence: {assessment.confidence}\n"
@@ -872,11 +872,11 @@ def handle_decide_tool_fate(context: Context) -> Tuple[TrainingState, Context]:
 
                 # Reload tools to include the new one
                 context.tools = get_created_tools()
-                _logger.info(f"Tools reloaded. Now have {len(context.tools)} tools")
+                logger.info(f"Tools reloaded. Now have {len(context.tools)} tools")
 
                 return TrainingState.END, context
             else:
-                _logger.error(f"Failed to save tool: {context.tool_name}")
+                logger.error(f"Failed to save tool: {context.tool_name}")
                 context.error_message = f"Failed to save tool: {context.tool_name}"
                 return TrainingState.ERROR, context
 
@@ -888,14 +888,14 @@ def handle_decide_tool_fate(context: Context) -> Tuple[TrainingState, Context]:
             if context.path_taken == "wrong":
                 delete_success = delete_tool(context.tool_name)
                 if delete_success:
-                    _logger.info(
+                    logger.info(
                         f"❌ Tool '{context.tool_name}' discarded and deleted from disk\n"
                         f"   Quality: {assessment.tool_usage_quality}\n"
                         f"   Confidence: {assessment.confidence}\n"
                         f"   Reason: {assessment.usage_details[:200]}..."
                     )
                 else:
-                    _logger.error(
+                    logger.error(
                         f"Failed to delete discarded tool: {context.tool_name}"
                     )
                     context.error_message = (
@@ -904,7 +904,7 @@ def handle_decide_tool_fate(context: Context) -> Tuple[TrainingState, Context]:
                     return TrainingState.ERROR, context
             else:
                 # Path A enhancement failed - keep original working version
-                _logger.info(
+                logger.info(
                     f"❌ Tool '{context.tool_name}' enhancement discarded (original preserved)\n"
                     f"   Quality: {assessment.tool_usage_quality}\n"
                     f"   Confidence: {assessment.confidence}\n"
@@ -921,14 +921,14 @@ def handle_decide_tool_fate(context: Context) -> Tuple[TrainingState, Context]:
             if context.path_taken == "wrong":
                 delete_success = delete_tool(context.tool_name)
                 if delete_success:
-                    _logger.info(
+                    logger.info(
                         f"⚠️  Tool '{context.tool_name}' needs improvement - deleted from disk\n"
                         f"   Quality: {assessment.tool_usage_quality}\n"
                         f"   Confidence: {assessment.confidence}\n"
                         f"   Issues: {assessment.usage_details[:200]}..."
                     )
                 else:
-                    _logger.error(
+                    logger.error(
                         f"Failed to delete tool needing improvement: {context.tool_name}"
                     )
                     context.error_message = (
@@ -937,7 +937,7 @@ def handle_decide_tool_fate(context: Context) -> Tuple[TrainingState, Context]:
                     return TrainingState.ERROR, context
             else:
                 # Path A enhancement needs work - keep original working version
-                _logger.info(
+                logger.info(
                     f"⚠️  Tool '{context.tool_name}' enhancement needs improvement (original preserved)\n"
                     f"   Quality: {assessment.tool_usage_quality}\n"
                     f"   Confidence: {assessment.confidence}\n"
@@ -952,14 +952,14 @@ def handle_decide_tool_fate(context: Context) -> Tuple[TrainingState, Context]:
                 context.tool_saved = False
                 delete_success = delete_tool(context.tool_name)
                 if delete_success:
-                    _logger.info(
+                    logger.info(
                         f"❓ Tool '{context.tool_name}' assessment unclear - deleted (defensive)\n"
                         f"   Quality: {assessment.tool_usage_quality}\n"
                         f"   Confidence: {assessment.confidence}\n"
                         f"   Note: {assessment.usage_details[:200]}..."
                     )
                 else:
-                    _logger.error(f"Failed to delete unclear tool: {context.tool_name}")
+                    logger.error(f"Failed to delete unclear tool: {context.tool_name}")
                     context.error_message = (
                         f"Failed to delete tool: {context.tool_name}"
                     )
@@ -970,7 +970,7 @@ def handle_decide_tool_fate(context: Context) -> Tuple[TrainingState, Context]:
             # Path A enhancement: Keep original working version (don't save unclear enhancement)
             elif context.is_enhancement:
                 context.tool_saved = False
-                _logger.info(
+                logger.info(
                     f"❓ Tool '{context.tool_name}' enhancement unclear - original preserved\n"
                     f"   Quality: {assessment.tool_usage_quality}\n"
                     f"   Confidence: {assessment.confidence}\n"
@@ -988,7 +988,7 @@ def handle_decide_tool_fate(context: Context) -> Tuple[TrainingState, Context]:
 
                 if save_success:
                     context.tool_saved = True
-                    _logger.info(
+                    logger.info(
                         f"❓ New tool '{context.tool_name}' assessment unclear, saved tentatively\n"
                         f"   Quality: {assessment.tool_usage_quality}\n"
                         f"   Confidence: {assessment.confidence}\n"
@@ -999,12 +999,12 @@ def handle_decide_tool_fate(context: Context) -> Tuple[TrainingState, Context]:
                     context.tools = get_created_tools()
                     return TrainingState.END, context
                 else:
-                    _logger.error(f"Failed to save tool: {context.tool_name}")
+                    logger.error(f"Failed to save tool: {context.tool_name}")
                     context.error_message = f"Failed to save tool: {context.tool_name}"
                     return TrainingState.ERROR, context
 
     except Exception as e:
-        _logger.error(f"Error deciding tool fate: {e}")
+        logger.error(f"Error deciding tool fate: {e}")
         context.error_message = f"Tool fate decision error: {e}"
         return TrainingState.ERROR, context
 
@@ -1048,7 +1048,7 @@ def process_state(
     elif state == TrainingState.DECIDE_TOOL_FATE:
         return handle_decide_tool_fate(context)
     else:
-        _logger.error(f"Unknown state: {state}")
+        logger.error(f"Unknown state: {state}")
         context.error_message = f"Unknown state: {state}"
         return TrainingState.ERROR, context
 
@@ -1096,8 +1096,8 @@ def main():
     end_index = args.end if args.end else len(TRAINSET)
     dataset = TRAINSET[args.start : end_index]
 
-    _logger.info(f"Starting training phase with {len(dataset)} QA pairs")
-    _logger.info(f"Dataset range: {args.start} to {end_index - 1}")
+    logger.info(f"Starting training phase with {len(dataset)} QA pairs")
+    logger.info(f"Dataset range: {args.start} to {end_index - 1}")
 
     # Setup MLflow
     mlflow.set_tracking_uri("http://127.0.0.1:5000")
@@ -1108,20 +1108,20 @@ def main():
         # Continuing existing run with explicit run_id
         run_id = determine_run_id(args.continue_run)
         run_name = None  # Don't set a new name when continuing
-        _logger.info(f"Continuing existing MLflow run: {run_id}")
-        _logger.info(f"Processing questions {args.start} to {end_index - 1}")
+        logger.info(f"Continuing existing MLflow run: {run_id}")
+        logger.info(f"Processing questions {args.start} to {end_index - 1}")
     else:
         # Creating new run
         run_id = None
         run_name = f"TRAINING_{datetime.now().strftime('%Y-%m-%d-%H-%M-%S')}"
-        _logger.info(f"Creating new MLflow run: {run_name}")
+        logger.info(f"Creating new MLflow run: {run_name}")
 
     # Main MLflow run
     with mlflow.start_run(run_id=run_id, run_name=run_name):
         # Initialize tool metadata for existing tools
         initialized_count = initialize_tool_metadata(args.start)
         if initialized_count > 0:
-            _logger.info(f"Initialized metadata for {initialized_count} existing tools")
+            logger.info(f"Initialized metadata for {initialized_count} existing tools")
 
         initial_tools = get_created_tools()
 
@@ -1129,7 +1129,7 @@ def main():
         if run_id is None:
             mlflow.log_params(
                 {
-                    "model_name": "glm-4.7",
+                    "model_name": LLM_NAME,
                     "provider_name": "zai",
                     "component": "Training",
                     "max_tools": args.max_tools,
@@ -1162,11 +1162,11 @@ def main():
 
         # Process each QA pair
         for idx, qa_pair in enumerate(dataset):
-            _logger.info(f"\n{'=' * 80}")
-            _logger.info(f"Processing QA {idx + 1}/{len(dataset)}: {qa_pair.id}")
-            _logger.info(f"Question: {qa_pair.question}")
-            _logger.info(f"Ground truth: {qa_pair.ground_truth}")
-            _logger.info(f"{'=' * 80}")
+            logger.info(f"\n{'=' * 80}")
+            logger.info(f"Processing QA {idx + 1}/{len(dataset)}: {qa_pair.id}")
+            logger.info(f"Question: {qa_pair.question}")
+            logger.info(f"Ground truth: {qa_pair.ground_truth}")
+            logger.info(f"{'=' * 80}")
 
             # Create nested run for this QA pair
             qa_run_name = f"question_{idx + args.start}_{qa_pair.id}"
@@ -1206,16 +1206,16 @@ def main():
                     qa_results.append(qa_result)
 
                     if state == TrainingState.ERROR:
-                        _logger.error(
+                        logger.error(
                             f"QA {qa_pair.id} ended with error: {context.error_message}"
                         )
                         mlflow.set_tag("status", "ERROR")
                     else:
-                        _logger.info(f"QA {qa_pair.id} completed successfully")
+                        logger.info(f"QA {qa_pair.id} completed successfully")
                         mlflow.set_tag("status", "success")
 
                 except Exception as e:
-                    _logger.error(
+                    logger.error(
                         f"Unexpected error processing QA {qa_pair.id}: {e}",
                         exc_info=True,
                     )
@@ -1238,21 +1238,21 @@ def main():
         if aggregate_metrics:
             mlflow.log_metrics(aggregate_metrics)
 
-        _logger.info(f"\n{'=' * 80}")
-        _logger.info("Training Phase Complete")
-        _logger.info(f"{'=' * 80}")
-        _logger.info(f"Total QA pairs: {aggregate_metrics.get('total_qa_pairs', 0)}")
-        _logger.info(f"Correct answers: {aggregate_metrics.get('correct_answers', 0)}")
-        _logger.info(f"Wrong answers: {aggregate_metrics.get('wrong_answers', 0)}")
-        _logger.info(f"Abstained: {aggregate_metrics.get('abstained_answers', 0)}")
-        _logger.info(f"Tools created: {aggregate_metrics.get('tools_created', 0)}")
-        _logger.info(f"Tools updated: {aggregate_metrics.get('tools_updated', 0)}")
-        _logger.info(f"Errors: {aggregate_metrics.get('errors', 0)}")
-        _logger.info(f"Success rate: {aggregate_metrics.get('success_rate', 0):.2%}")
+        logger.info(f"\n{'=' * 80}")
+        logger.info("Training Phase Complete")
+        logger.info(f"{'=' * 80}")
+        logger.info(f"Total QA pairs: {aggregate_metrics.get('total_qa_pairs', 0)}")
+        logger.info(f"Correct answers: {aggregate_metrics.get('correct_answers', 0)}")
+        logger.info(f"Wrong answers: {aggregate_metrics.get('wrong_answers', 0)}")
+        logger.info(f"Abstained: {aggregate_metrics.get('abstained_answers', 0)}")
+        logger.info(f"Tools created: {aggregate_metrics.get('tools_created', 0)}")
+        logger.info(f"Tools updated: {aggregate_metrics.get('tools_updated', 0)}")
+        logger.info(f"Errors: {aggregate_metrics.get('errors', 0)}")
+        logger.info(f"Success rate: {aggregate_metrics.get('success_rate', 0):.2%}")
 
         # Get final tool count
         final_tools = get_created_tools()
-        _logger.info(
+        logger.info(
             f"Final tool count: {len(final_tools)} (started with {len(initial_tools)})"
         )
 

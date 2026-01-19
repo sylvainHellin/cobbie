@@ -24,10 +24,22 @@ class LlmResponseParser:
     def __init__(self, options: DoNotUseDirectlyCallManager):
         self.__options = options
 
+    def BaselineQA(
+        self, llm_response: str, baml_options: BamlCallOptions = {},
+    ) -> types.FinalAnswer:
+        __result__ = self.__options.merge_options(baml_options).parse_response(function_name="BaselineQA", llm_response=llm_response, mode="request")
+        return typing.cast(types.FinalAnswer, __result__)
+
     def Cobbie(
         self, llm_response: str, baml_options: BamlCallOptions = {},
     ) -> typing.Union["types.CodeAction", "types.FinalAnswer"]:
         __result__ = self.__options.merge_options(baml_options).parse_response(function_name="Cobbie", llm_response=llm_response, mode="request")
+        return typing.cast(typing.Union["types.CodeAction", "types.FinalAnswer"], __result__)
+
+    def Cobbie_ollama(
+        self, llm_response: str, baml_options: BamlCallOptions = {},
+    ) -> typing.Union["types.CodeAction", "types.FinalAnswer"]:
+        __result__ = self.__options.merge_options(baml_options).parse_response(function_name="Cobbie_ollama", llm_response=llm_response, mode="request")
         return typing.cast(typing.Union["types.CodeAction", "types.FinalAnswer"], __result__)
 
     def EvaluateResponse(
@@ -72,6 +84,12 @@ class LlmResponseParser:
         __result__ = self.__options.merge_options(baml_options).parse_response(function_name="QuestionAnswerAlignment", llm_response=llm_response, mode="request")
         return typing.cast(types.AlignedQAPair, __result__)
 
+    def ReviewDocChunk(
+        self, llm_response: str, baml_options: BamlCallOptions = {},
+    ) -> types.ChunkReviewOutput:
+        __result__ = self.__options.merge_options(baml_options).parse_response(function_name="ReviewDocChunk", llm_response=llm_response, mode="request")
+        return typing.cast(types.ChunkReviewOutput, __result__)
+
     def ValidateQuestionCategory(
         self, llm_response: str, baml_options: BamlCallOptions = {},
     ) -> types.CategoryValidationResult:
@@ -86,10 +104,22 @@ class LlmStreamParser:
     def __init__(self, options: DoNotUseDirectlyCallManager):
         self.__options = options
 
+    def BaselineQA(
+        self, llm_response: str, baml_options: BamlCallOptions = {},
+    ) -> stream_types.FinalAnswer:
+        __result__ = self.__options.merge_options(baml_options).parse_response(function_name="BaselineQA", llm_response=llm_response, mode="stream")
+        return typing.cast(stream_types.FinalAnswer, __result__)
+
     def Cobbie(
         self, llm_response: str, baml_options: BamlCallOptions = {},
     ) -> typing.Union["stream_types.CodeAction", "stream_types.FinalAnswer"]:
         __result__ = self.__options.merge_options(baml_options).parse_response(function_name="Cobbie", llm_response=llm_response, mode="stream")
+        return typing.cast(typing.Union["stream_types.CodeAction", "stream_types.FinalAnswer"], __result__)
+
+    def Cobbie_ollama(
+        self, llm_response: str, baml_options: BamlCallOptions = {},
+    ) -> typing.Union["stream_types.CodeAction", "stream_types.FinalAnswer"]:
+        __result__ = self.__options.merge_options(baml_options).parse_response(function_name="Cobbie_ollama", llm_response=llm_response, mode="stream")
         return typing.cast(typing.Union["stream_types.CodeAction", "stream_types.FinalAnswer"], __result__)
 
     def EvaluateResponse(
@@ -133,6 +163,12 @@ class LlmStreamParser:
     ) -> stream_types.AlignedQAPair:
         __result__ = self.__options.merge_options(baml_options).parse_response(function_name="QuestionAnswerAlignment", llm_response=llm_response, mode="stream")
         return typing.cast(stream_types.AlignedQAPair, __result__)
+
+    def ReviewDocChunk(
+        self, llm_response: str, baml_options: BamlCallOptions = {},
+    ) -> stream_types.ChunkReviewOutput:
+        __result__ = self.__options.merge_options(baml_options).parse_response(function_name="ReviewDocChunk", llm_response=llm_response, mode="stream")
+        return typing.cast(stream_types.ChunkReviewOutput, __result__)
 
     def ValidateQuestionCategory(
         self, llm_response: str, baml_options: BamlCallOptions = {},

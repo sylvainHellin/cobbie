@@ -5,10 +5,9 @@ import inspect
 import os
 from typing import Callable, Dict, List, Literal
 
-from src.config import CREATED_TOOLS_PATH, INITIAL_TOOLS_PATH, MANUAL_TOOLS_PATH
-from src.util.get_logger import get_logger
+from loguru import logger
 
-logger = get_logger(__name__)
+from src.config import CREATED_TOOLS_PATH, INITIAL_TOOLS_PATH, MANUAL_TOOLS_PATH
 
 # Map directory names to their paths
 TOOL_PATHS = {

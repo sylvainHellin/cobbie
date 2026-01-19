@@ -2,11 +2,10 @@
 
 from pathlib import Path
 
-from src.config import CREATED_TOOLS_PATH, LOG_LEVEL
-from src.util.get_logger import get_logger
-from src.db.query import delete_tool_from_db
+from loguru import logger
 
-logger = get_logger(name="delete_tool", log_level=LOG_LEVEL)
+from src.config import CREATED_TOOLS_PATH
+from src.db.query import delete_tool_from_db
 
 
 def delete_tool(tool_name: str) -> bool:

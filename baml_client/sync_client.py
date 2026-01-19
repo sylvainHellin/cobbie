@@ -91,6 +91,20 @@ class BamlSyncClient:
     def parse_stream(self):
       return self.__llm_stream_parser
 
+    def BaselineQA(self, user_input: str,model_summary: str,
+        baml_options: BamlCallOptions = {},
+    ) -> types.FinalAnswer:
+        # Check if on_tick is provided
+        if 'on_tick' in baml_options:
+            __stream__ = self.stream.BaselineQA(user_input=user_input,model_summary=model_summary,
+                baml_options=baml_options)
+            return __stream__.get_final_response()
+        else:
+            # Original non-streaming code
+            __result__ = self.__options.merge_options(baml_options).call_function_sync(function_name="BaselineQA", args={
+                "user_input": user_input,"model_summary": model_summary,
+            })
+            return typing.cast(types.FinalAnswer, __result__.cast_to(types, types, stream_types, False, __runtime__))
     def Cobbie(self, user_input: str,available_tools: str,previous_attempts: typing.Optional[str] = None,model_path: typing.Optional[str] = None,
         baml_options: BamlCallOptions = {},
     ) -> typing.Union["types.CodeAction", "types.FinalAnswer"]:
@@ -103,6 +117,20 @@ class BamlSyncClient:
             # Original non-streaming code
             __result__ = self.__options.merge_options(baml_options).call_function_sync(function_name="Cobbie", args={
                 "user_input": user_input,"available_tools": available_tools,"previous_attempts": previous_attempts,"model_path": model_path,
+            })
+            return typing.cast(typing.Union["types.CodeAction", "types.FinalAnswer"], __result__.cast_to(types, types, stream_types, False, __runtime__))
+    def Cobbie_ollama(self, user_input: str,
+        baml_options: BamlCallOptions = {},
+    ) -> typing.Union["types.CodeAction", "types.FinalAnswer"]:
+        # Check if on_tick is provided
+        if 'on_tick' in baml_options:
+            __stream__ = self.stream.Cobbie_ollama(user_input=user_input,
+                baml_options=baml_options)
+            return __stream__.get_final_response()
+        else:
+            # Original non-streaming code
+            __result__ = self.__options.merge_options(baml_options).call_function_sync(function_name="Cobbie_ollama", args={
+                "user_input": user_input,
             })
             return typing.cast(typing.Union["types.CodeAction", "types.FinalAnswer"], __result__.cast_to(types, types, stream_types, False, __runtime__))
     def EvaluateResponse(self, question: str,category: types.QuestionCategory,ground_truth: str,system_response: str,
@@ -203,6 +231,20 @@ class BamlSyncClient:
                 "question": question,"answer": answer,
             })
             return typing.cast(types.AlignedQAPair, __result__.cast_to(types, types, stream_types, False, __runtime__))
+    def ReviewDocChunk(self, input: types.ChunkReviewInput,
+        baml_options: BamlCallOptions = {},
+    ) -> types.ChunkReviewOutput:
+        # Check if on_tick is provided
+        if 'on_tick' in baml_options:
+            __stream__ = self.stream.ReviewDocChunk(input=input,
+                baml_options=baml_options)
+            return __stream__.get_final_response()
+        else:
+            # Original non-streaming code
+            __result__ = self.__options.merge_options(baml_options).call_function_sync(function_name="ReviewDocChunk", args={
+                "input": input,
+            })
+            return typing.cast(types.ChunkReviewOutput, __result__.cast_to(types, types, stream_types, False, __runtime__))
     def ValidateQuestionCategory(self, question: str,answer: str,current_category: str,
         baml_options: BamlCallOptions = {},
     ) -> types.CategoryValidationResult:
@@ -226,11 +268,35 @@ class BamlStreamClient:
     def __init__(self, options: DoNotUseDirectlyCallManager):
         self.__options = options
 
+    def BaselineQA(self, user_input: str,model_summary: str,
+        baml_options: BamlCallOptions = {},
+    ) -> baml_py.BamlSyncStream[stream_types.FinalAnswer, types.FinalAnswer]:
+        __ctx__, __result__ = self.__options.merge_options(baml_options).create_sync_stream(function_name="BaselineQA", args={
+            "user_input": user_input,"model_summary": model_summary,
+        })
+        return baml_py.BamlSyncStream[stream_types.FinalAnswer, types.FinalAnswer](
+          __result__,
+          lambda x: typing.cast(stream_types.FinalAnswer, x.cast_to(types, types, stream_types, True, __runtime__)),
+          lambda x: typing.cast(types.FinalAnswer, x.cast_to(types, types, stream_types, False, __runtime__)),
+          __ctx__,
+        )
     def Cobbie(self, user_input: str,available_tools: str,previous_attempts: typing.Optional[str] = None,model_path: typing.Optional[str] = None,
         baml_options: BamlCallOptions = {},
     ) -> baml_py.BamlSyncStream[typing.Union["stream_types.CodeAction", "stream_types.FinalAnswer"], typing.Union["types.CodeAction", "types.FinalAnswer"]]:
         __ctx__, __result__ = self.__options.merge_options(baml_options).create_sync_stream(function_name="Cobbie", args={
             "user_input": user_input,"available_tools": available_tools,"previous_attempts": previous_attempts,"model_path": model_path,
+        })
+        return baml_py.BamlSyncStream[typing.Union["stream_types.CodeAction", "stream_types.FinalAnswer"], typing.Union["types.CodeAction", "types.FinalAnswer"]](
+          __result__,
+          lambda x: typing.cast(typing.Union["stream_types.CodeAction", "stream_types.FinalAnswer"], x.cast_to(types, types, stream_types, True, __runtime__)),
+          lambda x: typing.cast(typing.Union["types.CodeAction", "types.FinalAnswer"], x.cast_to(types, types, stream_types, False, __runtime__)),
+          __ctx__,
+        )
+    def Cobbie_ollama(self, user_input: str,
+        baml_options: BamlCallOptions = {},
+    ) -> baml_py.BamlSyncStream[typing.Union["stream_types.CodeAction", "stream_types.FinalAnswer"], typing.Union["types.CodeAction", "types.FinalAnswer"]]:
+        __ctx__, __result__ = self.__options.merge_options(baml_options).create_sync_stream(function_name="Cobbie_ollama", args={
+            "user_input": user_input,
         })
         return baml_py.BamlSyncStream[typing.Union["stream_types.CodeAction", "stream_types.FinalAnswer"], typing.Union["types.CodeAction", "types.FinalAnswer"]](
           __result__,
@@ -322,6 +388,18 @@ class BamlStreamClient:
           lambda x: typing.cast(types.AlignedQAPair, x.cast_to(types, types, stream_types, False, __runtime__)),
           __ctx__,
         )
+    def ReviewDocChunk(self, input: types.ChunkReviewInput,
+        baml_options: BamlCallOptions = {},
+    ) -> baml_py.BamlSyncStream[stream_types.ChunkReviewOutput, types.ChunkReviewOutput]:
+        __ctx__, __result__ = self.__options.merge_options(baml_options).create_sync_stream(function_name="ReviewDocChunk", args={
+            "input": input,
+        })
+        return baml_py.BamlSyncStream[stream_types.ChunkReviewOutput, types.ChunkReviewOutput](
+          __result__,
+          lambda x: typing.cast(stream_types.ChunkReviewOutput, x.cast_to(types, types, stream_types, True, __runtime__)),
+          lambda x: typing.cast(types.ChunkReviewOutput, x.cast_to(types, types, stream_types, False, __runtime__)),
+          __ctx__,
+        )
     def ValidateQuestionCategory(self, question: str,answer: str,current_category: str,
         baml_options: BamlCallOptions = {},
     ) -> baml_py.BamlSyncStream[stream_types.CategoryValidationResult, types.CategoryValidationResult]:
@@ -342,11 +420,25 @@ class BamlHttpRequestClient:
     def __init__(self, options: DoNotUseDirectlyCallManager):
         self.__options = options
 
+    def BaselineQA(self, user_input: str,model_summary: str,
+        baml_options: BamlCallOptions = {},
+    ) -> baml_py.baml_py.HTTPRequest:
+        __result__ = self.__options.merge_options(baml_options).create_http_request_sync(function_name="BaselineQA", args={
+            "user_input": user_input,"model_summary": model_summary,
+        }, mode="request")
+        return __result__
     def Cobbie(self, user_input: str,available_tools: str,previous_attempts: typing.Optional[str] = None,model_path: typing.Optional[str] = None,
         baml_options: BamlCallOptions = {},
     ) -> baml_py.baml_py.HTTPRequest:
         __result__ = self.__options.merge_options(baml_options).create_http_request_sync(function_name="Cobbie", args={
             "user_input": user_input,"available_tools": available_tools,"previous_attempts": previous_attempts,"model_path": model_path,
+        }, mode="request")
+        return __result__
+    def Cobbie_ollama(self, user_input: str,
+        baml_options: BamlCallOptions = {},
+    ) -> baml_py.baml_py.HTTPRequest:
+        __result__ = self.__options.merge_options(baml_options).create_http_request_sync(function_name="Cobbie_ollama", args={
+            "user_input": user_input,
         }, mode="request")
         return __result__
     def EvaluateResponse(self, question: str,category: types.QuestionCategory,ground_truth: str,system_response: str,
@@ -396,6 +488,13 @@ class BamlHttpRequestClient:
     ) -> baml_py.baml_py.HTTPRequest:
         __result__ = self.__options.merge_options(baml_options).create_http_request_sync(function_name="QuestionAnswerAlignment", args={
             "question": question,"answer": answer,
+        }, mode="request")
+        return __result__
+    def ReviewDocChunk(self, input: types.ChunkReviewInput,
+        baml_options: BamlCallOptions = {},
+    ) -> baml_py.baml_py.HTTPRequest:
+        __result__ = self.__options.merge_options(baml_options).create_http_request_sync(function_name="ReviewDocChunk", args={
+            "input": input,
         }, mode="request")
         return __result__
     def ValidateQuestionCategory(self, question: str,answer: str,current_category: str,
@@ -413,11 +512,25 @@ class BamlHttpStreamRequestClient:
     def __init__(self, options: DoNotUseDirectlyCallManager):
         self.__options = options
 
+    def BaselineQA(self, user_input: str,model_summary: str,
+        baml_options: BamlCallOptions = {},
+    ) -> baml_py.baml_py.HTTPRequest:
+        __result__ = self.__options.merge_options(baml_options).create_http_request_sync(function_name="BaselineQA", args={
+            "user_input": user_input,"model_summary": model_summary,
+        }, mode="stream")
+        return __result__
     def Cobbie(self, user_input: str,available_tools: str,previous_attempts: typing.Optional[str] = None,model_path: typing.Optional[str] = None,
         baml_options: BamlCallOptions = {},
     ) -> baml_py.baml_py.HTTPRequest:
         __result__ = self.__options.merge_options(baml_options).create_http_request_sync(function_name="Cobbie", args={
             "user_input": user_input,"available_tools": available_tools,"previous_attempts": previous_attempts,"model_path": model_path,
+        }, mode="stream")
+        return __result__
+    def Cobbie_ollama(self, user_input: str,
+        baml_options: BamlCallOptions = {},
+    ) -> baml_py.baml_py.HTTPRequest:
+        __result__ = self.__options.merge_options(baml_options).create_http_request_sync(function_name="Cobbie_ollama", args={
+            "user_input": user_input,
         }, mode="stream")
         return __result__
     def EvaluateResponse(self, question: str,category: types.QuestionCategory,ground_truth: str,system_response: str,
@@ -467,6 +580,13 @@ class BamlHttpStreamRequestClient:
     ) -> baml_py.baml_py.HTTPRequest:
         __result__ = self.__options.merge_options(baml_options).create_http_request_sync(function_name="QuestionAnswerAlignment", args={
             "question": question,"answer": answer,
+        }, mode="stream")
+        return __result__
+    def ReviewDocChunk(self, input: types.ChunkReviewInput,
+        baml_options: BamlCallOptions = {},
+    ) -> baml_py.baml_py.HTTPRequest:
+        __result__ = self.__options.merge_options(baml_options).create_http_request_sync(function_name="ReviewDocChunk", args={
+            "input": input,
         }, mode="stream")
         return __result__
     def ValidateQuestionCategory(self, question: str,answer: str,current_category: str,
