@@ -1,105 +1,156 @@
-"""SQLite-vec storage for documentation chunks and embeddings."""
+"""Hybrid storage for documentation chunks: ChromaDB (dense) + BM25 (sparse)."""
 
-import sqlite3
-import struct
+import pickle
+import re
 from pathlib import Path
+from typing import cast
 
+import chromadb
 import numpy as np
-import sqlite_vec
+from chromadb.config import Settings
+from rank_bm25 import BM25Okapi
 
-from src.docs_indexer.embedder import EMBEDDING_DIM
-from src.docs_indexer.models import DocChunk
+from src.docs_indexer.models import ChunkType, DocChunk
 
-# Default database path
-DEFAULT_DB_PATH = Path("src/db/doc_vectors.db")
-
-
-def _serialize_f32(vector: np.ndarray) -> bytes:
-    """Serialize a numpy array to bytes for sqlite-vec."""
-    return struct.pack(f"{len(vector)}f", *vector.astype(np.float32))
+# Default database paths
+DEFAULT_DB_PATH = Path("src/db/chroma_docs")
+DEFAULT_BM25_PATH = Path("src/db/bm25_index.pkl")
 
 
-def _deserialize_f32(data: bytes) -> np.ndarray:
-    """Deserialize bytes to a numpy array."""
-    return np.array(struct.unpack(f"{len(data) // 4}f", data), dtype=np.float32)
+def tokenize(text: str) -> list[str]:
+    """Simple tokenizer for BM25."""
+    # Lowercase and split on non-alphanumeric characters
+    text = text.lower()
+    tokens = re.findall(r"\b\w+\b", text)
+    return tokens
+
+
+class BM25Index:
+    """BM25 index for lexical search."""
+
+    def __init__(self, index_path: Path | str = DEFAULT_BM25_PATH):
+        self.index_path = Path(index_path)
+        self.bm25: BM25Okapi | None = None
+        self.chunk_ids: list[str] = []
+        self.corpus: list[list[str]] = []
+
+        # Load existing index if available
+        if self.index_path.exists():
+            self._load()
+
+    def _load(self):
+        """Load BM25 index from disk."""
+        with open(self.index_path, "rb") as f:
+            data = pickle.load(f)
+            self.chunk_ids = data["chunk_ids"]
+            self.corpus = data["corpus"]
+            if self.corpus:
+                self.bm25 = BM25Okapi(self.corpus)
+
+    def _save(self):
+        """Save BM25 index to disk."""
+        self.index_path.parent.mkdir(parents=True, exist_ok=True)
+        with open(self.index_path, "wb") as f:
+            pickle.dump({"chunk_ids": self.chunk_ids, "corpus": self.corpus}, f)
+
+    def clear(self):
+        """Clear the index."""
+        self.bm25 = None
+        self.chunk_ids = []
+        self.corpus = []
+        if self.index_path.exists():
+            self.index_path.unlink()
+
+    def build(self, chunks: list[DocChunk]):
+        """Build BM25 index from chunks.
+
+        Args:
+            chunks: List of DocChunk objects to index
+        """
+        self.chunk_ids = [chunk.id for chunk in chunks]
+        # Combine name, signature, and content for better lexical matching
+        self.corpus = [tokenize(chunk.to_embedding_text()) for chunk in chunks]
+        self.bm25 = BM25Okapi(self.corpus)
+        self._save()
+
+    def search(self, query: str, limit: int = 25) -> list[tuple[str, float]]:
+        """Search for chunks using BM25.
+
+        Args:
+            query: Query string
+            limit: Maximum number of results
+
+        Returns:
+            List of (chunk_id, score) tuples, sorted by score descending
+        """
+        if self.bm25 is None or not self.chunk_ids:
+            return []
+
+        query_tokens = tokenize(query)
+        scores = self.bm25.get_scores(query_tokens)
+
+        # Get top-k indices
+        top_indices = np.argsort(scores)[::-1][:limit]
+
+        results = []
+        for idx in top_indices:
+            if scores[idx] > 0:  # Only include non-zero scores
+                results.append((self.chunk_ids[idx], float(scores[idx])))
+
+        return results
+
+    def count(self) -> int:
+        """Return number of indexed documents."""
+        return len(self.chunk_ids)
 
 
 class DocVectorStore:
-    """Vector store for documentation chunks using sqlite-vec."""
+    """Hybrid vector store: ChromaDB for dense embeddings + BM25 for lexical search."""
 
-    def __init__(self, db_path: Path | str = DEFAULT_DB_PATH):
+    def __init__(
+        self,
+        db_path: Path | str = DEFAULT_DB_PATH,
+        bm25_path: Path | str = DEFAULT_BM25_PATH,
+    ):
         self.db_path = Path(db_path)
         self.db_path.parent.mkdir(parents=True, exist_ok=True)
-        self._init_db()
 
-    def _get_connection(self) -> sqlite3.Connection:
-        """Get a database connection with sqlite-vec loaded."""
-        conn = sqlite3.connect(str(self.db_path))
-        conn.enable_load_extension(True)
-        sqlite_vec.load(conn)
-        conn.enable_load_extension(False)
-        return conn
+        # Initialize persistent ChromaDB client
+        self.client = chromadb.PersistentClient(
+            path=str(self.db_path),
+            settings=Settings(anonymized_telemetry=False),
+        )
 
-    def _init_db(self):
-        """Initialize the database schema."""
-        conn = self._get_connection()
-        cursor = conn.cursor()
+        # Create collections for chunks and questions
+        self.chunks_collection = self.client.get_or_create_collection(
+            name="doc_chunks",
+            metadata={"hnsw:space": "cosine"},
+        )
+        self.questions_collection = self.client.get_or_create_collection(
+            name="doc_questions",
+            metadata={"hnsw:space": "cosine"},
+        )
 
-        # Create chunks table
-        cursor.execute("""
-            CREATE TABLE IF NOT EXISTS doc_chunks (
-                id TEXT PRIMARY KEY,
-                content TEXT NOT NULL,
-                chunk_type TEXT NOT NULL,
-                name TEXT NOT NULL,
-                module TEXT,
-                signature TEXT,
-                source_file TEXT NOT NULL,
-                line_start INTEGER,
-                parent TEXT
-            )
-        """)
-
-        # Create questions table
-        cursor.execute("""
-            CREATE TABLE IF NOT EXISTS doc_questions (
-                id INTEGER PRIMARY KEY AUTOINCREMENT,
-                chunk_id TEXT NOT NULL REFERENCES doc_chunks(id),
-                question TEXT NOT NULL
-            )
-        """)
-
-        # Create chunk embeddings virtual table
-        cursor.execute(f"""
-            CREATE VIRTUAL TABLE IF NOT EXISTS doc_chunk_embeddings USING vec0(
-                chunk_id TEXT PRIMARY KEY,
-                embedding FLOAT[{EMBEDDING_DIM}]
-            )
-        """)
-
-        # Create question embeddings virtual table
-        cursor.execute(f"""
-            CREATE VIRTUAL TABLE IF NOT EXISTS doc_question_embeddings USING vec0(
-                question_id INTEGER PRIMARY KEY,
-                embedding FLOAT[{EMBEDDING_DIM}]
-            )
-        """)
-
-        conn.commit()
-        conn.close()
+        # Initialize BM25 index
+        self.bm25_index = BM25Index(bm25_path)
 
     def clear(self):
-        """Clear all data from the database."""
-        conn = self._get_connection()
-        cursor = conn.cursor()
+        """Clear all data from the collections and BM25 index."""
+        # Delete and recreate ChromaDB collections
+        self.client.delete_collection("doc_chunks")
+        self.client.delete_collection("doc_questions")
 
-        cursor.execute("DELETE FROM doc_question_embeddings")
-        cursor.execute("DELETE FROM doc_chunk_embeddings")
-        cursor.execute("DELETE FROM doc_questions")
-        cursor.execute("DELETE FROM doc_chunks")
+        self.chunks_collection = self.client.create_collection(
+            name="doc_chunks",
+            metadata={"hnsw:space": "cosine"},
+        )
+        self.questions_collection = self.client.create_collection(
+            name="doc_questions",
+            metadata={"hnsw:space": "cosine"},
+        )
 
-        conn.commit()
-        conn.close()
+        # Clear BM25 index
+        self.bm25_index.clear()
 
     def insert_chunk(
         self,
@@ -114,50 +165,34 @@ class DocVectorStore:
             embedding: The chunk's embedding vector
             question_embeddings: List of (question_text, embedding) tuples
         """
-        conn = self._get_connection()
-        cursor = conn.cursor()
-
-        # Insert chunk metadata
-        cursor.execute(
-            """
-            INSERT OR REPLACE INTO doc_chunks
-            (id, content, chunk_type, name, module, signature, source_file, line_start, parent)
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
-            """,
-            (
-                chunk.id,
-                chunk.content,
-                chunk.chunk_type,
-                chunk.name,
-                chunk.module,
-                chunk.signature,
-                chunk.source_file,
-                chunk.line_start,
-                chunk.parent,
-            ),
-        )
-
-        # Insert chunk embedding
-        cursor.execute(
-            "INSERT OR REPLACE INTO doc_chunk_embeddings (chunk_id, embedding) VALUES (?, ?)",
-            (chunk.id, _serialize_f32(embedding)),
+        # Insert chunk with embedding
+        self.chunks_collection.add(
+            ids=[chunk.id],
+            embeddings=[embedding.tolist()],
+            metadatas=[
+                {
+                    "name": chunk.name,
+                    "chunk_type": chunk.chunk_type,
+                    "module": chunk.module or "",
+                    "signature": chunk.signature or "",
+                    "source_file": chunk.source_file,
+                    "line_start": chunk.line_start or 0,
+                    "parent": chunk.parent or "",
+                }
+            ],
+            documents=[chunk.content],
         )
 
         # Insert question embeddings if provided
         if question_embeddings:
-            for question_text, q_embedding in question_embeddings:
-                cursor.execute(
-                    "INSERT INTO doc_questions (chunk_id, question) VALUES (?, ?)",
-                    (chunk.id, question_text),
+            for idx, (question_text, q_embedding) in enumerate(question_embeddings):
+                question_id = f"{chunk.id}_q{idx}"
+                self.questions_collection.add(
+                    ids=[question_id],
+                    embeddings=[q_embedding.tolist()],
+                    metadatas=[{"chunk_id": chunk.id}],
+                    documents=[question_text],
                 )
-                question_id = cursor.lastrowid
-                cursor.execute(
-                    "INSERT INTO doc_question_embeddings (question_id, embedding) VALUES (?, ?)",
-                    (question_id, _serialize_f32(q_embedding)),
-                )
-
-        conn.commit()
-        conn.close()
 
     def insert_chunks_batch(
         self,
@@ -172,56 +207,63 @@ class DocVectorStore:
             embeddings: Array of shape (len(chunks), EMBEDDING_DIM)
             all_question_embeddings: List of question embeddings per chunk
         """
-        conn = self._get_connection()
-        cursor = conn.cursor()
+        # Prepare batch data for chunks
+        ids = [chunk.id for chunk in chunks]
+        emb_list = [embeddings[i].tolist() for i in range(len(chunks))]
+        metadatas: list[dict[str, str | int]] = [
+            {
+                "name": chunk.name,
+                "chunk_type": chunk.chunk_type,
+                "module": chunk.module or "",
+                "signature": chunk.signature or "",
+                "source_file": chunk.source_file,
+                "line_start": chunk.line_start or 0,
+                "parent": chunk.parent or "",
+            }
+            for chunk in chunks
+        ]
+        documents = [chunk.content for chunk in chunks]
 
-        for i, chunk in enumerate(chunks):
-            # Insert chunk metadata
-            cursor.execute(
-                """
-                INSERT OR REPLACE INTO doc_chunks
-                (id, content, chunk_type, name, module, signature, source_file, line_start, parent)
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
-                """,
-                (
-                    chunk.id,
-                    chunk.content,
-                    chunk.chunk_type,
-                    chunk.name,
-                    chunk.module,
-                    chunk.signature,
-                    chunk.source_file,
-                    chunk.line_start,
-                    chunk.parent,
-                ),
-            )
+        # Insert chunks in batch
+        self.chunks_collection.add(
+            ids=ids,
+            embeddings=emb_list,
+            metadatas=metadatas,  # type: ignore[arg-type]
+            documents=documents,
+        )
 
-            # Insert chunk embedding
-            cursor.execute(
-                "INSERT OR REPLACE INTO doc_chunk_embeddings (chunk_id, embedding) VALUES (?, ?)",
-                (chunk.id, _serialize_f32(embeddings[i])),
-            )
+        # Insert questions in batch
+        if all_question_embeddings:
+            q_ids = []
+            q_embeddings = []
+            q_metadatas = []
+            q_documents = []
 
-            # Insert question embeddings if provided
-            if all_question_embeddings and i < len(all_question_embeddings):
-                for question_text, q_embedding in all_question_embeddings[i]:
-                    cursor.execute(
-                        "INSERT INTO doc_questions (chunk_id, question) VALUES (?, ?)",
-                        (chunk.id, question_text),
-                    )
-                    question_id = cursor.lastrowid
-                    cursor.execute(
-                        "INSERT INTO doc_question_embeddings (question_id, embedding) VALUES (?, ?)",
-                        (question_id, _serialize_f32(q_embedding)),
-                    )
+            for i, chunk in enumerate(chunks):
+                if i < len(all_question_embeddings):
+                    for q_idx, (question_text, q_embedding) in enumerate(
+                        all_question_embeddings[i]
+                    ):
+                        q_ids.append(f"{chunk.id}_q{q_idx}")
+                        q_embeddings.append(q_embedding.tolist())
+                        q_metadatas.append({"chunk_id": chunk.id})
+                        q_documents.append(question_text)
 
-        conn.commit()
-        conn.close()
+            if q_ids:
+                self.questions_collection.add(
+                    ids=q_ids,
+                    embeddings=q_embeddings,
+                    metadatas=q_metadatas,
+                    documents=q_documents,
+                )
+
+        # Build BM25 index
+        self.bm25_index.build(chunks)
 
     def search_chunks(
         self, query_embedding: np.ndarray, limit: int = 25
     ) -> list[tuple[str, float]]:
-        """Search for similar chunks by embedding.
+        """Search for similar chunks by dense embedding.
 
         Args:
             query_embedding: Query vector of shape (EMBEDDING_DIM,)
@@ -230,22 +272,32 @@ class DocVectorStore:
         Returns:
             List of (chunk_id, distance) tuples, sorted by distance ascending
         """
-        conn = self._get_connection()
-        cursor = conn.cursor()
-
-        cursor.execute(
-            """
-            SELECT chunk_id, distance
-            FROM doc_chunk_embeddings
-            WHERE embedding MATCH ?
-            AND k = ?
-            """,
-            (_serialize_f32(query_embedding), limit),
+        results = self.chunks_collection.query(
+            query_embeddings=[query_embedding.tolist()],
+            n_results=limit,
+            include=["distances"],
         )
 
-        results = cursor.fetchall()
-        conn.close()
-        return results
+        if not results["ids"] or not results["ids"][0]:
+            return []
+
+        # Combine ids and distances
+        ids = results["ids"][0]
+        distances = results["distances"][0] if results["distances"] else [0.0] * len(ids)
+
+        return list(zip(ids, distances))
+
+    def search_bm25(self, query: str, limit: int = 25) -> list[tuple[str, float]]:
+        """Search for similar chunks using BM25 lexical search.
+
+        Args:
+            query: Query string
+            limit: Maximum number of results
+
+        Returns:
+            List of (chunk_id, score) tuples, sorted by score descending
+        """
+        return self.bm25_index.search(query, limit)
 
     def search_questions(
         self, query_embedding: np.ndarray, limit: int = 25
@@ -259,128 +311,93 @@ class DocVectorStore:
         Returns:
             List of (chunk_id, distance) tuples, sorted by distance ascending
         """
-        conn = self._get_connection()
-        cursor = conn.cursor()
-
-        # First get question matches from vec0
-        cursor.execute(
-            """
-            SELECT question_id, distance
-            FROM doc_question_embeddings
-            WHERE embedding MATCH ?
-            AND k = ?
-            """,
-            (_serialize_f32(query_embedding), limit),
+        results = self.questions_collection.query(
+            query_embeddings=[query_embedding.tolist()],
+            n_results=limit,
+            include=["metadatas", "distances"],
         )
-        question_results = cursor.fetchall()
 
-        if not question_results:
-            conn.close()
+        if not results["ids"] or not results["ids"][0]:
             return []
 
-        # Then join with questions table to get chunk_ids
-        question_ids = [r[0] for r in question_results]
-        distances = {r[0]: r[1] for r in question_results}
+        # Extract chunk_ids from metadata
+        metadatas = results["metadatas"][0] if results["metadatas"] else []
+        distances = results["distances"][0] if results["distances"] else []
 
-        placeholders = ",".join("?" * len(question_ids))
-        cursor.execute(
-            f"""
-            SELECT id, chunk_id FROM doc_questions
-            WHERE id IN ({placeholders})
-            """,
-            question_ids,
-        )
+        chunk_results = []
+        for i, metadata in enumerate(metadatas):
+            chunk_id = metadata.get("chunk_id", "")
+            distance = distances[i] if i < len(distances) else 0.0
+            chunk_results.append((chunk_id, distance))
 
-        results = [(row[1], distances[row[0]]) for row in cursor.fetchall()]
-        conn.close()
-
-        # Sort by distance
-        results.sort(key=lambda x: x[1])
-        return results
+        return chunk_results
 
     def get_chunk_by_id(self, chunk_id: str) -> DocChunk | None:
         """Retrieve a chunk by its ID."""
-        conn = self._get_connection()
-        cursor = conn.cursor()
-
-        cursor.execute(
-            """
-            SELECT id, content, chunk_type, name, module, signature,
-                   source_file, line_start, parent
-            FROM doc_chunks
-            WHERE id = ?
-            """,
-            (chunk_id,),
+        results = self.chunks_collection.get(
+            ids=[chunk_id],
+            include=["metadatas", "documents"],
         )
 
-        row = cursor.fetchone()
-        conn.close()
+        if not results["ids"]:
+            return None
 
-        if row:
-            return DocChunk(
-                id=row[0],
-                content=row[1],
-                chunk_type=row[2],
-                name=row[3],
-                module=row[4],
-                signature=row[5],
-                source_file=row[6],
-                line_start=row[7],
-                parent=row[8],
-            )
-        return None
+        metadata = results["metadatas"][0] if results["metadatas"] else {}
+        document = results["documents"][0] if results["documents"] else ""
+
+        return DocChunk(
+            id=chunk_id,
+            content=cast(str, document),
+            chunk_type=cast(ChunkType, metadata.get("chunk_type", "function")),
+            name=cast(str, metadata.get("name", "")),
+            module=cast(str | None, metadata.get("module") or None),
+            signature=cast(str | None, metadata.get("signature") or None),
+            source_file=cast(str, metadata.get("source_file", "")),
+            line_start=cast(int | None, metadata.get("line_start") or None),
+            parent=cast(str | None, metadata.get("parent") or None),
+        )
 
     def get_chunks_by_ids(self, chunk_ids: list[str]) -> list[DocChunk]:
         """Retrieve multiple chunks by their IDs."""
-        conn = self._get_connection()
-        cursor = conn.cursor()
+        if not chunk_ids:
+            return []
 
-        placeholders = ",".join("?" * len(chunk_ids))
-        cursor.execute(
-            f"""
-            SELECT id, content, chunk_type, name, module, signature,
-                   source_file, line_start, parent
-            FROM doc_chunks
-            WHERE id IN ({placeholders})
-            """,
-            chunk_ids,
+        results = self.chunks_collection.get(
+            ids=chunk_ids,
+            include=["metadatas", "documents"],
         )
 
-        rows = cursor.fetchall()
-        conn.close()
+        if not results["ids"]:
+            return []
 
-        return [
-            DocChunk(
-                id=row[0],
-                content=row[1],
-                chunk_type=row[2],
-                name=row[3],
-                module=row[4],
-                signature=row[5],
-                source_file=row[6],
-                line_start=row[7],
-                parent=row[8],
+        chunks = []
+        for i, chunk_id in enumerate(results["ids"]):
+            metadata = results["metadatas"][i] if results["metadatas"] else {}
+            document = results["documents"][i] if results["documents"] else ""
+
+            chunks.append(
+                DocChunk(
+                    id=chunk_id,
+                    content=cast(str, document),
+                    chunk_type=cast(ChunkType, metadata.get("chunk_type", "function")),
+                    name=cast(str, metadata.get("name", "")),
+                    module=cast(str | None, metadata.get("module") or None),
+                    signature=cast(str | None, metadata.get("signature") or None),
+                    source_file=cast(str, metadata.get("source_file", "")),
+                    line_start=cast(int | None, metadata.get("line_start") or None),
+                    parent=cast(str | None, metadata.get("parent") or None),
+                )
             )
-            for row in rows
-        ]
+
+        return chunks
 
     def count_chunks(self) -> int:
         """Count total number of chunks in the database."""
-        conn = self._get_connection()
-        cursor = conn.cursor()
-        cursor.execute("SELECT COUNT(*) FROM doc_chunks")
-        count = cursor.fetchone()[0]
-        conn.close()
-        return count
+        return self.chunks_collection.count()
 
     def count_questions(self) -> int:
         """Count total number of questions in the database."""
-        conn = self._get_connection()
-        cursor = conn.cursor()
-        cursor.execute("SELECT COUNT(*) FROM doc_questions")
-        count = cursor.fetchone()[0]
-        conn.close()
-        return count
+        return self.questions_collection.count()
 
 
 if __name__ == "__main__":
@@ -390,50 +407,56 @@ if __name__ == "__main__":
     from src.docs_indexer.embedder import embed_chunk, embed_text
 
     # Create temp database for testing
-    with tempfile.NamedTemporaryFile(suffix=".db", delete=False) as f:
-        test_db = Path(f.name)
+    with tempfile.TemporaryDirectory() as tmpdir:
+        test_db = Path(tmpdir) / "test_chroma"
+        test_bm25 = Path(tmpdir) / "test_bm25.pkl"
 
-    store = DocVectorStore(test_db)
+        store = DocVectorStore(test_db, test_bm25)
 
-    # Create a test chunk
-    chunk = DocChunk(
-        id="test_001",
-        content="This is a test documentation chunk about getting walls.",
-        chunk_type="function",
-        name="get_walls",
-        source_file="test.py",
-        module="test.module",
-        signature="def get_walls(model) -> list",
-        line_start=10,
-    )
+        # Create test chunks
+        chunks = [
+            DocChunk(
+                id="test_001",
+                content="This is a test documentation chunk about getting walls.",
+                chunk_type="function",
+                name="get_walls",
+                source_file="test.py",
+                module="test.module",
+                signature="def get_walls(model) -> list",
+                line_start=10,
+            ),
+            DocChunk(
+                id="test_002",
+                content="This function retrieves all windows from an IFC model.",
+                chunk_type="function",
+                name="get_windows",
+                source_file="test.py",
+                module="test.module",
+                signature="def get_windows(model) -> list",
+                line_start=20,
+            ),
+        ]
 
-    # Embed and store
-    embedding = embed_chunk(chunk)
-    questions = [
-        "How do I get all walls?",
-        "What function retrieves walls from a model?",
-    ]
-    question_embeddings = [(q, embed_text(q)) for q in questions]
+        # Embed and store
+        embeddings = np.array([embed_chunk(c) for c in chunks])
+        store.insert_chunks_batch(chunks, embeddings)
 
-    store.insert_chunk(chunk, embedding, question_embeddings)
+        print(f"Stored {store.count_chunks()} chunks")
+        print(f"BM25 index has {store.bm25_index.count()} documents")
 
-    print(f"Stored chunk. Total chunks: {store.count_chunks()}")
-    print(f"Total questions: {store.count_questions()}")
+        # Test dense search
+        query = "get walls from IFC"
+        query_emb = embed_text(query)
 
-    # Search
-    query = "get walls from IFC"
-    query_emb = embed_text(query)
+        dense_results = store.search_chunks(query_emb, limit=5)
+        print(f"\nDense search results: {dense_results}")
 
-    chunk_results = store.search_chunks(query_emb, limit=5)
-    print(f"\nChunk search results: {chunk_results}")
+        # Test BM25 search
+        bm25_results = store.search_bm25(query, limit=5)
+        print(f"BM25 search results: {bm25_results}")
 
-    question_results = store.search_questions(query_emb, limit=5)
-    print(f"Question search results: {question_results}")
+        # Retrieve
+        retrieved = store.get_chunk_by_id("test_001")
+        print(f"\nRetrieved chunk: {retrieved.name if retrieved else None}")
 
-    # Retrieve
-    retrieved = store.get_chunk_by_id("test_001")
-    print(f"\nRetrieved chunk: {retrieved.name if retrieved else None}")
-
-    # Cleanup
-    test_db.unlink()
-    print("\nTest passed!")
+        print("\nTest passed!")
