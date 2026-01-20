@@ -2,7 +2,7 @@ from pydantic import BaseModel, ConfigDict
 from src.db.models import IfcBench
 from typing import Optional, Dict, Callable, Literal
 from baml_py.baml_py import Collector
-from baml_client.types import (
+from src.baml.baml_client.types import (
     FinalAnswer,
     AnswerEvaluationResult,
     NewToolAnalysis,
