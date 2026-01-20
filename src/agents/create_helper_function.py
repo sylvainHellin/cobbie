@@ -677,7 +677,7 @@ if __name__ == "__main__":
     # Get list of available BIM models for testing
     import os
 
-    bim_models_dir = "/Users/sylvainhellin/GitHub/4_phd/cobbie/src/db/bim_models"
+    bim_models_dir = "/Users/sylvainhellin/code/tum/cobbie/src/db/bim_models"
     print("=" * 80)
     print("STEP 1: Running Cobbie to answer question")
     print("=" * 80)
