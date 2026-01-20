@@ -11,10 +11,6 @@ from src.util.python_executor import count_tokens
 load_dotenv(find_dotenv())
 CONTEXT7_API_KEY = os.getenv("CONTEXT7_API_KEY")
 
-# Configuration: "context7" uses the external API, "custom" uses local vector store
-DOC_BACKEND: Literal["context7", "custom"] = os.getenv("DOC_BACKEND", "custom")  # type: ignore
-
-
 def _query_context7(query: str) -> str:
     """Query IfcOpenShell docs using Context7 API."""
     if not CONTEXT7_API_KEY:
@@ -95,10 +91,13 @@ def query_ifcopenshell_docs(query: str) -> str:
     """
     start = time.time()
 
-    with mlflow.start_span(name="query_ifcopenshell_docs", span_type="TOOL") as span:
-        span.set_inputs({"query": query, "backend": DOC_BACKEND})
+    # Read DOC_BACKEND at runtime to allow configuration via environment variable
+    doc_backend: Literal["context7", "custom"] = os.getenv("DOC_BACKEND", "custom")  # type: ignore
 
-        if DOC_BACKEND == "context7":
+    with mlflow.start_span(name="query_ifcopenshell_docs", span_type="TOOL") as span:
+        span.set_inputs({"query": query, "backend": doc_backend})
+
+        if doc_backend == "context7":
             result = _query_context7(query)
         else:
             result = _query_custom(query)
@@ -108,7 +107,7 @@ def query_ifcopenshell_docs(query: str) -> str:
 
         span.set_outputs({"result": result})
         span.set_attributes({
-            "backend": DOC_BACKEND,
+            "backend": doc_backend,
             "duration_ms": duration * 1000,
             "result_tokens": result_tokens,
         })
@@ -118,5 +117,6 @@ def query_ifcopenshell_docs(query: str) -> str:
 
 
 if __name__ == "__main__":
-    print(f"Using backend: {DOC_BACKEND}")
+    doc_backend = os.getenv("DOC_BACKEND", "custom")
+    print(f"Using backend: {doc_backend}")
     docs = query_ifcopenshell_docs("get bounding box element")
