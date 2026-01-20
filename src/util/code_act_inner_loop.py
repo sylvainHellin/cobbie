@@ -2,8 +2,8 @@ from typing import Callable, Dict, Optional
 
 import mlflow
 
-from baml_client import b
-from baml_client.types import CodeAction, FinalAnswer
+from src.baml.baml_client import b
+from src.baml.baml_client.types import CodeAction, FinalAnswer
 from src.config import FUNCTION_BOILERPLATE
 from src.util.python_executor import execute_python
 
