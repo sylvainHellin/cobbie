@@ -20,9 +20,13 @@ Usage:
 
     # Merge mode: run cobbie twice (initial, created) then consolidate
     uv run scripts/run_evaluation.py --start 0 --nb-samples 5 --merge
+
+    # Use context7 documentation backend instead of custom
+    uv run scripts/run_evaluation.py --start 0 --nb-samples 5 --doc context7
 """
 
 import argparse
+import os
 import sys
 import time
 from datetime import datetime
@@ -53,6 +57,7 @@ setup_logger()
 # Mapping from BAML client names to model/provider info for logging
 CLIENT_INFO: Dict[str, Dict[str, str]] = {
     "GLM_4_7": {"model": "glm-4.7", "provider": "zai"},
+    "GLM_4_7_Flash": {"model": "glm-4.7-flash", "provider": "zai"},
     "GLM_4_5_air": {"model": "glm-4.5-air", "provider": "zai"},
     "Devstral": {"model": "devstral-small-2", "provider": "ollama"},
     "Gemini_2_5_Flash_Lite": {"model": "gemini-2.5-flash-lite", "provider": "google"},
@@ -637,7 +642,7 @@ def process_question_baseline(
     Returns:
         Dictionary containing question processing results
     """
-    from analysis.baseline_qa.baseline_bim_qas import baseline_bim_qas
+    from src.baseline.baseline_qa import baseline_bim_qas
 
     question = question_data.question
     ground_truth = getattr(question_data, "answer", "") or getattr(
@@ -712,7 +717,7 @@ def process_question_baseline(
             start_time_baseline = time.time()
 
             # Get model summary for logging (before calling baseline_bim_qas)
-            from analysis.baseline_qa.ifc_summary import get_or_create_summary
+            from src.baseline.ifc_summary import get_or_create_summary
             model_summary = get_or_create_summary(ifc_path)
 
             # Log the summary in the span inputs for debugging
@@ -1321,6 +1326,9 @@ Examples:
 
   # Evaluate with debug logging
   uv run scripts/run_evaluation.py --start 0 --nb-samples 3 --log-level DEBUG
+
+  # Use context7 documentation backend
+  uv run scripts/run_evaluation.py --start 0 --nb-samples 5 --doc context7
         """,
     )
 
@@ -1371,7 +1379,7 @@ Examples:
         "--client",
         type=str,
         default="GLM_4_7",
-        choices=["GLM_4_7", "GLM_4_5_air", "Devstral", "Gemini_2_5_Flash_Lite"],
+        choices=["GLM_4_7", "GLM_4_7_Flash", "GLM_4_5_air", "Devstral", "Gemini_2_5_Flash_Lite"],
         help="Client to use for evaluation (default: GLM_4_7)",
     )
 
@@ -1402,7 +1410,17 @@ Examples:
         help="Enable merging mode: run cobbie with initial tools, then with created tools, then consolidate answers"
     )
 
+    parser.add_argument(
+        "--doc",
+        choices=["custom", "context7"],
+        default="custom",
+        help="Documentation backend for query_ifcopenshell_docs: 'custom' (local vector store) or 'context7' (external API). Default: custom"
+    )
+
     args = parser.parse_args()
+
+    # Set DOC_BACKEND environment variable early, before any tool imports
+    os.environ["DOC_BACKEND"] = args.doc
 
     # Validate arguments
     if args.start < 0:
@@ -1456,6 +1474,7 @@ Examples:
     print(
         f"Processing {actual_samples} samples from index {args.start} to {end_index - 1}"
     )
+    logger.info(f"Using documentation backend: {args.doc}")
     if args.no_tools:
         logger.info("Running in no-tools mode (baseline test)")
     else:
@@ -1582,6 +1601,7 @@ Examples:
                 "tools": ", ".join(tools_dict.keys()) if tools_dict else "none",
                 "tools_count": len(tools_dict),
                 "merge_mode": str(args.merge),
+                "doc_backend": args.doc,
             }
             if args.merge:
                 params["tools_initial_count"] = len(tools_initial)
