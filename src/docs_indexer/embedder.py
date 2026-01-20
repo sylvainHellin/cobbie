@@ -142,7 +142,7 @@ if __name__ == "__main__":
     from src.docs_indexer.parser_python import extract_docstrings_from_file
 
     ifcopenshell_path = Path(
-        "external/ifcopenshell-docs/src/ifcopenshell-python/ifcopenshell"
+        "src/docs_indexer/external/ifcopenshell-docs/src/ifcopenshell-python/ifcopenshell"
     )
     chunks = extract_docstrings_from_file(
         ifcopenshell_path / "util" / "element.py",

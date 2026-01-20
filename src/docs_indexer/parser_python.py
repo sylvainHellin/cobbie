@@ -281,7 +281,7 @@ def extract_all_python_docstrings(ifcopenshell_path: Path) -> list[DocChunk]:
 if __name__ == "__main__":
     # Test the parser
     ifcopenshell_path = Path(
-        "external/ifcopenshell-docs/src/ifcopenshell-python/ifcopenshell"
+        "src/docs_indexer/external/ifcopenshell-docs/src/ifcopenshell-python/ifcopenshell"
     )
     chunks = extract_all_python_docstrings(ifcopenshell_path)
     print(f"\nTotal Python docstring chunks: {len(chunks)}")

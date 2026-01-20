@@ -23,7 +23,7 @@ MLFLOW_TRACKING_URI = "http://127.0.0.1:5000"
 MLFLOW_EXPERIMENT_NAME = "DocIndexing"
 
 # Paths
-IFCOPENSHELL_DOCS_PATH = Path("external/ifcopenshell-docs/src/ifcopenshell-python")
+IFCOPENSHELL_DOCS_PATH = Path("src/docs_indexer/external/ifcopenshell-docs/src/ifcopenshell-python")
 IFCOPENSHELL_PATH = IFCOPENSHELL_DOCS_PATH / "ifcopenshell"
 DOCS_PATH = IFCOPENSHELL_DOCS_PATH / "docs"
 

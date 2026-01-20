@@ -169,7 +169,7 @@ def parse_all_rst_tutorials(docs_dir: Path) -> list[DocChunk]:
 
 if __name__ == "__main__":
     # Test the parser
-    docs_path = Path("external/ifcopenshell-docs/src/ifcopenshell-python/docs")
+    docs_path = Path("src/docs_indexer/external/ifcopenshell-docs/src/ifcopenshell-python/docs")
     chunks = parse_all_rst_tutorials(docs_path)
     print(f"\nTotal tutorial chunks: {len(chunks)}")
     for chunk in chunks[:3]:

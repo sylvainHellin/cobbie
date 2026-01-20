@@ -5,8 +5,8 @@ from collections.abc import Callable
 from concurrent.futures import ThreadPoolExecutor, as_completed
 
 import mlflow
-from baml_client import b
-from baml_client.types import ChunkReviewInput
+from src.baml.baml_client import b
+from src.baml.baml_client.types import ChunkReviewInput
 from baml_py.baml_py import Collector
 from loguru import logger
 
@@ -265,7 +265,7 @@ if __name__ == "__main__":
     from src.docs_indexer.parser_python import extract_docstrings_from_file
 
     ifcopenshell_path = Path(
-        "external/ifcopenshell-docs/src/ifcopenshell-python/ifcopenshell"
+        "src/docs_indexer/external/ifcopenshell-docs/src/ifcopenshell-python/ifcopenshell"
     )
 
     # Get a sample chunk
