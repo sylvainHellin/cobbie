@@ -12,7 +12,7 @@ from baml_py import baml_py
 from baml_py.baml_py import Collector
 from loguru import logger
 
-from baml_client.types import CodeAction, FinalAnswer
+from src.baml.baml_client.types import CodeAction, FinalAnswer
 from src.util.code_act_inner_loop import _code_act_iter, _execute_code_action
 from src.util.generate_tools_docs import generate_tools_docs
 

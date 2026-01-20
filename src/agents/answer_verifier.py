@@ -9,8 +9,8 @@ from typing import Literal, Tuple
 import mlflow
 from baml_py.baml_py import Collector
 
-from baml_client import b
-from baml_client.types import AnswerEvaluationResult, CriterionResult, QuestionCategory
+from src.baml.baml_client import b
+from src.baml.baml_client.types import AnswerEvaluationResult, CriterionResult, QuestionCategory
 
 
 def _map_category_to_baml(category: Literal[1, 2, 3, 4]) -> QuestionCategory:

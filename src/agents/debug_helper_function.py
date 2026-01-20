@@ -13,7 +13,7 @@ import mlflow
 from baml_py.baml_py import Collector
 from loguru import logger
 
-from baml_client.types import CodeAction, UpdatedHelperFunction
+from src.baml.baml_client.types import CodeAction, UpdatedHelperFunction
 from src.config import DIRECTORY_IFC_MODELS_PATH
 from src.tools.initial import query_ifcopenshell_docs
 from src.util import _execute_code_action, generate_tools_docs, setup_logger
@@ -51,7 +51,7 @@ def _helper_function_debugger_iter(
     Returns:
         CodeAction to continue debugging or UpdatedHelperFunction when complete
     """
-    from baml_client import b
+    from src.baml.baml_client import b
 
     # Extract baml_options if provided for collector integration
     baml_options = kwargs.pop("baml_options", {})

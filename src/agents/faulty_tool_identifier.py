@@ -10,8 +10,8 @@ import mlflow
 from baml_py.baml_py import Collector
 from loguru import logger
 
-from baml_client import b
-from baml_client.types import FaultyToolAnalysis
+from src.baml.baml_client import b
+from src.baml.baml_client.types import FaultyToolAnalysis
 from src.util import setup_logger
 from src.agents import derive_binary_classification
 

@@ -10,7 +10,7 @@ import mlflow
 from baml_py.baml_py import Collector
 from loguru import logger
 
-from baml_client import b
+from src.baml.baml_client import b
 from src.db.models import IfcBench
 from src.util import setup_logger
 

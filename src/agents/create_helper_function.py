@@ -13,7 +13,7 @@ import mlflow
 from baml_py.baml_py import Collector
 from loguru import logger
 
-from baml_client.types import CodeAction, NewHelperFunction
+from src.baml.baml_client.types import CodeAction, NewHelperFunction
 from src.tools.initial import query_ifcopenshell_docs
 from src.util import _execute_code_action, generate_tools_docs, setup_logger
 
@@ -56,7 +56,7 @@ def _helper_function_creator_iter(
     Returns:
         CodeAction to continue development or NewHelperFunction when complete
     """
-    from baml_client import b
+    from src.baml.baml_client import b
 
     # Extract baml_options if provided for collector integration
     baml_options = kwargs.get("baml_options", {})
