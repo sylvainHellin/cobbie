@@ -24,6 +24,19 @@ client<llm> GLM_4_7{
   }
 }
 
+// Z.AI GLM 4.7 Flash (lightweight variant, free)
+client<llm> GLM_4_7_Flash {
+  provider openai
+  retry_policy Exponential
+  options {
+    base_url "https://api.z.ai/api/coding/paas/v4"
+    model "glm-4.7-flash"
+    api_key env.Z_AI_API_KEY
+    temperature 0.1
+    max_tokens 8192
+  }
+}
+
 // Z.AI GLM 4.5 (with Coding Plan API key)
 client<llm> GLM_4_5_air{
   provider openai
