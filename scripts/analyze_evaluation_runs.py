@@ -469,6 +469,14 @@ Examples:
         help="MLflow run IDs to analyze (space-separated)",
     )
 
+    parser.add_argument(
+        "--export",
+        type=str,
+        default=None,
+        metavar="NAME",
+        help="Export to Excel file: reports/Evaluation_YYYY-MM-DD_NAME.xlsx",
+    )
+
     args = parser.parse_args()
 
     print("=" * 80)
@@ -525,105 +533,110 @@ Examples:
     # Print statistics
     print_statistics(stats)
 
-    # Export to Excel
-    output_filename = f"{REPORTS_DIR}/{run_name}.xlsx"
-    print(f"\nExporting to Excel: {output_filename}")
+    # Export to Excel (only if --export is provided)
+    if args.export:
+        from datetime import datetime
 
-    with pd.ExcelWriter(output_filename, engine="openpyxl") as writer:
-        # Write main data
-        df.to_excel(writer, sheet_name="Evaluation Data", index=False)
+        date_str = datetime.now().strftime("%Y-%m-%d")
+        output_filename = f"{REPORTS_DIR}/Evaluation_{date_str}_{args.export}.xlsx"
+        print(f"\nExporting to Excel: {output_filename}")
 
-        # Write statistics summary
-        stats_data = {
-            "Metric": [
-                "Total Questions",
-                "Successful Evaluations",
-                "Failed Evaluations",
-                "Correct Answers",
-                "Wrong Answers",
-                "Abstained Answers",
-                "Accuracy",
-                "Abstention Rate",
-                "Total Iterations",
-                "Average Iterations",
-                "Median Iterations",
-                "Average Latency (s)",
-                "Median Latency (s)",
-                "Average COBBIE Duration (s)",
-                "Average Verifier Duration (s)",
-                "Total Input Tokens",
-                "Total Output Tokens",
-                "Total Tokens",
-                "Avg Tokens/Question",
-                "Tokens/Second",
-            ],
-            "Value": [
-                stats["total_questions"],
-                stats["successful_evaluations"],
-                stats["failed_evaluations"],
-                stats["correct_answers"],
-                stats["wrong_answers"],
-                stats["abstained_answers"],
-                f"{stats['accuracy']:.2%}",
-                f"{stats['abstention_rate']:.2%}",
-                f"{stats['total_iterations']:.0f}",
-                f"{stats['avg_iterations']:.2f}",
-                f"{stats['median_iterations']:.0f}",
-                f"{stats['avg_latency']:.2f}",
-                f"{stats['median_latency']:.2f}",
-                f"{stats['avg_cobbie_duration']:.2f}",
-                f"{stats['avg_verifier_duration']:.2f}",
-                f"{stats['total_input_tokens']:,}",
-                f"{stats['total_output_tokens']:,}",
-                f"{stats['total_tokens']:,}",
-                f"{stats['avg_tokens_per_question']:.0f}",
-                f"{stats['tokens_per_second']:.1f}",
-            ],
-        }
-        stats_df = pd.DataFrame(stats_data)
-        stats_df.to_excel(writer, sheet_name="Summary", index=False)
+        with pd.ExcelWriter(output_filename, engine="openpyxl") as writer:
+            # Write main data
+            df.to_excel(writer, sheet_name="Evaluation Data", index=False)
 
-        # Write category breakdown
-        category_data = []
-        for category, cat_stats in sorted(stats["by_category"].items()):
-            category_data.append(
-                {
-                    "Category": category,
-                    "Category Name": CATEGORY_NAMES.get(category, "Unknown"),
-                    "Count": cat_stats["count"],
-                    "Correct": cat_stats["correct"],
-                    "Wrong": cat_stats["wrong"],
-                    "Abstained": cat_stats["abstained"],
-                    "Accuracy": f"{cat_stats['accuracy']:.2%}",
-                    "Avg Iterations": f"{cat_stats['avg_iterations']:.2f}",
-                    "Avg Latency (s)": f"{cat_stats['avg_latency']:.2f}",
-                    "Avg Tokens": f"{cat_stats['avg_tokens']:.0f}",
-                }
-            )
-        category_df = pd.DataFrame(category_data)
-        category_df.to_excel(writer, sheet_name="By Category", index=False)
+            # Write statistics summary
+            stats_data = {
+                "Metric": [
+                    "Total Questions",
+                    "Successful Evaluations",
+                    "Failed Evaluations",
+                    "Correct Answers",
+                    "Wrong Answers",
+                    "Abstained Answers",
+                    "Accuracy",
+                    "Abstention Rate",
+                    "Total Iterations",
+                    "Average Iterations",
+                    "Median Iterations",
+                    "Average Latency (s)",
+                    "Median Latency (s)",
+                    "Average COBBIE Duration (s)",
+                    "Average Verifier Duration (s)",
+                    "Total Input Tokens",
+                    "Total Output Tokens",
+                    "Total Tokens",
+                    "Avg Tokens/Question",
+                    "Tokens/Second",
+                ],
+                "Value": [
+                    stats["total_questions"],
+                    stats["successful_evaluations"],
+                    stats["failed_evaluations"],
+                    stats["correct_answers"],
+                    stats["wrong_answers"],
+                    stats["abstained_answers"],
+                    f"{stats['accuracy']:.2%}",
+                    f"{stats['abstention_rate']:.2%}",
+                    f"{stats['total_iterations']:.0f}",
+                    f"{stats['avg_iterations']:.2f}",
+                    f"{stats['median_iterations']:.0f}",
+                    f"{stats['avg_latency']:.2f}",
+                    f"{stats['median_latency']:.2f}",
+                    f"{stats['avg_cobbie_duration']:.2f}",
+                    f"{stats['avg_verifier_duration']:.2f}",
+                    f"{stats['total_input_tokens']:,}",
+                    f"{stats['total_output_tokens']:,}",
+                    f"{stats['total_tokens']:,}",
+                    f"{stats['avg_tokens_per_question']:.0f}",
+                    f"{stats['tokens_per_second']:.1f}",
+                ],
+            }
+            stats_df = pd.DataFrame(stats_data)
+            stats_df.to_excel(writer, sheet_name="Summary", index=False)
 
-        # Write project breakdown
-        if stats["by_project"]:
-            project_data = []
-            for project, proj_stats in sorted(stats["by_project"].items()):
-                project_data.append(
+            # Write category breakdown
+            category_data = []
+            for category, cat_stats in sorted(stats["by_category"].items()):
+                category_data.append(
                     {
-                        "Project": project,
-                        "Count": proj_stats["count"],
-                        "Correct": proj_stats["correct"],
-                        "Wrong": proj_stats["wrong"],
-                        "Abstained": proj_stats["abstained"],
-                        "Accuracy": f"{proj_stats['accuracy']:.2%}",
-                        "Avg Iterations": f"{proj_stats['avg_iterations']:.2f}",
-                        "Avg Latency (s)": f"{proj_stats['avg_latency']:.2f}",
-                        "Avg Tokens": f"{proj_stats['avg_tokens']:.0f}",
+                        "Category": category,
+                        "Category Name": CATEGORY_NAMES.get(category, "Unknown"),
+                        "Count": cat_stats["count"],
+                        "Correct": cat_stats["correct"],
+                        "Wrong": cat_stats["wrong"],
+                        "Abstained": cat_stats["abstained"],
+                        "Accuracy": f"{cat_stats['accuracy']:.2%}",
+                        "Avg Iterations": f"{cat_stats['avg_iterations']:.2f}",
+                        "Avg Latency (s)": f"{cat_stats['avg_latency']:.2f}",
+                        "Avg Tokens": f"{cat_stats['avg_tokens']:.0f}",
                     }
                 )
-            project_df = pd.DataFrame(project_data)
-            project_df.to_excel(writer, sheet_name="By Project", index=False)
+            category_df = pd.DataFrame(category_data)
+            category_df.to_excel(writer, sheet_name="By Category", index=False)
 
-    print(f"✅ Export complete: {output_filename}")
+            # Write project breakdown
+            if stats["by_project"]:
+                project_data = []
+                for project, proj_stats in sorted(stats["by_project"].items()):
+                    project_data.append(
+                        {
+                            "Project": project,
+                            "Count": proj_stats["count"],
+                            "Correct": proj_stats["correct"],
+                            "Wrong": proj_stats["wrong"],
+                            "Abstained": proj_stats["abstained"],
+                            "Accuracy": f"{proj_stats['accuracy']:.2%}",
+                            "Avg Iterations": f"{proj_stats['avg_iterations']:.2f}",
+                            "Avg Latency (s)": f"{proj_stats['avg_latency']:.2f}",
+                            "Avg Tokens": f"{proj_stats['avg_tokens']:.0f}",
+                        }
+                    )
+                project_df = pd.DataFrame(project_data)
+                project_df.to_excel(writer, sheet_name="By Project", index=False)
+
+        print(f"✅ Export complete: {output_filename}")
+
     print("\nAnalysis complete!")
 
 
