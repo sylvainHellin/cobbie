@@ -48,6 +48,12 @@ class LlmResponseParser:
         __result__ = self.__options.merge_options(baml_options).parse_response(function_name="EvaluateResponse", llm_response=llm_response, mode="request")
         return typing.cast(types.AnswerEvaluationResult, __result__)
 
+    def EvaluateResponseGemini(
+        self, llm_response: str, baml_options: BamlCallOptions = {},
+    ) -> types.AnswerEvaluationResult:
+        __result__ = self.__options.merge_options(baml_options).parse_response(function_name="EvaluateResponseGemini", llm_response=llm_response, mode="request")
+        return typing.cast(types.AnswerEvaluationResult, __result__)
+
     def FaultyNewToolAnalysis(
         self, llm_response: str, baml_options: BamlCallOptions = {},
     ) -> types.FaultyToolAnalysis:
@@ -126,6 +132,12 @@ class LlmStreamParser:
         self, llm_response: str, baml_options: BamlCallOptions = {},
     ) -> stream_types.AnswerEvaluationResult:
         __result__ = self.__options.merge_options(baml_options).parse_response(function_name="EvaluateResponse", llm_response=llm_response, mode="stream")
+        return typing.cast(stream_types.AnswerEvaluationResult, __result__)
+
+    def EvaluateResponseGemini(
+        self, llm_response: str, baml_options: BamlCallOptions = {},
+    ) -> stream_types.AnswerEvaluationResult:
+        __result__ = self.__options.merge_options(baml_options).parse_response(function_name="EvaluateResponseGemini", llm_response=llm_response, mode="stream")
         return typing.cast(stream_types.AnswerEvaluationResult, __result__)
 
     def FaultyNewToolAnalysis(

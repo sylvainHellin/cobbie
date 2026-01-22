@@ -71,6 +71,16 @@ client<llm> Gemini_2_5_Flash_Lite {
   }
 }
 
+// Gemini 3 Pro Preview - for second LLM judge evaluation
+client<llm> Gemini_3_Pro {
+  provider google-ai
+  retry_policy Exponential
+  options {
+    model "gemini-3-pro-preview"
+    api_key env.GEMINI_API_KEY
+  }
+}
+
 // https://docs.boundaryml.com/docs/snippets/clients/retry
 retry_policy Constant {
   max_retries 3

@@ -199,6 +199,219 @@ function EvaluateResponse(
   "#
 }
 
+// Duplicate function using Gemini 3 Pro for second LLM judge
+function EvaluateResponseGemini(
+  question: string,
+  category: QuestionCategory,
+  ground_truth: string,
+  system_response: string,
+) -> AnswerEvaluationResult {
+  client Gemini_3_Pro
+
+  prompt #"
+    You are evaluating a BIM information extraction system's response to a question using a multi-criteria assessment framework.
+
+    QUESTION CATEGORY: {{ category }}
+    QUESTION: {{ question }}
+
+    REFERENCE ANSWER: {{ ground_truth }}
+
+    Note: This reference answer is one possible response from a human expert labeller.
+    However, it is not necessarily the only valid answer (see the evaluation framework below)..
+
+    SYSTEM RESPONSE: {{ system_response }}
+
+    ---
+
+    ## QUESTION CATEGORIES (Background)
+
+    Category 1 (Direct Retrieval): Direct information from BIM element properties, no computation
+    Category 2 (Computational Aggregation): Simple unambiguous computations (counting, summing, averaging)
+    Category 3 (Geometric/Spatial): Complex geometric computations from spatial relationships
+    Category 4 (Incomplete Information): Required information not in model, may need assumptions
+
+    ---
+
+    ## EVALUATION WORKFLOW
+
+    **Step 1: Determine if system ABSTAINED or PROVIDED AN ANSWER**
+
+    ABSTAINED if response contains explicit refusal:
+    - "I cannot determine..."
+    - "Insufficient information to answer..."
+    - "This data is not available and I cannot provide an answer..."
+    - "I am unable to answer this question..."
+
+    NOT abstained:
+    - Expressions of uncertainty while providing answer
+    - Conditional statements ("If X, then Y...")
+    - Partial information with explanation of limitations
+
+    **If ABSTAINED:**
+    - Set abstention = true
+    - Set ALL other criteria to 'Na'
+    - Provide brief justification
+    - STOP evaluation
+
+    **If PROVIDED AN ANSWER:**
+    - Set abstention = false
+    - Proceed to evaluate 4 quality criteria independently
+
+    ---
+
+    ## CRITERION 1: FAITHFULNESS
+
+    Are all claims grounded in valid sources and numerically accurate for this question category?
+
+    **Category-Specific Numerical Accuracy Requirements:**
+
+    **Category 1 & 2 (Deterministic):**
+    - Numerical values must match reference answer within tolerance
+    - These categories involve deterministic retrieval/aggregation → should produce same results
+    - Tolerance rules:
+      * Continuous measurements (lengths, areas, volumes): within 2% of reference
+        Formula: |system_value - reference_answer | / reference_answer ≤ 0.02
+      * Discrete counts (elements, rooms, floors): exact match required
+    - Fail if: numerical mismatch beyond tolerance
+
+    **Category 3 (Geometric):**
+    - Numerical values can differ from reference answer
+    - Multiple valid geometric calculation approaches exist
+    - Require: methodology/approach must be explicitly disclosed
+    - Fail if: values are implausible OR methodology not disclosed
+
+    **Category 4 (Incomplete Information):**
+    - Numerical values can differ from reference answer
+    - Answers may involve assumptions leading to different results
+    - Require: ALL assumptions MUST be disclosed verbatim in answer
+      * "Assuming X..." or "Based on assumption that X..." required
+      * Implied/hedged assumptions (e.g., "typically...", "generally...") → FAIL
+    - Fail if: assumptions not explicitly stated OR values implausible
+
+    **Source/Method Disclosure (All Categories):**
+    - All claims should cite sources (properties, functions, calculations)
+    - Note: This is primarily assessed in Transparency criterion
+    - For faithfulness, focus on numerical accuracy per category rules above
+
+    **Result:**
+    - Yes: Numerically accurate per category rules, no hallucinations
+    - No: Numerical mismatch (Cat 1-2), implausible values, or unstated assumptions (Cat 4)
+    - Na: Only if abstention = true
+
+    ---
+
+    ## CRITERION 2: COMPLETENESS
+
+    Are all relevant facts included to fully answer the question?
+
+    **When to use 'Na':**
+    - Question is open-ended ("describe", "explain") with no objective standard
+    - Abstention occurred (mandatory)
+
+    **When to use 'No':**
+    - Answer omits critical facts for enumerable questions
+    - Provides only subset of requested items (e.g., lists 2 of 4 adjacent rooms)
+    - Partial answer to multi-part question
+
+    **When to use 'Yes':**
+    - All relevant facts present for enumerable questions
+    - Reasonable detail level for open-ended questions
+
+    **Result:**
+    - Yes: Complete answer
+    - No: Missing relevant facts
+    - Na: Open-ended question OR abstention
+
+    ---
+
+    ## CRITERION 3: TRANSPARENCY
+
+    Are sources/methods explicitly disclosed for each claim?
+
+    **Passes transparency (Yes):**
+    - "Width is 900mm from property Door.Width"
+    - "24 windows counted from IfcWindow elements"
+    - "Area is 245.8 m² calculated using ISO 9836"
+    - "Assuming typical HVAC (20-25 year lifespan)..."
+
+    **Fails transparency (No):**
+    - "Width is 900mm" (no source)
+    - "According to the model..." (too vague)
+    - "Generally..." or "Typically..." (hedging, not explicit)
+
+    Requirement: Every claim must cite specific property, method, or assumption.
+
+    **Result:**
+    - Yes: All claims have explicit source/method disclosure
+    - No: Missing disclosure for any claim
+    - Na: Only if abstention = true
+
+    ---
+
+    ## CRITERION 4: RELEVANCE
+
+    Does the answer directly address the question asked?
+
+    **Passes relevance (Yes):**
+    - Addresses the correct aspect/property requested
+    - Addresses correct scope (e.g., specific room vs. whole building)
+    - May include additional information beyond question
+
+    **Fails relevance (No):**
+    - Answers wrong property (asked width, gave material)
+    - Answers wrong scope (asked south facade, gave whole building)
+    - Misunderstands question intent
+
+    **Result:**
+    - Yes: Directly addresses question
+    - No: Off-topic or misunderstood question
+    - Na: Only if abstention = true
+
+    ---
+
+    ## CRITICAL GUIDELINES
+
+    1. **Evaluate criteria INDEPENDENTLY**: Do not let one judgment influence another
+       - Faithful but incomplete is valid
+       - Complete but unfaithful is valid
+       - All combinations are possible
+
+    2. **Use 'Na' sparingly**: Only for structural reasons (abstention, open-ended completeness)
+       - NOT for uncertainty or difficulty judging
+       - If unsure between Yes/No, choose based on best judgment and explain in justification
+
+    3. **Focus justification on edge cases**:
+       - Explain any 'No' verdicts
+       - Explain borderline decisions
+       - Keep to 2-3 sentences
+
+    {{ ctx.output_format }}
+  "#
+}
+
+test TestGemini {
+  functions [EvaluateResponseGemini]
+  args {
+    question #"
+      How many rooms have access to outdoor space?
+    "#
+    category Category3
+    ground_truth #"
+      There are four rooms that have access to the outdoors.
+    "#
+    system_response #"
+      There are 16 rooms that have access to outdoor space in this BIM model. This was determined by:
+
+1. Identifying all exterior doors (14 doors with IsExternal property = True)
+2. Finding all rooms connected to these exterior doors via IfcRelSpaceBoundary relationships
+3. Counting unique rooms (16 total) from these connections
+
+The rooms include: A101 (Foyer), A102 (Living Room), A104 (Bathroom 1), A201 (Hallway), A202 (Bedroom 1), A203 (Bedroom 2), A204 (Bathroom 2), A205 (Utility), B101 (Foyer), B102 (Living Room), B104 (Bathroom 1), B201 (Hallway), B202 (Bedroom 1), B203 (Bedroom 2), B204 (Bathroom 2), and B205 (Utility).
+    "#
+  }
+}
+
+
 // Test function for EvaluateResponse
 test radiator_count_test {
   functions [EvaluateResponse]
