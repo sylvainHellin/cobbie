@@ -30,17 +30,14 @@ src.db/*.csv
 src/db/bim_models
 src/db/logs/
 pyrightconfig.json
-sandbox.ipynb
-sandbox.py
-mlartifacts
-mlruns
+.mlflow/
+mlartifacts/
 logs.log
 .cursor
-reports
 scripts/text_count_tokens.txt
 
 # External cloned repos (for docs indexing)
-external/
+src/docs_indexer/external/
 
-# cache
-analysis/data/baseline_cache
+# All generated outputs (reports, figures, cache)
+outputs/
