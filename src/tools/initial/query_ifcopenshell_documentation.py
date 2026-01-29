@@ -32,10 +32,10 @@ def query_ifcopenshell_docs(query: str, max_tokens: int = 2048) -> str:
         "id": 1,
         "method": "tools/call",
         "params": {
-            "name": "get-library-docs",
+            "name": "query-docs",
             "arguments": {
-                "context7CompatibleLibraryID": "/ifcopenshell/ifcopenshell",
-                "topic": query,
+                "libraryId": "/ifcopenshell/ifcopenshell",
+                "query": query,
                 "tokens": max_tokens,
             },
         },

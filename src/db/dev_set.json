@@ -1,0 +1,76 @@
+[
+    {   "rule_title": "307_4_reduced_vertical_clearance",
+        "question": "What stairs are in the current IFC model where the underside of the stair is not shielded to protect visually impaired persons from accessing it inadvertently.",
+        "rule": "307.4 Reduced Vertical Clearance\nVertical clearance shall be 80 inches (2030 mm) high minimum. Guardrails or other barriers shall be provided where the vertical clearance is less than 80 inches (2030 mm) high.",
+        "parameters": "Minimum Clear Height Under = 2.03 m",
+        "ground_truth": [{
+            "description": "307.4 Reduced Vertical Clearance\nUnderside of stair should be shielded to protect visually impaired persons from accessing it inadvertently.\n",
+            "ifc_guids": [
+              "2LQCcanLjFOuofCAdgIDUF",
+              "3JOMyjK59Fgervz4z7Kgh9"
+            ],
+            "title": "Stair.0.3",
+            "topic_id": "0d309356-957f-4430-a72d-7f4e9b381760"
+          },
+          {
+            "description": "307.4 Reduced Vertical Clearance\nUnderside of stair should be shielded to protect visually impaired persons from accessing it inadvertently.\n",
+            "ifc_guids": [
+              "2wwkhajRz9dOXaXiRcjMEN",
+              "2wwkhajRz9dOXaXiRcjNX8"
+            ],
+            "title": "Stair.3.2",
+            "topic_id": "103794a5-181f-45fe-a82b-b8e8dbd17cf8"
+          },
+          {
+            "description": "307.4 Reduced Vertical Clearance\nUnderside of stair should be shielded to protect visually impaired persons from accessing it inadvertently.\n",
+            "ifc_guids": [
+              "2LQCcanLjFOuofCAdgIDS4",
+              "2wwkhajRz9dOXaXiRcjNWp"
+            ],
+            "title": "Stair.2.1",
+            "topic_id": "620fee05-38fe-4c1c-b8e6-31d89bca977f"
+          },
+          {
+            "description": "307.4 Reduced Vertical Clearance\nUnderside of stair should be shielded to protect visually impaired persons from accessing it inadvertently.\n",
+            "ifc_guids": [
+              "2LQCcanLjFOuofCAdgI2gY",
+              "3JOMyjK59Fgervz4z7Kgh9"
+            ],
+            "title": "Stair.0.1",
+            "topic_id": "8f8f9237-9dc8-4d42-a597-db63e3a10e19"
+          },
+          {
+            "description": "307.4 Reduced Vertical Clearance\nUnderside of stair should be shielded to protect visually impaired persons from accessing it inadvertently.\n",
+            "ifc_guids": [
+              "2LQCcanLjFOuofCAdgIDS4",
+              "2wwkhajRz9dOXaXiRcjNXf"
+            ],
+            "title": "Stair.2.2",
+            "topic_id": "b55bd469-c5d0-4310-b4c7-f30cc055234a"
+          },  {
+            "description": "307.4 Reduced Vertical Clearance\nUnderside of stair should be shielded to protect visually impaired persons from accessing it inadvertently.\n",
+            "ifc_guids": [
+              "2wwkhajRz9dOXaXiRcjMEN",
+              "2wwkhajRz9dOXaXiRcjNWI"
+            ],
+            "title": "Stair.3.1",
+            "topic_id": "d826f859-b108-4035-8933-c833add58d5b"
+          }]
+    },
+    {
+        "rule_title": "405_2_slope",
+        "question": "What ramps in the current IFC model that are too steep. The maximum slope for the ramps is 1:12.",
+        "rule": "Ramp runs shall have a running slope not steeper than 1:12.\nEXCEPTION: In existing sites, buildings, and facilities, ramps shall be permitted to have running slopes steeper than 1:12 (8%) complying with Table 405.2 where such slopes are necessary due to space limitations.",
+        "parameters": "2% slope: max length = unlimited; 8% slope: max length = 9.14 m; 10% slope: max length = 1.52 m; 12% slope: max length = 0.61 m; Minimum clear height above = 2.10 m; Maximum distance to Stair = 9.75 m; Additional stairs required = True",
+        "ground_truth": [
+            {
+                "description": "405.2 Slope\nRamp length is 3.00 m and slope is 10.0%. The maximum length for this slope is 1.52 m.\n",
+                "ifc_guids": [
+                  "2US5AV8qb0GwByJnlCSm4X"
+                ],
+                "title": "Ramp.0.1: 3.00 M",
+                "topic_id": "444d7216-583f-4ba0-8fb1-8f35f53fe8f8"
+              }
+        ]
+    }
+]

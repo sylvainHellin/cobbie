@@ -38,3 +38,8 @@ logs.log
 .cursor
 reports
 scripts/text_count_tokens.txt
+
+acc/res
+acc/bim_models
+.claude
+.ruff_cache

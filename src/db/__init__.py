@@ -1,5 +1,5 @@
 from .engine import ENGINE
-from .load_dataset import DEVSET, TRAINSET, load_train_dev_split
+# from .load_dataset import DEVSET, TRAINSET, load_train_dev_split
 from .models import IfcBench, Ifcmodels
 
 __all__ = [

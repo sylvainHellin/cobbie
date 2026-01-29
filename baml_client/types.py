@@ -47,8 +47,15 @@ class QuestionCategory(str, Enum):
     Category4 = "Category4"
 
 # #########################################################################
-# Generated classes (19)
+# Generated classes (20)
 # #########################################################################
+
+class ACCToolAssessment(BaseModel):
+    thoughts: str
+    diagnosis: typing.Union[typing_extensions.Literal['overfitting'], typing_extensions.Literal['missing_generalization'], typing_extensions.Literal['implementation_bug'], typing_extensions.Literal['model_difference'], typing_extensions.Literal['unknown']]
+    improvement_hint: str
+    recommendation: typing.Union[typing_extensions.Literal['keep_tool'], typing_extensions.Literal['retry_with_hint']]
+    confidence: typing.Union[typing_extensions.Literal['high'], typing_extensions.Literal['medium'], typing_extensions.Literal['low']]
 
 class AlignedQAPair(BaseModel):
     thought: str
@@ -90,6 +97,7 @@ class FaultyToolAnalysis(BaseModel):
 class FinalAnswer(BaseModel):
     thoughts: str
     answer: str
+    ifc_guids: typing.List[str]
 
 class FunctionImplementation(BaseModel):
     function_implementation: str

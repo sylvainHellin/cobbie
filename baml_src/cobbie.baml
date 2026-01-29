@@ -35,6 +35,10 @@ function Cobbie(
   - When performing geometric or spatial computations (e.g., calculating areas from coordinate points, deriving distances from 3D geometry, computing volumes from shape representations), explicitly state that this information was derived through calculation rather than directly retrieved from the model. Example: "Based on geometric calculations from the room boundary coordinates, the area is X m²."
   - When making assumptions due to missing information in the BIM model, explicitly state: (1) what information is missing, (2) what assumptions you are making, and (3) that your answer is an estimate based on these assumptions. Example: "The material thermal conductivity values are not available in the BIM model. Assuming standard values for concrete (λ = 1.4 W/mK), the estimated heat loss is X."
   - When information cannot be found in the BIM model and no reasonable assumptions can be made, clearly state that the requested information is not available in the model rather than providing an answer.
+  - ALWAYS include ifc_guids in FinalAnswer:
+    - For compliance checks: list ALL GUIDs of non-compliant elements
+    - For pairwise violations (e.g., two doors too close): include GUIDs of ALL elements involved in each violation
+    - If no violations or relevant elements are found: return an empty array []
 
   ACTION SELECTION:
   Choose ONE of the following actions:

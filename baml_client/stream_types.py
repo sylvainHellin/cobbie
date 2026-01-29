@@ -23,8 +23,15 @@ class StreamState(BaseModel, typing.Generic[StreamStateValueT]):
     value: StreamStateValueT
     state: typing_extensions.Literal["Pending", "Incomplete", "Complete"]
 # #########################################################################
-# Generated classes (19)
+# Generated classes (20)
 # #########################################################################
+
+class ACCToolAssessment(BaseModel):
+    thoughts: typing.Optional[str] = None
+    diagnosis: typing.Optional[typing.Union[typing_extensions.Literal['overfitting'], typing_extensions.Literal['missing_generalization'], typing_extensions.Literal['implementation_bug'], typing_extensions.Literal['model_difference'], typing_extensions.Literal['unknown']]] = None
+    improvement_hint: typing.Optional[str] = None
+    recommendation: typing.Optional[typing.Union[typing_extensions.Literal['keep_tool'], typing_extensions.Literal['retry_with_hint']]] = None
+    confidence: typing.Optional[typing.Union[typing_extensions.Literal['high'], typing_extensions.Literal['medium'], typing_extensions.Literal['low']]] = None
 
 class AlignedQAPair(BaseModel):
     thought: typing.Optional[str] = None
@@ -66,6 +73,7 @@ class FaultyToolAnalysis(BaseModel):
 class FinalAnswer(BaseModel):
     thoughts: typing.Optional[str] = None
     answer: typing.Optional[str] = None
+    ifc_guids: typing.List[str]
 
 class FunctionImplementation(BaseModel):
     function_implementation: typing.Optional[str] = None

@@ -20,7 +20,7 @@ from .globals import DO_NOT_USE_DIRECTLY_UNLESS_YOU_KNOW_WHAT_YOURE_DOING_RUNTIM
 class TypeBuilder(type_builder.TypeBuilder):
     def __init__(self):
         super().__init__(classes=set(
-          ["AlignedQAPair","AnswerEvaluationResult","AssessmentResult","CategoryValidationResult","CodeAction","ErrorAnalysisResult","FaultyToolAnalysis","FinalAnswer","FunctionImplementation","HelperFunctionAssessment","ImprovedImplementation","NewHelperFunction","NewToolAnalysis","SimilarityResult","TestAndImproveError","TestAndImproveSuccess","ToolCreationResult","ToolOptimizationResult","UpdatedHelperFunction",]
+          ["ACCToolAssessment","AlignedQAPair","AnswerEvaluationResult","AssessmentResult","CategoryValidationResult","CodeAction","ErrorAnalysisResult","FaultyToolAnalysis","FinalAnswer","FunctionImplementation","HelperFunctionAssessment","ImprovedImplementation","NewHelperFunction","NewToolAnalysis","SimilarityResult","TestAndImproveError","TestAndImproveSuccess","ToolCreationResult","ToolOptimizationResult","UpdatedHelperFunction",]
         ), enums=set(
           ["QuestionCategory",]
         ), runtime=DO_NOT_USE_DIRECTLY_UNLESS_YOU_KNOW_WHAT_YOURE_DOING_RUNTIME)
@@ -35,8 +35,12 @@ class TypeBuilder(type_builder.TypeBuilder):
 
 
     # #########################################################################
-    # Generated classes 19
+    # Generated classes 20
     # #########################################################################
+
+    @property
+    def ACCToolAssessment(self) -> "ACCToolAssessmentViewer":
+        return ACCToolAssessmentViewer(self)
 
     @property
     def AlignedQAPair(self) -> "AlignedQAPairViewer":
@@ -172,8 +176,63 @@ class QuestionCategoryValues:
 
 
 # #########################################################################
-# Generated classes 19
+# Generated classes 20
 # #########################################################################
+
+class ACCToolAssessmentAst:
+    def __init__(self, tb: type_builder.TypeBuilder):
+        _tb = tb._tb # type: ignore (we know how to use this private attribute)
+        self._bldr = _tb.class_("ACCToolAssessment")
+        self._properties: typing.Set[str] = set([  "thoughts",  "diagnosis",  "improvement_hint",  "recommendation",  "confidence",  ])
+        self._props = ACCToolAssessmentProperties(self._bldr, self._properties)
+
+    def type(self) -> baml_py.FieldType:
+        return self._bldr.field()
+
+    @property
+    def props(self) -> "ACCToolAssessmentProperties":
+        return self._props
+
+
+class ACCToolAssessmentViewer(ACCToolAssessmentAst):
+    def __init__(self, tb: type_builder.TypeBuilder):
+        super().__init__(tb)
+
+    
+    def list_properties(self) -> typing.List[typing.Tuple[str, type_builder.ClassPropertyViewer]]:
+        return [(name, type_builder.ClassPropertyViewer(self._bldr.property(name))) for name in self._properties]
+    
+
+
+class ACCToolAssessmentProperties:
+    def __init__(self, bldr: baml_py.ClassBuilder, properties: typing.Set[str]):
+        self.__bldr = bldr
+        self.__properties = properties # type: ignore (we know how to use this private attribute) # noqa: F821
+
+    
+    
+    @property
+    def thoughts(self) -> type_builder.ClassPropertyViewer:
+        return type_builder.ClassPropertyViewer(self.__bldr.property("thoughts"))
+    
+    @property
+    def diagnosis(self) -> type_builder.ClassPropertyViewer:
+        return type_builder.ClassPropertyViewer(self.__bldr.property("diagnosis"))
+    
+    @property
+    def improvement_hint(self) -> type_builder.ClassPropertyViewer:
+        return type_builder.ClassPropertyViewer(self.__bldr.property("improvement_hint"))
+    
+    @property
+    def recommendation(self) -> type_builder.ClassPropertyViewer:
+        return type_builder.ClassPropertyViewer(self.__bldr.property("recommendation"))
+    
+    @property
+    def confidence(self) -> type_builder.ClassPropertyViewer:
+        return type_builder.ClassPropertyViewer(self.__bldr.property("confidence"))
+    
+    
+
 
 class AlignedQAPairAst:
     def __init__(self, tb: type_builder.TypeBuilder):
@@ -516,7 +575,7 @@ class FinalAnswerAst:
     def __init__(self, tb: type_builder.TypeBuilder):
         _tb = tb._tb # type: ignore (we know how to use this private attribute)
         self._bldr = _tb.class_("FinalAnswer")
-        self._properties: typing.Set[str] = set([  "thoughts",  "answer",  ])
+        self._properties: typing.Set[str] = set([  "thoughts",  "answer",  "ifc_guids",  ])
         self._props = FinalAnswerProperties(self._bldr, self._properties)
 
     def type(self) -> baml_py.FieldType:
@@ -551,6 +610,10 @@ class FinalAnswerProperties:
     @property
     def answer(self) -> type_builder.ClassPropertyViewer:
         return type_builder.ClassPropertyViewer(self.__bldr.property("answer"))
+    
+    @property
+    def ifc_guids(self) -> type_builder.ClassPropertyViewer:
+        return type_builder.ClassPropertyViewer(self.__bldr.property("ifc_guids"))
     
     
 

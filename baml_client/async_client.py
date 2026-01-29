@@ -79,6 +79,21 @@ class BamlAsyncClient:
     def parse_stream(self):
       return self.__llm_stream_parser
 
+    async def ACCToolAssessor(self, rule_title: str,rule_code: str,rule_description: str,question: str,training_model_name: str,training_expected_guids: typing.List[str],training_predicted_guids: typing.List[str],training_tp: int,training_fp: int,training_fn: int,training_f1: float,validation_model_name: str,validation_expected_count: int,validation_predicted_count: int,validation_tp: int,validation_fp: int,validation_fn: int,validation_f1: float,tool_name: str,tool_implementation: str,execution_log: str,retry_count: int,previous_hints: typing.Optional[str] = None,
+        baml_options: BamlCallOptions = {},
+    ) -> types.ACCToolAssessment:
+        # Check if on_tick is provided
+        if 'on_tick' in baml_options:
+            # Use streaming internally when on_tick is provided
+            __stream__ = self.stream.ACCToolAssessor(rule_title=rule_title,rule_code=rule_code,rule_description=rule_description,question=question,training_model_name=training_model_name,training_expected_guids=training_expected_guids,training_predicted_guids=training_predicted_guids,training_tp=training_tp,training_fp=training_fp,training_fn=training_fn,training_f1=training_f1,validation_model_name=validation_model_name,validation_expected_count=validation_expected_count,validation_predicted_count=validation_predicted_count,validation_tp=validation_tp,validation_fp=validation_fp,validation_fn=validation_fn,validation_f1=validation_f1,tool_name=tool_name,tool_implementation=tool_implementation,execution_log=execution_log,retry_count=retry_count,previous_hints=previous_hints,
+                baml_options=baml_options)
+            return await __stream__.get_final_response()
+        else:
+            # Original non-streaming code
+            __result__ = await self.__options.merge_options(baml_options).call_function_async(function_name="ACCToolAssessor", args={
+                "rule_title": rule_title,"rule_code": rule_code,"rule_description": rule_description,"question": question,"training_model_name": training_model_name,"training_expected_guids": training_expected_guids,"training_predicted_guids": training_predicted_guids,"training_tp": training_tp,"training_fp": training_fp,"training_fn": training_fn,"training_f1": training_f1,"validation_model_name": validation_model_name,"validation_expected_count": validation_expected_count,"validation_predicted_count": validation_predicted_count,"validation_tp": validation_tp,"validation_fp": validation_fp,"validation_fn": validation_fn,"validation_f1": validation_f1,"tool_name": tool_name,"tool_implementation": tool_implementation,"execution_log": execution_log,"retry_count": retry_count,"previous_hints": previous_hints,
+            })
+            return typing.cast(types.ACCToolAssessment, __result__.cast_to(types, types, stream_types, False, __runtime__))
     async def Cobbie(self, user_input: str,available_tools: str,previous_attempts: typing.Optional[str] = None,model_path: typing.Optional[str] = None,
         baml_options: BamlCallOptions = {},
     ) -> typing.Union["types.CodeAction", "types.FinalAnswer"]:
@@ -223,6 +238,18 @@ class BamlStreamClient:
     def __init__(self, options: DoNotUseDirectlyCallManager):
         self.__options = options
 
+    def ACCToolAssessor(self, rule_title: str,rule_code: str,rule_description: str,question: str,training_model_name: str,training_expected_guids: typing.List[str],training_predicted_guids: typing.List[str],training_tp: int,training_fp: int,training_fn: int,training_f1: float,validation_model_name: str,validation_expected_count: int,validation_predicted_count: int,validation_tp: int,validation_fp: int,validation_fn: int,validation_f1: float,tool_name: str,tool_implementation: str,execution_log: str,retry_count: int,previous_hints: typing.Optional[str] = None,
+        baml_options: BamlCallOptions = {},
+    ) -> baml_py.BamlStream[stream_types.ACCToolAssessment, types.ACCToolAssessment]:
+        __ctx__, __result__ = self.__options.merge_options(baml_options).create_async_stream(function_name="ACCToolAssessor", args={
+            "rule_title": rule_title,"rule_code": rule_code,"rule_description": rule_description,"question": question,"training_model_name": training_model_name,"training_expected_guids": training_expected_guids,"training_predicted_guids": training_predicted_guids,"training_tp": training_tp,"training_fp": training_fp,"training_fn": training_fn,"training_f1": training_f1,"validation_model_name": validation_model_name,"validation_expected_count": validation_expected_count,"validation_predicted_count": validation_predicted_count,"validation_tp": validation_tp,"validation_fp": validation_fp,"validation_fn": validation_fn,"validation_f1": validation_f1,"tool_name": tool_name,"tool_implementation": tool_implementation,"execution_log": execution_log,"retry_count": retry_count,"previous_hints": previous_hints,
+        })
+        return baml_py.BamlStream[stream_types.ACCToolAssessment, types.ACCToolAssessment](
+          __result__,
+          lambda x: typing.cast(stream_types.ACCToolAssessment, x.cast_to(types, types, stream_types, True, __runtime__)),
+          lambda x: typing.cast(types.ACCToolAssessment, x.cast_to(types, types, stream_types, False, __runtime__)),
+          __ctx__,
+        )
     def Cobbie(self, user_input: str,available_tools: str,previous_attempts: typing.Optional[str] = None,model_path: typing.Optional[str] = None,
         baml_options: BamlCallOptions = {},
     ) -> baml_py.BamlStream[typing.Union["stream_types.CodeAction", "stream_types.FinalAnswer"], typing.Union["types.CodeAction", "types.FinalAnswer"]]:
@@ -339,6 +366,13 @@ class BamlHttpRequestClient:
     def __init__(self, options: DoNotUseDirectlyCallManager):
         self.__options = options
 
+    async def ACCToolAssessor(self, rule_title: str,rule_code: str,rule_description: str,question: str,training_model_name: str,training_expected_guids: typing.List[str],training_predicted_guids: typing.List[str],training_tp: int,training_fp: int,training_fn: int,training_f1: float,validation_model_name: str,validation_expected_count: int,validation_predicted_count: int,validation_tp: int,validation_fp: int,validation_fn: int,validation_f1: float,tool_name: str,tool_implementation: str,execution_log: str,retry_count: int,previous_hints: typing.Optional[str] = None,
+        baml_options: BamlCallOptions = {},
+    ) -> baml_py.baml_py.HTTPRequest:
+        __result__ = await self.__options.merge_options(baml_options).create_http_request_async(function_name="ACCToolAssessor", args={
+            "rule_title": rule_title,"rule_code": rule_code,"rule_description": rule_description,"question": question,"training_model_name": training_model_name,"training_expected_guids": training_expected_guids,"training_predicted_guids": training_predicted_guids,"training_tp": training_tp,"training_fp": training_fp,"training_fn": training_fn,"training_f1": training_f1,"validation_model_name": validation_model_name,"validation_expected_count": validation_expected_count,"validation_predicted_count": validation_predicted_count,"validation_tp": validation_tp,"validation_fp": validation_fp,"validation_fn": validation_fn,"validation_f1": validation_f1,"tool_name": tool_name,"tool_implementation": tool_implementation,"execution_log": execution_log,"retry_count": retry_count,"previous_hints": previous_hints,
+        }, mode="request")
+        return __result__
     async def Cobbie(self, user_input: str,available_tools: str,previous_attempts: typing.Optional[str] = None,model_path: typing.Optional[str] = None,
         baml_options: BamlCallOptions = {},
     ) -> baml_py.baml_py.HTTPRequest:
@@ -410,6 +444,13 @@ class BamlHttpStreamRequestClient:
     def __init__(self, options: DoNotUseDirectlyCallManager):
         self.__options = options
 
+    async def ACCToolAssessor(self, rule_title: str,rule_code: str,rule_description: str,question: str,training_model_name: str,training_expected_guids: typing.List[str],training_predicted_guids: typing.List[str],training_tp: int,training_fp: int,training_fn: int,training_f1: float,validation_model_name: str,validation_expected_count: int,validation_predicted_count: int,validation_tp: int,validation_fp: int,validation_fn: int,validation_f1: float,tool_name: str,tool_implementation: str,execution_log: str,retry_count: int,previous_hints: typing.Optional[str] = None,
+        baml_options: BamlCallOptions = {},
+    ) -> baml_py.baml_py.HTTPRequest:
+        __result__ = await self.__options.merge_options(baml_options).create_http_request_async(function_name="ACCToolAssessor", args={
+            "rule_title": rule_title,"rule_code": rule_code,"rule_description": rule_description,"question": question,"training_model_name": training_model_name,"training_expected_guids": training_expected_guids,"training_predicted_guids": training_predicted_guids,"training_tp": training_tp,"training_fp": training_fp,"training_fn": training_fn,"training_f1": training_f1,"validation_model_name": validation_model_name,"validation_expected_count": validation_expected_count,"validation_predicted_count": validation_predicted_count,"validation_tp": validation_tp,"validation_fp": validation_fp,"validation_fn": validation_fn,"validation_f1": validation_f1,"tool_name": tool_name,"tool_implementation": tool_implementation,"execution_log": execution_log,"retry_count": retry_count,"previous_hints": previous_hints,
+        }, mode="stream")
+        return __result__
     async def Cobbie(self, user_input: str,available_tools: str,previous_attempts: typing.Optional[str] = None,model_path: typing.Optional[str] = None,
         baml_options: BamlCallOptions = {},
     ) -> baml_py.baml_py.HTTPRequest:

@@ -8,9 +8,17 @@ load_dotenv(find_dotenv())
 ROOT_PATH = os.environ["ROOT_PATH"]
 SRC_PATH = os.path.join(ROOT_PATH, "src")
 TEST_IFC_PATH = os.path.join(ROOT_PATH, "src/db/bim_models/duplex/arc.ifc")
+DEVSET_PATH = os.path.join(ROOT_PATH, "src/db/dev_set.json")
 DB_PATH = os.path.join(ROOT_PATH, "src/db/db.db")
 DIRECTORY_IFC_MODELS_PATH = os.path.join(ROOT_PATH, "src/db/bim_models")
 CREATED_TOOLS_PATH = os.path.join(ROOT_PATH, "src/tools/created")
+
+# ACC paths
+ACC_ROOT_PATH = os.path.join(ROOT_PATH, "acc")
+ACC_RES_PATH = os.path.join(ROOT_PATH, "acc", "res")
+ACC_TOOLS_PATH = os.path.join(ROOT_PATH, "acc", "tools")
+ACC_SETUP_PATH = os.path.join(ROOT_PATH, "acc", "setup")
+ACC_MODELS_PATH = os.path.join(ROOT_PATH, "acc", "bim_models")
 
 # URI
 MLFLOW_URI = "http://127.0.0.1:5000"

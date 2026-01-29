@@ -24,6 +24,12 @@ class LlmResponseParser:
     def __init__(self, options: DoNotUseDirectlyCallManager):
         self.__options = options
 
+    def ACCToolAssessor(
+        self, llm_response: str, baml_options: BamlCallOptions = {},
+    ) -> types.ACCToolAssessment:
+        __result__ = self.__options.merge_options(baml_options).parse_response(function_name="ACCToolAssessor", llm_response=llm_response, mode="request")
+        return typing.cast(types.ACCToolAssessment, __result__)
+
     def Cobbie(
         self, llm_response: str, baml_options: BamlCallOptions = {},
     ) -> typing.Union["types.CodeAction", "types.FinalAnswer"]:
@@ -85,6 +91,12 @@ class LlmStreamParser:
 
     def __init__(self, options: DoNotUseDirectlyCallManager):
         self.__options = options
+
+    def ACCToolAssessor(
+        self, llm_response: str, baml_options: BamlCallOptions = {},
+    ) -> stream_types.ACCToolAssessment:
+        __result__ = self.__options.merge_options(baml_options).parse_response(function_name="ACCToolAssessor", llm_response=llm_response, mode="stream")
+        return typing.cast(stream_types.ACCToolAssessment, __result__)
 
     def Cobbie(
         self, llm_response: str, baml_options: BamlCallOptions = {},

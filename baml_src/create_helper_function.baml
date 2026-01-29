@@ -15,20 +15,15 @@ function HelperFunctionCreator(
 ) -> CodeAction | NewHelperFunction {
   client GLM_4_7
   prompt #"
-    You are an expert Python programmer specializing in creating reusable helper functions for BIM (Building Information Modeling) analysis using the IfcOpenShell library.
+    You are an expert Python programmer specializing in creating reusable functions for BIM (Building Information Modeling) analysis using the IfcOpenShell library.
 
-    Your task is to extract and implement a reusable helper function based on a successful Cobbie execution.
+    Your task is to implement a reusable function based on the Ground Truth Answer.
 
     CONTEXT:
-    Cobbie successfully answered the following question:
     Question: {{ example_question }}
     Ground Truth Answer: {{ example_answer }}
 
     Using BIM model: {{ example_bim_model }}
-
-    EXECUTION HISTORY:
-    The following shows how Cobbie solved this problem (including all thoughts, code, and results):
-    {{ history }}
 
     YOUR TASK:
     {% if is_enhancement %}
@@ -48,7 +43,7 @@ function HelperFunctionCreator(
     5. Test both old usage (without new params) and new usage
 
     {% else %}
-    Create new helper function:
+    Create new function:
     - Name: {{ function_name }}
     - Description: {{ function_description }}
     {% endif %}

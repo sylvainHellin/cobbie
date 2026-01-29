@@ -16,6 +16,9 @@ from . import stream_types
 
 type_map = {
 
+    "types.ACCToolAssessment": types.ACCToolAssessment,
+    "stream_types.ACCToolAssessment": stream_types.ACCToolAssessment,
+
     "types.AlignedQAPair": types.AlignedQAPair,
     "stream_types.AlignedQAPair": stream_types.AlignedQAPair,
 

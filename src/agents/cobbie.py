@@ -147,6 +147,7 @@ def _cobbie(
                             "result_type": "FinalAnswer",
                             "thoughts": result.thoughts,
                             "answer": result.answer,
+                            "ifc_guids": result.ifc_guids,
                         }
                     )
 
@@ -459,8 +460,8 @@ def cobbie(
 
 if __name__ == "__main__":
     import mlflow
-
-    from src.config import TEST_IFC_PATH
+    import json
+    from src.config import TEST_IFC_PATH, DEVSET_PATH
     from src.tools.initial import (
         query_ifcopenshell_docs,
         web_search,
@@ -468,7 +469,7 @@ if __name__ == "__main__":
 
     # Try to set up MLflow tracking, but don't fail if server is not available
     mlflow.set_tracking_uri("http://127.0.0.1:5000")
-    mlflow.set_experiment("Cobbie")
+    mlflow.set_experiment("Cobbie_ACC")
 
     # Setup tools
     tools_dict = {
@@ -476,8 +477,22 @@ if __name__ == "__main__":
         "web_search": web_search,
     }
 
+    with open(DEVSET_PATH, "r") as f:
+        dev_set = json.load(f)
+    test_data = dev_set[0]
+    test_question = f"""
+{test_data['question']}
+Underlying Rule: {test_data['rule']}
+Additional Parameters: {test_data['parameters']}
+    """
+    ground_truth = test_data['ground_truth']
+    if len(ground_truth) > 1:
+        guids = [gt['ifc_guids'][0] for gt in ground_truth]
+    else:
+        guids = ground_truth[0]['ifc_guids']
+
     # Test question with IFC model
-    test_question = "How many walls are there in the BIM model?"
+    # test_question = "How many walls are there in the BIM model?"
     model_path = TEST_IFC_PATH
 
     print("COBBIE Test Execution:")
@@ -497,6 +512,7 @@ if __name__ == "__main__":
     print("COBBIE Test Results:")
     print(f"Answer: {result.answer}")
     print(f"\nReasoning: {result.thoughts}")
+    print(f"\nIFC GUIDs: {result.ifc_guids}")
     print(f"\nExecution History:\n{execution_history}")
 
     # Extract metrics
