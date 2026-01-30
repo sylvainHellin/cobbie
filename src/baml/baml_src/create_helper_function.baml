@@ -151,8 +151,8 @@ function HelperFunctionCreator(
     - Make sure the function signature matches what's described in function_description
     - Test that the function returns the exact type specified in its signature
     - Test on multiple BIM models to avoid overfitting to naming conventions or data formats
-
     {% if previous_attempts %}
+    
     PREVIOUS ATTEMPTS:
     {{ previous_attempts }}
 

@@ -15,6 +15,7 @@ from loguru import logger
 from src.baml.baml_client.types import CodeAction, FinalAnswer
 from src.util.code_act_inner_loop import _code_act_iter, _execute_code_action
 from src.util.generate_tools_docs import generate_tools_docs
+from src.util.python_executor import setup_interpreter
 
 
 def _cobbie(
@@ -60,6 +61,9 @@ def _cobbie(
 
     # Track schema validation errors for retry logic
     schema_error_occurred = False
+
+    # Create interpreter ONCE for this question (reused across all iterations)
+    interpreter = setup_interpreter(model_path, tools)
 
     # Main reasoning loop
     for iteration in range(max_iterations):
@@ -231,6 +235,7 @@ Please retry with the correct format.
                     tools=tools,
                     model_path=model_path,
                     add_code_prefix=add_code_prefix,
+                    interpreter=interpreter,
                 )
                 previous_attempts += f"/n{current_attempt}/n"
 
@@ -507,10 +512,7 @@ if __name__ == "__main__":
     import mlflow
 
     from src.config import TEST_IFC_PATH
-    from src.tools.initial import (
-        query_ifcopenshell_docs,
-        web_search,
-    )
+    from src.tools.initial import query_ifcopenshell_docs
 
     # Try to set up MLflow tracking, but don't fail if server is not available
     mlflow.set_tracking_uri("http://127.0.0.1:5000")
@@ -519,7 +521,6 @@ if __name__ == "__main__":
     # Setup tools
     tools_dict = {
         "query_ifcopenshell_docs": query_ifcopenshell_docs,
-        "web_search": web_search,
     }
 
     # Test question with IFC model

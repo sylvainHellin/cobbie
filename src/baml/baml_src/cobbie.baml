@@ -15,6 +15,9 @@ function Cobbie(
   Use this exact path when calling IFC functions in your code.
   {% endif %}
 
+  ## EXECUTION ENVIRONMENT
+  Your code runs in a persistent Python session. Variables, loaded models, and computed results from previous iterations are still available. You do NOT need to re-open the IFC model or recompute results if they were already obtained in a previous iteration. Simply reuse existing variables.
+
   Question: {{ user_input }}
 
   ## AVAILABLE TOOLS
