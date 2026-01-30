@@ -395,7 +395,7 @@ Examples:
 
     # Create timestamp for report
     timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-    report_path = Path(f"reports/ifc_bench_cleaning_{timestamp}.csv")
+    report_path = Path(f"outputs/eval/ifc_bench_cleaning_{timestamp}.csv")
 
     # Start main MLflow run
     run_name = f"IFCBenchCleaning_{timestamp}_samples_{len(dataset)}"

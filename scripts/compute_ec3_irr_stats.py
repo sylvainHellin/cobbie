@@ -37,7 +37,7 @@ STEFAN_FILE = EVAL_DIR / "EC3-2026 - stefan (stefan) 2026-01-20_21-07.csv"
 LLM_FILE = EVAL_DIR / "EC3-2026 - LLM_Judge (LLM_Judge) 2026-01-20_21-08.csv"
 GEMINI_FILE = EVAL_DIR / "EC3-2026 - Gemini_Judge (Gemini_Judge) 2026-01-21_16-00.csv"
 CONSOLIDATED_FILE = EVAL_DIR / "EC3-2026 - human-human final agreement.csv"
-OUTPUT_DIR = Path("outputs/reports/ec3_irr")
+OUTPUT_DIR = Path("outputs/ec3")
 FIGURES_DIR = OUTPUT_DIR / "figures"
 
 CRITERIA = ["Abstention", "Faithfulness", "Completeness", "Transparency", "Relevance"]

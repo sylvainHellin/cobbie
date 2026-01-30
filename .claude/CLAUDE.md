@@ -12,13 +12,21 @@
 - **Type Check**: `uvx ty check`
 
 ### MLflow Tracking
-- **Start MLflow**: `uv run mlflow server --host 127.0.0.1 --port 5000 --backend-store-uri sqlite:///mlflow.sqlite --uvicorn-opts "--timeout=120 -w 1"`
-  - **Important**: Use single worker (`-w 1`) to avoid SQLite database locking issues with concurrent writes
+- **Start MLflow** (from the `.mlflow/` directory):
+  ```bash
+  cd .mlflow
+  uv run mlflow server --host 127.0.0.1 --port 5000 --backend-store-uri sqlite:///mlflow.sqlite --uvicorn-opts "--timeout=120 -w 1"
+  ```
+  - **Important**: Must run from `.mlflow/` directory so paths resolve correctly
+  - Use single worker (`-w 1`) to avoid SQLite database locking issues with concurrent writes
   - The `--timeout=120` option prevents timeouts for long-running operations
 
 ### Training & Evaluation
 - **Training**: `uv run scripts/run_training_phase.py --start 0 --end 10`
 - **Evaluation**: `uv run scripts/run_evaluation.py --start 0 --nb-samples 5`
+- **Batched Evaluation** (memory-safe): `fish scripts/run_eval_batched.fish --nb-samples 20 --batch-size 5`
+  - Runs each batch as a separate process to avoid ifcopenshell memory accumulation
+  - First batch = 1 question (creates MLflow run), then prompts for run ID, remaining batches use `--continue`
 
 ## Architecture Overview
 
@@ -31,6 +39,8 @@ This is a sophisticated AI System named Cobbie (COde Based BIM Information Extra
 - **BAML**: `src/baml/baml_src/` (source) and `src/baml/baml_client/` (auto-generated). Regenerate with `cd src/baml && uv run baml-cli generate`
 - **Data Pipeline**: SQLite database with MLflow tracking
 - **Web Interface**: See [cobbie-web](../cobbie-web) for FastAPI backend and React frontend
+  - **Backend**: `cd ../cobbie-web/api && uv run uvicorn main:app --host 127.0.0.1 --port 8000 --reload`
+  - **Frontend**: `cd ../cobbie-web && pnpm run dev` (runs on port 8080)
 
 
 ## Development Notes
@@ -73,6 +83,21 @@ The system supports multiple LLM providers:
 - Training uses sophisticated state machine with tool creation/correction/merging
 - Comprehensive MLflow integration with nested span hierarchies
 - Token usage tracking and cost analysis
+
+### Generated Outputs
+All generated outputs (reports, figures, data exports) must go under `outputs/`, organised into one of these subdirectories:
+
+```
+outputs/
+├── ec3/            # EC3 paper analysis (CSVs, TEX tables, markdown reports)
+│   └── figures/    # All figures (PNG + PDF)
+├── eval/           # Evaluation outputs (Evaluation_*.xlsx, grading sheets)
+└── training/       # Training outputs (TRAINING_*.xlsx)
+```
+
+- **Never** write generated files to the project root or ad-hoc directories.
+- New scripts must write to one of the three existing subdirectories.
+- If a new output doesn't fit any of them, **ask permission** before creating a new subdirectory under `outputs/`.
 
 ## Important Guidelines
 - Use `uv run` prefix for all Python commands

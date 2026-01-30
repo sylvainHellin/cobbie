@@ -9,7 +9,7 @@ LLM-as-a-judge (pre-filled), Human Judge 1, and Human Judge 2.
 Usage:
     uv run scripts/create_grading_sheet.py --run-ids <run_id1> <run_id2> ...
     uv run scripts/create_grading_sheet.py --run-ids c0f5d69f17b3400093fa63204c70adc3
-    uv run scripts/create_grading_sheet.py --run-ids abc123 --output reports/my_grading.xlsx
+    uv run scripts/create_grading_sheet.py --run-ids abc123 --output outputs/eval/my_grading.xlsx
 """
 
 import argparse
@@ -29,7 +29,7 @@ from openpyxl.worksheet.datavalidation import DataValidation
 from src.config import DB_PATH, MLFLOW_URI
 
 # Constants
-REPORTS_DIR = "reports"
+REPORTS_DIR = "outputs/eval"
 CATEGORY_NAMES = {
     1: "Direct Property",
     2: "Aggregation",
@@ -872,7 +872,7 @@ Examples:
   uv run scripts/create_grading_sheet.py --run-ids run1 run2 run3
 
   # Custom output path
-  uv run scripts/create_grading_sheet.py --run-ids abc123 --output reports/my_grading.xlsx
+  uv run scripts/create_grading_sheet.py --run-ids abc123 --output outputs/eval/my_grading.xlsx
         """,
     )
 
@@ -885,7 +885,7 @@ Examples:
 
     parser.add_argument(
         "--output",
-        help="Custom output path (default: reports/grading_sheet_YYYY-MM-DD_HH-MM-SS.xlsx)",
+        help="Custom output path (default: outputs/eval/grading_sheet_YYYY-MM-DD_HH-MM-SS.xlsx)",
     )
 
     args = parser.parse_args()

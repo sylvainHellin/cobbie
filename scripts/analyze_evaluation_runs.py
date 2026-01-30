@@ -23,7 +23,7 @@ from tabulate import tabulate
 from src.config import DB_PATH, MLFLOW_URI
 
 # Constants
-REPORTS_DIR = "reports"
+REPORTS_DIR = "outputs/eval"
 CATEGORY_NAMES = {
     1: "Direct Property",
     2: "Aggregation",
@@ -474,7 +474,7 @@ Examples:
         type=str,
         default=None,
         metavar="NAME",
-        help="Export to Excel file: reports/Evaluation_YYYY-MM-DD_NAME.xlsx",
+        help="Export to Excel file: outputs/eval/Evaluation_YYYY-MM-DD_NAME.xlsx",
     )
 
     args = parser.parse_args()
