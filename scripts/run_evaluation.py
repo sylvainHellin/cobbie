@@ -26,6 +26,7 @@ Usage:
 """
 
 import argparse
+import gc
 import os
 import sys
 import time
@@ -1716,6 +1717,9 @@ Examples:
                     )
                 question_results.append(result)
                 pbar.update(1)
+
+                # Force garbage collection between questions to reclaim memory
+                gc.collect()
 
         end_time = time.time()
         total_evaluation_time = end_time - start_time
