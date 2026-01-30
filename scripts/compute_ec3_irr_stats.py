@@ -2,10 +2,12 @@
 """
 Compute EC3 Paper IRR Statistics
 
-Computes inter-rater reliability metrics for 3 raters:
-- Human 1 (Sylvain)
-- Human 2 (Stefan)
-- LLM Judge
+Computes inter-rater reliability metrics for 4 raters (H1, H2, LLM₁, LLM₂)
+plus post-discussion consolidated human judgment (H_cons).
+
+Includes pairwise and 4-way metrics, plus:
+- H1-H2 post-discussion agreement
+- Consolidated human vs LLM₁ and LLM₂
 
 Outputs CSV reports, LaTeX tables, and figures.
 
@@ -34,11 +36,38 @@ SYLVAIN_FILE = EVAL_DIR / "EC3-2026 - sylvain (sylvain) 2026-01-20_21-07.csv"
 STEFAN_FILE = EVAL_DIR / "EC3-2026 - stefan (stefan) 2026-01-20_21-07.csv"
 LLM_FILE = EVAL_DIR / "EC3-2026 - LLM_Judge (LLM_Judge) 2026-01-20_21-08.csv"
 GEMINI_FILE = EVAL_DIR / "EC3-2026 - Gemini_Judge (Gemini_Judge) 2026-01-21_16-00.csv"
+CONSOLIDATED_FILE = EVAL_DIR / "EC3-2026 - human-human final agreement.csv"
 OUTPUT_DIR = Path("outputs/reports/ec3_irr")
 FIGURES_DIR = OUTPUT_DIR / "figures"
 
 CRITERIA = ["Abstention", "Faithfulness", "Completeness", "Transparency", "Relevance"]
 RATERS = ["sylvain", "stefan", "llm", "gemini"]
+
+# Display names for figures and tables (anonymized)
+RATER_DISPLAY_NAMES = {
+    "sylvain": "H1",
+    "stefan": "H2",
+    "llm": "LLM₁",
+    "gemini": "LLM₂",
+    "consolidated": "H_cons",
+}
+
+# System names for cross-system comparison
+SYSTEM_NAMES = {
+    "cobbie": "Agentic",
+    "baseline": "Static",
+    "gemini-flash": "Lightweight",
+}
+SYSTEMS = ["Agentic", "Static", "Lightweight"]
+
+def get_display_name(rater: str) -> str:
+    """Get display name for a rater."""
+    return RATER_DISPLAY_NAMES.get(rater, rater)
+
+def get_pair_display_name(pair: str) -> str:
+    """Get display name for a rater pair like 'sylvain-stefan' -> 'H1-H2'."""
+    parts = pair.split("-")
+    return "-".join(get_display_name(p) for p in parts)
 
 # MLflow run IDs for comparison systems
 BASELINE_RUN_ID = "952f4e16f4464e33b4c72f9ed10d9195"
@@ -50,27 +79,40 @@ GEMINI_RUN_ID = "b1ce27fe59714eaeb343753ddc5f61d0"
 # =============================================================================
 
 
-def load_and_clean_data() -> tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame, pd.DataFrame]:
-    """Load and clean the 4 CSV files."""
+def load_and_clean_data() -> tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame, pd.DataFrame, pd.DataFrame]:
+    """Load and clean the 5 CSV files (4 original raters + consolidated)."""
     sylvain = pd.read_csv(SYLVAIN_FILE)
     stefan = pd.read_csv(STEFAN_FILE)
     llm = pd.read_csv(LLM_FILE)
     gemini = pd.read_csv(GEMINI_FILE)
+    consolidated = pd.read_csv(CONSOLIDATED_FILE)
 
-    # Drop empty rows (Stefan has one)
+    # Drop empty rows
     stefan = stefan.dropna(subset=["Question ID"])
+    consolidated = consolidated.dropna(subset=["Question ID"])
 
     # Ensure Question ID is int
-    for df in [sylvain, stefan, llm, gemini]:
+    for df in [sylvain, stefan, llm, gemini, consolidated]:
         df["Question ID"] = df["Question ID"].astype(int)
 
-    return sylvain, stefan, llm, gemini
+    # Normalise Abstention across all sources
+    for df in [sylvain, stefan, llm, gemini, consolidated]:
+        df["Abstention"] = df["Abstention"].apply(normalise_abstention)
+
+    return sylvain, stefan, llm, gemini, consolidated
 
 
 def filter_valid_questions(
-    sylvain: pd.DataFrame, stefan: pd.DataFrame, llm: pd.DataFrame, gemini: pd.DataFrame
+    sylvain: pd.DataFrame,
+    stefan: pd.DataFrame,
+    llm: pd.DataFrame,
+    gemini: pd.DataFrame,
+    consolidated: pd.DataFrame,
 ) -> set[int]:
-    """Return set of valid Question IDs (intersection with complete evaluations)."""
+    """Return set of valid Question IDs (intersection with complete evaluations).
+
+    For discussed questions (those in consolidated CSV), both evaluators must be present.
+    """
     # Filter Sylvain: Error=0, UPDATED != 'x'
     sylvain_valid = sylvain[(sylvain["Error"] == 0) & (sylvain["UPDATED"] != "x")]
 
@@ -85,13 +127,31 @@ def filter_valid_questions(
     llm_valid = llm
     gemini_valid = gemini
 
-    # Intersection
-    valid_ids = (
+    # Original 4-way intersection
+    original_valid = (
         set(sylvain_valid["Question ID"])
         & set(stefan_valid["Question ID"])
         & set(llm_valid["Question ID"])
         & set(gemini_valid["Question ID"])
     )
+
+    # Discussed questions must have both evaluators in consolidated CSV
+    discussed_ids = set(consolidated["Question ID"].unique())
+    consolidated_valid: set[int] = set()
+    for qid in discussed_ids:
+        q_rows = consolidated[consolidated["Question ID"] == qid]
+        evaluators = set(q_rows["Evaluator"].str.lower().str.strip())
+        if {"sylvain", "stefan"} <= evaluators:
+            consolidated_valid.add(qid)
+
+    # Valid = original valid, but discussed questions must also be in consolidated_valid
+    valid_ids: set[int] = set()
+    for qid in original_valid:
+        if qid in discussed_ids:
+            if qid in consolidated_valid:
+                valid_ids.add(qid)
+        else:
+            valid_ids.add(qid)
 
     return valid_ids
 
@@ -136,6 +196,81 @@ def merge_ratings(
     return merged.sort_values("Question ID").reset_index(drop=True)
 
 
+def augment_with_consolidated(
+    merged: pd.DataFrame,
+    sylvain: pd.DataFrame,
+    stefan: pd.DataFrame,
+    consolidated: pd.DataFrame,
+    valid_ids: set[int],
+) -> tuple[pd.DataFrame, int, int]:
+    """Add sylvain_post_*, stefan_post_*, and consolidated_* columns to merged.
+
+    For originally-agreed questions: post = original, consolidated = sylvain's value.
+    For discussed questions: post = post-discussion values from consolidated CSV,
+    consolidated = agreed value (NaN where still disagreed).
+
+    Returns (merged, n_agreed, n_disagreed).
+    """
+    discussed_ids = set(consolidated["Question ID"].unique()) & valid_ids
+
+    # Build lookup dicts from consolidated CSV
+    # {qid: {evaluator: row_series}}
+    cons_lookup: dict[int, dict[str, pd.Series]] = {}
+    for qid in discussed_ids:
+        q_rows = consolidated[consolidated["Question ID"] == qid]
+        for _, row in q_rows.iterrows():
+            evaluator = str(row["Evaluator"]).strip().lower()
+            cons_lookup.setdefault(qid, {})[evaluator] = row
+
+    n_agreed = 0
+    n_disagreed = 0
+
+    for criterion in CRITERIA:
+        sylvain_post_vals = []
+        stefan_post_vals = []
+        consolidated_vals = []
+
+        for _, mrow in merged.iterrows():
+            qid = mrow["Question ID"]
+
+            if qid in discussed_ids and qid in cons_lookup:
+                # Discussed question: use post-discussion values
+                s_post = cons_lookup[qid].get("sylvain")
+                st_post = cons_lookup[qid].get("stefan")
+                sv = s_post[criterion] if s_post is not None else np.nan
+                stv = st_post[criterion] if st_post is not None else np.nan
+                sylvain_post_vals.append(sv)
+                stefan_post_vals.append(stv)
+
+                # Consolidated = agreed value or NaN
+                if encode_criterion(sv, criterion) == encode_criterion(stv, criterion):
+                    consolidated_vals.append(sv)
+                else:
+                    consolidated_vals.append(np.nan)
+            else:
+                # Originally agreed: post = original
+                sv = mrow[f"sylvain_{criterion}"]
+                stv = mrow[f"stefan_{criterion}"]
+                sylvain_post_vals.append(sv)
+                stefan_post_vals.append(stv)
+                # Consolidated = sylvain's value (they agreed)
+                consolidated_vals.append(sv)
+
+        merged[f"sylvain_post_{criterion}"] = sylvain_post_vals
+        merged[f"stefan_post_{criterion}"] = stefan_post_vals
+        merged[f"consolidated_{criterion}"] = consolidated_vals
+
+    # Count agreed/disagreed (check all criteria per question)
+    for _, mrow in merged.iterrows():
+        all_agree = all(pd.notna(mrow[f"consolidated_{c}"]) for c in CRITERIA)
+        if all_agree:
+            n_agreed += 1
+        else:
+            n_disagreed += 1
+
+    return merged, n_agreed, n_disagreed
+
+
 # =============================================================================
 # Phase 2: Krippendorff's Alpha Computation
 # =============================================================================
@@ -153,6 +288,20 @@ def encode_criterion(value: object, criterion: str) -> float:
         # Yes/No/Na: ordinal encoding
         mapping = {"Yes": 2.0, "Na": 1.0, "No": 0.0}
         return mapping.get(str(value), np.nan)
+
+
+def normalise_abstention(val: object) -> object:
+    """Normalise Abstention to Python bool."""
+    if pd.isna(val):
+        return np.nan
+    if isinstance(val, bool):
+        return val
+    s = str(val).strip().lower()
+    if s in ("true", "1", "1.0"):
+        return True
+    if s in ("false", "0", "0.0"):
+        return False
+    return np.nan
 
 
 def compute_krippendorff_alpha(
@@ -185,23 +334,33 @@ def compute_all_krippendorff(merged: pd.DataFrame) -> pd.DataFrame:
         row = {
             "Criterion": criterion,
             "Alpha (4 raters)": compute_krippendorff_alpha(merged, criterion, RATERS),
-            "Alpha (Sylvain-Stefan)": compute_krippendorff_alpha(
+            f"Alpha ({get_display_name('sylvain')}-{get_display_name('stefan')})": compute_krippendorff_alpha(
                 merged, criterion, ["sylvain", "stefan"]
             ),
-            "Alpha (Sylvain-LLM)": compute_krippendorff_alpha(
+            f"Alpha ({get_display_name('sylvain')}-{get_display_name('llm')})": compute_krippendorff_alpha(
                 merged, criterion, ["sylvain", "llm"]
             ),
-            "Alpha (Stefan-LLM)": compute_krippendorff_alpha(
+            f"Alpha ({get_display_name('stefan')}-{get_display_name('llm')})": compute_krippendorff_alpha(
                 merged, criterion, ["stefan", "llm"]
             ),
-            "Alpha (Sylvain-Gemini)": compute_krippendorff_alpha(
+            f"Alpha ({get_display_name('sylvain')}-{get_display_name('gemini')})": compute_krippendorff_alpha(
                 merged, criterion, ["sylvain", "gemini"]
             ),
-            "Alpha (Stefan-Gemini)": compute_krippendorff_alpha(
+            f"Alpha ({get_display_name('stefan')}-{get_display_name('gemini')})": compute_krippendorff_alpha(
                 merged, criterion, ["stefan", "gemini"]
             ),
-            "Alpha (LLM-Gemini)": compute_krippendorff_alpha(
+            f"Alpha ({get_display_name('llm')}-{get_display_name('gemini')})": compute_krippendorff_alpha(
                 merged, criterion, ["llm", "gemini"]
+            ),
+            # Post-discussion and consolidated comparisons
+            "Alpha (H1-H2 post)": compute_krippendorff_alpha(
+                merged, criterion, ["sylvain_post", "stefan_post"]
+            ),
+            f"Alpha ({get_display_name('consolidated')}-{get_display_name('llm')})": compute_krippendorff_alpha(
+                merged, criterion, ["consolidated", "llm"]
+            ),
+            f"Alpha ({get_display_name('consolidated')}-{get_display_name('gemini')})": compute_krippendorff_alpha(
+                merged, criterion, ["consolidated", "gemini"]
             ),
         }
         results.append(row)
@@ -223,6 +382,9 @@ def compute_percentage_agreement(merged: pd.DataFrame, criterion: str) -> dict:
         ("sylvain", "gemini"),
         ("stefan", "gemini"),
         ("llm", "gemini"),
+        ("sylvain_post", "stefan_post"),
+        ("consolidated", "llm"),
+        ("consolidated", "gemini"),
     ]
 
     results: dict[str, dict] = {}
@@ -268,13 +430,16 @@ def compute_all_agreements(merged: pd.DataFrame) -> pd.DataFrame:
         agreement = compute_percentage_agreement(merged, criterion)
         row = {
             "Criterion": criterion,
-            "Sylvain-Stefan (%)": agreement["sylvain-stefan"]["pct"] * 100,
-            "Sylvain-LLM (%)": agreement["sylvain-llm"]["pct"] * 100,
-            "Stefan-LLM (%)": agreement["stefan-llm"]["pct"] * 100,
-            "Sylvain-Gemini (%)": agreement["sylvain-gemini"]["pct"] * 100,
-            "Stefan-Gemini (%)": agreement["stefan-gemini"]["pct"] * 100,
-            "LLM-Gemini (%)": agreement["llm-gemini"]["pct"] * 100,
+            f"{get_display_name('sylvain')}-{get_display_name('stefan')} (%)": agreement["sylvain-stefan"]["pct"] * 100,
+            f"{get_display_name('sylvain')}-{get_display_name('llm')} (%)": agreement["sylvain-llm"]["pct"] * 100,
+            f"{get_display_name('stefan')}-{get_display_name('llm')} (%)": agreement["stefan-llm"]["pct"] * 100,
+            f"{get_display_name('sylvain')}-{get_display_name('gemini')} (%)": agreement["sylvain-gemini"]["pct"] * 100,
+            f"{get_display_name('stefan')}-{get_display_name('gemini')} (%)": agreement["stefan-gemini"]["pct"] * 100,
+            f"{get_display_name('llm')}-{get_display_name('gemini')} (%)": agreement["llm-gemini"]["pct"] * 100,
             "4-way (%)": agreement["4-way"]["pct"] * 100,
+            "H1-H2 post (%)": agreement["sylvain_post-stefan_post"]["pct"] * 100,
+            f"{get_display_name('consolidated')}-{get_display_name('llm')} (%)": agreement["consolidated-llm"]["pct"] * 100,
+            f"{get_display_name('consolidated')}-{get_display_name('gemini')} (%)": agreement["consolidated-gemini"]["pct"] * 100,
         }
         results.append(row)
 
@@ -323,10 +488,12 @@ def compute_spearman_correlations(merged: pd.DataFrame) -> pd.DataFrame:
     encoded = pd.DataFrame()
     encoded["Question ID"] = merged["Question ID"]
 
-    for rater in RATERS:
+    all_prefixes = RATERS + ["sylvain_post", "stefan_post", "consolidated"]
+    for prefix in all_prefixes:
         for criterion in CRITERIA:
-            col = f"{rater}_{criterion}"
-            encoded[col] = merged[col].apply(lambda x: encode_criterion(x, criterion))
+            col = f"{prefix}_{criterion}"
+            if col in merged.columns:
+                encoded[col] = merged[col].apply(lambda x: encode_criterion(x, criterion))
 
     # Compute correlations between raters for same criterion
     results = []
@@ -337,6 +504,9 @@ def compute_spearman_correlations(merged: pd.DataFrame) -> pd.DataFrame:
         ("sylvain", "gemini"),
         ("stefan", "gemini"),
         ("llm", "gemini"),
+        ("sylvain_post", "stefan_post"),
+        ("consolidated", "llm"),
+        ("consolidated", "gemini"),
     ]
 
     for criterion in CRITERIA:
@@ -344,14 +514,22 @@ def compute_spearman_correlations(merged: pd.DataFrame) -> pd.DataFrame:
         for r1, r2 in pairs:
             col1 = f"{r1}_{criterion}"
             col2 = f"{r2}_{criterion}"
+            # Use display names, with special handling for post-discussion prefixes
+            if r1 == "sylvain_post":
+                pair_display = "H1_post-H2_post" if r2 == "stefan_post" else f"H1_post-{get_display_name(r2)}"
+            elif r1 == "consolidated":
+                pair_display = f"{get_display_name('consolidated')}-{get_display_name(r2)}"
+            else:
+                pair_display = f"{get_display_name(r1)}-{get_display_name(r2)}"
+
             valid = encoded[[col1, col2]].dropna()
             if len(valid) >= 3:
                 corr, pval = spearmanr(valid[col1], valid[col2])
-                row[f"{r1}-{r2} (rho)"] = corr
-                row[f"{r1}-{r2} (p)"] = pval
+                row[f"{pair_display} (rho)"] = corr
+                row[f"{pair_display} (p)"] = pval
             else:
-                row[f"{r1}-{r2} (rho)"] = np.nan
-                row[f"{r1}-{r2} (p)"] = np.nan
+                row[f"{pair_display} (rho)"] = np.nan
+                row[f"{pair_display} (p)"] = np.nan
         results.append(row)
 
     return pd.DataFrame(results)
@@ -459,6 +637,26 @@ def compute_category_breakdown(merged: pd.DataFrame) -> pd.DataFrame:
     return pd.DataFrame(results)
 
 
+def compute_category_breakdown_all_criteria(merged: pd.DataFrame) -> pd.DataFrame:
+    """Compute IRR metrics broken down by question category for ALL criteria."""
+    results = []
+
+    for cat in sorted(merged["Category"].unique()):
+        cat_data = merged[merged["Category"] == cat]
+        n = len(cat_data)
+
+        row = {"Category": cat, "N": n}
+
+        # Compute Krippendorff's alpha for all criteria
+        for criterion in CRITERIA:
+            alpha = compute_krippendorff_alpha(cat_data, criterion, RATERS)
+            row[f"Alpha ({criterion})"] = alpha
+
+        results.append(row)
+
+    return pd.DataFrame(results)
+
+
 # =============================================================================
 # Phase 6: Output Generation (CSV + LaTeX)
 # =============================================================================
@@ -529,7 +727,7 @@ def setup_style() -> None:
 
 def plot_krippendorff_heatmap(alpha_df: pd.DataFrame) -> None:
     """Plot Krippendorff's alpha as heatmap."""
-    fig, ax = plt.subplots(figsize=(8, 5))
+    fig, ax = plt.subplots(figsize=(14, 5))
 
     # Prepare data for heatmap
     data = alpha_df.set_index("Criterion")
@@ -564,7 +762,7 @@ def plot_agreement_bars(agreement_df: pd.DataFrame) -> None:
         id_vars=["Criterion"], var_name="Comparison", value_name="Agreement (%)"
     )
 
-    colors = sns.color_palette("mako", n_colors=7)
+    colors = sns.color_palette("mako", n_colors=10)
 
     sns.barplot(
         data=melted,
@@ -606,7 +804,8 @@ def plot_inter_criteria_correlation(corr_matrix: pd.DataFrame, rater: str) -> No
         cbar_kws={"label": "Spearman Correlation"},
     )
 
-    ax.set_title(f"Inter-Criteria Correlations ({rater.upper()} ratings)\nLow = distinct measures, High = redundant")
+    display_name = get_display_name(rater)
+    ax.set_title(f"Inter-Criteria Correlations ({display_name} ratings)\nLow = distinct measures, High = redundant")
 
     plt.tight_layout()
     plt.savefig(FIGURES_DIR / f"inter_criteria_correlation_{rater}.png")
@@ -644,6 +843,46 @@ def plot_category_breakdown(cat_df: pd.DataFrame) -> None:
     plt.savefig(FIGURES_DIR / "category_breakdown.png")
     plt.close()
     print(f"  Saved: {FIGURES_DIR / 'category_breakdown.png'}")
+
+
+def plot_category_breakdown_all_criteria(cat_df: pd.DataFrame) -> None:
+    """Plot category-level breakdown for ALL criteria."""
+    fig, axes = plt.subplots(1, 2, figsize=(14, 5))
+
+    colors = sns.color_palette("mako", n_colors=5)
+
+    # Alpha by category for all criteria
+    alpha_cols = [f"Alpha ({c})" for c in CRITERIA]
+    cat_df.plot(
+        x="Category",
+        y=alpha_cols,
+        kind="bar",
+        ax=axes[0],
+        color=colors,
+        width=0.8,
+    )
+    axes[0].set_title("Krippendorff's Alpha by Category (All Criteria)")
+    axes[0].set_ylabel("Alpha")
+    axes[0].set_ylim(-0.2, 1.0)  # Allow negative values (can happen with small samples)
+    axes[0].axhline(y=0, color='gray', linestyle='--', linewidth=0.8)
+    axes[0].legend(CRITERIA, loc='upper right', fontsize=8)
+    axes[0].tick_params(axis="x", rotation=0)
+
+    # Sample size by category
+    axes[1].bar(cat_df["Category"], cat_df["N"], color=colors[2])
+    axes[1].set_title("Sample Size by Category")
+    axes[1].set_xlabel("Category")
+    axes[1].set_ylabel("N")
+
+    # Add sample size annotations
+    for i, (_, row) in enumerate(cat_df.iterrows()):
+        axes[1].text(row["Category"], row["N"] + 0.5, str(int(row["N"])),
+                     ha='center', va='bottom', fontsize=9)
+
+    plt.tight_layout()
+    plt.savefig(FIGURES_DIR / "category_breakdown_all_criteria.png")
+    plt.close()
+    print(f"  Saved: {FIGURES_DIR / 'category_breakdown_all_criteria.png'}")
 
 
 def plot_confusion_matrix(
@@ -722,9 +961,9 @@ def extract_mlflow_evaluations(run_id: str, system_name: str) -> pd.DataFrame:
 
 def load_all_systems() -> pd.DataFrame:
     """Load evaluations from all 3 systems."""
-    # Cobbie from CSV
+    # Agentic (Cobbie) from CSV
     llm_csv = pd.read_csv(LLM_FILE)
-    cobbie = llm_csv[
+    agentic = llm_csv[
         [
             "Question ID",
             "Abstention",
@@ -734,14 +973,14 @@ def load_all_systems() -> pd.DataFrame:
             "Relevance",
         ]
     ].copy()
-    cobbie["System"] = "Cobbie"
+    agentic["System"] = "Agentic"
 
-    # Baseline and Gemini from MLflow
-    baseline = extract_mlflow_evaluations(BASELINE_RUN_ID, "Baseline")
-    gemini = extract_mlflow_evaluations(GEMINI_RUN_ID, "Gemini-Flash")
+    # Static (Baseline) and Lightweight (Gemini-Flash) from MLflow
+    static = extract_mlflow_evaluations(BASELINE_RUN_ID, "Static")
+    lightweight = extract_mlflow_evaluations(GEMINI_RUN_ID, "Lightweight")
 
     # Combine
-    all_systems = pd.concat([cobbie, baseline, gemini], ignore_index=True)
+    all_systems = pd.concat([agentic, static, lightweight], ignore_index=True)
     return all_systems
 
 
@@ -764,7 +1003,7 @@ def compute_discriminative_power(all_systems: pd.DataFrame) -> pd.DataFrame:
     for criterion in CRITERIA:
         row: dict[str, object] = {"Criterion": criterion}
 
-        for system in ["Cobbie", "Baseline", "Gemini-Flash"]:
+        for system in SYSTEMS:
             sys_data = all_systems[all_systems["System"] == system]
 
             # Entropy (distribution spread)
@@ -782,12 +1021,12 @@ def compute_discriminative_power(all_systems: pd.DataFrame) -> pd.DataFrame:
         if criterion != "Abstention":
             yes_rates = [
                 (all_systems[all_systems["System"] == s][criterion] == "Yes").mean()
-                for s in ["Cobbie", "Baseline", "Gemini-Flash"]
+                for s in SYSTEMS
             ]
         else:
             yes_rates = [
                 all_systems[all_systems["System"] == s][criterion].mean()
-                for s in ["Cobbie", "Baseline", "Gemini-Flash"]
+                for s in SYSTEMS
             ]
 
         row["Cross-System Variance"] = np.var(yes_rates)
@@ -806,7 +1045,7 @@ def identify_ceiling_floor_effects(all_systems: pd.DataFrame) -> pd.DataFrame:
         if criterion == "Abstention":
             continue
 
-        for system in ["Cobbie", "Baseline", "Gemini-Flash"]:
+        for system in SYSTEMS:
             sys_data = all_systems[all_systems["System"] == system]
             yes_rate = (sys_data[criterion] == "Yes").mean() * 100
             no_rate = (sys_data[criterion] == "No").mean() * 100
@@ -838,7 +1077,7 @@ def plot_cross_system_comparison(all_systems: pd.DataFrame) -> None:
     axes = axes.flatten()
 
     colors = sns.color_palette("mako", n_colors=3)
-    system_order = ["Cobbie", "Baseline", "Gemini-Flash"]
+    system_order = SYSTEMS
 
     for idx, criterion in enumerate(CRITERIA):
         ax = axes[idx]
@@ -922,6 +1161,59 @@ def plot_discriminative_power(disc_df: pd.DataFrame) -> None:
     print(f"  Saved: {FIGURES_DIR / 'discriminative_power.png'}")
 
 
+def rename_csv_columns_for_systems(csv_path: Path) -> pd.DataFrame:
+    """Load CSV and rename columns to use new system names."""
+    old_to_new = {
+        "Cobbie": "Agentic",
+        "Baseline": "Static",
+        "Gemini-Flash": "Lightweight",
+    }
+
+    df = pd.read_csv(csv_path)
+
+    # Rename columns containing old system names
+    new_columns = {}
+    for col in df.columns:
+        new_col = col
+        for old, new in old_to_new.items():
+            new_col = new_col.replace(old, new)
+        if new_col != col:
+            new_columns[col] = new_col
+
+    if new_columns:
+        df = df.rename(columns=new_columns)
+
+    return df
+
+
+def regenerate_cross_system_figures_from_csv(disc_csv_path: Path, ceiling_csv_path: Path) -> None:
+    """Regenerate cross-system figures using existing CSV data with new names."""
+    print("   Regenerating cross-system figures from CSV data...")
+
+    # Load and rename discriminative power CSV
+    disc_df = rename_csv_columns_for_systems(disc_csv_path)
+    disc_df.to_csv(OUTPUT_DIR / "discriminative_power.csv", index=False)
+    print(f"   Updated: {OUTPUT_DIR / 'discriminative_power.csv'}")
+
+    # Load and rename ceiling/floor effects CSV
+    ceiling_df = rename_csv_columns_for_systems(ceiling_csv_path)
+    # Also rename System column values
+    system_map = {"cobbie": "Agentic", "Cobbie": "Agentic",
+                  "baseline": "Static", "Baseline": "Static",
+                  "gemini-flash": "Lightweight", "Gemini-Flash": "Lightweight"}
+    if "System" in ceiling_df.columns:
+        ceiling_df["System"] = ceiling_df["System"].replace(system_map)
+    ceiling_df.to_csv(OUTPUT_DIR / "ceiling_floor_effects.csv", index=False)
+    print(f"   Updated: {OUTPUT_DIR / 'ceiling_floor_effects.csv'}")
+
+    # Plot discriminative power figure
+    plot_discriminative_power(disc_df)
+
+    # For cross_system_comparison figure, we need raw data which isn't in CSV
+    # So we skip that figure when regenerating from CSV
+    print("   Note: cross_system_comparison.png requires raw data; skipping regeneration.")
+
+
 # =============================================================================
 # Phase 8: Main Function and CLI
 # =============================================================================
@@ -940,6 +1232,13 @@ def main() -> None:
         action="store_true",
         help="Skip cross-system analysis (requires MLflow)",
     )
+    parser.add_argument(
+        "--regenerate-cross-system-from-csv",
+        type=str,
+        nargs=2,
+        metavar=("DISC_CSV", "CEILING_CSV"),
+        help="Regenerate cross-system figures from existing CSV files (skips MLflow)",
+    )
     args = parser.parse_args()
 
     print("=" * 60)
@@ -953,10 +1252,20 @@ def main() -> None:
 
     # Load data
     print("\n1. Loading data...")
-    sylvain, stefan, llm, gemini = load_and_clean_data()
-    valid_ids = filter_valid_questions(sylvain, stefan, llm, gemini)
+    sylvain, stefan, llm, gemini, consolidated = load_and_clean_data()
+    valid_ids = filter_valid_questions(sylvain, stefan, llm, gemini, consolidated)
     merged = merge_ratings(sylvain, stefan, llm, gemini, valid_ids)
     print(f"   Valid questions: {len(merged)}")
+
+    # Augment with consolidated human judgment
+    merged, n_agreed, n_disagreed = augment_with_consolidated(
+        merged, sylvain, stefan, consolidated, valid_ids,
+    )
+    discussed_ids = set(consolidated["Question ID"].unique()) & valid_ids
+    print(f"   Discussed questions: {len(discussed_ids)}")
+    print(f"   Originally agreed: {len(valid_ids) - len(discussed_ids)}")
+    print(f"   Fully agreed (post-discussion): {n_agreed}")
+    print(f"   Still disagreed: {n_disagreed}")
 
     # Krippendorff's alpha
     print("\n2. Computing Krippendorff's alpha...")
@@ -998,6 +1307,15 @@ def main() -> None:
         "tab:category",
     )
 
+    # Category breakdown with ALL criteria
+    cat_df_all = compute_category_breakdown_all_criteria(merged)
+    save_results(
+        cat_df_all,
+        "category_breakdown_all_criteria",
+        "IRR Metrics by Question Category (All Criteria)",
+        "tab:category_all",
+    )
+
     # Inter-criteria correlations
     print("\n6. Computing inter-criteria correlations...")
     for rater in RATERS:
@@ -1022,6 +1340,7 @@ def main() -> None:
         plot_krippendorff_heatmap(alpha_df)
         plot_agreement_bars(agreement_df)
         plot_category_breakdown(cat_df)
+        plot_category_breakdown_all_criteria(cat_df_all)
 
         # Inter-criteria correlation heatmaps
         for rater in RATERS:
@@ -1032,10 +1351,11 @@ def main() -> None:
         cms = compute_confusion_matrices(merged, "Faithfulness")
         labels = ["Yes", "No", "Na"]
         for pair, cm in cms.items():
+            pair_display = get_pair_display_name(pair)
             plot_confusion_matrix(
                 cm,
                 labels,
-                f"Faithfulness: {pair}",
+                f"Faithfulness: {pair_display}",
                 f"confusion_faithfulness_{pair.replace('-', '_')}.png",
             )
             print(
@@ -1043,7 +1363,12 @@ def main() -> None:
             )
 
     # Cross-system analysis
-    if not args.skip_cross_system:
+    if args.regenerate_cross_system_from_csv:
+        print("\n9. Regenerating cross-system figures from CSV...")
+        disc_csv = Path(args.regenerate_cross_system_from_csv[0])
+        ceiling_csv = Path(args.regenerate_cross_system_from_csv[1])
+        regenerate_cross_system_figures_from_csv(disc_csv, ceiling_csv)
+    elif not args.skip_cross_system:
         print("\n9. Cross-system discriminative analysis...")
         all_systems = load_all_systems()
         print(f"   Loaded {len(all_systems)} evaluations across 3 systems")
