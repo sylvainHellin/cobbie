@@ -107,7 +107,8 @@ def execute_python(
     python_code: str,
     tools: Dict[str, Callable],
     model_path: Optional[str] = None,
-    max_tokens: int = 2048
+    max_tokens: int = 2048,
+    interpreter: Optional[Any] = None,
 ) -> str:
     """
     Execute Python code and return output.
@@ -117,13 +118,16 @@ def execute_python(
         tools: Dictionary of available tools/functions
         model_path: Optional path to IFC model file
         max_tokens: Maximum number of tokens in output (default: 2048)
+        interpreter: Optional existing interpreter to reuse (skips setup_interpreter if provided)
 
     Returns:
         String output from code execution (truncated if exceeds max_tokens)
     """
     try:
-        # Setup interpreter for this execution
-        interpreter = setup_interpreter(model_path, tools)
+        # Use provided interpreter or create a new one
+        if interpreter is None:
+            interpreter = setup_interpreter(model_path, tools)
+        assert interpreter is not None
 
         # Capture stdout and stderr
         stdout_buffer = io.StringIO()
@@ -175,7 +179,8 @@ def execute_python_safe(
     tools: Dict[str, Callable],
     model_path: Optional[str] = None,
     timeout_seconds: int = 30,
-    max_tokens: int = 2048
+    max_tokens: int = 2048,
+    interpreter: Optional[Any] = None,
 ) -> str:
     """
     Execute Python code with timeout protection.
@@ -186,6 +191,7 @@ def execute_python_safe(
         model_path: Optional path to IFC model file
         timeout_seconds: Maximum execution time in seconds
         max_tokens: Maximum number of tokens in output (default: 2048)
+        interpreter: Optional existing interpreter to reuse
 
     Returns:
         String output from code execution or timeout message
@@ -196,7 +202,7 @@ def execute_python_safe(
 
     def target():
         try:
-            result_container["result"] = execute_python(python_code, tools, model_path, max_tokens)
+            result_container["result"] = execute_python(python_code, tools, model_path, max_tokens, interpreter)
             result_container["completed"] = True
         except Exception as e:
             result_container["result"] = f"Execution failed: {e}"
