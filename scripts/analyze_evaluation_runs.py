@@ -5,9 +5,13 @@ Analyze Evaluation Runs from MLflow
 This script extracts detailed evaluation run data from MLflow, enriches it with database
 information, and generates an Excel report with comprehensive statistics.
 
+When multiple run IDs are provided, a side-by-side comparison of key metrics
+(accuracy, faithfulness, completeness, transparency, relevance, abstention rate)
+is printed at the end.
+
 Usage:
+    uv run scripts/analyze_evaluation_runs.py --run-ids <run_id>
     uv run scripts/analyze_evaluation_runs.py --run-ids <run_id1> <run_id2> ...
-    uv run scripts/analyze_evaluation_runs.py --run-ids c0f5d69f17b3400093fa63204c70adc3
 """
 
 import argparse
@@ -125,6 +129,11 @@ def extract_run_data(run) -> Dict:
         "total_output_tokens": metrics.get("total_output_tokens", 0),
         # Success flag
         "success": metrics.get("success", 0) == 1,
+        # Criterion-level params (logged as params, not metrics)
+        "faithfulness": params.get("faithfulness", "not_evaluated"),
+        "completeness": params.get("completeness", "not_evaluated"),
+        "transparency": params.get("transparency", "not_evaluated"),
+        "relevance": params.get("relevance", "not_evaluated"),
     }
 
     return data
@@ -207,6 +216,7 @@ def build_dataframe(run_data_list: List[Dict], question_data: Dict[int, Dict]) -
 
         # Combine all data (sanitize text fields for Excel compatibility)
         row = {
+            "parent_run_name": run_data.get("parent_run_name", "Unknown"),
             "question_id": question_id,
             "question": sanitize_for_excel(q_data.get("question", "N/A")),
             "ground_truth": sanitize_for_excel(q_data.get("ground_truth", "N/A")),
@@ -218,6 +228,10 @@ def build_dataframe(run_data_list: List[Dict], question_data: Dict[int, Dict]) -
             "cobbie_answer": sanitize_for_excel(run_data["cobbie_answer"]),
             "justification": sanitize_for_excel(run_data["justification"]),
             "confidence": sanitize_for_excel(run_data["confidence"]),
+            "faithfulness": run_data["faithfulness"],
+            "completeness": run_data["completeness"],
+            "transparency": run_data["transparency"],
+            "relevance": run_data["relevance"],
             "num_iterations": run_data["num_iterations"],
             "cobbie_duration": run_data["cobbie_duration"],
             "verifier_duration": run_data["verifier_duration"],
@@ -265,6 +279,16 @@ def calculate_statistics(df: pd.DataFrame) -> Dict:
     evaluated = stats["correct_answers"] + stats["wrong_answers"]
     stats["accuracy"] = stats["correct_answers"] / evaluated if evaluated > 0 else 0
     stats["abstention_rate"] = stats["abstained_answers"] / len(successful_df) if len(successful_df) > 0 else 0
+
+    # Criterion-level metrics (only for successful evaluations)
+    for criterion in ["faithfulness", "completeness", "transparency", "relevance"]:
+        yes_count = (successful_df[criterion] == "Yes").sum()
+        no_count = (successful_df[criterion] == "No").sum()
+        na_count = (successful_df[criterion] == "Na").sum()
+        stats[f"{criterion}_yes"] = yes_count
+        stats[f"{criterion}_no"] = no_count
+        stats[f"{criterion}_na"] = na_count
+        stats[f"{criterion}_rate"] = yes_count / (yes_count + no_count) if (yes_count + no_count) > 0 else 0
 
     # Iteration statistics
     stats["avg_iterations"] = df["num_iterations"].mean()
@@ -344,12 +368,14 @@ def calculate_statistics(df: pd.DataFrame) -> Dict:
     return stats
 
 
-def print_statistics(stats: Dict) -> None:
+def print_statistics(stats: Dict, run_names: List[str] | None = None, per_run_stats: Dict[str, Dict] | None = None) -> None:
     """
     Print formatted statistics to console.
 
     Args:
         stats: Dictionary with statistics
+        run_names: List of MLflow run names
+        per_run_stats: Per-run statistics keyed by run name (for side-by-side comparison)
     """
     print("\n" + "=" * 80)
     print("EVALUATION RUN ANALYSIS - STATISTICS")
@@ -444,21 +470,71 @@ def print_statistics(stats: Dict) -> None:
     print(f"  Average Total Tokens/Question: {stats['avg_tokens_per_question']:.0f}")
     print(f"  Throughput: {stats['tokens_per_second']:.1f} tokens/second")
 
+    # Key metrics summary at the end for quick reference
     print("\n" + "=" * 80)
+
+    def _format_run_metrics(s: Dict) -> List[str]:
+        return [
+            f"{s['accuracy']:.2%}",
+            f"{s['faithfulness_rate']:.2%}",
+            f"{s['completeness_rate']:.2%}",
+            f"{s['transparency_rate']:.2%}",
+            f"{s['relevance_rate']:.2%}",
+            f"{s['abstention_rate']:.2%}",
+            f"{s['correct_answers']} / {s['wrong_answers']} / {s['abstained_answers']}",
+            f"{s['total_questions']}",
+        ]
+
+    metric_names = [
+        "Accuracy",
+        "Faithfulness",
+        "Completeness",
+        "Transparency",
+        "Relevance",
+        "Abstention Rate",
+        "Correct / Wrong / Abstained",
+        "Total Questions",
+    ]
+
+    if per_run_stats and len(per_run_stats) > 1:
+        # Side-by-side comparison
+        print("KEY METRICS COMPARISON")
+        print("=" * 80)
+        headers = ["Metric"] + list(per_run_stats.keys())
+        columns_per_run = [_format_run_metrics(s) for s in per_run_stats.values()]
+        summary_table = [
+            [name] + [col[i] for col in columns_per_run]
+            for i, name in enumerate(metric_names)
+        ]
+        print(tabulate(summary_table, headers=headers, tablefmt="grid"))
+    else:
+        # Single run summary
+        run_label = " | ".join(run_names) if run_names else "Unknown"
+        print(f"KEY METRICS SUMMARY - {run_label}")
+        print("=" * 80)
+        values = _format_run_metrics(stats)
+        summary_table = [[name, val] for name, val in zip(metric_names, values)]
+        print(tabulate(summary_table, headers=["Metric", "Value"], tablefmt="grid"))
+
+    print("=" * 80)
 
 
 def main():
     """Main function."""
     parser = argparse.ArgumentParser(
-        description="Analyze MLflow evaluation runs and generate Excel report",
+        description="Analyze MLflow evaluation runs and generate Excel report. "
+        "When multiple run IDs are provided, prints a side-by-side comparison of key metrics.",
         formatter_class=argparse.RawDescriptionHelpFormatter,
         epilog="""
 Examples:
-  # Analyze specific runs
-  uv run scripts/analyze_evaluation_runs.py --run-ids c0f5d69f17b3400093fa63204c70adc3 21d1966df8dc47d3a5753cbb9bbbb0e3
-
   # Analyze a single run
   uv run scripts/analyze_evaluation_runs.py --run-ids c0f5d69f17b3400093fa63204c70adc3
+
+  # Compare multiple runs side-by-side
+  uv run scripts/analyze_evaluation_runs.py --run-ids c0f5d69f17b3400093fa63204c70adc3 21d1966df8dc47d3a5753cbb9bbbb0e3
+
+  # Export results to Excel
+  uv run scripts/analyze_evaluation_runs.py --run-ids c0f5d69f17b3400093fa63204c70adc3 --export my_run
         """,
     )
 
@@ -466,7 +542,7 @@ Examples:
         "--run-ids",
         nargs="+",
         required=True,
-        help="MLflow run IDs to analyze (space-separated)",
+        help="MLflow run IDs to analyze (space-separated). Multiple IDs produce a side-by-side comparison.",
     )
 
     parser.add_argument(
@@ -490,6 +566,7 @@ Examples:
 
     # Collect all run data
     all_run_data = []
+    run_names = []
 
     for run_id in args.run_ids:
         print(f"\nProcessing run: {run_id}")
@@ -499,6 +576,7 @@ Examples:
             main_run = client.get_run(run_id)
             experiment_id = main_run.info.experiment_id
             run_name = main_run.data.tags.get("mlflow.runName", "Unknown")
+            run_names.append(run_name)
             print(f"  Run Name: {run_name}")
             print(f"  Experiment ID: {experiment_id}")
 
@@ -509,6 +587,8 @@ Examples:
             # Extract data from each nested run
             for nested_run in nested_runs:
                 run_data = extract_run_data(nested_run)
+                run_data["parent_run_id"] = run_id
+                run_data["parent_run_name"] = run_name
                 all_run_data.append(run_data)
 
         except Exception as e:
@@ -530,8 +610,17 @@ Examples:
     print("Calculating statistics...")
     stats = calculate_statistics(df)
 
+    # Calculate per-run statistics for side-by-side comparison
+    per_run_stats: Dict[str, Dict] | None = None
+    if len(run_names) > 1 and "parent_run_name" in df.columns:
+        per_run_stats = {}
+        for name in run_names:
+            run_df = df.loc[df["parent_run_name"] == name]
+            if not run_df.empty:
+                per_run_stats[name] = calculate_statistics(pd.DataFrame(run_df))
+
     # Print statistics
-    print_statistics(stats)
+    print_statistics(stats, run_names, per_run_stats)
 
     # Export to Excel (only if --export is provided)
     if args.export:
