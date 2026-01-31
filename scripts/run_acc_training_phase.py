@@ -13,7 +13,7 @@ Training Flow:
 
 Data Split (from acc/config/model_splits.json):
     - Training: all models from 'train' split (ground truth loaded per-model)
-    - Validation: first model from 'validate' split
+    - Validation: all models from 'validate' split (ground truth loaded per-model)
     - Rules: from acc/config/rule_templates.json
 """
 
@@ -87,12 +87,13 @@ class ACCContext:
     training_result_aggregated: Optional[GUIDComparisonResult] = None  # combined TP/FP/FN
     training_result_avg_f1: float = 0.0  # mean per-model F1
 
-    # Validation data (first model from validate split)
-    validation_model_name: str = ""
-    validation_model_path: str = ""
-    validation_expected_guids: list[str] = field(default_factory=list)
-    validation_predicted_guids: list[str] = field(default_factory=list)
-    validation_result: Optional[GUIDComparisonResult] = None
+    # Validation data (all models from validate split)
+    validation_models: list[str] = field(default_factory=list)
+    validation_model_paths: dict[str, str] = field(default_factory=dict)  # name -> ifc path
+    validation_guids_per_model: dict[str, list[str]] = field(default_factory=dict)  # name -> expected GUIDs
+    validation_results_per_model: dict[str, GUIDComparisonResult] = field(default_factory=dict)
+    validation_result_aggregated: Optional[GUIDComparisonResult] = None  # combined TP/FP/FN
+    validation_result_avg_f1: float = 0.0  # mean per-model F1
 
     # Tool creation
     tool_name: str = ""
@@ -191,14 +192,27 @@ def handle_start(ctx: ACCContext) -> Tuple[ACCTrainingState, ACCContext]:
             key=lambda m: len(ctx.training_ground_truth[m]),
         )
 
-        # Load validation context
-        validation_context = get_rule_context(ctx.validation_model_name, ctx.rule_title)
-        ctx.validation_expected_guids = validation_context["expected_guids"]
+        # Load validation ground truth for all validate models (same pattern as training)
+        for model_name in ctx.validation_models:
+            try:
+                rule_data = get_rule_context(model_name, ctx.rule_title)
+            except KeyError:
+                _logger.info(f"Rule '{ctx.rule_title}' not found in validation model {model_name} — skipping")
+                continue
 
-        # Get validation model path
-        ctx.validation_model_path = get_model_path(ctx.validation_model_name) or ""
-        if not ctx.validation_model_path:
-            raise ValueError(f"Could not find IFC model for {ctx.validation_model_name}")
+            guids: list[str] = []
+            for issue in rule_data.get("issues", []):
+                guids.extend(issue.get("required_guids", []))
+            ctx.validation_guids_per_model[model_name] = list(dict.fromkeys(guids))
+
+            model_path = get_model_path(model_name)
+            if model_path:
+                ctx.validation_model_paths[model_name] = model_path
+            else:
+                _logger.warning(f"Could not find IFC model for validation model {model_name}")
+
+        if not ctx.validation_guids_per_model:
+            raise ValueError(f"Rule '{ctx.rule_title}' not found in any validation model")
 
         # Generate tool name from rule title
         ctx.tool_name = f"check_{ctx.rule_title}"
@@ -208,7 +222,8 @@ def handle_start(ctx: ACCContext) -> Tuple[ACCTrainingState, ACCContext]:
         for m in ctx.training_ground_truth:
             _logger.info(f"  {m}: {len(ctx.training_ground_truth[m])} issues, "
                          f"{len(ctx.training_guids_per_model.get(m, []))} GUIDs")
-        _logger.info(f"Validation expected GUIDs: {len(ctx.validation_expected_guids)}")
+        for m in ctx.validation_guids_per_model:
+            _logger.info(f"  Validation {m}: {len(ctx.validation_guids_per_model[m])} GUIDs")
 
         return ACCTrainingState.CREATE_TOOL, ctx
 
@@ -424,32 +439,63 @@ def handle_validate_tool(ctx: ACCContext) -> Tuple[ACCTrainingState, ACCContext]
             f"F1_agg={agg_f1:.3f}, F1_avg={ctx.training_result_avg_f1:.3f}"
         )
 
-        # --- Validation: single model ---
-        validation_predicted, validation_log = _execute_tool(
-            ctx.tool_implementation, ctx.tool_name, ctx.validation_model_path
-        )
-        ctx.validation_predicted_guids = validation_predicted
-        ctx.validation_result = compare_guids(
-            set(validation_predicted), set(ctx.validation_expected_guids)
-        )
+        # --- Validation: run on all validate models ---
+        val_total_tp, val_total_fp, val_total_fn = 0, 0, 0
+        val_f1_scores: list[float] = []
 
-        log_parts.append(f"=== Validation ({ctx.validation_model_name}) ===\n{validation_log}")
+        for model_name in ctx.validation_guids_per_model:
+            model_path = ctx.validation_model_paths.get(model_name, "")
+            if not model_path:
+                _logger.warning(f"No IFC path for validation model {model_name} — skipping")
+                continue
+
+            predicted, run_log = _execute_tool(ctx.tool_implementation, ctx.tool_name, model_path)
+            expected = ctx.validation_guids_per_model.get(model_name, [])
+            result = compare_guids(set(predicted), set(expected))
+
+            ctx.validation_results_per_model[model_name] = result
+            val_total_tp += result.tp
+            val_total_fp += result.fp
+            val_total_fn += result.fn
+            val_f1_scores.append(result.f1)
+
+            _logger.info(
+                f"  Validation [{model_name}]: TP={result.tp}, FP={result.fp}, "
+                f"FN={result.fn}, F1={result.f1:.3f}"
+            )
+            log_parts.append(f"=== Validation ({model_name}) ===\n{run_log}")
+
+        # Aggregated validation result
+        val_precision = val_total_tp / (val_total_tp + val_total_fp) if (val_total_tp + val_total_fp) > 0 else (1.0 if val_total_fn == 0 else 0.0)
+        val_recall = val_total_tp / (val_total_tp + val_total_fn) if (val_total_tp + val_total_fn) > 0 else (1.0 if val_total_fp == 0 else 0.0)
+        val_f1 = (2 * val_precision * val_recall / (val_precision + val_recall)
+                  if (val_precision + val_recall) > 0 else 0.0)
+        if val_total_tp == 0 and val_total_fp == 0 and val_total_fn == 0:
+            val_f1 = 1.0
+
+        ctx.validation_result_aggregated = GUIDComparisonResult(
+            tp=val_total_tp, fp=val_total_fp, fn=val_total_fn,
+            precision=val_precision, recall=val_recall, f1=val_f1,
+            is_perfect_match=(val_total_fp == 0 and val_total_fn == 0),
+        )
+        ctx.validation_result_avg_f1 = sum(val_f1_scores) / len(val_f1_scores) if val_f1_scores else 0.0
+
         ctx.execution_log = "\n\n".join(log_parts)
         ctx.validate_duration = time.time() - start_time
 
         _logger.info(
-            f"Validation: TP={ctx.validation_result.tp}, FP={ctx.validation_result.fp}, "
-            f"FN={ctx.validation_result.fn}, F1={ctx.validation_result.f1:.3f}"
+            f"Validation aggregated: TP={val_total_tp}, FP={val_total_fp}, FN={val_total_fn}, "
+            f"F1_agg={val_f1:.3f}, F1_avg={ctx.validation_result_avg_f1:.3f}"
         )
 
-        # Track best tool by aggregated training F1
-        if agg_f1 > ctx.best_tool_f1:
-            ctx.best_tool_f1 = agg_f1
+        # Track best tool by aggregated validation F1
+        if val_f1 > ctx.best_tool_f1:
+            ctx.best_tool_f1 = val_f1
             ctx.best_tool_implementation = ctx.tool_implementation
-            _logger.info(f"New best tool! Aggregated training F1={ctx.best_tool_f1:.3f}")
+            _logger.info(f"New best tool! Aggregated validation F1={ctx.best_tool_f1:.3f}")
 
         # Check for perfect validation match
-        if ctx.validation_result.f1 == 1.0:
+        if val_f1 == 1.0:
             _logger.info("Perfect validation F1=1.0 - saving tool immediately")
             return ACCTrainingState.SAVE_TOOL, ctx
 
@@ -471,12 +517,16 @@ def handle_assess_generalizability(ctx: ACCContext) -> Tuple[ACCTrainingState, A
 
     try:
         assert ctx.training_result_aggregated is not None
-        assert ctx.validation_result is not None
+        assert ctx.validation_result_aggregated is not None
 
         # Flatten training GUIDs across all models for the assessment API
-        all_expected: list[str] = []
+        all_training_expected: list[str] = []
         for guids in ctx.training_guids_per_model.values():
-            all_expected.extend(guids)
+            all_training_expected.extend(guids)
+
+        # Compute aggregated validation expected/predicted counts
+        val_expected_count = sum(len(g) for g in ctx.validation_guids_per_model.values())
+        val_predicted_count = sum(r.tp + r.fp for r in ctx.validation_results_per_model.values())
 
         assessment, collector = assess_acc_tool(
             rule_title=ctx.rule_title,
@@ -484,19 +534,19 @@ def handle_assess_generalizability(ctx: ACCContext) -> Tuple[ACCTrainingState, A
             rule_description=ctx.rule_description,
             question=ctx.question,
             training_model_name=ctx.primary_training_model,
-            training_expected_guids=all_expected,
+            training_expected_guids=all_training_expected,
             training_predicted_guids=[],  # not tracked per-model; aggregated metrics used
             training_tp=ctx.training_result_aggregated.tp,
             training_fp=ctx.training_result_aggregated.fp,
             training_fn=ctx.training_result_aggregated.fn,
             training_f1=ctx.training_result_aggregated.f1,
-            validation_model_name=ctx.validation_model_name,
-            validation_expected_count=len(ctx.validation_expected_guids),
-            validation_predicted_count=len(ctx.validation_predicted_guids),
-            validation_tp=ctx.validation_result.tp,
-            validation_fp=ctx.validation_result.fp,
-            validation_fn=ctx.validation_result.fn,
-            validation_f1=ctx.validation_result.f1,
+            validation_model_name=",".join(ctx.validation_results_per_model.keys()),
+            validation_expected_count=val_expected_count,
+            validation_predicted_count=val_predicted_count,
+            validation_tp=ctx.validation_result_aggregated.tp,
+            validation_fp=ctx.validation_result_aggregated.fp,
+            validation_fn=ctx.validation_result_aggregated.fn,
+            validation_f1=ctx.validation_result_aggregated.f1,
             tool_name=ctx.tool_name,
             tool_implementation=ctx.tool_implementation,
             execution_log=ctx.execution_log,
@@ -645,19 +695,29 @@ def log_rule_metrics(ctx: ACCContext) -> dict:
             "training_recall": ctx.training_result_aggregated.recall,
         })
 
-    # Per-model training F1s
+    # Per-model training metrics
     for model_name, result in ctx.training_results_per_model.items():
         metrics[f"training_f1_{model_name}"] = result.f1
+        metrics[f"training_precision_{model_name}"] = result.precision
+        metrics[f"training_recall_{model_name}"] = result.recall
 
-    if ctx.validation_result:
+    # Aggregated validation metrics
+    if ctx.validation_result_aggregated:
         metrics.update({
-            "validation_tp": ctx.validation_result.tp,
-            "validation_fp": ctx.validation_result.fp,
-            "validation_fn": ctx.validation_result.fn,
-            "validation_precision": ctx.validation_result.precision,
-            "validation_recall": ctx.validation_result.recall,
-            "validation_f1": ctx.validation_result.f1,
+            "validation_f1_aggregated": ctx.validation_result_aggregated.f1,
+            "validation_precision_aggregated": ctx.validation_result_aggregated.precision,
+            "validation_recall_aggregated": ctx.validation_result_aggregated.recall,
+            "validation_f1_avg": ctx.validation_result_avg_f1,
+            "validation_tp": ctx.validation_result_aggregated.tp,
+            "validation_fp": ctx.validation_result_aggregated.fp,
+            "validation_fn": ctx.validation_result_aggregated.fn,
         })
+
+    # Per-model validation metrics
+    for model_name, result in ctx.validation_results_per_model.items():
+        metrics[f"validation_f1_{model_name}"] = result.f1
+        metrics[f"validation_precision_{model_name}"] = result.precision
+        metrics[f"validation_recall_{model_name}"] = result.recall
 
     # Best tool F1
     metrics["best_f1"] = ctx.best_tool_f1
@@ -736,13 +796,12 @@ def main():
     splits = load_model_splits()
     train_models = splits["train"]
     validate_models = splits["validate"]
-    validation_model = validate_models[0]  # first model from validate split
 
     templates = load_rule_templates()
     all_rules = [tmpl["rule_title"] for tmpl in templates.values()]
     _logger.info(f"Found {len(all_rules)} rules from rule_templates.json")
     _logger.info(f"Train models: {train_models}")
-    _logger.info(f"Validation model: {validation_model}")
+    _logger.info(f"Validation models: {validate_models}")
 
     # Determine rules to process
     if args.rules:
@@ -762,7 +821,7 @@ def main():
     with mlflow.start_run(run_name=run_name):
         mlflow.log_params({
             "training_models": ",".join(train_models),
-            "validation_model": validation_model,
+            "validation_models": ",".join(validate_models),
             "max_retries": args.max_retries,
             "rules_count": len(rules_to_process),
         })
@@ -787,7 +846,7 @@ def main():
                     rule_idx=rule_idx,
                     max_retries=args.max_retries,
                     training_models=train_models,
-                    validation_model_name=validation_model,
+                    validation_models=validate_models,
                 )
 
                 # Run state machine
