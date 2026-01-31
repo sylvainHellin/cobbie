@@ -148,7 +148,7 @@ if __name__ == "__main__":
     from src.agents.cobbie import cobbie
     from src.agents.answer_verifier import verify_answer
     from src.config import TEST_IFC_PATH
-    from src.tools.initial import query_ifcopenshell_docs, web_search
+    from src.tools.initial import query_ifcopenshell_docs
 
     # Define a FAULTY helper function for testing purposes
     # BUG: This function ignores the floor_name parameter and returns ALL doors
@@ -175,7 +175,6 @@ if __name__ == "__main__":
     # Setup tools for cobbie - INCLUDING THE FAULTY TOOL
     tools_dict = {
         "query_ifcopenshell_docs": query_ifcopenshell_docs,
-        "web_search": web_search,
         "count_doors_by_floor": count_doors_by_floor,  # This tool has a bug!
     }
 
@@ -244,9 +243,6 @@ Answer: {cobbie_result.answer}
             test_existing_functions = """
 def query_ifcopenshell_docs(query: str) -> str:
     '''Search ifcopenshell documentation for information'''
-
-def web_search(query: str) -> str:
-    '''Search the web for general information'''
 
 def count_doors_by_floor(ifc_file_path: str, floor_name: str) -> int:
     '''Count the number of doors on a specific building floor.

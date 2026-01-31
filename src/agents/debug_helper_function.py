@@ -572,7 +572,7 @@ if __name__ == "__main__":
     from src.agents.cobbie import cobbie
     from src.agents.faulty_tool_identifier import identify_faulty_tool
     from src.config import TEST_IFC_PATH
-    from src.tools.initial import query_ifcopenshell_docs, web_search
+    from src.tools.initial import query_ifcopenshell_docs
 
     # Define a FAULTY helper function for testing purposes
     # BUG: This function ignores the floor_name parameter and returns ALL doors
@@ -605,7 +605,6 @@ if __name__ == "__main__":
     # Setup tools for Cobbie - INCLUDING THE FAULTY TOOL
     tools_dict = {
         "query_ifcopenshell_docs": query_ifcopenshell_docs,
-        "web_search": web_search,
         "count_doors_by_floor": count_doors_by_floor,  # This tool has a bug!
     }
 

@@ -161,9 +161,6 @@ test HelperFunctionIdentifierPositiveTest {
     existing_helper_functions #"
       def query_ifcopenshell_docs(query: str) -> str:
           '''Search ifcopenshell documentation for information'''
-
-      def web_search(query: str) -> str:
-          '''Search the web for general information'''
     "#
   }
 }
@@ -196,9 +193,6 @@ test HelperFunctionIdentifierNegativeTest {
     existing_helper_functions #"
       def query_ifcopenshell_docs(query: str) -> str:
           '''Search ifcopenshell documentation for information'''
-
-      def web_search(query: str) -> str:
-          '''Search the web for general information'''
     "#
   }
 }
@@ -228,9 +222,6 @@ test HelperFunctionIdentifierRedundantTest {
     existing_helper_functions #"
       def query_ifcopenshell_docs(query: str) -> str:
           '''Search ifcopenshell documentation for information'''
-
-      def web_search(query: str) -> str:
-          '''Search the web for general information'''
 
       def count_elements_by_type(ifc_file_path: str, ifc_type: str) -> int:
           '''Count the number of elements of a specific IFC type in a model

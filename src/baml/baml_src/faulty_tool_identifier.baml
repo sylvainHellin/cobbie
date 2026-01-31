@@ -133,9 +133,6 @@ test FaultyToolPositiveTest {
       def query_ifcopenshell_docs(query: str) -> str:
           '''Search ifcopenshell documentation for information'''
 
-      def web_search(query: str) -> str:
-          '''Search the web for general information'''
-
       def count_doors_by_fire_rating(ifc_file_path: str, min_fire_rating: int) -> int:
           '''Count doors that meet minimum fire rating requirements
 
@@ -192,9 +189,6 @@ test FaultyToolNegativeTest_MissingTool {
       def query_ifcopenshell_docs(query: str) -> str:
           '''Search ifcopenshell documentation for information'''
 
-      def web_search(query: str) -> str:
-          '''Search the web for general information'''
-
       def get_element_properties(ifc_file_path: str, element_guid: str) -> dict:
           '''Get all properties of a specific IFC element
 
@@ -245,9 +239,6 @@ test FaultyToolNegativeTest_ReasoningError {
     existing_helper_functions #"
       def query_ifcopenshell_docs(query: str) -> str:
           '''Search ifcopenshell documentation for information'''
-
-      def web_search(query: str) -> str:
-          '''Search the web for general information'''
 
       def get_elements_by_type(ifc_file_path: str, ifc_type: str) -> list:
           '''Get all elements of a specific IFC type

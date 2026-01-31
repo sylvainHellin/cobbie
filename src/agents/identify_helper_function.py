@@ -125,7 +125,7 @@ if __name__ == "__main__":
 
     from src.agents.cobbie import cobbie
     from src.config import TEST_IFC_PATH
-    from src.tools.initial import query_ifcopenshell_docs, web_search
+    from src.tools.initial import query_ifcopenshell_docs
 
     # Try to set up MLflow tracking, but don't fail if server is not available
     mlflow.set_tracking_uri("http://127.0.0.1:5000")
@@ -134,7 +134,6 @@ if __name__ == "__main__":
     # Setup tools for cobbie
     tools_dict = {
         "query_ifcopenshell_docs": query_ifcopenshell_docs,
-        "web_search": web_search,
     }
 
     # Test question that should generate a reusable pattern
@@ -178,9 +177,6 @@ Answer: {cobbie_result.answer}
         test_existing_functions = """
 def query_ifcopenshell_docs(query: str) -> str:
     '''Search ifcopenshell documentation for information'''
-
-def web_search(query: str) -> str:
-    '''Search the web for general information'''
         """.strip()
 
         # Test the functional helper function identifier

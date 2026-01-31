@@ -654,10 +654,7 @@ if __name__ == "__main__":
     from src.agents.cobbie import cobbie
     from src.agents.identify_helper_function import identify_helper_function
     from src.config import TEST_IFC_PATH
-    from src.tools.initial import (
-        query_ifcopenshell_docs,
-        web_search,
-    )
+    from src.tools.initial import query_ifcopenshell_docs
 
     # Try to set up MLflow tracking
     mlflow.set_tracking_uri("http://127.0.0.1:5000")
@@ -666,7 +663,6 @@ if __name__ == "__main__":
     # Setup tools for Cobbie
     tools_dict = {
         "query_ifcopenshell_docs": query_ifcopenshell_docs,
-        "web_search": web_search,
     }
 
     # Test question and model
