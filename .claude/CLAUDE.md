@@ -23,6 +23,9 @@
 
 ### Training & Evaluation
 - **Training**: `uv run scripts/run_training_phase.py --start 0 --end 10`
+- **Batched Training** (memory-safe): `fish scripts/run_training_batched.fish --nb-samples 20 --batch-size 5`
+  - Same pattern as batched evaluation: each batch runs as a separate process
+  - First batch = 1 question (creates MLflow run), then prompts for run ID, remaining batches use `--continue`
 - **Evaluation**: `uv run scripts/run_evaluation.py --start 0 --nb-samples 5`
 - **Batched Evaluation** (memory-safe): `fish scripts/run_eval_batched.fish --nb-samples 20 --batch-size 5`
   - Runs each batch as a separate process to avoid ifcopenshell memory accumulation
