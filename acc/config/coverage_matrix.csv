@@ -1,0 +1,17 @@
+rule,train,validate,test
+304_3_1_circular_space,Y,Y,Y
+305_3_size,Y,Y,Y
+404_2_5_two_doors_in_series,Y,-,Y
+504_2_non_uniform_risers_treads,Y,Y,-
+504_2_riser_height,Y,Y,Y
+504_2_stair_slab_connection,Y,-,Y
+504_2_tread_length,Y,Y,Y
+clearance_front_of_doors,Y,Y,Y
+doors_and_windows,Y,-,Y
+large_spaces_more_than_one_door,Y,Y,Y
+slab_thickness,Y,-,Y
+slabs_guarded_against_falling,Y,Y,Y
+space_validation_inside,Y,Y,Y
+space_validation_intersect,Y,Y,Y
+spaces_same_storey_same_bottom_elevation,Y,Y,Y
+unallocated_areas,Y,-,Y

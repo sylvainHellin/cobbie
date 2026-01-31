@@ -1,0 +1,20 @@
+{
+  "train": [
+    "141",
+    "ac20",
+    "dental_clinic",
+    "duplex"
+  ],
+  "validate": [
+    "103",
+    "166",
+    "fzk_house",
+    "smiley_west"
+  ],
+  "test": [
+    "4351",
+    "digital_hub",
+    "samuel_macalister_sample_house",
+    "wbdg_office"
+  ]
+}
