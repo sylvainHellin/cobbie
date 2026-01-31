@@ -10,7 +10,7 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Optional
 
-from src.config import ACC_RES_PATH
+from src.config import ACC_RES_PATH, ACC_CONFIG_PATH
 
 
 @dataclass
@@ -169,6 +169,7 @@ def get_rule_context(model_name: str, rule_title: str) -> dict:
         "parameters": rule_data.get("parameters", ""),
         "issues_count": rule_data.get("issues_count", 0),
         "expected_guids": expected_guids,
+        "issues": issues,
     }
 
 
@@ -246,6 +247,37 @@ def get_model_path(model_name: str) -> Optional[str]:
     return None
 
 
+def load_rule_templates() -> dict[str, dict]:
+    """Load acc/config/rule_templates.json.
+
+    Returns:
+        Dictionary keyed by rule index string, each value containing
+        rule_code, rule_title, question, rule, parameters, etc.
+    """
+    templates_path = Path(ACC_CONFIG_PATH) / "rule_templates.json"
+
+    if not templates_path.exists():
+        raise FileNotFoundError(f"Rule templates not found: {templates_path}")
+
+    with open(templates_path, encoding="utf-8") as f:
+        return json.load(f)
+
+
+def load_model_splits() -> dict[str, list[str]]:
+    """Load acc/config/model_splits.json.
+
+    Returns:
+        Dictionary with 'train', 'validate', 'test' keys, each a list of model names.
+    """
+    splits_path = Path(ACC_CONFIG_PATH) / "model_splits.json"
+
+    if not splits_path.exists():
+        raise FileNotFoundError(f"Model splits not found: {splits_path}")
+
+    with open(splits_path, encoding="utf-8") as f:
+        return json.load(f)
+
+
 __all__ = [
     "GUIDComparisonResult",
     "compare_guids",
@@ -254,4 +286,6 @@ __all__ = [
     "load_ground_truth",
     "get_available_rules",
     "get_model_path",
+    "load_rule_templates",
+    "load_model_splits",
 ]

@@ -17,6 +17,7 @@ CREATED_TOOLS_PATH = os.path.join(ROOT_PATH, "src/tools/created")
 ACC_ROOT_PATH = os.path.join(ROOT_PATH, "acc")
 ACC_RES_PATH = os.path.join(ROOT_PATH, "acc", "res")
 ACC_TOOLS_PATH = os.path.join(ROOT_PATH, "acc", "tools")
+ACC_CONFIG_PATH = os.path.join(ROOT_PATH, "acc", "config")
 ACC_SETUP_PATH = os.path.join(ROOT_PATH, "acc", "setup")
 ACC_MODELS_PATH = os.path.join(ROOT_PATH, "acc", "bim_models")
 

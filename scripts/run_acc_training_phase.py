@@ -1,19 +1,20 @@
 """
-ACC Training Phase v2 - GUID-Based Validation
+ACC Training Phase v2 - GUID-Based Validation (Multi-Model)
 
-This script implements the new ACC training flow with direct GUID-based validation
+This script implements the ACC training flow with direct GUID-based validation
 instead of Cobbie-based Q&A verification.
 
 Training Flow:
-    START -> LOAD_TOOLS -> CREATE_TOOL -> VALIDATE_TOOL
+    START -> CREATE_TOOL -> VALIDATE_TOOL
         -> [F1=1.0] -> SAVE_TOOL -> END
         -> [F1<1.0] -> ASSESS_GENERALIZABILITY -> DECIDE_FATE
             -> [retry_with_hint & retries < max] -> CREATE_TOOL (loop)
             -> [retries exhausted] -> SAVE_BEST_TOOL -> END
 
-Data Split:
-    - Training: duplex model (acc/res/duplex/ground_truth.json)
-    - Validation: dental_clinic model (acc/res/dental_clinic/ground_truth.json)
+Data Split (from acc/config/model_splits.json):
+    - Training: all models from 'train' split (ground truth loaded per-model)
+    - Validation: first model from 'validate' split
+    - Rules: from acc/config/rule_templates.json
 """
 
 import argparse
@@ -35,18 +36,15 @@ from src.acc.guid_comparison import (
     GUIDComparisonResult,
     compare_guids,
     get_rule_context,
-    get_available_rules,
     get_model_path,
+    load_rule_templates,
+    load_model_splits,
 )
 from src.config import LOG_LEVEL, ACC_TOOLS_PATH
 from src.util import get_logger, save_new_tool, _create_function_from_source_code
 
 # Initialize logger
 _logger = get_logger(name="ACCTrainingPhase", log_level=LOG_LEVEL)
-
-# Constants for training/validation models
-TRAINING_MODEL = "duplex"
-VALIDATION_MODEL = "dental_clinic"
 
 
 class ACCTrainingState(Enum):
@@ -71,21 +69,26 @@ class ACCContext:
     rule_title: str
     rule_idx: int  # Index in the rules list
 
-    # Rule context from ground truth
+    # Rule context from ground truth / templates
     rule_code: str = ""
     rule_description: str = ""
     question: str = ""
     parameters: str = ""
 
-    # Training data (duplex)
-    training_model_name: str = TRAINING_MODEL
-    training_model_path: str = ""
-    training_expected_guids: list[str] = field(default_factory=list)
-    training_predicted_guids: list[str] = field(default_factory=list)
-    training_result: Optional[GUIDComparisonResult] = None
+    # Training data (all train models)
+    training_models: list[str] = field(default_factory=list)
+    training_model_paths: dict[str, str] = field(default_factory=dict)  # name -> ifc path
+    training_ground_truth: dict[str, list[dict]] = field(default_factory=dict)  # name -> list of issue dicts
+    training_guids_per_model: dict[str, list[str]] = field(default_factory=dict)  # name -> required GUIDs
+    primary_training_model: str = ""
 
-    # Validation data (dental_clinic)
-    validation_model_name: str = VALIDATION_MODEL
+    # Per-model training results
+    training_results_per_model: dict[str, GUIDComparisonResult] = field(default_factory=dict)
+    training_result_aggregated: Optional[GUIDComparisonResult] = None  # combined TP/FP/FN
+    training_result_avg_f1: float = 0.0  # mean per-model F1
+
+    # Validation data (first model from validate split)
+    validation_model_name: str = ""
     validation_model_path: str = ""
     validation_expected_guids: list[str] = field(default_factory=list)
     validation_predicted_guids: list[str] = field(default_factory=list)
@@ -146,22 +149,47 @@ def extract_token_metrics(collector: Optional[Collector]) -> Tuple[int, int, int
 
 
 def handle_start(ctx: ACCContext) -> Tuple[ACCTrainingState, ACCContext]:
-    """Initialize context with rule data from ground truth."""
+    """Initialize context with rule data from ground truth across all train models."""
     _logger.info(f"Starting ACC training for rule: {ctx.rule_title}")
 
     try:
-        # Load training context
-        training_context = get_rule_context(ctx.training_model_name, ctx.rule_title)
-        ctx.rule_code = training_context["rule_code"]
-        ctx.rule_description = training_context["rule_description"]
-        ctx.question = training_context["question"]
-        ctx.parameters = training_context["parameters"]
-        ctx.training_expected_guids = training_context["expected_guids"]
+        # Load ground truth from each train model for this rule
+        for model_name in ctx.training_models:
+            try:
+                rule_data = get_rule_context(model_name, ctx.rule_title)
+            except KeyError:
+                _logger.info(f"Rule '{ctx.rule_title}' not found in {model_name} — skipping")
+                continue
 
-        # Get training model path
-        ctx.training_model_path = get_model_path(ctx.training_model_name) or ""
-        if not ctx.training_model_path:
-            raise ValueError(f"Could not find IFC model for {ctx.training_model_name}")
+            # Use rule metadata from first successful model (same across models)
+            if not ctx.rule_code:
+                ctx.rule_code = rule_data["rule_code"]
+                ctx.rule_description = rule_data["rule_description"]
+                ctx.question = rule_data["question"]
+                ctx.parameters = rule_data["parameters"]
+
+            # Store full issue list and extract required GUIDs
+            ctx.training_ground_truth[model_name] = rule_data.get("issues", [])
+            guids: list[str] = []
+            for issue in ctx.training_ground_truth[model_name]:
+                guids.extend(issue.get("required_guids", []))
+            ctx.training_guids_per_model[model_name] = list(dict.fromkeys(guids))  # unique, order-preserving
+
+            # Resolve IFC path
+            model_path = get_model_path(model_name)
+            if model_path:
+                ctx.training_model_paths[model_name] = model_path
+            else:
+                _logger.warning(f"Could not find IFC model for {model_name}")
+
+        if not ctx.training_ground_truth:
+            raise ValueError(f"Rule '{ctx.rule_title}' not found in any training model")
+
+        # Pick primary model = one with the most issues
+        ctx.primary_training_model = max(
+            ctx.training_ground_truth,
+            key=lambda m: len(ctx.training_ground_truth[m]),
+        )
 
         # Load validation context
         validation_context = get_rule_context(ctx.validation_model_name, ctx.rule_title)
@@ -176,7 +204,10 @@ def handle_start(ctx: ACCContext) -> Tuple[ACCTrainingState, ACCContext]:
         ctx.tool_name = f"check_{ctx.rule_title}"
 
         _logger.info(f"Rule: {ctx.rule_code} - {ctx.rule_title}")
-        _logger.info(f"Training expected GUIDs: {len(ctx.training_expected_guids)}")
+        _logger.info(f"Primary training model: {ctx.primary_training_model}")
+        for m in ctx.training_ground_truth:
+            _logger.info(f"  {m}: {len(ctx.training_ground_truth[m])} issues, "
+                         f"{len(ctx.training_guids_per_model.get(m, []))} GUIDs")
         _logger.info(f"Validation expected GUIDs: {len(ctx.validation_expected_guids)}")
 
         return ACCTrainingState.CREATE_TOOL, ctx
@@ -185,6 +216,38 @@ def handle_start(ctx: ACCContext) -> Tuple[ACCTrainingState, ACCContext]:
         _logger.error(f"Error in START state: {e}")
         ctx.error_message = str(e)
         return ACCTrainingState.ERROR, ctx
+
+
+def _build_expected_answer(ctx: ACCContext) -> str:
+    """Build per-model expected answer string with rich context for the LLM."""
+    parts: list[str] = []
+
+    for model_name in ctx.training_ground_truth:
+        issues = ctx.training_ground_truth[model_name]
+        is_primary = model_name == ctx.primary_training_model
+        label = f"Model: {model_name}" + (" (primary)" if is_primary else "")
+        parts.append(label)
+
+        if not issues:
+            parts.append("Issues (0): pass (no violations expected, tool should return [])")
+        else:
+
+            set_of_required_guids = ctx.training_guids_per_model[model_name]
+            parts.append(f"Set of required GUIDs (tool must return these): {set_of_required_guids}")
+            parts.append("Detailed description of the issues:")
+            parts.append(f"Issues ({len(issues)}):")
+            for issue in issues:
+                title = issue.get("title", "")
+                description = issue.get("description", "")
+                all_guids = issue.get("all_guids", [])
+                required_guids = issue.get("required_guids", [])
+                parts.append(f'- "{title}": {description}')
+                parts.append(f"  All GUIDs: {all_guids}")
+                parts.append(f"  Required GUIDs: {required_guids}")
+
+        parts.append("")  # blank line between models
+
+    return "\n".join(parts)
 
 
 def handle_create_tool(ctx: ACCContext) -> Tuple[ACCTrainingState, ACCContext]:
@@ -204,8 +267,15 @@ def handle_create_tool(ctx: ACCContext) -> Tuple[ACCTrainingState, ACCContext]:
             f"Return a list of IFC GUIDs of all elements that violate this rule."
         )
 
-        # Build expected answer as GUID list string
-        expected_answer = str(ctx.training_expected_guids)
+        # Build per-model expected answer with rich context
+        expected_answer = _build_expected_answer(ctx)
+
+        # Primary model path for example_bim_model, others for testing
+        primary_path = ctx.training_model_paths.get(ctx.primary_training_model, "")
+        other_paths = [
+            path for name, path in ctx.training_model_paths.items()
+            if name != ctx.primary_training_model
+        ]
 
         # Include improvement hint if retrying
         history = ""
@@ -223,11 +293,11 @@ def handle_create_tool(ctx: ACCContext) -> Tuple[ACCTrainingState, ACCContext]:
             history=history,
             example_question=full_question,
             example_answer=expected_answer,
-            example_bim_model=ctx.training_model_path,
+            example_bim_model=primary_path,
             function_name=ctx.tool_name,
             function_description=full_question,
-            other_bim_models_for_testing=[],
-            max_iterations=15,
+            other_bim_models_for_testing=other_paths,
+            max_iterations=25,
             llm_provider="zai",
             llm_name="GLM-4.7",
         )
@@ -300,27 +370,61 @@ def _execute_tool(tool_implementation: str, function_name: str, model_path: str)
 
 
 def handle_validate_tool(ctx: ACCContext) -> Tuple[ACCTrainingState, ACCContext]:
-    """Execute tool on validation model and compare GUIDs."""
-    _logger.info(f"Validating tool on {ctx.validation_model_name}...")
+    """Execute tool on all training models and validation model, compare GUIDs."""
+    _logger.info("Validating tool on training models and validation model...")
 
     start_time = time.time()
 
     try:
-        # Execute on training model first (for completeness)
-        training_predicted, training_log = _execute_tool(
-            ctx.tool_implementation, ctx.tool_name, ctx.training_model_path
+        # --- Training: run on all train models ---
+        log_parts: list[str] = []
+        total_tp, total_fp, total_fn = 0, 0, 0
+        f1_scores: list[float] = []
+
+        for model_name in ctx.training_ground_truth:
+            model_path = ctx.training_model_paths.get(model_name, "")
+            if not model_path:
+                _logger.warning(f"No IFC path for training model {model_name} — skipping validation")
+                continue
+
+            predicted, run_log = _execute_tool(ctx.tool_implementation, ctx.tool_name, model_path)
+            expected = ctx.training_guids_per_model.get(model_name, [])
+            result = compare_guids(set(predicted), set(expected))
+
+            ctx.training_results_per_model[model_name] = result
+            total_tp += result.tp
+            total_fp += result.fp
+            total_fn += result.fn
+            f1_scores.append(result.f1)
+
+            _logger.info(
+                f"  Training [{model_name}]: TP={result.tp}, FP={result.fp}, "
+                f"FN={result.fn}, F1={result.f1:.3f}"
+            )
+            log_parts.append(f"=== Training ({model_name}) ===\n{run_log}")
+
+        # Aggregated training result from summed TP/FP/FN
+        agg_precision = total_tp / (total_tp + total_fp) if (total_tp + total_fp) > 0 else (1.0 if total_fn == 0 else 0.0)
+        agg_recall = total_tp / (total_tp + total_fn) if (total_tp + total_fn) > 0 else (1.0 if total_fp == 0 else 0.0)
+        agg_f1 = (2 * agg_precision * agg_recall / (agg_precision + agg_recall)
+                  if (agg_precision + agg_recall) > 0 else 0.0)
+        # Handle all-empty case (all models are pass rules)
+        if total_tp == 0 and total_fp == 0 and total_fn == 0:
+            agg_f1 = 1.0
+
+        ctx.training_result_aggregated = GUIDComparisonResult(
+            tp=total_tp, fp=total_fp, fn=total_fn,
+            precision=agg_precision, recall=agg_recall, f1=agg_f1,
+            is_perfect_match=(total_fp == 0 and total_fn == 0),
         )
-        ctx.training_predicted_guids = training_predicted
-        ctx.training_result = compare_guids(
-            set(training_predicted), set(ctx.training_expected_guids)
-        )
+        ctx.training_result_avg_f1 = sum(f1_scores) / len(f1_scores) if f1_scores else 0.0
 
         _logger.info(
-            f"Training: TP={ctx.training_result.tp}, FP={ctx.training_result.fp}, "
-            f"FN={ctx.training_result.fn}, F1={ctx.training_result.f1:.3f}"
+            f"Training aggregated: TP={total_tp}, FP={total_fp}, FN={total_fn}, "
+            f"F1_agg={agg_f1:.3f}, F1_avg={ctx.training_result_avg_f1:.3f}"
         )
 
-        # Execute on validation model
+        # --- Validation: single model ---
         validation_predicted, validation_log = _execute_tool(
             ctx.tool_implementation, ctx.tool_name, ctx.validation_model_path
         )
@@ -329,8 +433,8 @@ def handle_validate_tool(ctx: ACCContext) -> Tuple[ACCTrainingState, ACCContext]
             set(validation_predicted), set(ctx.validation_expected_guids)
         )
 
-        ctx.execution_log = f"=== Training ({ctx.training_model_name}) ===\n{training_log}\n\n"
-        ctx.execution_log += f"=== Validation ({ctx.validation_model_name}) ===\n{validation_log}"
+        log_parts.append(f"=== Validation ({ctx.validation_model_name}) ===\n{validation_log}")
+        ctx.execution_log = "\n\n".join(log_parts)
         ctx.validate_duration = time.time() - start_time
 
         _logger.info(
@@ -338,13 +442,13 @@ def handle_validate_tool(ctx: ACCContext) -> Tuple[ACCTrainingState, ACCContext]
             f"FN={ctx.validation_result.fn}, F1={ctx.validation_result.f1:.3f}"
         )
 
-        # Track best tool
-        if ctx.validation_result.f1 > ctx.best_tool_f1:
-            ctx.best_tool_f1 = ctx.validation_result.f1
+        # Track best tool by aggregated training F1
+        if agg_f1 > ctx.best_tool_f1:
+            ctx.best_tool_f1 = agg_f1
             ctx.best_tool_implementation = ctx.tool_implementation
-            _logger.info(f"New best tool! F1={ctx.best_tool_f1:.3f}")
+            _logger.info(f"New best tool! Aggregated training F1={ctx.best_tool_f1:.3f}")
 
-        # Check for perfect match
+        # Check for perfect validation match
         if ctx.validation_result.f1 == 1.0:
             _logger.info("Perfect validation F1=1.0 - saving tool immediately")
             return ACCTrainingState.SAVE_TOOL, ctx
@@ -366,21 +470,26 @@ def handle_assess_generalizability(ctx: ACCContext) -> Tuple[ACCTrainingState, A
     start_time = time.time()
 
     try:
-        assert ctx.training_result is not None
+        assert ctx.training_result_aggregated is not None
         assert ctx.validation_result is not None
+
+        # Flatten training GUIDs across all models for the assessment API
+        all_expected: list[str] = []
+        for guids in ctx.training_guids_per_model.values():
+            all_expected.extend(guids)
 
         assessment, collector = assess_acc_tool(
             rule_title=ctx.rule_title,
             rule_code=ctx.rule_code,
             rule_description=ctx.rule_description,
             question=ctx.question,
-            training_model_name=ctx.training_model_name,
-            training_expected_guids=ctx.training_expected_guids,
-            training_predicted_guids=ctx.training_predicted_guids,
-            training_tp=ctx.training_result.tp,
-            training_fp=ctx.training_result.fp,
-            training_fn=ctx.training_result.fn,
-            training_f1=ctx.training_result.f1,
+            training_model_name=ctx.primary_training_model,
+            training_expected_guids=all_expected,
+            training_predicted_guids=[],  # not tracked per-model; aggregated metrics used
+            training_tp=ctx.training_result_aggregated.tp,
+            training_fp=ctx.training_result_aggregated.fp,
+            training_fn=ctx.training_result_aggregated.fn,
+            training_f1=ctx.training_result_aggregated.f1,
             validation_model_name=ctx.validation_model_name,
             validation_expected_count=len(ctx.validation_expected_guids),
             validation_predicted_count=len(ctx.validation_predicted_guids),
@@ -508,10 +617,10 @@ def process_state(state: ACCTrainingState, ctx: ACCContext) -> Tuple[ACCTraining
 def log_rule_metrics(ctx: ACCContext) -> dict:
     """Log metrics for a single rule to MLflow."""
     # Extract token metrics
-    create_in, create_out, create_total = extract_token_metrics(ctx.create_tool_collector)
-    assess_in, assess_out, assess_total = extract_token_metrics(ctx.assessment_collector)
+    _, _, create_total = extract_token_metrics(ctx.create_tool_collector)
+    _, _, assess_total = extract_token_metrics(ctx.assessment_collector)
 
-    metrics = {
+    metrics: dict[str, float] = {
         "create_tool_duration": ctx.create_tool_duration,
         "create_tool_tokens": create_total,
         "validate_duration": ctx.validate_duration,
@@ -524,16 +633,21 @@ def log_rule_metrics(ctx: ACCContext) -> dict:
         "error": 1 if ctx.error_message else 0,
     }
 
-    # Add validation metrics if available
-    if ctx.training_result:
+    # Add aggregated training metrics
+    if ctx.training_result_aggregated:
         metrics.update({
-            "training_tp": ctx.training_result.tp,
-            "training_fp": ctx.training_result.fp,
-            "training_fn": ctx.training_result.fn,
-            "training_precision": ctx.training_result.precision,
-            "training_recall": ctx.training_result.recall,
-            "training_f1": ctx.training_result.f1,
+            "training_f1_aggregated": ctx.training_result_aggregated.f1,
+            "training_f1_avg": ctx.training_result_avg_f1,
+            "training_tp": ctx.training_result_aggregated.tp,
+            "training_fp": ctx.training_result_aggregated.fp,
+            "training_fn": ctx.training_result_aggregated.fn,
+            "training_precision": ctx.training_result_aggregated.precision,
+            "training_recall": ctx.training_result_aggregated.recall,
         })
+
+    # Per-model training F1s
+    for model_name, result in ctx.training_results_per_model.items():
+        metrics[f"training_f1_{model_name}"] = result.f1
 
     if ctx.validation_result:
         metrics.update({
@@ -618,9 +732,17 @@ def main():
     )
     args = parser.parse_args()
 
-    # Get available rules from training ground truth
-    all_rules = get_available_rules(TRAINING_MODEL)
-    _logger.info(f"Found {len(all_rules)} rules in {TRAINING_MODEL} ground truth")
+    # Load splits and rule templates
+    splits = load_model_splits()
+    train_models = splits["train"]
+    validate_models = splits["validate"]
+    validation_model = validate_models[0]  # first model from validate split
+
+    templates = load_rule_templates()
+    all_rules = [tmpl["rule_title"] for tmpl in templates.values()]
+    _logger.info(f"Found {len(all_rules)} rules from rule_templates.json")
+    _logger.info(f"Train models: {train_models}")
+    _logger.info(f"Validation model: {validation_model}")
 
     # Determine rules to process
     if args.rules:
@@ -639,8 +761,8 @@ def main():
 
     with mlflow.start_run(run_name=run_name):
         mlflow.log_params({
-            "training_model": TRAINING_MODEL,
-            "validation_model": VALIDATION_MODEL,
+            "training_models": ",".join(train_models),
+            "validation_model": validation_model,
             "max_retries": args.max_retries,
             "rules_count": len(rules_to_process),
         })
@@ -659,11 +781,13 @@ def main():
                     "rule_index": rule_idx,
                 })
 
-                # Initialize context
+                # Initialize context with train/validate models
                 ctx = ACCContext(
                     rule_title=rule_title,
                     rule_idx=rule_idx,
                     max_retries=args.max_retries,
+                    training_models=train_models,
+                    validation_model_name=validation_model,
                 )
 
                 # Run state machine
