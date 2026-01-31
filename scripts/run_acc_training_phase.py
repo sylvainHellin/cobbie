@@ -6,14 +6,15 @@ instead of Cobbie-based Q&A verification.
 
 Training Flow:
     START -> CREATE_TOOL -> VALIDATE_TOOL
-        -> [F1=1.0] -> SAVE_TOOL -> END
+        -> [F1=1.0] -> SAVE_TOOL -> TEST_TOOL -> END
         -> [F1<1.0] -> ASSESS_GENERALIZABILITY -> DECIDE_FATE
             -> [retry_with_hint & retries < max] -> CREATE_TOOL (loop)
-            -> [retries exhausted] -> SAVE_BEST_TOOL -> END
+            -> [retries exhausted] -> SAVE_BEST_TOOL -> TEST_TOOL -> END
 
 Data Split (from acc/config/model_splits.json):
     - Training: all models from 'train' split (ground truth loaded per-model)
     - Validation: all models from 'validate' split (ground truth loaded per-model)
+    - Test: all models from 'test' split (ground truth loaded per-model; optional)
     - Rules: from acc/config/rule_templates.json
 """
 
@@ -57,6 +58,7 @@ class ACCTrainingState(Enum):
     ASSESS_GENERALIZABILITY = auto()
     DECIDE_FATE = auto()
     SAVE_TOOL = auto()
+    TEST_TOOL = auto()
     END = auto()
     ERROR = auto()
 
@@ -94,6 +96,15 @@ class ACCContext:
     validation_results_per_model: dict[str, GUIDComparisonResult] = field(default_factory=dict)
     validation_result_aggregated: Optional[GUIDComparisonResult] = None  # combined TP/FP/FN
     validation_result_avg_f1: float = 0.0  # mean per-model F1
+
+    # Test data (all models from test split)
+    test_models: list[str] = field(default_factory=list)
+    test_model_paths: dict[str, str] = field(default_factory=dict)  # name -> ifc path
+    test_guids_per_model: dict[str, list[str]] = field(default_factory=dict)  # name -> expected GUIDs
+    test_results_per_model: dict[str, GUIDComparisonResult] = field(default_factory=dict)
+    test_result_aggregated: Optional[GUIDComparisonResult] = None
+    test_result_avg_f1: float = 0.0
+    test_duration: float = 0.0
 
     # Tool creation
     tool_name: str = ""
@@ -213,6 +224,28 @@ def handle_start(ctx: ACCContext) -> Tuple[ACCTrainingState, ACCContext]:
 
         if not ctx.validation_guids_per_model:
             raise ValueError(f"Rule '{ctx.rule_title}' not found in any validation model")
+
+        # Load test ground truth for all test models (same pattern as validation; optional)
+        for model_name in ctx.test_models:
+            try:
+                rule_data = get_rule_context(model_name, ctx.rule_title)
+            except KeyError:
+                _logger.info(f"Rule '{ctx.rule_title}' not found in test model {model_name} — skipping")
+                continue
+
+            guids = []
+            for issue in rule_data.get("issues", []):
+                guids.extend(issue.get("required_guids", []))
+            ctx.test_guids_per_model[model_name] = list(dict.fromkeys(guids))
+
+            model_path = get_model_path(model_name)
+            if model_path:
+                ctx.test_model_paths[model_name] = model_path
+            else:
+                _logger.warning(f"Could not find IFC model for test model {model_name}")
+
+        if not ctx.test_guids_per_model:
+            _logger.warning("No test ground truth loaded — test phase will be skipped")
 
         # Generate tool name from rule title
         ctx.tool_name = f"check_{ctx.rule_title}"
@@ -615,7 +648,7 @@ def handle_save_tool(ctx: ACCContext) -> Tuple[ACCTrainingState, ACCContext]:
 
         if not implementation:
             _logger.warning("No tool implementation to save")
-            return ACCTrainingState.END, ctx
+            return ACCTrainingState.TEST_TOOL, ctx
 
         # Save to ACC tools directory
         save_success = save_new_tool(
@@ -631,12 +664,88 @@ def handle_save_tool(ctx: ACCContext) -> Tuple[ACCTrainingState, ACCContext]:
         else:
             _logger.error(f"Failed to save tool: {ctx.tool_name}")
 
-        return ACCTrainingState.END, ctx
+        return ACCTrainingState.TEST_TOOL, ctx
 
     except Exception as e:
         _logger.error(f"Error saving tool: {e}")
         ctx.error_message = str(e)
         return ACCTrainingState.ERROR, ctx
+
+
+def handle_test_tool(ctx: ACCContext) -> Tuple[ACCTrainingState, ACCContext]:
+    """Run final tool on all test models; always transition to END."""
+    if not ctx.test_guids_per_model:
+        _logger.info("No test ground truth — skipping test phase")
+        return ACCTrainingState.END, ctx
+
+    implementation = ctx.best_tool_implementation or ctx.tool_implementation
+    if not implementation:
+        _logger.info("No tool implementation saved — skipping test phase")
+        return ACCTrainingState.END, ctx
+
+    _logger.info("Running tool on test split...")
+    start_time = time.time()
+
+    test_total_tp, test_total_fp, test_total_fn = 0, 0, 0
+    test_f1_scores: list[float] = []
+
+    for model_name in ctx.test_guids_per_model:
+        model_path = ctx.test_model_paths.get(model_name, "")
+        if not model_path:
+            _logger.warning(f"No IFC path for test model {model_name} — skipping")
+            continue
+
+        predicted, _ = _execute_tool(implementation, ctx.tool_name, model_path)
+        expected = ctx.test_guids_per_model.get(model_name, [])
+        result = compare_guids(set(predicted), set(expected))
+
+        ctx.test_results_per_model[model_name] = result
+        test_total_tp += result.tp
+        test_total_fp += result.fp
+        test_total_fn += result.fn
+        test_f1_scores.append(result.f1)
+
+        _logger.info(
+            f"  Test [{model_name}]: TP={result.tp}, FP={result.fp}, "
+            f"FN={result.fn}, F1={result.f1:.3f}"
+        )
+
+    test_precision = (
+        test_total_tp / (test_total_tp + test_total_fp)
+        if (test_total_tp + test_total_fp) > 0
+        else (1.0 if test_total_fn == 0 else 0.0)
+    )
+    test_recall = (
+        test_total_tp / (test_total_tp + test_total_fn)
+        if (test_total_tp + test_total_fn) > 0
+        else (1.0 if test_total_fp == 0 else 0.0)
+    )
+    test_f1 = (
+        2 * test_precision * test_recall / (test_precision + test_recall)
+        if (test_precision + test_recall) > 0
+        else 0.0
+    )
+    if test_total_tp == 0 and test_total_fp == 0 and test_total_fn == 0:
+        test_f1 = 1.0
+
+    ctx.test_result_aggregated = GUIDComparisonResult(
+        tp=test_total_tp,
+        fp=test_total_fp,
+        fn=test_total_fn,
+        precision=test_precision,
+        recall=test_recall,
+        f1=test_f1,
+        is_perfect_match=(test_total_fp == 0 and test_total_fn == 0),
+    )
+    ctx.test_result_avg_f1 = sum(test_f1_scores) / len(test_f1_scores) if test_f1_scores else 0.0
+    ctx.test_duration = time.time() - start_time
+
+    _logger.info(
+        f"Test aggregated: TP={test_total_tp}, FP={test_total_fp}, FN={test_total_fn}, "
+        f"F1_agg={test_f1:.3f}, F1_avg={ctx.test_result_avg_f1:.3f}"
+    )
+
+    return ACCTrainingState.END, ctx
 
 
 # ============================================================================
@@ -653,6 +762,7 @@ def process_state(state: ACCTrainingState, ctx: ACCContext) -> Tuple[ACCTraining
         ACCTrainingState.ASSESS_GENERALIZABILITY: handle_assess_generalizability,
         ACCTrainingState.DECIDE_FATE: handle_decide_fate,
         ACCTrainingState.SAVE_TOOL: handle_save_tool,
+        ACCTrainingState.TEST_TOOL: handle_test_tool,
     }
 
     handler = handlers.get(state)
@@ -676,8 +786,9 @@ def log_rule_metrics(ctx: ACCContext) -> dict:
         "validate_duration": ctx.validate_duration,
         "assessment_duration": ctx.assessment_duration,
         "assessment_tokens": assess_total,
+        "test_duration": ctx.test_duration,
         "total_tokens": create_total + assess_total,
-        "total_duration": ctx.create_tool_duration + ctx.validate_duration + ctx.assessment_duration,
+        "total_duration": ctx.create_tool_duration + ctx.validate_duration + ctx.assessment_duration + ctx.test_duration,
         "retry_count": ctx.retry_count,
         "tool_saved": 1 if ctx.tool_saved else 0,
         "error": 1 if ctx.error_message else 0,
@@ -719,6 +830,24 @@ def log_rule_metrics(ctx: ACCContext) -> dict:
         metrics[f"validation_precision_{model_name}"] = result.precision
         metrics[f"validation_recall_{model_name}"] = result.recall
 
+    # Aggregated test metrics
+    if ctx.test_result_aggregated:
+        metrics.update({
+            "test_f1_aggregated": ctx.test_result_aggregated.f1,
+            "test_precision_aggregated": ctx.test_result_aggregated.precision,
+            "test_recall_aggregated": ctx.test_result_aggregated.recall,
+            "test_f1_avg": ctx.test_result_avg_f1,
+            "test_tp": ctx.test_result_aggregated.tp,
+            "test_fp": ctx.test_result_aggregated.fp,
+            "test_fn": ctx.test_result_aggregated.fn,
+        })
+
+    # Per-model test metrics
+    for model_name, result in ctx.test_results_per_model.items():
+        metrics[f"test_f1_{model_name}"] = result.f1
+        metrics[f"test_precision_{model_name}"] = result.precision
+        metrics[f"test_recall_{model_name}"] = result.recall
+
     # Best tool F1
     metrics["best_f1"] = ctx.best_tool_f1
 
@@ -736,7 +865,7 @@ def log_rule_metrics(ctx: ACCContext) -> dict:
         "retry_count": ctx.retry_count,
         "error": bool(ctx.error_message),
         "total_tokens": create_total + assess_total,
-        "total_duration": ctx.create_tool_duration + ctx.validate_duration + ctx.assessment_duration,
+        "total_duration": ctx.create_tool_duration + ctx.validate_duration + ctx.assessment_duration + ctx.test_duration,
     }
 
 
@@ -796,12 +925,14 @@ def main():
     splits = load_model_splits()
     train_models = splits["train"]
     validate_models = splits["validate"]
+    test_models = splits["test"]
 
     templates = load_rule_templates()
     all_rules = [tmpl["rule_title"] for tmpl in templates.values()]
     _logger.info(f"Found {len(all_rules)} rules from rule_templates.json")
     _logger.info(f"Train models: {train_models}")
     _logger.info(f"Validation models: {validate_models}")
+    _logger.info(f"Test models: {test_models}")
 
     # Determine rules to process
     if args.rules:
@@ -822,6 +953,7 @@ def main():
         mlflow.log_params({
             "training_models": ",".join(train_models),
             "validation_models": ",".join(validate_models),
+            "test_models": ",".join(test_models),
             "max_retries": args.max_retries,
             "rules_count": len(rules_to_process),
         })
@@ -840,13 +972,14 @@ def main():
                     "rule_index": rule_idx,
                 })
 
-                # Initialize context with train/validate models
+                # Initialize context with train/validate/test models
                 ctx = ACCContext(
                     rule_title=rule_title,
                     rule_idx=rule_idx,
                     max_retries=args.max_retries,
                     training_models=train_models,
                     validation_models=validate_models,
+                    test_models=test_models,
                 )
 
                 # Run state machine
