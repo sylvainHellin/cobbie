@@ -1,0 +1,5602 @@
+[
+  {
+    "description": "305.3 Size\nSpace.-1.1 : Besprechungsraum I[001] has inaccessible areas.\n",
+    "ifc_guids": [
+      "0$h$6iqvH7uuMv8xHW4e2S",
+      "0OwNcV9erFMvQIJeFqhaw0",
+      "0aYqrniYTF5OrgY8FDqrZ5",
+      "10477ZVeHF7f0uosceJBkS",
+      "1286tJlcX2qvmyh3QzzVxk",
+      "14gIVRaHXBJ8Coly$UiFBy",
+      "17cPNULgTCcun2tAvF_kd4",
+      "1BQdTQ$pv3fPMiik0mgcWd",
+      "1PjIpUMEnBpAnz4ixm0QoT",
+      "1R0L929Q9CdAWif7mN_tix",
+      "1q4vzT$i54VvZIWlsohkjs",
+      "1rOyQwjfjEiBsbGTIeM8xP",
+      "1wThYq9f17wPWKLBsNOeYG",
+      "1x6b5f29L53P6PEc81$dZn",
+      "29Qs7IkSHDse$fFtMm_UoG",
+      "2Bcq7G1OfCQxI3Qq2VL1RX",
+      "2CH_JhJHP4QhBNQW5I_$p3",
+      "2S81_Ddrv5IO_9FQklmGZn",
+      "2xj7SPlwX4qx17_F2_8HgV",
+      "3Pom8En7165Ovrq1bs5st9",
+      "3UEb2iq7D2tOgbX6Mufs$X",
+      "3UFdUoOUjCKeAYjOsvjsYa",
+      "3e4dHd2$bDqPCEQxkITpEq"
+    ],
+    "ifc_guids_enriched": [
+      {
+        "guid": "0$h$6iqvH7uuMv8xHW4e2S",
+        "ifc_type": "IfcFurnishingElement"
+      },
+      {
+        "guid": "0OwNcV9erFMvQIJeFqhaw0",
+        "ifc_type": "IfcFurnishingElement"
+      },
+      {
+        "guid": "0aYqrniYTF5OrgY8FDqrZ5",
+        "ifc_type": "IfcFurnishingElement"
+      },
+      {
+        "guid": "10477ZVeHF7f0uosceJBkS",
+        "ifc_type": "IfcFurnishingElement"
+      },
+      {
+        "guid": "1286tJlcX2qvmyh3QzzVxk",
+        "ifc_type": "IfcFurnishingElement"
+      },
+      {
+        "guid": "14gIVRaHXBJ8Coly$UiFBy",
+        "ifc_type": "IfcFurnishingElement"
+      },
+      {
+        "guid": "17cPNULgTCcun2tAvF_kd4",
+        "ifc_type": "IfcFurnishingElement"
+      },
+      {
+        "guid": "1BQdTQ$pv3fPMiik0mgcWd",
+        "ifc_type": "IfcFurnishingElement"
+      },
+      {
+        "guid": "1PjIpUMEnBpAnz4ixm0QoT",
+        "ifc_type": "IfcFurnishingElement"
+      },
+      {
+        "guid": "1R0L929Q9CdAWif7mN_tix",
+        "ifc_type": "IfcFurnishingElement"
+      },
+      {
+        "guid": "1q4vzT$i54VvZIWlsohkjs",
+        "ifc_type": "IfcFurnishingElement"
+      },
+      {
+        "guid": "1rOyQwjfjEiBsbGTIeM8xP",
+        "ifc_type": "IfcFurnishingElement"
+      },
+      {
+        "guid": "1wThYq9f17wPWKLBsNOeYG",
+        "ifc_type": "IfcFurnishingElement"
+      },
+      {
+        "guid": "1x6b5f29L53P6PEc81$dZn",
+        "ifc_type": "IfcFurnishingElement"
+      },
+      {
+        "guid": "29Qs7IkSHDse$fFtMm_UoG",
+        "ifc_type": "IfcFurnishingElement"
+      },
+      {
+        "guid": "2Bcq7G1OfCQxI3Qq2VL1RX",
+        "ifc_type": "IfcFurnishingElement"
+      },
+      {
+        "guid": "2CH_JhJHP4QhBNQW5I_$p3",
+        "ifc_type": "IfcFurnishingElement"
+      },
+      {
+        "guid": "2S81_Ddrv5IO_9FQklmGZn",
+        "ifc_type": "IfcFurnishingElement"
+      },
+      {
+        "guid": "2xj7SPlwX4qx17_F2_8HgV",
+        "ifc_type": "IfcFurnishingElement"
+      },
+      {
+        "guid": "3Pom8En7165Ovrq1bs5st9",
+        "ifc_type": "IfcFurnishingElement"
+      },
+      {
+        "guid": "3UEb2iq7D2tOgbX6Mufs$X",
+        "ifc_type": "IfcSpace"
+      },
+      {
+        "guid": "3UFdUoOUjCKeAYjOsvjsYa",
+        "ifc_type": "IfcFurnishingElement"
+      },
+      {
+        "guid": "3e4dHd2$bDqPCEQxkITpEq",
+        "ifc_type": "IfcFurnishingElement"
+      }
+    ],
+    "title": "Space.-1.1 : Besprechungsraum I[001]",
+    "topic_id": "a9e03ee8-ab68-4dc5-83ab-85bdec2167fe"
+  },
+  {
+    "description": "305.3 Size\nSpace.-1.6 : Besprechungsraum II[002] has inaccessible areas.\n",
+    "ifc_guids": [
+      "0Md6zOio1EyORL9lp07Mhq",
+      "0YPT$aZi92A9SqKimjlZgJ",
+      "0ei_X4ZTnDtPQ5R8atgCEB",
+      "0ejPu6D1zDhuDjPRSjdhyK",
+      "0g$WjhniHFtBP2XpihTmVn",
+      "0pFEckBM5Dw8FooBjva_0M",
+      "0qrtF4SJ55A9KOb0lFJdBL",
+      "0rj_H3BP1CLuO9levpij_h",
+      "0wyjKOWj91FBee0XT_xPUt",
+      "0z_RS2_6n1I8yHTIAjSqL9",
+      "1aHvr85u1DxuE5GbK6n65k",
+      "1rF0m$ayDDZwrULyvU6hAS",
+      "1xQpZQIW58RfNRU7w3kJuF",
+      "1xsJfsSWbCSBCPqZG84tEN",
+      "1y8o9bXb9Emg30E5lE5c4o",
+      "2BAQ2TsDfFQwm_jkfGU81b",
+      "2pan8BLsn6mP58YLsASNfY",
+      "2xcLNHPon6VO6wB_n0EQLF",
+      "2zuBJSHsD0OOQvyAI$1_oh",
+      "3HkP5rwynD2O5u77hTbWsv",
+      "3Js595fxzAHfThl4exBD3r",
+      "3bK3oxhJ59BBUaTh_RU3nb",
+      "3s8qTSU1jDRh5lmNIPbN4u"
+    ],
+    "ifc_guids_enriched": [
+      {
+        "guid": "0Md6zOio1EyORL9lp07Mhq",
+        "ifc_type": "IfcFurnishingElement"
+      },
+      {
+        "guid": "0YPT$aZi92A9SqKimjlZgJ",
+        "ifc_type": "IfcFurnishingElement"
+      },
+      {
+        "guid": "0ei_X4ZTnDtPQ5R8atgCEB",
+        "ifc_type": "IfcFurnishingElement"
+      },
+      {
+        "guid": "0ejPu6D1zDhuDjPRSjdhyK",
+        "ifc_type": "IfcFurnishingElement"
+      },
+      {
+        "guid": "0g$WjhniHFtBP2XpihTmVn",
+        "ifc_type": "IfcFurnishingElement"
+      },
+      {
+        "guid": "0pFEckBM5Dw8FooBjva_0M",
+        "ifc_type": "IfcFurnishingElement"
+      },
+      {
+        "guid": "0qrtF4SJ55A9KOb0lFJdBL",
+        "ifc_type": "IfcFurnishingElement"
+      },
+      {
+        "guid": "0rj_H3BP1CLuO9levpij_h",
+        "ifc_type": "IfcFurnishingElement"
+      },
+      {
+        "guid": "0wyjKOWj91FBee0XT_xPUt",
+        "ifc_type": "IfcFurnishingElement"
+      },
+      {
+        "guid": "0z_RS2_6n1I8yHTIAjSqL9",
+        "ifc_type": "IfcFurnishingElement"
+      },
+      {
+        "guid": "1aHvr85u1DxuE5GbK6n65k",
+        "ifc_type": "IfcFurnishingElement"
+      },
+      {
+        "guid": "1rF0m$ayDDZwrULyvU6hAS",
+        "ifc_type": "IfcFurnishingElement"
+      },
+      {
+        "guid": "1xQpZQIW58RfNRU7w3kJuF",
+        "ifc_type": "IfcFurnishingElement"
+      },
+      {
+        "guid": "1xsJfsSWbCSBCPqZG84tEN",
+        "ifc_type": "IfcFurnishingElement"
+      },
+      {
+        "guid": "1y8o9bXb9Emg30E5lE5c4o",
+        "ifc_type": "IfcFurnishingElement"
+      },
+      {
+        "guid": "2BAQ2TsDfFQwm_jkfGU81b",
+        "ifc_type": "IfcFurnishingElement"
+      },
+      {
+        "guid": "2pan8BLsn6mP58YLsASNfY",
+        "ifc_type": "IfcFurnishingElement"
+      },
+      {
+        "guid": "2xcLNHPon6VO6wB_n0EQLF",
+        "ifc_type": "IfcSpace"
+      },
+      {
+        "guid": "2zuBJSHsD0OOQvyAI$1_oh",
+        "ifc_type": "IfcFurnishingElement"
+      },
+      {
+        "guid": "3HkP5rwynD2O5u77hTbWsv",
+        "ifc_type": "IfcFurnishingElement"
+      },
+      {
+        "guid": "3Js595fxzAHfThl4exBD3r",
+        "ifc_type": "IfcFurnishingElement"
+      },
+      {
+        "guid": "3bK3oxhJ59BBUaTh_RU3nb",
+        "ifc_type": "IfcFurnishingElement"
+      },
+      {
+        "guid": "3s8qTSU1jDRh5lmNIPbN4u",
+        "ifc_type": "IfcFurnishingElement"
+      }
+    ],
+    "title": "Space.-1.6 : Besprechungsraum Ii[002]",
+    "topic_id": "e95298d9-5bad-412a-a32a-fe3980f48a64"
+  },
+  {
+    "description": "305.3 Size\nSpace.0.13 : Buero Studenten III[114] has inaccessible areas.\n",
+    "ifc_guids": [
+      "0BwbUEtUXCveHWZ7HWUQrv",
+      "0hvwmXBX99MB50mF38yTGl",
+      "0jhU4VZ6XCxee3pjfx5VMh",
+      "1BgnCX27rAT9D_Cf$w4d3b",
+      "1QWDYFVQXFiuwoubSkSG48",
+      "1SOfm38Sr3TuQ2VmMVHkIk",
+      "1X8ISgOSf99vUFSjfvAmt3",
+      "1axMfr5oLBgOS3LHyi46$t",
+      "1f$gTvlHX8GhKd604sQm2W",
+      "2c3SDDFBjDRevm_iMuG2$P",
+      "3EyCDlgjv8R9_MyCxnwYxS",
+      "3Rt$$LAsTF7vMcZ8JzPVr4",
+      "3SNBWCgSrBZu7WfzpF18w1",
+      "3WgKK2GqL2thS5m4gLxriY",
+      "3_bYofZKP9lAUHAD3P9WWN",
+      "3kjBbM7cvCYRZ9LLqGksoU"
+    ],
+    "ifc_guids_enriched": [
+      {
+        "guid": "0BwbUEtUXCveHWZ7HWUQrv",
+        "ifc_type": "IfcFurnishingElement"
+      },
+      {
+        "guid": "0hvwmXBX99MB50mF38yTGl",
+        "ifc_type": "IfcFurnishingElement"
+      },
+      {
+        "guid": "0jhU4VZ6XCxee3pjfx5VMh",
+        "ifc_type": "IfcSpace"
+      },
+      {
+        "guid": "1BgnCX27rAT9D_Cf$w4d3b",
+        "ifc_type": "IfcFurnishingElement"
+      },
+      {
+        "guid": "1QWDYFVQXFiuwoubSkSG48",
+        "ifc_type": "IfcFurnishingElement"
+      },
+      {
+        "guid": "1SOfm38Sr3TuQ2VmMVHkIk",
+        "ifc_type": "IfcFurnishingElement"
+      },
+      {
+        "guid": "1X8ISgOSf99vUFSjfvAmt3",
+        "ifc_type": "IfcFurnishingElement"
+      },
+      {
+        "guid": "1axMfr5oLBgOS3LHyi46$t",
+        "ifc_type": "IfcFurnishingElement"
+      },
+      {
+        "guid": "1f$gTvlHX8GhKd604sQm2W",
+        "ifc_type": "IfcFurnishingElement"
+      },
+      {
+        "guid": "2c3SDDFBjDRevm_iMuG2$P",
+        "ifc_type": "IfcFurnishingElement"
+      },
+      {
+        "guid": "3EyCDlgjv8R9_MyCxnwYxS",
+        "ifc_type": "IfcFurnishingElement"
+      },
+      {
+        "guid": "3Rt$$LAsTF7vMcZ8JzPVr4",
+        "ifc_type": "IfcFurnishingElement"
+      },
+      {
+        "guid": "3SNBWCgSrBZu7WfzpF18w1",
+        "ifc_type": "IfcFurnishingElement"
+      },
+      {
+        "guid": "3WgKK2GqL2thS5m4gLxriY",
+        "ifc_type": "IfcFurnishingElement"
+      },
+      {
+        "guid": "3_bYofZKP9lAUHAD3P9WWN",
+        "ifc_type": "IfcFurnishingElement"
+      },
+      {
+        "guid": "3kjBbM7cvCYRZ9LLqGksoU",
+        "ifc_type": "IfcFurnishingElement"
+      }
+    ],
+    "title": "Space.0.13 : Buero Studenten Iii[114]",
+    "topic_id": "9c5d42cb-a660-4b0e-9746-b9995a47d602"
+  },
+  {
+    "description": "305.3 Size\nSpace.1.17 : Buero IL[207] has inaccessible areas.\n",
+    "ifc_guids": [
+      "0f4DwHFrj33es5$Uo7ry7l",
+      "1NXpkcMSL7LwDALwcFkxMv",
+      "24vVAUYDH2SetutQQsZBMv",
+      "2ESvsFh7v5BhidcSw$NlVS",
+      "2W4u8ksTjDWgY$_q7S_hDw",
+      "2xQk5kDfXAPuhPwfXZ$rgr",
+      "3TT6371QXFwBiALT2JVdDR",
+      "3eUvS6q0P14OC1IuUt0pvP"
+    ],
+    "ifc_guids_enriched": [
+      {
+        "guid": "0f4DwHFrj33es5$Uo7ry7l",
+        "ifc_type": "IfcFurnishingElement"
+      },
+      {
+        "guid": "1NXpkcMSL7LwDALwcFkxMv",
+        "ifc_type": "IfcFurnishingElement"
+      },
+      {
+        "guid": "24vVAUYDH2SetutQQsZBMv",
+        "ifc_type": "IfcSpace"
+      },
+      {
+        "guid": "2ESvsFh7v5BhidcSw$NlVS",
+        "ifc_type": "IfcFurnishingElement"
+      },
+      {
+        "guid": "2W4u8ksTjDWgY$_q7S_hDw",
+        "ifc_type": "IfcFurnishingElement"
+      },
+      {
+        "guid": "2xQk5kDfXAPuhPwfXZ$rgr",
+        "ifc_type": "IfcFurnishingElement"
+      },
+      {
+        "guid": "3TT6371QXFwBiALT2JVdDR",
+        "ifc_type": "IfcFurnishingElement"
+      },
+      {
+        "guid": "3eUvS6q0P14OC1IuUt0pvP",
+        "ifc_type": "IfcFurnishingElement"
+      }
+    ],
+    "title": "Space.1.17 : Buero Il[207]",
+    "topic_id": "7fb708c6-933b-47a3-b5d7-0180269799e0"
+  },
+  {
+    "description": "305.3 Size\nSpace.2.1 : Buero[307] has inaccessible areas.\n",
+    "ifc_guids": [
+      "0wOs8cwRn3Cgmq_aLC_Oc2",
+      "0yQDJsqyH8SxODovysDAPx",
+      "1K_d1XY_H0eR6YQt18Z3A$",
+      "1bBYVH$oL5ORExvNxEoec1",
+      "3knwp7Zd90qPHbstf1VRar",
+      "3uvYP4OyH5ufyPIMbZD86h",
+      "3yNXKcVj99lAvPT2UEyZ2b"
+    ],
+    "ifc_guids_enriched": [
+      {
+        "guid": "0wOs8cwRn3Cgmq_aLC_Oc2",
+        "ifc_type": "IfcFurnishingElement"
+      },
+      {
+        "guid": "0yQDJsqyH8SxODovysDAPx",
+        "ifc_type": "IfcFurnishingElement"
+      },
+      {
+        "guid": "1K_d1XY_H0eR6YQt18Z3A$",
+        "ifc_type": "IfcFurnishingElement"
+      },
+      {
+        "guid": "1bBYVH$oL5ORExvNxEoec1",
+        "ifc_type": "IfcFurnishingElement"
+      },
+      {
+        "guid": "3knwp7Zd90qPHbstf1VRar",
+        "ifc_type": "IfcFurnishingElement"
+      },
+      {
+        "guid": "3uvYP4OyH5ufyPIMbZD86h",
+        "ifc_type": "IfcSpace"
+      },
+      {
+        "guid": "3yNXKcVj99lAvPT2UEyZ2b",
+        "ifc_type": "IfcFurnishingElement"
+      }
+    ],
+    "title": "Space.2.1 : Buero[307]",
+    "topic_id": "61bedc2d-d0c3-4ac1-a1e6-269ac7f51380"
+  },
+  {
+    "description": "307.4 Reduced Vertical Clearance\nStair SStair.2098 has a landing with clear width of less than the required 0.90 m.\n",
+    "ifc_guids": [
+      "0xQhptVzf44Qzhs9jMEILa"
+    ],
+    "ifc_guids_enriched": [
+      {
+        "guid": "0xQhptVzf44Qzhs9jMEILa",
+        "ifc_type": "IfcStair"
+      }
+    ],
+    "title": "Stair.2.1",
+    "topic_id": "fe94f191-9e83-4cb9-a8e6-94dc60bd9f69"
+  },
+  {
+    "description": "307.4 Reduced Vertical Clearance\nUnderside of stair should be shielded to protect visually impaired persons from accessing it inadvertently.\n",
+    "ifc_guids": [
+      "0o_5lbt6jCpRs3V3FoLyNr",
+      "2WnDGvXIP14xQJyJ3RQPXx"
+    ],
+    "ifc_guids_enriched": [
+      {
+        "guid": "0o_5lbt6jCpRs3V3FoLyNr",
+        "ifc_type": "IfcStair"
+      },
+      {
+        "guid": "2WnDGvXIP14xQJyJ3RQPXx",
+        "ifc_type": "IfcSlab"
+      }
+    ],
+    "title": "Stair.-1.1",
+    "topic_id": "f4eb4959-886e-434e-a080-1718b82b3fc8"
+  },
+  {
+    "description": "404.2.2 Clear Width & 404.2.3 Maneuvering Clearances\n- Revolving door Door.0.13 is not accompanied by swing door.\n\n",
+    "ifc_guids": [
+      "18PQUIFELEARLM4c0brquf",
+      "1RP4kkhTDFJuLugWfrM_1s"
+    ],
+    "ifc_guids_enriched": [
+      {
+        "guid": "18PQUIFELEARLM4c0brquf",
+        "ifc_type": "IfcDoor"
+      },
+      {
+        "guid": "1RP4kkhTDFJuLugWfrM_1s",
+        "ifc_type": "IfcSpace"
+      }
+    ],
+    "title": "Space.0.18 : Flur Eg Eingang[117]",
+    "topic_id": "e3a84f4f-52c8-4348-9acd-a1e15992a4eb"
+  },
+  {
+    "description": "404.2.2 Clear Width & 404.2.3 Maneuvering Clearances\nNot enough space in front of Door.-1.1 on push side.<br/>\n- Component Wall.-1.13 intersects the required free area with dimensions 1.22 m and 0.11 m.<br/>\n- Door.-1.9 intersects the required free area in 2 locations: with dimensions  1.22 m and 0.11 m\n  1.12 m and 0.11 m\n",
+    "ifc_guids": [
+      "2$tv64Cn5DZx8YisuS365o",
+      "2G3Zgh3YLFBxViczryC8tv",
+      "2Zmi8kumn3P9N9wBPT48lG"
+    ],
+    "ifc_guids_enriched": [
+      {
+        "guid": "2$tv64Cn5DZx8YisuS365o",
+        "ifc_type": "IfcDoor"
+      },
+      {
+        "guid": "2G3Zgh3YLFBxViczryC8tv",
+        "ifc_type": "IfcSpace"
+      },
+      {
+        "guid": "2Zmi8kumn3P9N9wBPT48lG",
+        "ifc_type": "IfcSpace"
+      }
+    ],
+    "title": "Door.-1.1",
+    "topic_id": "343008cd-febb-4082-adf0-9aa2287117c5"
+  },
+  {
+    "description": "404.2.2 Clear Width & 404.2.3 Maneuvering Clearances\nNot enough space in front of Door.-1.15 on push side.<br/>\n- Component Wall.-1.18 intersects the required free area with dimensions 1.22 m and 0.11 m.\n",
+    "ifc_guids": [
+      "1nDSxVMDT3hh2Ql2HEz6Lg",
+      "3UEb2iq7D2tOgbX6Mufs$X",
+      "3cjnMny5DF0g1J6kKZWO4Y"
+    ],
+    "ifc_guids_enriched": [
+      {
+        "guid": "1nDSxVMDT3hh2Ql2HEz6Lg",
+        "ifc_type": "IfcDoor"
+      },
+      {
+        "guid": "3UEb2iq7D2tOgbX6Mufs$X",
+        "ifc_type": "IfcSpace"
+      },
+      {
+        "guid": "3cjnMny5DF0g1J6kKZWO4Y",
+        "ifc_type": "IfcSpace"
+      }
+    ],
+    "title": "Door.-1.15",
+    "topic_id": "fce0fc2d-a0f4-432a-8a71-6ae482d49083"
+  },
+  {
+    "description": "404.2.2 Clear Width & 404.2.3 Maneuvering Clearances\nNot enough space in front of Door.0.18 on push side.<br/>\n- Component Window.0.25 intersects the required free area with dimensions 0.67 m and 0.11 m.<br/>\n- Wall.0.12 intersects the required free area in 2 locations: with dimensions  0.67 m and 0.11 m\n  1.22 m and 0.11 m\n",
+    "ifc_guids": [
+      "2d24khq3H2EhLI7osiekrD",
+      "3EN96kdYDB2OOGjNLp8e86",
+      "3KaloR8018sAKZVwuYVbSu"
+    ],
+    "ifc_guids_enriched": [
+      {
+        "guid": "2d24khq3H2EhLI7osiekrD",
+        "ifc_type": "IfcDoor"
+      },
+      {
+        "guid": "3EN96kdYDB2OOGjNLp8e86",
+        "ifc_type": "IfcSpace"
+      },
+      {
+        "guid": "3KaloR8018sAKZVwuYVbSu",
+        "ifc_type": "IfcSpace"
+      }
+    ],
+    "title": "Door.0.18",
+    "topic_id": "cd99edcc-1a94-4f37-bc36-c186694207e7"
+  },
+  {
+    "description": "404.2.2 Clear Width & 404.2.3 Maneuvering Clearances\nNot enough space in front of Door.0.4 on pull side.<br/>\n- Component Furniture.0.70 intersects the required free area with dimensions 0.61 m and 0.32 m.\n",
+    "ifc_guids": [
+      "0nixpH$hD2$xLwip3vL96O",
+      "1_Evy7T$DCiwLgTMLHCRoe",
+      "3KaloR8018sAKZVwuYVbSu"
+    ],
+    "ifc_guids_enriched": [
+      {
+        "guid": "0nixpH$hD2$xLwip3vL96O",
+        "ifc_type": "IfcDoor"
+      },
+      {
+        "guid": "1_Evy7T$DCiwLgTMLHCRoe",
+        "ifc_type": "IfcSpace"
+      },
+      {
+        "guid": "3KaloR8018sAKZVwuYVbSu",
+        "ifc_type": "IfcSpace"
+      }
+    ],
+    "title": "Door.0.4",
+    "topic_id": "0d006486-8d81-4931-b2fe-062a95f410aa"
+  },
+  {
+    "description": "404.2.2 Clear Width & 404.2.3 Maneuvering Clearances\nNot enough space in front of Door.0.5 on push side.<br/>\n- Component Window.0.27 intersects the required free area with dimensions 0.67 m and 0.11 m.<br/>\n- Wall.0.13 intersects the required free area in 2 locations: with dimensions  0.67 m and 0.11 m\n  1.22 m and 0.11 m\n",
+    "ifc_guids": [
+      "0_TtqXcOrDbeTXyb5q0Uxb",
+      "0p1Mt3h7nDeQ1Q4N9eEl9H",
+      "3yAAZZ86j388XApaG$h1X6"
+    ],
+    "ifc_guids_enriched": [
+      {
+        "guid": "0_TtqXcOrDbeTXyb5q0Uxb",
+        "ifc_type": "IfcSpace"
+      },
+      {
+        "guid": "0p1Mt3h7nDeQ1Q4N9eEl9H",
+        "ifc_type": "IfcDoor"
+      },
+      {
+        "guid": "3yAAZZ86j388XApaG$h1X6",
+        "ifc_type": "IfcSpace"
+      }
+    ],
+    "title": "Door.0.5",
+    "topic_id": "96485717-5fd2-4157-a352-1332ce7aa491"
+  },
+  {
+    "description": "404.2.2 Clear Width & 404.2.3 Maneuvering Clearances\nNot enough space in front of Door.0.6 on pull side.<br/>\n- Component Furniture.0.26 intersects the required free area with dimensions 0.61 m and 0.32 m.\n",
+    "ifc_guids": [
+      "2SfY7UTIz1E82rEMOUSWux",
+      "3KaloR8018sAKZVwuYVbSu",
+      "3eQ_MQ5er5UeRXq4xxAoKl"
+    ],
+    "ifc_guids_enriched": [
+      {
+        "guid": "2SfY7UTIz1E82rEMOUSWux",
+        "ifc_type": "IfcDoor"
+      },
+      {
+        "guid": "3KaloR8018sAKZVwuYVbSu",
+        "ifc_type": "IfcSpace"
+      },
+      {
+        "guid": "3eQ_MQ5er5UeRXq4xxAoKl",
+        "ifc_type": "IfcSpace"
+      }
+    ],
+    "title": "Door.0.6",
+    "topic_id": "e8d241f7-7217-4f8e-b1e3-7518a5c0198b"
+  },
+  {
+    "description": "404.2.2 Clear Width & 404.2.3 Maneuvering Clearances\nNot enough space in front of Door.1.1 on push side.<br/>\n- Component Window.1.10 intersects the required free area with dimensions 0.67 m and 0.11 m.<br/>\n- Wall.1.15 intersects the required free area in 2 locations: with dimensions  0.67 m and 0.11 m\n  1.22 m and 0.11 m\n",
+    "ifc_guids": [
+      "0uC7OD3$5F7v$zL3aaoEig",
+      "0vTIWG60z84eKitb_eWAIR",
+      "25CC32yK130ALlKsnej9JW"
+    ],
+    "ifc_guids_enriched": [
+      {
+        "guid": "0uC7OD3$5F7v$zL3aaoEig",
+        "ifc_type": "IfcSpace"
+      },
+      {
+        "guid": "0vTIWG60z84eKitb_eWAIR",
+        "ifc_type": "IfcDoor"
+      },
+      {
+        "guid": "25CC32yK130ALlKsnej9JW",
+        "ifc_type": "IfcSpace"
+      }
+    ],
+    "title": "Door.1.1",
+    "topic_id": "0eaced4d-ce14-4eb2-a4e3-6e39791aef20"
+  },
+  {
+    "description": "404.2.2 Clear Width & 404.2.3 Maneuvering Clearances\nNot enough space in front of Door.1.19 on push side.<br/>\n- Component Window.1.43 intersects the required free area with dimensions 0.67 m and 0.11 m.<br/>\n- Wall.1.7 intersects the required free area in 2 locations: with dimensions  0.67 m and 0.11 m\n  1.22 m and 0.11 m\n",
+    "ifc_guids": [
+      "2E2TaOnqD0chpbuH8tXCpW",
+      "2sSHD6n39BZQnSaHjLYpnc",
+      "3XJSZHVdLFTQTPYNfhA6a2"
+    ],
+    "ifc_guids_enriched": [
+      {
+        "guid": "2E2TaOnqD0chpbuH8tXCpW",
+        "ifc_type": "IfcSpace"
+      },
+      {
+        "guid": "2sSHD6n39BZQnSaHjLYpnc",
+        "ifc_type": "IfcDoor"
+      },
+      {
+        "guid": "3XJSZHVdLFTQTPYNfhA6a2",
+        "ifc_type": "IfcSpace"
+      }
+    ],
+    "title": "Door.1.19",
+    "topic_id": "bb37a463-2913-4c28-a8a1-dcd8c284bdbe"
+  },
+  {
+    "description": "404.2.2 Clear Width & 404.2.3 Maneuvering Clearances\nNot enough space in front of Door.2.1 on push side.<br/>\n- Component Wall.2.4 intersects the required free area with dimensions 1.22 m and 0.11 m.<br/>\n- Window.2.3 intersects the required free area in 2 locations: with dimensions  1.22 m and 0.11 m\n  0.67 m and 0.11 m\n",
+    "ifc_guids": [
+      "1EjnchXi9Esx$bY6vHG2RD",
+      "3gYFdGsxTBa9PFlMvRAaiF",
+      "3zaEFaiGrF1ftyFPQrOe_i"
+    ],
+    "ifc_guids_enriched": [
+      {
+        "guid": "1EjnchXi9Esx$bY6vHG2RD",
+        "ifc_type": "IfcDoor"
+      },
+      {
+        "guid": "3gYFdGsxTBa9PFlMvRAaiF",
+        "ifc_type": "IfcSpace"
+      },
+      {
+        "guid": "3zaEFaiGrF1ftyFPQrOe_i",
+        "ifc_type": "IfcSpace"
+      }
+    ],
+    "title": "Door.2.1",
+    "topic_id": "bedf0131-4b8a-437d-8627-06d0ea33cd48"
+  },
+  {
+    "description": "404.2.2 Clear Width & 404.2.3 Maneuvering Clearances\nNot enough space in front of Door.2.11 on push side.<br/>\n- Component Window.2.22 intersects the required free area with dimensions 0.67 m and 0.11 m.<br/>\n- Wall.2.7 intersects the required free area in 2 locations: with dimensions  0.67 m and 0.11 m\n  1.22 m and 0.11 m\n",
+    "ifc_guids": [
+      "1qHIiTcLf7zwz3pTXujZ3t",
+      "1ufhCZbhH2Ifud2RWdYCPS",
+      "3CXBDjcSTES8AedjLKSfJe"
+    ],
+    "ifc_guids_enriched": [
+      {
+        "guid": "1qHIiTcLf7zwz3pTXujZ3t",
+        "ifc_type": "IfcSpace"
+      },
+      {
+        "guid": "1ufhCZbhH2Ifud2RWdYCPS",
+        "ifc_type": "IfcDoor"
+      },
+      {
+        "guid": "3CXBDjcSTES8AedjLKSfJe",
+        "ifc_type": "IfcSpace"
+      }
+    ],
+    "title": "Door.2.11",
+    "topic_id": "6443e384-d142-459d-a605-2d494a657c36"
+  },
+  {
+    "description": "404.2.2 Clear Width & 404.2.3 Maneuvering Clearances\nNot enough space on front handle side of Door.-1.15. The required free area is width 1.07 m x depth 1.52 m.<br/>\n- Component Furniture.-1.6 intersects the required free area with dimensions 0.91 m and 0.58 m.<br/>\n- Furniture.-1.40 intersects the required free area in 2 locations: with dimensions  0.91 m and 0.58 m\n  0.30 m and 0.29 m<br/>\n- Furniture.-1.7 intersects the required free area in 3 locations: with dimensions  0.91 m and 0.58 m\n  0.30 m and 0.29 m\n  0.30 m and 0.30 m\n",
+    "ifc_guids": [
+      "1nDSxVMDT3hh2Ql2HEz6Lg",
+      "3UEb2iq7D2tOgbX6Mufs$X",
+      "3cjnMny5DF0g1J6kKZWO4Y"
+    ],
+    "ifc_guids_enriched": [
+      {
+        "guid": "1nDSxVMDT3hh2Ql2HEz6Lg",
+        "ifc_type": "IfcDoor"
+      },
+      {
+        "guid": "3UEb2iq7D2tOgbX6Mufs$X",
+        "ifc_type": "IfcSpace"
+      },
+      {
+        "guid": "3cjnMny5DF0g1J6kKZWO4Y",
+        "ifc_type": "IfcSpace"
+      }
+    ],
+    "title": "Door.-1.15",
+    "topic_id": "0a73cc2f-ab0b-46bf-a9e6-fd29e4b340ee"
+  },
+  {
+    "description": "404.2.2 Clear Width & 404.2.3 Maneuvering Clearances\nNot enough space on front handle side of Door.-1.4. The required free area is width 1.07 m x depth 1.52 m.<br/>\n- Component Furniture.-1.33 intersects the required free area with dimensions 0.30 m and 0.22 m.<br/>\n- Furniture.-1.53 intersects the required free area in 2 locations: with dimensions  0.30 m and 0.22 m\n  0.30 m and 0.30 m<br/>\n- Furniture.-1.73 intersects the required free area in 3 locations: with dimensions  0.30 m and 0.22 m\n  0.30 m and 0.30 m\n  0.86 m and 0.50 m\n",
+    "ifc_guids": [
+      "2MHPtmLzv5OhZf$6Z1Y75J",
+      "2xcLNHPon6VO6wB_n0EQLF",
+      "3cjnMny5DF0g1J6kKZWO4Y"
+    ],
+    "ifc_guids_enriched": [
+      {
+        "guid": "2MHPtmLzv5OhZf$6Z1Y75J",
+        "ifc_type": "IfcDoor"
+      },
+      {
+        "guid": "2xcLNHPon6VO6wB_n0EQLF",
+        "ifc_type": "IfcSpace"
+      },
+      {
+        "guid": "3cjnMny5DF0g1J6kKZWO4Y",
+        "ifc_type": "IfcSpace"
+      }
+    ],
+    "title": "Door.-1.4",
+    "topic_id": "6db669f5-6656-41b7-979c-69bcd4afa5ef"
+  },
+  {
+    "description": "404.2.2 Clear Width & 404.2.3 Maneuvering Clearances\nNot enough space on front handle side of Door.0.11. The required free area is width 1.07 m x depth 1.52 m.<br/>\n- Component Furniture.0.32 intersects the required free area with dimensions 0.28 m and 0.14 m.\n",
+    "ifc_guids": [
+      "0_TtqXcOrDbeTXyb5q0Uxb",
+      "1loQAAB191MA5YmsaMJHkI",
+      "3QI0Za4AD7g9EDuOxKtL4z"
+    ],
+    "ifc_guids_enriched": [
+      {
+        "guid": "0_TtqXcOrDbeTXyb5q0Uxb",
+        "ifc_type": "IfcSpace"
+      },
+      {
+        "guid": "1loQAAB191MA5YmsaMJHkI",
+        "ifc_type": "IfcSpace"
+      },
+      {
+        "guid": "3QI0Za4AD7g9EDuOxKtL4z",
+        "ifc_type": "IfcDoor"
+      }
+    ],
+    "title": "Door.0.11",
+    "topic_id": "8e69cc21-b2e2-48e5-a79c-47d0e036d7a0"
+  },
+  {
+    "description": "404.2.2 Clear Width & 404.2.3 Maneuvering Clearances\nNot enough space on front handle side of Door.0.18. The required free area is width 1.07 m x depth 1.52 m.<br/>\n- Component Furniture.0.47 intersects the required free area with dimensions 0.66 m and 0.34 m.<br/>\n- Furniture.0.2 intersects the required free area in 2 locations: with dimensions  0.66 m and 0.34 m\n  0.30 m and 0.12 m\n",
+    "ifc_guids": [
+      "2d24khq3H2EhLI7osiekrD",
+      "3EN96kdYDB2OOGjNLp8e86",
+      "3KaloR8018sAKZVwuYVbSu"
+    ],
+    "ifc_guids_enriched": [
+      {
+        "guid": "2d24khq3H2EhLI7osiekrD",
+        "ifc_type": "IfcDoor"
+      },
+      {
+        "guid": "3EN96kdYDB2OOGjNLp8e86",
+        "ifc_type": "IfcSpace"
+      },
+      {
+        "guid": "3KaloR8018sAKZVwuYVbSu",
+        "ifc_type": "IfcSpace"
+      }
+    ],
+    "title": "Door.0.18",
+    "topic_id": "cb9fe7ce-b01b-4127-a457-bebfc4378cbd"
+  },
+  {
+    "description": "404.2.2 Clear Width & 404.2.3 Maneuvering Clearances\nNot enough space on front handle side of Door.0.8. The required free area is width 1.07 m x depth 1.52 m.<br/>\n- Component Furniture.0.15 intersects the required free area with dimensions 0.35 m and 0.14 m.\n",
+    "ifc_guids": [
+      "0_TtqXcOrDbeTXyb5q0Uxb",
+      "3Xu6SpY4vC89stuKlMWE2n",
+      "3nS8Xe8c5BpfdWxU$cBkvz"
+    ],
+    "ifc_guids_enriched": [
+      {
+        "guid": "0_TtqXcOrDbeTXyb5q0Uxb",
+        "ifc_type": "IfcSpace"
+      },
+      {
+        "guid": "3Xu6SpY4vC89stuKlMWE2n",
+        "ifc_type": "IfcSpace"
+      },
+      {
+        "guid": "3nS8Xe8c5BpfdWxU$cBkvz",
+        "ifc_type": "IfcDoor"
+      }
+    ],
+    "title": "Door.0.8",
+    "topic_id": "01d637a2-13b4-4315-bbc8-cd7caa2b084e"
+  },
+  {
+    "description": "404.2.2 Clear Width & 404.2.3 Maneuvering Clearances\nNot enough space on front handle side of Door.1.14. The required free area is width 1.07 m x depth 1.52 m.<br/>\n- Component Furniture.1.46 intersects the required free area with dimensions 0.14 m and 0.06 m.\n",
+    "ifc_guids": [
+      "1gw9pvArXFYfZkbYdrwJwh",
+      "3XJSZHVdLFTQTPYNfhA6a2",
+      "3iSzpa9d93jhTDB7hG0QBW"
+    ],
+    "ifc_guids_enriched": [
+      {
+        "guid": "1gw9pvArXFYfZkbYdrwJwh",
+        "ifc_type": "IfcDoor"
+      },
+      {
+        "guid": "3XJSZHVdLFTQTPYNfhA6a2",
+        "ifc_type": "IfcSpace"
+      },
+      {
+        "guid": "3iSzpa9d93jhTDB7hG0QBW",
+        "ifc_type": "IfcSpace"
+      }
+    ],
+    "title": "Door.1.14",
+    "topic_id": "948cce5d-7723-4d03-b26c-e09903cddac1"
+  },
+  {
+    "description": "404.2.2 Clear Width & 404.2.3 Maneuvering Clearances\nNot enough space on front handle side of Door.1.18. The required free area is width 1.07 m x depth 1.52 m.<br/>\n- Component Furniture.1.40 intersects the required free area with dimensions 0.14 m and 0.02 m.\n",
+    "ifc_guids": [
+      "1a3ixYyUn0QO4HWUYKN$4p",
+      "35jd8lu1fDJAuZoKl4ldDk",
+      "3XJSZHVdLFTQTPYNfhA6a2"
+    ],
+    "ifc_guids_enriched": [
+      {
+        "guid": "1a3ixYyUn0QO4HWUYKN$4p",
+        "ifc_type": "IfcSpace"
+      },
+      {
+        "guid": "35jd8lu1fDJAuZoKl4ldDk",
+        "ifc_type": "IfcDoor"
+      },
+      {
+        "guid": "3XJSZHVdLFTQTPYNfhA6a2",
+        "ifc_type": "IfcSpace"
+      }
+    ],
+    "title": "Door.1.18",
+    "topic_id": "5a4ef2c5-c940-4210-85ce-d3ae306dcdfb"
+  },
+  {
+    "description": "404.2.2 Clear Width & 404.2.3 Maneuvering Clearances\nNot enough space on front handle side of Door.1.22. The required free area is width 1.07 m x depth 1.52 m.<br/>\n- Component Furniture.1.45 intersects the required free area with dimensions 0.49 m and 0.21 m.<br/>\n- Furniture.1.8 intersects the required free area in 2 locations: with dimensions  0.49 m and 0.21 m\n  0.30 m and 0.03 m\n",
+    "ifc_guids": [
+      "0JdG5rMQr10RkgztM3HqwA",
+      "24vVAUYDH2SetutQQsZBMv",
+      "2goaA6RR92B9xducYbaQVU"
+    ],
+    "ifc_guids_enriched": [
+      {
+        "guid": "0JdG5rMQr10RkgztM3HqwA",
+        "ifc_type": "IfcDoor"
+      },
+      {
+        "guid": "24vVAUYDH2SetutQQsZBMv",
+        "ifc_type": "IfcSpace"
+      },
+      {
+        "guid": "2goaA6RR92B9xducYbaQVU",
+        "ifc_type": "IfcSpace"
+      }
+    ],
+    "title": "Door.1.22",
+    "topic_id": "667bcfb2-507c-4150-899d-0f41bac54132"
+  },
+  {
+    "description": "404.2.5 Two Doors in Series\n- Revolving door Door.0.13 is not accompanied by swing door.\n\n",
+    "ifc_guids": [
+      "18PQUIFELEARLM4c0brquf",
+      "1RP4kkhTDFJuLugWfrM_1s"
+    ],
+    "ifc_guids_enriched": [
+      {
+        "guid": "18PQUIFELEARLM4c0brquf",
+        "ifc_type": "IfcDoor"
+      },
+      {
+        "guid": "1RP4kkhTDFJuLugWfrM_1s",
+        "ifc_type": "IfcSpace"
+      }
+    ],
+    "title": "Space.0.18 : Flur Eg Eingang[117]",
+    "topic_id": "5477efb7-32d2-4f69-bf3d-1437491a5630"
+  },
+  {
+    "description": "407.3.6 Width\n- Revolving door Door.0.13 is not accompanied by swing door.\n\n",
+    "ifc_guids": [
+      "18PQUIFELEARLM4c0brquf",
+      "1RP4kkhTDFJuLugWfrM_1s"
+    ],
+    "ifc_guids_enriched": [
+      {
+        "guid": "18PQUIFELEARLM4c0brquf",
+        "ifc_type": "IfcDoor"
+      },
+      {
+        "guid": "1RP4kkhTDFJuLugWfrM_1s",
+        "ifc_type": "IfcSpace"
+      }
+    ],
+    "title": "Space.0.18 : Flur Eg Eingang[117]",
+    "topic_id": "e3378195-3786-47a5-a1e6-8f6b8edd142a"
+  },
+  {
+    "description": "504.2 Treads and Risers\nStair SStair.2098 has a landing with clear width of less than the required 0.90 m.\n",
+    "ifc_guids": [
+      "0xQhptVzf44Qzhs9jMEILa"
+    ],
+    "ifc_guids_enriched": [
+      {
+        "guid": "0xQhptVzf44Qzhs9jMEILa",
+        "ifc_type": "IfcStair"
+      }
+    ],
+    "title": "Stair.2.1",
+    "topic_id": "b68369ad-2e9b-4a0d-b967-8e094300888a"
+  },
+  {
+    "description": "504.3 Open Risers\nStair SStair.2098 has a landing with clear width of less than the required 0.90 m.\n",
+    "ifc_guids": [
+      "0xQhptVzf44Qzhs9jMEILa"
+    ],
+    "ifc_guids_enriched": [
+      {
+        "guid": "0xQhptVzf44Qzhs9jMEILa",
+        "ifc_type": "IfcStair"
+      }
+    ],
+    "title": "Stair.2.1",
+    "topic_id": "0d96a096-2dae-4a00-9549-3f48d37b9c20"
+  },
+  {
+    "description": "504.5 Nosings\nStair SStair.2098 has a landing with clear width of less than the required 0.90 m.\n",
+    "ifc_guids": [
+      "0xQhptVzf44Qzhs9jMEILa"
+    ],
+    "ifc_guids_enriched": [
+      {
+        "guid": "0xQhptVzf44Qzhs9jMEILa",
+        "ifc_type": "IfcStair"
+      }
+    ],
+    "title": "Stair.2.1",
+    "topic_id": "a62a5e42-1aff-40d0-b2e3-e0d8bbed6558"
+  },
+  {
+    "description": "504.5 Nosings\nStair Stair.-1.1 has steps, which nosing length is 0.05 m. The maximum nosing length for the step is 0.04 m.\n",
+    "ifc_guids": [
+      "0o_5lbt6jCpRs3V3FoLyNr"
+    ],
+    "ifc_guids_enriched": [
+      {
+        "guid": "0o_5lbt6jCpRs3V3FoLyNr",
+        "ifc_type": "IfcStair"
+      }
+    ],
+    "title": "Stair.-1.1: 50 Mm",
+    "topic_id": "59c65968-2277-45af-bcda-0f882808193e"
+  },
+  {
+    "description": "504.5 Nosings\nStair Stair.0.1 has steps, which nosing length is 0.05 m. The maximum nosing length for the step is 0.04 m.\n",
+    "ifc_guids": [
+      "1Kl5_Wzb98HOSGZ8eaBX2f"
+    ],
+    "ifc_guids_enriched": [
+      {
+        "guid": "1Kl5_Wzb98HOSGZ8eaBX2f",
+        "ifc_type": "IfcStair"
+      }
+    ],
+    "title": "Stair.0.1: 50 Mm",
+    "topic_id": "fa825696-a6ca-44ec-a4fb-dd7116f32cbd"
+  },
+  {
+    "description": "504.5 Nosings\nStair Stair.1.1 has steps, which nosing length is 0.05 m. The maximum nosing length for the step is 0.04 m.\n",
+    "ifc_guids": [
+      "3Zb0LaH4z9HPmaVjAzVngL"
+    ],
+    "ifc_guids_enriched": [
+      {
+        "guid": "3Zb0LaH4z9HPmaVjAzVngL",
+        "ifc_type": "IfcStair"
+      }
+    ],
+    "title": "Stair.1.1: 50 Mm",
+    "topic_id": "95be789b-650d-489e-b007-ed82aa04ee17"
+  },
+  {
+    "description": "504.5 Nosings\nStair Stair.2.1 has steps, which nosing length is 0.05 m. The maximum nosing length for the step is 0.04 m.\n",
+    "ifc_guids": [
+      "0xQhptVzf44Qzhs9jMEILa"
+    ],
+    "ifc_guids_enriched": [
+      {
+        "guid": "0xQhptVzf44Qzhs9jMEILa",
+        "ifc_type": "IfcStair"
+      }
+    ],
+    "title": "Stair.2.1: 50 Mm",
+    "topic_id": "d681228a-1ff3-4009-837d-df5dcfbcf356"
+  },
+  {
+    "description": "Floor Heights\n",
+    "ifc_guids": [
+      "01Q5XSApT1A8MVwFMrw27s",
+      "0hEXM06OrA5gv_ZOu0dPhm",
+      "1sX1eJEdn4tx6WnOEIL8As",
+      "2qBBp57vj5yguk4qD5Rp6P",
+      "3Kn4W2ZqD4K8KzX7iS3xhj"
+    ],
+    "ifc_guids_enriched": [
+      {
+        "guid": "01Q5XSApT1A8MVwFMrw27s",
+        "ifc_type": "IfcSlab"
+      },
+      {
+        "guid": "0hEXM06OrA5gv_ZOu0dPhm",
+        "ifc_type": "IfcSlab"
+      },
+      {
+        "guid": "1sX1eJEdn4tx6WnOEIL8As",
+        "ifc_type": "IfcSlab"
+      },
+      {
+        "guid": "2qBBp57vj5yguk4qD5Rp6P",
+        "ifc_type": "IfcSlab"
+      },
+      {
+        "guid": "3Kn4W2ZqD4K8KzX7iS3xhj",
+        "ifc_type": "IfcSlab"
+      }
+    ],
+    "title": "0.74 M",
+    "topic_id": "3dac0c37-18c7-4f3d-8b3b-8a323e58c080"
+  },
+  {
+    "description": "Floor Heights\n",
+    "ifc_guids": [
+      "03TjDzhOTFX9jbLMrZ04Ko",
+      "0NhW4VLIbBiuXKiyGrq3kz",
+      "0UobTn5dzETeVPsaqJjGpw",
+      "1m13_kW2X8DhPK7Uom15kV",
+      "2qBBp57vj5yguk4qD5Rp6P"
+    ],
+    "ifc_guids_enriched": [
+      {
+        "guid": "03TjDzhOTFX9jbLMrZ04Ko",
+        "ifc_type": "IfcSlab"
+      },
+      {
+        "guid": "0NhW4VLIbBiuXKiyGrq3kz",
+        "ifc_type": "IfcSlab"
+      },
+      {
+        "guid": "0UobTn5dzETeVPsaqJjGpw",
+        "ifc_type": "IfcSlab"
+      },
+      {
+        "guid": "1m13_kW2X8DhPK7Uom15kV",
+        "ifc_type": "IfcSlab"
+      },
+      {
+        "guid": "2qBBp57vj5yguk4qD5Rp6P",
+        "ifc_type": "IfcSlab"
+      }
+    ],
+    "title": "1.34 M",
+    "topic_id": "f1a10e11-b51e-4db8-aa80-193867561860"
+  },
+  {
+    "description": "Floor Heights\nDistance 0.79 m between Slab.3.1 and Roof.3.8 is too low. It should be at least 2.10 m.\n",
+    "ifc_guids": [
+      "0LG1dnAtn4qQamxBPgaWX7",
+      "2qBBp57vj5yguk4qD5Rp6P"
+    ],
+    "ifc_guids_enriched": [
+      {
+        "guid": "0LG1dnAtn4qQamxBPgaWX7",
+        "ifc_type": "IfcSlab"
+      },
+      {
+        "guid": "2qBBp57vj5yguk4qD5Rp6P",
+        "ifc_type": "IfcSlab"
+      }
+    ],
+    "title": "Stahlbeton 2747937872 300 - Aluminium 131198 380, 790 Mm",
+    "topic_id": "2af50925-780f-42ae-9508-f8b6faf584dc"
+  },
+  {
+    "description": "Floor Heights\nDistance 1.64 m between Slab.3.1 and Roof.3.16 is too low. It should be at least 2.10 m.\n",
+    "ifc_guids": [
+      "2j5_0TlNP02vq$h$fhXZI2",
+      "2qBBp57vj5yguk4qD5Rp6P"
+    ],
+    "ifc_guids_enriched": [
+      {
+        "guid": "2j5_0TlNP02vq$h$fhXZI2",
+        "ifc_type": "IfcSlab"
+      },
+      {
+        "guid": "2qBBp57vj5yguk4qD5Rp6P",
+        "ifc_type": "IfcSlab"
+      }
+    ],
+    "title": "Stahlbeton 2747937872 300 - Aluminium 131198 380, 1.64 M",
+    "topic_id": "9c6ac9c6-b6f0-44ae-ac12-3b42440e79ce"
+  },
+  {
+    "description": "Floor Heights\nDistance 1.64 m between Slab.3.1 and Roof.3.18 is too low. It should be at least 2.10 m.\n",
+    "ifc_guids": [
+      "0_6U2wqx5EygCAIw2ocirl",
+      "2qBBp57vj5yguk4qD5Rp6P"
+    ],
+    "ifc_guids_enriched": [
+      {
+        "guid": "0_6U2wqx5EygCAIw2ocirl",
+        "ifc_type": "IfcSlab"
+      },
+      {
+        "guid": "2qBBp57vj5yguk4qD5Rp6P",
+        "ifc_type": "IfcSlab"
+      }
+    ],
+    "title": "Stahlbeton 2747937872 300 - Aluminium 131198 380, 1.64 M",
+    "topic_id": "44373953-bfb8-4ba6-8cc4-3b12e2c38d34"
+  },
+  {
+    "description": "Floor Heights\nDistance 1.76 m between Slab.3.1 and Roof.3.17 is too low. It should be at least 2.10 m.\n",
+    "ifc_guids": [
+      "2qBBp57vj5yguk4qD5Rp6P",
+      "2s4YT_DyvEIwBQu$XLcqVB"
+    ],
+    "ifc_guids_enriched": [
+      {
+        "guid": "2qBBp57vj5yguk4qD5Rp6P",
+        "ifc_type": "IfcSlab"
+      },
+      {
+        "guid": "2s4YT_DyvEIwBQu$XLcqVB",
+        "ifc_type": "IfcSlab"
+      }
+    ],
+    "title": "Stahlbeton 2747937872 300 - Aluminium 131198 380, 1.76 M",
+    "topic_id": "4c524982-549d-4523-ac3e-eceef85a52fe"
+  },
+  {
+    "description": "Floor Heights\nDistance 1.76 m between Slab.3.1 and Roof.3.20 is too low. It should be at least 2.10 m.\n",
+    "ifc_guids": [
+      "2qBBp57vj5yguk4qD5Rp6P",
+      "2sqOrgHH1BIwrN$KcJhc_B"
+    ],
+    "ifc_guids_enriched": [
+      {
+        "guid": "2qBBp57vj5yguk4qD5Rp6P",
+        "ifc_type": "IfcSlab"
+      },
+      {
+        "guid": "2sqOrgHH1BIwrN$KcJhc_B",
+        "ifc_type": "IfcSlab"
+      }
+    ],
+    "title": "Stahlbeton 2747937872 300 - Aluminium 131198 380, 1.76 M",
+    "topic_id": "a57b9472-5d14-4383-8299-2fa90cd0f5d9"
+  },
+  {
+    "description": "Large Spaces Have to Have More than One Door\nCount (0) of the components does not match the requirement: ≥ 2.\n",
+    "ifc_guids": [
+      "0dXE$xLxz8MwbtYoTqJPiO"
+    ],
+    "ifc_guids_enriched": [
+      {
+        "guid": "0dXE$xLxz8MwbtYoTqJPiO",
+        "ifc_type": "IfcSpace"
+      }
+    ],
+    "title": "Space.-1.13 : Seminarraum[006]: Count (0) Of The Components Does Not Match The Requirement: ≥ 2",
+    "topic_id": "45e82ffc-d358-4fc1-a015-bd6e755cae54"
+  },
+  {
+    "description": "Large Spaces Have to Have More than One Door\nCount (0) of the components does not match the requirement: ≥ 2.\n",
+    "ifc_guids": [
+      "1RP4kkhTDFJuLugWfrM_1s"
+    ],
+    "ifc_guids_enriched": [
+      {
+        "guid": "1RP4kkhTDFJuLugWfrM_1s",
+        "ifc_type": "IfcSpace"
+      }
+    ],
+    "title": "Space.0.18 : Flur Eg Eingang[117]: Count (0) Of The Components Does Not Match The Requirement: ≥ 2",
+    "topic_id": "d0f0dd46-eae6-41bb-be4d-000cfb990f36"
+  },
+  {
+    "description": "Large Spaces Have to Have More than One Door\nCount (0) of the components does not match the requirement: ≥ 2.\n",
+    "ifc_guids": [
+      "0jbV$RErb7o9P7rp7ALEd$"
+    ],
+    "ifc_guids_enriched": [
+      {
+        "guid": "0jbV$RErb7o9P7rp7ALEd$",
+        "ifc_type": "IfcSpace"
+      }
+    ],
+    "title": "Space.3.1 : Dachboden-1[402]: Count (0) Of The Components Does Not Match The Requirement: ≥ 2",
+    "topic_id": "a0b67d26-b3bf-4fff-ae95-05059998dc5d"
+  },
+  {
+    "description": "Large Spaces Have to Have More than One Door\nCount (0) of the components does not match the requirement: ≥ 2.\n",
+    "ifc_guids": [
+      "3txvJd9V1BPhyU$48F$mnF"
+    ],
+    "ifc_guids_enriched": [
+      {
+        "guid": "3txvJd9V1BPhyU$48F$mnF",
+        "ifc_type": "IfcSpace"
+      }
+    ],
+    "title": "Space.3.2 : Dachboden-2[403]: Count (0) Of The Components Does Not Match The Requirement: ≥ 2",
+    "topic_id": "0748a7fc-e14e-43f5-85e0-ff102938f975"
+  },
+  {
+    "description": "Large Spaces Have to Have More than One Door\nCount (0) of the components does not match the requirement: ≥ 2.\n",
+    "ifc_guids": [
+      "2_rG4oliv3CxmStpGPieup"
+    ],
+    "ifc_guids_enriched": [
+      {
+        "guid": "2_rG4oliv3CxmStpGPieup",
+        "ifc_type": "IfcSpace"
+      }
+    ],
+    "title": "Space.3.3 : Flur 3.og Treppe[401]: Count (0) Of The Components Does Not Match The Requirement: ≥ 2",
+    "topic_id": "59d170ea-4d60-4710-a34f-d826a84f251a"
+  },
+  {
+    "description": "Required Components\nThe model doesn't have Stair types at all.\n",
+    "ifc_guids": [
+      "0o_5lbt6jCpRs3V3FoLyNr",
+      "0xQhptVzf44Qzhs9jMEILa",
+      "1Kl5_Wzb98HOSGZ8eaBX2f",
+      "3Zb0LaH4z9HPmaVjAzVngL"
+    ],
+    "ifc_guids_enriched": [
+      {
+        "guid": "0o_5lbt6jCpRs3V3FoLyNr",
+        "ifc_type": "IfcStair"
+      },
+      {
+        "guid": "0xQhptVzf44Qzhs9jMEILa",
+        "ifc_type": "IfcStair"
+      },
+      {
+        "guid": "1Kl5_Wzb98HOSGZ8eaBX2f",
+        "ifc_type": "IfcStair"
+      },
+      {
+        "guid": "3Zb0LaH4z9HPmaVjAzVngL",
+        "ifc_type": "IfcStair"
+      }
+    ],
+    "title": "No Stair Types At All",
+    "topic_id": "134f6f69-8da6-424a-af8c-468566f7d1f4"
+  },
+  {
+    "description": "Required Components\narc doesn't  contain any Beam components\n",
+    "ifc_guids": [
+      "0$6TgsobP9PPnqNXqQeskc",
+      "0$JKvhGY93_fJkUQk3tc0K",
+      "0$h$6iqvH7uuMv8xHW4e2S",
+      "0$nFj884DCFPyXrOVQ1uBE",
+      "000vZ5hTfBgR1R0ytKrVZS",
+      "001lu2mo55kwdGauS8LRxn",
+      "00RjztLorCQgcGEHv7fY3g",
+      "00UNrXETv7oftJb4TQUHq4",
+      "01DPZ9SBn5r9Sivd0bV8Ar",
+      "01Hsj8Zoj47f3xDgoQzQH_",
+      "01Q5XSApT1A8MVwFMrw27s",
+      "01e2zHdgn5GRyyfNksJ$8a",
+      "03SJ_6GzL72BUsuqP6BUv3",
+      "03TjDzhOTFX9jbLMrZ04Ko",
+      "03eINspibAMB7ulPPvjfHd",
+      "03hhkFXKT4RPFNu5rDrZPL",
+      "04vGlrThrE5RHdeUGlTFPp",
+      "054SZ4_9H5tRVfRLsmTmFu",
+      "05pt4VPQf37w1V18yX4Rbi",
+      "06IfVSEn91UgGayOp3O7IE",
+      "07S4DtKg9Dsu1Pe9Miw$W5",
+      "07j7ld5m1AKfwXwsD8BKk6",
+      "08EvXe7d51ZhzVtSteieto",
+      "08Pzy1FAf8zh5TqA5mdXl$",
+      "08uaDJHLH3FAZ6Hg9FwzkG",
+      "09JX$lRj14w8LMwtAomZqY",
+      "09MDBnUZP8hhAAplbz1Q$1",
+      "09m2tgyfr9UfikvrKFMkeD",
+      "09nsmlIP1Av8Gqo7k1gGXA",
+      "09wYceIaT6_feeZkzCYLGw",
+      "0APvzagRfDa8S2CxmCLJFH",
+      "0AlQO9vJD8yQs$jjO$RhN4",
+      "0BEDAo9y13gQ0v5BiWlobp",
+      "0BwbUEtUXCveHWZ7HWUQrv",
+      "0C68vVxz1F_RziZYAfcHRO",
+      "0CFMpIkEzADxWz$xDSGgek",
+      "0CGHrXiHv4HBY05$ose5V2",
+      "0CfDD9v019POgJaaj_XgfQ",
+      "0ChVXF3Lj3cv66fcKII9ok",
+      "0Cp2aAca94mRqMc0MSzZN0",
+      "0D6CHqaN11nArwOYCNX_5Z",
+      "0DL0We4nPFyAVGrKFIo$_Q",
+      "0DyvKRpqrDchZau$PoLIcs",
+      "0Ed4kADQn1aAszmSUYcdMy",
+      "0F7G8tf7P9q8M9AFl$SocW",
+      "0FQY4AQwf2dup5RArZ6ZOG",
+      "0GcUba3297CALsDAJ33hol",
+      "0GqFi1HeT6feINbnmmHPMN",
+      "0HthpQNkzAiuSXm9HWsQaw",
+      "0HtsZ3YcbDMwJN3vvrSgK9",
+      "0ITxfFtMb2WvSCvmhlelOf",
+      "0J1SwSeib5NelMocEXw8uQ",
+      "0JdG5rMQr10RkgztM3HqwA",
+      "0JtLRXJlvE_wC5_4sLnvdj",
+      "0K6ICBa1zCjvUnsy8qMIRC",
+      "0KLaJwQuP0euIp_0e1Xccz",
+      "0KqFIy5jL1Mgh2ggQ4WLch",
+      "0L1ke1dG93fxxhtLVwOTsT",
+      "0LG1dnAtn4qQamxBPgaWX7",
+      "0LmvL42xf8o8gvekhf5kDW",
+      "0M4vLi9CL8HBMODhwUEvP9",
+      "0M5DbO6eLEYAljcKYr52lj",
+      "0Md6zOio1EyORL9lp07Mhq",
+      "0MhDBT4Xn35BdD0XgN2Zqz",
+      "0MwwQwktD1EABufkWsF6jR",
+      "0NhW4VLIbBiuXKiyGrq3kz",
+      "0NlvTwoNb2b9zVnJSo5F73",
+      "0NwAXV3355GR00was0Pjhg",
+      "0OfiUXCAX6LfIaxpPfB_xJ",
+      "0OmtQ6_NzE188dQC34v0g6",
+      "0OwNcV9erFMvQIJeFqhaw0",
+      "0PHxAz4Mz6deTAW0Bg48qa",
+      "0PRStG8ML5VA5ZHyl6gaeQ",
+      "0Ps7yhClL6h8h0z4HCWvmA",
+      "0PyP8DIl91dB01H5Na4r6n",
+      "0QgcTUhxfBlRUTxmdrocfw",
+      "0S8yN4GYfAcee_3jT9azuZ",
+      "0Ti0dr3tHAq8uzw2luJtyI",
+      "0U5AcnRYX7aw$OIZXqMUaR",
+      "0U9x4f675CxAXlkJBnOQjW",
+      "0UiHARbFzF1RT4g_GKem_B",
+      "0Uj41I9z10jhD6G0gjh8bR",
+      "0UobTn5dzETeVPsaqJjGpw",
+      "0UvsYD1LfBsx91MU4B1EY1",
+      "0V74RtuUH1zQt_CcawQbBc",
+      "0VWZeARNT8IAUcPL5OoYiA",
+      "0Veunyhgf7QxfJXezc1Ydu",
+      "0WJMcpbbzA2e6$Z5dpYikp",
+      "0WVkDf7jjAGhdceJ18iI2g",
+      "0Xbk1qGZnCY9arQDkkuJ8L",
+      "0YCk3WI6TD6QdRsRe9JSgf",
+      "0YIVuBlyXF3PI_fXw2b_vJ",
+      "0YPT$aZi92A9SqKimjlZgJ",
+      "0YVYnJBGbDKQ0RN26IQ7HI",
+      "0Zh1XcHrb67ww2PT6GHvWU",
+      "0ZkRKInan2QuHsjV669aGn",
+      "0ZxDbbd5n3VwNQoJuNCWPa",
+      "0_6U2wqx5EygCAIw2ocirl",
+      "0_SIhNEQD0EBlBOnMVz61A",
+      "0_TtqXcOrDbeTXyb5q0Uxb",
+      "0_flqizUv5_A_EGt7DzP3T",
+      "0aA9C4EurBxOMEsOhmkvUA",
+      "0aFvTq1m96zgWbjq4TXV_5",
+      "0aYqrniYTF5OrgY8FDqrZ5",
+      "0aqwE82KP5aAe5kL$$RBxu",
+      "0b0LPBmHX6ARvPDJs3OtVG",
+      "0bg0AtKu104BS2oVEJMTxV",
+      "0cVuwP1qX3PP0j6C20oeL5",
+      "0cxniC0UzD0wuIz01g7Uyw",
+      "0dAxB0XKHC$QriSRAuBxf6",
+      "0dSSxYXuzAJPpIozbSzgnc",
+      "0dXE$xLxz8MwbtYoTqJPiO",
+      "0dc6ovxJLDww6sjSpu_cfN",
+      "0e_l9mS6T7o9KGSwbjHHGh",
+      "0ei_X4ZTnDtPQ5R8atgCEB",
+      "0ejPu6D1zDhuDjPRSjdhyK",
+      "0f4DwHFrj33es5$Uo7ry7l",
+      "0f4gVmdAr50OHIxcdU7ZHw",
+      "0f6kjO4cnBngLgZgtaoBTE",
+      "0fhDs_SDn9a8x9PU70oHGj",
+      "0g$WjhniHFtBP2XpihTmVn",
+      "0g8fKmhXn4uAw7n6ZPtqv3",
+      "0gNf7EDIL42Rl9K1zK6uZD",
+      "0gf4zLSNHARQiAvK3qkBDz",
+      "0gyrXe6SXDygYb42YyYA8$",
+      "0hEXM06OrA5gv_ZOu0dPhm",
+      "0hMAE7lDbCl8oEWalE9nKQ",
+      "0hNQaAT4D3YwXdr1hlqzEc",
+      "0ha9$dzvr5hfHL2tup2bF9",
+      "0hvwmXBX99MB50mF38yTGl",
+      "0i4GPkF$j1$P1_N4yoKfHm",
+      "0i6DZZR0v0YxdGB37YLlHt",
+      "0iabNzJqPCA9ptg2HynprV",
+      "0jbV$RErb7o9P7rp7ALEd$",
+      "0jh6L39QvEQu8mVKX3j43f",
+      "0jhU4VZ6XCxee3pjfx5VMh",
+      "0l4dSq$O1EhPrwBM112bpI",
+      "0lSCVI_pz9aRsLneS8b7BY",
+      "0m$kvDvUr77f4o9JMw6ppP",
+      "0me8A0uin0PfNjrbQz004W",
+      "0nG5nAAT595BryB8i9NgTL",
+      "0nfZvgryT8XBahkto1k2p0",
+      "0nixpH$hD2$xLwip3vL96O",
+      "0o6iTaAHzAQ9cd4xHGAaOG",
+      "0oB0YIgnPE49CsBpGIdxOR",
+      "0o_5lbt6jCpRs3V3FoLyNr",
+      "0p1Mt3h7nDeQ1Q4N9eEl9H",
+      "0pFEckBM5Dw8FooBjva_0M",
+      "0pPpDUymrBF8Wc$W7Gv4T$",
+      "0qcoNAafTDehoCiz4cM6tx",
+      "0qmJgxjdH3IBqV20iXIpL6",
+      "0qrtF4SJ55A9KOb0lFJdBL",
+      "0r2Ds1$6P2DwQ4MwKwJura",
+      "0rbusGsQ597PmiU$ae9AGd",
+      "0rj_H3BP1CLuO9levpij_h",
+      "0tNy_iP2b0Ge3YC49v0CwY",
+      "0tY7LaMUT29xmFtCjT7$Tc",
+      "0td876Op155QAh5MHPRO05",
+      "0tmT0uM9X7qPqvsQL$Vnrv",
+      "0uC7OD3$5F7v$zL3aaoEig",
+      "0uPiF9LkPAqeB8f54Uy3_C",
+      "0uUUWyhx96pOZ1f$3c_du9",
+      "0vTIWG60z84eKitb_eWAIR",
+      "0vzBs_8_n40xRpBtuEXQlk",
+      "0wOs8cwRn3Cgmq_aLC_Oc2",
+      "0wyjKOWj91FBee0XT_xPUt",
+      "0xQhptVzf44Qzhs9jMEILa",
+      "0y2gVbrHLBEQOsZrBF1Kyc",
+      "0yQDJsqyH8SxODovysDAPx",
+      "0yQykg43j93AWHqSKwUt$2",
+      "0yxjkv3wvEtQPAWliouV$u",
+      "0z_RS2_6n1I8yHTIAjSqL9",
+      "1$1ClJMbr7AusAHSAhOyRM",
+      "1$mThV5ZH5x8FMcVAgBdXr",
+      "1$pDx4kq9D$Qv87vSmRHF1",
+      "1$wm4f6k99XRQrMNEvL_1P",
+      "10477ZVeHF7f0uosceJBkS",
+      "10Km1Yd$XBawEELd4t7awF",
+      "10upAxJXj11PJZmCgdwBQv",
+      "11b8rH4vrDfP5iUZizUh0h",
+      "11fH3jC9D9jh7FjWMadwXd",
+      "11laNX2p18PByhMz0BVkyn",
+      "11sAUYYe54ivK9a$vxLFoK",
+      "123VQUHCn26ei6whtqvtKu",
+      "1286tJlcX2qvmyh3QzzVxk",
+      "12ErTRo_9EmBI9cF9PJCvF",
+      "12QSop5nvChgTKqP9gJXTR",
+      "12ewscBPX8TO20fizC01c1",
+      "12gYtU2FL0SvTEriHSUNbg",
+      "13abvHCs97gOGS1VyTZ36D",
+      "13eMrYb7r9R8JYEJCM4rQ0",
+      "13zn5GpxPBTen9net4UvLI",
+      "14E0a5PTb3iemHibLOvZOK",
+      "14Xie0oVj4ZglTrZ1ZM6H_",
+      "14gIVRaHXBJ8Coly$UiFBy",
+      "14lr70JTX5Zw5AEQUrJRI6",
+      "14tRml$oP0Rhmg9zCpGzdf",
+      "15DaMtku1EowtkGqYps1Sn",
+      "15FnNlztjC7vnddscl7y9q",
+      "15lQJrYf9A4xrsK9Ca$fEc",
+      "16PPPa8vv5HuPkSmln13OV",
+      "17HzXMa29CgeqdGTriCwwh",
+      "17cPNULgTCcun2tAvF_kd4",
+      "17n0YjYkvEshOmsrIPLGOb",
+      "18PQUIFELEARLM4c0brquf",
+      "18w4XWKEz1fPVH$dCZCDq2",
+      "1AW8GAtUnEYB9XPWOUYKK5",
+      "1BQdTQ$pv3fPMiik0mgcWd",
+      "1BWbpTElb4dAcW2J6oyRrZ",
+      "1BgnCX27rAT9D_Cf$w4d3b",
+      "1CC7dXY6v5nAdc$PmuzWuu",
+      "1DD7a7jY58OvAb5Q8BLeLd",
+      "1DPAiLw8z7UOS6MROTEe9q",
+      "1DxredyET5bf_85HZe8$FO",
+      "1DzsOFtvv7WQtyhwR4rtky",
+      "1E2pL$RPP0l9aelib_UXhX",
+      "1EjnchXi9Esx$bY6vHG2RD",
+      "1FCKjvOWnEAv7x1dg2f7BI",
+      "1FE8CtiW100xXfCcvMbGZY",
+      "1FkOlh8oXEMBSG67XHRHzZ",
+      "1G74dAb9j0svW4u5KST1Xv",
+      "1GL3Bl4yrCY9XKlcdMQiXb",
+      "1GW5TEwET1CgdSDwJMg0Do",
+      "1GfjDdfNDDqgfciMAwYG5c",
+      "1GtYUXG753_h6i4vKAf46v",
+      "1HjBOhu_1CKQqWZRKqFAKM",
+      "1I4mvNGj58VPS4IqdvGDOQ",
+      "1II2wI2iz2xugPBtxLqfRA",
+      "1Irg_U9z1CFgCoHXTaJ73y",
+      "1JeAYUvIPDgf0MExGbWX8m",
+      "1K1TcIE8XFn8c1A5sopbGz",
+      "1K9shFYpvAiODk_sr0FdfC",
+      "1KKnvDZrr6qPZi0fbRfk_i",
+      "1K_d1XY_H0eR6YQt18Z3A$",
+      "1Kl5_Wzb98HOSGZ8eaBX2f",
+      "1LVv$xQpj6k8KE6pcNlDDU",
+      "1LnXM52pj1uP_ZpDnRRCRj",
+      "1LxqA4yVP4kB4jwzvOrfdp",
+      "1MlsdMSb17ygNfEs7N22qC",
+      "1Mr2sTBdr1xvpLwkrwJazC",
+      "1NXpkcMSL7LwDALwcFkxMv",
+      "1Nuu5OpifASuV5Obbpb0tT",
+      "1OLRx1anXAohtkhV733dGP",
+      "1OQ6lS92bEv8IU1oObylOf",
+      "1OV17CuXX2yOi2aX$NydU3",
+      "1OeButDUzCWPGfp3wmTIEe",
+      "1On7utzJX5t9QaOztb5SZH",
+      "1PZopcCGLE1gg8vjYpfhIA",
+      "1PjIpUMEnBpAnz4ixm0QoT",
+      "1Q1MFJN9j2pv1BLE6RiOuK",
+      "1Q1gG8rYr9OgXFwTFYGxnT",
+      "1QWDYFVQXFiuwoubSkSG48",
+      "1QjkZhkJHDXvqiuYRJXgHb",
+      "1R0L929Q9CdAWif7mN_tix",
+      "1RCVW73Oj2bu8iBqsndt0W",
+      "1RP4kkhTDFJuLugWfrM_1s",
+      "1RzK_sJZL8FAgD5$F6uQkd",
+      "1Rzexj$TXFD8wcAAKUvjkv",
+      "1SOfm38Sr3TuQ2VmMVHkIk",
+      "1SYrCsD5b06witWXPZMU56",
+      "1T1LBp0uL5Nu7AUgOR0Fag",
+      "1TG_f7WfXACvGvZKFbVS6v",
+      "1U0C1y7wv1vwIyersUJ1OK",
+      "1U1oW1sAHBYQKKweh9c7E2",
+      "1U75ejClv3dQdMZ31HFglJ",
+      "1UJnRoYuXDo8ukuFR0M0uj",
+      "1VhUd1CGD2g8UutVlYLkue",
+      "1VnKPbGUf8jAe4_g4_t6qn",
+      "1W7MHVAMr68wA_RXr2l$FR",
+      "1WGpVnFtzE7xNQ0hhegKo8",
+      "1Wa4Z7NrXAHwCBRQNj0Cft",
+      "1Wf59vCvr60f0gYAhSG32Y",
+      "1X8ISgOSf99vUFSjfvAmt3",
+      "1XFei80jz5HuhRQ3nkwKNk",
+      "1YJMbhLR951gL2GWABG5x4",
+      "1ZQVrHlMD3n9zdt2n1Q9Ch",
+      "1ZkrmZCfvDUe2ucUcWc7PF",
+      "1_Evy7T$DCiwLgTMLHCRoe",
+      "1_H_m5RiH9X8BR$Fz7YY7j",
+      "1_UD$NAdH5j8VQ4M152ONb",
+      "1_gfp1z4z9L8T0WrSsfGMo",
+      "1_hrYGMATEmeNbEHgfoKxd",
+      "1a3ixYyUn0QO4HWUYKN$4p",
+      "1aCt7Z_VfBc8zwGoxehfhE",
+      "1aHvr85u1DxuE5GbK6n65k",
+      "1aejkGBNz2FuRzjxv1SLrw",
+      "1ame9iIALAvw$79YOmjYpD",
+      "1axMfr5oLBgOS3LHyi46$t",
+      "1bBYVH$oL5ORExvNxEoec1",
+      "1bxtpaVk912hlBqFs8DpVp",
+      "1cHXMbICn1WhQfo8g2ZwtI",
+      "1coZzBH1f7pxg7wn$hDQxr",
+      "1d9QvK4Qv1Iem3fiUhniQB",
+      "1dMEjnMYb30fvDOMo6UnWr",
+      "1e37$aOvHAn8RjUTHO3fVt",
+      "1f$gTvlHX8GhKd604sQm2W",
+      "1fN0dUKvfE4x8uHeMcb2A4",
+      "1fPWXlbezBARmrmO_Y9jDU",
+      "1feGWn8gHCpO93K4dz4gbc",
+      "1gEdScl$T7E8EEVM27peQB",
+      "1gOmYslDr1suTYoJuY1bx$",
+      "1gw9pvArXFYfZkbYdrwJwh",
+      "1gxRBxWbf8oRRUychif_cc",
+      "1iDSDe5Zr2URYEWxFEwChZ",
+      "1iMOcFqIjEcv5ELCYYrEBA",
+      "1jJ7opRcX6uevup8Hnq0$2",
+      "1kipoXIGrCGwrOTfUS4l5M",
+      "1kux6efQT9SPgiZFaNhkv5",
+      "1lUbm8UC9BRhi6_rj8flXo",
+      "1lclf89IDDS8I01Hi8Sb8Z",
+      "1lf5dxZ1LE_xJj$eJu8Rhu",
+      "1loQAAB191MA5YmsaMJHkI",
+      "1m13_kW2X8DhPK7Uom15kV",
+      "1mNoyQNRjFqALu0EZLqVjE",
+      "1mSLMfkcfCPRJKG_3bRRxE",
+      "1mUlkaN4jFkfHh1zNVHhGj",
+      "1mxN55cZPF6hKlsvawmd2i",
+      "1nDSxVMDT3hh2Ql2HEz6Lg",
+      "1njbY3IMb4IedX5fLGTCRc",
+      "1nsRm1QQb1xwWpzzFR7Ax3",
+      "1oG$NgSrz3Y9NtZlkjCKNH",
+      "1oKaKV7Wz8IOJ10cA1PGWP",
+      "1oYD_Z9ybB_h3cLF0sBrlO",
+      "1ouI6iS8H4iveeYlQVR6wM",
+      "1p4YfqvYLCyfRRiNruiahD",
+      "1pEJsF8kH4BQ$w9DVNUS8V",
+      "1pG7ErnqL79fYOSoJhY$mD",
+      "1pOW7Mn9TD$xI0y62RCLDe",
+      "1pPdANFrDBBhYWYhTHEEHn",
+      "1piAuVWKr1vB9nZx_vUax_",
+      "1pje_D_or3NPRN0K90aQGI",
+      "1pwulCAzX8FuWzCuScT$77",
+      "1q4vzT$i54VvZIWlsohkjs",
+      "1qHIiTcLf7zwz3pTXujZ3t",
+      "1qabSjaY9ExfS9$TGOdAJp",
+      "1r5F044u5Ch9IwbSp3VAFh",
+      "1r7dVjs_50zw9skBo0gwIq",
+      "1rF0m$ayDDZwrULyvU6hAS",
+      "1rOyQwjfjEiBsbGTIeM8xP",
+      "1ruBd5KBP6ZP9AhR6$WWX4",
+      "1s0I4MS9j8Iu9GUFHzJ9cI",
+      "1s2ucU7sz6WPNdY1u8lvSQ",
+      "1sX1eJEdn4tx6WnOEIL8As",
+      "1t1oVJnh17iuvuQ5uyeLr_",
+      "1t4Zdb3Vv8mQLPoMeqevrn",
+      "1tD8H76Wj8rwVBPPIEaOBk",
+      "1tKUxOe3b3mPp3I4yeL1Rz",
+      "1tQgCOlQ19deavPeJlRZDx",
+      "1tzQtGg6DBJOHJ8$0$tVUx",
+      "1u4dzm1Ej6VxuWWX2hSHEy",
+      "1uDQb3wH95JQTlYH_Y617r",
+      "1uJooYa2n4hffNW04AKDA2",
+      "1ufhCZbhH2Ifud2RWdYCPS",
+      "1urUcYP71DIf1u38ogU1RV",
+      "1vWhxAiTL1RR3r4R3eC2Vv",
+      "1vevu6ekH25hciBayNqSbV",
+      "1wB4a7dCr10hjA64sQASOs",
+      "1wThYq9f17wPWKLBsNOeYG",
+      "1wk9c1dpX2_PJQtcSI9FcM",
+      "1woJxRP9rBzA0NGvvq6Jbs",
+      "1x6b5f29L53P6PEc81$dZn",
+      "1xD7nIclXAbe0AcpTv8C3w",
+      "1xQpZQIW58RfNRU7w3kJuF",
+      "1xVAErrPn9h9PZS4j$g3G8",
+      "1xlLX8Zrj9wAZCni6ROM5N",
+      "1xsJfsSWbCSBCPqZG84tEN",
+      "1y52BJ9iLBoAyZV5YvNxz0",
+      "1y8o9bXb9Emg30E5lE5c4o",
+      "1yNitoSSf7mQHrIxramT2j",
+      "1yZQvqj15Ab8eMXDuz85Dy",
+      "1z0qMKUIT5IxhyyHbF4ocp",
+      "1zknH7zvP9hxs5fxl0m$NM",
+      "1zxqAr$Mf44Qt0StYZlpmU",
+      "2$R4rUG1nFkBAylN9aGNhb",
+      "2$ggPbypH5bewZ6ww_a1T0",
+      "2$nPiau5D04f53gf5UX3yP",
+      "2$oqR_D2H8qOOk0Dye6UwH",
+      "2$tv64Cn5DZx8YisuS365o",
+      "20JhNkjN59TAeGj1FCwzAo",
+      "20nncC0vDDp9h64AX6XevC",
+      "20vQ1GzuvF_PTyxE9uwMwj",
+      "22eq1cKyX4ORpHxEO$xo4v",
+      "22mYo$ZgTCP90ywROIM98L",
+      "22nrSGy7r6DOK9atRWIN2y",
+      "22xmLeW115ag7Oc8smTySp",
+      "23NwekTZP52g8Rswy$C86L",
+      "23PhpBVjn93AtYg$TgQDLi",
+      "23l$qeWIPEDfZM4gVatE2N",
+      "24$uaJIhH2ouGJkH7Wd6Cg",
+      "24JOkmJxf0GOisNyZ3FF$C",
+      "24UZuOfCf3JhP_9U8SWMuK",
+      "24vVAUYDH2SetutQQsZBMv",
+      "25CC32yK130ALlKsnej9JW",
+      "25NDKbpWH5r94ho13fJMeb",
+      "25QUQJ9jHAFengkpc9N7GR",
+      "2636AictfCaBavk86H6D4D",
+      "26SkGOcmP0WOaNvJq6qTX7",
+      "26U0nxarH8_x8tgH561X5B",
+      "26eKyZ3PT1Shdb5Xv0LatX",
+      "26mrcAJmP0oONv21v_UcLA",
+      "27$3O5O5r4zP4FJdp1zwdN",
+      "27_DcwcBj4pR51s85xqpTA",
+      "28SmbiP0L7jguMtcYb5tR1",
+      "28jtanJLnD68zXO6BYmgve",
+      "28pY$eTgz34vpE27jGTytk",
+      "29QiFsnBr6CgjK4aJmQ5ED",
+      "29Qs7IkSHDse$fFtMm_UoG",
+      "29dtO28k16G9baf14UO37j",
+      "29qQ5ECrL6nQEhooPP__BH",
+      "2AXKOsn1P81ALezwsDldNa",
+      "2BAQ2TsDfFQwm_jkfGU81b",
+      "2BKSigZcT9LPO64JjoTNF4",
+      "2BV8xGkm94E8NCuKck6qCF",
+      "2Bcq7G1OfCQxI3Qq2VL1RX",
+      "2C1iPnad1Ck8zwAioI$XGI",
+      "2C1mTF6lD8mgYJqKrvvqbc",
+      "2C5lQ3NhPCegfTg9Z1ac7G",
+      "2CH_JhJHP4QhBNQW5I_$p3",
+      "2CnQ7ixwv8A9Jwtk_6wiBp",
+      "2E10mbuJn7xfIy4jOWJKPm",
+      "2E2TaOnqD0chpbuH8tXCpW",
+      "2ED0MLfrf17BXIsuJYCs7R",
+      "2ESvsFh7v5BhidcSw$NlVS",
+      "2FYBB$DerEng8G$eISvGgZ",
+      "2FZD1g3DX6Lf1xKxpeANT$",
+      "2FhF5ftpfAoR5u9P0zRDN2",
+      "2G3Zgh3YLFBxViczryC8tv",
+      "2GIKSl4yvD7wO8pi7zg$sQ",
+      "2HUtvXxkDFoO6CX6ZGSxv2",
+      "2Hh$tXimL1_Aogi9jn1cZ4",
+      "2J6cZ8ikD0LQU8mWRIxn7Z",
+      "2J8eOGmDvFBugacRXH1u$T",
+      "2JLDJqS39FHgmOzoWdVdP_",
+      "2JMzFDlyLC_vpXgeQ4GDNH",
+      "2JXm8iNNv7LfVrBi4zO_Vd",
+      "2KWGkABzf5YuhLq7$mydKO",
+      "2LES77BC56KQ3R7uNhrxe2",
+      "2LkcdSrN1BN9bjMXtrVXB5",
+      "2LrttlMCD93gsPHs8eydhh",
+      "2Luo2PAnn99uT1hjBk4Vyq",
+      "2M$VFKOm95iv8NI96wAPul",
+      "2MHPtmLzv5OhZf$6Z1Y75J",
+      "2MLUym1055WAf4WdQSNnJQ",
+      "2MQJI38fb4kxSZGQpeIRXv",
+      "2N6esOMjP29AvhRLQ1Jz3$",
+      "2NItBPmLX4phu7hB4RNo_9",
+      "2NO$Il8fr1n8x3zsU1IoYc",
+      "2OOpkSORHDYvBk8zsUWSWd",
+      "2OU4curhvDMPArGs3c5lc0",
+      "2Og5$70yb1DxR1TY1w8bzN",
+      "2PEohQWxr83Q$dJApWgZz7",
+      "2PRVpojvP8fPtR7ZH8qagD",
+      "2PhD4lAaLA3PMKnfhSTJ9q",
+      "2PyPcf7HvDGQxPopRGPDKI",
+      "2Q31NM555AyhJre_5CK6sQ",
+      "2Qnyjx3Hr9MANpUnArlvkh",
+      "2R1TAx1CP0iABwkslb$Gv_",
+      "2R5wDhDefB6Ob2SgSotdBS",
+      "2R7WL4wm9BL9_1dYAUIspF",
+      "2R8NAnph52sfLukERHNNXv",
+      "2S05fJwurB0AsobKzEqBs1",
+      "2S3C3uY4L3E8GfjjcpTjpF",
+      "2S81_Ddrv5IO_9FQklmGZn",
+      "2SaahCH6j7CBDf8tBj2NwL",
+      "2SfY7UTIz1E82rEMOUSWux",
+      "2SkcgVRZT55eBv9ib8QmcA",
+      "2TM3hOfDLEKgLHIoi2G2eE",
+      "2TRdI2M4H8YPVIWBCwGuSk",
+      "2Tnz7eiWn96fYzN2y_ZGL$",
+      "2UZhzWc8v0fA0sfv__WgLn",
+      "2UjUodKnf77PmcAVpITSgL",
+      "2UkFRzvxv6r8FK6VLY_xj2",
+      "2V1MCFZRf1GA2ZyRufjYwX",
+      "2VGdy0IID6LxPfFQdDE_rz",
+      "2VJpmvlMLEvOKD0Mb9hAiw",
+      "2VbQuFbEn3h87DbM2PUuUY",
+      "2W4u8ksTjDWgY$_q7S_hDw",
+      "2WXefP$$nEQOIoMSsU5Ddi",
+      "2WnDGvXIP14xQJyJ3RQPXx",
+      "2XgPE753r1of9qIx7CUdRU",
+      "2Yd3UbuHLF0P7Q5pq$wqrF",
+      "2YsRBHmZf7YwXGB4KcMPJy",
+      "2ZDRA4lYXAawe3WLk$RpXy",
+      "2Zd2aBx0TC58gDRfGak1gB",
+      "2ZgDPH3ff44uNnfS_Brc5r",
+      "2Zmi8kumn3P9N9wBPT48lG",
+      "2ZuwhXd0901Adi2h1pa4Do",
+      "2_$5lBnKnFou2_bANCFK3B",
+      "2_X97mjPr6SfXHvLlAWVeK",
+      "2_rG4oliv3CxmStpGPieup",
+      "2a0MZ65LPAovJFCqtf_zKL",
+      "2ac9e1BT96ZAB5qrv0LY1U",
+      "2agthUitrEmRxrqwwPaejP",
+      "2arF9pkZL6Bv$cs4BWnNwD",
+      "2bI$bwQXP6BhqrBObsVIg2",
+      "2c3SDDFBjDRevm_iMuG2$P",
+      "2c8tkvv0f3bx0r2cE2KbR4",
+      "2coDnG5N19uA3pQ4oOPvmL",
+      "2d24khq3H2EhLI7osiekrD",
+      "2dUUX5v1j6ofLpFT0PekPV",
+      "2dmNSROS54DQzD5NyEFXm$",
+      "2e97zOhNb518prQ88j_DQa",
+      "2eQ15rBnD9bQnYtYvsSlv$",
+      "2enhYSVeP8Ke64amBbDPeL",
+      "2ezLa6k3r22f7kZrwjKNLO",
+      "2fB1Cm3Gn6SRIusC52HTGe",
+      "2fPOa6PzvBr9CXTAP3tUbE",
+      "2gewk2Hc99jOA$HRpp8OdW",
+      "2goaA6RR92B9xducYbaQVU",
+      "2gtoeoCt9CBhiwfjH_Yl8E",
+      "2h5A513TXAAhxsa3$Armxt",
+      "2hfmgjFfrEMggYJn0m8E5f",
+      "2hhqHIBeP8nw9YAzD$9Pr5",
+      "2hnpR8mzTAn9yDg7byDsCY",
+      "2hwuUNMpz9AAsYWleNcUZN",
+      "2iLTU_LYz3NA91FzuoqriL",
+      "2ijDjejvTCZvZnfGVKFht6",
+      "2j5_0TlNP02vq$h$fhXZI2",
+      "2jwEgPGy11AO$o9d66R3dj",
+      "2k6vBG3yn9hRJUYx$GK5vo",
+      "2kvkyANgn6yeU1mKrsLn55",
+      "2kyp5olOX6YxfL8$tctAgH",
+      "2l4LFd9FnDpA2oSc00bxDu",
+      "2lebmw3XD9w9PIIn4HKbwh",
+      "2lwCvFBUz95BAyapPUrPcM",
+      "2mSYEw1YLDvhMYvUr3eREJ",
+      "2mUDgAvr1C1ukAYYO0gjTU",
+      "2muLeR9tf5FfEKGfOAn8sb",
+      "2ne1IcZdrDPRb$8OCHUml1",
+      "2o6o7HeHT9vvXnKUKST8PE",
+      "2oOoWKmmfChQTLCBzuB3$b",
+      "2pX0sc7rf06usjFMq1TsGs",
+      "2pXh2vfXHEb9m$yGEotBP_",
+      "2pan8BLsn6mP58YLsASNfY",
+      "2pe3RqZ0j8ogoAvp7iGUAH",
+      "2pkKx0m_bEbfjzzBNbASG_",
+      "2q$7ICGvL3zvLmzSLHMQRS",
+      "2q98g6Chr6CvCwj6ioyUET",
+      "2qBBp57vj5yguk4qD5Rp6P",
+      "2qDsMbogn9mOCQgNc0xzpP",
+      "2qPW077NvDiutPe3Gn4S9E",
+      "2qUri1qbLFngpPcA8UGe8D",
+      "2qxLrwhAPACfqRNJ2qg0N9",
+      "2r5uaVzi56I8umPPBXAgku",
+      "2rfNFYnCT2WAXMkqZ5PiDc",
+      "2s4YT_DyvEIwBQu$XLcqVB",
+      "2sPrxFKUnDQBesnyFyTX7C",
+      "2sSHD6n39BZQnSaHjLYpnc",
+      "2sVpKMTdb3u8IUv50wOLpo",
+      "2sqOrgHH1BIwrN$KcJhc_B",
+      "2tFeyHM1v51PbS1kDg4mQi",
+      "2tqQAKnbb9Puqr69a3n37D",
+      "2tu8_KoLfDpho5M9F1jtqL",
+      "2uISt8kaPCfvv_omjCtpzC",
+      "2uNgF909j7tPKKB$Pnk58y",
+      "2udBPbKibCZ8zbfpJmtDTM",
+      "2utQBN6QX8$Rqapk6FlejI",
+      "2vt0LWwZ1B$wvl1xJ$rRYX",
+      "2vthESqkPCtexTHr1MwOxj",
+      "2wCVZFSRnBZ8YJ5Ri$bwG7",
+      "2wH9GIWt94mgMKOirAU7CY",
+      "2wzUmDh8LD9BcIe4cEFuli",
+      "2xQk5kDfXAPuhPwfXZ$rgr",
+      "2xTaNf8DzFMfTdt$AJsD2d",
+      "2xcLNHPon6VO6wB_n0EQLF",
+      "2xj7SPlwX4qx17_F2_8HgV",
+      "2xrOyxR9nEifMekjrljPsL",
+      "2xwYlwB1T57OJZ7Vu0xhzF",
+      "2zTK8GIWP5CPRPLmzfTLA_",
+      "2zcvnUe5n40gqSh$BlyVaH",
+      "2zm79Baqz7hvGifG6oryf9",
+      "2zuBJSHsD0OOQvyAI$1_oh",
+      "3$FatfHY1Cg9apAMwbKPN8",
+      "3$Or0IscP2QwYDfcHtTvP$",
+      "3$PC9MkEH1Ex24UD3VHyzP",
+      "3$kYJBEBjCkRuGC4bJp2mQ",
+      "3$z_JpuOL3SPOR9jTaKp6h",
+      "30S9Awv3LEe8VCVTEwi68n",
+      "30oDtenHrAwuYDgWTayiN$",
+      "31Gx3VvgP1fvwL2I0a9YtY",
+      "31Q_5FuqX07QgicqF9UALl",
+      "31UFds84f5oAxxal4G6S8P",
+      "31WZqUkqr2U9UpIQCAkHVB",
+      "31vL2xKtv6b8xITngnOCX4",
+      "32UdM49pfAMxiX5WyXhCuy",
+      "32bs0HOZX0vvvwyZStidn0",
+      "330dYeUbrElh0YlMzoTR7O",
+      "336PxxRqb7$9D3zSdp7W2o",
+      "33jlsNXXLCaQ28opnwDi77",
+      "33rbr8lHzC9wyGLDUf1$oL",
+      "341k0qXuD0rvtNqbyQX8sC",
+      "34z_sfy5r7MxZO_XK2tdyk",
+      "350CUI1c1F0QSJPiZz1wP5",
+      "350UCBmyj8FAuqMhlyCUmZ",
+      "35gnZQeI53KeKv$o8xXWCY",
+      "35jd8lu1fDJAuZoKl4ldDk",
+      "36$lV978n70fzaOS1aGkQb",
+      "36GqY9dAL1U8z7GaExMms3",
+      "36O0Kh7cH6TQcDT6_PZUT$",
+      "37DmcwHRH46vMkO0bCgirD",
+      "37NUOXsmX3z9p4Kk0VJikq",
+      "37pP75EaP1axQNg3rWc_WT",
+      "38g7R7wXv17gWe71J1QVvg",
+      "39pRQ$7l15fOjHNjfl3enL",
+      "39sGTemlXCqwFRicEPZCbl",
+      "3AkI48O_PCCeuXSLwQg5Mp",
+      "3BIJVubgnERQcs0rJzA8XO",
+      "3BS07ph7TB6xbEqPnopfjE",
+      "3BlfjPTqH1qeG63Yox0pCX",
+      "3CSXD6Rbv958Qo9UQc_j7d",
+      "3CXBDjcSTES8AedjLKSfJe",
+      "3Ce34IKWX0CgyqgQMLzqfn",
+      "3CiCcmHpP2K84bQMGsx3y3",
+      "3DDIxElIvCmOW6piyS2d1Q",
+      "3EN96kdYDB2OOGjNLp8e86",
+      "3EYxooj415QgvrtcQsy2Kh",
+      "3EsZp8TeX6TR3B5rI4HKlR",
+      "3EtzNx_Z1BD9$bnmCd_7Ak",
+      "3EyCDlgjv8R9_MyCxnwYxS",
+      "3Fas3llhbBh9X004hBAIlC",
+      "3FbQRBjA12hA$$V1TpgMZN",
+      "3FhKOKIeb8QOyMFfTkmffU",
+      "3GJznf5S911R8L74sMGaVW",
+      "3Gz7u_d1P7IA35Wmtg48Rc",
+      "3HAt_XvHb13AE8gYn28I5g",
+      "3HkP5rwynD2O5u77hTbWsv",
+      "3HyKYtosrEC96fPRcfU8a1",
+      "3I0_zAKh53_PRDghNrS9dg",
+      "3IYA4nCCH8M80noAVj1s7N",
+      "3Js595fxzAHfThl4exBD3r",
+      "3KG27wZLbFaxu7wvjAtGKk",
+      "3KZ2b1pvXFm9M9Ry1f7XBP",
+      "3KZEpyDbXCPw3E3rBdWKma",
+      "3KaloR8018sAKZVwuYVbSu",
+      "3KiAVCT1D1t8Xn0nRB8nld",
+      "3Kn4W2ZqD4K8KzX7iS3xhj",
+      "3L1mIBs6z9ogCIZXMzLon3",
+      "3LbljY7D5Dleprs8wA8XAB",
+      "3LhgbZxOfBS96L3z1ugkAf",
+      "3LxPgFi8zB9O2dL$OVvll8",
+      "3M3dydUxH2hR7Uvg9QNhS$",
+      "3NTkL25Pb8Y8HEKKJUt_B_",
+      "3NpTHgn_j3zx2eDS5wHeXw",
+      "3OLrsLZhv1PQmDyVv_Z4Lj",
+      "3OOVMSU1552vco0YZaaaa0",
+      "3OTyytnFX6cgkJBrCQi6_I",
+      "3OyEtJg2n8hRE1aQ34Qa1Q",
+      "3Pom8En7165Ovrq1bs5st9",
+      "3QEUKhewj50vykoqwkHQYg",
+      "3QI0Za4AD7g9EDuOxKtL4z",
+      "3QoJ6BxnbEJAsAxl5gQcR_",
+      "3QrI2pmPL8WPedMr4WdGPA",
+      "3QvvbxsHP1IRaR5M7CZy9i",
+      "3R1b0LbNrEWAIn8OKiGhF5",
+      "3RZiJ6qDzALv1rgqlu1sqF",
+      "3Rt$$LAsTF7vMcZ8JzPVr4",
+      "3SNBWCgSrBZu7WfzpF18w1",
+      "3TJw0vQUj3IBtvQc_JXfwV",
+      "3TLauWy$r6BP48CfZGppsL",
+      "3TN3HaTRD9tOSDpYD5ChE0",
+      "3TT6371QXFwBiALT2JVdDR",
+      "3TaVJS_WrFjvF4FNvIpjkU",
+      "3Tizqrq5LBwRkVzeahshML",
+      "3U2sFmrfjDax6jh0rEXk$8",
+      "3UEb2iq7D2tOgbX6Mufs$X",
+      "3UFdUoOUjCKeAYjOsvjsYa",
+      "3UHq8yqkf4oQOgspFsMBg$",
+      "3UZtqiBsz5uvWB4kZmuS1Q",
+      "3UcRuggsrAXPWkQpXc3dLn",
+      "3Uvxr2hnf5MBwBbkSxm2tz",
+      "3VEwjtZZHA4P7U0POkvM8h",
+      "3WB_OmiKjCuRLWyouXiTke",
+      "3WgKK2GqL2thS5m4gLxriY",
+      "3WpHRqarrCjOECEV0F8VkX",
+      "3XIgDIN6vBjxvjdvI7ngjF",
+      "3XJSZHVdLFTQTPYNfhA6a2",
+      "3XTmtktyL53gMdILgeHpxW",
+      "3XWJoOAe95r84KuBtu9JdR",
+      "3Xu6SpY4vC89stuKlMWE2n",
+      "3YOWN6kp53UhVDk7gccfjD",
+      "3YVQQ7t1vFE8ej$paGzJX9",
+      "3ZJxNn9Nz6HQakewV2F393",
+      "3Zb0LaH4z9HPmaVjAzVngL",
+      "3ZiHV_RFL3shDKRIJ1fjqB",
+      "3ZjVAeEWfC9wzpoXZ_EwS6",
+      "3ZvIiAd7b8tvll14FCaSxA",
+      "3_B0AFj$92Lftw82L$xWsU",
+      "3_CZje0qzFFfsJdg65CoF_",
+      "3_bYofZKP9lAUHAD3P9WWN",
+      "3_y8v12Lz4KR1UK3TN6qRe",
+      "3aE3QOlsXEGPZvgRhCYpOH",
+      "3agC4hpd53tRnrNunBL7Od",
+      "3asragEFTC7ANo8AbuT5f0",
+      "3bK3oxhJ59BBUaTh_RU3nb",
+      "3c$Xo8yh56dgtfpqOlOZSt",
+      "3c7FFURCHAIuL_Uqfwogkh",
+      "3cBLzORtrFxwCaZldEUxGm",
+      "3cTqMaSBr3wfxDe7CbRYyh",
+      "3cfqOXb3f3Ow95PuTGA8ge",
+      "3cjmnELbT4ZgU434Wpw8$2",
+      "3cjnMny5DF0g1J6kKZWO4Y",
+      "3crVVuymz5l8Xi7YdWo4yG",
+      "3d6U2voMvC8Oso0kmQIjMA",
+      "3dPSMcyiP038aVO12rVuep",
+      "3ddBeFeQz9QvQv9xPTOCTk",
+      "3dzEsQ1lDAcwKwcjHQGYL5",
+      "3e4dHd2$bDqPCEQxkITpEq",
+      "3e8jVE_ETEZugvuYOVjgPL",
+      "3eQ_MQ5er5UeRXq4xxAoKl",
+      "3eUvS6q0P14OC1IuUt0pvP",
+      "3f6i$RL$53ifm9jUfWk0rQ",
+      "3f7Fz2Ssb9qBEvcT1P5nR5",
+      "3f8gKg5kT30h_8UXOmLt72",
+      "3fHoF9ddLDNg7p4qo0Wq7v",
+      "3fUog30lP6pwOTrTR2sk8d",
+      "3fa9JjQTn7bw8pUt5e9Is$",
+      "3fbAZjZW1D0O7cqj1YBy1V",
+      "3g8MS5YmX0Zx4Mf2deNLEd",
+      "3gYFdGsxTBa9PFlMvRAaiF",
+      "3hUHz9q29098WsMJ20lZFe",
+      "3hUfAFTuTCueiBwdehoXNP",
+      "3hbkmd1qbBiPqCbdQME7PO",
+      "3hlocwRv9E28ldFEZcrJKR",
+      "3hmLvediX7gRVGzmAdPrx3",
+      "3hnGLaSkH3SvHIeUtURa3P",
+      "3hyPFx8vT6mvi6nf7P7n2u",
+      "3i9iiZlcT5eQkuRPP$TrLS",
+      "3iSzpa9d93jhTDB7hG0QBW",
+      "3j5r$vfHT3JfqUfpdRoXnP",
+      "3jPBVBqyH6RgTDfklWLj5B",
+      "3jVh8jSJrDvA6MPkB86x3V",
+      "3jurQKaejCqgtlRMQvYO$h",
+      "3k8ejU_PjCWBuPFpm1k2lH",
+      "3kV3mGMIX3BvUw5dL_lJVg",
+      "3kjBbM7cvCYRZ9LLqGksoU",
+      "3knwp7Zd90qPHbstf1VRar",
+      "3lGf1hbrD1_BXZse2Q3o2H",
+      "3lO$9T1S1EYvzBiKnlJUlv",
+      "3lUU1BV1T9OeboWPSlTSt6",
+      "3mQi89EHb4rOWufyKZfZhB",
+      "3mdCjAdrPENxEJc7JsHQHA",
+      "3mi7E48qj1AwGWI_Z0L$OT",
+      "3nHMcJ8q56uR8twwvBap_b",
+      "3nS8Xe8c5BpfdWxU$cBkvz",
+      "3nhdjeVj59Fg23cVlxSI2E",
+      "3o$pVJjC5EqBVH2ZRwJMcp",
+      "3panYjerbCSQl08K8o34mj",
+      "3pwwIpoc57hgvawYgQG32b",
+      "3qMdsXfXrAvuL60mUR_8Vj",
+      "3qT9lE$bTCQB_T41jFK_q6",
+      "3qY_MoOI19oe3eXh00JaM1",
+      "3qlaFAAcPAeh1wBxQgEJ1O",
+      "3qloCPnZDEQBom1ZjBlwJP",
+      "3qz8vRMKXCHubRHdl$maGl",
+      "3rmqVs9ZL3qgw1cva2u9Fv",
+      "3s$opTy0vANQ_jzKgb0VhR",
+      "3s8qTSU1jDRh5lmNIPbN4u",
+      "3sXEZFiePFsxi_o7909$c3",
+      "3shuyF_Yb7yu2P$QLB2s8G",
+      "3t8qjHTuTAigDlC1x7D16b",
+      "3ts3ZsbjXDlv2btICYqqvu",
+      "3txvJd9V1BPhyU$48F$mnF",
+      "3u9W_RePLF$fFnvEZnhAA3",
+      "3uG8sjdwr9WvIJ2E5J1vnl",
+      "3uYK2H0E52Qhz8bK3APcca",
+      "3uvYP4OyH5ufyPIMbZD86h",
+      "3vRTqctWLA386lknYd28_z",
+      "3vTaz$m4D7Mw20Cj4ZCMEW",
+      "3vncPH76n1UeVgD4ElrkJF",
+      "3wT8Lkj1j8dRPSJbjoKEaq",
+      "3wYiknQvv0EvKo$0bWGoQ0",
+      "3wlbgmJJTA7vni80paHaxx",
+      "3wtmcFknrEIBf$$ZaZkjsa",
+      "3x663a8XD65viEHNLVdTxd",
+      "3xKoz5lYr2kBHotkF1f8iz",
+      "3xvQAmf45C8PC3qSvtvqlg",
+      "3yAAZZ86j388XApaG$h1X6",
+      "3yGeEHOp97MPf7P0QPdQGT",
+      "3yNXKcVj99lAvPT2UEyZ2b",
+      "3yl6250Yj7yBi59RVKlXKu",
+      "3zBM1y5eP8WRpfQm18$R2O",
+      "3zXYrOG$5AIAmg3jOwc8e1",
+      "3zaEFaiGrF1ftyFPQrOe_i"
+    ],
+    "ifc_guids_enriched": [
+      {
+        "guid": "0$6TgsobP9PPnqNXqQeskc",
+        "ifc_type": "IfcWindow"
+      },
+      {
+        "guid": "0$JKvhGY93_fJkUQk3tc0K",
+        "ifc_type": "IfcWallStandardCase"
+      },
+      {
+        "guid": "0$h$6iqvH7uuMv8xHW4e2S",
+        "ifc_type": "IfcFurnishingElement"
+      },
+      {
+        "guid": "0$nFj884DCFPyXrOVQ1uBE",
+        "ifc_type": "IfcFurnishingElement"
+      },
+      {
+        "guid": "000vZ5hTfBgR1R0ytKrVZS",
+        "ifc_type": "IfcWindow"
+      },
+      {
+        "guid": "001lu2mo55kwdGauS8LRxn",
+        "ifc_type": "IfcFurnishingElement"
+      },
+      {
+        "guid": "00RjztLorCQgcGEHv7fY3g",
+        "ifc_type": "IfcDoor"
+      },
+      {
+        "guid": "00UNrXETv7oftJb4TQUHq4",
+        "ifc_type": "IfcWindow"
+      },
+      {
+        "guid": "01DPZ9SBn5r9Sivd0bV8Ar",
+        "ifc_type": "IfcSlab"
+      },
+      {
+        "guid": "01Hsj8Zoj47f3xDgoQzQH_",
+        "ifc_type": "IfcWallStandardCase"
+      },
+      {
+        "guid": "01Q5XSApT1A8MVwFMrw27s",
+        "ifc_type": "IfcSlab"
+      },
+      {
+        "guid": "01e2zHdgn5GRyyfNksJ$8a",
+        "ifc_type": "IfcRailing"
+      },
+      {
+        "guid": "03SJ_6GzL72BUsuqP6BUv3",
+        "ifc_type": "IfcWindow"
+      },
+      {
+        "guid": "03TjDzhOTFX9jbLMrZ04Ko",
+        "ifc_type": "IfcSlab"
+      },
+      {
+        "guid": "03eINspibAMB7ulPPvjfHd",
+        "ifc_type": "IfcFurnishingElement"
+      },
+      {
+        "guid": "03hhkFXKT4RPFNu5rDrZPL",
+        "ifc_type": "IfcSpace"
+      },
+      {
+        "guid": "04vGlrThrE5RHdeUGlTFPp",
+        "ifc_type": "IfcFurnishingElement"
+      },
+      {
+        "guid": "054SZ4_9H5tRVfRLsmTmFu",
+        "ifc_type": "IfcWallStandardCase"
+      },
+      {
+        "guid": "05pt4VPQf37w1V18yX4Rbi",
+        "ifc_type": "IfcWallStandardCase"
+      },
+      {
+        "guid": "06IfVSEn91UgGayOp3O7IE",
+        "ifc_type": "IfcWindow"
+      },
+      {
+        "guid": "07S4DtKg9Dsu1Pe9Miw$W5",
+        "ifc_type": "IfcFurnishingElement"
+      },
+      {
+        "guid": "07j7ld5m1AKfwXwsD8BKk6",
+        "ifc_type": "IfcWindow"
+      },
+      {
+        "guid": "08EvXe7d51ZhzVtSteieto",
+        "ifc_type": "IfcWindow"
+      },
+      {
+        "guid": "08Pzy1FAf8zh5TqA5mdXl$",
+        "ifc_type": "IfcFurnishingElement"
+      },
+      {
+        "guid": "08uaDJHLH3FAZ6Hg9FwzkG",
+        "ifc_type": "IfcDoor"
+      },
+      {
+        "guid": "09JX$lRj14w8LMwtAomZqY",
+        "ifc_type": "IfcSlab"
+      },
+      {
+        "guid": "09MDBnUZP8hhAAplbz1Q$1",
+        "ifc_type": "IfcWallStandardCase"
+      },
+      {
+        "guid": "09m2tgyfr9UfikvrKFMkeD",
+        "ifc_type": "IfcSpace"
+      },
+      {
+        "guid": "09nsmlIP1Av8Gqo7k1gGXA",
+        "ifc_type": "IfcWindow"
+      },
+      {
+        "guid": "09wYceIaT6_feeZkzCYLGw",
+        "ifc_type": "IfcFurnishingElement"
+      },
+      {
+        "guid": "0APvzagRfDa8S2CxmCLJFH",
+        "ifc_type": "IfcColumn"
+      },
+      {
+        "guid": "0AlQO9vJD8yQs$jjO$RhN4",
+        "ifc_type": "IfcWindow"
+      },
+      {
+        "guid": "0BEDAo9y13gQ0v5BiWlobp",
+        "ifc_type": "IfcWindow"
+      },
+      {
+        "guid": "0BwbUEtUXCveHWZ7HWUQrv",
+        "ifc_type": "IfcFurnishingElement"
+      },
+      {
+        "guid": "0C68vVxz1F_RziZYAfcHRO",
+        "ifc_type": "IfcFurnishingElement"
+      },
+      {
+        "guid": "0CFMpIkEzADxWz$xDSGgek",
+        "ifc_type": "IfcDoor"
+      },
+      {
+        "guid": "0CGHrXiHv4HBY05$ose5V2",
+        "ifc_type": "IfcWindow"
+      },
+      {
+        "guid": "0CfDD9v019POgJaaj_XgfQ",
+        "ifc_type": "IfcWallStandardCase"
+      },
+      {
+        "guid": "0ChVXF3Lj3cv66fcKII9ok",
+        "ifc_type": "IfcWindow"
+      },
+      {
+        "guid": "0Cp2aAca94mRqMc0MSzZN0",
+        "ifc_type": "IfcWallStandardCase"
+      },
+      {
+        "guid": "0D6CHqaN11nArwOYCNX_5Z",
+        "ifc_type": "IfcFurnishingElement"
+      },
+      {
+        "guid": "0DL0We4nPFyAVGrKFIo$_Q",
+        "ifc_type": "IfcWindow"
+      },
+      {
+        "guid": "0DyvKRpqrDchZau$PoLIcs",
+        "ifc_type": "IfcWindow"
+      },
+      {
+        "guid": "0Ed4kADQn1aAszmSUYcdMy",
+        "ifc_type": "IfcWallStandardCase"
+      },
+      {
+        "guid": "0F7G8tf7P9q8M9AFl$SocW",
+        "ifc_type": "IfcFurnishingElement"
+      },
+      {
+        "guid": "0FQY4AQwf2dup5RArZ6ZOG",
+        "ifc_type": "IfcWallStandardCase"
+      },
+      {
+        "guid": "0GcUba3297CALsDAJ33hol",
+        "ifc_type": "IfcFurnishingElement"
+      },
+      {
+        "guid": "0GqFi1HeT6feINbnmmHPMN",
+        "ifc_type": "IfcFurnishingElement"
+      },
+      {
+        "guid": "0HthpQNkzAiuSXm9HWsQaw",
+        "ifc_type": "IfcDoor"
+      },
+      {
+        "guid": "0HtsZ3YcbDMwJN3vvrSgK9",
+        "ifc_type": "IfcWindow"
+      },
+      {
+        "guid": "0ITxfFtMb2WvSCvmhlelOf",
+        "ifc_type": "IfcWallStandardCase"
+      },
+      {
+        "guid": "0J1SwSeib5NelMocEXw8uQ",
+        "ifc_type": "IfcWindow"
+      },
+      {
+        "guid": "0JdG5rMQr10RkgztM3HqwA",
+        "ifc_type": "IfcDoor"
+      },
+      {
+        "guid": "0JtLRXJlvE_wC5_4sLnvdj",
+        "ifc_type": "IfcWindow"
+      },
+      {
+        "guid": "0K6ICBa1zCjvUnsy8qMIRC",
+        "ifc_type": "IfcSpace"
+      },
+      {
+        "guid": "0KLaJwQuP0euIp_0e1Xccz",
+        "ifc_type": "IfcWallStandardCase"
+      },
+      {
+        "guid": "0KqFIy5jL1Mgh2ggQ4WLch",
+        "ifc_type": "IfcWindow"
+      },
+      {
+        "guid": "0L1ke1dG93fxxhtLVwOTsT",
+        "ifc_type": "IfcWindow"
+      },
+      {
+        "guid": "0LG1dnAtn4qQamxBPgaWX7",
+        "ifc_type": "IfcSlab"
+      },
+      {
+        "guid": "0LmvL42xf8o8gvekhf5kDW",
+        "ifc_type": "IfcWindow"
+      },
+      {
+        "guid": "0M4vLi9CL8HBMODhwUEvP9",
+        "ifc_type": "IfcFurnishingElement"
+      },
+      {
+        "guid": "0M5DbO6eLEYAljcKYr52lj",
+        "ifc_type": "IfcWindow"
+      },
+      {
+        "guid": "0Md6zOio1EyORL9lp07Mhq",
+        "ifc_type": "IfcFurnishingElement"
+      },
+      {
+        "guid": "0MhDBT4Xn35BdD0XgN2Zqz",
+        "ifc_type": "IfcWindow"
+      },
+      {
+        "guid": "0MwwQwktD1EABufkWsF6jR",
+        "ifc_type": "IfcFurnishingElement"
+      },
+      {
+        "guid": "0NhW4VLIbBiuXKiyGrq3kz",
+        "ifc_type": "IfcSlab"
+      },
+      {
+        "guid": "0NlvTwoNb2b9zVnJSo5F73",
+        "ifc_type": "IfcFurnishingElement"
+      },
+      {
+        "guid": "0NwAXV3355GR00was0Pjhg",
+        "ifc_type": "IfcWindow"
+      },
+      {
+        "guid": "0OfiUXCAX6LfIaxpPfB_xJ",
+        "ifc_type": "IfcFurnishingElement"
+      },
+      {
+        "guid": "0OmtQ6_NzE188dQC34v0g6",
+        "ifc_type": "IfcWindow"
+      },
+      {
+        "guid": "0OwNcV9erFMvQIJeFqhaw0",
+        "ifc_type": "IfcFurnishingElement"
+      },
+      {
+        "guid": "0PHxAz4Mz6deTAW0Bg48qa",
+        "ifc_type": "IfcFurnishingElement"
+      },
+      {
+        "guid": "0PRStG8ML5VA5ZHyl6gaeQ",
+        "ifc_type": "IfcWallStandardCase"
+      },
+      {
+        "guid": "0Ps7yhClL6h8h0z4HCWvmA",
+        "ifc_type": "IfcFurnishingElement"
+      },
+      {
+        "guid": "0PyP8DIl91dB01H5Na4r6n",
+        "ifc_type": "IfcWindow"
+      },
+      {
+        "guid": "0QgcTUhxfBlRUTxmdrocfw",
+        "ifc_type": "IfcWindow"
+      },
+      {
+        "guid": "0S8yN4GYfAcee_3jT9azuZ",
+        "ifc_type": "IfcWindow"
+      },
+      {
+        "guid": "0Ti0dr3tHAq8uzw2luJtyI",
+        "ifc_type": "IfcDoor"
+      },
+      {
+        "guid": "0U5AcnRYX7aw$OIZXqMUaR",
+        "ifc_type": "IfcSpace"
+      },
+      {
+        "guid": "0U9x4f675CxAXlkJBnOQjW",
+        "ifc_type": "IfcWindow"
+      },
+      {
+        "guid": "0UiHARbFzF1RT4g_GKem_B",
+        "ifc_type": "IfcSpace"
+      },
+      {
+        "guid": "0Uj41I9z10jhD6G0gjh8bR",
+        "ifc_type": "IfcWallStandardCase"
+      },
+      {
+        "guid": "0UobTn5dzETeVPsaqJjGpw",
+        "ifc_type": "IfcSlab"
+      },
+      {
+        "guid": "0UvsYD1LfBsx91MU4B1EY1",
+        "ifc_type": "IfcWindow"
+      },
+      {
+        "guid": "0V74RtuUH1zQt_CcawQbBc",
+        "ifc_type": "IfcSpace"
+      },
+      {
+        "guid": "0VWZeARNT8IAUcPL5OoYiA",
+        "ifc_type": "IfcSpace"
+      },
+      {
+        "guid": "0Veunyhgf7QxfJXezc1Ydu",
+        "ifc_type": "IfcSpace"
+      },
+      {
+        "guid": "0WJMcpbbzA2e6$Z5dpYikp",
+        "ifc_type": "IfcWindow"
+      },
+      {
+        "guid": "0WVkDf7jjAGhdceJ18iI2g",
+        "ifc_type": "IfcDoor"
+      },
+      {
+        "guid": "0Xbk1qGZnCY9arQDkkuJ8L",
+        "ifc_type": "IfcDoor"
+      },
+      {
+        "guid": "0YCk3WI6TD6QdRsRe9JSgf",
+        "ifc_type": "IfcFurnishingElement"
+      },
+      {
+        "guid": "0YIVuBlyXF3PI_fXw2b_vJ",
+        "ifc_type": "IfcDoor"
+      },
+      {
+        "guid": "0YPT$aZi92A9SqKimjlZgJ",
+        "ifc_type": "IfcFurnishingElement"
+      },
+      {
+        "guid": "0YVYnJBGbDKQ0RN26IQ7HI",
+        "ifc_type": "IfcWallStandardCase"
+      },
+      {
+        "guid": "0Zh1XcHrb67ww2PT6GHvWU",
+        "ifc_type": "IfcFurnishingElement"
+      },
+      {
+        "guid": "0ZkRKInan2QuHsjV669aGn",
+        "ifc_type": "IfcFurnishingElement"
+      },
+      {
+        "guid": "0ZxDbbd5n3VwNQoJuNCWPa",
+        "ifc_type": "IfcFurnishingElement"
+      },
+      {
+        "guid": "0_6U2wqx5EygCAIw2ocirl",
+        "ifc_type": "IfcSlab"
+      },
+      {
+        "guid": "0_SIhNEQD0EBlBOnMVz61A",
+        "ifc_type": "IfcWallStandardCase"
+      },
+      {
+        "guid": "0_TtqXcOrDbeTXyb5q0Uxb",
+        "ifc_type": "IfcSpace"
+      },
+      {
+        "guid": "0_flqizUv5_A_EGt7DzP3T",
+        "ifc_type": "IfcDoor"
+      },
+      {
+        "guid": "0aA9C4EurBxOMEsOhmkvUA",
+        "ifc_type": "IfcFurnishingElement"
+      },
+      {
+        "guid": "0aFvTq1m96zgWbjq4TXV_5",
+        "ifc_type": "IfcDoor"
+      },
+      {
+        "guid": "0aYqrniYTF5OrgY8FDqrZ5",
+        "ifc_type": "IfcFurnishingElement"
+      },
+      {
+        "guid": "0aqwE82KP5aAe5kL$$RBxu",
+        "ifc_type": "IfcWallStandardCase"
+      },
+      {
+        "guid": "0b0LPBmHX6ARvPDJs3OtVG",
+        "ifc_type": "IfcFurnishingElement"
+      },
+      {
+        "guid": "0bg0AtKu104BS2oVEJMTxV",
+        "ifc_type": "IfcWallStandardCase"
+      },
+      {
+        "guid": "0cVuwP1qX3PP0j6C20oeL5",
+        "ifc_type": "IfcWallStandardCase"
+      },
+      {
+        "guid": "0cxniC0UzD0wuIz01g7Uyw",
+        "ifc_type": "IfcWallStandardCase"
+      },
+      {
+        "guid": "0dAxB0XKHC$QriSRAuBxf6",
+        "ifc_type": "IfcWindow"
+      },
+      {
+        "guid": "0dSSxYXuzAJPpIozbSzgnc",
+        "ifc_type": "IfcFurnishingElement"
+      },
+      {
+        "guid": "0dXE$xLxz8MwbtYoTqJPiO",
+        "ifc_type": "IfcSpace"
+      },
+      {
+        "guid": "0dc6ovxJLDww6sjSpu_cfN",
+        "ifc_type": "IfcSpace"
+      },
+      {
+        "guid": "0e_l9mS6T7o9KGSwbjHHGh",
+        "ifc_type": "IfcFurnishingElement"
+      },
+      {
+        "guid": "0ei_X4ZTnDtPQ5R8atgCEB",
+        "ifc_type": "IfcFurnishingElement"
+      },
+      {
+        "guid": "0ejPu6D1zDhuDjPRSjdhyK",
+        "ifc_type": "IfcFurnishingElement"
+      },
+      {
+        "guid": "0f4DwHFrj33es5$Uo7ry7l",
+        "ifc_type": "IfcFurnishingElement"
+      },
+      {
+        "guid": "0f4gVmdAr50OHIxcdU7ZHw",
+        "ifc_type": "IfcWallStandardCase"
+      },
+      {
+        "guid": "0f6kjO4cnBngLgZgtaoBTE",
+        "ifc_type": "IfcSpace"
+      },
+      {
+        "guid": "0fhDs_SDn9a8x9PU70oHGj",
+        "ifc_type": "IfcWallStandardCase"
+      },
+      {
+        "guid": "0g$WjhniHFtBP2XpihTmVn",
+        "ifc_type": "IfcFurnishingElement"
+      },
+      {
+        "guid": "0g8fKmhXn4uAw7n6ZPtqv3",
+        "ifc_type": "IfcFurnishingElement"
+      },
+      {
+        "guid": "0gNf7EDIL42Rl9K1zK6uZD",
+        "ifc_type": "IfcFurnishingElement"
+      },
+      {
+        "guid": "0gf4zLSNHARQiAvK3qkBDz",
+        "ifc_type": "IfcWallStandardCase"
+      },
+      {
+        "guid": "0gyrXe6SXDygYb42YyYA8$",
+        "ifc_type": "IfcFurnishingElement"
+      },
+      {
+        "guid": "0hEXM06OrA5gv_ZOu0dPhm",
+        "ifc_type": "IfcSlab"
+      },
+      {
+        "guid": "0hMAE7lDbCl8oEWalE9nKQ",
+        "ifc_type": "IfcFurnishingElement"
+      },
+      {
+        "guid": "0hNQaAT4D3YwXdr1hlqzEc",
+        "ifc_type": "IfcFurnishingElement"
+      },
+      {
+        "guid": "0ha9$dzvr5hfHL2tup2bF9",
+        "ifc_type": "IfcWindow"
+      },
+      {
+        "guid": "0hvwmXBX99MB50mF38yTGl",
+        "ifc_type": "IfcFurnishingElement"
+      },
+      {
+        "guid": "0i4GPkF$j1$P1_N4yoKfHm",
+        "ifc_type": "IfcSpace"
+      },
+      {
+        "guid": "0i6DZZR0v0YxdGB37YLlHt",
+        "ifc_type": "IfcWindow"
+      },
+      {
+        "guid": "0iabNzJqPCA9ptg2HynprV",
+        "ifc_type": "IfcFurnishingElement"
+      },
+      {
+        "guid": "0jbV$RErb7o9P7rp7ALEd$",
+        "ifc_type": "IfcSpace"
+      },
+      {
+        "guid": "0jh6L39QvEQu8mVKX3j43f",
+        "ifc_type": "IfcSpace"
+      },
+      {
+        "guid": "0jhU4VZ6XCxee3pjfx5VMh",
+        "ifc_type": "IfcSpace"
+      },
+      {
+        "guid": "0l4dSq$O1EhPrwBM112bpI",
+        "ifc_type": "IfcWindow"
+      },
+      {
+        "guid": "0lSCVI_pz9aRsLneS8b7BY",
+        "ifc_type": "IfcWindow"
+      },
+      {
+        "guid": "0m$kvDvUr77f4o9JMw6ppP",
+        "ifc_type": "IfcWindow"
+      },
+      {
+        "guid": "0me8A0uin0PfNjrbQz004W",
+        "ifc_type": "IfcWallStandardCase"
+      },
+      {
+        "guid": "0nG5nAAT595BryB8i9NgTL",
+        "ifc_type": "IfcWallStandardCase"
+      },
+      {
+        "guid": "0nfZvgryT8XBahkto1k2p0",
+        "ifc_type": "IfcFurnishingElement"
+      },
+      {
+        "guid": "0nixpH$hD2$xLwip3vL96O",
+        "ifc_type": "IfcDoor"
+      },
+      {
+        "guid": "0o6iTaAHzAQ9cd4xHGAaOG",
+        "ifc_type": "IfcDoor"
+      },
+      {
+        "guid": "0oB0YIgnPE49CsBpGIdxOR",
+        "ifc_type": "IfcSpace"
+      },
+      {
+        "guid": "0o_5lbt6jCpRs3V3FoLyNr",
+        "ifc_type": "IfcStair"
+      },
+      {
+        "guid": "0p1Mt3h7nDeQ1Q4N9eEl9H",
+        "ifc_type": "IfcDoor"
+      },
+      {
+        "guid": "0pFEckBM5Dw8FooBjva_0M",
+        "ifc_type": "IfcFurnishingElement"
+      },
+      {
+        "guid": "0pPpDUymrBF8Wc$W7Gv4T$",
+        "ifc_type": "IfcWindow"
+      },
+      {
+        "guid": "0qcoNAafTDehoCiz4cM6tx",
+        "ifc_type": "IfcWindow"
+      },
+      {
+        "guid": "0qmJgxjdH3IBqV20iXIpL6",
+        "ifc_type": "IfcFurnishingElement"
+      },
+      {
+        "guid": "0qrtF4SJ55A9KOb0lFJdBL",
+        "ifc_type": "IfcFurnishingElement"
+      },
+      {
+        "guid": "0r2Ds1$6P2DwQ4MwKwJura",
+        "ifc_type": "IfcWindow"
+      },
+      {
+        "guid": "0rbusGsQ597PmiU$ae9AGd",
+        "ifc_type": "IfcFurnishingElement"
+      },
+      {
+        "guid": "0rj_H3BP1CLuO9levpij_h",
+        "ifc_type": "IfcFurnishingElement"
+      },
+      {
+        "guid": "0tNy_iP2b0Ge3YC49v0CwY",
+        "ifc_type": "IfcWallStandardCase"
+      },
+      {
+        "guid": "0tY7LaMUT29xmFtCjT7$Tc",
+        "ifc_type": "IfcFurnishingElement"
+      },
+      {
+        "guid": "0td876Op155QAh5MHPRO05",
+        "ifc_type": "IfcWindow"
+      },
+      {
+        "guid": "0tmT0uM9X7qPqvsQL$Vnrv",
+        "ifc_type": "IfcWindow"
+      },
+      {
+        "guid": "0uC7OD3$5F7v$zL3aaoEig",
+        "ifc_type": "IfcSpace"
+      },
+      {
+        "guid": "0uPiF9LkPAqeB8f54Uy3_C",
+        "ifc_type": "IfcSpace"
+      },
+      {
+        "guid": "0uUUWyhx96pOZ1f$3c_du9",
+        "ifc_type": "IfcWindow"
+      },
+      {
+        "guid": "0vTIWG60z84eKitb_eWAIR",
+        "ifc_type": "IfcDoor"
+      },
+      {
+        "guid": "0vzBs_8_n40xRpBtuEXQlk",
+        "ifc_type": "IfcWindow"
+      },
+      {
+        "guid": "0wOs8cwRn3Cgmq_aLC_Oc2",
+        "ifc_type": "IfcFurnishingElement"
+      },
+      {
+        "guid": "0wyjKOWj91FBee0XT_xPUt",
+        "ifc_type": "IfcFurnishingElement"
+      },
+      {
+        "guid": "0xQhptVzf44Qzhs9jMEILa",
+        "ifc_type": "IfcStair"
+      },
+      {
+        "guid": "0y2gVbrHLBEQOsZrBF1Kyc",
+        "ifc_type": "IfcSlab"
+      },
+      {
+        "guid": "0yQDJsqyH8SxODovysDAPx",
+        "ifc_type": "IfcFurnishingElement"
+      },
+      {
+        "guid": "0yQykg43j93AWHqSKwUt$2",
+        "ifc_type": "IfcFurnishingElement"
+      },
+      {
+        "guid": "0yxjkv3wvEtQPAWliouV$u",
+        "ifc_type": "IfcWindow"
+      },
+      {
+        "guid": "0z_RS2_6n1I8yHTIAjSqL9",
+        "ifc_type": "IfcFurnishingElement"
+      },
+      {
+        "guid": "1$1ClJMbr7AusAHSAhOyRM",
+        "ifc_type": "IfcRailing"
+      },
+      {
+        "guid": "1$mThV5ZH5x8FMcVAgBdXr",
+        "ifc_type": "IfcFurnishingElement"
+      },
+      {
+        "guid": "1$pDx4kq9D$Qv87vSmRHF1",
+        "ifc_type": "IfcWindow"
+      },
+      {
+        "guid": "1$wm4f6k99XRQrMNEvL_1P",
+        "ifc_type": "IfcWindow"
+      },
+      {
+        "guid": "10477ZVeHF7f0uosceJBkS",
+        "ifc_type": "IfcFurnishingElement"
+      },
+      {
+        "guid": "10Km1Yd$XBawEELd4t7awF",
+        "ifc_type": "IfcFurnishingElement"
+      },
+      {
+        "guid": "10upAxJXj11PJZmCgdwBQv",
+        "ifc_type": "IfcWallStandardCase"
+      },
+      {
+        "guid": "11b8rH4vrDfP5iUZizUh0h",
+        "ifc_type": "IfcWallStandardCase"
+      },
+      {
+        "guid": "11fH3jC9D9jh7FjWMadwXd",
+        "ifc_type": "IfcWallStandardCase"
+      },
+      {
+        "guid": "11laNX2p18PByhMz0BVkyn",
+        "ifc_type": "IfcFurnishingElement"
+      },
+      {
+        "guid": "11sAUYYe54ivK9a$vxLFoK",
+        "ifc_type": "IfcFurnishingElement"
+      },
+      {
+        "guid": "123VQUHCn26ei6whtqvtKu",
+        "ifc_type": "IfcDoor"
+      },
+      {
+        "guid": "1286tJlcX2qvmyh3QzzVxk",
+        "ifc_type": "IfcFurnishingElement"
+      },
+      {
+        "guid": "12ErTRo_9EmBI9cF9PJCvF",
+        "ifc_type": "IfcWindow"
+      },
+      {
+        "guid": "12QSop5nvChgTKqP9gJXTR",
+        "ifc_type": "IfcWindow"
+      },
+      {
+        "guid": "12ewscBPX8TO20fizC01c1",
+        "ifc_type": "IfcFurnishingElement"
+      },
+      {
+        "guid": "12gYtU2FL0SvTEriHSUNbg",
+        "ifc_type": "IfcWallStandardCase"
+      },
+      {
+        "guid": "13abvHCs97gOGS1VyTZ36D",
+        "ifc_type": "IfcWindow"
+      },
+      {
+        "guid": "13eMrYb7r9R8JYEJCM4rQ0",
+        "ifc_type": "IfcWallStandardCase"
+      },
+      {
+        "guid": "13zn5GpxPBTen9net4UvLI",
+        "ifc_type": "IfcFurnishingElement"
+      },
+      {
+        "guid": "14E0a5PTb3iemHibLOvZOK",
+        "ifc_type": "IfcWindow"
+      },
+      {
+        "guid": "14Xie0oVj4ZglTrZ1ZM6H_",
+        "ifc_type": "IfcFurnishingElement"
+      },
+      {
+        "guid": "14gIVRaHXBJ8Coly$UiFBy",
+        "ifc_type": "IfcFurnishingElement"
+      },
+      {
+        "guid": "14lr70JTX5Zw5AEQUrJRI6",
+        "ifc_type": "IfcWindow"
+      },
+      {
+        "guid": "14tRml$oP0Rhmg9zCpGzdf",
+        "ifc_type": "IfcWindow"
+      },
+      {
+        "guid": "15DaMtku1EowtkGqYps1Sn",
+        "ifc_type": "IfcWallStandardCase"
+      },
+      {
+        "guid": "15FnNlztjC7vnddscl7y9q",
+        "ifc_type": "IfcWallStandardCase"
+      },
+      {
+        "guid": "15lQJrYf9A4xrsK9Ca$fEc",
+        "ifc_type": "IfcWindow"
+      },
+      {
+        "guid": "16PPPa8vv5HuPkSmln13OV",
+        "ifc_type": "IfcWindow"
+      },
+      {
+        "guid": "17HzXMa29CgeqdGTriCwwh",
+        "ifc_type": "IfcDoor"
+      },
+      {
+        "guid": "17cPNULgTCcun2tAvF_kd4",
+        "ifc_type": "IfcFurnishingElement"
+      },
+      {
+        "guid": "17n0YjYkvEshOmsrIPLGOb",
+        "ifc_type": "IfcDoor"
+      },
+      {
+        "guid": "18PQUIFELEARLM4c0brquf",
+        "ifc_type": "IfcDoor"
+      },
+      {
+        "guid": "18w4XWKEz1fPVH$dCZCDq2",
+        "ifc_type": "IfcWindow"
+      },
+      {
+        "guid": "1AW8GAtUnEYB9XPWOUYKK5",
+        "ifc_type": "IfcSpace"
+      },
+      {
+        "guid": "1BQdTQ$pv3fPMiik0mgcWd",
+        "ifc_type": "IfcFurnishingElement"
+      },
+      {
+        "guid": "1BWbpTElb4dAcW2J6oyRrZ",
+        "ifc_type": "IfcDoor"
+      },
+      {
+        "guid": "1BgnCX27rAT9D_Cf$w4d3b",
+        "ifc_type": "IfcFurnishingElement"
+      },
+      {
+        "guid": "1CC7dXY6v5nAdc$PmuzWuu",
+        "ifc_type": "IfcWindow"
+      },
+      {
+        "guid": "1DD7a7jY58OvAb5Q8BLeLd",
+        "ifc_type": "IfcFurnishingElement"
+      },
+      {
+        "guid": "1DPAiLw8z7UOS6MROTEe9q",
+        "ifc_type": "IfcWallStandardCase"
+      },
+      {
+        "guid": "1DxredyET5bf_85HZe8$FO",
+        "ifc_type": "IfcSpace"
+      },
+      {
+        "guid": "1DzsOFtvv7WQtyhwR4rtky",
+        "ifc_type": "IfcRailing"
+      },
+      {
+        "guid": "1E2pL$RPP0l9aelib_UXhX",
+        "ifc_type": "IfcFurnishingElement"
+      },
+      {
+        "guid": "1EjnchXi9Esx$bY6vHG2RD",
+        "ifc_type": "IfcDoor"
+      },
+      {
+        "guid": "1FCKjvOWnEAv7x1dg2f7BI",
+        "ifc_type": "IfcDoor"
+      },
+      {
+        "guid": "1FE8CtiW100xXfCcvMbGZY",
+        "ifc_type": "IfcFurnishingElement"
+      },
+      {
+        "guid": "1FkOlh8oXEMBSG67XHRHzZ",
+        "ifc_type": "IfcFurnishingElement"
+      },
+      {
+        "guid": "1G74dAb9j0svW4u5KST1Xv",
+        "ifc_type": "IfcFurnishingElement"
+      },
+      {
+        "guid": "1GL3Bl4yrCY9XKlcdMQiXb",
+        "ifc_type": "IfcSlab"
+      },
+      {
+        "guid": "1GW5TEwET1CgdSDwJMg0Do",
+        "ifc_type": "IfcFurnishingElement"
+      },
+      {
+        "guid": "1GfjDdfNDDqgfciMAwYG5c",
+        "ifc_type": "IfcFurnishingElement"
+      },
+      {
+        "guid": "1GtYUXG753_h6i4vKAf46v",
+        "ifc_type": "IfcSpace"
+      },
+      {
+        "guid": "1HjBOhu_1CKQqWZRKqFAKM",
+        "ifc_type": "IfcWallStandardCase"
+      },
+      {
+        "guid": "1I4mvNGj58VPS4IqdvGDOQ",
+        "ifc_type": "IfcSpace"
+      },
+      {
+        "guid": "1II2wI2iz2xugPBtxLqfRA",
+        "ifc_type": "IfcWindow"
+      },
+      {
+        "guid": "1Irg_U9z1CFgCoHXTaJ73y",
+        "ifc_type": "IfcWindow"
+      },
+      {
+        "guid": "1JeAYUvIPDgf0MExGbWX8m",
+        "ifc_type": "IfcFurnishingElement"
+      },
+      {
+        "guid": "1K1TcIE8XFn8c1A5sopbGz",
+        "ifc_type": "IfcWallStandardCase"
+      },
+      {
+        "guid": "1K9shFYpvAiODk_sr0FdfC",
+        "ifc_type": "IfcWindow"
+      },
+      {
+        "guid": "1KKnvDZrr6qPZi0fbRfk_i",
+        "ifc_type": "IfcWindow"
+      },
+      {
+        "guid": "1K_d1XY_H0eR6YQt18Z3A$",
+        "ifc_type": "IfcFurnishingElement"
+      },
+      {
+        "guid": "1Kl5_Wzb98HOSGZ8eaBX2f",
+        "ifc_type": "IfcStair"
+      },
+      {
+        "guid": "1LVv$xQpj6k8KE6pcNlDDU",
+        "ifc_type": "IfcSpace"
+      },
+      {
+        "guid": "1LnXM52pj1uP_ZpDnRRCRj",
+        "ifc_type": "IfcWallStandardCase"
+      },
+      {
+        "guid": "1LxqA4yVP4kB4jwzvOrfdp",
+        "ifc_type": "IfcFurnishingElement"
+      },
+      {
+        "guid": "1MlsdMSb17ygNfEs7N22qC",
+        "ifc_type": "IfcDoor"
+      },
+      {
+        "guid": "1Mr2sTBdr1xvpLwkrwJazC",
+        "ifc_type": "IfcFurnishingElement"
+      },
+      {
+        "guid": "1NXpkcMSL7LwDALwcFkxMv",
+        "ifc_type": "IfcFurnishingElement"
+      },
+      {
+        "guid": "1Nuu5OpifASuV5Obbpb0tT",
+        "ifc_type": "IfcRailing"
+      },
+      {
+        "guid": "1OLRx1anXAohtkhV733dGP",
+        "ifc_type": "IfcWindow"
+      },
+      {
+        "guid": "1OQ6lS92bEv8IU1oObylOf",
+        "ifc_type": "IfcWindow"
+      },
+      {
+        "guid": "1OV17CuXX2yOi2aX$NydU3",
+        "ifc_type": "IfcWindow"
+      },
+      {
+        "guid": "1OeButDUzCWPGfp3wmTIEe",
+        "ifc_type": "IfcWindow"
+      },
+      {
+        "guid": "1On7utzJX5t9QaOztb5SZH",
+        "ifc_type": "IfcFurnishingElement"
+      },
+      {
+        "guid": "1PZopcCGLE1gg8vjYpfhIA",
+        "ifc_type": "IfcWallStandardCase"
+      },
+      {
+        "guid": "1PjIpUMEnBpAnz4ixm0QoT",
+        "ifc_type": "IfcFurnishingElement"
+      },
+      {
+        "guid": "1Q1MFJN9j2pv1BLE6RiOuK",
+        "ifc_type": "IfcFurnishingElement"
+      },
+      {
+        "guid": "1Q1gG8rYr9OgXFwTFYGxnT",
+        "ifc_type": "IfcColumn"
+      },
+      {
+        "guid": "1QWDYFVQXFiuwoubSkSG48",
+        "ifc_type": "IfcFurnishingElement"
+      },
+      {
+        "guid": "1QjkZhkJHDXvqiuYRJXgHb",
+        "ifc_type": "IfcWallStandardCase"
+      },
+      {
+        "guid": "1R0L929Q9CdAWif7mN_tix",
+        "ifc_type": "IfcFurnishingElement"
+      },
+      {
+        "guid": "1RCVW73Oj2bu8iBqsndt0W",
+        "ifc_type": "IfcFurnishingElement"
+      },
+      {
+        "guid": "1RP4kkhTDFJuLugWfrM_1s",
+        "ifc_type": "IfcSpace"
+      },
+      {
+        "guid": "1RzK_sJZL8FAgD5$F6uQkd",
+        "ifc_type": "IfcFurnishingElement"
+      },
+      {
+        "guid": "1Rzexj$TXFD8wcAAKUvjkv",
+        "ifc_type": "IfcFurnishingElement"
+      },
+      {
+        "guid": "1SOfm38Sr3TuQ2VmMVHkIk",
+        "ifc_type": "IfcFurnishingElement"
+      },
+      {
+        "guid": "1SYrCsD5b06witWXPZMU56",
+        "ifc_type": "IfcFurnishingElement"
+      },
+      {
+        "guid": "1T1LBp0uL5Nu7AUgOR0Fag",
+        "ifc_type": "IfcFurnishingElement"
+      },
+      {
+        "guid": "1TG_f7WfXACvGvZKFbVS6v",
+        "ifc_type": "IfcWallStandardCase"
+      },
+      {
+        "guid": "1U0C1y7wv1vwIyersUJ1OK",
+        "ifc_type": "IfcFurnishingElement"
+      },
+      {
+        "guid": "1U1oW1sAHBYQKKweh9c7E2",
+        "ifc_type": "IfcWallStandardCase"
+      },
+      {
+        "guid": "1U75ejClv3dQdMZ31HFglJ",
+        "ifc_type": "IfcWindow"
+      },
+      {
+        "guid": "1UJnRoYuXDo8ukuFR0M0uj",
+        "ifc_type": "IfcWindow"
+      },
+      {
+        "guid": "1VhUd1CGD2g8UutVlYLkue",
+        "ifc_type": "IfcWindow"
+      },
+      {
+        "guid": "1VnKPbGUf8jAe4_g4_t6qn",
+        "ifc_type": "IfcFurnishingElement"
+      },
+      {
+        "guid": "1W7MHVAMr68wA_RXr2l$FR",
+        "ifc_type": "IfcFurnishingElement"
+      },
+      {
+        "guid": "1WGpVnFtzE7xNQ0hhegKo8",
+        "ifc_type": "IfcRailing"
+      },
+      {
+        "guid": "1Wa4Z7NrXAHwCBRQNj0Cft",
+        "ifc_type": "IfcWindow"
+      },
+      {
+        "guid": "1Wf59vCvr60f0gYAhSG32Y",
+        "ifc_type": "IfcFurnishingElement"
+      },
+      {
+        "guid": "1X8ISgOSf99vUFSjfvAmt3",
+        "ifc_type": "IfcFurnishingElement"
+      },
+      {
+        "guid": "1XFei80jz5HuhRQ3nkwKNk",
+        "ifc_type": "IfcWallStandardCase"
+      },
+      {
+        "guid": "1YJMbhLR951gL2GWABG5x4",
+        "ifc_type": "IfcFurnishingElement"
+      },
+      {
+        "guid": "1ZQVrHlMD3n9zdt2n1Q9Ch",
+        "ifc_type": "IfcWallStandardCase"
+      },
+      {
+        "guid": "1ZkrmZCfvDUe2ucUcWc7PF",
+        "ifc_type": "IfcWallStandardCase"
+      },
+      {
+        "guid": "1_Evy7T$DCiwLgTMLHCRoe",
+        "ifc_type": "IfcSpace"
+      },
+      {
+        "guid": "1_H_m5RiH9X8BR$Fz7YY7j",
+        "ifc_type": "IfcWindow"
+      },
+      {
+        "guid": "1_UD$NAdH5j8VQ4M152ONb",
+        "ifc_type": "IfcWindow"
+      },
+      {
+        "guid": "1_gfp1z4z9L8T0WrSsfGMo",
+        "ifc_type": "IfcFurnishingElement"
+      },
+      {
+        "guid": "1_hrYGMATEmeNbEHgfoKxd",
+        "ifc_type": "IfcDoor"
+      },
+      {
+        "guid": "1a3ixYyUn0QO4HWUYKN$4p",
+        "ifc_type": "IfcSpace"
+      },
+      {
+        "guid": "1aCt7Z_VfBc8zwGoxehfhE",
+        "ifc_type": "IfcFurnishingElement"
+      },
+      {
+        "guid": "1aHvr85u1DxuE5GbK6n65k",
+        "ifc_type": "IfcFurnishingElement"
+      },
+      {
+        "guid": "1aejkGBNz2FuRzjxv1SLrw",
+        "ifc_type": "IfcWallStandardCase"
+      },
+      {
+        "guid": "1ame9iIALAvw$79YOmjYpD",
+        "ifc_type": "IfcWallStandardCase"
+      },
+      {
+        "guid": "1axMfr5oLBgOS3LHyi46$t",
+        "ifc_type": "IfcFurnishingElement"
+      },
+      {
+        "guid": "1bBYVH$oL5ORExvNxEoec1",
+        "ifc_type": "IfcFurnishingElement"
+      },
+      {
+        "guid": "1bxtpaVk912hlBqFs8DpVp",
+        "ifc_type": "IfcWindow"
+      },
+      {
+        "guid": "1cHXMbICn1WhQfo8g2ZwtI",
+        "ifc_type": "IfcWindow"
+      },
+      {
+        "guid": "1coZzBH1f7pxg7wn$hDQxr",
+        "ifc_type": "IfcWallStandardCase"
+      },
+      {
+        "guid": "1d9QvK4Qv1Iem3fiUhniQB",
+        "ifc_type": "IfcDoor"
+      },
+      {
+        "guid": "1dMEjnMYb30fvDOMo6UnWr",
+        "ifc_type": "IfcFurnishingElement"
+      },
+      {
+        "guid": "1e37$aOvHAn8RjUTHO3fVt",
+        "ifc_type": "IfcRailing"
+      },
+      {
+        "guid": "1f$gTvlHX8GhKd604sQm2W",
+        "ifc_type": "IfcFurnishingElement"
+      },
+      {
+        "guid": "1fN0dUKvfE4x8uHeMcb2A4",
+        "ifc_type": "IfcWindow"
+      },
+      {
+        "guid": "1fPWXlbezBARmrmO_Y9jDU",
+        "ifc_type": "IfcWindow"
+      },
+      {
+        "guid": "1feGWn8gHCpO93K4dz4gbc",
+        "ifc_type": "IfcFurnishingElement"
+      },
+      {
+        "guid": "1gEdScl$T7E8EEVM27peQB",
+        "ifc_type": "IfcFurnishingElement"
+      },
+      {
+        "guid": "1gOmYslDr1suTYoJuY1bx$",
+        "ifc_type": "IfcWallStandardCase"
+      },
+      {
+        "guid": "1gw9pvArXFYfZkbYdrwJwh",
+        "ifc_type": "IfcDoor"
+      },
+      {
+        "guid": "1gxRBxWbf8oRRUychif_cc",
+        "ifc_type": "IfcWindow"
+      },
+      {
+        "guid": "1iDSDe5Zr2URYEWxFEwChZ",
+        "ifc_type": "IfcWallStandardCase"
+      },
+      {
+        "guid": "1iMOcFqIjEcv5ELCYYrEBA",
+        "ifc_type": "IfcFurnishingElement"
+      },
+      {
+        "guid": "1jJ7opRcX6uevup8Hnq0$2",
+        "ifc_type": "IfcSpace"
+      },
+      {
+        "guid": "1kipoXIGrCGwrOTfUS4l5M",
+        "ifc_type": "IfcWallStandardCase"
+      },
+      {
+        "guid": "1kux6efQT9SPgiZFaNhkv5",
+        "ifc_type": "IfcFurnishingElement"
+      },
+      {
+        "guid": "1lUbm8UC9BRhi6_rj8flXo",
+        "ifc_type": "IfcWindow"
+      },
+      {
+        "guid": "1lclf89IDDS8I01Hi8Sb8Z",
+        "ifc_type": "IfcWindow"
+      },
+      {
+        "guid": "1lf5dxZ1LE_xJj$eJu8Rhu",
+        "ifc_type": "IfcDoor"
+      },
+      {
+        "guid": "1loQAAB191MA5YmsaMJHkI",
+        "ifc_type": "IfcSpace"
+      },
+      {
+        "guid": "1m13_kW2X8DhPK7Uom15kV",
+        "ifc_type": "IfcSlab"
+      },
+      {
+        "guid": "1mNoyQNRjFqALu0EZLqVjE",
+        "ifc_type": "IfcSlab"
+      },
+      {
+        "guid": "1mSLMfkcfCPRJKG_3bRRxE",
+        "ifc_type": "IfcWallStandardCase"
+      },
+      {
+        "guid": "1mUlkaN4jFkfHh1zNVHhGj",
+        "ifc_type": "IfcWindow"
+      },
+      {
+        "guid": "1mxN55cZPF6hKlsvawmd2i",
+        "ifc_type": "IfcWindow"
+      },
+      {
+        "guid": "1nDSxVMDT3hh2Ql2HEz6Lg",
+        "ifc_type": "IfcDoor"
+      },
+      {
+        "guid": "1njbY3IMb4IedX5fLGTCRc",
+        "ifc_type": "IfcDoor"
+      },
+      {
+        "guid": "1nsRm1QQb1xwWpzzFR7Ax3",
+        "ifc_type": "IfcSpace"
+      },
+      {
+        "guid": "1oG$NgSrz3Y9NtZlkjCKNH",
+        "ifc_type": "IfcFurnishingElement"
+      },
+      {
+        "guid": "1oKaKV7Wz8IOJ10cA1PGWP",
+        "ifc_type": "IfcSpace"
+      },
+      {
+        "guid": "1oYD_Z9ybB_h3cLF0sBrlO",
+        "ifc_type": "IfcWindow"
+      },
+      {
+        "guid": "1ouI6iS8H4iveeYlQVR6wM",
+        "ifc_type": "IfcWindow"
+      },
+      {
+        "guid": "1p4YfqvYLCyfRRiNruiahD",
+        "ifc_type": "IfcDoor"
+      },
+      {
+        "guid": "1pEJsF8kH4BQ$w9DVNUS8V",
+        "ifc_type": "IfcWindow"
+      },
+      {
+        "guid": "1pG7ErnqL79fYOSoJhY$mD",
+        "ifc_type": "IfcSpace"
+      },
+      {
+        "guid": "1pOW7Mn9TD$xI0y62RCLDe",
+        "ifc_type": "IfcWallStandardCase"
+      },
+      {
+        "guid": "1pPdANFrDBBhYWYhTHEEHn",
+        "ifc_type": "IfcWindow"
+      },
+      {
+        "guid": "1piAuVWKr1vB9nZx_vUax_",
+        "ifc_type": "IfcRailing"
+      },
+      {
+        "guid": "1pje_D_or3NPRN0K90aQGI",
+        "ifc_type": "IfcWindow"
+      },
+      {
+        "guid": "1pwulCAzX8FuWzCuScT$77",
+        "ifc_type": "IfcFurnishingElement"
+      },
+      {
+        "guid": "1q4vzT$i54VvZIWlsohkjs",
+        "ifc_type": "IfcFurnishingElement"
+      },
+      {
+        "guid": "1qHIiTcLf7zwz3pTXujZ3t",
+        "ifc_type": "IfcSpace"
+      },
+      {
+        "guid": "1qabSjaY9ExfS9$TGOdAJp",
+        "ifc_type": "IfcWallStandardCase"
+      },
+      {
+        "guid": "1r5F044u5Ch9IwbSp3VAFh",
+        "ifc_type": "IfcFurnishingElement"
+      },
+      {
+        "guid": "1r7dVjs_50zw9skBo0gwIq",
+        "ifc_type": "IfcWallStandardCase"
+      },
+      {
+        "guid": "1rF0m$ayDDZwrULyvU6hAS",
+        "ifc_type": "IfcFurnishingElement"
+      },
+      {
+        "guid": "1rOyQwjfjEiBsbGTIeM8xP",
+        "ifc_type": "IfcFurnishingElement"
+      },
+      {
+        "guid": "1ruBd5KBP6ZP9AhR6$WWX4",
+        "ifc_type": "IfcFurnishingElement"
+      },
+      {
+        "guid": "1s0I4MS9j8Iu9GUFHzJ9cI",
+        "ifc_type": "IfcFurnishingElement"
+      },
+      {
+        "guid": "1s2ucU7sz6WPNdY1u8lvSQ",
+        "ifc_type": "IfcWindow"
+      },
+      {
+        "guid": "1sX1eJEdn4tx6WnOEIL8As",
+        "ifc_type": "IfcSlab"
+      },
+      {
+        "guid": "1t1oVJnh17iuvuQ5uyeLr_",
+        "ifc_type": "IfcFurnishingElement"
+      },
+      {
+        "guid": "1t4Zdb3Vv8mQLPoMeqevrn",
+        "ifc_type": "IfcWindow"
+      },
+      {
+        "guid": "1tD8H76Wj8rwVBPPIEaOBk",
+        "ifc_type": "IfcWindow"
+      },
+      {
+        "guid": "1tKUxOe3b3mPp3I4yeL1Rz",
+        "ifc_type": "IfcFurnishingElement"
+      },
+      {
+        "guid": "1tQgCOlQ19deavPeJlRZDx",
+        "ifc_type": "IfcWallStandardCase"
+      },
+      {
+        "guid": "1tzQtGg6DBJOHJ8$0$tVUx",
+        "ifc_type": "IfcFurnishingElement"
+      },
+      {
+        "guid": "1u4dzm1Ej6VxuWWX2hSHEy",
+        "ifc_type": "IfcWallStandardCase"
+      },
+      {
+        "guid": "1uDQb3wH95JQTlYH_Y617r",
+        "ifc_type": "IfcDoor"
+      },
+      {
+        "guid": "1uJooYa2n4hffNW04AKDA2",
+        "ifc_type": "IfcWallStandardCase"
+      },
+      {
+        "guid": "1ufhCZbhH2Ifud2RWdYCPS",
+        "ifc_type": "IfcDoor"
+      },
+      {
+        "guid": "1urUcYP71DIf1u38ogU1RV",
+        "ifc_type": "IfcWallStandardCase"
+      },
+      {
+        "guid": "1vWhxAiTL1RR3r4R3eC2Vv",
+        "ifc_type": "IfcSpace"
+      },
+      {
+        "guid": "1vevu6ekH25hciBayNqSbV",
+        "ifc_type": "IfcWindow"
+      },
+      {
+        "guid": "1wB4a7dCr10hjA64sQASOs",
+        "ifc_type": "IfcFurnishingElement"
+      },
+      {
+        "guid": "1wThYq9f17wPWKLBsNOeYG",
+        "ifc_type": "IfcFurnishingElement"
+      },
+      {
+        "guid": "1wk9c1dpX2_PJQtcSI9FcM",
+        "ifc_type": "IfcWallStandardCase"
+      },
+      {
+        "guid": "1woJxRP9rBzA0NGvvq6Jbs",
+        "ifc_type": "IfcWindow"
+      },
+      {
+        "guid": "1x6b5f29L53P6PEc81$dZn",
+        "ifc_type": "IfcFurnishingElement"
+      },
+      {
+        "guid": "1xD7nIclXAbe0AcpTv8C3w",
+        "ifc_type": "IfcWindow"
+      },
+      {
+        "guid": "1xQpZQIW58RfNRU7w3kJuF",
+        "ifc_type": "IfcFurnishingElement"
+      },
+      {
+        "guid": "1xVAErrPn9h9PZS4j$g3G8",
+        "ifc_type": "IfcWindow"
+      },
+      {
+        "guid": "1xlLX8Zrj9wAZCni6ROM5N",
+        "ifc_type": "IfcWindow"
+      },
+      {
+        "guid": "1xsJfsSWbCSBCPqZG84tEN",
+        "ifc_type": "IfcFurnishingElement"
+      },
+      {
+        "guid": "1y52BJ9iLBoAyZV5YvNxz0",
+        "ifc_type": "IfcWallStandardCase"
+      },
+      {
+        "guid": "1y8o9bXb9Emg30E5lE5c4o",
+        "ifc_type": "IfcFurnishingElement"
+      },
+      {
+        "guid": "1yNitoSSf7mQHrIxramT2j",
+        "ifc_type": "IfcFurnishingElement"
+      },
+      {
+        "guid": "1yZQvqj15Ab8eMXDuz85Dy",
+        "ifc_type": "IfcSpace"
+      },
+      {
+        "guid": "1z0qMKUIT5IxhyyHbF4ocp",
+        "ifc_type": "IfcWindow"
+      },
+      {
+        "guid": "1zknH7zvP9hxs5fxl0m$NM",
+        "ifc_type": "IfcFurnishingElement"
+      },
+      {
+        "guid": "1zxqAr$Mf44Qt0StYZlpmU",
+        "ifc_type": "IfcWallStandardCase"
+      },
+      {
+        "guid": "2$R4rUG1nFkBAylN9aGNhb",
+        "ifc_type": "IfcDoor"
+      },
+      {
+        "guid": "2$ggPbypH5bewZ6ww_a1T0",
+        "ifc_type": "IfcFurnishingElement"
+      },
+      {
+        "guid": "2$nPiau5D04f53gf5UX3yP",
+        "ifc_type": "IfcWallStandardCase"
+      },
+      {
+        "guid": "2$oqR_D2H8qOOk0Dye6UwH",
+        "ifc_type": "IfcWallStandardCase"
+      },
+      {
+        "guid": "2$tv64Cn5DZx8YisuS365o",
+        "ifc_type": "IfcDoor"
+      },
+      {
+        "guid": "20JhNkjN59TAeGj1FCwzAo",
+        "ifc_type": "IfcFurnishingElement"
+      },
+      {
+        "guid": "20nncC0vDDp9h64AX6XevC",
+        "ifc_type": "IfcDoor"
+      },
+      {
+        "guid": "20vQ1GzuvF_PTyxE9uwMwj",
+        "ifc_type": "IfcFurnishingElement"
+      },
+      {
+        "guid": "22eq1cKyX4ORpHxEO$xo4v",
+        "ifc_type": "IfcWindow"
+      },
+      {
+        "guid": "22mYo$ZgTCP90ywROIM98L",
+        "ifc_type": "IfcWindow"
+      },
+      {
+        "guid": "22nrSGy7r6DOK9atRWIN2y",
+        "ifc_type": "IfcFurnishingElement"
+      },
+      {
+        "guid": "22xmLeW115ag7Oc8smTySp",
+        "ifc_type": "IfcFurnishingElement"
+      },
+      {
+        "guid": "23NwekTZP52g8Rswy$C86L",
+        "ifc_type": "IfcWindow"
+      },
+      {
+        "guid": "23PhpBVjn93AtYg$TgQDLi",
+        "ifc_type": "IfcFurnishingElement"
+      },
+      {
+        "guid": "23l$qeWIPEDfZM4gVatE2N",
+        "ifc_type": "IfcFurnishingElement"
+      },
+      {
+        "guid": "24$uaJIhH2ouGJkH7Wd6Cg",
+        "ifc_type": "IfcWindow"
+      },
+      {
+        "guid": "24JOkmJxf0GOisNyZ3FF$C",
+        "ifc_type": "IfcFurnishingElement"
+      },
+      {
+        "guid": "24UZuOfCf3JhP_9U8SWMuK",
+        "ifc_type": "IfcDoor"
+      },
+      {
+        "guid": "24vVAUYDH2SetutQQsZBMv",
+        "ifc_type": "IfcSpace"
+      },
+      {
+        "guid": "25CC32yK130ALlKsnej9JW",
+        "ifc_type": "IfcSpace"
+      },
+      {
+        "guid": "25NDKbpWH5r94ho13fJMeb",
+        "ifc_type": "IfcSpace"
+      },
+      {
+        "guid": "25QUQJ9jHAFengkpc9N7GR",
+        "ifc_type": "IfcSpace"
+      },
+      {
+        "guid": "2636AictfCaBavk86H6D4D",
+        "ifc_type": "IfcWindow"
+      },
+      {
+        "guid": "26SkGOcmP0WOaNvJq6qTX7",
+        "ifc_type": "IfcFurnishingElement"
+      },
+      {
+        "guid": "26U0nxarH8_x8tgH561X5B",
+        "ifc_type": "IfcRailing"
+      },
+      {
+        "guid": "26eKyZ3PT1Shdb5Xv0LatX",
+        "ifc_type": "IfcFurnishingElement"
+      },
+      {
+        "guid": "26mrcAJmP0oONv21v_UcLA",
+        "ifc_type": "IfcFurnishingElement"
+      },
+      {
+        "guid": "27$3O5O5r4zP4FJdp1zwdN",
+        "ifc_type": "IfcWindow"
+      },
+      {
+        "guid": "27_DcwcBj4pR51s85xqpTA",
+        "ifc_type": "IfcWindow"
+      },
+      {
+        "guid": "28SmbiP0L7jguMtcYb5tR1",
+        "ifc_type": "IfcWallStandardCase"
+      },
+      {
+        "guid": "28jtanJLnD68zXO6BYmgve",
+        "ifc_type": "IfcWindow"
+      },
+      {
+        "guid": "28pY$eTgz34vpE27jGTytk",
+        "ifc_type": "IfcWindow"
+      },
+      {
+        "guid": "29QiFsnBr6CgjK4aJmQ5ED",
+        "ifc_type": "IfcFurnishingElement"
+      },
+      {
+        "guid": "29Qs7IkSHDse$fFtMm_UoG",
+        "ifc_type": "IfcFurnishingElement"
+      },
+      {
+        "guid": "29dtO28k16G9baf14UO37j",
+        "ifc_type": "IfcSpace"
+      },
+      {
+        "guid": "29qQ5ECrL6nQEhooPP__BH",
+        "ifc_type": "IfcDoor"
+      },
+      {
+        "guid": "2AXKOsn1P81ALezwsDldNa",
+        "ifc_type": "IfcWallStandardCase"
+      },
+      {
+        "guid": "2BAQ2TsDfFQwm_jkfGU81b",
+        "ifc_type": "IfcFurnishingElement"
+      },
+      {
+        "guid": "2BKSigZcT9LPO64JjoTNF4",
+        "ifc_type": "IfcWindow"
+      },
+      {
+        "guid": "2BV8xGkm94E8NCuKck6qCF",
+        "ifc_type": "IfcFurnishingElement"
+      },
+      {
+        "guid": "2Bcq7G1OfCQxI3Qq2VL1RX",
+        "ifc_type": "IfcFurnishingElement"
+      },
+      {
+        "guid": "2C1iPnad1Ck8zwAioI$XGI",
+        "ifc_type": "IfcFurnishingElement"
+      },
+      {
+        "guid": "2C1mTF6lD8mgYJqKrvvqbc",
+        "ifc_type": "IfcWindow"
+      },
+      {
+        "guid": "2C5lQ3NhPCegfTg9Z1ac7G",
+        "ifc_type": "IfcWindow"
+      },
+      {
+        "guid": "2CH_JhJHP4QhBNQW5I_$p3",
+        "ifc_type": "IfcFurnishingElement"
+      },
+      {
+        "guid": "2CnQ7ixwv8A9Jwtk_6wiBp",
+        "ifc_type": "IfcWindow"
+      },
+      {
+        "guid": "2E10mbuJn7xfIy4jOWJKPm",
+        "ifc_type": "IfcWallStandardCase"
+      },
+      {
+        "guid": "2E2TaOnqD0chpbuH8tXCpW",
+        "ifc_type": "IfcSpace"
+      },
+      {
+        "guid": "2ED0MLfrf17BXIsuJYCs7R",
+        "ifc_type": "IfcSpace"
+      },
+      {
+        "guid": "2ESvsFh7v5BhidcSw$NlVS",
+        "ifc_type": "IfcFurnishingElement"
+      },
+      {
+        "guid": "2FYBB$DerEng8G$eISvGgZ",
+        "ifc_type": "IfcDoor"
+      },
+      {
+        "guid": "2FZD1g3DX6Lf1xKxpeANT$",
+        "ifc_type": "IfcWindow"
+      },
+      {
+        "guid": "2FhF5ftpfAoR5u9P0zRDN2",
+        "ifc_type": "IfcWindow"
+      },
+      {
+        "guid": "2G3Zgh3YLFBxViczryC8tv",
+        "ifc_type": "IfcSpace"
+      },
+      {
+        "guid": "2GIKSl4yvD7wO8pi7zg$sQ",
+        "ifc_type": "IfcDoor"
+      },
+      {
+        "guid": "2HUtvXxkDFoO6CX6ZGSxv2",
+        "ifc_type": "IfcWindow"
+      },
+      {
+        "guid": "2Hh$tXimL1_Aogi9jn1cZ4",
+        "ifc_type": "IfcSpace"
+      },
+      {
+        "guid": "2J6cZ8ikD0LQU8mWRIxn7Z",
+        "ifc_type": "IfcFurnishingElement"
+      },
+      {
+        "guid": "2J8eOGmDvFBugacRXH1u$T",
+        "ifc_type": "IfcWallStandardCase"
+      },
+      {
+        "guid": "2JLDJqS39FHgmOzoWdVdP_",
+        "ifc_type": "IfcWindow"
+      },
+      {
+        "guid": "2JMzFDlyLC_vpXgeQ4GDNH",
+        "ifc_type": "IfcWindow"
+      },
+      {
+        "guid": "2JXm8iNNv7LfVrBi4zO_Vd",
+        "ifc_type": "IfcWallStandardCase"
+      },
+      {
+        "guid": "2KWGkABzf5YuhLq7$mydKO",
+        "ifc_type": "IfcWindow"
+      },
+      {
+        "guid": "2LES77BC56KQ3R7uNhrxe2",
+        "ifc_type": "IfcWallStandardCase"
+      },
+      {
+        "guid": "2LkcdSrN1BN9bjMXtrVXB5",
+        "ifc_type": "IfcWindow"
+      },
+      {
+        "guid": "2LrttlMCD93gsPHs8eydhh",
+        "ifc_type": "IfcWindow"
+      },
+      {
+        "guid": "2Luo2PAnn99uT1hjBk4Vyq",
+        "ifc_type": "IfcWindow"
+      },
+      {
+        "guid": "2M$VFKOm95iv8NI96wAPul",
+        "ifc_type": "IfcWallStandardCase"
+      },
+      {
+        "guid": "2MHPtmLzv5OhZf$6Z1Y75J",
+        "ifc_type": "IfcDoor"
+      },
+      {
+        "guid": "2MLUym1055WAf4WdQSNnJQ",
+        "ifc_type": "IfcWallStandardCase"
+      },
+      {
+        "guid": "2MQJI38fb4kxSZGQpeIRXv",
+        "ifc_type": "IfcWindow"
+      },
+      {
+        "guid": "2N6esOMjP29AvhRLQ1Jz3$",
+        "ifc_type": "IfcDoor"
+      },
+      {
+        "guid": "2NItBPmLX4phu7hB4RNo_9",
+        "ifc_type": "IfcFurnishingElement"
+      },
+      {
+        "guid": "2NO$Il8fr1n8x3zsU1IoYc",
+        "ifc_type": "IfcSpace"
+      },
+      {
+        "guid": "2OOpkSORHDYvBk8zsUWSWd",
+        "ifc_type": "IfcFurnishingElement"
+      },
+      {
+        "guid": "2OU4curhvDMPArGs3c5lc0",
+        "ifc_type": "IfcWallStandardCase"
+      },
+      {
+        "guid": "2Og5$70yb1DxR1TY1w8bzN",
+        "ifc_type": "IfcSlab"
+      },
+      {
+        "guid": "2PEohQWxr83Q$dJApWgZz7",
+        "ifc_type": "IfcWallStandardCase"
+      },
+      {
+        "guid": "2PRVpojvP8fPtR7ZH8qagD",
+        "ifc_type": "IfcWallStandardCase"
+      },
+      {
+        "guid": "2PhD4lAaLA3PMKnfhSTJ9q",
+        "ifc_type": "IfcWindow"
+      },
+      {
+        "guid": "2PyPcf7HvDGQxPopRGPDKI",
+        "ifc_type": "IfcWindow"
+      },
+      {
+        "guid": "2Q31NM555AyhJre_5CK6sQ",
+        "ifc_type": "IfcWindow"
+      },
+      {
+        "guid": "2Qnyjx3Hr9MANpUnArlvkh",
+        "ifc_type": "IfcFurnishingElement"
+      },
+      {
+        "guid": "2R1TAx1CP0iABwkslb$Gv_",
+        "ifc_type": "IfcWindow"
+      },
+      {
+        "guid": "2R5wDhDefB6Ob2SgSotdBS",
+        "ifc_type": "IfcFurnishingElement"
+      },
+      {
+        "guid": "2R7WL4wm9BL9_1dYAUIspF",
+        "ifc_type": "IfcFurnishingElement"
+      },
+      {
+        "guid": "2R8NAnph52sfLukERHNNXv",
+        "ifc_type": "IfcFurnishingElement"
+      },
+      {
+        "guid": "2S05fJwurB0AsobKzEqBs1",
+        "ifc_type": "IfcWindow"
+      },
+      {
+        "guid": "2S3C3uY4L3E8GfjjcpTjpF",
+        "ifc_type": "IfcWindow"
+      },
+      {
+        "guid": "2S81_Ddrv5IO_9FQklmGZn",
+        "ifc_type": "IfcFurnishingElement"
+      },
+      {
+        "guid": "2SaahCH6j7CBDf8tBj2NwL",
+        "ifc_type": "IfcFurnishingElement"
+      },
+      {
+        "guid": "2SfY7UTIz1E82rEMOUSWux",
+        "ifc_type": "IfcDoor"
+      },
+      {
+        "guid": "2SkcgVRZT55eBv9ib8QmcA",
+        "ifc_type": "IfcWindow"
+      },
+      {
+        "guid": "2TM3hOfDLEKgLHIoi2G2eE",
+        "ifc_type": "IfcWindow"
+      },
+      {
+        "guid": "2TRdI2M4H8YPVIWBCwGuSk",
+        "ifc_type": "IfcFurnishingElement"
+      },
+      {
+        "guid": "2Tnz7eiWn96fYzN2y_ZGL$",
+        "ifc_type": "IfcFurnishingElement"
+      },
+      {
+        "guid": "2UZhzWc8v0fA0sfv__WgLn",
+        "ifc_type": "IfcWallStandardCase"
+      },
+      {
+        "guid": "2UjUodKnf77PmcAVpITSgL",
+        "ifc_type": "IfcWindow"
+      },
+      {
+        "guid": "2UkFRzvxv6r8FK6VLY_xj2",
+        "ifc_type": "IfcWindow"
+      },
+      {
+        "guid": "2V1MCFZRf1GA2ZyRufjYwX",
+        "ifc_type": "IfcWallStandardCase"
+      },
+      {
+        "guid": "2VGdy0IID6LxPfFQdDE_rz",
+        "ifc_type": "IfcDoor"
+      },
+      {
+        "guid": "2VJpmvlMLEvOKD0Mb9hAiw",
+        "ifc_type": "IfcDoor"
+      },
+      {
+        "guid": "2VbQuFbEn3h87DbM2PUuUY",
+        "ifc_type": "IfcFurnishingElement"
+      },
+      {
+        "guid": "2W4u8ksTjDWgY$_q7S_hDw",
+        "ifc_type": "IfcFurnishingElement"
+      },
+      {
+        "guid": "2WXefP$$nEQOIoMSsU5Ddi",
+        "ifc_type": "IfcFurnishingElement"
+      },
+      {
+        "guid": "2WnDGvXIP14xQJyJ3RQPXx",
+        "ifc_type": "IfcSlab"
+      },
+      {
+        "guid": "2XgPE753r1of9qIx7CUdRU",
+        "ifc_type": "IfcWindow"
+      },
+      {
+        "guid": "2Yd3UbuHLF0P7Q5pq$wqrF",
+        "ifc_type": "IfcSpace"
+      },
+      {
+        "guid": "2YsRBHmZf7YwXGB4KcMPJy",
+        "ifc_type": "IfcFurnishingElement"
+      },
+      {
+        "guid": "2ZDRA4lYXAawe3WLk$RpXy",
+        "ifc_type": "IfcDoor"
+      },
+      {
+        "guid": "2Zd2aBx0TC58gDRfGak1gB",
+        "ifc_type": "IfcWallStandardCase"
+      },
+      {
+        "guid": "2ZgDPH3ff44uNnfS_Brc5r",
+        "ifc_type": "IfcRailing"
+      },
+      {
+        "guid": "2Zmi8kumn3P9N9wBPT48lG",
+        "ifc_type": "IfcSpace"
+      },
+      {
+        "guid": "2ZuwhXd0901Adi2h1pa4Do",
+        "ifc_type": "IfcFurnishingElement"
+      },
+      {
+        "guid": "2_$5lBnKnFou2_bANCFK3B",
+        "ifc_type": "IfcFurnishingElement"
+      },
+      {
+        "guid": "2_X97mjPr6SfXHvLlAWVeK",
+        "ifc_type": "IfcWindow"
+      },
+      {
+        "guid": "2_rG4oliv3CxmStpGPieup",
+        "ifc_type": "IfcSpace"
+      },
+      {
+        "guid": "2a0MZ65LPAovJFCqtf_zKL",
+        "ifc_type": "IfcFurnishingElement"
+      },
+      {
+        "guid": "2ac9e1BT96ZAB5qrv0LY1U",
+        "ifc_type": "IfcFurnishingElement"
+      },
+      {
+        "guid": "2agthUitrEmRxrqwwPaejP",
+        "ifc_type": "IfcWindow"
+      },
+      {
+        "guid": "2arF9pkZL6Bv$cs4BWnNwD",
+        "ifc_type": "IfcRailing"
+      },
+      {
+        "guid": "2bI$bwQXP6BhqrBObsVIg2",
+        "ifc_type": "IfcWallStandardCase"
+      },
+      {
+        "guid": "2c3SDDFBjDRevm_iMuG2$P",
+        "ifc_type": "IfcFurnishingElement"
+      },
+      {
+        "guid": "2c8tkvv0f3bx0r2cE2KbR4",
+        "ifc_type": "IfcWindow"
+      },
+      {
+        "guid": "2coDnG5N19uA3pQ4oOPvmL",
+        "ifc_type": "IfcFurnishingElement"
+      },
+      {
+        "guid": "2d24khq3H2EhLI7osiekrD",
+        "ifc_type": "IfcDoor"
+      },
+      {
+        "guid": "2dUUX5v1j6ofLpFT0PekPV",
+        "ifc_type": "IfcWindow"
+      },
+      {
+        "guid": "2dmNSROS54DQzD5NyEFXm$",
+        "ifc_type": "IfcDoor"
+      },
+      {
+        "guid": "2e97zOhNb518prQ88j_DQa",
+        "ifc_type": "IfcFurnishingElement"
+      },
+      {
+        "guid": "2eQ15rBnD9bQnYtYvsSlv$",
+        "ifc_type": "IfcWindow"
+      },
+      {
+        "guid": "2enhYSVeP8Ke64amBbDPeL",
+        "ifc_type": "IfcRailing"
+      },
+      {
+        "guid": "2ezLa6k3r22f7kZrwjKNLO",
+        "ifc_type": "IfcDoor"
+      },
+      {
+        "guid": "2fB1Cm3Gn6SRIusC52HTGe",
+        "ifc_type": "IfcWindow"
+      },
+      {
+        "guid": "2fPOa6PzvBr9CXTAP3tUbE",
+        "ifc_type": "IfcWallStandardCase"
+      },
+      {
+        "guid": "2gewk2Hc99jOA$HRpp8OdW",
+        "ifc_type": "IfcFurnishingElement"
+      },
+      {
+        "guid": "2goaA6RR92B9xducYbaQVU",
+        "ifc_type": "IfcSpace"
+      },
+      {
+        "guid": "2gtoeoCt9CBhiwfjH_Yl8E",
+        "ifc_type": "IfcWindow"
+      },
+      {
+        "guid": "2h5A513TXAAhxsa3$Armxt",
+        "ifc_type": "IfcDoor"
+      },
+      {
+        "guid": "2hfmgjFfrEMggYJn0m8E5f",
+        "ifc_type": "IfcFurnishingElement"
+      },
+      {
+        "guid": "2hhqHIBeP8nw9YAzD$9Pr5",
+        "ifc_type": "IfcFurnishingElement"
+      },
+      {
+        "guid": "2hnpR8mzTAn9yDg7byDsCY",
+        "ifc_type": "IfcWindow"
+      },
+      {
+        "guid": "2hwuUNMpz9AAsYWleNcUZN",
+        "ifc_type": "IfcWindow"
+      },
+      {
+        "guid": "2iLTU_LYz3NA91FzuoqriL",
+        "ifc_type": "IfcWindow"
+      },
+      {
+        "guid": "2ijDjejvTCZvZnfGVKFht6",
+        "ifc_type": "IfcDoor"
+      },
+      {
+        "guid": "2j5_0TlNP02vq$h$fhXZI2",
+        "ifc_type": "IfcSlab"
+      },
+      {
+        "guid": "2jwEgPGy11AO$o9d66R3dj",
+        "ifc_type": "IfcWallStandardCase"
+      },
+      {
+        "guid": "2k6vBG3yn9hRJUYx$GK5vo",
+        "ifc_type": "IfcDoor"
+      },
+      {
+        "guid": "2kvkyANgn6yeU1mKrsLn55",
+        "ifc_type": "IfcFurnishingElement"
+      },
+      {
+        "guid": "2kyp5olOX6YxfL8$tctAgH",
+        "ifc_type": "IfcWindow"
+      },
+      {
+        "guid": "2l4LFd9FnDpA2oSc00bxDu",
+        "ifc_type": "IfcFurnishingElement"
+      },
+      {
+        "guid": "2lebmw3XD9w9PIIn4HKbwh",
+        "ifc_type": "IfcSpace"
+      },
+      {
+        "guid": "2lwCvFBUz95BAyapPUrPcM",
+        "ifc_type": "IfcWindow"
+      },
+      {
+        "guid": "2mSYEw1YLDvhMYvUr3eREJ",
+        "ifc_type": "IfcSpace"
+      },
+      {
+        "guid": "2mUDgAvr1C1ukAYYO0gjTU",
+        "ifc_type": "IfcFurnishingElement"
+      },
+      {
+        "guid": "2muLeR9tf5FfEKGfOAn8sb",
+        "ifc_type": "IfcWindow"
+      },
+      {
+        "guid": "2ne1IcZdrDPRb$8OCHUml1",
+        "ifc_type": "IfcWindow"
+      },
+      {
+        "guid": "2o6o7HeHT9vvXnKUKST8PE",
+        "ifc_type": "IfcFurnishingElement"
+      },
+      {
+        "guid": "2oOoWKmmfChQTLCBzuB3$b",
+        "ifc_type": "IfcWallStandardCase"
+      },
+      {
+        "guid": "2pX0sc7rf06usjFMq1TsGs",
+        "ifc_type": "IfcDoor"
+      },
+      {
+        "guid": "2pXh2vfXHEb9m$yGEotBP_",
+        "ifc_type": "IfcWallStandardCase"
+      },
+      {
+        "guid": "2pan8BLsn6mP58YLsASNfY",
+        "ifc_type": "IfcFurnishingElement"
+      },
+      {
+        "guid": "2pe3RqZ0j8ogoAvp7iGUAH",
+        "ifc_type": "IfcDoor"
+      },
+      {
+        "guid": "2pkKx0m_bEbfjzzBNbASG_",
+        "ifc_type": "IfcFurnishingElement"
+      },
+      {
+        "guid": "2q$7ICGvL3zvLmzSLHMQRS",
+        "ifc_type": "IfcWindow"
+      },
+      {
+        "guid": "2q98g6Chr6CvCwj6ioyUET",
+        "ifc_type": "IfcFurnishingElement"
+      },
+      {
+        "guid": "2qBBp57vj5yguk4qD5Rp6P",
+        "ifc_type": "IfcSlab"
+      },
+      {
+        "guid": "2qDsMbogn9mOCQgNc0xzpP",
+        "ifc_type": "IfcFurnishingElement"
+      },
+      {
+        "guid": "2qPW077NvDiutPe3Gn4S9E",
+        "ifc_type": "IfcFurnishingElement"
+      },
+      {
+        "guid": "2qUri1qbLFngpPcA8UGe8D",
+        "ifc_type": "IfcFurnishingElement"
+      },
+      {
+        "guid": "2qxLrwhAPACfqRNJ2qg0N9",
+        "ifc_type": "IfcFurnishingElement"
+      },
+      {
+        "guid": "2r5uaVzi56I8umPPBXAgku",
+        "ifc_type": "IfcWindow"
+      },
+      {
+        "guid": "2rfNFYnCT2WAXMkqZ5PiDc",
+        "ifc_type": "IfcDoor"
+      },
+      {
+        "guid": "2s4YT_DyvEIwBQu$XLcqVB",
+        "ifc_type": "IfcSlab"
+      },
+      {
+        "guid": "2sPrxFKUnDQBesnyFyTX7C",
+        "ifc_type": "IfcWindow"
+      },
+      {
+        "guid": "2sSHD6n39BZQnSaHjLYpnc",
+        "ifc_type": "IfcDoor"
+      },
+      {
+        "guid": "2sVpKMTdb3u8IUv50wOLpo",
+        "ifc_type": "IfcSpace"
+      },
+      {
+        "guid": "2sqOrgHH1BIwrN$KcJhc_B",
+        "ifc_type": "IfcSlab"
+      },
+      {
+        "guid": "2tFeyHM1v51PbS1kDg4mQi",
+        "ifc_type": "IfcFurnishingElement"
+      },
+      {
+        "guid": "2tqQAKnbb9Puqr69a3n37D",
+        "ifc_type": "IfcWindow"
+      },
+      {
+        "guid": "2tu8_KoLfDpho5M9F1jtqL",
+        "ifc_type": "IfcDoor"
+      },
+      {
+        "guid": "2uISt8kaPCfvv_omjCtpzC",
+        "ifc_type": "IfcFurnishingElement"
+      },
+      {
+        "guid": "2uNgF909j7tPKKB$Pnk58y",
+        "ifc_type": "IfcFurnishingElement"
+      },
+      {
+        "guid": "2udBPbKibCZ8zbfpJmtDTM",
+        "ifc_type": "IfcWallStandardCase"
+      },
+      {
+        "guid": "2utQBN6QX8$Rqapk6FlejI",
+        "ifc_type": "IfcFurnishingElement"
+      },
+      {
+        "guid": "2vt0LWwZ1B$wvl1xJ$rRYX",
+        "ifc_type": "IfcWindow"
+      },
+      {
+        "guid": "2vthESqkPCtexTHr1MwOxj",
+        "ifc_type": "IfcWindow"
+      },
+      {
+        "guid": "2wCVZFSRnBZ8YJ5Ri$bwG7",
+        "ifc_type": "IfcDoor"
+      },
+      {
+        "guid": "2wH9GIWt94mgMKOirAU7CY",
+        "ifc_type": "IfcWindow"
+      },
+      {
+        "guid": "2wzUmDh8LD9BcIe4cEFuli",
+        "ifc_type": "IfcWindow"
+      },
+      {
+        "guid": "2xQk5kDfXAPuhPwfXZ$rgr",
+        "ifc_type": "IfcFurnishingElement"
+      },
+      {
+        "guid": "2xTaNf8DzFMfTdt$AJsD2d",
+        "ifc_type": "IfcSlab"
+      },
+      {
+        "guid": "2xcLNHPon6VO6wB_n0EQLF",
+        "ifc_type": "IfcSpace"
+      },
+      {
+        "guid": "2xj7SPlwX4qx17_F2_8HgV",
+        "ifc_type": "IfcFurnishingElement"
+      },
+      {
+        "guid": "2xrOyxR9nEifMekjrljPsL",
+        "ifc_type": "IfcWallStandardCase"
+      },
+      {
+        "guid": "2xwYlwB1T57OJZ7Vu0xhzF",
+        "ifc_type": "IfcFurnishingElement"
+      },
+      {
+        "guid": "2zTK8GIWP5CPRPLmzfTLA_",
+        "ifc_type": "IfcWindow"
+      },
+      {
+        "guid": "2zcvnUe5n40gqSh$BlyVaH",
+        "ifc_type": "IfcWindow"
+      },
+      {
+        "guid": "2zm79Baqz7hvGifG6oryf9",
+        "ifc_type": "IfcWallStandardCase"
+      },
+      {
+        "guid": "2zuBJSHsD0OOQvyAI$1_oh",
+        "ifc_type": "IfcFurnishingElement"
+      },
+      {
+        "guid": "3$FatfHY1Cg9apAMwbKPN8",
+        "ifc_type": "IfcSpace"
+      },
+      {
+        "guid": "3$Or0IscP2QwYDfcHtTvP$",
+        "ifc_type": "IfcFurnishingElement"
+      },
+      {
+        "guid": "3$PC9MkEH1Ex24UD3VHyzP",
+        "ifc_type": "IfcSpace"
+      },
+      {
+        "guid": "3$kYJBEBjCkRuGC4bJp2mQ",
+        "ifc_type": "IfcFurnishingElement"
+      },
+      {
+        "guid": "3$z_JpuOL3SPOR9jTaKp6h",
+        "ifc_type": "IfcFurnishingElement"
+      },
+      {
+        "guid": "30S9Awv3LEe8VCVTEwi68n",
+        "ifc_type": "IfcWindow"
+      },
+      {
+        "guid": "30oDtenHrAwuYDgWTayiN$",
+        "ifc_type": "IfcSpace"
+      },
+      {
+        "guid": "31Gx3VvgP1fvwL2I0a9YtY",
+        "ifc_type": "IfcDoor"
+      },
+      {
+        "guid": "31Q_5FuqX07QgicqF9UALl",
+        "ifc_type": "IfcWindow"
+      },
+      {
+        "guid": "31UFds84f5oAxxal4G6S8P",
+        "ifc_type": "IfcDoor"
+      },
+      {
+        "guid": "31WZqUkqr2U9UpIQCAkHVB",
+        "ifc_type": "IfcWindow"
+      },
+      {
+        "guid": "31vL2xKtv6b8xITngnOCX4",
+        "ifc_type": "IfcWindow"
+      },
+      {
+        "guid": "32UdM49pfAMxiX5WyXhCuy",
+        "ifc_type": "IfcDoor"
+      },
+      {
+        "guid": "32bs0HOZX0vvvwyZStidn0",
+        "ifc_type": "IfcFurnishingElement"
+      },
+      {
+        "guid": "330dYeUbrElh0YlMzoTR7O",
+        "ifc_type": "IfcFurnishingElement"
+      },
+      {
+        "guid": "336PxxRqb7$9D3zSdp7W2o",
+        "ifc_type": "IfcFurnishingElement"
+      },
+      {
+        "guid": "33jlsNXXLCaQ28opnwDi77",
+        "ifc_type": "IfcWallStandardCase"
+      },
+      {
+        "guid": "33rbr8lHzC9wyGLDUf1$oL",
+        "ifc_type": "IfcWindow"
+      },
+      {
+        "guid": "341k0qXuD0rvtNqbyQX8sC",
+        "ifc_type": "IfcFurnishingElement"
+      },
+      {
+        "guid": "34z_sfy5r7MxZO_XK2tdyk",
+        "ifc_type": "IfcWindow"
+      },
+      {
+        "guid": "350CUI1c1F0QSJPiZz1wP5",
+        "ifc_type": "IfcWindow"
+      },
+      {
+        "guid": "350UCBmyj8FAuqMhlyCUmZ",
+        "ifc_type": "IfcFurnishingElement"
+      },
+      {
+        "guid": "35gnZQeI53KeKv$o8xXWCY",
+        "ifc_type": "IfcFurnishingElement"
+      },
+      {
+        "guid": "35jd8lu1fDJAuZoKl4ldDk",
+        "ifc_type": "IfcDoor"
+      },
+      {
+        "guid": "36$lV978n70fzaOS1aGkQb",
+        "ifc_type": "IfcDoor"
+      },
+      {
+        "guid": "36GqY9dAL1U8z7GaExMms3",
+        "ifc_type": "IfcFurnishingElement"
+      },
+      {
+        "guid": "36O0Kh7cH6TQcDT6_PZUT$",
+        "ifc_type": "IfcWallStandardCase"
+      },
+      {
+        "guid": "37DmcwHRH46vMkO0bCgirD",
+        "ifc_type": "IfcWindow"
+      },
+      {
+        "guid": "37NUOXsmX3z9p4Kk0VJikq",
+        "ifc_type": "IfcDoor"
+      },
+      {
+        "guid": "37pP75EaP1axQNg3rWc_WT",
+        "ifc_type": "IfcSpace"
+      },
+      {
+        "guid": "38g7R7wXv17gWe71J1QVvg",
+        "ifc_type": "IfcWindow"
+      },
+      {
+        "guid": "39pRQ$7l15fOjHNjfl3enL",
+        "ifc_type": "IfcWindow"
+      },
+      {
+        "guid": "39sGTemlXCqwFRicEPZCbl",
+        "ifc_type": "IfcFurnishingElement"
+      },
+      {
+        "guid": "3AkI48O_PCCeuXSLwQg5Mp",
+        "ifc_type": "IfcFurnishingElement"
+      },
+      {
+        "guid": "3BIJVubgnERQcs0rJzA8XO",
+        "ifc_type": "IfcWallStandardCase"
+      },
+      {
+        "guid": "3BS07ph7TB6xbEqPnopfjE",
+        "ifc_type": "IfcWallStandardCase"
+      },
+      {
+        "guid": "3BlfjPTqH1qeG63Yox0pCX",
+        "ifc_type": "IfcSpace"
+      },
+      {
+        "guid": "3CSXD6Rbv958Qo9UQc_j7d",
+        "ifc_type": "IfcFurnishingElement"
+      },
+      {
+        "guid": "3CXBDjcSTES8AedjLKSfJe",
+        "ifc_type": "IfcSpace"
+      },
+      {
+        "guid": "3Ce34IKWX0CgyqgQMLzqfn",
+        "ifc_type": "IfcWallStandardCase"
+      },
+      {
+        "guid": "3CiCcmHpP2K84bQMGsx3y3",
+        "ifc_type": "IfcWindow"
+      },
+      {
+        "guid": "3DDIxElIvCmOW6piyS2d1Q",
+        "ifc_type": "IfcWindow"
+      },
+      {
+        "guid": "3EN96kdYDB2OOGjNLp8e86",
+        "ifc_type": "IfcSpace"
+      },
+      {
+        "guid": "3EYxooj415QgvrtcQsy2Kh",
+        "ifc_type": "IfcWallStandardCase"
+      },
+      {
+        "guid": "3EsZp8TeX6TR3B5rI4HKlR",
+        "ifc_type": "IfcFurnishingElement"
+      },
+      {
+        "guid": "3EtzNx_Z1BD9$bnmCd_7Ak",
+        "ifc_type": "IfcSlab"
+      },
+      {
+        "guid": "3EyCDlgjv8R9_MyCxnwYxS",
+        "ifc_type": "IfcFurnishingElement"
+      },
+      {
+        "guid": "3Fas3llhbBh9X004hBAIlC",
+        "ifc_type": "IfcFurnishingElement"
+      },
+      {
+        "guid": "3FbQRBjA12hA$$V1TpgMZN",
+        "ifc_type": "IfcFurnishingElement"
+      },
+      {
+        "guid": "3FhKOKIeb8QOyMFfTkmffU",
+        "ifc_type": "IfcWindow"
+      },
+      {
+        "guid": "3GJznf5S911R8L74sMGaVW",
+        "ifc_type": "IfcFurnishingElement"
+      },
+      {
+        "guid": "3Gz7u_d1P7IA35Wmtg48Rc",
+        "ifc_type": "IfcSpace"
+      },
+      {
+        "guid": "3HAt_XvHb13AE8gYn28I5g",
+        "ifc_type": "IfcWindow"
+      },
+      {
+        "guid": "3HkP5rwynD2O5u77hTbWsv",
+        "ifc_type": "IfcFurnishingElement"
+      },
+      {
+        "guid": "3HyKYtosrEC96fPRcfU8a1",
+        "ifc_type": "IfcWindow"
+      },
+      {
+        "guid": "3I0_zAKh53_PRDghNrS9dg",
+        "ifc_type": "IfcWindow"
+      },
+      {
+        "guid": "3IYA4nCCH8M80noAVj1s7N",
+        "ifc_type": "IfcFurnishingElement"
+      },
+      {
+        "guid": "3Js595fxzAHfThl4exBD3r",
+        "ifc_type": "IfcFurnishingElement"
+      },
+      {
+        "guid": "3KG27wZLbFaxu7wvjAtGKk",
+        "ifc_type": "IfcFurnishingElement"
+      },
+      {
+        "guid": "3KZ2b1pvXFm9M9Ry1f7XBP",
+        "ifc_type": "IfcFurnishingElement"
+      },
+      {
+        "guid": "3KZEpyDbXCPw3E3rBdWKma",
+        "ifc_type": "IfcFurnishingElement"
+      },
+      {
+        "guid": "3KaloR8018sAKZVwuYVbSu",
+        "ifc_type": "IfcSpace"
+      },
+      {
+        "guid": "3KiAVCT1D1t8Xn0nRB8nld",
+        "ifc_type": "IfcDoor"
+      },
+      {
+        "guid": "3Kn4W2ZqD4K8KzX7iS3xhj",
+        "ifc_type": "IfcSlab"
+      },
+      {
+        "guid": "3L1mIBs6z9ogCIZXMzLon3",
+        "ifc_type": "IfcFurnishingElement"
+      },
+      {
+        "guid": "3LbljY7D5Dleprs8wA8XAB",
+        "ifc_type": "IfcFurnishingElement"
+      },
+      {
+        "guid": "3LhgbZxOfBS96L3z1ugkAf",
+        "ifc_type": "IfcWindow"
+      },
+      {
+        "guid": "3LxPgFi8zB9O2dL$OVvll8",
+        "ifc_type": "IfcWindow"
+      },
+      {
+        "guid": "3M3dydUxH2hR7Uvg9QNhS$",
+        "ifc_type": "IfcSpace"
+      },
+      {
+        "guid": "3NTkL25Pb8Y8HEKKJUt_B_",
+        "ifc_type": "IfcDoor"
+      },
+      {
+        "guid": "3NpTHgn_j3zx2eDS5wHeXw",
+        "ifc_type": "IfcWindow"
+      },
+      {
+        "guid": "3OLrsLZhv1PQmDyVv_Z4Lj",
+        "ifc_type": "IfcFurnishingElement"
+      },
+      {
+        "guid": "3OOVMSU1552vco0YZaaaa0",
+        "ifc_type": "IfcWallStandardCase"
+      },
+      {
+        "guid": "3OTyytnFX6cgkJBrCQi6_I",
+        "ifc_type": "IfcFurnishingElement"
+      },
+      {
+        "guid": "3OyEtJg2n8hRE1aQ34Qa1Q",
+        "ifc_type": "IfcWallStandardCase"
+      },
+      {
+        "guid": "3Pom8En7165Ovrq1bs5st9",
+        "ifc_type": "IfcFurnishingElement"
+      },
+      {
+        "guid": "3QEUKhewj50vykoqwkHQYg",
+        "ifc_type": "IfcWindow"
+      },
+      {
+        "guid": "3QI0Za4AD7g9EDuOxKtL4z",
+        "ifc_type": "IfcDoor"
+      },
+      {
+        "guid": "3QoJ6BxnbEJAsAxl5gQcR_",
+        "ifc_type": "IfcSlab"
+      },
+      {
+        "guid": "3QrI2pmPL8WPedMr4WdGPA",
+        "ifc_type": "IfcWallStandardCase"
+      },
+      {
+        "guid": "3QvvbxsHP1IRaR5M7CZy9i",
+        "ifc_type": "IfcWallStandardCase"
+      },
+      {
+        "guid": "3R1b0LbNrEWAIn8OKiGhF5",
+        "ifc_type": "IfcFurnishingElement"
+      },
+      {
+        "guid": "3RZiJ6qDzALv1rgqlu1sqF",
+        "ifc_type": "IfcWindow"
+      },
+      {
+        "guid": "3Rt$$LAsTF7vMcZ8JzPVr4",
+        "ifc_type": "IfcFurnishingElement"
+      },
+      {
+        "guid": "3SNBWCgSrBZu7WfzpF18w1",
+        "ifc_type": "IfcFurnishingElement"
+      },
+      {
+        "guid": "3TJw0vQUj3IBtvQc_JXfwV",
+        "ifc_type": "IfcWallStandardCase"
+      },
+      {
+        "guid": "3TLauWy$r6BP48CfZGppsL",
+        "ifc_type": "IfcWallStandardCase"
+      },
+      {
+        "guid": "3TN3HaTRD9tOSDpYD5ChE0",
+        "ifc_type": "IfcFurnishingElement"
+      },
+      {
+        "guid": "3TT6371QXFwBiALT2JVdDR",
+        "ifc_type": "IfcFurnishingElement"
+      },
+      {
+        "guid": "3TaVJS_WrFjvF4FNvIpjkU",
+        "ifc_type": "IfcWindow"
+      },
+      {
+        "guid": "3Tizqrq5LBwRkVzeahshML",
+        "ifc_type": "IfcWallStandardCase"
+      },
+      {
+        "guid": "3U2sFmrfjDax6jh0rEXk$8",
+        "ifc_type": "IfcFurnishingElement"
+      },
+      {
+        "guid": "3UEb2iq7D2tOgbX6Mufs$X",
+        "ifc_type": "IfcSpace"
+      },
+      {
+        "guid": "3UFdUoOUjCKeAYjOsvjsYa",
+        "ifc_type": "IfcFurnishingElement"
+      },
+      {
+        "guid": "3UHq8yqkf4oQOgspFsMBg$",
+        "ifc_type": "IfcWallStandardCase"
+      },
+      {
+        "guid": "3UZtqiBsz5uvWB4kZmuS1Q",
+        "ifc_type": "IfcWindow"
+      },
+      {
+        "guid": "3UcRuggsrAXPWkQpXc3dLn",
+        "ifc_type": "IfcDoor"
+      },
+      {
+        "guid": "3Uvxr2hnf5MBwBbkSxm2tz",
+        "ifc_type": "IfcFurnishingElement"
+      },
+      {
+        "guid": "3VEwjtZZHA4P7U0POkvM8h",
+        "ifc_type": "IfcWallStandardCase"
+      },
+      {
+        "guid": "3WB_OmiKjCuRLWyouXiTke",
+        "ifc_type": "IfcWallStandardCase"
+      },
+      {
+        "guid": "3WgKK2GqL2thS5m4gLxriY",
+        "ifc_type": "IfcFurnishingElement"
+      },
+      {
+        "guid": "3WpHRqarrCjOECEV0F8VkX",
+        "ifc_type": "IfcWallStandardCase"
+      },
+      {
+        "guid": "3XIgDIN6vBjxvjdvI7ngjF",
+        "ifc_type": "IfcDoor"
+      },
+      {
+        "guid": "3XJSZHVdLFTQTPYNfhA6a2",
+        "ifc_type": "IfcSpace"
+      },
+      {
+        "guid": "3XTmtktyL53gMdILgeHpxW",
+        "ifc_type": "IfcWallStandardCase"
+      },
+      {
+        "guid": "3XWJoOAe95r84KuBtu9JdR",
+        "ifc_type": "IfcWindow"
+      },
+      {
+        "guid": "3Xu6SpY4vC89stuKlMWE2n",
+        "ifc_type": "IfcSpace"
+      },
+      {
+        "guid": "3YOWN6kp53UhVDk7gccfjD",
+        "ifc_type": "IfcSpace"
+      },
+      {
+        "guid": "3YVQQ7t1vFE8ej$paGzJX9",
+        "ifc_type": "IfcWindow"
+      },
+      {
+        "guid": "3ZJxNn9Nz6HQakewV2F393",
+        "ifc_type": "IfcDoor"
+      },
+      {
+        "guid": "3Zb0LaH4z9HPmaVjAzVngL",
+        "ifc_type": "IfcStair"
+      },
+      {
+        "guid": "3ZiHV_RFL3shDKRIJ1fjqB",
+        "ifc_type": "IfcWindow"
+      },
+      {
+        "guid": "3ZjVAeEWfC9wzpoXZ_EwS6",
+        "ifc_type": "IfcFurnishingElement"
+      },
+      {
+        "guid": "3ZvIiAd7b8tvll14FCaSxA",
+        "ifc_type": "IfcWindow"
+      },
+      {
+        "guid": "3_B0AFj$92Lftw82L$xWsU",
+        "ifc_type": "IfcFurnishingElement"
+      },
+      {
+        "guid": "3_CZje0qzFFfsJdg65CoF_",
+        "ifc_type": "IfcWindow"
+      },
+      {
+        "guid": "3_bYofZKP9lAUHAD3P9WWN",
+        "ifc_type": "IfcFurnishingElement"
+      },
+      {
+        "guid": "3_y8v12Lz4KR1UK3TN6qRe",
+        "ifc_type": "IfcFurnishingElement"
+      },
+      {
+        "guid": "3aE3QOlsXEGPZvgRhCYpOH",
+        "ifc_type": "IfcWallStandardCase"
+      },
+      {
+        "guid": "3agC4hpd53tRnrNunBL7Od",
+        "ifc_type": "IfcFurnishingElement"
+      },
+      {
+        "guid": "3asragEFTC7ANo8AbuT5f0",
+        "ifc_type": "IfcFurnishingElement"
+      },
+      {
+        "guid": "3bK3oxhJ59BBUaTh_RU3nb",
+        "ifc_type": "IfcFurnishingElement"
+      },
+      {
+        "guid": "3c$Xo8yh56dgtfpqOlOZSt",
+        "ifc_type": "IfcWindow"
+      },
+      {
+        "guid": "3c7FFURCHAIuL_Uqfwogkh",
+        "ifc_type": "IfcDoor"
+      },
+      {
+        "guid": "3cBLzORtrFxwCaZldEUxGm",
+        "ifc_type": "IfcWindow"
+      },
+      {
+        "guid": "3cTqMaSBr3wfxDe7CbRYyh",
+        "ifc_type": "IfcWindow"
+      },
+      {
+        "guid": "3cfqOXb3f3Ow95PuTGA8ge",
+        "ifc_type": "IfcWindow"
+      },
+      {
+        "guid": "3cjmnELbT4ZgU434Wpw8$2",
+        "ifc_type": "IfcWindow"
+      },
+      {
+        "guid": "3cjnMny5DF0g1J6kKZWO4Y",
+        "ifc_type": "IfcSpace"
+      },
+      {
+        "guid": "3crVVuymz5l8Xi7YdWo4yG",
+        "ifc_type": "IfcFurnishingElement"
+      },
+      {
+        "guid": "3d6U2voMvC8Oso0kmQIjMA",
+        "ifc_type": "IfcWallStandardCase"
+      },
+      {
+        "guid": "3dPSMcyiP038aVO12rVuep",
+        "ifc_type": "IfcFurnishingElement"
+      },
+      {
+        "guid": "3ddBeFeQz9QvQv9xPTOCTk",
+        "ifc_type": "IfcWindow"
+      },
+      {
+        "guid": "3dzEsQ1lDAcwKwcjHQGYL5",
+        "ifc_type": "IfcFurnishingElement"
+      },
+      {
+        "guid": "3e4dHd2$bDqPCEQxkITpEq",
+        "ifc_type": "IfcFurnishingElement"
+      },
+      {
+        "guid": "3e8jVE_ETEZugvuYOVjgPL",
+        "ifc_type": "IfcWallStandardCase"
+      },
+      {
+        "guid": "3eQ_MQ5er5UeRXq4xxAoKl",
+        "ifc_type": "IfcSpace"
+      },
+      {
+        "guid": "3eUvS6q0P14OC1IuUt0pvP",
+        "ifc_type": "IfcFurnishingElement"
+      },
+      {
+        "guid": "3f6i$RL$53ifm9jUfWk0rQ",
+        "ifc_type": "IfcWallStandardCase"
+      },
+      {
+        "guid": "3f7Fz2Ssb9qBEvcT1P5nR5",
+        "ifc_type": "IfcWindow"
+      },
+      {
+        "guid": "3f8gKg5kT30h_8UXOmLt72",
+        "ifc_type": "IfcWindow"
+      },
+      {
+        "guid": "3fHoF9ddLDNg7p4qo0Wq7v",
+        "ifc_type": "IfcWindow"
+      },
+      {
+        "guid": "3fUog30lP6pwOTrTR2sk8d",
+        "ifc_type": "IfcWindow"
+      },
+      {
+        "guid": "3fa9JjQTn7bw8pUt5e9Is$",
+        "ifc_type": "IfcFurnishingElement"
+      },
+      {
+        "guid": "3fbAZjZW1D0O7cqj1YBy1V",
+        "ifc_type": "IfcFurnishingElement"
+      },
+      {
+        "guid": "3g8MS5YmX0Zx4Mf2deNLEd",
+        "ifc_type": "IfcWindow"
+      },
+      {
+        "guid": "3gYFdGsxTBa9PFlMvRAaiF",
+        "ifc_type": "IfcSpace"
+      },
+      {
+        "guid": "3hUHz9q29098WsMJ20lZFe",
+        "ifc_type": "IfcWindow"
+      },
+      {
+        "guid": "3hUfAFTuTCueiBwdehoXNP",
+        "ifc_type": "IfcWallStandardCase"
+      },
+      {
+        "guid": "3hbkmd1qbBiPqCbdQME7PO",
+        "ifc_type": "IfcWallStandardCase"
+      },
+      {
+        "guid": "3hlocwRv9E28ldFEZcrJKR",
+        "ifc_type": "IfcWallStandardCase"
+      },
+      {
+        "guid": "3hmLvediX7gRVGzmAdPrx3",
+        "ifc_type": "IfcWallStandardCase"
+      },
+      {
+        "guid": "3hnGLaSkH3SvHIeUtURa3P",
+        "ifc_type": "IfcWindow"
+      },
+      {
+        "guid": "3hyPFx8vT6mvi6nf7P7n2u",
+        "ifc_type": "IfcWallStandardCase"
+      },
+      {
+        "guid": "3i9iiZlcT5eQkuRPP$TrLS",
+        "ifc_type": "IfcSpace"
+      },
+      {
+        "guid": "3iSzpa9d93jhTDB7hG0QBW",
+        "ifc_type": "IfcSpace"
+      },
+      {
+        "guid": "3j5r$vfHT3JfqUfpdRoXnP",
+        "ifc_type": "IfcSpace"
+      },
+      {
+        "guid": "3jPBVBqyH6RgTDfklWLj5B",
+        "ifc_type": "IfcWindow"
+      },
+      {
+        "guid": "3jVh8jSJrDvA6MPkB86x3V",
+        "ifc_type": "IfcWindow"
+      },
+      {
+        "guid": "3jurQKaejCqgtlRMQvYO$h",
+        "ifc_type": "IfcSpace"
+      },
+      {
+        "guid": "3k8ejU_PjCWBuPFpm1k2lH",
+        "ifc_type": "IfcWindow"
+      },
+      {
+        "guid": "3kV3mGMIX3BvUw5dL_lJVg",
+        "ifc_type": "IfcSpace"
+      },
+      {
+        "guid": "3kjBbM7cvCYRZ9LLqGksoU",
+        "ifc_type": "IfcFurnishingElement"
+      },
+      {
+        "guid": "3knwp7Zd90qPHbstf1VRar",
+        "ifc_type": "IfcFurnishingElement"
+      },
+      {
+        "guid": "3lGf1hbrD1_BXZse2Q3o2H",
+        "ifc_type": "IfcWallStandardCase"
+      },
+      {
+        "guid": "3lO$9T1S1EYvzBiKnlJUlv",
+        "ifc_type": "IfcWallStandardCase"
+      },
+      {
+        "guid": "3lUU1BV1T9OeboWPSlTSt6",
+        "ifc_type": "IfcWindow"
+      },
+      {
+        "guid": "3mQi89EHb4rOWufyKZfZhB",
+        "ifc_type": "IfcDoor"
+      },
+      {
+        "guid": "3mdCjAdrPENxEJc7JsHQHA",
+        "ifc_type": "IfcFurnishingElement"
+      },
+      {
+        "guid": "3mi7E48qj1AwGWI_Z0L$OT",
+        "ifc_type": "IfcFurnishingElement"
+      },
+      {
+        "guid": "3nHMcJ8q56uR8twwvBap_b",
+        "ifc_type": "IfcWallStandardCase"
+      },
+      {
+        "guid": "3nS8Xe8c5BpfdWxU$cBkvz",
+        "ifc_type": "IfcDoor"
+      },
+      {
+        "guid": "3nhdjeVj59Fg23cVlxSI2E",
+        "ifc_type": "IfcWallStandardCase"
+      },
+      {
+        "guid": "3o$pVJjC5EqBVH2ZRwJMcp",
+        "ifc_type": "IfcWindow"
+      },
+      {
+        "guid": "3panYjerbCSQl08K8o34mj",
+        "ifc_type": "IfcWindow"
+      },
+      {
+        "guid": "3pwwIpoc57hgvawYgQG32b",
+        "ifc_type": "IfcWindow"
+      },
+      {
+        "guid": "3qMdsXfXrAvuL60mUR_8Vj",
+        "ifc_type": "IfcWallStandardCase"
+      },
+      {
+        "guid": "3qT9lE$bTCQB_T41jFK_q6",
+        "ifc_type": "IfcSlab"
+      },
+      {
+        "guid": "3qY_MoOI19oe3eXh00JaM1",
+        "ifc_type": "IfcFurnishingElement"
+      },
+      {
+        "guid": "3qlaFAAcPAeh1wBxQgEJ1O",
+        "ifc_type": "IfcWindow"
+      },
+      {
+        "guid": "3qloCPnZDEQBom1ZjBlwJP",
+        "ifc_type": "IfcDoor"
+      },
+      {
+        "guid": "3qz8vRMKXCHubRHdl$maGl",
+        "ifc_type": "IfcDoor"
+      },
+      {
+        "guid": "3rmqVs9ZL3qgw1cva2u9Fv",
+        "ifc_type": "IfcDoor"
+      },
+      {
+        "guid": "3s$opTy0vANQ_jzKgb0VhR",
+        "ifc_type": "IfcWallStandardCase"
+      },
+      {
+        "guid": "3s8qTSU1jDRh5lmNIPbN4u",
+        "ifc_type": "IfcFurnishingElement"
+      },
+      {
+        "guid": "3sXEZFiePFsxi_o7909$c3",
+        "ifc_type": "IfcDoor"
+      },
+      {
+        "guid": "3shuyF_Yb7yu2P$QLB2s8G",
+        "ifc_type": "IfcSpace"
+      },
+      {
+        "guid": "3t8qjHTuTAigDlC1x7D16b",
+        "ifc_type": "IfcSpace"
+      },
+      {
+        "guid": "3ts3ZsbjXDlv2btICYqqvu",
+        "ifc_type": "IfcWallStandardCase"
+      },
+      {
+        "guid": "3txvJd9V1BPhyU$48F$mnF",
+        "ifc_type": "IfcSpace"
+      },
+      {
+        "guid": "3u9W_RePLF$fFnvEZnhAA3",
+        "ifc_type": "IfcWindow"
+      },
+      {
+        "guid": "3uG8sjdwr9WvIJ2E5J1vnl",
+        "ifc_type": "IfcFurnishingElement"
+      },
+      {
+        "guid": "3uYK2H0E52Qhz8bK3APcca",
+        "ifc_type": "IfcDoor"
+      },
+      {
+        "guid": "3uvYP4OyH5ufyPIMbZD86h",
+        "ifc_type": "IfcSpace"
+      },
+      {
+        "guid": "3vRTqctWLA386lknYd28_z",
+        "ifc_type": "IfcRailing"
+      },
+      {
+        "guid": "3vTaz$m4D7Mw20Cj4ZCMEW",
+        "ifc_type": "IfcSpace"
+      },
+      {
+        "guid": "3vncPH76n1UeVgD4ElrkJF",
+        "ifc_type": "IfcFurnishingElement"
+      },
+      {
+        "guid": "3wT8Lkj1j8dRPSJbjoKEaq",
+        "ifc_type": "IfcWallStandardCase"
+      },
+      {
+        "guid": "3wYiknQvv0EvKo$0bWGoQ0",
+        "ifc_type": "IfcWallStandardCase"
+      },
+      {
+        "guid": "3wlbgmJJTA7vni80paHaxx",
+        "ifc_type": "IfcFurnishingElement"
+      },
+      {
+        "guid": "3wtmcFknrEIBf$$ZaZkjsa",
+        "ifc_type": "IfcWindow"
+      },
+      {
+        "guid": "3x663a8XD65viEHNLVdTxd",
+        "ifc_type": "IfcSlab"
+      },
+      {
+        "guid": "3xKoz5lYr2kBHotkF1f8iz",
+        "ifc_type": "IfcWallStandardCase"
+      },
+      {
+        "guid": "3xvQAmf45C8PC3qSvtvqlg",
+        "ifc_type": "IfcWindow"
+      },
+      {
+        "guid": "3yAAZZ86j388XApaG$h1X6",
+        "ifc_type": "IfcSpace"
+      },
+      {
+        "guid": "3yGeEHOp97MPf7P0QPdQGT",
+        "ifc_type": "IfcWindow"
+      },
+      {
+        "guid": "3yNXKcVj99lAvPT2UEyZ2b",
+        "ifc_type": "IfcFurnishingElement"
+      },
+      {
+        "guid": "3yl6250Yj7yBi59RVKlXKu",
+        "ifc_type": "IfcWindow"
+      },
+      {
+        "guid": "3zBM1y5eP8WRpfQm18$R2O",
+        "ifc_type": "IfcFurnishingElement"
+      },
+      {
+        "guid": "3zXYrOG$5AIAmg3jOwc8e1",
+        "ifc_type": "IfcWindow"
+      },
+      {
+        "guid": "3zaEFaiGrF1ftyFPQrOe_i",
+        "ifc_type": "IfcSpace"
+      }
+    ],
+    "title": "No Beam Components In Arc",
+    "topic_id": "b4b69df9-d3f8-472b-9836-9a3b0bbb2ab1"
+  },
+  {
+    "description": "Revolving Doors Must Have Swinging Door Next to It\nThere are 0 component(s) in Erdgeschoss close to \"Door.0.13\" within 3.00 m that match the given requirements. There should be at least 1.\n",
+    "ifc_guids": [
+      "18PQUIFELEARLM4c0brquf",
+      "1RP4kkhTDFJuLugWfrM_1s",
+      "1_hrYGMATEmeNbEHgfoKxd",
+      "31UFds84f5oAxxal4G6S8P"
+    ],
+    "ifc_guids_enriched": [
+      {
+        "guid": "18PQUIFELEARLM4c0brquf",
+        "ifc_type": "IfcDoor"
+      },
+      {
+        "guid": "1RP4kkhTDFJuLugWfrM_1s",
+        "ifc_type": "IfcSpace"
+      },
+      {
+        "guid": "1_hrYGMATEmeNbEHgfoKxd",
+        "ifc_type": "IfcDoor"
+      },
+      {
+        "guid": "31UFds84f5oAxxal4G6S8P",
+        "ifc_type": "IfcDoor"
+      }
+    ],
+    "title": "Door.0.13",
+    "topic_id": "2f2993df-5848-4db0-a2f7-3da359678ef0"
+  },
+  {
+    "description": "Slabs must be Guarded against Falling\nSlab.1.1 has vertical barriers that are not fully guarding its edges.\n",
+    "ifc_guids": [
+      "2Og5$70yb1DxR1TY1w8bzN",
+      "2udBPbKibCZ8zbfpJmtDTM"
+    ],
+    "ifc_guids_enriched": [
+      {
+        "guid": "2Og5$70yb1DxR1TY1w8bzN",
+        "ifc_type": "IfcSlab"
+      },
+      {
+        "guid": "2udBPbKibCZ8zbfpJmtDTM",
+        "ifc_type": "IfcWallStandardCase"
+      }
+    ],
+    "title": "Slab.1.1",
+    "topic_id": "59e72e53-3aff-4df1-a428-aa3c702c76dd"
+  },
+  {
+    "description": "Slabs must be Guarded against Falling\nSlab.1.1 is missing a barrier/barriers.\n",
+    "ifc_guids": [
+      "2Og5$70yb1DxR1TY1w8bzN"
+    ],
+    "ifc_guids_enriched": [
+      {
+        "guid": "2Og5$70yb1DxR1TY1w8bzN",
+        "ifc_type": "IfcSlab"
+      }
+    ],
+    "title": "Slab.1.1",
+    "topic_id": "3aa92723-4a45-43e2-afe0-ccb0b2d04aa6"
+  },
+  {
+    "description": "Space Area Check\nToo large WC Damen spaces. Area of the spaces is 12.76 m2, when the allowed maximum area is 5.00 m2.\n",
+    "ifc_guids": [
+      "0jh6L39QvEQu8mVKX3j43f",
+      "1nsRm1QQb1xwWpzzFR7Ax3",
+      "1oKaKV7Wz8IOJ10cA1PGWP",
+      "37pP75EaP1axQNg3rWc_WT"
+    ],
+    "ifc_guids_enriched": [
+      {
+        "guid": "0jh6L39QvEQu8mVKX3j43f",
+        "ifc_type": "IfcSpace"
+      },
+      {
+        "guid": "1nsRm1QQb1xwWpzzFR7Ax3",
+        "ifc_type": "IfcSpace"
+      },
+      {
+        "guid": "1oKaKV7Wz8IOJ10cA1PGWP",
+        "ifc_type": "IfcSpace"
+      },
+      {
+        "guid": "37pP75EaP1axQNg3rWc_WT",
+        "ifc_type": "IfcSpace"
+      }
+    ],
+    "title": "Wc Damen : 12.76 M2",
+    "topic_id": "77fea061-b272-4bca-b8ff-632183c044fb"
+  },
+  {
+    "description": "Space Area Check\nToo large WC Herren spaces. Area of the spaces is 12.76 m2, when the allowed maximum area is 5.00 m2.\n",
+    "ifc_guids": [
+      "0f6kjO4cnBngLgZgtaoBTE",
+      "1pG7ErnqL79fYOSoJhY$mD",
+      "3M3dydUxH2hR7Uvg9QNhS$",
+      "3j5r$vfHT3JfqUfpdRoXnP"
+    ],
+    "ifc_guids_enriched": [
+      {
+        "guid": "0f6kjO4cnBngLgZgtaoBTE",
+        "ifc_type": "IfcSpace"
+      },
+      {
+        "guid": "1pG7ErnqL79fYOSoJhY$mD",
+        "ifc_type": "IfcSpace"
+      },
+      {
+        "guid": "3M3dydUxH2hR7Uvg9QNhS$",
+        "ifc_type": "IfcSpace"
+      },
+      {
+        "guid": "3j5r$vfHT3JfqUfpdRoXnP",
+        "ifc_type": "IfcSpace"
+      }
+    ],
+    "title": "Wc Herren : 12.76 M2",
+    "topic_id": "873320d9-1679-42c4-8865-af6e7c728f0b"
+  },
+  {
+    "description": "Space Dimensions Must Be Within Sensible Bounds\nSpace component(s) have wrong value. The actual value of Property: Height is 1.64 m. ≥ 2.00 m.\n",
+    "ifc_guids": [
+      "0jbV$RErb7o9P7rp7ALEd$"
+    ],
+    "ifc_guids_enriched": [
+      {
+        "guid": "0jbV$RErb7o9P7rp7ALEd$",
+        "ifc_type": "IfcSpace"
+      }
+    ],
+    "title": "Wrong Value Of Property - Height: 1.64 M",
+    "topic_id": "7b9d9965-8f69-4ac1-ac43-d041aa4ae0b6"
+  },
+  {
+    "description": "Space Dimensions Must Be Within Sensible Bounds\nSpace component(s) have wrong value. The actual value of Property: Height is 1.64 m. ≥ 2.00 m.\n",
+    "ifc_guids": [
+      "3txvJd9V1BPhyU$48F$mnF"
+    ],
+    "ifc_guids_enriched": [
+      {
+        "guid": "3txvJd9V1BPhyU$48F$mnF",
+        "ifc_type": "IfcSpace"
+      }
+    ],
+    "title": "Wrong Value Of Property - Height: 1.64 M",
+    "topic_id": "8f1bd48f-76b6-4ed5-8b78-16642980e489"
+  },
+  {
+    "description": "Space Validation\n- Space intersects with Roof.3.1, Roof.3.12, Roof.3.14, Roof.3.2, Roof.3.5, and Roof.3.6. The intersection area is 173.64 m2.\n- Space height 1.64 m is less than required 2.10 m.\n\n",
+    "ifc_guids": [
+      "01Q5XSApT1A8MVwFMrw27s",
+      "03TjDzhOTFX9jbLMrZ04Ko",
+      "0jbV$RErb7o9P7rp7ALEd$",
+      "1GL3Bl4yrCY9XKlcdMQiXb",
+      "1m13_kW2X8DhPK7Uom15kV",
+      "1sX1eJEdn4tx6WnOEIL8As",
+      "3qT9lE$bTCQB_T41jFK_q6"
+    ],
+    "ifc_guids_enriched": [
+      {
+        "guid": "01Q5XSApT1A8MVwFMrw27s",
+        "ifc_type": "IfcSlab"
+      },
+      {
+        "guid": "03TjDzhOTFX9jbLMrZ04Ko",
+        "ifc_type": "IfcSlab"
+      },
+      {
+        "guid": "0jbV$RErb7o9P7rp7ALEd$",
+        "ifc_type": "IfcSpace"
+      },
+      {
+        "guid": "1GL3Bl4yrCY9XKlcdMQiXb",
+        "ifc_type": "IfcSlab"
+      },
+      {
+        "guid": "1m13_kW2X8DhPK7Uom15kV",
+        "ifc_type": "IfcSlab"
+      },
+      {
+        "guid": "1sX1eJEdn4tx6WnOEIL8As",
+        "ifc_type": "IfcSlab"
+      },
+      {
+        "guid": "3qT9lE$bTCQB_T41jFK_q6",
+        "ifc_type": "IfcSlab"
+      }
+    ],
+    "title": "Space.3.1 : Dachboden-1[402], 1.64 M",
+    "topic_id": "86ed1f36-df4f-4b9f-a038-8889de77a0e9"
+  },
+  {
+    "description": "Space Validation\n- Space intersects with Roof.3.10, Roof.3.11, Roof.3.15, Roof.3.3, Roof.3.4, and Roof.3.9. The intersection area is 173.64 m2.\n- Space height 1.64 m is less than required 2.10 m.\n\n",
+    "ifc_guids": [
+      "01DPZ9SBn5r9Sivd0bV8Ar",
+      "0NhW4VLIbBiuXKiyGrq3kz",
+      "0UobTn5dzETeVPsaqJjGpw",
+      "0hEXM06OrA5gv_ZOu0dPhm",
+      "3Kn4W2ZqD4K8KzX7iS3xhj",
+      "3txvJd9V1BPhyU$48F$mnF",
+      "3x663a8XD65viEHNLVdTxd"
+    ],
+    "ifc_guids_enriched": [
+      {
+        "guid": "01DPZ9SBn5r9Sivd0bV8Ar",
+        "ifc_type": "IfcSlab"
+      },
+      {
+        "guid": "0NhW4VLIbBiuXKiyGrq3kz",
+        "ifc_type": "IfcSlab"
+      },
+      {
+        "guid": "0UobTn5dzETeVPsaqJjGpw",
+        "ifc_type": "IfcSlab"
+      },
+      {
+        "guid": "0hEXM06OrA5gv_ZOu0dPhm",
+        "ifc_type": "IfcSlab"
+      },
+      {
+        "guid": "3Kn4W2ZqD4K8KzX7iS3xhj",
+        "ifc_type": "IfcSlab"
+      },
+      {
+        "guid": "3txvJd9V1BPhyU$48F$mnF",
+        "ifc_type": "IfcSpace"
+      },
+      {
+        "guid": "3x663a8XD65viEHNLVdTxd",
+        "ifc_type": "IfcSlab"
+      }
+    ],
+    "title": "Space.3.2 : Dachboden-2[403], 1.64 M",
+    "topic_id": "2b25faeb-159b-46af-9468-c86dc25fcf1f"
+  },
+  {
+    "description": "Space Validation\n- Space intersects with Roof.3.17, Roof.3.19, Roof.3.20, Roof.3.21, Roof.3.7, and Roof.3.8. The intersection area is 61.99 m2.\n- Space touches slab, roof, or space surface below itself, but the area of touching is only 56.76 m2, which is 78% of the components surface.\n\n",
+    "ifc_guids": [
+      "09JX$lRj14w8LMwtAomZqY",
+      "0LG1dnAtn4qQamxBPgaWX7",
+      "1mNoyQNRjFqALu0EZLqVjE",
+      "2_rG4oliv3CxmStpGPieup",
+      "2s4YT_DyvEIwBQu$XLcqVB",
+      "2sqOrgHH1BIwrN$KcJhc_B",
+      "2xTaNf8DzFMfTdt$AJsD2d"
+    ],
+    "ifc_guids_enriched": [
+      {
+        "guid": "09JX$lRj14w8LMwtAomZqY",
+        "ifc_type": "IfcSlab"
+      },
+      {
+        "guid": "0LG1dnAtn4qQamxBPgaWX7",
+        "ifc_type": "IfcSlab"
+      },
+      {
+        "guid": "1mNoyQNRjFqALu0EZLqVjE",
+        "ifc_type": "IfcSlab"
+      },
+      {
+        "guid": "2_rG4oliv3CxmStpGPieup",
+        "ifc_type": "IfcSpace"
+      },
+      {
+        "guid": "2s4YT_DyvEIwBQu$XLcqVB",
+        "ifc_type": "IfcSlab"
+      },
+      {
+        "guid": "2sqOrgHH1BIwrN$KcJhc_B",
+        "ifc_type": "IfcSlab"
+      },
+      {
+        "guid": "2xTaNf8DzFMfTdt$AJsD2d",
+        "ifc_type": "IfcSlab"
+      }
+    ],
+    "title": "Space.3.3 : Flur 3.og Treppe[401]",
+    "topic_id": "a5531d0d-ca9b-40ab-a119-03702d904df2"
+  },
+  {
+    "description": "Space Validation\n- Space touches slab, roof, or space surface below itself, but the area of touching is only 31.38 m2, which is 67% of the components surface.\n\n",
+    "ifc_guids": [
+      "0uPiF9LkPAqeB8f54Uy3_C"
+    ],
+    "ifc_guids_enriched": [
+      {
+        "guid": "0uPiF9LkPAqeB8f54Uy3_C",
+        "ifc_type": "IfcSpace"
+      }
+    ],
+    "title": "Space.1.15 : Flur 1.og Treppe[221]",
+    "topic_id": "04374640-b657-4544-8238-6912ec38ec84"
+  },
+  {
+    "description": "Space Validation\n- Space touches slab, roof, or space surface below itself, but the area of touching is only 31.38 m2, which is 67% of the components surface.\n\n",
+    "ifc_guids": [
+      "2mSYEw1YLDvhMYvUr3eREJ"
+    ],
+    "ifc_guids_enriched": [
+      {
+        "guid": "2mSYEw1YLDvhMYvUr3eREJ",
+        "ifc_type": "IfcSpace"
+      }
+    ],
+    "title": "Space.2.8 : Flur 2.og Treppe[321]",
+    "topic_id": "0f6184ab-f9d8-482a-968c-0dd2b24ebc40"
+  },
+  {
+    "description": "Space Validation\n- Space touches slab, roof, or space surface below itself, but the area of touching is only 67.56 m2, which is 81% of the components surface.\n\n",
+    "ifc_guids": [
+      "1RP4kkhTDFJuLugWfrM_1s"
+    ],
+    "ifc_guids_enriched": [
+      {
+        "guid": "1RP4kkhTDFJuLugWfrM_1s",
+        "ifc_type": "IfcSpace"
+      }
+    ],
+    "title": "Space.0.18 : Flur Eg Eingang[117]",
+    "topic_id": "ef683dcb-c7d0-4540-952f-db4599eff120"
+  },
+  {
+    "description": "Spaces Must Have Doors\nCount (0) of the components does not match the requirement: ≥ 1.\n",
+    "ifc_guids": [
+      "0jbV$RErb7o9P7rp7ALEd$"
+    ],
+    "ifc_guids_enriched": [
+      {
+        "guid": "0jbV$RErb7o9P7rp7ALEd$",
+        "ifc_type": "IfcSpace"
+      }
+    ],
+    "title": "Space.3.1 : Dachboden-1[402]: Count (0) Of The Components Does Not Match The Requirement: ≥ 1",
+    "topic_id": "d8c2c04e-c769-42df-a7b1-06989b024310"
+  },
+  {
+    "description": "Spaces Must Have Doors\nCount (0) of the components does not match the requirement: ≥ 1.\n",
+    "ifc_guids": [
+      "3txvJd9V1BPhyU$48F$mnF"
+    ],
+    "ifc_guids_enriched": [
+      {
+        "guid": "3txvJd9V1BPhyU$48F$mnF",
+        "ifc_type": "IfcSpace"
+      }
+    ],
+    "title": "Space.3.2 : Dachboden-2[403]: Count (0) Of The Components Does Not Match The Requirement: ≥ 1",
+    "topic_id": "f0a92929-da18-4174-a5a2-5fb83dbe80c2"
+  },
+  {
+    "description": "Spaces Must Have Doors\nCount (0) of the components does not match the requirement: ≥ 1.\n",
+    "ifc_guids": [
+      "2_rG4oliv3CxmStpGPieup"
+    ],
+    "ifc_guids_enriched": [
+      {
+        "guid": "2_rG4oliv3CxmStpGPieup",
+        "ifc_type": "IfcSpace"
+      }
+    ],
+    "title": "Space.3.3 : Flur 3.og Treppe[401]: Count (0) Of The Components Does Not Match The Requirement: ≥ 1",
+    "topic_id": "f613b415-e06a-4e60-aceb-f387689eccbc"
+  }
+]

@@ -7,6 +7,7 @@ Phase 4 of the ACC Ground Truth Pipeline:
 - 4.2 Ground Truth Transformer: Apply GUID filtering, output ground_truth_{model_name}.json
 """
 
+import csv
 import json
 import re
 from pathlib import Path
@@ -434,6 +435,64 @@ class GroundTruthGenerator:
 
         return results
 
+    def generate_stats(self, output_path: Path | None = None) -> Path:
+        """Generate cross-model stats CSV from existing ground_truth.json files."""
+        acc_res = Path(ACC_RES_PATH)
+
+        if output_path is None:
+            output_path = acc_res / "ground_truth_stats.csv"
+
+        # Discover all ground_truth.json files
+        gt_files: dict[str, Path] = {}
+        for d in acc_res.iterdir():
+            gt_path = d / "ground_truth.json"
+            if d.is_dir() and gt_path.exists():
+                gt_files[d.name] = gt_path
+
+        if not gt_files:
+            raise FileNotFoundError(f"No ground_truth.json files found in {acc_res}")
+
+        model_names = sorted(gt_files.keys())
+
+        # Collect stats: {rule_title: {rule_code, model_name: guid_count}}
+        stats: dict[str, dict[str, Any]] = {}
+
+        for model_name in model_names:
+            with open(gt_files[model_name], encoding="utf-8") as f:
+                gt_data = json.load(f)
+
+            for rule_title, rule_data in gt_data.get("rules", {}).items():
+                if rule_title not in stats:
+                    stats[rule_title] = {"rule_code": rule_data.get("rule_code", "")}
+
+                total_guids = sum(
+                    len(issue.get("required_guids", []))
+                    for issue in rule_data.get("issues", [])
+                )
+                stats[rule_title][model_name] = total_guids
+
+        # Sort rules by rule_code
+        sorted_rules = sorted(stats.items(), key=lambda x: x[1].get("rule_code", ""))
+
+        # Write CSV
+        output_path.parent.mkdir(parents=True, exist_ok=True)
+        with open(output_path, "w", newline="", encoding="utf-8") as f:
+            writer = csv.writer(f)
+            writer.writerow(["rule_code", "rule_title", *model_names])
+
+            for rule_title, rule_stats in sorted_rules:
+                row = [
+                    rule_stats["rule_code"],
+                    rule_title,
+                    *[rule_stats.get(m, 0) for m in model_names],
+                ]
+                writer.writerow(row)
+
+        print(f"\nStats CSV: {output_path}")
+        print(f"  Rules: {len(sorted_rules)}, Models: {len(model_names)}")
+
+        return output_path
+
 
 def generate_ground_truth(model_name: str) -> Path:
     """
@@ -460,7 +519,16 @@ def generate_all_ground_truth() -> dict[str, Path]:
     return generator.generate_all()
 
 
+def generate_ground_truth_stats() -> Path:
+    """Convenience function to generate cross-model stats CSV."""
+    generator = GroundTruthGenerator()
+    return generator.generate_stats()
+
+
 if __name__ == "__main__":
     # Generate for all discovered models
     results = generate_all_ground_truth()
     print(f"\nGenerated ground truth for {len(results)} model(s)")
+
+    # Generate stats CSV
+    generate_ground_truth_stats()

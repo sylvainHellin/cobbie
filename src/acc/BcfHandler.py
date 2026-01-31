@@ -405,17 +405,14 @@ class BcfProjectProcessor:
         ]
     
     def _find_bcfzip_for_project(self, name: str) -> Optional[Path]:
-        """Find BCF ZIP file in the Solibri working directory."""
-        bcf_folder: Path = Path(ACC_RES_PATH) / 'bcfzip'
-        
+        """Find BCF ZIP file for this project (acc/res/{name}/bcfzip)."""
+        bcf_folder: Path = Path(ACC_RES_PATH) / name / "bcfzip"
         if not bcf_folder.is_dir():
             print(f"- Skipping '{name}': no bcfzip folder at {bcf_folder}")
             return None
-        
         for f in bcf_folder.iterdir():
-            if f.is_file() and f.suffix.lower() == '.bcfzip':
+            if f.is_file() and f.suffix.lower() == ".bcfzip":
                 return f
-        
         print(f"- Skipping '{name}': no .bcfzip found in {bcf_folder}")
         return None
     
@@ -445,10 +442,10 @@ class BcfProjectProcessor:
     
     def _export_issues(self, name: str, bcf_analyzer: BcfAnalyzer) -> None:
         """
-        Save issues extracted from topics into acc/res/issues/topics.json
+        Save issues extracted from topics into acc/res/{name}/issues/topics.json
         Topics are sorted by topic_id for consistent output.
         """
-        issues_dir: Path = Path(ACC_RES_PATH) / "issues"
+        issues_dir: Path = Path(ACC_RES_PATH) / name / "issues"
         issues_dir.mkdir(parents=True, exist_ok=True)
         
         # Sort topics by topic_id for consistent output

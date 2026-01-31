@@ -1,29 +1,26 @@
 """
-Simple script to run Solibri ACC check for a model.
+Script to run Solibri ACC check for one or all models.
 Uses pre-configured SMC files (model + rules + classifications bundled).
 
 Usage:
-    Full check:    uv run python scripts/run_acc_check.py <model_name>
-    Process only:  uv run python scripts/run_acc_check.py <model_name> --process
-    Enrich only:   uv run python scripts/run_acc_check.py <model_name> --enrich
-
-Example: uv run python scripts/run_acc_check.py dental_clinic
+    Full check:          uv run python scripts/run_acc_check.py dental_clinic
+    All models:          uv run python scripts/run_acc_check.py --all
+    Skip existing:       uv run python scripts/run_acc_check.py --all --skip-existing
+    Process only:        uv run python scripts/run_acc_check.py dental_clinic --process
+    Enrich only:         uv run python scripts/run_acc_check.py dental_clinic --enrich
 """
 
+import argparse
 import json
 import sys
 from pathlib import Path
 from typing import Dict, List, Any
 
 import ifcopenshell
-
-# Path setup
-sys.path.insert(0, str(Path(__file__).parent.parent / 'src'))
-
 from config import ACC_RES_PATH, ACC_MODELS_PATH
-from acc.AutorunGenerator import generate_autorun
-from acc.SolibriManagerMac import SolibriManagerMac
-from acc.BcfHandler import process_bcf_for_model
+from src.acc.AutorunGenerator import generate_autorun
+from src.acc.SolibriManagerMac import SolibriManagerMac
+from src.acc.BcfHandler import process_bcf_for_model
 
 
 def enrich_topics_with_ifc_types(model_name: str) -> Path:
@@ -95,6 +92,22 @@ def enrich_topics_with_ifc_types(model_name: str) -> Path:
     return topics_path
 
 
+def get_all_models() -> List[str]:
+    """Return sorted list of model folder names that contain an .smc file."""
+    models_dir = Path(ACC_MODELS_PATH)
+    return sorted(
+        p.parent.name
+        for p in models_dir.glob("*/*.smc")
+        if p.is_file() and not p.name.startswith("~$")
+    )
+
+
+def has_results(model_name: str) -> bool:
+    """Check if a model already has BCF results."""
+    bcf_dir = Path(ACC_RES_PATH) / model_name / "bcfzip"
+    return bcf_dir.exists() and any(bcf_dir.iterdir())
+
+
 def run_check(model_name: str) -> bool:
     """
     Run Solibri check for a model.
@@ -132,32 +145,49 @@ def run_check(model_name: str) -> bool:
 
 
 if __name__ == "__main__":
-    if len(sys.argv) < 2:
-        print("Usage:")
-        print("  Full check:    uv run python scripts/run_acc_check.py <model_name>")
-        print("  Process only:  uv run python scripts/run_acc_check.py <model_name> --process")
-        print("  Enrich only:   uv run python scripts/run_acc_check.py <model_name> --enrich")
-        print("\nExample: uv run python scripts/run_acc_check.py dental_clinic")
+    parser = argparse.ArgumentParser(description="Run Solibri ACC check for BIM models.")
+    parser.add_argument("model", nargs="?", help="Model directory name (e.g. dental_clinic)")
+    parser.add_argument("--all", action="store_true", help="Process all models in acc/bim_models/")
+    parser.add_argument("--skip-existing", action="store_true", help="Skip models that already have BCF results")
+    parser.add_argument("--process", action="store_true", help="Process BCF + enrich only (no Solibri)")
+    parser.add_argument("--enrich", action="store_true", help="Enrich existing topics.json only")
+
+    args = parser.parse_args()
+
+    if not args.model and not args.all:
+        parser.print_help()
         sys.exit(1)
-    
-    model = sys.argv[1]
-    flag = sys.argv[2] if len(sys.argv) > 2 else None
-    
-    if flag == "--enrich":
-        # Enrich existing topics.json only
-        print(f"\nEnriching topics for: {model}")
-        enrich_topics_with_ifc_types(model)
-        sys.exit(0)
-    
-    if flag == "--process":
-        # Process BCF + enrich (no Solibri)
-        print(f"\nProcessing BCF for: {model}")
-        process_bcf_for_model(model)
-        print("\nEnriching with IFC types...")
-        enrich_topics_with_ifc_types(model)
-        print(f"\n[Done] Results in: acc/res/{model}/")
-        sys.exit(0)
-    
-    success = run_check(model)
-    sys.exit(0 if success else 1)
+
+    # Build list of models to process
+    if args.all:
+        models = get_all_models()
+        if not models:
+            print("No models found in acc/bim_models/")
+            sys.exit(1)
+        print(f"Found {len(models)} models: {', '.join(models)}\n")
+    else:
+        models = [args.model]
+
+    failed: List[str] = []
+    for model in models:
+        if args.skip_existing and has_results(model):
+            print(f"[Skipped] {model} (results exist)")
+            continue
+
+        if args.enrich:
+            print(f"\nEnriching topics for: {model}")
+            enrich_topics_with_ifc_types(model)
+        elif args.process:
+            print(f"\nProcessing BCF for: {model}")
+            process_bcf_for_model(model)
+            print("\nEnriching with IFC types...")
+            enrich_topics_with_ifc_types(model)
+            print(f"\n[Done] Results in: acc/res/{model}/")
+        else:
+            if not run_check(model):
+                failed.append(model)
+
+    if failed:
+        print(f"\nFailed models: {', '.join(failed)}")
+        sys.exit(1)
 

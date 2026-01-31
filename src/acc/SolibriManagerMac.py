@@ -82,8 +82,7 @@ class SolibriExecutor:
     def cleanup_result_folders(self):
         """
         Delete previous result files before running Solibri.
-        Cleans: .bcfzip, .json and .smc files.
-        Creates folders if they don't exist.
+        Cleans: .bcfzip, .json and .smc files in acc/res (only if folders exist).
         """
         patterns = [
             (os.path.join(self.res_dir, "bcfzip"), ".bcfzip"),  # type: ignore
@@ -92,9 +91,8 @@ class SolibriExecutor:
         ]
         
         for folder, ext in patterns:
-            # Ensure folder exists
-            os.makedirs(folder, exist_ok=True)
-            
+            if not os.path.isdir(folder):
+                continue
             for filename in os.listdir(folder):
                 if filename.lower().endswith(ext):
                     try:

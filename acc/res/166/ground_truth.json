@@ -1,0 +1,973 @@
+{
+  "metadata": {
+    "total_topics": 41,
+    "rules_count": 16,
+    "pass_rules_count": 8,
+    "model_name": "166"
+  },
+  "rules": {
+    "304_3_1_circular_space": {
+      "rule_code": "304.3.1",
+      "rule_title": "304_3_1_circular_space",
+      "question": "What spaces in the current IFC model do not have enough room for wheelchair turning space with the required diameter?",
+      "rule": "304.3.1 Circular Space\nCircular space shall have a diameter of 1.52 m (60 inches) minimum.",
+      "parameters": "Applicable Space Classifications: Balcony, Circulation, Garage, Habitable, Institutional, Lobby, Mercantile, Office, Parking, Production, Refuge, Stair Hall, Workplace",
+      "issues_count": 3,
+      "issues": [
+        {
+          "topic_id": "766a2384-ab99-4c5a-ae9b-568daafb81ff",
+          "title": "Cabin 1",
+          "description": "304.3.1 Circular Space\n",
+          "all_guids": [
+            "02sTr6M6vE9Qf5C1OPPy8j",
+            "02sTr6M6vE9Qf5C1OPPyEC",
+            "0jno74fnz3JA4_tWzynQ3m",
+            "0jno74fnz3JA4_tWzynQUb",
+            "1R$KBYTRP3QOdXlCBx2dzk",
+            "1kDD1yopT87PgXGbHYxDrf",
+            "2ci8AX44j6O8Lr29eFxLyf",
+            "2k4hklcZX0AhLEYFO5nh2H",
+            "38F_bUbFvBfv9QXygUodTG",
+            "38F_bUbFvBfv9QXygUodUq"
+          ],
+          "required_guids": [
+            "02sTr6M6vE9Qf5C1OPPy8j",
+            "02sTr6M6vE9Qf5C1OPPyEC",
+            "0jno74fnz3JA4_tWzynQ3m",
+            "0jno74fnz3JA4_tWzynQUb",
+            "1R$KBYTRP3QOdXlCBx2dzk",
+            "1kDD1yopT87PgXGbHYxDrf",
+            "2ci8AX44j6O8Lr29eFxLyf",
+            "2k4hklcZX0AhLEYFO5nh2H",
+            "38F_bUbFvBfv9QXygUodTG",
+            "38F_bUbFvBfv9QXygUodUq"
+          ],
+          "guid_strategy": "single"
+        },
+        {
+          "topic_id": "dc90342c-841d-4f6b-8f9f-cd8aed38c950",
+          "title": "Cabin 2",
+          "description": "304.3.1 Circular Space\n",
+          "all_guids": [
+            "02sTr6M6vE9Qf5C1OPPy9f",
+            "02sTr6M6vE9Qf5C1OPPyFA",
+            "0jno74fnz3JA4_tWzynQ3r",
+            "0jno74fnz3JA4_tWzynQUg",
+            "1R$KBYTRP3QOdXlCBx2d_t",
+            "1R$KBYTRP3QOdXlCBx2dzn",
+            "1kDD1yopT87PgXGbHYxDrg",
+            "2ci8AX44j6O8Lr29eFxLyk",
+            "38F_bUbFvBfv9QXygUodU9",
+            "38F_bUbFvBfv9QXygUodVn"
+          ],
+          "required_guids": [
+            "02sTr6M6vE9Qf5C1OPPy9f",
+            "02sTr6M6vE9Qf5C1OPPyFA",
+            "0jno74fnz3JA4_tWzynQ3r",
+            "0jno74fnz3JA4_tWzynQUg",
+            "1R$KBYTRP3QOdXlCBx2d_t",
+            "1R$KBYTRP3QOdXlCBx2dzn",
+            "1kDD1yopT87PgXGbHYxDrg",
+            "2ci8AX44j6O8Lr29eFxLyk",
+            "38F_bUbFvBfv9QXygUodU9",
+            "38F_bUbFvBfv9QXygUodVn"
+          ],
+          "guid_strategy": "single"
+        },
+        {
+          "topic_id": "48aad3f1-79e7-4de0-a883-16b00090e23e",
+          "title": "Space.b.22 : Co-working Space[26]",
+          "description": "304.3.1 Circular Space\nSpace.b.22 : Co-Working space[26] has not enough room for wheelchair turning space with diameter of 1.52 m. Largest possible space diameter is 1.26 m.\n",
+          "all_guids": [
+            "12f5QcaEv27vYRG99unEhW"
+          ],
+          "required_guids": [
+            "12f5QcaEv27vYRG99unEhW"
+          ],
+          "guid_strategy": "single"
+        }
+      ]
+    },
+    "305_3_size": {
+      "rule_code": "305.3",
+      "rule_title": "305_3_size",
+      "question": "What spaces in the current IFC model have inaccessible areas?",
+      "rule": "305.3 Size\nThe clear floor or ground space shall be 30 inches (760 mm) minimum by 48 inches (1220 mm) minimum.",
+      "parameters": "Applicable Space Classifications: Balcony, Circulation, Garage, Habitable, Institutional, Lobby, Mercantile, Office, Parking, Production, Refuge, Stair Hall, Workplace",
+      "issues_count": 1,
+      "issues": [
+        {
+          "topic_id": "a8910624-a9d3-4847-8d06-37df4a5e8fb3",
+          "title": "Space.b.2 : Stairs[49], Space.b.3 : Stairs[48], Space.b.47 : Stairs[42], Space.b.48 : Lobby[46], And Space.b.55 : Stairs[47]",
+          "description": "305.3 Size\nSpace.b.55 : Stairs[47] has inaccessible areas.\n",
+          "all_guids": [
+            "0jno74fnz3JA4_tWzynQV0",
+            "2Q4p8vO3f7xfeTuXPVwexW",
+            "2Q4p8vO3f7xfeTuXPVwezU",
+            "3$FAt$zaL8xQnSrjNsTfy8",
+            "3ilNunKRzC8O5AE9O61ty0",
+            "3uUWHjHcfEwfBz0Ci_6GKr",
+            "3uUWHjHcfEwfBz0Ci_6GMX"
+          ],
+          "required_guids": [
+            "0jno74fnz3JA4_tWzynQV0"
+          ],
+          "guid_strategy": "primary_and_cause"
+        }
+      ]
+    },
+    "504_2_tread_length": {
+      "rule_code": "504.2",
+      "rule_title": "504_2_tread_length",
+      "question": "What stairs in the current IFC model have tread lengths that do not meet the required minimum?",
+      "rule": "504.2 Treads and Risers\nTreads shall be 11 inches (280 mm) deep minimum.",
+      "parameters": "Stair Classification: Stair*",
+      "issues_count": 8,
+      "issues": [
+        {
+          "topic_id": "648b3287-3d7c-4712-99be-23edd982445d",
+          "title": "Stair.1.1: 200 Mm",
+          "description": "504.2 Treads and Risers\nStair Stair.1.1 tread length is 0.20 m. The minimum length for the tread is 0.28 m.\n",
+          "all_guids": [
+            "2epRaYhqX0DxnJHWOF5J_G"
+          ],
+          "required_guids": [
+            "2epRaYhqX0DxnJHWOF5J_G"
+          ],
+          "guid_strategy": "single"
+        },
+        {
+          "topic_id": "06c047f8-642e-4ad0-ab9c-4f13edd84fe2",
+          "title": "Stair.1.2: 200 Mm",
+          "description": "504.2 Treads and Risers\nStair Stair.1.2 tread length is 0.20 m. The minimum length for the tread is 0.28 m.\n",
+          "all_guids": [
+            "33ANSOGgzDP9smaVGaDGQt"
+          ],
+          "required_guids": [
+            "33ANSOGgzDP9smaVGaDGQt"
+          ],
+          "guid_strategy": "single"
+        },
+        {
+          "topic_id": "cee1cdaa-022e-404a-9929-cb0b7ebb36e9",
+          "title": "Stair.1.3: 200 Mm",
+          "description": "504.2 Treads and Risers\nStair Stair.1.3 tread length is 0.20 m. The minimum length for the tread is 0.28 m.\n",
+          "all_guids": [
+            "2epRaYhqX0DxnJHWOF5Jnz"
+          ],
+          "required_guids": [
+            "2epRaYhqX0DxnJHWOF5Jnz"
+          ],
+          "guid_strategy": "single"
+        },
+        {
+          "topic_id": "f15708cd-1363-4681-b9fc-563baddc7b1f",
+          "title": "Stair.1.4: 200 Mm",
+          "description": "504.2 Treads and Risers\nStair Stair.1.4 tread length is 0.20 m. The minimum length for the tread is 0.28 m.\n",
+          "all_guids": [
+            "2epRaYhqX0DxnJHWOF5JzT"
+          ],
+          "required_guids": [
+            "2epRaYhqX0DxnJHWOF5JzT"
+          ],
+          "guid_strategy": "single"
+        },
+        {
+          "topic_id": "53bc1a82-3f17-4dcb-8a95-fb5cfc18a3a7",
+          "title": "Stair.1.5: 200 Mm",
+          "description": "504.2 Treads and Risers\nStair Stair.1.5 tread length is 0.20 m. The minimum length for the tread is 0.28 m.\n",
+          "all_guids": [
+            "2Ev12zif18qhpprOVbtAFL"
+          ],
+          "required_guids": [
+            "2Ev12zif18qhpprOVbtAFL"
+          ],
+          "guid_strategy": "single"
+        },
+        {
+          "topic_id": "884e5e2b-a77d-46ad-95cf-801828aee026",
+          "title": "Stair.1.6: 200 Mm",
+          "description": "504.2 Treads and Risers\nStair Stair.1.6 tread length is 0.20 m. The minimum length for the tread is 0.28 m.\n",
+          "all_guids": [
+            "2Ev12zif18qhpprOVbtAEU"
+          ],
+          "required_guids": [
+            "2Ev12zif18qhpprOVbtAEU"
+          ],
+          "guid_strategy": "single"
+        },
+        {
+          "topic_id": "1fa613ad-0a2c-4406-8ea4-a2e34406ec5c",
+          "title": "Stair.1.7: 200 Mm",
+          "description": "504.2 Treads and Risers\nStair Stair.1.7 tread length is 0.20 m. The minimum length for the tread is 0.28 m.\n",
+          "all_guids": [
+            "2Ev12zif18qhpprOVbtAIt"
+          ],
+          "required_guids": [
+            "2Ev12zif18qhpprOVbtAIt"
+          ],
+          "guid_strategy": "single"
+        },
+        {
+          "topic_id": "9398fd04-99cd-4397-a767-559c3c5a5e22",
+          "title": "Stair.1.8: 200 Mm",
+          "description": "504.2 Treads and Risers\nStair Stair.1.8 tread length is 0.20 m. The minimum length for the tread is 0.28 m.\n",
+          "all_guids": [
+            "2Ev12zif18qhpprOVbtAHO"
+          ],
+          "required_guids": [
+            "2Ev12zif18qhpprOVbtAHO"
+          ],
+          "guid_strategy": "single"
+        }
+      ]
+    },
+    "clearance_front_of_doors": {
+      "rule_code": "BIM Validation: Clearance in Front of Doors",
+      "rule_title": "clearance_front_of_doors",
+      "question": "What doors in the current IFC model do not have the required clearance in front of them because a component intersects the free area?",
+      "rule": "Clearance in Front of Doors\nThis rule checks there is enough clearance in front of doors.",
+      "parameters": "Width, Depth, Height Adjustment: 0.05 m; Check both sides: false; Exclude: Door is Hatch",
+      "issues_count": 13,
+      "issues": [
+        {
+          "topic_id": "72728032-cdc0-4c13-9a99-1ccef568c195",
+          "title": "Furniture.b.1, Furniture.b.2 Too Close To Door.1.11 Component",
+          "description": "Clearance in Front of Doors\n- Component Furniture.b.1 intersects the required free area with dimensions 0.05 m and 0.02 m.<br/>\n- Furniture.b.2 intersects the required free area in 2 locations: with dimensions  0.05 m and 0.02 m\n  0.47 m and 0.25 m\n",
+          "all_guids": [
+            "12f5QcaEv27vYRG99unEiM",
+            "1xxBAYOm5EU8_Pw3pzr538",
+            "1xxBAYOm5EU8_Pw3pzr5V2"
+          ],
+          "required_guids": [
+            "12f5QcaEv27vYRG99unEiM"
+          ],
+          "guid_strategy": "primary_and_cause"
+        },
+        {
+          "topic_id": "6a0e56e8-3667-445b-94ad-c55304894466",
+          "title": "Furniture.b.1 Too Close To Door.1.2 Component",
+          "description": "Clearance in Front of Doors\n- Component Furniture.b.1 intersects the required free area with dimensions 0.60 m and 0.27 m.\n",
+          "all_guids": [
+            "02sTr6M6vE9Qf5C1OPPy8g",
+            "3KDZhy$nzFoQxETLFlDfOu"
+          ],
+          "required_guids": [
+            "02sTr6M6vE9Qf5C1OPPy8g"
+          ],
+          "guid_strategy": "primary_and_cause"
+        },
+        {
+          "topic_id": "20b278a8-3f09-4b85-97e5-e04b9298f17a",
+          "title": "Furniture.b.1 Too Close To Door.1.29 Component",
+          "description": "Clearance in Front of Doors\n- Component Furniture.b.1 intersects the required free area with dimensions 0.60 m and 0.27 m.\n",
+          "all_guids": [
+            "0jno74fnz3JA4_tWzynQ3f",
+            "3KDZhy$nzFoQxETLFlDfVv"
+          ],
+          "required_guids": [
+            "0jno74fnz3JA4_tWzynQ3f"
+          ],
+          "guid_strategy": "primary_and_cause"
+        },
+        {
+          "topic_id": "d9e81e39-7a63-4a0e-bb0f-0294c7354198",
+          "title": "Furniture.b.1 Too Close To Door.1.35 Component",
+          "description": "Clearance in Front of Doors\n- Component Furniture.b.1 intersects the required free area with dimensions 0.60 m and 0.27 m.\n",
+          "all_guids": [
+            "0jno74fnz3JA4_tWzynQ3O",
+            "3KDZhy$nzFoQxETLFlDfVz"
+          ],
+          "required_guids": [
+            "0jno74fnz3JA4_tWzynQ3O"
+          ],
+          "guid_strategy": "primary_and_cause"
+        },
+        {
+          "topic_id": "07711026-bdbc-470c-b678-819adf8b8110",
+          "title": "Furniture.b.1 Too Close To Door.1.38 Component",
+          "description": "Clearance in Front of Doors\n- Component Furniture.b.1 intersects the required free area with dimensions 0.60 m and 0.27 m.\n",
+          "all_guids": [
+            "3KDZhy$nzFoQxETLFlDfTL",
+            "3xJqPJrvz2sQPZbf6JPpGL"
+          ],
+          "required_guids": [
+            "3KDZhy$nzFoQxETLFlDfTL"
+          ],
+          "guid_strategy": "primary_and_cause"
+        },
+        {
+          "topic_id": "f3312b51-1e99-412b-83c8-42d9d4f24f9e",
+          "title": "Furniture.b.1 Too Close To Door.1.5 Component",
+          "description": "Clearance in Front of Doors\n- Component Furniture.b.1 intersects the required free area with dimensions 0.60 m and 0.27 m.\n",
+          "all_guids": [
+            "02sTr6M6vE9Qf5C1OPPyEr",
+            "3KDZhy$nzFoQxETLFlDfOm"
+          ],
+          "required_guids": [
+            "02sTr6M6vE9Qf5C1OPPyEr"
+          ],
+          "guid_strategy": "primary_and_cause"
+        },
+        {
+          "topic_id": "a2fa4814-3985-459d-a711-861cd00f55ea",
+          "title": "Furniture.b.2, Furniture.b.1 Too Close To Door.1.30 Component",
+          "description": "Clearance in Front of Doors\n- Component Furniture.b.2 intersects the required free area with dimensions 0.05 m and 0.02 m.<br/>\n- Furniture.b.1 intersects the required free area in 2 locations: with dimensions  0.05 m and 0.02 m\n  0.47 m and 0.25 m\n",
+          "all_guids": [
+            "0jno74fnz3JA4_tWzynQ3d",
+            "3KDZhy$nzFoQxETLFlDfVu",
+            "3KDZhy$nzFoQxETLFlDfVx"
+          ],
+          "required_guids": [
+            "0jno74fnz3JA4_tWzynQ3d"
+          ],
+          "guid_strategy": "primary_and_cause"
+        },
+        {
+          "topic_id": "ae699a5d-e790-4b21-a55d-a9399502cb98",
+          "title": "Furniture.b.2, Furniture.b.1 Too Close To Door.1.1 Component",
+          "description": "Clearance in Front of Doors\n- Component Furniture.b.2 intersects the required free area with dimensions 0.05 m and 0.02 m.<br/>\n- Furniture.b.1 intersects the required free area in 2 locations: with dimensions  0.05 m and 0.02 m\n  0.47 m and 0.45 m\n",
+          "all_guids": [
+            "02sTr6M6vE9Qf5C1OPPy8h",
+            "3KDZhy$nzFoQxETLFlDfO$",
+            "3KDZhy$nzFoQxETLFlDfOw"
+          ],
+          "required_guids": [
+            "02sTr6M6vE9Qf5C1OPPy8h"
+          ],
+          "guid_strategy": "primary_and_cause"
+        },
+        {
+          "topic_id": "9f399dc2-7832-4b8a-827b-cf122f14035a",
+          "title": "Furniture.b.2 Too Close To Door.1.15 Component",
+          "description": "Clearance in Front of Doors\n- Component Furniture.b.2 intersects the required free area with dimensions 0.60 m and 0.27 m.\n",
+          "all_guids": [
+            "38F_bUbFvBfv9QXygUodUv",
+            "3KDZhy$nzFoQxETLFlDfVO"
+          ],
+          "required_guids": [
+            "38F_bUbFvBfv9QXygUodUv"
+          ],
+          "guid_strategy": "primary_and_cause"
+        },
+        {
+          "topic_id": "02eb30f5-9220-4b5e-a102-c81a4c592dd2",
+          "title": "Furniture.b.2 Too Close To Door.1.17 Component",
+          "description": "Clearance in Front of Doors\n- Component Furniture.b.2 intersects the required free area with dimensions 0.60 m and 0.27 m.\n",
+          "all_guids": [
+            "38F_bUbFvBfv9QXygUodUn",
+            "3KDZhy$nzFoQxETLFlDfVK"
+          ],
+          "required_guids": [
+            "38F_bUbFvBfv9QXygUodUn"
+          ],
+          "guid_strategy": "primary_and_cause"
+        },
+        {
+          "topic_id": "d8111757-10d0-482e-87c5-8cf9e7e24306",
+          "title": "Furniture.b.2 Too Close To Door.1.24 Component",
+          "description": "Clearance in Front of Doors\n- Component Furniture.b.2 intersects the required free area with dimensions 0.60 m and 0.27 m.\n",
+          "all_guids": [
+            "1R$KBYTRP3QOdXlCBx2dzb",
+            "3KDZhy$nzFoQxETLFlDfVC"
+          ],
+          "required_guids": [
+            "1R$KBYTRP3QOdXlCBx2dzb"
+          ],
+          "guid_strategy": "primary_and_cause"
+        },
+        {
+          "topic_id": "4575dd97-ae63-4bcb-856b-77a2ee07367c",
+          "title": "Furniture.b.2 Too Close To Door.1.27 Component",
+          "description": "Clearance in Front of Doors\n- Component Furniture.b.2 intersects the required free area with dimensions 0.60 m and 0.27 m.\n",
+          "all_guids": [
+            "1xxBAYOm5EU8_Pw3pzr54H",
+            "2ci8AX44j6O8Lr29eFxLyp"
+          ],
+          "required_guids": [
+            "1xxBAYOm5EU8_Pw3pzr54H"
+          ],
+          "guid_strategy": "primary_and_cause"
+        },
+        {
+          "topic_id": "ea82d1cd-2bd4-49f4-bdf8-29173d564a6f",
+          "title": "Furniture.b.2 Too Close To Door.1.39 Component",
+          "description": "Clearance in Front of Doors\n- Component Furniture.b.2 intersects the required free area with dimensions 0.60 m and 0.27 m.\n",
+          "all_guids": [
+            "2k4hklcZX0AhLEYFO5nizD",
+            "3KDZhy$nzFoQxETLFlDfVG"
+          ],
+          "required_guids": [
+            "2k4hklcZX0AhLEYFO5nizD"
+          ],
+          "guid_strategy": "primary_and_cause"
+        }
+      ]
+    },
+    "slabs_guarded_against_falling": {
+      "rule_code": "Slabs must be Guarded against Falling",
+      "rule_title": "slabs_guarded_against_falling",
+      "question": "What slabs in the current IFC model are not guarded against falling (missing barriers or acceptable drop to landing)?",
+      "rule": "Slabs must be Guarded against Falling\nThis rule checks that it is not possible to fall from slabs. The rule checks that horizontal components are surrounded by vertical components, such as walls or railings. If no vertical component exists on the edge of a horizontal component, another horizontal component or stairs needs to continue and the drop to the other horizontal component must not be more than specified.",
+      "parameters": "Include Slab Building Elements - General: One Of [Balconies, Floor Slabs]. Barrier Components: Include Wall, Railing, Object, Column, Stair. Min barrier total height 1 m; max horizontal or vertical gap between barriers 0.1 m; max horizontal or vertical gap from platform to barriers 0.1 m. Fall and Landing: Include Slab, Site, Stair, Ramp. Max distance to landing 0.1 m; max fall 0.5 m; min landing width 0.2 m. Barrier height and climbable: distance to top of barrier (longest reach) 1 m; height of climb (unclimbable above) 0.6 m; side width (min foothold) 0.15 m. Barrier height measured from top of climbable curb: False",
+      "issues_count": 6,
+      "issues": [
+        {
+          "topic_id": "8acfaca7-e649-46e1-a5ec-37d3754ed178",
+          "title": "Insufficient Vertical Barriers",
+          "description": "Slabs must be Guarded against Falling\n",
+          "all_guids": [
+            "02sTr6M6vE9Qf5C1OPPy8X",
+            "02sTr6M6vE9Qf5C1OPPy9L",
+            "02sTr6M6vE9Qf5C1OPPy9U",
+            "02sTr6M6vE9Qf5C1OPPy9h",
+            "02sTr6M6vE9Qf5C1OPPyE3",
+            "02sTr6M6vE9Qf5C1OPPyE7",
+            "02sTr6M6vE9Qf5C1OPPyEq",
+            "02sTr6M6vE9Qf5C1OPPyEt",
+            "02sTr6M6vE9Qf5C1OPPyEu",
+            "02sTr6M6vE9Qf5C1OPPyFW",
+            "02sTr6M6vE9Qf5C1OPPyFi",
+            "02sTr6M6vE9Qf5C1OPPyFq",
+            "0gMZ1IS1D3FvSg_p9VAdYB",
+            "0gMZ1IS1D3FvSg_p9VAdds",
+            "0jno74fnz3JA4_tWzynQVu",
+            "12f5QcaEv27vYRG99unEXL",
+            "12f5QcaEv27vYRG99unEXM",
+            "12f5QcaEv27vYRG99unEXN",
+            "12f5QcaEv27vYRG99unEXe",
+            "1R$KBYTRP3QOdXlCBx2d$D",
+            "1R$KBYTRP3QOdXlCBx2d$Z",
+            "1R$KBYTRP3QOdXlCBx2d_7",
+            "1R$KBYTRP3QOdXlCBx2d_9",
+            "1R$KBYTRP3QOdXlCBx2d_v",
+            "1R$KBYTRP3QOdXlCBx2dhn",
+            "1R$KBYTRP3QOdXlCBx2dzp",
+            "2k4hklcZX0AhLEYFO5nizC",
+            "2rgc2m7xv6XO$hLnzZPAj1",
+            "33ANSOGgzDP9smaVGaDGKR",
+            "38F_bUbFvBfv9QXygUod3X",
+            "38F_bUbFvBfv9QXygUodOj",
+            "38F_bUbFvBfv9QXygUodUF",
+            "38F_bUbFvBfv9QXygUodUH",
+            "38F_bUbFvBfv9QXygUodUJ",
+            "38F_bUbFvBfv9QXygUodUu",
+            "38F_bUbFvBfv9QXygUodVR",
+            "38F_bUbFvBfv9QXygUodVt",
+            "3KT7y79217qhD1ukhFstrg",
+            "3qHHwYbFDANA3sEF6iPkYV",
+            "3qHHwYbFDANA3sEF6iPkaT"
+          ],
+          "required_guids": [
+            "02sTr6M6vE9Qf5C1OPPy8X",
+            "02sTr6M6vE9Qf5C1OPPy9L",
+            "02sTr6M6vE9Qf5C1OPPy9U",
+            "02sTr6M6vE9Qf5C1OPPy9h",
+            "02sTr6M6vE9Qf5C1OPPyE3",
+            "02sTr6M6vE9Qf5C1OPPyE7",
+            "02sTr6M6vE9Qf5C1OPPyEq",
+            "02sTr6M6vE9Qf5C1OPPyEt",
+            "02sTr6M6vE9Qf5C1OPPyEu",
+            "02sTr6M6vE9Qf5C1OPPyFW",
+            "02sTr6M6vE9Qf5C1OPPyFi",
+            "02sTr6M6vE9Qf5C1OPPyFq",
+            "0gMZ1IS1D3FvSg_p9VAdYB",
+            "0gMZ1IS1D3FvSg_p9VAdds",
+            "0jno74fnz3JA4_tWzynQVu",
+            "12f5QcaEv27vYRG99unEXL",
+            "12f5QcaEv27vYRG99unEXM",
+            "12f5QcaEv27vYRG99unEXN",
+            "12f5QcaEv27vYRG99unEXe",
+            "1R$KBYTRP3QOdXlCBx2d$D",
+            "1R$KBYTRP3QOdXlCBx2d$Z",
+            "1R$KBYTRP3QOdXlCBx2d_7",
+            "1R$KBYTRP3QOdXlCBx2d_9",
+            "1R$KBYTRP3QOdXlCBx2d_v",
+            "1R$KBYTRP3QOdXlCBx2dhn",
+            "1R$KBYTRP3QOdXlCBx2dzp",
+            "2k4hklcZX0AhLEYFO5nizC",
+            "2rgc2m7xv6XO$hLnzZPAj1",
+            "33ANSOGgzDP9smaVGaDGKR",
+            "38F_bUbFvBfv9QXygUod3X",
+            "38F_bUbFvBfv9QXygUodOj",
+            "38F_bUbFvBfv9QXygUodUF",
+            "38F_bUbFvBfv9QXygUodUH",
+            "38F_bUbFvBfv9QXygUodUJ",
+            "38F_bUbFvBfv9QXygUodUu",
+            "38F_bUbFvBfv9QXygUodVR",
+            "38F_bUbFvBfv9QXygUodVt",
+            "3KT7y79217qhD1ukhFstrg",
+            "3qHHwYbFDANA3sEF6iPkYV",
+            "3qHHwYbFDANA3sEF6iPkaT"
+          ],
+          "guid_strategy": "single"
+        },
+        {
+          "topic_id": "5c128d0a-fe24-4d1d-b544-b11d19477fa7",
+          "title": "Slab.1.1",
+          "description": "Slabs must be Guarded against Falling\nSlab.1.1 is missing a barrier/barriers.\n",
+          "all_guids": [
+            "2rgc2m7xv6XO$hLnzZPAj1"
+          ],
+          "required_guids": [
+            "2rgc2m7xv6XO$hLnzZPAj1"
+          ],
+          "guid_strategy": "single"
+        },
+        {
+          "topic_id": "051b8432-55d0-4734-8eb2-a8141e42eacc",
+          "title": "Slab.1.2",
+          "description": "Slabs must be Guarded against Falling\nSlab.1.2 is missing a barrier/barriers.\n",
+          "all_guids": [
+            "0gMZ1IS1D3FvSg_p9VAdds"
+          ],
+          "required_guids": [
+            "0gMZ1IS1D3FvSg_p9VAdds"
+          ],
+          "guid_strategy": "single"
+        },
+        {
+          "topic_id": "61b54b19-5a55-46a7-902a-1c058351b636",
+          "title": "Slab.1.3",
+          "description": "Slabs must be Guarded against Falling\nSlab.1.3 has barriers that are too low. The required height of a barrier is 1.00 m, and the height in the model is 0.48 m.\n",
+          "all_guids": [
+            "0gMZ1IS1D3FvSg_p9VAdYB",
+            "2Ev12zif18qhpprOVbtAHO",
+            "2Ev12zif18qhpprOVbtAHV"
+          ],
+          "required_guids": [
+            "0gMZ1IS1D3FvSg_p9VAdYB",
+            "2Ev12zif18qhpprOVbtAHO",
+            "2Ev12zif18qhpprOVbtAHV"
+          ],
+          "guid_strategy": "single"
+        },
+        {
+          "topic_id": "386a37d6-35ba-4923-bbfd-82e41027a577",
+          "title": "Slab.1.3",
+          "description": "Slabs must be Guarded against Falling\nSlab.1.3 is missing a barrier/barriers.\n",
+          "all_guids": [
+            "0gMZ1IS1D3FvSg_p9VAdYB"
+          ],
+          "required_guids": [
+            "0gMZ1IS1D3FvSg_p9VAdYB"
+          ],
+          "guid_strategy": "single"
+        },
+        {
+          "topic_id": "2b11b619-5b43-4c90-bec3-f21802f937b3",
+          "title": "Slab.1.4",
+          "description": "Slabs must be Guarded against Falling\nSlab.1.4 has barriers that are too low. The required height of a barrier is 1.00 m, and the height in the model is 0.00 m.\n",
+          "all_guids": [
+            "021Pqtlf91HwMpw7JVoT$x",
+            "0WJf9giaLFxAIlkBabbQjv",
+            "0jno74fnz3JA4_tWzynQPP",
+            "0jno74fnz3JA4_tWzynQUx",
+            "33ANSOGgzDP9smaVGaDGKR"
+          ],
+          "required_guids": [
+            "021Pqtlf91HwMpw7JVoT$x",
+            "0WJf9giaLFxAIlkBabbQjv",
+            "0jno74fnz3JA4_tWzynQPP",
+            "0jno74fnz3JA4_tWzynQUx",
+            "33ANSOGgzDP9smaVGaDGKR"
+          ],
+          "guid_strategy": "single"
+        }
+      ]
+    },
+    "space_validation_inside": {
+      "rule_code": "General Space Check: Space Validation",
+      "rule_title": "space_validation_inside",
+      "question": "What spaces in the current IFC model have components incorrectly inside the space (space validation - inside check)?",
+      "rule": "Space Validation\nThis rule checks that space geometry and location are correct. It also checks intersections (inside only) with other components. This template focuses only on the 'inside' check: components that are inside the space.",
+      "parameters": "Include: Wall, CurtainWall, Column, Slab, Roof. Tolerance 0.03 m. Check Bottom surface: True; Check Top surface: False",
+      "issues_count": 3,
+      "issues": [
+        {
+          "topic_id": "df50cc57-ecce-4185-bb1c-874b2a20b4d3",
+          "title": "Space.b.48 : Lobby[46]",
+          "description": "Space Validation\n- Components Wall.1.181 and Wall.1.204 are inside the space.\n- Space intersects with Slab.1.1. The intersection area is 137.30 m2.\n- Space perimeter is not totally aligned with bounding components. The total length of these segments is 6.68 m.\n\n",
+          "all_guids": [
+            "0jno74fnz3JA4_tWzynQV0",
+            "2rgc2m7xv6XO$hLnzZPAj1",
+            "3$FAt$zaL8xQnSrjNsTfy8",
+            "3uUWHjHcfEwfBz0Ci_6GMX"
+          ],
+          "required_guids": [
+            "3uUWHjHcfEwfBz0Ci_6GMX"
+          ],
+          "guid_strategy": "element"
+        },
+        {
+          "topic_id": "2d924435-9aa4-4d1d-9d8d-8eae060f8163",
+          "title": "Space.b.67 : Elevator[27]",
+          "description": "Space Validation\n- Components Wall.1.188 are inside the space.\n\n",
+          "all_guids": [
+            "0jno74fnz3JA4_tWzynQUf",
+            "0jno74fnz3JA4_tWzynQVy"
+          ],
+          "required_guids": [
+            "0jno74fnz3JA4_tWzynQUf"
+          ],
+          "guid_strategy": "element"
+        },
+        {
+          "topic_id": "071d1121-35e8-4ab5-a95a-bcb2bb396f6c",
+          "title": "Space.b.71 : Elevator[3]",
+          "description": "Space Validation\n- Components Wall.1.239 are inside the space.\n\n",
+          "all_guids": [
+            "0f9vpvusf8o9jkjUUYDyxE",
+            "1kDD1yopT87PgXGbHYxDrk"
+          ],
+          "required_guids": [
+            "1kDD1yopT87PgXGbHYxDrk"
+          ],
+          "guid_strategy": "element"
+        }
+      ]
+    },
+    "space_validation_intersect": {
+      "rule_code": "General Space Check: Space Validation",
+      "rule_title": "space_validation_intersect",
+      "question": "What spaces in the current IFC model intersect with slabs, walls or other components (space validation - intersect check)?",
+      "rule": "Space Validation\nThis rule checks that space geometry and location are correct. It checks that space does not incorrectly intersect with slabs, walls or other components. This template focuses only on the 'intersect' check.",
+      "parameters": "Include: Wall, CurtainWall, Column, Slab, Roof. Tolerance 0.03 m. Check Bottom surface: True; Check Top surface: False; Exclude: If component is fully inside the space.",
+      "issues_count": 4,
+      "issues": [
+        {
+          "topic_id": "551629ce-f900-43df-b25c-a895863fa41a",
+          "title": "Space.b.69 : Kitchen[34]",
+          "description": "Space Validation\n- Space intersects with Slab.1.1. The intersection area is 7.91 m2.\n- Space touches slab, roof, or space surface below itself, but the area of touching is only 8.06 m2, which is 98% of the components surface.\n- Space perimeter is not totally aligned with bounding components. The total length of these segments is 1.15 m.\n\n",
+          "all_guids": [
+            "0jno74fnz3JA4_tWzynQP0",
+            "2rgc2m7xv6XO$hLnzZPAj1"
+          ],
+          "required_guids": [
+            "0jno74fnz3JA4_tWzynQP0"
+          ],
+          "guid_strategy": "element"
+        },
+        {
+          "topic_id": "418a148f-04eb-4eaa-b1fb-1eaad7a35c67",
+          "title": "Space.b.70 : Kitchen[13]",
+          "description": "Space Validation\n- Space intersects with Slab.1.1. The intersection area is 7.91 m2.\n- Space touches slab, roof, or space surface below itself, but the area of touching is only 8.06 m2, which is 98% of the components surface.\n- Space perimeter is not totally aligned with bounding components. The total length of these segments is 1.15 m.\n\n",
+          "all_guids": [
+            "1Y97YmJfPCNx2s3uSKGZDf",
+            "2rgc2m7xv6XO$hLnzZPAj1"
+          ],
+          "required_guids": [
+            "1Y97YmJfPCNx2s3uSKGZDf"
+          ],
+          "guid_strategy": "element"
+        },
+        {
+          "topic_id": "830b15ee-e8a8-403f-a581-0a244377bc14",
+          "title": "Space.b.1 : Lobby[113]",
+          "description": "Space Validation\n- Space intersects with Slab.1.2. The intersection area is 58.60 m2.\n- Space perimeter is not totally aligned with bounding components. The total length of these segments is 1.67 m.\n\n",
+          "all_guids": [
+            "0gMZ1IS1D3FvSg_p9VAdds",
+            "3m224$uFjFqBV3ckWFbLG7"
+          ],
+          "required_guids": [
+            "3m224$uFjFqBV3ckWFbLG7"
+          ],
+          "guid_strategy": "element"
+        },
+        {
+          "topic_id": "4d9589dd-fac2-4679-b40f-77a0055fdf72",
+          "title": "Space.b.79 : Lobby[68]",
+          "description": "Space Validation\n- Space intersects with Slab.1.3. The intersection area is 58.60 m2.\n- Space perimeter is not totally aligned with bounding components. The total length of these segments is 1.67 m.\n\n",
+          "all_guids": [
+            "0gMZ1IS1D3FvSg_p9VAdYB",
+            "2k4hklcZX0AhLEYFO5nh8P"
+          ],
+          "required_guids": [
+            "2k4hklcZX0AhLEYFO5nh8P"
+          ],
+          "guid_strategy": "element"
+        }
+      ]
+    },
+    "spaces_same_storey_same_bottom_elevation": {
+      "rule_code": "Spaces in Same Building Storey Must Have Same Bottom Elevation",
+      "rule_title": "spaces_same_storey_same_bottom_elevation",
+      "question": "What spaces in the same building storey in the current IFC model do not have the same bottom elevation?",
+      "rule": "Spaces in Same Building Storey Must Have Same Bottom Elevation\nThe rule checks that components in the model or in the same building storey with the same construction type have same dimensions.",
+      "parameters": "",
+      "issues_count": 3,
+      "issues": [
+        {
+          "topic_id": "f65de412-01e9-434e-a24f-bb644c124b7a",
+          "title": "Bottom Elevation Is 0.00 M",
+          "description": "Spaces in Same Building Storey Must Have Same Bottom Elevation\nSpace components whose Bottom Elevation is 0.00 m. Number of components is 37\n",
+          "all_guids": [
+            "0jno74fnz3JA4_tWzynQ3l",
+            "0jno74fnz3JA4_tWzynQ3m",
+            "0jno74fnz3JA4_tWzynQ3n",
+            "0jno74fnz3JA4_tWzynQ3r",
+            "0jno74fnz3JA4_tWzynQ3s",
+            "0jno74fnz3JA4_tWzynQ3t",
+            "0jno74fnz3JA4_tWzynQP0",
+            "0jno74fnz3JA4_tWzynQPT",
+            "0jno74fnz3JA4_tWzynQUa",
+            "0jno74fnz3JA4_tWzynQUb",
+            "0jno74fnz3JA4_tWzynQUc",
+            "0jno74fnz3JA4_tWzynQUf",
+            "0jno74fnz3JA4_tWzynQUg",
+            "0jno74fnz3JA4_tWzynQUh",
+            "12f5QcaEv27vYRG99unEhW",
+            "1Y97YmJfPCNx2s3uSKGZDf",
+            "1kDD1yopT87PgXGbHYxACp",
+            "1kDD1yopT87PgXGbHYxDqM",
+            "1kDD1yopT87PgXGbHYxDrW",
+            "1kDD1yopT87PgXGbHYxDre",
+            "1kDD1yopT87PgXGbHYxDrf",
+            "1kDD1yopT87PgXGbHYxDrg",
+            "1kDD1yopT87PgXGbHYxDrh",
+            "1kDD1yopT87PgXGbHYxDrj",
+            "1kDD1yopT87PgXGbHYxDrk",
+            "2Q4p8vO3f7xfeTuXPVwexW",
+            "2Q4p8vO3f7xfeTuXPVwezU",
+            "2ci8AX44j6O8Lr29eFxLye",
+            "2ci8AX44j6O8Lr29eFxLyf",
+            "2ci8AX44j6O8Lr29eFxLyg",
+            "2ci8AX44j6O8Lr29eFxLyk",
+            "2ci8AX44j6O8Lr29eFxLyl",
+            "2ci8AX44j6O8Lr29eFxLym",
+            "3ilNunKRzC8O5AE9O61ty0",
+            "3uUWHjHcfEwfBz0Ci_6GKr",
+            "3uUWHjHcfEwfBz0Ci_6GMX",
+            "3uUWHjHcfEwfBz0Ci_6GTk"
+          ],
+          "required_guids": [
+            "0jno74fnz3JA4_tWzynQ3l",
+            "0jno74fnz3JA4_tWzynQ3m",
+            "0jno74fnz3JA4_tWzynQ3n",
+            "0jno74fnz3JA4_tWzynQ3r",
+            "0jno74fnz3JA4_tWzynQ3s",
+            "0jno74fnz3JA4_tWzynQ3t",
+            "0jno74fnz3JA4_tWzynQP0",
+            "0jno74fnz3JA4_tWzynQPT",
+            "0jno74fnz3JA4_tWzynQUa",
+            "0jno74fnz3JA4_tWzynQUb",
+            "0jno74fnz3JA4_tWzynQUc",
+            "0jno74fnz3JA4_tWzynQUf",
+            "0jno74fnz3JA4_tWzynQUg",
+            "0jno74fnz3JA4_tWzynQUh",
+            "12f5QcaEv27vYRG99unEhW",
+            "1Y97YmJfPCNx2s3uSKGZDf",
+            "1kDD1yopT87PgXGbHYxACp",
+            "1kDD1yopT87PgXGbHYxDqM",
+            "1kDD1yopT87PgXGbHYxDrW",
+            "1kDD1yopT87PgXGbHYxDre",
+            "1kDD1yopT87PgXGbHYxDrf",
+            "1kDD1yopT87PgXGbHYxDrg",
+            "1kDD1yopT87PgXGbHYxDrh",
+            "1kDD1yopT87PgXGbHYxDrj",
+            "1kDD1yopT87PgXGbHYxDrk",
+            "2Q4p8vO3f7xfeTuXPVwexW",
+            "2Q4p8vO3f7xfeTuXPVwezU",
+            "2ci8AX44j6O8Lr29eFxLye",
+            "2ci8AX44j6O8Lr29eFxLyf",
+            "2ci8AX44j6O8Lr29eFxLyg",
+            "2ci8AX44j6O8Lr29eFxLyk",
+            "2ci8AX44j6O8Lr29eFxLyl",
+            "2ci8AX44j6O8Lr29eFxLym",
+            "3ilNunKRzC8O5AE9O61ty0",
+            "3uUWHjHcfEwfBz0Ci_6GKr",
+            "3uUWHjHcfEwfBz0Ci_6GMX",
+            "3uUWHjHcfEwfBz0Ci_6GTk"
+          ],
+          "guid_strategy": "multiple"
+        },
+        {
+          "topic_id": "02b853a3-52b1-4087-afd2-a0e71307c0c1",
+          "title": "Bottom Elevation Is 3.50 M",
+          "description": "Spaces in Same Building Storey Must Have Same Bottom Elevation\nSpace components whose Bottom Elevation is 3.50 m. Number of components is 29\n",
+          "all_guids": [
+            "1R$KBYTRP3QOdXlCBx2d_p",
+            "1R$KBYTRP3QOdXlCBx2d_s",
+            "1R$KBYTRP3QOdXlCBx2d_t",
+            "1R$KBYTRP3QOdXlCBx2dxV",
+            "1R$KBYTRP3QOdXlCBx2dzk",
+            "1R$KBYTRP3QOdXlCBx2dzl",
+            "1R$KBYTRP3QOdXlCBx2dzm",
+            "1R$KBYTRP3QOdXlCBx2dzn",
+            "2k4hklcZX0AhLEYFO5nh24",
+            "2k4hklcZX0AhLEYFO5nh2G",
+            "2k4hklcZX0AhLEYFO5nh2H",
+            "2k4hklcZX0AhLEYFO5nh2V",
+            "2k4hklcZX0AhLEYFO5nh8P",
+            "38F_bUbFvBfv9QXygUod2Q",
+            "38F_bUbFvBfv9QXygUod2S",
+            "38F_bUbFvBfv9QXygUod2V",
+            "38F_bUbFvBfv9QXygUod3D",
+            "38F_bUbFvBfv9QXygUodTG",
+            "38F_bUbFvBfv9QXygUodTL",
+            "38F_bUbFvBfv9QXygUodTN",
+            "38F_bUbFvBfv9QXygUodU9",
+            "38F_bUbFvBfv9QXygUodUA",
+            "38F_bUbFvBfv9QXygUodUB",
+            "38F_bUbFvBfv9QXygUodUh",
+            "38F_bUbFvBfv9QXygUodUq",
+            "38F_bUbFvBfv9QXygUodVn",
+            "38F_bUbFvBfv9QXygUodVo",
+            "38F_bUbFvBfv9QXygUodVp",
+            "3m224$uFjFqBV3ckWFbLG7"
+          ],
+          "required_guids": [
+            "1R$KBYTRP3QOdXlCBx2d_p",
+            "1R$KBYTRP3QOdXlCBx2d_s",
+            "1R$KBYTRP3QOdXlCBx2d_t",
+            "1R$KBYTRP3QOdXlCBx2dxV",
+            "1R$KBYTRP3QOdXlCBx2dzk",
+            "1R$KBYTRP3QOdXlCBx2dzl",
+            "1R$KBYTRP3QOdXlCBx2dzm",
+            "1R$KBYTRP3QOdXlCBx2dzn",
+            "2k4hklcZX0AhLEYFO5nh24",
+            "2k4hklcZX0AhLEYFO5nh2G",
+            "2k4hklcZX0AhLEYFO5nh2H",
+            "2k4hklcZX0AhLEYFO5nh2V",
+            "2k4hklcZX0AhLEYFO5nh8P",
+            "38F_bUbFvBfv9QXygUod2Q",
+            "38F_bUbFvBfv9QXygUod2S",
+            "38F_bUbFvBfv9QXygUod2V",
+            "38F_bUbFvBfv9QXygUod3D",
+            "38F_bUbFvBfv9QXygUodTG",
+            "38F_bUbFvBfv9QXygUodTL",
+            "38F_bUbFvBfv9QXygUodTN",
+            "38F_bUbFvBfv9QXygUodU9",
+            "38F_bUbFvBfv9QXygUodUA",
+            "38F_bUbFvBfv9QXygUodUB",
+            "38F_bUbFvBfv9QXygUodUh",
+            "38F_bUbFvBfv9QXygUodUq",
+            "38F_bUbFvBfv9QXygUodVn",
+            "38F_bUbFvBfv9QXygUodVo",
+            "38F_bUbFvBfv9QXygUodVp",
+            "3m224$uFjFqBV3ckWFbLG7"
+          ],
+          "guid_strategy": "multiple"
+        },
+        {
+          "topic_id": "8bc8950a-be8c-4c56-83a7-49b4c48ba5be",
+          "title": "Bottom Elevation Is 7.00 M",
+          "description": "Spaces in Same Building Storey Must Have Same Bottom Elevation\nSpace components whose Bottom Elevation is 7.00 m. Number of components is 18\n",
+          "all_guids": [
+            "02sTr6M6vE9Qf5C1OPPy8Y",
+            "02sTr6M6vE9Qf5C1OPPy8e",
+            "02sTr6M6vE9Qf5C1OPPy8i",
+            "02sTr6M6vE9Qf5C1OPPy8j",
+            "02sTr6M6vE9Qf5C1OPPy8k",
+            "02sTr6M6vE9Qf5C1OPPy9I",
+            "02sTr6M6vE9Qf5C1OPPy9f",
+            "02sTr6M6vE9Qf5C1OPPy9k",
+            "02sTr6M6vE9Qf5C1OPPy9l",
+            "02sTr6M6vE9Qf5C1OPPyE9",
+            "02sTr6M6vE9Qf5C1OPPyEB",
+            "02sTr6M6vE9Qf5C1OPPyEC",
+            "02sTr6M6vE9Qf5C1OPPyED",
+            "02sTr6M6vE9Qf5C1OPPyEF",
+            "02sTr6M6vE9Qf5C1OPPyEy",
+            "02sTr6M6vE9Qf5C1OPPyF8",
+            "02sTr6M6vE9Qf5C1OPPyFA",
+            "02sTr6M6vE9Qf5C1OPPyFB"
+          ],
+          "required_guids": [
+            "02sTr6M6vE9Qf5C1OPPy8Y",
+            "02sTr6M6vE9Qf5C1OPPy8e",
+            "02sTr6M6vE9Qf5C1OPPy8i",
+            "02sTr6M6vE9Qf5C1OPPy8j",
+            "02sTr6M6vE9Qf5C1OPPy8k",
+            "02sTr6M6vE9Qf5C1OPPy9I",
+            "02sTr6M6vE9Qf5C1OPPy9f",
+            "02sTr6M6vE9Qf5C1OPPy9k",
+            "02sTr6M6vE9Qf5C1OPPy9l",
+            "02sTr6M6vE9Qf5C1OPPyE9",
+            "02sTr6M6vE9Qf5C1OPPyEB",
+            "02sTr6M6vE9Qf5C1OPPyEC",
+            "02sTr6M6vE9Qf5C1OPPyED",
+            "02sTr6M6vE9Qf5C1OPPyEF",
+            "02sTr6M6vE9Qf5C1OPPyEy",
+            "02sTr6M6vE9Qf5C1OPPyF8",
+            "02sTr6M6vE9Qf5C1OPPyFA",
+            "02sTr6M6vE9Qf5C1OPPyFB"
+          ],
+          "guid_strategy": "multiple"
+        }
+      ]
+    },
+    "404_2_5_two_doors_in_series": {
+      "rule_code": "404.2.5",
+      "rule_title": "404_2_5_two_doors_in_series",
+      "question": "What pairs of doors in series in the current IFC model do not have the minimum required distance between them?",
+      "rule": "404.2.5 Two Doors in Series\nDistance between two hinged or pivoted doors in series shall be 48 inches (1220 mm) minimum plus the width of any door swinging into the space.",
+      "parameters": "Space Classification: One space must be Circulation, the other can be any classification (*); Door Defaults: Frame thickness = 0.03 m, Panel thickness = 0.04 m, Threshold height = 0.01 m",
+      "issues_count": 0,
+      "issues": []
+    },
+    "504_2_stair_slab_connection": {
+      "rule_code": "504.2",
+      "rule_title": "504_2_stair_slab_connection",
+      "question": "What stairs in the current IFC model are not properly connected to slabs?",
+      "rule": "504.2 Treads and Risers\nAll stairs shall be connected to slabs.",
+      "parameters": "Stair Classification: Stair*",
+      "issues_count": 0,
+      "issues": []
+    },
+    "504_2_non_uniform_risers_treads": {
+      "rule_code": "504.2",
+      "rule_title": "504_2_non_uniform_risers_treads",
+      "question": "What stairs in the current IFC model have non-uniform riser heights or tread depths?",
+      "rule": "504.2 Treads and Risers\nAll steps on a flight of stairs shall have uniform riser heights and uniform tread depths.",
+      "parameters": "Stair Classification: Stair*",
+      "issues_count": 0,
+      "issues": []
+    },
+    "504_2_riser_height": {
+      "rule_code": "504.2",
+      "rule_title": "504_2_riser_height",
+      "question": "What stairs in the current IFC model have riser heights that do not meet the required minimum or maximum?",
+      "rule": "504.2 Treads and Risers\nRisers shall be 4 inches (100 mm) high minimum and 7 inches (180 mm) high maximum.",
+      "parameters": "Stair Classification: Stair*",
+      "issues_count": 0,
+      "issues": []
+    },
+    "doors_and_windows": {
+      "rule_code": "BIM Validation: Doors and Windows",
+      "rule_title": "doors_and_windows",
+      "question": "What doors or windows in the current IFC model are not located in the same floor as the wall they are related to, or are orphan doors/windows without a relation to any wall?",
+      "rule": "Doors and Windows\nThis rule checks that doors and windows in the model are located in the same floor as the wall they are related to. The rule checks also that the model doesn't contain any orphan doors or windows (a door or a window, which doesn't have a relation to any wall).",
+      "parameters": "Check Orphan Doors and Windows: True",
+      "issues_count": 0,
+      "issues": []
+    },
+    "large_spaces_more_than_one_door": {
+      "rule_code": "Advanced Space Check: Large Spaces Have to Have More than One Door",
+      "rule_title": "large_spaces_more_than_one_door",
+      "question": "What large spaces in the current IFC model do not have the required minimum number of doors?",
+      "rule": "Large Spaces Have to Have More than One Door\nLarge spaces must have at least 2 doors.",
+      "parameters": "Include Space Group Type: Is Undefined; Include Space Area: ≥ 50.0; Exclude - Space Usage: One Of [Outdoor Space, Parking, Terrace]; Target Value: 2; Exclude door = Hatch",
+      "issues_count": 0,
+      "issues": []
+    },
+    "slab_thickness": {
+      "rule_code": "BIM Validation: Slab Thickness",
+      "rule_title": "slab_thickness",
+      "question": "What slabs in the current IFC model have thickness that does not meet the required minimum or maximum?",
+      "rule": "Slab Thickness\nThis rule checks that slab thickness is not too small or too large. Minimum thickness 0.30 m, maximum 1.0 m.",
+      "parameters": "Exclude Slab Building Elements - General: One Of [Fixed Furnishings, Suspended Ceilings]; Include Slab Thickness: ≥ 0.30 m; Include Slab Thickness: ≤ 1.0 m",
+      "issues_count": 0,
+      "issues": []
+    },
+    "unallocated_areas": {
+      "rule_code": "Unallocated Areas",
+      "rule_title": "unallocated_areas",
+      "question": "Where in the current IFC model are there unallocated areas (floor area not assigned to any space) that exceed the maximum allowed?",
+      "rule": "Unallocated Areas\nThis rule checks that space geometry and location are correct.",
+      "parameters": "Maximum allowed Unallocated space: 0.50 m2; Return Surrounding Walls",
+      "issues_count": 0,
+      "issues": []
+    }
+  }
+}

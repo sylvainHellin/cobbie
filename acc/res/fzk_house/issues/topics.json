@@ -1,0 +1,1354 @@
+[
+  {
+    "description": "307.4 Reduced Vertical Clearance\nUnderside of stair should be shielded to protect visually impaired persons from accessing it inadvertently.\n",
+    "ifc_guids": [
+      "1pPHnf7cXCpPsNEnQf8_6B",
+      "38a9vdh9bF5Qg28GWyHhlr"
+    ],
+    "ifc_guids_enriched": [
+      {
+        "guid": "1pPHnf7cXCpPsNEnQf8_6B",
+        "ifc_type": "IfcSlab"
+      },
+      {
+        "guid": "38a9vdh9bF5Qg28GWyHhlr",
+        "ifc_type": "IfcStair"
+      }
+    ],
+    "title": "Stair.0.1",
+    "topic_id": "234b6fad-ff0e-4e38-ad90-ab95c569bca5"
+  },
+  {
+    "description": "404.2.2 Clear Width & 404.2.3 Maneuvering Clearances\n- Door.0.1 is too narrow. Door accessible width is 0.80 m. Required width is 0.81 m\n- Door.0.1 is too low. Door accessible height is 1.97 m. Required height is 2.03 m.\n\n",
+    "ifc_guids": [
+      "0e_hbkIQ5DMQlIJ$2V3j_m",
+      "0pGAjlJMP3ifYPATVF5xAR",
+      "3$f2p7VyLB7eox67SA_zKE"
+    ],
+    "ifc_guids_enriched": [
+      {
+        "guid": "0e_hbkIQ5DMQlIJ$2V3j_m",
+        "ifc_type": "IfcSpace"
+      },
+      {
+        "guid": "0pGAjlJMP3ifYPATVF5xAR",
+        "ifc_type": "IfcDoor"
+      },
+      {
+        "guid": "3$f2p7VyLB7eox67SA_zKE",
+        "ifc_type": "IfcSpace"
+      }
+    ],
+    "title": "Space.0.2 : Flur[1] - Space.0.6 : Bad[3]",
+    "topic_id": "84660c2f-4bd9-4da6-97a6-8509d04ebc42"
+  },
+  {
+    "description": "404.2.2 Clear Width & 404.2.3 Maneuvering Clearances\n- Door.0.2 is too narrow. Door accessible width is 0.80 m. Required width is 0.81 m\n- Door.0.2 is too low. Door accessible height is 1.97 m. Required height is 2.03 m.\n\n",
+    "ifc_guids": [
+      "2RSCzLOBz4FAK$_wE8VckM",
+      "2qiPPF3FrF8OIqfrKiSUqm",
+      "3$f2p7VyLB7eox67SA_zKE"
+    ],
+    "ifc_guids_enriched": [
+      {
+        "guid": "2RSCzLOBz4FAK$_wE8VckM",
+        "ifc_type": "IfcSpace"
+      },
+      {
+        "guid": "2qiPPF3FrF8OIqfrKiSUqm",
+        "ifc_type": "IfcDoor"
+      },
+      {
+        "guid": "3$f2p7VyLB7eox67SA_zKE",
+        "ifc_type": "IfcSpace"
+      }
+    ],
+    "title": "Space.0.2 : Flur[1] - Space.0.1 : Buero[2]",
+    "topic_id": "5541ec20-579d-4120-9917-c3d84e8f03c9"
+  },
+  {
+    "description": "404.2.2 Clear Width & 404.2.3 Maneuvering Clearances\n- Door.0.3 is too narrow. Door accessible width is 0.80 m. Required width is 0.81 m\n- Door.0.3 is too low. Door accessible height is 1.97 m. Required height is 2.03 m.\n\n",
+    "ifc_guids": [
+      "1Oms875aH3Wg$9l65H2ZGw",
+      "3$f2p7VyLB7eox67SA_zKE",
+      "347jFE2yX7IhCEIALmupEH"
+    ],
+    "ifc_guids_enriched": [
+      {
+        "guid": "1Oms875aH3Wg$9l65H2ZGw",
+        "ifc_type": "IfcDoor"
+      },
+      {
+        "guid": "3$f2p7VyLB7eox67SA_zKE",
+        "ifc_type": "IfcSpace"
+      },
+      {
+        "guid": "347jFE2yX7IhCEIALmupEH",
+        "ifc_type": "IfcSpace"
+      }
+    ],
+    "title": "Space.0.2 : Flur[1] - Space.0.4 : Schlafzimmer[4]",
+    "topic_id": "c499cbdb-1a9a-43d1-9959-1a67bcd2b6a4"
+  },
+  {
+    "description": "404.2.2 Clear Width & 404.2.3 Maneuvering Clearances\n- Door.0.5 is too low. Door accessible height is 1.97 m. Required height is 2.03 m.\n\n",
+    "ifc_guids": [
+      "2jTRqchjf7oB0yhQ6462T0",
+      "3$f2p7VyLB7eox67SA_zKE"
+    ],
+    "ifc_guids_enriched": [
+      {
+        "guid": "2jTRqchjf7oB0yhQ6462T0",
+        "ifc_type": "IfcDoor"
+      },
+      {
+        "guid": "3$f2p7VyLB7eox67SA_zKE",
+        "ifc_type": "IfcSpace"
+      }
+    ],
+    "title": "Space.0.2 : Flur[1]",
+    "topic_id": "356e3400-eeea-4af4-a783-be27d1d8d736"
+  },
+  {
+    "description": "504.2 Treads and Risers\nStair Stair.0.1 has steps at the end that are non-uniform. Riser height at end is 0.05 m and elsewhere 0.18 m.\n",
+    "ifc_guids": [
+      "2RGlQk4xH47RHK93zcTzUL",
+      "38a9vdh9bF5Qg28GWyHhlr"
+    ],
+    "ifc_guids_enriched": [
+      {
+        "guid": "2RGlQk4xH47RHK93zcTzUL",
+        "ifc_type": "IfcSlab"
+      },
+      {
+        "guid": "38a9vdh9bF5Qg28GWyHhlr",
+        "ifc_type": "IfcStair"
+      }
+    ],
+    "title": "Stair.0.1: 50 Mm",
+    "topic_id": "23fa1dd6-219a-43ff-bb0c-6f837f359d05"
+  },
+  {
+    "description": "504.2 Treads and Risers\nStair Stair.0.1 tread length is 0.14 m. The minimum length for the tread is 0.28 m.\n",
+    "ifc_guids": [
+      "38a9vdh9bF5Qg28GWyHhlr"
+    ],
+    "ifc_guids_enriched": [
+      {
+        "guid": "38a9vdh9bF5Qg28GWyHhlr",
+        "ifc_type": "IfcStair"
+      }
+    ],
+    "title": "Stair.0.1: 136 Mm",
+    "topic_id": "3657906e-f3e4-41d1-af6c-9b6ea14a4e59"
+  },
+  {
+    "description": "504.3 Open Risers\nStair Stair.0.1 has open risers.\n",
+    "ifc_guids": [
+      "38a9vdh9bF5Qg28GWyHhlr"
+    ],
+    "ifc_guids_enriched": [
+      {
+        "guid": "38a9vdh9bF5Qg28GWyHhlr",
+        "ifc_type": "IfcStair"
+      }
+    ],
+    "title": "Stair.0.1",
+    "topic_id": "6f9499ef-8281-4e67-891e-71996ee73045"
+  },
+  {
+    "description": "804.2.2 U-Shaped Areas\nThe doors Door.0.2 andDoor.0.5 cannot be reached.\n",
+    "ifc_guids": [
+      "0Lt8gR_E9ESeGH5uY_g9e9",
+      "17JZcMFrf5tOftUTidA0d3",
+      "2jTRqchjf7oB0yhQ6462T0",
+      "2qiPPF3FrF8OIqfrKiSUqm",
+      "3$f2p7VyLB7eox67SA_zKE"
+    ],
+    "ifc_guids_enriched": [
+      {
+        "guid": "0Lt8gR_E9ESeGH5uY_g9e9",
+        "ifc_type": "IfcSpace"
+      },
+      {
+        "guid": "17JZcMFrf5tOftUTidA0d3",
+        "ifc_type": "IfcSpace"
+      },
+      {
+        "guid": "2jTRqchjf7oB0yhQ6462T0",
+        "ifc_type": "IfcDoor"
+      },
+      {
+        "guid": "2qiPPF3FrF8OIqfrKiSUqm",
+        "ifc_type": "IfcDoor"
+      },
+      {
+        "guid": "3$f2p7VyLB7eox67SA_zKE",
+        "ifc_type": "IfcSpace"
+      }
+    ],
+    "title": "Space.0.2 : Flur[1], Space.0.3 : Wohnen[5], And Space.0.5 : Küche[6]",
+    "topic_id": "0494ee4a-1c55-40f4-a648-95a78d601e7c"
+  },
+  {
+    "description": "Components Below Beams\nBeam.1.1 doesn't touch components below itself. Checking requires surfaces to be parallel and facing to each other.\n",
+    "ifc_guids": [
+      "0B1RwEzzP3CfME5NR$Vqh5",
+      "0knNIAVBPBFvBy_m5QVHsU",
+      "13aSY79zb8fP4HApEJ0z_e",
+      "1Oms875aH3Wg$9l65H2ZGw",
+      "1srAI$R4T8ihLXSNHmUSET",
+      "1zOBw0Gej5Wf0QAJfHnOc0",
+      "20bTaetQDApP5w8egFxj13",
+      "25fsbPyk15VvuXI$yNKenK",
+      "2ACmFFQhT1Ouf0x4YRUh9m",
+      "2EQh_jhP1B_A_AMuSJc5E0",
+      "2RGlQk4xH47RHK93zcTzUL",
+      "2jTRqchjf7oB0yhQ6462T0",
+      "3PfS__Y_DBAfq5naM6zD2Z",
+      "3VCarUKgH1buLo22Ozxe6J",
+      "3rPX_Juz59peXXY6wDJl18"
+    ],
+    "ifc_guids_enriched": [
+      {
+        "guid": "0B1RwEzzP3CfME5NR$Vqh5",
+        "ifc_type": "IfcWindow"
+      },
+      {
+        "guid": "0knNIAVBPBFvBy_m5QVHsU",
+        "ifc_type": "IfcWallStandardCase"
+      },
+      {
+        "guid": "13aSY79zb8fP4HApEJ0z_e",
+        "ifc_type": "IfcWindow"
+      },
+      {
+        "guid": "1Oms875aH3Wg$9l65H2ZGw",
+        "ifc_type": "IfcDoor"
+      },
+      {
+        "guid": "1srAI$R4T8ihLXSNHmUSET",
+        "ifc_type": "IfcWindow"
+      },
+      {
+        "guid": "1zOBw0Gej5Wf0QAJfHnOc0",
+        "ifc_type": "IfcWindow"
+      },
+      {
+        "guid": "20bTaetQDApP5w8egFxj13",
+        "ifc_type": "IfcBeam"
+      },
+      {
+        "guid": "25fsbPyk15VvuXI$yNKenK",
+        "ifc_type": "IfcWallStandardCase"
+      },
+      {
+        "guid": "2ACmFFQhT1Ouf0x4YRUh9m",
+        "ifc_type": "IfcWindow"
+      },
+      {
+        "guid": "2EQh_jhP1B_A_AMuSJc5E0",
+        "ifc_type": "IfcWindow"
+      },
+      {
+        "guid": "2RGlQk4xH47RHK93zcTzUL",
+        "ifc_type": "IfcSlab"
+      },
+      {
+        "guid": "2jTRqchjf7oB0yhQ6462T0",
+        "ifc_type": "IfcDoor"
+      },
+      {
+        "guid": "3PfS__Y_DBAfq5naM6zD2Z",
+        "ifc_type": "IfcWallStandardCase"
+      },
+      {
+        "guid": "3VCarUKgH1buLo22Ozxe6J",
+        "ifc_type": "IfcWallStandardCase"
+      },
+      {
+        "guid": "3rPX_Juz59peXXY6wDJl18",
+        "ifc_type": "IfcWallStandardCase"
+      }
+    ],
+    "title": "Beam.1.1",
+    "topic_id": "23c43cb5-04e9-470b-abf8-c65ac3815fc7"
+  },
+  {
+    "description": "Components Below Beams\nSimilar components that don't touch components below themselves. Checking requires surfaces to be parallel and facing to each other. Distance to the nearest is 0.50 m.\n",
+    "ifc_guids": [
+      "0B1RwEzzP3CfME5NR$Vqh5",
+      "0eaC0nL3XAOfFxRXK_2iAr",
+      "0knNIAVBPBFvBy_m5QVHsU",
+      "13aSY79zb8fP4HApEJ0z_e",
+      "16DNNqzfP2thtfaOflvsKA",
+      "1DiYqhfzH9xxuJdVHwXCNa",
+      "1M$gxUrX1Fiwe3P64ww7U5",
+      "1TAI4ouKX4Xx4lBDZIu5qM",
+      "1bzfVsJqn8De5PukCrqylz",
+      "1pPHnf7cXCpPsNEnQf8_6B",
+      "1srAI$R4T8ihLXSNHmUSET",
+      "1zOBw0Gej5Wf0QAJfHnOc0",
+      "25OWQvmXj5BPgyergP43tY",
+      "25fsbPyk15VvuXI$yNKenK",
+      "25nJxEpYf8LRDJNkMUVO0m",
+      "2ACmFFQhT1Ouf0x4YRUh9m",
+      "2EQh_jhP1B_A_AMuSJc5E0",
+      "2Q9w7oRXP249jBobEMVqlZ",
+      "2RGlQk4xH47RHK93zcTzUL",
+      "2jTRqchjf7oB0yhQ6462T0",
+      "3BFcylCsX74PQAoRAe5fNv",
+      "3Ttjr$59XEWfWN1WUHjelZ",
+      "3VCarUKgH1buLo22Ozxe6J",
+      "3jZHeNcfvDMf9wG$wx9XqG",
+      "3rPX_Juz59peXXY6wDJl18"
+    ],
+    "ifc_guids_enriched": [
+      {
+        "guid": "0B1RwEzzP3CfME5NR$Vqh5",
+        "ifc_type": "IfcWindow"
+      },
+      {
+        "guid": "0eaC0nL3XAOfFxRXK_2iAr",
+        "ifc_type": "IfcBeam"
+      },
+      {
+        "guid": "0knNIAVBPBFvBy_m5QVHsU",
+        "ifc_type": "IfcWallStandardCase"
+      },
+      {
+        "guid": "13aSY79zb8fP4HApEJ0z_e",
+        "ifc_type": "IfcWindow"
+      },
+      {
+        "guid": "16DNNqzfP2thtfaOflvsKA",
+        "ifc_type": "IfcWallStandardCase"
+      },
+      {
+        "guid": "1DiYqhfzH9xxuJdVHwXCNa",
+        "ifc_type": "IfcWindow"
+      },
+      {
+        "guid": "1M$gxUrX1Fiwe3P64ww7U5",
+        "ifc_type": "IfcDoor"
+      },
+      {
+        "guid": "1TAI4ouKX4Xx4lBDZIu5qM",
+        "ifc_type": "IfcWindow"
+      },
+      {
+        "guid": "1bzfVsJqn8De5PukCrqylz",
+        "ifc_type": "IfcWallStandardCase"
+      },
+      {
+        "guid": "1pPHnf7cXCpPsNEnQf8_6B",
+        "ifc_type": "IfcSlab"
+      },
+      {
+        "guid": "1srAI$R4T8ihLXSNHmUSET",
+        "ifc_type": "IfcWindow"
+      },
+      {
+        "guid": "1zOBw0Gej5Wf0QAJfHnOc0",
+        "ifc_type": "IfcWindow"
+      },
+      {
+        "guid": "25OWQvmXj5BPgyergP43tY",
+        "ifc_type": "IfcWallStandardCase"
+      },
+      {
+        "guid": "25fsbPyk15VvuXI$yNKenK",
+        "ifc_type": "IfcWallStandardCase"
+      },
+      {
+        "guid": "25nJxEpYf8LRDJNkMUVO0m",
+        "ifc_type": "IfcWindow"
+      },
+      {
+        "guid": "2ACmFFQhT1Ouf0x4YRUh9m",
+        "ifc_type": "IfcWindow"
+      },
+      {
+        "guid": "2EQh_jhP1B_A_AMuSJc5E0",
+        "ifc_type": "IfcWindow"
+      },
+      {
+        "guid": "2Q9w7oRXP249jBobEMVqlZ",
+        "ifc_type": "IfcWindow"
+      },
+      {
+        "guid": "2RGlQk4xH47RHK93zcTzUL",
+        "ifc_type": "IfcSlab"
+      },
+      {
+        "guid": "2jTRqchjf7oB0yhQ6462T0",
+        "ifc_type": "IfcDoor"
+      },
+      {
+        "guid": "3BFcylCsX74PQAoRAe5fNv",
+        "ifc_type": "IfcWindow"
+      },
+      {
+        "guid": "3Ttjr$59XEWfWN1WUHjelZ",
+        "ifc_type": "IfcWallStandardCase"
+      },
+      {
+        "guid": "3VCarUKgH1buLo22Ozxe6J",
+        "ifc_type": "IfcWallStandardCase"
+      },
+      {
+        "guid": "3jZHeNcfvDMf9wG$wx9XqG",
+        "ifc_type": "IfcBeam"
+      },
+      {
+        "guid": "3rPX_Juz59peXXY6wDJl18",
+        "ifc_type": "IfcWallStandardCase"
+      }
+    ],
+    "title": "Undefined, 500 Mm",
+    "topic_id": "fe232dca-1508-4699-91b0-cd1fa627f65e"
+  },
+  {
+    "description": "Door Opening Direction Definition\nDoors with type Eingangstür don't have information about their operation (e.g. single swing left). Some rules required information about the door operation.\n",
+    "ifc_guids": [
+      "2jTRqchjf7oB0yhQ6462T0"
+    ],
+    "ifc_guids_enriched": [
+      {
+        "guid": "2jTRqchjf7oB0yhQ6462T0",
+        "ifc_type": "IfcDoor"
+      }
+    ],
+    "title": "Eingangstür",
+    "topic_id": "9eb79461-7da9-4c56-93fe-e71297cd67bc"
+  },
+  {
+    "description": "Every Floor Has to Have Circulation Spaces\nCount (0) of the components does not match the requirement: ≥ 1.\n",
+    "ifc_guids": [
+      "06JZMOVBX8VucSQwQ3o$8d",
+      "07Enbsqm9C7AQC9iyBwfSD",
+      "09OmJpUcj4WvNp2dXHFMWj",
+      "09axaKU7X1_O8n6dmmiZ1E",
+      "0DTRkEz0r6gvzG6VdDr24n",
+      "0OKCG9uG53i9K16_x3YNfz",
+      "0VzptM87L6uOjQj08tTXIQ",
+      "0eaC0nL3XAOfFxRXK_2iAr",
+      "0hRh9WB$jCLwlAiq3vfmg9",
+      "0knNIAVBPBFvBy_m5QVHsU",
+      "0nsN_jkIrBQBuGFMg_zMEg",
+      "0o5vgCKyTBzO5$QJcI2YDP",
+      "0oTQ6V1VbChulreA_hfmUa",
+      "0q1clcN4jF4gdikC9OySy7",
+      "17MHCgVYn2YPLX56yXUJbL",
+      "1NBDw_i_jD$u7IjvwmbPmx",
+      "1OckORehXEoB_KILQGJao5",
+      "1nGDFBBHvBJ9NmlweQO0fX",
+      "1qMEiq1Qz6guq8g1GCODiJ",
+      "1tpUOcVEPCGgFqSz0VbniQ",
+      "1ulHlNTuj798Os3k9phhVC",
+      "1zOBw0Gej5Wf0QAJfHnOc0",
+      "20AsUDMgH0JwAitydKgsOm",
+      "20bTaetQDApP5w8egFxj13",
+      "22oN_bO9T4jO5eG4GKW7be",
+      "23pmL_2aH88OVqWp_5Lfkf",
+      "25OWQvmXj5BPgyergP43tY",
+      "2ACmFFQhT1Ouf0x4YRUh9m",
+      "2AxITdtlD1h9Y3ye8U93bV",
+      "2CxE0$jXr8iOH1VC2gLCXX",
+      "2DH$OLoObDkAtwqVzNdUnS",
+      "2IxUUNUVPB6Ob$eicCfP2N",
+      "2OHMT7B69F5PRG_f3rMcjF",
+      "2RGlQk4xH47RHK93zcTzUL",
+      "2SfSpj_pX9nvTeCOxeKqTd",
+      "2XyYurmzzDOAIoZ52R97Jm",
+      "2dQFggKBb1fOc1CqZDIDlx",
+      "2in0QvfYXEawl1f3MP1bq2",
+      "2jBFZiQw110vV7XY77KKfx",
+      "31Quw2HAvFqv$9_JgCuemp",
+      "31ry3UPYD7weLluBlhQxXZ",
+      "34zPS2PUTBDOe7g7RIRXK0",
+      "35W3cFc4L7MhJR0gIk9uis",
+      "36KGWr2Rv8QuUhNnocm2nH",
+      "37ab3q_iz8XRterfnMKTQX",
+      "3CS1rsE3bB7vMHAdjyaamh",
+      "3EgsECVVb6zQXnK3YFcWAu",
+      "3F58AqxJfF$QkuoceQhWg3",
+      "3Ttjr$59XEWfWN1WUHjelZ",
+      "3UTqpydzf7i8J6iMY2tHil",
+      "3VCarUKgH1buLo22Ozxe6J",
+      "3ePWkSzvLApwXTt3b0I2nV",
+      "3iSL8frGLDweFar9j4zgJ_",
+      "3jZHeNcfvDMf9wG$wx9XqG",
+      "3qFc3Wrr9BBPJyb2wB$4Ra",
+      "3sG$iUZAX499eUK87UfZk_",
+      "3xdLwxTMD7bw4hWoOQL41M"
+    ],
+    "ifc_guids_enriched": [
+      {
+        "guid": "06JZMOVBX8VucSQwQ3o$8d",
+        "ifc_type": "IfcMember"
+      },
+      {
+        "guid": "07Enbsqm9C7AQC9iyBwfSD",
+        "ifc_type": "IfcSlab"
+      },
+      {
+        "guid": "09OmJpUcj4WvNp2dXHFMWj",
+        "ifc_type": "IfcMember"
+      },
+      {
+        "guid": "09axaKU7X1_O8n6dmmiZ1E",
+        "ifc_type": "IfcRailing"
+      },
+      {
+        "guid": "0DTRkEz0r6gvzG6VdDr24n",
+        "ifc_type": "IfcMember"
+      },
+      {
+        "guid": "0OKCG9uG53i9K16_x3YNfz",
+        "ifc_type": "IfcMember"
+      },
+      {
+        "guid": "0VzptM87L6uOjQj08tTXIQ",
+        "ifc_type": "IfcMember"
+      },
+      {
+        "guid": "0eaC0nL3XAOfFxRXK_2iAr",
+        "ifc_type": "IfcBeam"
+      },
+      {
+        "guid": "0hRh9WB$jCLwlAiq3vfmg9",
+        "ifc_type": "IfcMember"
+      },
+      {
+        "guid": "0knNIAVBPBFvBy_m5QVHsU",
+        "ifc_type": "IfcWallStandardCase"
+      },
+      {
+        "guid": "0nsN_jkIrBQBuGFMg_zMEg",
+        "ifc_type": "IfcMember"
+      },
+      {
+        "guid": "0o5vgCKyTBzO5$QJcI2YDP",
+        "ifc_type": "IfcRailing"
+      },
+      {
+        "guid": "0oTQ6V1VbChulreA_hfmUa",
+        "ifc_type": "IfcMember"
+      },
+      {
+        "guid": "0q1clcN4jF4gdikC9OySy7",
+        "ifc_type": "IfcMember"
+      },
+      {
+        "guid": "17MHCgVYn2YPLX56yXUJbL",
+        "ifc_type": "IfcMember"
+      },
+      {
+        "guid": "1NBDw_i_jD$u7IjvwmbPmx",
+        "ifc_type": "IfcMember"
+      },
+      {
+        "guid": "1OckORehXEoB_KILQGJao5",
+        "ifc_type": "IfcMember"
+      },
+      {
+        "guid": "1nGDFBBHvBJ9NmlweQO0fX",
+        "ifc_type": "IfcMember"
+      },
+      {
+        "guid": "1qMEiq1Qz6guq8g1GCODiJ",
+        "ifc_type": "IfcMember"
+      },
+      {
+        "guid": "1tpUOcVEPCGgFqSz0VbniQ",
+        "ifc_type": "IfcMember"
+      },
+      {
+        "guid": "1ulHlNTuj798Os3k9phhVC",
+        "ifc_type": "IfcMember"
+      },
+      {
+        "guid": "1zOBw0Gej5Wf0QAJfHnOc0",
+        "ifc_type": "IfcWindow"
+      },
+      {
+        "guid": "20AsUDMgH0JwAitydKgsOm",
+        "ifc_type": "IfcMember"
+      },
+      {
+        "guid": "20bTaetQDApP5w8egFxj13",
+        "ifc_type": "IfcBeam"
+      },
+      {
+        "guid": "22oN_bO9T4jO5eG4GKW7be",
+        "ifc_type": "IfcMember"
+      },
+      {
+        "guid": "23pmL_2aH88OVqWp_5Lfkf",
+        "ifc_type": "IfcMember"
+      },
+      {
+        "guid": "25OWQvmXj5BPgyergP43tY",
+        "ifc_type": "IfcWallStandardCase"
+      },
+      {
+        "guid": "2ACmFFQhT1Ouf0x4YRUh9m",
+        "ifc_type": "IfcWindow"
+      },
+      {
+        "guid": "2AxITdtlD1h9Y3ye8U93bV",
+        "ifc_type": "IfcMember"
+      },
+      {
+        "guid": "2CxE0$jXr8iOH1VC2gLCXX",
+        "ifc_type": "IfcMember"
+      },
+      {
+        "guid": "2DH$OLoObDkAtwqVzNdUnS",
+        "ifc_type": "IfcMember"
+      },
+      {
+        "guid": "2IxUUNUVPB6Ob$eicCfP2N",
+        "ifc_type": "IfcSlab"
+      },
+      {
+        "guid": "2OHMT7B69F5PRG_f3rMcjF",
+        "ifc_type": "IfcMember"
+      },
+      {
+        "guid": "2RGlQk4xH47RHK93zcTzUL",
+        "ifc_type": "IfcSlab"
+      },
+      {
+        "guid": "2SfSpj_pX9nvTeCOxeKqTd",
+        "ifc_type": "IfcMember"
+      },
+      {
+        "guid": "2XyYurmzzDOAIoZ52R97Jm",
+        "ifc_type": "IfcMember"
+      },
+      {
+        "guid": "2dQFggKBb1fOc1CqZDIDlx",
+        "ifc_type": "IfcSpace"
+      },
+      {
+        "guid": "2in0QvfYXEawl1f3MP1bq2",
+        "ifc_type": "IfcMember"
+      },
+      {
+        "guid": "2jBFZiQw110vV7XY77KKfx",
+        "ifc_type": "IfcMember"
+      },
+      {
+        "guid": "31Quw2HAvFqv$9_JgCuemp",
+        "ifc_type": "IfcMember"
+      },
+      {
+        "guid": "31ry3UPYD7weLluBlhQxXZ",
+        "ifc_type": "IfcMember"
+      },
+      {
+        "guid": "34zPS2PUTBDOe7g7RIRXK0",
+        "ifc_type": "IfcMember"
+      },
+      {
+        "guid": "35W3cFc4L7MhJR0gIk9uis",
+        "ifc_type": "IfcMember"
+      },
+      {
+        "guid": "36KGWr2Rv8QuUhNnocm2nH",
+        "ifc_type": "IfcMember"
+      },
+      {
+        "guid": "37ab3q_iz8XRterfnMKTQX",
+        "ifc_type": "IfcMember"
+      },
+      {
+        "guid": "3CS1rsE3bB7vMHAdjyaamh",
+        "ifc_type": "IfcMember"
+      },
+      {
+        "guid": "3EgsECVVb6zQXnK3YFcWAu",
+        "ifc_type": "IfcMember"
+      },
+      {
+        "guid": "3F58AqxJfF$QkuoceQhWg3",
+        "ifc_type": "IfcMember"
+      },
+      {
+        "guid": "3Ttjr$59XEWfWN1WUHjelZ",
+        "ifc_type": "IfcWallStandardCase"
+      },
+      {
+        "guid": "3UTqpydzf7i8J6iMY2tHil",
+        "ifc_type": "IfcMember"
+      },
+      {
+        "guid": "3VCarUKgH1buLo22Ozxe6J",
+        "ifc_type": "IfcWallStandardCase"
+      },
+      {
+        "guid": "3ePWkSzvLApwXTt3b0I2nV",
+        "ifc_type": "IfcMember"
+      },
+      {
+        "guid": "3iSL8frGLDweFar9j4zgJ_",
+        "ifc_type": "IfcMember"
+      },
+      {
+        "guid": "3jZHeNcfvDMf9wG$wx9XqG",
+        "ifc_type": "IfcBeam"
+      },
+      {
+        "guid": "3qFc3Wrr9BBPJyb2wB$4Ra",
+        "ifc_type": "IfcMember"
+      },
+      {
+        "guid": "3sG$iUZAX499eUK87UfZk_",
+        "ifc_type": "IfcMember"
+      },
+      {
+        "guid": "3xdLwxTMD7bw4hWoOQL41M",
+        "ifc_type": "IfcMember"
+      }
+    ],
+    "title": "Dachgeschoss: Count (0) Of The Components Does Not Match The Requirement: ≥ 1",
+    "topic_id": "926a2473-2e1d-4ede-bb22-50bc39235688"
+  },
+  {
+    "description": "Large Spaces Have to Have More than One Door\nCount (0) of the components does not match the requirement: ≥ 2.\n",
+    "ifc_guids": [
+      "2dQFggKBb1fOc1CqZDIDlx"
+    ],
+    "ifc_guids_enriched": [
+      {
+        "guid": "2dQFggKBb1fOc1CqZDIDlx",
+        "ifc_type": "IfcSpace"
+      }
+    ],
+    "title": "Space.1.1 : Galerie[7]: Count (0) Of The Components Does Not Match The Requirement: ≥ 2",
+    "topic_id": "00801617-f5fe-44e8-b1cf-6f8138735158"
+  },
+  {
+    "description": "Required Components\nBeam components without construction type.\n",
+    "ifc_guids": [
+      "0eaC0nL3XAOfFxRXK_2iAr",
+      "20bTaetQDApP5w8egFxj13",
+      "3jZHeNcfvDMf9wG$wx9XqG"
+    ],
+    "ifc_guids_enriched": [
+      {
+        "guid": "0eaC0nL3XAOfFxRXK_2iAr",
+        "ifc_type": "IfcBeam"
+      },
+      {
+        "guid": "20bTaetQDApP5w8egFxj13",
+        "ifc_type": "IfcBeam"
+      },
+      {
+        "guid": "3jZHeNcfvDMf9wG$wx9XqG",
+        "ifc_type": "IfcBeam"
+      }
+    ],
+    "title": "No Construction Types For Beam Components",
+    "topic_id": "58b276d1-38e1-4d92-bbea-396a3e576ceb"
+  },
+  {
+    "description": "Required Components\nThe model doesn't have Stair types at all.\n",
+    "ifc_guids": [
+      "38a9vdh9bF5Qg28GWyHhlr"
+    ],
+    "ifc_guids_enriched": [
+      {
+        "guid": "38a9vdh9bF5Qg28GWyHhlr",
+        "ifc_type": "IfcStair"
+      }
+    ],
+    "title": "No Stair Types At All",
+    "topic_id": "77a1816c-729c-4439-9798-ef776d4ad4b0"
+  },
+  {
+    "description": "Required Components\narc_model doesn't  contain any Column components\n",
+    "ifc_guids": [
+      "06JZMOVBX8VucSQwQ3o$8d",
+      "07Enbsqm9C7AQC9iyBwfSD",
+      "09OmJpUcj4WvNp2dXHFMWj",
+      "09axaKU7X1_O8n6dmmiZ1E",
+      "0B1RwEzzP3CfME5NR$Vqh5",
+      "0DTRkEz0r6gvzG6VdDr24n",
+      "0Lt8gR_E9ESeGH5uY_g9e9",
+      "0OKCG9uG53i9K16_x3YNfz",
+      "0VzptM87L6uOjQj08tTXIQ",
+      "0e_hbkIQ5DMQlIJ$2V3j_m",
+      "0eaC0nL3XAOfFxRXK_2iAr",
+      "0hRh9WB$jCLwlAiq3vfmg9",
+      "0knNIAVBPBFvBy_m5QVHsU",
+      "0nsN_jkIrBQBuGFMg_zMEg",
+      "0o5vgCKyTBzO5$QJcI2YDP",
+      "0oTQ6V1VbChulreA_hfmUa",
+      "0pGAjlJMP3ifYPATVF5xAR",
+      "0q1clcN4jF4gdikC9OySy7",
+      "1$wmdwWPjDYuku_ghVkynE",
+      "13aSY79zb8fP4HApEJ0z_e",
+      "16DNNqzfP2thtfaOflvsKA",
+      "17JZcMFrf5tOftUTidA0d3",
+      "17MHCgVYn2YPLX56yXUJbL",
+      "1DiYqhfzH9xxuJdVHwXCNa",
+      "1M$gxUrX1Fiwe3P64ww7U5",
+      "1NBDw_i_jD$u7IjvwmbPmx",
+      "1OckORehXEoB_KILQGJao5",
+      "1Oms875aH3Wg$9l65H2ZGw",
+      "1TAI4ouKX4Xx4lBDZIu5qM",
+      "1bzfVsJqn8De5PukCrqylz",
+      "1nGDFBBHvBJ9NmlweQO0fX",
+      "1pPHnf7cXCpPsNEnQf8_6B",
+      "1qMEiq1Qz6guq8g1GCODiJ",
+      "1srAI$R4T8ihLXSNHmUSET",
+      "1tpUOcVEPCGgFqSz0VbniQ",
+      "1ulHlNTuj798Os3k9phhVC",
+      "1zOBw0Gej5Wf0QAJfHnOc0",
+      "20AsUDMgH0JwAitydKgsOm",
+      "20bTaetQDApP5w8egFxj13",
+      "22oN_bO9T4jO5eG4GKW7be",
+      "23pmL_2aH88OVqWp_5Lfkf",
+      "25OWQvmXj5BPgyergP43tY",
+      "25fsbPyk15VvuXI$yNKenK",
+      "25nJxEpYf8LRDJNkMUVO0m",
+      "2ACmFFQhT1Ouf0x4YRUh9m",
+      "2AxITdtlD1h9Y3ye8U93bV",
+      "2CxE0$jXr8iOH1VC2gLCXX",
+      "2DH$OLoObDkAtwqVzNdUnS",
+      "2EQh_jhP1B_A_AMuSJc5E0",
+      "2IxUUNUVPB6Ob$eicCfP2N",
+      "2OHMT7B69F5PRG_f3rMcjF",
+      "2Q9w7oRXP249jBobEMVqlZ",
+      "2RGlQk4xH47RHK93zcTzUL",
+      "2RSCzLOBz4FAK$_wE8VckM",
+      "2SfSpj_pX9nvTeCOxeKqTd",
+      "2XPyKWY018sA1ygZKgQPtU",
+      "2XyYurmzzDOAIoZ52R97Jm",
+      "2dQFggKBb1fOc1CqZDIDlx",
+      "2in0QvfYXEawl1f3MP1bq2",
+      "2jBFZiQw110vV7XY77KKfx",
+      "2jTRqchjf7oB0yhQ6462T0",
+      "2ptk1k7qn8_Qk22vjh$0DE",
+      "2qiPPF3FrF8OIqfrKiSUqm",
+      "3$f2p7VyLB7eox67SA_zKE",
+      "31Quw2HAvFqv$9_JgCuemp",
+      "31ry3UPYD7weLluBlhQxXZ",
+      "347jFE2yX7IhCEIALmupEH",
+      "34zPS2PUTBDOe7g7RIRXK0",
+      "35W3cFc4L7MhJR0gIk9uis",
+      "36KGWr2Rv8QuUhNnocm2nH",
+      "37ab3q_iz8XRterfnMKTQX",
+      "38a9vdh9bF5Qg28GWyHhlr",
+      "3BFcylCsX74PQAoRAe5fNv",
+      "3CS1rsE3bB7vMHAdjyaamh",
+      "3EgsECVVb6zQXnK3YFcWAu",
+      "3F58AqxJfF$QkuoceQhWg3",
+      "3PfS__Y_DBAfq5naM6zD2Z",
+      "3Ttjr$59XEWfWN1WUHjelZ",
+      "3UTqpydzf7i8J6iMY2tHil",
+      "3VCarUKgH1buLo22Ozxe6J",
+      "3ePWkSzvLApwXTt3b0I2nV",
+      "3iSL8frGLDweFar9j4zgJ_",
+      "3jZHeNcfvDMf9wG$wx9XqG",
+      "3jjW3rL656ex34Gws22EfM",
+      "3qFc3Wrr9BBPJyb2wB$4Ra",
+      "3rPX_Juz59peXXY6wDJl18",
+      "3sG$iUZAX499eUK87UfZk_",
+      "3tCgZT92j6fw8fXgwCL3Jm",
+      "3xdLwxTMD7bw4hWoOQL41M"
+    ],
+    "ifc_guids_enriched": [
+      {
+        "guid": "06JZMOVBX8VucSQwQ3o$8d",
+        "ifc_type": "IfcMember"
+      },
+      {
+        "guid": "07Enbsqm9C7AQC9iyBwfSD",
+        "ifc_type": "IfcSlab"
+      },
+      {
+        "guid": "09OmJpUcj4WvNp2dXHFMWj",
+        "ifc_type": "IfcMember"
+      },
+      {
+        "guid": "09axaKU7X1_O8n6dmmiZ1E",
+        "ifc_type": "IfcRailing"
+      },
+      {
+        "guid": "0B1RwEzzP3CfME5NR$Vqh5",
+        "ifc_type": "IfcWindow"
+      },
+      {
+        "guid": "0DTRkEz0r6gvzG6VdDr24n",
+        "ifc_type": "IfcMember"
+      },
+      {
+        "guid": "0Lt8gR_E9ESeGH5uY_g9e9",
+        "ifc_type": "IfcSpace"
+      },
+      {
+        "guid": "0OKCG9uG53i9K16_x3YNfz",
+        "ifc_type": "IfcMember"
+      },
+      {
+        "guid": "0VzptM87L6uOjQj08tTXIQ",
+        "ifc_type": "IfcMember"
+      },
+      {
+        "guid": "0e_hbkIQ5DMQlIJ$2V3j_m",
+        "ifc_type": "IfcSpace"
+      },
+      {
+        "guid": "0eaC0nL3XAOfFxRXK_2iAr",
+        "ifc_type": "IfcBeam"
+      },
+      {
+        "guid": "0hRh9WB$jCLwlAiq3vfmg9",
+        "ifc_type": "IfcMember"
+      },
+      {
+        "guid": "0knNIAVBPBFvBy_m5QVHsU",
+        "ifc_type": "IfcWallStandardCase"
+      },
+      {
+        "guid": "0nsN_jkIrBQBuGFMg_zMEg",
+        "ifc_type": "IfcMember"
+      },
+      {
+        "guid": "0o5vgCKyTBzO5$QJcI2YDP",
+        "ifc_type": "IfcRailing"
+      },
+      {
+        "guid": "0oTQ6V1VbChulreA_hfmUa",
+        "ifc_type": "IfcMember"
+      },
+      {
+        "guid": "0pGAjlJMP3ifYPATVF5xAR",
+        "ifc_type": "IfcDoor"
+      },
+      {
+        "guid": "0q1clcN4jF4gdikC9OySy7",
+        "ifc_type": "IfcMember"
+      },
+      {
+        "guid": "1$wmdwWPjDYuku_ghVkynE",
+        "ifc_type": "IfcWallStandardCase"
+      },
+      {
+        "guid": "13aSY79zb8fP4HApEJ0z_e",
+        "ifc_type": "IfcWindow"
+      },
+      {
+        "guid": "16DNNqzfP2thtfaOflvsKA",
+        "ifc_type": "IfcWallStandardCase"
+      },
+      {
+        "guid": "17JZcMFrf5tOftUTidA0d3",
+        "ifc_type": "IfcSpace"
+      },
+      {
+        "guid": "17MHCgVYn2YPLX56yXUJbL",
+        "ifc_type": "IfcMember"
+      },
+      {
+        "guid": "1DiYqhfzH9xxuJdVHwXCNa",
+        "ifc_type": "IfcWindow"
+      },
+      {
+        "guid": "1M$gxUrX1Fiwe3P64ww7U5",
+        "ifc_type": "IfcDoor"
+      },
+      {
+        "guid": "1NBDw_i_jD$u7IjvwmbPmx",
+        "ifc_type": "IfcMember"
+      },
+      {
+        "guid": "1OckORehXEoB_KILQGJao5",
+        "ifc_type": "IfcMember"
+      },
+      {
+        "guid": "1Oms875aH3Wg$9l65H2ZGw",
+        "ifc_type": "IfcDoor"
+      },
+      {
+        "guid": "1TAI4ouKX4Xx4lBDZIu5qM",
+        "ifc_type": "IfcWindow"
+      },
+      {
+        "guid": "1bzfVsJqn8De5PukCrqylz",
+        "ifc_type": "IfcWallStandardCase"
+      },
+      {
+        "guid": "1nGDFBBHvBJ9NmlweQO0fX",
+        "ifc_type": "IfcMember"
+      },
+      {
+        "guid": "1pPHnf7cXCpPsNEnQf8_6B",
+        "ifc_type": "IfcSlab"
+      },
+      {
+        "guid": "1qMEiq1Qz6guq8g1GCODiJ",
+        "ifc_type": "IfcMember"
+      },
+      {
+        "guid": "1srAI$R4T8ihLXSNHmUSET",
+        "ifc_type": "IfcWindow"
+      },
+      {
+        "guid": "1tpUOcVEPCGgFqSz0VbniQ",
+        "ifc_type": "IfcMember"
+      },
+      {
+        "guid": "1ulHlNTuj798Os3k9phhVC",
+        "ifc_type": "IfcMember"
+      },
+      {
+        "guid": "1zOBw0Gej5Wf0QAJfHnOc0",
+        "ifc_type": "IfcWindow"
+      },
+      {
+        "guid": "20AsUDMgH0JwAitydKgsOm",
+        "ifc_type": "IfcMember"
+      },
+      {
+        "guid": "20bTaetQDApP5w8egFxj13",
+        "ifc_type": "IfcBeam"
+      },
+      {
+        "guid": "22oN_bO9T4jO5eG4GKW7be",
+        "ifc_type": "IfcMember"
+      },
+      {
+        "guid": "23pmL_2aH88OVqWp_5Lfkf",
+        "ifc_type": "IfcMember"
+      },
+      {
+        "guid": "25OWQvmXj5BPgyergP43tY",
+        "ifc_type": "IfcWallStandardCase"
+      },
+      {
+        "guid": "25fsbPyk15VvuXI$yNKenK",
+        "ifc_type": "IfcWallStandardCase"
+      },
+      {
+        "guid": "25nJxEpYf8LRDJNkMUVO0m",
+        "ifc_type": "IfcWindow"
+      },
+      {
+        "guid": "2ACmFFQhT1Ouf0x4YRUh9m",
+        "ifc_type": "IfcWindow"
+      },
+      {
+        "guid": "2AxITdtlD1h9Y3ye8U93bV",
+        "ifc_type": "IfcMember"
+      },
+      {
+        "guid": "2CxE0$jXr8iOH1VC2gLCXX",
+        "ifc_type": "IfcMember"
+      },
+      {
+        "guid": "2DH$OLoObDkAtwqVzNdUnS",
+        "ifc_type": "IfcMember"
+      },
+      {
+        "guid": "2EQh_jhP1B_A_AMuSJc5E0",
+        "ifc_type": "IfcWindow"
+      },
+      {
+        "guid": "2IxUUNUVPB6Ob$eicCfP2N",
+        "ifc_type": "IfcSlab"
+      },
+      {
+        "guid": "2OHMT7B69F5PRG_f3rMcjF",
+        "ifc_type": "IfcMember"
+      },
+      {
+        "guid": "2Q9w7oRXP249jBobEMVqlZ",
+        "ifc_type": "IfcWindow"
+      },
+      {
+        "guid": "2RGlQk4xH47RHK93zcTzUL",
+        "ifc_type": "IfcSlab"
+      },
+      {
+        "guid": "2RSCzLOBz4FAK$_wE8VckM",
+        "ifc_type": "IfcSpace"
+      },
+      {
+        "guid": "2SfSpj_pX9nvTeCOxeKqTd",
+        "ifc_type": "IfcMember"
+      },
+      {
+        "guid": "2XPyKWY018sA1ygZKgQPtU",
+        "ifc_type": "IfcWallStandardCase"
+      },
+      {
+        "guid": "2XyYurmzzDOAIoZ52R97Jm",
+        "ifc_type": "IfcMember"
+      },
+      {
+        "guid": "2dQFggKBb1fOc1CqZDIDlx",
+        "ifc_type": "IfcSpace"
+      },
+      {
+        "guid": "2in0QvfYXEawl1f3MP1bq2",
+        "ifc_type": "IfcMember"
+      },
+      {
+        "guid": "2jBFZiQw110vV7XY77KKfx",
+        "ifc_type": "IfcMember"
+      },
+      {
+        "guid": "2jTRqchjf7oB0yhQ6462T0",
+        "ifc_type": "IfcDoor"
+      },
+      {
+        "guid": "2ptk1k7qn8_Qk22vjh$0DE",
+        "ifc_type": "IfcWallStandardCase"
+      },
+      {
+        "guid": "2qiPPF3FrF8OIqfrKiSUqm",
+        "ifc_type": "IfcDoor"
+      },
+      {
+        "guid": "3$f2p7VyLB7eox67SA_zKE",
+        "ifc_type": "IfcSpace"
+      },
+      {
+        "guid": "31Quw2HAvFqv$9_JgCuemp",
+        "ifc_type": "IfcMember"
+      },
+      {
+        "guid": "31ry3UPYD7weLluBlhQxXZ",
+        "ifc_type": "IfcMember"
+      },
+      {
+        "guid": "347jFE2yX7IhCEIALmupEH",
+        "ifc_type": "IfcSpace"
+      },
+      {
+        "guid": "34zPS2PUTBDOe7g7RIRXK0",
+        "ifc_type": "IfcMember"
+      },
+      {
+        "guid": "35W3cFc4L7MhJR0gIk9uis",
+        "ifc_type": "IfcMember"
+      },
+      {
+        "guid": "36KGWr2Rv8QuUhNnocm2nH",
+        "ifc_type": "IfcMember"
+      },
+      {
+        "guid": "37ab3q_iz8XRterfnMKTQX",
+        "ifc_type": "IfcMember"
+      },
+      {
+        "guid": "38a9vdh9bF5Qg28GWyHhlr",
+        "ifc_type": "IfcStair"
+      },
+      {
+        "guid": "3BFcylCsX74PQAoRAe5fNv",
+        "ifc_type": "IfcWindow"
+      },
+      {
+        "guid": "3CS1rsE3bB7vMHAdjyaamh",
+        "ifc_type": "IfcMember"
+      },
+      {
+        "guid": "3EgsECVVb6zQXnK3YFcWAu",
+        "ifc_type": "IfcMember"
+      },
+      {
+        "guid": "3F58AqxJfF$QkuoceQhWg3",
+        "ifc_type": "IfcMember"
+      },
+      {
+        "guid": "3PfS__Y_DBAfq5naM6zD2Z",
+        "ifc_type": "IfcWallStandardCase"
+      },
+      {
+        "guid": "3Ttjr$59XEWfWN1WUHjelZ",
+        "ifc_type": "IfcWallStandardCase"
+      },
+      {
+        "guid": "3UTqpydzf7i8J6iMY2tHil",
+        "ifc_type": "IfcMember"
+      },
+      {
+        "guid": "3VCarUKgH1buLo22Ozxe6J",
+        "ifc_type": "IfcWallStandardCase"
+      },
+      {
+        "guid": "3ePWkSzvLApwXTt3b0I2nV",
+        "ifc_type": "IfcMember"
+      },
+      {
+        "guid": "3iSL8frGLDweFar9j4zgJ_",
+        "ifc_type": "IfcMember"
+      },
+      {
+        "guid": "3jZHeNcfvDMf9wG$wx9XqG",
+        "ifc_type": "IfcBeam"
+      },
+      {
+        "guid": "3jjW3rL656ex34Gws22EfM",
+        "ifc_type": "IfcWallStandardCase"
+      },
+      {
+        "guid": "3qFc3Wrr9BBPJyb2wB$4Ra",
+        "ifc_type": "IfcMember"
+      },
+      {
+        "guid": "3rPX_Juz59peXXY6wDJl18",
+        "ifc_type": "IfcWallStandardCase"
+      },
+      {
+        "guid": "3sG$iUZAX499eUK87UfZk_",
+        "ifc_type": "IfcMember"
+      },
+      {
+        "guid": "3tCgZT92j6fw8fXgwCL3Jm",
+        "ifc_type": "IfcBeam"
+      },
+      {
+        "guid": "3xdLwxTMD7bw4hWoOQL41M",
+        "ifc_type": "IfcMember"
+      }
+    ],
+    "title": "No Column Components In Arc_model",
+    "topic_id": "e12ddb08-d057-4574-b2ca-36c011888002"
+  },
+  {
+    "description": "Slabs must be Guarded against Falling\nSlab.1.1 has barriers that are too low. The required height of a barrier is 1.00 m, and the height in the model is 0.53 m.\n",
+    "ifc_guids": [
+      "0knNIAVBPBFvBy_m5QVHsU",
+      "25OWQvmXj5BPgyergP43tY",
+      "2RGlQk4xH47RHK93zcTzUL",
+      "3Ttjr$59XEWfWN1WUHjelZ",
+      "3VCarUKgH1buLo22Ozxe6J"
+    ],
+    "ifc_guids_enriched": [
+      {
+        "guid": "0knNIAVBPBFvBy_m5QVHsU",
+        "ifc_type": "IfcWallStandardCase"
+      },
+      {
+        "guid": "25OWQvmXj5BPgyergP43tY",
+        "ifc_type": "IfcWallStandardCase"
+      },
+      {
+        "guid": "2RGlQk4xH47RHK93zcTzUL",
+        "ifc_type": "IfcSlab"
+      },
+      {
+        "guid": "3Ttjr$59XEWfWN1WUHjelZ",
+        "ifc_type": "IfcWallStandardCase"
+      },
+      {
+        "guid": "3VCarUKgH1buLo22Ozxe6J",
+        "ifc_type": "IfcWallStandardCase"
+      }
+    ],
+    "title": "Slab.1.1",
+    "topic_id": "fcf8c2a8-43bb-4f24-88d7-3c56fa241aa1"
+  },
+  {
+    "description": "Slabs must be Guarded against Falling\nSlab.1.1 has vertical barriers that are not fully guarding its edges.\n",
+    "ifc_guids": [
+      "0o5vgCKyTBzO5$QJcI2YDP",
+      "2RGlQk4xH47RHK93zcTzUL"
+    ],
+    "ifc_guids_enriched": [
+      {
+        "guid": "0o5vgCKyTBzO5$QJcI2YDP",
+        "ifc_type": "IfcRailing"
+      },
+      {
+        "guid": "2RGlQk4xH47RHK93zcTzUL",
+        "ifc_type": "IfcSlab"
+      }
+    ],
+    "title": "Slab.1.1",
+    "topic_id": "9e9b6611-9089-407f-81f6-d0c753d14e00"
+  },
+  {
+    "description": "Space Validation\n- Space intersects with Roof.1.1 and Roof.1.2. The intersection area is 107.16 m2.\n- Space touches slab, roof, or space surface below itself, but the area of touching is only 91.36 m2, which is 85% of the components surface.\n\n",
+    "ifc_guids": [
+      "07Enbsqm9C7AQC9iyBwfSD",
+      "2IxUUNUVPB6Ob$eicCfP2N",
+      "2dQFggKBb1fOc1CqZDIDlx"
+    ],
+    "ifc_guids_enriched": [
+      {
+        "guid": "07Enbsqm9C7AQC9iyBwfSD",
+        "ifc_type": "IfcSlab"
+      },
+      {
+        "guid": "2IxUUNUVPB6Ob$eicCfP2N",
+        "ifc_type": "IfcSlab"
+      },
+      {
+        "guid": "2dQFggKBb1fOc1CqZDIDlx",
+        "ifc_type": "IfcSpace"
+      }
+    ],
+    "title": "Space.1.1 : Galerie[7]",
+    "topic_id": "7c19a14f-9164-4827-9878-f888858f9185"
+  },
+  {
+    "description": "Spaces Must Have Doors\nCount (0) of the components does not match the requirement: ≥ 1.\n",
+    "ifc_guids": [
+      "17JZcMFrf5tOftUTidA0d3"
+    ],
+    "ifc_guids_enriched": [
+      {
+        "guid": "17JZcMFrf5tOftUTidA0d3",
+        "ifc_type": "IfcSpace"
+      }
+    ],
+    "title": "Space.0.5 : Küche[6]: Count (0) Of The Components Does Not Match The Requirement: ≥ 1",
+    "topic_id": "eb7c067a-9d89-40f5-a005-2fe026d1a61d"
+  },
+  {
+    "description": "Spaces Must Have Doors\nCount (0) of the components does not match the requirement: ≥ 1.\n",
+    "ifc_guids": [
+      "2dQFggKBb1fOc1CqZDIDlx"
+    ],
+    "ifc_guids_enriched": [
+      {
+        "guid": "2dQFggKBb1fOc1CqZDIDlx",
+        "ifc_type": "IfcSpace"
+      }
+    ],
+    "title": "Space.1.1 : Galerie[7]: Count (0) Of The Components Does Not Match The Requirement: ≥ 1",
+    "topic_id": "881af1d2-1397-4902-b008-7de9306bb3ae"
+  },
+  {
+    "description": "Spaces Must Have Enough Window Area\nThe ratio between floor and windows area is 2% when it should be at least 10%.\n",
+    "ifc_guids": [
+      "1zOBw0Gej5Wf0QAJfHnOc0",
+      "2ACmFFQhT1Ouf0x4YRUh9m",
+      "2dQFggKBb1fOc1CqZDIDlx"
+    ],
+    "ifc_guids_enriched": [
+      {
+        "guid": "1zOBw0Gej5Wf0QAJfHnOc0",
+        "ifc_type": "IfcWindow"
+      },
+      {
+        "guid": "2ACmFFQhT1Ouf0x4YRUh9m",
+        "ifc_type": "IfcWindow"
+      },
+      {
+        "guid": "2dQFggKBb1fOc1CqZDIDlx",
+        "ifc_type": "IfcSpace"
+      }
+    ],
+    "title": "Space.1.1 : Galerie[7] : 2%",
+    "topic_id": "d1c446ac-f2bc-43d0-8632-7fb5e28a93db"
+  }
+]

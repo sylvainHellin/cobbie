@@ -39,7 +39,10 @@ logs.log
 reports
 scripts/text_count_tokens.txt
 
-acc/res
+acc/res/*/smc
+acc/res/*/bcfzip
+acc/res/*/temp
+
 acc/bim_models
 .claude
 .ruff_cache

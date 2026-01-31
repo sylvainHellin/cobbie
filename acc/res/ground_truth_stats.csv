@@ -1,0 +1,17 @@
+rule_code,rule_title,103,141,166,4351,ac20,dental_clinic,digital_hub,duplex,fzk_house,samuel_macalister_sample_house,smiley_west,wbdg_office
+304.3.1,304_3_1_circular_space,1,0,21,0,0,0,2,2,0,0,0,0
+305.3,305_3_size,4,2,1,0,5,0,0,0,0,1,7,0
+404.2.5,404_2_5_two_doors_in_series,0,0,0,0,0,6,0,2,0,1,0,0
+504.2,504_2_riser_height,7,2,0,0,0,0,4,8,0,1,30,0
+504.2,504_2_tread_length,6,0,8,0,0,0,2,2,1,0,30,0
+504.2,504_2_stair_slab_connection,0,0,0,0,0,3,0,0,0,0,0,5
+504.2,504_2_non_uniform_risers_treads,0,0,0,0,0,0,0,2,1,0,20,0
+Advanced Space Check: Large Spaces Have to Have More than One Door,large_spaces_more_than_one_door,8,0,0,3,5,16,11,1,1,2,0,9
+BIM Validation: Clearance in Front of Doors,clearance_front_of_doors,17,10,13,2,0,10,6,3,0,2,0,1
+BIM Validation: Doors and Windows,doors_and_windows,0,0,0,2,0,0,0,2,0,0,0,0
+BIM Validation: Slab Thickness,slab_thickness,0,0,0,0,0,0,3,14,0,0,0,0
+General Space Check: Space Validation,space_validation_inside,4,0,3,0,0,14,10,3,0,1,0,6
+General Space Check: Space Validation,space_validation_intersect,15,0,4,3,3,19,6,2,1,13,35,0
+Slabs must be Guarded against Falling,slabs_guarded_against_falling,0,86,51,16,3,0,17,2,7,28,0,0
+Spaces in Same Building Storey Must Have Same Bottom Elevation,spaces_same_storey_same_bottom_elevation,26,0,84,0,0,160,64,20,0,0,0,60
+Unallocated Areas,unallocated_areas,0,0,0,0,0,0,8,6,0,15,0,0

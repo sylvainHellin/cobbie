@@ -1,10 +1,10 @@
 <?xml version="1.0" encoding="ISO-8859-1"?>
 <batch name="Solibri_Autorun" default="root">
-<!-- Solibri Autorun Configuration - Generated for duplex -->
+<!-- Solibri Autorun Configuration - Generated for smiley_west -->
 <target name="root">
 
 <!-- Open pre-configured SMC (contains model + rules + classifications) -->
-<openmodel file="/Users/stefanfuchs/Repos/cobbie/acc/bim_models/duplex/arc.smc" />
+<openmodel file="/Users/stefanfuchs/Repos/cobbie/acc/bim_models/smiley_west/arc.smc" />
 
 <!-- Check model -->
 <check/>
@@ -16,10 +16,10 @@
 <createpresentation />
 
 <!-- Create BCF Issue report from the Presentation view -->
-<bcfreport file="/Users/stefanfuchs/Repos/cobbie/acc/res/duplex/bcfzip/duplex_check.bcfzip" version="2" />
+<bcfreport file="/Users/stefanfuchs/Repos/cobbie/acc/res/smiley_west/bcfzip/smiley_west_check.bcfzip" version="2" />
 
 <!-- Save model with issues -->
-<savemodel file="/Users/stefanfuchs/Repos/cobbie/acc/res/duplex/smc/duplex_check.smc" />
+<savemodel file="/Users/stefanfuchs/Repos/cobbie/acc/res/smiley_west/smc/smiley_west_check.smc" />
 
 <exit />
 </target>
