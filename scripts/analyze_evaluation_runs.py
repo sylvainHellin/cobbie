@@ -15,8 +15,6 @@ Usage:
 """
 
 import argparse
-import re
-import sqlite3
 from typing import Dict, List
 
 import mlflow
@@ -24,232 +22,18 @@ import pandas as pd
 from mlflow import MlflowClient
 from tabulate import tabulate
 
-from src.config import DB_PATH, MLFLOW_URI
+from src.analysis.data_extraction import (
+    CATEGORY_NAMES,
+    build_dataframe,
+    extract_run_data,
+    fetch_nested_runs,
+)
+from src.config import MLFLOW_URI
+from src.db.query import fetch_question_data
 
 # Constants
 REPORTS_DIR = "outputs/eval"
-CATEGORY_NAMES = {
-    1: "Direct Property",
-    2: "Aggregation",
-    3: "Computation",
-    4: "Estimation/Unavailable",
-}
 
-
-def sanitize_for_excel(text: str) -> str:
-    """
-    Sanitize text to remove characters that are illegal in Excel cells.
-
-    Excel/openpyxl doesn't allow certain control characters (0x00-0x1F except tab, newline, carriage return).
-
-    Args:
-        text: Input text string
-
-    Returns:
-        Sanitized text safe for Excel
-    """
-    if not isinstance(text, str):
-        return text
-
-    # Remove illegal XML characters (Excel uses XML internally)
-    # Keep only: tab (0x09), newline (0x0A), carriage return (0x0D), and printable characters (>= 0x20)
-    illegal_chars = re.compile(r'[\x00-\x08\x0B\x0C\x0E-\x1F]')
-    return illegal_chars.sub('', text)
-
-
-def fetch_nested_runs(client: MlflowClient, parent_run_id: str, experiment_id: str) -> List:
-    """
-    Fetch all nested runs for a given parent run.
-
-    Args:
-        client: MLflow client instance
-        parent_run_id: ID of the parent evaluation run
-        experiment_id: ID of the experiment
-
-    Returns:
-        List of nested run objects
-    """
-    nested_runs = client.search_runs(
-        experiment_ids=[experiment_id],
-        filter_string=f'tags.mlflow.parentRunId = "{parent_run_id}"',
-        max_results=1000,  # Adjust if you have more questions
-    )
-    return nested_runs
-
-
-def extract_run_data(run) -> Dict:
-    """
-    Extract relevant data from a single nested run.
-
-    Args:
-        run: MLflow run object
-
-    Returns:
-        Dictionary with extracted run data
-    """
-    params = run.data.params
-    metrics = run.data.metrics
-
-    # Get question ID - prefer the explicit parameter
-    # Run name format: "question_{index}_{question_id}"
-    question_id = params.get("question_id")
-    if question_id is not None:
-        try:
-            question_id = int(question_id)
-        except (ValueError, TypeError):
-            pass
-
-    # Get classification from parameters
-    classification = params.get("classification", "unknown")
-    if classification == "not_evaluated":
-        classification = "unknown"
-
-    # Extract all relevant data
-    data = {
-        "question_id": question_id,
-        "run_id": run.info.run_id,
-        "experiment_id": run.info.experiment_id,
-        "classification": classification,
-        # Answer and justification from parameters
-        "cobbie_answer": params.get("answer", ""),
-        "justification": params.get("justification", ""),
-        "confidence": params.get("confidence", ""),
-        # Iteration count (number of BAML calls made by Cobbie)
-        "num_iterations": int(metrics.get("cobbie_calls_count", 0)),
-        # Latency metrics
-        "cobbie_duration": metrics.get("cobbie_duration", 0),
-        "verifier_duration": metrics.get("verifier_duration", 0),
-        "total_duration": metrics.get("cobbie_duration", 0) + metrics.get("verifier_duration", 0),
-        # Token metrics
-        "cobbie_input_tokens": metrics.get("cobbie_input_tokens", 0),
-        "cobbie_output_tokens": metrics.get("cobbie_output_tokens", 0),
-        "verifier_input_tokens": metrics.get("verifier_input_tokens", 0),
-        "verifier_output_tokens": metrics.get("verifier_output_tokens", 0),
-        "total_input_tokens": metrics.get("total_input_tokens", 0),
-        "total_output_tokens": metrics.get("total_output_tokens", 0),
-        # Success flag
-        "success": metrics.get("success", 0) == 1,
-        # Criterion-level params (logged as params, not metrics)
-        "faithfulness": params.get("faithfulness", "not_evaluated"),
-        "completeness": params.get("completeness", "not_evaluated"),
-        "transparency": params.get("transparency", "not_evaluated"),
-        "relevance": params.get("relevance", "not_evaluated"),
-    }
-
-    return data
-
-
-def fetch_question_data(question_ids: List[int]) -> Dict[int, Dict]:
-    """
-    Fetch question data from the database.
-
-    Args:
-        question_ids: List of question IDs to fetch
-
-    Returns:
-        Dictionary mapping question_id to question data
-    """
-    if not question_ids:
-        return {}
-
-    conn = sqlite3.connect(DB_PATH)
-    cursor = conn.cursor()
-
-    # Build query with JOIN to get project and model names
-    placeholders = ",".join("?" * len(question_ids))
-    query = f"""
-        SELECT
-            ib.id,
-            ib.question,
-            ib.ground_truth,
-            ib.category,
-            im.project_name,
-            im.model_name,
-            im.model_path
-        FROM ifc_bench ib
-        LEFT JOIN ifcmodels im ON ib.ifc_id = im.id
-        WHERE ib.id IN ({placeholders})
-    """
-
-    cursor.execute(query, question_ids)
-    rows = cursor.fetchall()
-    conn.close()
-
-    # Build dictionary
-    question_data = {}
-    for row in rows:
-        question_data[row[0]] = {
-            "question": row[1],
-            "ground_truth": row[2],
-            "category": row[3],
-            "project_name": row[4],
-            "model_name": row[5],
-            "model_path": row[6],
-        }
-
-    return question_data
-
-
-def build_dataframe(run_data_list: List[Dict], question_data: Dict[int, Dict]) -> pd.DataFrame:
-    """
-    Build a pandas DataFrame from run data and question data.
-
-    Args:
-        run_data_list: List of dictionaries with run data
-        question_data: Dictionary mapping question_id to question data
-
-    Returns:
-        Pandas DataFrame with enriched data
-    """
-    rows = []
-
-    for run_data in run_data_list:
-        question_id = run_data["question_id"]
-        if question_id is None:
-            continue
-
-        # Get question data from database
-        q_data = question_data.get(int(question_id), {})
-
-        # Build MLflow URL
-        mlflow_url = f"{MLFLOW_URI}/#/experiments/{run_data['experiment_id']}/runs/{run_data['run_id']}"
-
-        # Combine all data (sanitize text fields for Excel compatibility)
-        row = {
-            "parent_run_name": run_data.get("parent_run_name", "Unknown"),
-            "question_id": question_id,
-            "question": sanitize_for_excel(q_data.get("question", "N/A")),
-            "ground_truth": sanitize_for_excel(q_data.get("ground_truth", "N/A")),
-            "category": q_data.get("category", "N/A"),
-            "category_name": CATEGORY_NAMES.get(q_data.get("category", 0), "Unknown"),
-            "project_name": sanitize_for_excel(q_data.get("project_name", "N/A")),
-            "model_name": sanitize_for_excel(q_data.get("model_name", "N/A")),
-            "classification": sanitize_for_excel(run_data["classification"]),
-            "cobbie_answer": sanitize_for_excel(run_data["cobbie_answer"]),
-            "justification": sanitize_for_excel(run_data["justification"]),
-            "confidence": sanitize_for_excel(run_data["confidence"]),
-            "faithfulness": run_data["faithfulness"],
-            "completeness": run_data["completeness"],
-            "transparency": run_data["transparency"],
-            "relevance": run_data["relevance"],
-            "num_iterations": run_data["num_iterations"],
-            "cobbie_duration": run_data["cobbie_duration"],
-            "verifier_duration": run_data["verifier_duration"],
-            "total_duration": run_data["total_duration"],
-            "cobbie_input_tokens": run_data["cobbie_input_tokens"],
-            "cobbie_output_tokens": run_data["cobbie_output_tokens"],
-            "verifier_input_tokens": run_data["verifier_input_tokens"],
-            "verifier_output_tokens": run_data["verifier_output_tokens"],
-            "total_input_tokens": run_data["total_input_tokens"],
-            "total_output_tokens": run_data["total_output_tokens"],
-            "success": run_data["success"],
-            "mlflow_url": mlflow_url,
-        }
-
-        rows.append(row)
-
-    df = pd.DataFrame(rows)
-    return df
 
 
 def calculate_statistics(df: pd.DataFrame) -> Dict:
