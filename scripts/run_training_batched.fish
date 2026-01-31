@@ -37,6 +37,11 @@ while test $i -le (count $argv)
         case --continue
             set i (math $i + 1)
             set run_id $argv[$i]
+        case --end
+            echo "✗ Error: --end is not supported. Use --nb-samples instead."
+            echo "  --end conflicts with the batching logic (which computes --end internally)."
+            echo "  Example: fish scripts/run_training_batched.fish --start 0 --nb-samples 500"
+            exit 1
         case '*'
             set -a extra_args $argv[$i]
     end
