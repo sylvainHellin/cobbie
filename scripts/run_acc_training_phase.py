@@ -364,6 +364,19 @@ def handle_create_tool(ctx: ACCContext) -> Tuple[ACCTrainingState, ACCContext]:
                     f"Tool creation did not converge in {ctx.create_tool_duration:.1f}s, "
                     f"proceeding with last extracted implementation"
                 )
+
+            # Pre-check: try executing on primary model before full validation
+            _, exec_log = _execute_tool(ctx.tool_implementation, ctx.tool_name, primary_path)
+            is_crash = exec_log.startswith("Failed to create function:") or exec_log.startswith("Execution error:")
+            if is_crash:
+                logger.warning("Pre-check failed, retrying CREATE_TOOL without consuming a retry")
+                ctx.improvement_hint = f"The implementation crashed during execution:\n{exec_log}"
+                if ctx.previous_hints:
+                    ctx.previous_hints += f"\n\nPre-check failure:\n{exec_log}"
+                else:
+                    ctx.previous_hints = f"Pre-check failure:\n{exec_log}"
+                return ACCTrainingState.CREATE_TOOL, ctx
+
             return ACCTrainingState.VALIDATE_TOOL, ctx
         else:
             logger.warning(f"Tool creation failed with no implementation: {result.thoughts}")
@@ -754,6 +767,27 @@ def handle_test_tool(ctx: ACCContext) -> Tuple[ACCTrainingState, ACCContext]:
     return ACCTrainingState.END, ctx
 
 
+def handle_error(ctx: ACCContext) -> Tuple[ACCTrainingState, ACCContext]:
+    """Recover from infrastructure errors by retrying or saving best tool."""
+    if ctx.retry_count < ctx.max_retries:
+        ctx.retry_count += 1
+        logger.warning(
+            f"Error recovery: retrying CREATE_TOOL "
+            f"(attempt {ctx.retry_count + 1}/{ctx.max_retries + 1}). "
+            f"Error was: {ctx.error_message}"
+        )
+        ctx.error_message = None
+        return ACCTrainingState.CREATE_TOOL, ctx
+
+    logger.warning(
+        f"Retries exhausted ({ctx.retry_count}/{ctx.max_retries}). "
+        f"Error: {ctx.error_message}"
+    )
+    if ctx.best_tool_implementation:
+        return ACCTrainingState.SAVE_TOOL, ctx
+    return ACCTrainingState.END, ctx
+
+
 # ============================================================================
 # State Machine Dispatcher
 # ============================================================================
@@ -769,6 +803,7 @@ def process_state(state: ACCTrainingState, ctx: ACCContext) -> Tuple[ACCTraining
         ACCTrainingState.DECIDE_FATE: handle_decide_fate,
         ACCTrainingState.SAVE_TOOL: handle_save_tool,
         ACCTrainingState.TEST_TOOL: handle_test_tool,
+        ACCTrainingState.ERROR: handle_error,
     }
 
     handler = handlers.get(state)
@@ -992,19 +1027,15 @@ def main():
                 state = ACCTrainingState.START
                 try:
                     with mlflow.start_span(name="ACCTraining", span_type="CHAIN"):
-                        while state not in [ACCTrainingState.END, ACCTrainingState.ERROR]:
+                        while state != ACCTrainingState.END:
                             state, ctx = process_state(state, ctx)
 
                     # Log metrics
                     result = log_rule_metrics(ctx)
                     results.append(result)
 
-                    if state == ACCTrainingState.ERROR:
-                        logger.error(f"Rule {rule_title} ended with error: {ctx.error_message}")
-                        mlflow.set_tag("status", "ERROR")
-                    else:
-                        logger.info(f"Rule {rule_title} completed successfully")
-                        mlflow.set_tag("status", "success")
+                    logger.info(f"Rule {rule_title} completed successfully")
+                    mlflow.set_tag("status", "success")
 
                 except Exception as e:
                     logger.error(f"Unexpected error processing {rule_title}: {e}", exc_info=True)
