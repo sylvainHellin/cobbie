@@ -1,0 +1,1 @@
+{"user_input": "What spaces in the current IFC model do not have enough room for wheelchair turning space with the required diameter?", "max_iterations": 15, "model_path": "src/db/bim_models/duplex/arc.ifc", "tools_count": 16}

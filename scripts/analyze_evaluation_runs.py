@@ -5,14 +5,16 @@ Analyze Evaluation Runs from MLflow
 This script extracts detailed evaluation run data from MLflow, enriches it with database
 information, and generates an Excel report with comprehensive statistics.
 
+When multiple run IDs are provided, a side-by-side comparison of key metrics
+(accuracy, faithfulness, completeness, transparency, relevance, abstention rate)
+is printed at the end.
+
 Usage:
+    uv run scripts/analyze_evaluation_runs.py --run-ids <run_id>
     uv run scripts/analyze_evaluation_runs.py --run-ids <run_id1> <run_id2> ...
-    uv run scripts/analyze_evaluation_runs.py --run-ids c0f5d69f17b3400093fa63204c70adc3
 """
 
 import argparse
-import re
-import sqlite3
 from typing import Dict, List
 
 import mlflow
@@ -20,225 +22,18 @@ import pandas as pd
 from mlflow import MlflowClient
 from tabulate import tabulate
 
-from src.config import DB_PATH, MLFLOW_URI
+from src.analysis.data_extraction import (
+    CATEGORY_NAMES,
+    build_dataframe,
+    extract_run_data,
+    fetch_nested_runs,
+)
+from src.config import MLFLOW_URI
+from src.db.query import fetch_question_data
 
 # Constants
-REPORTS_DIR = "reports"
-CATEGORY_NAMES = {
-    1: "Direct Property",
-    2: "Aggregation",
-    3: "Computation",
-    4: "Estimation/Unavailable",
-}
+REPORTS_DIR = "outputs/eval"
 
-
-def sanitize_for_excel(text: str) -> str:
-    """
-    Sanitize text to remove characters that are illegal in Excel cells.
-
-    Excel/openpyxl doesn't allow certain control characters (0x00-0x1F except tab, newline, carriage return).
-
-    Args:
-        text: Input text string
-
-    Returns:
-        Sanitized text safe for Excel
-    """
-    if not isinstance(text, str):
-        return text
-
-    # Remove illegal XML characters (Excel uses XML internally)
-    # Keep only: tab (0x09), newline (0x0A), carriage return (0x0D), and printable characters (>= 0x20)
-    illegal_chars = re.compile(r'[\x00-\x08\x0B\x0C\x0E-\x1F]')
-    return illegal_chars.sub('', text)
-
-
-def fetch_nested_runs(client: MlflowClient, parent_run_id: str, experiment_id: str) -> List:
-    """
-    Fetch all nested runs for a given parent run.
-
-    Args:
-        client: MLflow client instance
-        parent_run_id: ID of the parent evaluation run
-        experiment_id: ID of the experiment
-
-    Returns:
-        List of nested run objects
-    """
-    nested_runs = client.search_runs(
-        experiment_ids=[experiment_id],
-        filter_string=f'tags.mlflow.parentRunId = "{parent_run_id}"',
-        max_results=1000,  # Adjust if you have more questions
-    )
-    return nested_runs
-
-
-def extract_run_data(run) -> Dict:
-    """
-    Extract relevant data from a single nested run.
-
-    Args:
-        run: MLflow run object
-
-    Returns:
-        Dictionary with extracted run data
-    """
-    params = run.data.params
-    metrics = run.data.metrics
-    tags = run.data.tags
-
-    # Get question ID from run name (e.g., "question_909" -> 909)
-    run_name = tags.get("mlflow.runName", "")
-    question_id = None
-    if run_name.startswith("question_"):
-        try:
-            question_id = int(run_name.split("_")[1])
-        except (IndexError, ValueError):
-            question_id = params.get("question_id")
-    else:
-        question_id = params.get("question_id")
-
-    # Get classification from parameters
-    classification = params.get("classification", "unknown")
-    if classification == "not_evaluated":
-        classification = "unknown"
-
-    # Extract all relevant data
-    data = {
-        "question_id": question_id,
-        "run_id": run.info.run_id,
-        "experiment_id": run.info.experiment_id,
-        "classification": classification,
-        # Answer and justification from parameters
-        "cobbie_answer": params.get("answer", ""),
-        "justification": params.get("justification", ""),
-        "confidence": params.get("confidence", ""),
-        # Iteration count (number of BAML calls made by Cobbie)
-        "num_iterations": int(metrics.get("cobbie_calls_count", 0)),
-        # Latency metrics
-        "cobbie_duration": metrics.get("cobbie_duration", 0),
-        "verifier_duration": metrics.get("verifier_duration", 0),
-        "total_duration": metrics.get("cobbie_duration", 0) + metrics.get("verifier_duration", 0),
-        # Token metrics
-        "cobbie_input_tokens": metrics.get("cobbie_input_tokens", 0),
-        "cobbie_output_tokens": metrics.get("cobbie_output_tokens", 0),
-        "verifier_input_tokens": metrics.get("verifier_input_tokens", 0),
-        "verifier_output_tokens": metrics.get("verifier_output_tokens", 0),
-        "total_input_tokens": metrics.get("total_input_tokens", 0),
-        "total_output_tokens": metrics.get("total_output_tokens", 0),
-        # Success flag
-        "success": metrics.get("success", 0) == 1,
-    }
-
-    return data
-
-
-def fetch_question_data(question_ids: List[int]) -> Dict[int, Dict]:
-    """
-    Fetch question data from the database.
-
-    Args:
-        question_ids: List of question IDs to fetch
-
-    Returns:
-        Dictionary mapping question_id to question data
-    """
-    if not question_ids:
-        return {}
-
-    conn = sqlite3.connect(DB_PATH)
-    cursor = conn.cursor()
-
-    # Build query with JOIN to get project and model names
-    placeholders = ",".join("?" * len(question_ids))
-    query = f"""
-        SELECT
-            ib.id,
-            ib.question,
-            ib.ground_truth,
-            ib.category,
-            im.project_name,
-            im.model_name,
-            im.model_path
-        FROM ifc_bench ib
-        LEFT JOIN ifcmodels im ON ib.ifc_id = im.id
-        WHERE ib.id IN ({placeholders})
-    """
-
-    cursor.execute(query, question_ids)
-    rows = cursor.fetchall()
-    conn.close()
-
-    # Build dictionary
-    question_data = {}
-    for row in rows:
-        question_data[row[0]] = {
-            "question": row[1],
-            "ground_truth": row[2],
-            "category": row[3],
-            "project_name": row[4],
-            "model_name": row[5],
-            "model_path": row[6],
-        }
-
-    return question_data
-
-
-def build_dataframe(run_data_list: List[Dict], question_data: Dict[int, Dict]) -> pd.DataFrame:
-    """
-    Build a pandas DataFrame from run data and question data.
-
-    Args:
-        run_data_list: List of dictionaries with run data
-        question_data: Dictionary mapping question_id to question data
-
-    Returns:
-        Pandas DataFrame with enriched data
-    """
-    rows = []
-
-    for run_data in run_data_list:
-        question_id = run_data["question_id"]
-        if question_id is None:
-            continue
-
-        # Get question data from database
-        q_data = question_data.get(int(question_id), {})
-
-        # Build MLflow URL
-        mlflow_url = f"{MLFLOW_URI}/#/experiments/{run_data['experiment_id']}/runs/{run_data['run_id']}"
-
-        # Combine all data (sanitize text fields for Excel compatibility)
-        row = {
-            "question_id": question_id,
-            "question": sanitize_for_excel(q_data.get("question", "N/A")),
-            "ground_truth": sanitize_for_excel(q_data.get("ground_truth", "N/A")),
-            "category": q_data.get("category", "N/A"),
-            "category_name": CATEGORY_NAMES.get(q_data.get("category", 0), "Unknown"),
-            "project_name": sanitize_for_excel(q_data.get("project_name", "N/A")),
-            "model_name": sanitize_for_excel(q_data.get("model_name", "N/A")),
-            "classification": sanitize_for_excel(run_data["classification"]),
-            "cobbie_answer": sanitize_for_excel(run_data["cobbie_answer"]),
-            "justification": sanitize_for_excel(run_data["justification"]),
-            "confidence": sanitize_for_excel(run_data["confidence"]),
-            "num_iterations": run_data["num_iterations"],
-            "cobbie_duration": run_data["cobbie_duration"],
-            "verifier_duration": run_data["verifier_duration"],
-            "total_duration": run_data["total_duration"],
-            "cobbie_input_tokens": run_data["cobbie_input_tokens"],
-            "cobbie_output_tokens": run_data["cobbie_output_tokens"],
-            "verifier_input_tokens": run_data["verifier_input_tokens"],
-            "verifier_output_tokens": run_data["verifier_output_tokens"],
-            "total_input_tokens": run_data["total_input_tokens"],
-            "total_output_tokens": run_data["total_output_tokens"],
-            "success": run_data["success"],
-            "mlflow_url": mlflow_url,
-        }
-
-        rows.append(row)
-
-    df = pd.DataFrame(rows)
-    return df
 
 
 def calculate_statistics(df: pd.DataFrame) -> Dict:
@@ -268,6 +63,16 @@ def calculate_statistics(df: pd.DataFrame) -> Dict:
     evaluated = stats["correct_answers"] + stats["wrong_answers"]
     stats["accuracy"] = stats["correct_answers"] / evaluated if evaluated > 0 else 0
     stats["abstention_rate"] = stats["abstained_answers"] / len(successful_df) if len(successful_df) > 0 else 0
+
+    # Criterion-level metrics (only for successful evaluations)
+    for criterion in ["faithfulness", "completeness", "transparency", "relevance"]:
+        yes_count = (successful_df[criterion] == "Yes").sum()
+        no_count = (successful_df[criterion] == "No").sum()
+        na_count = (successful_df[criterion] == "Na").sum()
+        stats[f"{criterion}_yes"] = yes_count
+        stats[f"{criterion}_no"] = no_count
+        stats[f"{criterion}_na"] = na_count
+        stats[f"{criterion}_rate"] = yes_count / (yes_count + no_count) if (yes_count + no_count) > 0 else 0
 
     # Iteration statistics
     stats["avg_iterations"] = df["num_iterations"].mean()
@@ -347,12 +152,14 @@ def calculate_statistics(df: pd.DataFrame) -> Dict:
     return stats
 
 
-def print_statistics(stats: Dict) -> None:
+def print_statistics(stats: Dict, run_names: List[str] | None = None, per_run_stats: Dict[str, Dict] | None = None) -> None:
     """
     Print formatted statistics to console.
 
     Args:
         stats: Dictionary with statistics
+        run_names: List of MLflow run names
+        per_run_stats: Per-run statistics keyed by run name (for side-by-side comparison)
     """
     print("\n" + "=" * 80)
     print("EVALUATION RUN ANALYSIS - STATISTICS")
@@ -447,21 +254,71 @@ def print_statistics(stats: Dict) -> None:
     print(f"  Average Total Tokens/Question: {stats['avg_tokens_per_question']:.0f}")
     print(f"  Throughput: {stats['tokens_per_second']:.1f} tokens/second")
 
+    # Key metrics summary at the end for quick reference
     print("\n" + "=" * 80)
+
+    def _format_run_metrics(s: Dict) -> List[str]:
+        return [
+            f"{s['accuracy']:.2%}",
+            f"{s['faithfulness_rate']:.2%}",
+            f"{s['completeness_rate']:.2%}",
+            f"{s['transparency_rate']:.2%}",
+            f"{s['relevance_rate']:.2%}",
+            f"{s['abstention_rate']:.2%}",
+            f"{s['correct_answers']} / {s['wrong_answers']} / {s['abstained_answers']}",
+            f"{s['total_questions']}",
+        ]
+
+    metric_names = [
+        "Accuracy",
+        "Faithfulness",
+        "Completeness",
+        "Transparency",
+        "Relevance",
+        "Abstention Rate",
+        "Correct / Wrong / Abstained",
+        "Total Questions",
+    ]
+
+    if per_run_stats and len(per_run_stats) > 1:
+        # Side-by-side comparison
+        print("KEY METRICS COMPARISON")
+        print("=" * 80)
+        headers = ["Metric"] + list(per_run_stats.keys())
+        columns_per_run = [_format_run_metrics(s) for s in per_run_stats.values()]
+        summary_table = [
+            [name] + [col[i] for col in columns_per_run]
+            for i, name in enumerate(metric_names)
+        ]
+        print(tabulate(summary_table, headers=headers, tablefmt="grid"))
+    else:
+        # Single run summary
+        run_label = " | ".join(run_names) if run_names else "Unknown"
+        print(f"KEY METRICS SUMMARY - {run_label}")
+        print("=" * 80)
+        values = _format_run_metrics(stats)
+        summary_table = [[name, val] for name, val in zip(metric_names, values)]
+        print(tabulate(summary_table, headers=["Metric", "Value"], tablefmt="grid"))
+
+    print("=" * 80)
 
 
 def main():
     """Main function."""
     parser = argparse.ArgumentParser(
-        description="Analyze MLflow evaluation runs and generate Excel report",
+        description="Analyze MLflow evaluation runs and generate Excel report. "
+        "When multiple run IDs are provided, prints a side-by-side comparison of key metrics.",
         formatter_class=argparse.RawDescriptionHelpFormatter,
         epilog="""
 Examples:
-  # Analyze specific runs
-  uv run scripts/analyze_evaluation_runs.py --run-ids c0f5d69f17b3400093fa63204c70adc3 21d1966df8dc47d3a5753cbb9bbbb0e3
-
   # Analyze a single run
   uv run scripts/analyze_evaluation_runs.py --run-ids c0f5d69f17b3400093fa63204c70adc3
+
+  # Compare multiple runs side-by-side
+  uv run scripts/analyze_evaluation_runs.py --run-ids c0f5d69f17b3400093fa63204c70adc3 21d1966df8dc47d3a5753cbb9bbbb0e3
+
+  # Export results to Excel
+  uv run scripts/analyze_evaluation_runs.py --run-ids c0f5d69f17b3400093fa63204c70adc3 --export my_run
         """,
     )
 
@@ -469,7 +326,15 @@ Examples:
         "--run-ids",
         nargs="+",
         required=True,
-        help="MLflow run IDs to analyze (space-separated)",
+        help="MLflow run IDs to analyze (space-separated). Multiple IDs produce a side-by-side comparison.",
+    )
+
+    parser.add_argument(
+        "--export",
+        type=str,
+        default=None,
+        metavar="NAME",
+        help="Export to Excel file: outputs/eval/Evaluation_YYYY-MM-DD_NAME.xlsx",
     )
 
     args = parser.parse_args()
@@ -485,6 +350,7 @@ Examples:
 
     # Collect all run data
     all_run_data = []
+    run_names = []
 
     for run_id in args.run_ids:
         print(f"\nProcessing run: {run_id}")
@@ -494,6 +360,7 @@ Examples:
             main_run = client.get_run(run_id)
             experiment_id = main_run.info.experiment_id
             run_name = main_run.data.tags.get("mlflow.runName", "Unknown")
+            run_names.append(run_name)
             print(f"  Run Name: {run_name}")
             print(f"  Experiment ID: {experiment_id}")
 
@@ -504,6 +371,8 @@ Examples:
             # Extract data from each nested run
             for nested_run in nested_runs:
                 run_data = extract_run_data(nested_run)
+                run_data["parent_run_id"] = run_id
+                run_data["parent_run_name"] = run_name
                 all_run_data.append(run_data)
 
         except Exception as e:
@@ -525,108 +394,122 @@ Examples:
     print("Calculating statistics...")
     stats = calculate_statistics(df)
 
+    # Calculate per-run statistics for side-by-side comparison
+    per_run_stats: Dict[str, Dict] | None = None
+    if len(run_names) > 1 and "parent_run_name" in df.columns:
+        per_run_stats = {}
+        for name in run_names:
+            run_df = df.loc[df["parent_run_name"] == name]
+            if not run_df.empty:
+                per_run_stats[name] = calculate_statistics(pd.DataFrame(run_df))
+
     # Print statistics
-    print_statistics(stats)
+    print_statistics(stats, run_names, per_run_stats)
 
-    # Export to Excel
-    output_filename = f"{REPORTS_DIR}/{run_name}.xlsx"
-    print(f"\nExporting to Excel: {output_filename}")
+    # Export to Excel (only if --export is provided)
+    if args.export:
+        from datetime import datetime
 
-    with pd.ExcelWriter(output_filename, engine="openpyxl") as writer:
-        # Write main data
-        df.to_excel(writer, sheet_name="Evaluation Data", index=False)
+        date_str = datetime.now().strftime("%Y-%m-%d")
+        output_filename = f"{REPORTS_DIR}/Evaluation_{date_str}_{args.export}.xlsx"
+        print(f"\nExporting to Excel: {output_filename}")
 
-        # Write statistics summary
-        stats_data = {
-            "Metric": [
-                "Total Questions",
-                "Successful Evaluations",
-                "Failed Evaluations",
-                "Correct Answers",
-                "Wrong Answers",
-                "Abstained Answers",
-                "Accuracy",
-                "Abstention Rate",
-                "Total Iterations",
-                "Average Iterations",
-                "Median Iterations",
-                "Average Latency (s)",
-                "Median Latency (s)",
-                "Average COBBIE Duration (s)",
-                "Average Verifier Duration (s)",
-                "Total Input Tokens",
-                "Total Output Tokens",
-                "Total Tokens",
-                "Avg Tokens/Question",
-                "Tokens/Second",
-            ],
-            "Value": [
-                stats["total_questions"],
-                stats["successful_evaluations"],
-                stats["failed_evaluations"],
-                stats["correct_answers"],
-                stats["wrong_answers"],
-                stats["abstained_answers"],
-                f"{stats['accuracy']:.2%}",
-                f"{stats['abstention_rate']:.2%}",
-                f"{stats['total_iterations']:.0f}",
-                f"{stats['avg_iterations']:.2f}",
-                f"{stats['median_iterations']:.0f}",
-                f"{stats['avg_latency']:.2f}",
-                f"{stats['median_latency']:.2f}",
-                f"{stats['avg_cobbie_duration']:.2f}",
-                f"{stats['avg_verifier_duration']:.2f}",
-                f"{stats['total_input_tokens']:,}",
-                f"{stats['total_output_tokens']:,}",
-                f"{stats['total_tokens']:,}",
-                f"{stats['avg_tokens_per_question']:.0f}",
-                f"{stats['tokens_per_second']:.1f}",
-            ],
-        }
-        stats_df = pd.DataFrame(stats_data)
-        stats_df.to_excel(writer, sheet_name="Summary", index=False)
+        with pd.ExcelWriter(output_filename, engine="openpyxl") as writer:
+            # Write main data
+            df.to_excel(writer, sheet_name="Evaluation Data", index=False)
 
-        # Write category breakdown
-        category_data = []
-        for category, cat_stats in sorted(stats["by_category"].items()):
-            category_data.append(
-                {
-                    "Category": category,
-                    "Category Name": CATEGORY_NAMES.get(category, "Unknown"),
-                    "Count": cat_stats["count"],
-                    "Correct": cat_stats["correct"],
-                    "Wrong": cat_stats["wrong"],
-                    "Abstained": cat_stats["abstained"],
-                    "Accuracy": f"{cat_stats['accuracy']:.2%}",
-                    "Avg Iterations": f"{cat_stats['avg_iterations']:.2f}",
-                    "Avg Latency (s)": f"{cat_stats['avg_latency']:.2f}",
-                    "Avg Tokens": f"{cat_stats['avg_tokens']:.0f}",
-                }
-            )
-        category_df = pd.DataFrame(category_data)
-        category_df.to_excel(writer, sheet_name="By Category", index=False)
+            # Write statistics summary
+            stats_data = {
+                "Metric": [
+                    "Total Questions",
+                    "Successful Evaluations",
+                    "Failed Evaluations",
+                    "Correct Answers",
+                    "Wrong Answers",
+                    "Abstained Answers",
+                    "Accuracy",
+                    "Abstention Rate",
+                    "Total Iterations",
+                    "Average Iterations",
+                    "Median Iterations",
+                    "Average Latency (s)",
+                    "Median Latency (s)",
+                    "Average COBBIE Duration (s)",
+                    "Average Verifier Duration (s)",
+                    "Total Input Tokens",
+                    "Total Output Tokens",
+                    "Total Tokens",
+                    "Avg Tokens/Question",
+                    "Tokens/Second",
+                ],
+                "Value": [
+                    stats["total_questions"],
+                    stats["successful_evaluations"],
+                    stats["failed_evaluations"],
+                    stats["correct_answers"],
+                    stats["wrong_answers"],
+                    stats["abstained_answers"],
+                    f"{stats['accuracy']:.2%}",
+                    f"{stats['abstention_rate']:.2%}",
+                    f"{stats['total_iterations']:.0f}",
+                    f"{stats['avg_iterations']:.2f}",
+                    f"{stats['median_iterations']:.0f}",
+                    f"{stats['avg_latency']:.2f}",
+                    f"{stats['median_latency']:.2f}",
+                    f"{stats['avg_cobbie_duration']:.2f}",
+                    f"{stats['avg_verifier_duration']:.2f}",
+                    f"{stats['total_input_tokens']:,}",
+                    f"{stats['total_output_tokens']:,}",
+                    f"{stats['total_tokens']:,}",
+                    f"{stats['avg_tokens_per_question']:.0f}",
+                    f"{stats['tokens_per_second']:.1f}",
+                ],
+            }
+            stats_df = pd.DataFrame(stats_data)
+            stats_df.to_excel(writer, sheet_name="Summary", index=False)
 
-        # Write project breakdown
-        if stats["by_project"]:
-            project_data = []
-            for project, proj_stats in sorted(stats["by_project"].items()):
-                project_data.append(
+            # Write category breakdown
+            category_data = []
+            for category, cat_stats in sorted(stats["by_category"].items()):
+                category_data.append(
                     {
-                        "Project": project,
-                        "Count": proj_stats["count"],
-                        "Correct": proj_stats["correct"],
-                        "Wrong": proj_stats["wrong"],
-                        "Abstained": proj_stats["abstained"],
-                        "Accuracy": f"{proj_stats['accuracy']:.2%}",
-                        "Avg Iterations": f"{proj_stats['avg_iterations']:.2f}",
-                        "Avg Latency (s)": f"{proj_stats['avg_latency']:.2f}",
-                        "Avg Tokens": f"{proj_stats['avg_tokens']:.0f}",
+                        "Category": category,
+                        "Category Name": CATEGORY_NAMES.get(category, "Unknown"),
+                        "Count": cat_stats["count"],
+                        "Correct": cat_stats["correct"],
+                        "Wrong": cat_stats["wrong"],
+                        "Abstained": cat_stats["abstained"],
+                        "Accuracy": f"{cat_stats['accuracy']:.2%}",
+                        "Avg Iterations": f"{cat_stats['avg_iterations']:.2f}",
+                        "Avg Latency (s)": f"{cat_stats['avg_latency']:.2f}",
+                        "Avg Tokens": f"{cat_stats['avg_tokens']:.0f}",
                     }
                 )
-            project_df = pd.DataFrame(project_data)
-            project_df.to_excel(writer, sheet_name="By Project", index=False)
+            category_df = pd.DataFrame(category_data)
+            category_df.to_excel(writer, sheet_name="By Category", index=False)
 
-    print(f"✅ Export complete: {output_filename}")
+            # Write project breakdown
+            if stats["by_project"]:
+                project_data = []
+                for project, proj_stats in sorted(stats["by_project"].items()):
+                    project_data.append(
+                        {
+                            "Project": project,
+                            "Count": proj_stats["count"],
+                            "Correct": proj_stats["correct"],
+                            "Wrong": proj_stats["wrong"],
+                            "Abstained": proj_stats["abstained"],
+                            "Accuracy": f"{proj_stats['accuracy']:.2%}",
+                            "Avg Iterations": f"{proj_stats['avg_iterations']:.2f}",
+                            "Avg Latency (s)": f"{proj_stats['avg_latency']:.2f}",
+                            "Avg Tokens": f"{proj_stats['avg_tokens']:.0f}",
+                        }
+                    )
+                project_df = pd.DataFrame(project_data)
+                project_df.to_excel(writer, sheet_name="By Project", index=False)
+
+        print(f"✅ Export complete: {output_filename}")
+
     print("\nAnalysis complete!")
 
 

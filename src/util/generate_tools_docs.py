@@ -1,10 +1,9 @@
 """Tools documentation generation utilities for COBBIE and other components."""
 
-from typing import Dict, Callable, List
 import inspect
-import logging
+from typing import Callable, Dict, List
 
-logger = logging.getLogger(__name__)
+from loguru import logger
 
 
 def generate_tools_docs(tools: Dict[str, Callable]) -> str:

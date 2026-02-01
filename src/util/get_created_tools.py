@@ -1,61 +1,31 @@
 """Import all available tools"""
 
-import importlib
-import inspect
-import os
 from typing import Callable, Dict, List
 
-from src.config import CREATED_TOOLS_PATH
-from src.util.get_logger import get_logger
-
-logger = get_logger(__name__)
+from loguru import logger
 
 
 # Import all functions from each file
-def get_created_tools(tools: List[Callable] = []) -> Dict[str, Callable]:
+def get_created_tools(tools: List[Callable] = []) -> Dict[str, Callable]:  # type: ignore[assignment]
     """
     Return a Dict[str, Callable] with all the name and functions from:
     - the provided tools parameter
     - the functions in the tools/created directory
-    """
 
-    # Get all Python files in the directory (excluding __init__.py)
-    python_files = [
-        f[:-3]
-        for f in os.listdir(CREATED_TOOLS_PATH)
-        if f.endswith(".py") and f != "__init__.py"
-    ]
+    DEPRECATED: Use get_tools(['created']) instead.
+    Kept for backward compatibility with existing code.
+    """
+    from src.util.get_tools import get_tools_from_directory
+
     fn_dict: Dict[str, Callable] = {}
 
+    # Add provided tools
     for fn in tools:
-        fn_dict[fn.__name__] = fn
+        fn_dict[fn.__name__] = fn  # type: ignore[attr-defined]
 
-    for module_name in python_files:
-        try:
-            # Use absolute import path
-            module = importlib.import_module(f"src.tools.created.{module_name}")
-            # Get all objects from the module
-            for name, fn in inspect.getmembers(module):
-                # Only include functions that are defined in this module (not imported)
-                # and exclude built-in types, classes, etc.
-                if (
-                    inspect.isfunction(fn)
-                    and fn.__module__ == module.__name__
-                    and not name.startswith("_")
-                ):
-                    globals()[name] = fn
-                    fn_dict[name] = fn
-        except Exception as e:
-            file_path = os.path.join(CREATED_TOOLS_PATH, f"{module_name}.py")
-            logger.warning(
-                f"Could not import module '{module_name}'. Deleting it. Error: {e}"
-            )
-            try:
-                os.remove(file_path)
-                logger.info(f"Successfully deleted problematic tool file: {file_path}")
-            except OSError as remove_error:
-                logger.error(f"Error deleting file {file_path}: {remove_error}")
-            continue
+    # Add created tools
+    created = get_tools_from_directory("created", allow_deletion=True)
+    fn_dict.update(created)
 
     return fn_dict
 

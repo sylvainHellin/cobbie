@@ -11,16 +11,15 @@ from typing import List, Optional, Tuple
 
 import mlflow
 from baml_py.baml_py import Collector
+from loguru import logger
 
-from baml_client.types import CodeAction, NewHelperFunction
-from src.config import LOG_LEVEL
+from src.baml.baml_client.types import CodeAction, NewHelperFunction
 from src.tools.initial import query_ifcopenshell_docs
 from src.util.code_act_inner_loop import _execute_code_action
 from src.util.generate_tools_docs import generate_tools_docs
-from src.util.get_logger import get_logger
+from src.util import setup_logger
 
-# Initialize logger
-_logger = get_logger(name="baml_helper_function_creator", log_level=LOG_LEVEL)
+setup_logger()
 
 
 def _helper_function_creator_iter(
@@ -98,7 +97,7 @@ def _helper_function_creator_iter(
                 **kwargs_copy,
             )
     except Exception as e:
-        _logger.error(f"Error in HelperFunctionCreator iteration: {e}")
+        logger.error(f"Error in HelperFunctionCreator iteration: {e}")
         result = NewHelperFunction(
             thoughts=f"An Exception occurred when trying to create the helper function. Exception:\n{e}",
             function_implementation="",
@@ -148,7 +147,7 @@ def _create_helper_function(
         Tuple of (NewHelperFunction, execution_history) where execution_history contains
         the complete iteration-by-iteration trace of development
     """
-    _logger.info(f"Starting helper function creation for: {function_name}")
+    logger.info(f"Starting helper function creation for: {function_name}")
 
     # Prepare tools for code execution
     tools = {
@@ -173,13 +172,13 @@ def _create_helper_function(
 
             if ifc_files:
                 other_bim_models_for_testing = ifc_files
-                _logger.info(f"Found {len(ifc_files)} other BIM models for testing")
+                logger.info(f"Found {len(ifc_files)} other BIM models for testing")
             else:
                 other_bim_models_for_testing = []
-                _logger.warning("No other BIM models found in bim_models directory")
+                logger.warning("No other BIM models found in bim_models directory")
         else:
             other_bim_models_for_testing = []
-            _logger.warning(f"BIM models directory not found at {bim_models_dir}")
+            logger.warning(f"BIM models directory not found at {bim_models_dir}")
 
     # Initialize execution history
     previous_attempts = ""
@@ -260,17 +259,17 @@ def _create_helper_function(
                                                         message_parts.append(f"{message.get('role', 'unknown')}: {part['text']}")
 
                                     full_prompt = "\n\n".join(message_parts)
-                                    _logger.debug(f"Successfully extracted full prompt from collector: {len(full_prompt)} characters")
+                                    logger.debug(f"Successfully extracted full prompt from collector: {len(full_prompt)} characters")
                                 else:
-                                    _logger.warning("No messages found in collector request JSON")
+                                    logger.warning("No messages found in collector request JSON")
                             else:
-                                _logger.warning("HTTP body does not have json method")
+                                logger.warning("HTTP body does not have json method")
                         else:
-                            _logger.warning("Last call does not have http_request or body")
+                            logger.warning("Last call does not have http_request or body")
                     except Exception as e:
-                        _logger.error(f"Error extracting full prompt from collector: {e}")
+                        logger.error(f"Error extracting full prompt from collector: {e}")
                 else:
-                    _logger.warning("No collector data available for prompt extraction")
+                    logger.warning("No collector data available for prompt extraction")
 
                 if collector and collector.last and collector.last.usage:
                     usage = collector.last.usage
@@ -327,7 +326,7 @@ def _create_helper_function(
 
             # Handle union type flow control
             if isinstance(result, NewHelperFunction):
-                _logger.info(
+                logger.info(
                     f"Helper function creation completed after {iteration + 1} iterations"
                 )
 
@@ -382,7 +381,7 @@ def _create_helper_function(
             else:
                 # Handle unexpected result type
                 error_msg = f"Unexpected result type: {type(result)}"
-                _logger.error(error_msg)
+                logger.error(error_msg)
                 previous_attempts += (
                     f"\n--- Iteration {iteration + 1} ---\nError:\n{error_msg}"
                 )
@@ -403,7 +402,7 @@ def _create_helper_function(
                 continue
 
     # Max iterations reached - return incomplete result
-    _logger.warning(
+    logger.warning(
         f"Helper function creator reached max iterations ({max_iterations}) without completion"
     )
 
@@ -573,12 +572,12 @@ def create_helper_function(
                             last_usage.output_tokens or 0
                         )
 
-                    _logger.debug(
+                    logger.debug(
                         f"Token tracking - Cumulative: {total_tokens} (in: {input_tokens}, out: {output_tokens}), Last call: {last_call_tokens}"
                     )
 
                 except Exception as e:
-                    _logger.warning(f"Error extracting token usage from collector: {e}")
+                    logger.warning(f"Error extracting token usage from collector: {e}")
 
             # Log metrics to MLflow
             mlflow.log_metrics(
@@ -621,7 +620,7 @@ def create_helper_function(
                 }
             )
 
-            _logger.debug(
+            logger.debug(
                 f"Helper function creator completed. Tokens: {total_tokens}, Time: {execution_time:.2f}s, Success: {final_result.success}"
             )
 

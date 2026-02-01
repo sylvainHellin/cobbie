@@ -12,6 +12,8 @@ DEVSET_PATH = os.path.join(ROOT_PATH, "src/db/dev_set.json")
 DB_PATH = os.path.join(ROOT_PATH, "src/db/db.db")
 DIRECTORY_IFC_MODELS_PATH = os.path.join(ROOT_PATH, "src/db/bim_models")
 CREATED_TOOLS_PATH = os.path.join(ROOT_PATH, "src/tools/created")
+INITIAL_TOOLS_PATH = os.path.join(ROOT_PATH, "src/tools/initial")
+MANUAL_TOOLS_PATH = os.path.join(ROOT_PATH, "src/tools/manual")
 
 # ACC paths
 ACC_ROOT_PATH = os.path.join(ROOT_PATH, "acc")

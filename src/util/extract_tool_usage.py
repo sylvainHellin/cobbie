@@ -10,19 +10,15 @@ tools are listed in system prompts.
 """
 
 import re
-from pathlib import Path
 from typing import List
 
-from src.config import CREATED_TOOLS_PATH
 
-
-def extract_tools_used(execution_history: str) -> List[str]:
+def extract_tools_used(execution_history: str, available_tools: List[str]) -> List[str]:
     """Extract tool names that were called in the execution history.
 
     Parses the execution history string (iteration-by-iteration trace) to find
     all function calls matching the pattern of tool names (lowercase with
-    underscores). Only returns tools that actually exist in the created tools
-    directory.
+    underscores). Only returns tools that are in the available_tools list.
 
     IMPORTANT: Pass execution_history (the previous_attempts accumulator from
     cobbie.py), NOT the full conversation history which includes system prompts.
@@ -30,14 +26,16 @@ def extract_tools_used(execution_history: str) -> List[str]:
     Args:
         execution_history: String containing the execution history with tool calls
             (the iteration-by-iteration trace, not full conversation)
+        available_tools: List of tool names that are available (from tools_dict.keys())
 
     Returns:
-        Deduplicated list of tool names that were called and exist in created tools
+        Deduplicated list of tool names that were called and exist in available_tools
 
     Examples:
         >>> history = "Called get_walls(ifc_file) and calculate_area(wall)"
-        >>> extract_tools_used(history)
-        ['get_walls', 'calculate_area']  # assuming these tools exist
+        >>> available = ["get_walls", "calculate_area", "other_tool"]
+        >>> extract_tools_used(history, available)
+        ['get_walls', 'calculate_area']
     """
     # Regex pattern to match function calls: lowercase names with underscores
     pattern = r'\b([a-z_][a-z0-9_]*)\s*\('
@@ -45,13 +43,10 @@ def extract_tools_used(execution_history: str) -> List[str]:
     # Find all matches in the execution history
     potential_tools = re.findall(pattern, execution_history)
 
-    # Get path to created tools directory (absolute path from config)
-    tools_dir = Path(CREATED_TOOLS_PATH)
-
-    # Filter to only tools that exist as files in the created tools directory
+    # Filter to only tools that are in the available tools list
     existing_tools = [
         tool for tool in potential_tools
-        if (tools_dir / f"{tool}.py").exists()
+        if tool in available_tools
     ]
 
     # Return deduplicated list (preserving order of first occurrence)

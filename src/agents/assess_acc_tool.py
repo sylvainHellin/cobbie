@@ -8,13 +8,12 @@ from typing import Optional, Tuple
 
 import mlflow
 from baml_py.baml_py import Collector
-from baml_client import b
-from baml_client.types import ACCToolAssessment
-from src.config import LOG_LEVEL
-from src.util import get_logger
+from loguru import logger
+from src.baml.baml_client import b
+from src.baml.baml_client.types import ACCToolAssessment
+from src.util import setup_logger
 
-# Initialize logger
-_logger = get_logger(name="baml_acc_tool_assessor", log_level=LOG_LEVEL)
+setup_logger()
 
 
 def assess_acc_tool(
@@ -151,7 +150,7 @@ def assess_acc_tool(
                 **kwargs,
             )
         except Exception as e:
-            _logger.error(f"Error assessing ACC tool: {e}")
+            logger.error(f"Error assessing ACC tool: {e}")
             assessment = ACCToolAssessment(
                 thoughts=f"An Exception occurred when trying to assess ACC tool. Exception:\n{e}",
                 diagnosis="unknown",
@@ -195,7 +194,7 @@ def assess_acc_tool(
             }
         )
 
-        _logger.info(
+        logger.info(
             f"ACC tool assessment completed. Diagnosis: {assessment.diagnosis}, "
             f"Recommendation: {assessment.recommendation}, "
             f"Confidence: {assessment.confidence}, Tokens: {total_tokens}, Duration: {duration:.2f}s"

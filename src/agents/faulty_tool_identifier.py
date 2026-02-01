@@ -8,14 +8,14 @@ from typing import Tuple
 
 import mlflow
 from baml_py.baml_py import Collector
-from baml_client import b
-from baml_client.types import FaultyToolAnalysis
-from src.config import LOG_LEVEL
-from src.util import get_logger
+from loguru import logger
 
-# Initialize logger
-_logger = get_logger(name="baml_faulty_tool_identifier", log_level=LOG_LEVEL)
+from src.baml.baml_client import b
+from src.baml.baml_client.types import FaultyToolAnalysis
+from src.util import setup_logger
+from src.agents import derive_binary_classification
 
+setup_logger()
 
 def identify_faulty_tool(
     history: str,
@@ -94,7 +94,7 @@ def identify_faulty_tool(
                 **kwargs,
             )
         except Exception as e:
-            _logger.error(f"Error identifying faulty tool: {e}")
+            logger.error(f"Error identifying faulty tool: {e}")
             faulty_tool_analysis = FaultyToolAnalysis(
                 thoughts=f"An Exception occurred when trying to identify faulty tool. Exception:\n{e}",
                 faulty_tool=False,
@@ -148,23 +148,22 @@ if __name__ == "__main__":
     from src.agents.cobbie import cobbie
     from src.agents.answer_verifier import verify_answer
     from src.config import TEST_IFC_PATH
-    from src.tools.initial import query_ifcopenshell_docs, web_search
+    from src.tools.initial import query_ifcopenshell_docs
 
     # Define a FAULTY helper function for testing purposes
     # BUG: This function ignores the floor_name parameter and returns ALL doors
-    def count_doors_by_floor(ifc_file_path: str, floor_name: str) -> int:
+    def count_doors_by_floor(ifc_file_path: str) -> int:
         """
         Count the number of doors on a specific building floor.
 
         Args:
             ifc_file_path: Path to the IFC file
-            floor_name: Name of the floor/storey (e.g., 'Level 1', 'Ground Floor')
 
         Returns:
             Number of doors on the specified floor
         """
         ifc_file = ifcopenshell.open(ifc_file_path)
-        doors = ifc_file.by_type('IfcDoor')
+        doors = ifc_file.by_type('IfcDoor') #type: ignore
 
         # BUG: Returns ALL doors instead of filtering by floor_name
         return len(doors)
@@ -176,7 +175,6 @@ if __name__ == "__main__":
     # Setup tools for cobbie - INCLUDING THE FAULTY TOOL
     tools_dict = {
         "query_ifcopenshell_docs": query_ifcopenshell_docs,
-        "web_search": web_search,
         "count_doors_by_floor": count_doors_by_floor,  # This tool has a bug!
     }
 
@@ -230,12 +228,13 @@ Answer: {cobbie_result.answer}
             system_response=cobbie_result.answer,
         )
 
-        print(f"\nClassification: {verification_result.classification}")
+        classification = derive_binary_classification(result=verification_result)
+
+        print(f"\nClassification: {classification}")
         print(f"Justification: {verification_result.justification}")
-        print(f"Confidence: {verification_result.confidence}\n")
 
         # Only proceed with faulty tool identification if answer was wrong
-        if verification_result.classification == "wrong":
+        if classification == "wrong":
             print("=" * 80)
             print("STEP 3: Analyzing for faulty tools (answer was WRONG)")
             print("=" * 80)
@@ -244,9 +243,6 @@ Answer: {cobbie_result.answer}
             test_existing_functions = """
 def query_ifcopenshell_docs(query: str) -> str:
     '''Search ifcopenshell documentation for information'''
-
-def web_search(query: str) -> str:
-    '''Search the web for general information'''
 
 def count_doors_by_floor(ifc_file_path: str, floor_name: str) -> int:
     '''Count the number of doors on a specific building floor.
@@ -294,22 +290,9 @@ def count_doors_by_floor(ifc_file_path: str, floor_name: str) -> int:
             print(f"Answer Verifier - Input: {verification_collector.usage.input_tokens if verification_collector.usage else 0}, "
                   f"Output: {verification_collector.usage.output_tokens if verification_collector.usage else 0}")
             print(f"Faulty Tool Identifier - Input: {faulty_tool_input_tokens}, Output: {faulty_tool_output_tokens}")
-
-            total_input = (
-                (cobbie_collector.usage.input_tokens if cobbie_collector.usage else 0) +
-                (verification_collector.usage.input_tokens if verification_collector.usage else 0) +
-                faulty_tool_input_tokens
-            )
-            total_output = (
-                (cobbie_collector.usage.output_tokens if cobbie_collector.usage else 0) +
-                (verification_collector.usage.output_tokens if verification_collector.usage else 0) +
-                faulty_tool_output_tokens
-            )
-            print(f"Total - Input: {total_input}, Output: {total_output}, Combined: {total_input + total_output}")
             print("=" * 80)
         else:
             print("=" * 80)
-            print(f"STEP 3: Skipping faulty tool analysis (answer was {verification_result.classification.upper()})")
             print("=" * 80)
             print("\nNo need to analyze for faulty tools since the answer was correct or abstained.")
             print("The faulty_tool_identifier agent is only run when answers are classified as 'wrong'.")

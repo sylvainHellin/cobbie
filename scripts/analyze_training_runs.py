@@ -23,7 +23,7 @@ from tabulate import tabulate
 from src.config import DB_PATH, MLFLOW_URI
 
 # Constants
-REPORTS_DIR = "reports"
+REPORTS_DIR = "outputs/training"
 CATEGORY_NAMES = {
     1: "Direct Property",
     2: "Aggregation",
@@ -453,6 +453,14 @@ Example:
         help="MLflow run ID to analyze",
     )
 
+    parser.add_argument(
+        "--export",
+        type=str,
+        default=None,
+        metavar="NAME",
+        help="Export to Excel file: outputs/training/TRAINING_YYYY-MM-DD_NAME.xlsx",
+    )
+
     args = parser.parse_args()
 
     print("=" * 80)
@@ -499,76 +507,81 @@ Example:
     # Print statistics
     print_statistics(stats)
 
-    # Export to Excel
-    output_filename = f"{REPORTS_DIR}/{run_name}.xlsx"
-    print(f"\nExporting to Excel: {output_filename}")
+    # Export to Excel (only if --export is provided)
+    if args.export:
+        from datetime import datetime
 
-    with pd.ExcelWriter(output_filename, engine="openpyxl") as writer:
-        # Write main data
-        df.to_excel(writer, sheet_name="Training Data", index=False)
+        date_str = datetime.now().strftime("%Y-%m-%d")
+        output_filename = f"{REPORTS_DIR}/TRAINING_{date_str}_{args.export}.xlsx"
+        print(f"\nExporting to Excel: {output_filename}")
 
-        # Write statistics summary
-        stats_data = {
-            "Metric": [
-                "Total Questions",
-                "Correct Answers",
-                "Wrong Answers",
-                "Abstained Answers",
-                "Accuracy",
-                "Abstention Rate",
-                "Tools Created",
-                "Tools Updated",
-                "Tools Saved",
-                "Tools Kept",
-                "Tools Discarded",
-                "Average Latency (s)",
-                "Median Latency (s)",
-                "Total Input Tokens",
-                "Total Output Tokens",
-                "Errors",
-            ],
-            "Value": [
-                stats["total_questions"],
-                stats["correct_answers"],
-                stats["wrong_answers"],
-                stats["abstained_answers"],
-                f"{stats['accuracy']:.2%}",
-                f"{stats['abstention_rate']:.2%}",
-                stats["tools_created"],
-                stats["tools_updated"],
-                stats["tools_saved"],
-                stats["tools_kept"],
-                stats["tools_discarded"],
-                f"{stats['avg_latency']:.2f}",
-                f"{stats['median_latency']:.2f}",
-                f"{stats['total_input_tokens']:,}",
-                f"{stats['total_output_tokens']:,}",
-                stats["errors"],
-            ],
-        }
-        stats_df = pd.DataFrame(stats_data)
-        stats_df.to_excel(writer, sheet_name="Summary", index=False)
+        with pd.ExcelWriter(output_filename, engine="openpyxl") as writer:
+            # Write main data
+            df.to_excel(writer, sheet_name="Training Data", index=False)
 
-        # Write category breakdown
-        category_data = []
-        for category, cat_stats in sorted(stats["by_category"].items()):
-            category_data.append(
-                {
-                    "Category": category,
-                    "Category Name": CATEGORY_NAMES.get(category, "Unknown"),
-                    "Count": cat_stats["count"],
-                    "Correct": cat_stats["correct"],
-                    "Wrong": cat_stats["wrong"],
-                    "Abstained": cat_stats["abstained"],
-                    "Accuracy": f"{cat_stats['accuracy']:.2%}",
-                    "Avg Latency (s)": f"{cat_stats['avg_latency']:.2f}",
-                    "Avg Tokens": f"{cat_stats['avg_tokens']:.0f}",
-                }
-            )
-        category_df = pd.DataFrame(category_data)
-        category_df.to_excel(writer, sheet_name="By Category", index=False)
+            # Write statistics summary
+            stats_data = {
+                "Metric": [
+                    "Total Questions",
+                    "Correct Answers",
+                    "Wrong Answers",
+                    "Abstained Answers",
+                    "Accuracy",
+                    "Abstention Rate",
+                    "Tools Created",
+                    "Tools Updated",
+                    "Tools Saved",
+                    "Tools Kept",
+                    "Tools Discarded",
+                    "Average Latency (s)",
+                    "Median Latency (s)",
+                    "Total Input Tokens",
+                    "Total Output Tokens",
+                    "Errors",
+                ],
+                "Value": [
+                    stats["total_questions"],
+                    stats["correct_answers"],
+                    stats["wrong_answers"],
+                    stats["abstained_answers"],
+                    f"{stats['accuracy']:.2%}",
+                    f"{stats['abstention_rate']:.2%}",
+                    stats["tools_created"],
+                    stats["tools_updated"],
+                    stats["tools_saved"],
+                    stats["tools_kept"],
+                    stats["tools_discarded"],
+                    f"{stats['avg_latency']:.2f}",
+                    f"{stats['median_latency']:.2f}",
+                    f"{stats['total_input_tokens']:,}",
+                    f"{stats['total_output_tokens']:,}",
+                    stats["errors"],
+                ],
+            }
+            stats_df = pd.DataFrame(stats_data)
+            stats_df.to_excel(writer, sheet_name="Summary", index=False)
 
-    print(f"✅ Export complete: {output_filename}")
+            # Write category breakdown
+            category_data = []
+            for category, cat_stats in sorted(stats["by_category"].items()):
+                category_data.append(
+                    {
+                        "Category": category,
+                        "Category Name": CATEGORY_NAMES.get(category, "Unknown"),
+                        "Count": cat_stats["count"],
+                        "Correct": cat_stats["correct"],
+                        "Wrong": cat_stats["wrong"],
+                        "Abstained": cat_stats["abstained"],
+                        "Accuracy": f"{cat_stats['accuracy']:.2%}",
+                        "Avg Latency (s)": f"{cat_stats['avg_latency']:.2f}",
+                        "Avg Tokens": f"{cat_stats['avg_tokens']:.0f}",
+                    }
+                )
+            category_df = pd.DataFrame(category_data)
+            category_df.to_excel(writer, sheet_name="By Category", index=False)
+
+        print(f"✅ Export complete: {output_filename}")
+
     print("\nAnalysis complete!")
 
 

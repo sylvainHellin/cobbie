@@ -1,0 +1,14 @@
+artifact_uri: mlflow-artifacts:/0/70fce63396984b9c8582b50a3c78e802/artifacts
+end_time: 1769504937853
+entry_point_name: ''
+experiment_id: '0'
+lifecycle_stage: active
+run_id: 70fce63396984b9c8582b50a3c78e802
+run_name: Cobbie
+source_name: ''
+source_type: 4
+source_version: ''
+start_time: 1769504438770
+status: 3
+tags: []
+user_id: stefanfuchs

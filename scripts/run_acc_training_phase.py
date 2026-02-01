@@ -29,7 +29,7 @@ from typing import Optional, Tuple
 
 import mlflow
 from baml_py.baml_py import Collector
-
+from loguru import logger
 from baml_client.types import ACCToolAssessment, NewHelperFunction
 from src.agents.assess_acc_tool import assess_acc_tool
 from src.agents.create_acc_function import create_helper_function
@@ -41,11 +41,11 @@ from src.acc.guid_comparison import (
     load_rule_templates,
     load_model_splits,
 )
-from src.config import LOG_LEVEL, ACC_TOOLS_PATH
-from src.util import get_logger, save_new_tool, _create_function_from_source_code
+from src.config import ACC_TOOLS_PATH
+from src.util import setup_logger, save_new_tool, _create_function_from_source_code
 
 # Initialize logger
-_logger = get_logger(name="ACCTrainingPhase", log_level=LOG_LEVEL)
+setup_logger()
 
 
 class ACCTrainingState(Enum):
@@ -150,7 +150,7 @@ def extract_token_metrics(collector: Optional[Collector]) -> Tuple[int, int, int
             output_tokens = usage.output_tokens or 0
             return input_tokens, output_tokens, input_tokens + output_tokens
     except Exception as e:
-        _logger.warning(f"Error extracting token usage: {e}")
+        logger.warning(f"Error extracting token usage: {e}")
 
     return 0, 0, 0
 
@@ -162,7 +162,7 @@ def extract_token_metrics(collector: Optional[Collector]) -> Tuple[int, int, int
 
 def handle_start(ctx: ACCContext) -> Tuple[ACCTrainingState, ACCContext]:
     """Initialize context with rule data from ground truth across all train models."""
-    _logger.info(f"Starting ACC training for rule: {ctx.rule_title}")
+    logger.info(f"Starting ACC training for rule: {ctx.rule_title}")
 
     try:
         # Load ground truth from each train model for this rule
@@ -170,7 +170,7 @@ def handle_start(ctx: ACCContext) -> Tuple[ACCTrainingState, ACCContext]:
             try:
                 rule_data = get_rule_context(model_name, ctx.rule_title)
             except KeyError:
-                _logger.info(f"Rule '{ctx.rule_title}' not found in {model_name} — skipping")
+                logger.info(f"Rule '{ctx.rule_title}' not found in {model_name} — skipping")
                 continue
 
             # Use rule metadata from first successful model (same across models)
@@ -192,7 +192,7 @@ def handle_start(ctx: ACCContext) -> Tuple[ACCTrainingState, ACCContext]:
             if model_path:
                 ctx.training_model_paths[model_name] = model_path
             else:
-                _logger.warning(f"Could not find IFC model for {model_name}")
+                logger.warning(f"Could not find IFC model for {model_name}")
 
         if not ctx.training_ground_truth:
             raise ValueError(f"Rule '{ctx.rule_title}' not found in any training model")
@@ -208,7 +208,7 @@ def handle_start(ctx: ACCContext) -> Tuple[ACCTrainingState, ACCContext]:
             try:
                 rule_data = get_rule_context(model_name, ctx.rule_title)
             except KeyError:
-                _logger.info(f"Rule '{ctx.rule_title}' not found in validation model {model_name} — skipping")
+                logger.info(f"Rule '{ctx.rule_title}' not found in validation model {model_name} — skipping")
                 continue
 
             guids: list[str] = []
@@ -220,7 +220,7 @@ def handle_start(ctx: ACCContext) -> Tuple[ACCTrainingState, ACCContext]:
             if model_path:
                 ctx.validation_model_paths[model_name] = model_path
             else:
-                _logger.warning(f"Could not find IFC model for validation model {model_name}")
+                logger.warning(f"Could not find IFC model for validation model {model_name}")
 
         if not ctx.validation_guids_per_model:
             raise ValueError(f"Rule '{ctx.rule_title}' not found in any validation model")
@@ -230,7 +230,7 @@ def handle_start(ctx: ACCContext) -> Tuple[ACCTrainingState, ACCContext]:
             try:
                 rule_data = get_rule_context(model_name, ctx.rule_title)
             except KeyError:
-                _logger.info(f"Rule '{ctx.rule_title}' not found in test model {model_name} — skipping")
+                logger.info(f"Rule '{ctx.rule_title}' not found in test model {model_name} — skipping")
                 continue
 
             guids = []
@@ -242,26 +242,26 @@ def handle_start(ctx: ACCContext) -> Tuple[ACCTrainingState, ACCContext]:
             if model_path:
                 ctx.test_model_paths[model_name] = model_path
             else:
-                _logger.warning(f"Could not find IFC model for test model {model_name}")
+                logger.warning(f"Could not find IFC model for test model {model_name}")
 
         if not ctx.test_guids_per_model:
-            _logger.warning("No test ground truth loaded — test phase will be skipped")
+            logger.warning("No test ground truth loaded — test phase will be skipped")
 
         # Generate tool name from rule title
         ctx.tool_name = f"check_{ctx.rule_title}"
 
-        _logger.info(f"Rule: {ctx.rule_code} - {ctx.rule_title}")
-        _logger.info(f"Primary training model: {ctx.primary_training_model}")
+        logger.info(f"Rule: {ctx.rule_code} - {ctx.rule_title}")
+        logger.info(f"Primary training model: {ctx.primary_training_model}")
         for m in ctx.training_ground_truth:
-            _logger.info(f"  {m}: {len(ctx.training_ground_truth[m])} issues, "
+            logger.info(f"  {m}: {len(ctx.training_ground_truth[m])} issues, "
                          f"{len(ctx.training_guids_per_model.get(m, []))} GUIDs")
         for m in ctx.validation_guids_per_model:
-            _logger.info(f"  Validation {m}: {len(ctx.validation_guids_per_model[m])} GUIDs")
+            logger.info(f"  Validation {m}: {len(ctx.validation_guids_per_model[m])} GUIDs")
 
         return ACCTrainingState.CREATE_TOOL, ctx
 
     except Exception as e:
-        _logger.error(f"Error in START state: {e}")
+        logger.error(f"Error in START state: {e}")
         ctx.error_message = str(e)
         return ACCTrainingState.ERROR, ctx
 
@@ -301,7 +301,7 @@ def _build_expected_answer(ctx: ACCContext) -> str:
 def handle_create_tool(ctx: ACCContext) -> Tuple[ACCTrainingState, ACCContext]:
     """Create or retry creating the ACC tool."""
     action = "Retrying" if ctx.retry_count > 0 else "Creating"
-    _logger.info(f"{action} tool: {ctx.tool_name} (attempt {ctx.retry_count + 1}/{ctx.max_retries + 1})")
+    logger.info(f"{action} tool: {ctx.tool_name} (attempt {ctx.retry_count + 1}/{ctx.max_retries + 1})")
 
     start_time = time.time()
 
@@ -357,15 +357,15 @@ def handle_create_tool(ctx: ACCContext) -> Tuple[ACCTrainingState, ACCContext]:
 
         if result.success and result.function_implementation:
             ctx.tool_implementation = result.function_implementation
-            _logger.info(f"Tool creation succeeded in {ctx.create_tool_duration:.1f}s")
+            logger.info(f"Tool creation succeeded in {ctx.create_tool_duration:.1f}s")
             return ACCTrainingState.VALIDATE_TOOL, ctx
         else:
-            _logger.warning(f"Tool creation failed: {result.thoughts}")
+            logger.warning(f"Tool creation failed: {result.thoughts}")
             ctx.error_message = f"Tool creation failed: {result.thoughts}"
             return ACCTrainingState.ERROR, ctx
 
     except Exception as e:
-        _logger.error(f"Error creating tool: {e}")
+        logger.error(f"Error creating tool: {e}")
         ctx.error_message = str(e)
         ctx.create_tool_duration = time.time() - start_time
         return ACCTrainingState.ERROR, ctx
@@ -419,7 +419,7 @@ def _execute_tool(tool_implementation: str, function_name: str, model_path: str)
 
 def handle_validate_tool(ctx: ACCContext) -> Tuple[ACCTrainingState, ACCContext]:
     """Execute tool on all training models and validation model, compare GUIDs."""
-    _logger.info("Validating tool on training models and validation model...")
+    logger.info("Validating tool on training models and validation model...")
 
     start_time = time.time()
 
@@ -432,7 +432,7 @@ def handle_validate_tool(ctx: ACCContext) -> Tuple[ACCTrainingState, ACCContext]
         for model_name in ctx.training_ground_truth:
             model_path = ctx.training_model_paths.get(model_name, "")
             if not model_path:
-                _logger.warning(f"No IFC path for training model {model_name} — skipping validation")
+                logger.warning(f"No IFC path for training model {model_name} — skipping validation")
                 continue
 
             predicted, run_log = _execute_tool(ctx.tool_implementation, ctx.tool_name, model_path)
@@ -445,7 +445,7 @@ def handle_validate_tool(ctx: ACCContext) -> Tuple[ACCTrainingState, ACCContext]
             total_fn += result.fn
             f1_scores.append(result.f1)
 
-            _logger.info(
+            logger.info(
                 f"  Training [{model_name}]: TP={result.tp}, FP={result.fp}, "
                 f"FN={result.fn}, F1={result.f1:.3f}"
             )
@@ -467,7 +467,7 @@ def handle_validate_tool(ctx: ACCContext) -> Tuple[ACCTrainingState, ACCContext]
         )
         ctx.training_result_avg_f1 = sum(f1_scores) / len(f1_scores) if f1_scores else 0.0
 
-        _logger.info(
+        logger.info(
             f"Training aggregated: TP={total_tp}, FP={total_fp}, FN={total_fn}, "
             f"F1_agg={agg_f1:.3f}, F1_avg={ctx.training_result_avg_f1:.3f}"
         )
@@ -479,7 +479,7 @@ def handle_validate_tool(ctx: ACCContext) -> Tuple[ACCTrainingState, ACCContext]
         for model_name in ctx.validation_guids_per_model:
             model_path = ctx.validation_model_paths.get(model_name, "")
             if not model_path:
-                _logger.warning(f"No IFC path for validation model {model_name} — skipping")
+                logger.warning(f"No IFC path for validation model {model_name} — skipping")
                 continue
 
             predicted, run_log = _execute_tool(ctx.tool_implementation, ctx.tool_name, model_path)
@@ -492,7 +492,7 @@ def handle_validate_tool(ctx: ACCContext) -> Tuple[ACCTrainingState, ACCContext]
             val_total_fn += result.fn
             val_f1_scores.append(result.f1)
 
-            _logger.info(
+            logger.info(
                 f"  Validation [{model_name}]: TP={result.tp}, FP={result.fp}, "
                 f"FN={result.fn}, F1={result.f1:.3f}"
             )
@@ -516,7 +516,7 @@ def handle_validate_tool(ctx: ACCContext) -> Tuple[ACCTrainingState, ACCContext]
         ctx.execution_log = "\n\n".join(log_parts)
         ctx.validate_duration = time.time() - start_time
 
-        _logger.info(
+        logger.info(
             f"Validation aggregated: TP={val_total_tp}, FP={val_total_fp}, FN={val_total_fn}, "
             f"F1_agg={val_f1:.3f}, F1_avg={ctx.validation_result_avg_f1:.3f}"
         )
@@ -525,18 +525,18 @@ def handle_validate_tool(ctx: ACCContext) -> Tuple[ACCTrainingState, ACCContext]
         if val_f1 > ctx.best_tool_f1:
             ctx.best_tool_f1 = val_f1
             ctx.best_tool_implementation = ctx.tool_implementation
-            _logger.info(f"New best tool! Aggregated validation F1={ctx.best_tool_f1:.3f}")
+            logger.info(f"New best tool! Aggregated validation F1={ctx.best_tool_f1:.3f}")
 
         # Check for perfect validation match
         if val_f1 == 1.0:
-            _logger.info("Perfect validation F1=1.0 - saving tool immediately")
+            logger.info("Perfect validation F1=1.0 - saving tool immediately")
             return ACCTrainingState.SAVE_TOOL, ctx
 
         # Not perfect - assess and potentially retry
         return ACCTrainingState.ASSESS_GENERALIZABILITY, ctx
 
     except Exception as e:
-        _logger.error(f"Error validating tool: {e}")
+        logger.error(f"Error validating tool: {e}")
         ctx.error_message = str(e)
         ctx.validate_duration = time.time() - start_time
         return ACCTrainingState.ERROR, ctx
@@ -544,7 +544,7 @@ def handle_validate_tool(ctx: ACCContext) -> Tuple[ACCTrainingState, ACCContext]
 
 def handle_assess_generalizability(ctx: ACCContext) -> Tuple[ACCTrainingState, ACCContext]:
     """Assess why the tool failed on validation and get improvement hints."""
-    _logger.info("Assessing tool generalizability...")
+    logger.info("Assessing tool generalizability...")
 
     start_time = time.time()
 
@@ -593,17 +593,17 @@ def handle_assess_generalizability(ctx: ACCContext) -> Tuple[ACCTrainingState, A
         ctx.assessment_collector = collector
         ctx.assessment_duration = time.time() - start_time
 
-        _logger.info(
+        logger.info(
             f"Assessment: diagnosis={assessment.diagnosis}, "
             f"recommendation={assessment.recommendation}, "
             f"confidence={assessment.confidence}"
         )
-        _logger.info(f"Improvement hint: {assessment.improvement_hint[:200]}...")
+        logger.info(f"Improvement hint: {assessment.improvement_hint[:200]}...")
 
         return ACCTrainingState.DECIDE_FATE, ctx
 
     except Exception as e:
-        _logger.error(f"Error assessing tool: {e}")
+        logger.error(f"Error assessing tool: {e}")
         ctx.error_message = str(e)
         ctx.assessment_duration = time.time() - start_time
         return ACCTrainingState.ERROR, ctx
@@ -611,7 +611,7 @@ def handle_assess_generalizability(ctx: ACCContext) -> Tuple[ACCTrainingState, A
 
 def handle_decide_fate(ctx: ACCContext) -> Tuple[ACCTrainingState, ACCContext]:
     """Decide whether to retry or save the best tool."""
-    _logger.info(f"Deciding tool fate (retry {ctx.retry_count}/{ctx.max_retries})...")
+    logger.info(f"Deciding tool fate (retry {ctx.retry_count}/{ctx.max_retries})...")
 
     assert ctx.assessment is not None
 
@@ -627,12 +627,12 @@ def handle_decide_fate(ctx: ACCContext) -> Tuple[ACCTrainingState, ACCContext]:
             ctx.previous_hints = f"Attempt {ctx.retry_count}:\n{ctx.improvement_hint}"
 
         hint_preview = ctx.improvement_hint[:100] if ctx.improvement_hint else "No hint"
-        _logger.info(f"Retrying with hint: {hint_preview}...")
+        logger.info(f"Retrying with hint: {hint_preview}...")
         return ACCTrainingState.CREATE_TOOL, ctx
 
     else:
         # Max retries reached or assessment says keep - save best tool
-        _logger.info(
+        logger.info(
             f"Saving best tool (F1={ctx.best_tool_f1:.3f}, retries={ctx.retry_count})"
         )
         return ACCTrainingState.SAVE_TOOL, ctx
@@ -640,14 +640,14 @@ def handle_decide_fate(ctx: ACCContext) -> Tuple[ACCTrainingState, ACCContext]:
 
 def handle_save_tool(ctx: ACCContext) -> Tuple[ACCTrainingState, ACCContext]:
     """Save the best tool implementation."""
-    _logger.info(f"Saving tool: {ctx.tool_name}")
+    logger.info(f"Saving tool: {ctx.tool_name}")
 
     try:
         # Use best tool if available, otherwise current
         implementation = ctx.best_tool_implementation or ctx.tool_implementation
 
         if not implementation:
-            _logger.warning("No tool implementation to save")
+            logger.warning("No tool implementation to save")
             return ACCTrainingState.TEST_TOOL, ctx
 
         # Save to ACC tools directory
@@ -660,14 +660,14 @@ def handle_save_tool(ctx: ACCContext) -> Tuple[ACCTrainingState, ACCContext]:
 
         if save_success:
             ctx.tool_saved = True
-            _logger.info(f"Tool saved successfully: {ctx.tool_name}")
+            logger.info(f"Tool saved successfully: {ctx.tool_name}")
         else:
-            _logger.error(f"Failed to save tool: {ctx.tool_name}")
+            logger.error(f"Failed to save tool: {ctx.tool_name}")
 
         return ACCTrainingState.TEST_TOOL, ctx
 
     except Exception as e:
-        _logger.error(f"Error saving tool: {e}")
+        logger.error(f"Error saving tool: {e}")
         ctx.error_message = str(e)
         return ACCTrainingState.ERROR, ctx
 
@@ -675,15 +675,15 @@ def handle_save_tool(ctx: ACCContext) -> Tuple[ACCTrainingState, ACCContext]:
 def handle_test_tool(ctx: ACCContext) -> Tuple[ACCTrainingState, ACCContext]:
     """Run final tool on all test models; always transition to END."""
     if not ctx.test_guids_per_model:
-        _logger.info("No test ground truth — skipping test phase")
+        logger.info("No test ground truth — skipping test phase")
         return ACCTrainingState.END, ctx
 
     implementation = ctx.best_tool_implementation or ctx.tool_implementation
     if not implementation:
-        _logger.info("No tool implementation saved — skipping test phase")
+        logger.info("No tool implementation saved — skipping test phase")
         return ACCTrainingState.END, ctx
 
-    _logger.info("Running tool on test split...")
+    logger.info("Running tool on test split...")
     start_time = time.time()
 
     test_total_tp, test_total_fp, test_total_fn = 0, 0, 0
@@ -692,7 +692,7 @@ def handle_test_tool(ctx: ACCContext) -> Tuple[ACCTrainingState, ACCContext]:
     for model_name in ctx.test_guids_per_model:
         model_path = ctx.test_model_paths.get(model_name, "")
         if not model_path:
-            _logger.warning(f"No IFC path for test model {model_name} — skipping")
+            logger.warning(f"No IFC path for test model {model_name} — skipping")
             continue
 
         predicted, _ = _execute_tool(implementation, ctx.tool_name, model_path)
@@ -705,7 +705,7 @@ def handle_test_tool(ctx: ACCContext) -> Tuple[ACCTrainingState, ACCContext]:
         test_total_fn += result.fn
         test_f1_scores.append(result.f1)
 
-        _logger.info(
+        logger.info(
             f"  Test [{model_name}]: TP={result.tp}, FP={result.fp}, "
             f"FN={result.fn}, F1={result.f1:.3f}"
         )
@@ -740,7 +740,7 @@ def handle_test_tool(ctx: ACCContext) -> Tuple[ACCTrainingState, ACCContext]:
     ctx.test_result_avg_f1 = sum(test_f1_scores) / len(test_f1_scores) if test_f1_scores else 0.0
     ctx.test_duration = time.time() - start_time
 
-    _logger.info(
+    logger.info(
         f"Test aggregated: TP={test_total_tp}, FP={test_total_fp}, FN={test_total_fn}, "
         f"F1_agg={test_f1:.3f}, F1_avg={ctx.test_result_avg_f1:.3f}"
     )
@@ -769,7 +769,7 @@ def process_state(state: ACCTrainingState, ctx: ACCContext) -> Tuple[ACCTraining
     if handler:
         return handler(ctx)
     else:
-        _logger.error(f"Unknown state: {state}")
+        logger.error(f"Unknown state: {state}")
         ctx.error_message = f"Unknown state: {state}"
         return ACCTrainingState.ERROR, ctx
 
@@ -929,10 +929,10 @@ def main():
 
     templates = load_rule_templates()
     all_rules = [tmpl["rule_title"] for tmpl in templates.values()]
-    _logger.info(f"Found {len(all_rules)} rules from rule_templates.json")
-    _logger.info(f"Train models: {train_models}")
-    _logger.info(f"Validation models: {validate_models}")
-    _logger.info(f"Test models: {test_models}")
+    logger.info(f"Found {len(all_rules)} rules from rule_templates.json")
+    logger.info(f"Train models: {train_models}")
+    logger.info(f"Validation models: {validate_models}")
+    logger.info(f"Test models: {test_models}")
 
     # Determine rules to process
     if args.rules:
@@ -941,7 +941,7 @@ def main():
         end_idx = args.end if args.end else len(all_rules)
         rules_to_process = [(i, all_rules[i]) for i in range(args.start, end_idx)]
 
-    _logger.info(f"Processing {len(rules_to_process)} rules")
+    logger.info(f"Processing {len(rules_to_process)} rules")
 
     # Setup MLflow
     mlflow.set_tracking_uri("http://127.0.0.1:5000")
@@ -961,9 +961,9 @@ def main():
         results = []
 
         for rule_idx, rule_title in rules_to_process:
-            _logger.info(f"\n{'=' * 80}")
-            _logger.info(f"Processing rule {rule_idx + 1}/{len(rules_to_process)}: {rule_title}")
-            _logger.info(f"{'=' * 80}")
+            logger.info(f"\n{'=' * 80}")
+            logger.info(f"Processing rule {rule_idx + 1}/{len(rules_to_process)}: {rule_title}")
+            logger.info(f"{'=' * 80}")
 
             # Create nested run for this rule
             with mlflow.start_run(run_name=f"rule_{rule_idx}_{rule_title}", nested=True):
@@ -994,14 +994,14 @@ def main():
                     results.append(result)
 
                     if state == ACCTrainingState.ERROR:
-                        _logger.error(f"Rule {rule_title} ended with error: {ctx.error_message}")
+                        logger.error(f"Rule {rule_title} ended with error: {ctx.error_message}")
                         mlflow.set_tag("status", "ERROR")
                     else:
-                        _logger.info(f"Rule {rule_title} completed successfully")
+                        logger.info(f"Rule {rule_title} completed successfully")
                         mlflow.set_tag("status", "success")
 
                 except Exception as e:
-                    _logger.error(f"Unexpected error processing {rule_title}: {e}", exc_info=True)
+                    logger.error(f"Unexpected error processing {rule_title}: {e}", exc_info=True)
                     results.append({
                         "rule_title": rule_title,
                         "tool_saved": False,
@@ -1018,14 +1018,14 @@ def main():
         if aggregate:
             mlflow.log_metrics(aggregate)
 
-        _logger.info(f"\n{'=' * 80}")
-        _logger.info("ACC Training Phase Complete")
-        _logger.info(f"{'=' * 80}")
-        _logger.info(f"Total rules: {aggregate.get('total_rules', 0)}")
-        _logger.info(f"Tools saved: {aggregate.get('tools_saved', 0)}")
-        _logger.info(f"Errors: {aggregate.get('errors', 0)}")
-        _logger.info(f"Average best F1: {aggregate.get('avg_best_f1', 0):.3f}")
-        _logger.info(f"Save rate: {aggregate.get('save_rate', 0):.2%}")
+        logger.info(f"\n{'=' * 80}")
+        logger.info("ACC Training Phase Complete")
+        logger.info(f"{'=' * 80}")
+        logger.info(f"Total rules: {aggregate.get('total_rules', 0)}")
+        logger.info(f"Tools saved: {aggregate.get('tools_saved', 0)}")
+        logger.info(f"Errors: {aggregate.get('errors', 0)}")
+        logger.info(f"Average best F1: {aggregate.get('avg_best_f1', 0):.3f}")
+        logger.info(f"Save rate: {aggregate.get('save_rate', 0):.2%}")
 
 
 if __name__ == "__main__":

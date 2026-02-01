@@ -11,17 +11,16 @@ from typing import List, Optional, Tuple
 
 import mlflow
 from baml_py.baml_py import Collector
+from loguru import logger
 
-from baml_client.types import CodeAction, NewHelperFunction
-from src.config import LOG_LEVEL
+from src.baml.baml_client.types import CodeAction, NewHelperFunction
 from src.tools.initial import query_ifcopenshell_docs
-from src.util.code_act_inner_loop import _execute_code_action
-from src.util.generate_tools_docs import generate_tools_docs
-from src.util.get_logger import get_logger
+from src.util import _execute_code_action, generate_tools_docs, setup_logger
+from src.util.python_executor import setup_interpreter
 
-# Initialize logger
-_logger = get_logger(name="baml_helper_function_creator", log_level=LOG_LEVEL)
 
+# initialize logger
+setup_logger()
 
 def _helper_function_creator_iter(
     history: str,
@@ -58,7 +57,7 @@ def _helper_function_creator_iter(
     Returns:
         CodeAction to continue development or NewHelperFunction when complete
     """
-    from baml_client import b
+    from src.baml.baml_client import b
 
     # Extract baml_options if provided for collector integration
     baml_options = kwargs.get("baml_options", {})
@@ -98,7 +97,7 @@ def _helper_function_creator_iter(
                 **kwargs_copy,
             )
     except Exception as e:
-        _logger.error(f"Error in HelperFunctionCreator iteration: {e}")
+        logger.error(f"Error in HelperFunctionCreator iteration: {e}")
         result = NewHelperFunction(
             thoughts=f"An Exception occurred when trying to create the helper function. Exception:\n{e}",
             function_implementation="",
@@ -148,7 +147,7 @@ def _create_helper_function(
         Tuple of (NewHelperFunction, execution_history) where execution_history contains
         the complete iteration-by-iteration trace of development
     """
-    _logger.info(f"Starting helper function creation for: {function_name}")
+    logger.info(f"Starting helper function creation for: {function_name}")
 
     # Prepare tools for code execution
     tools = {
@@ -163,7 +162,7 @@ def _create_helper_function(
         if bim_models_dir.exists():
             # Find all .ifc files recursively in the directory
             ifc_files = []
-            for root, dirs, files in os.walk(bim_models_dir):
+            for root, _, files in os.walk(bim_models_dir):
                 for file in files:
                     if file.endswith(".ifc"):
                         ifc_path = os.path.join(root, file)
@@ -173,13 +172,16 @@ def _create_helper_function(
 
             if ifc_files:
                 other_bim_models_for_testing = ifc_files
-                _logger.info(f"Found {len(ifc_files)} other BIM models for testing")
+                logger.info(f"Found {len(ifc_files)} other BIM models for testing")
             else:
                 other_bim_models_for_testing = []
-                _logger.warning("No other BIM models found in bim_models directory")
+                logger.warning("No other BIM models found in bim_models directory")
         else:
             other_bim_models_for_testing = []
-            _logger.warning(f"BIM models directory not found at {bim_models_dir}")
+            logger.warning(f"BIM models directory not found at {bim_models_dir}")
+
+    # Setup stateful interpreter (persists across iterations)
+    interpreter = setup_interpreter(example_bim_model, tools)
 
     # Initialize execution history
     previous_attempts = ""
@@ -239,38 +241,57 @@ def _create_helper_function(
 
                 # Extract the actual full prompt from collector
                 full_prompt = ""
-                if collector and collector.last and hasattr(collector.last, 'calls') and collector.last.calls:
+                if (
+                    collector
+                    and collector.last
+                    and hasattr(collector.last, "calls")
+                    and collector.last.calls
+                ):
                     try:
                         last_call = collector.last.calls[-1]
-                        if hasattr(last_call, 'http_request') and hasattr(last_call.http_request, 'body'):
+                        if hasattr(last_call, "http_request") and hasattr(
+                            last_call.http_request, "body"
+                        ):
                             body = last_call.http_request.body
-                            if hasattr(body, 'json'):
+                            if hasattr(body, "json"):
                                 request_json = body.json()
-                                if 'messages' in request_json:
+                                if "messages" in request_json:
                                     # Reconstruct the full prompt from messages
                                     message_parts = []
-                                    for message in request_json['messages']:
-                                        if 'content' in message:
-                                            content = message['content']
+                                    for message in request_json["messages"]:
+                                        if "content" in message:
+                                            content = message["content"]
                                             if isinstance(content, str):
-                                                message_parts.append(f"{message.get('role', 'unknown')}: {content}")
+                                                message_parts.append(
+                                                    f"{message.get('role', 'unknown')}: {content}"
+                                                )
                                             elif isinstance(content, list):
                                                 for part in content:
-                                                    if 'text' in part:
-                                                        message_parts.append(f"{message.get('role', 'unknown')}: {part['text']}")
+                                                    if "text" in part:
+                                                        message_parts.append(
+                                                            f"{message.get('role', 'unknown')}: {part['text']}"
+                                                        )
 
                                     full_prompt = "\n\n".join(message_parts)
-                                    _logger.debug(f"Successfully extracted full prompt from collector: {len(full_prompt)} characters")
+                                    logger.debug(
+                                        f"Successfully extracted full prompt from collector: {len(full_prompt)} characters"
+                                    )
                                 else:
-                                    _logger.warning("No messages found in collector request JSON")
+                                    logger.warning(
+                                        "No messages found in collector request JSON"
+                                    )
                             else:
-                                _logger.warning("HTTP body does not have json method")
+                                logger.warning("HTTP body does not have json method")
                         else:
-                            _logger.warning("Last call does not have http_request or body")
+                            logger.warning(
+                                "Last call does not have http_request or body"
+                            )
                     except Exception as e:
-                        _logger.error(f"Error extracting full prompt from collector: {e}")
+                        logger.error(
+                            f"Error extracting full prompt from collector: {e}"
+                        )
                 else:
-                    _logger.warning("No collector data available for prompt extraction")
+                    logger.warning("No collector data available for prompt extraction")
 
                 if collector and collector.last and collector.last.usage:
                     usage = collector.last.usage
@@ -327,7 +348,7 @@ def _create_helper_function(
 
             # Handle union type flow control
             if isinstance(result, NewHelperFunction):
-                _logger.info(
+                logger.info(
                     f"Helper function creation completed after {iteration + 1} iterations"
                 )
 
@@ -362,7 +383,8 @@ def _create_helper_function(
                     iteration=iteration,
                     tools=tools,
                     model_path=example_bim_model,
-                    add_code_prefix=True,
+                    add_code_prefix=False,
+                    interpreter=interpreter,
                 )
                 previous_attempts += f"\n{current_attempt}\n"
 
@@ -382,7 +404,7 @@ def _create_helper_function(
             else:
                 # Handle unexpected result type
                 error_msg = f"Unexpected result type: {type(result)}"
-                _logger.error(error_msg)
+                logger.error(error_msg)
                 previous_attempts += (
                     f"\n--- Iteration {iteration + 1} ---\nError:\n{error_msg}"
                 )
@@ -403,7 +425,7 @@ def _create_helper_function(
                 continue
 
     # Max iterations reached - return incomplete result
-    _logger.warning(
+    logger.warning(
         f"Helper function creator reached max iterations ({max_iterations}) without completion"
     )
 
@@ -507,7 +529,9 @@ def create_helper_function(
                     "max_iterations": max_iterations,
                     "function_name": function_name,
                     "example_bim_model": example_bim_model,
-                    "other_models_count": len(other_bim_models_for_testing) if other_bim_models_for_testing is not None else 0,
+                    "other_models_count": len(other_bim_models_for_testing)
+                    if other_bim_models_for_testing is not None
+                    else 0,
                     "llm_provider": llm_provider,
                     "llm_model": llm_name,
                 }
@@ -574,12 +598,12 @@ def create_helper_function(
                             last_usage.output_tokens or 0
                         )
 
-                    _logger.debug(
+                    logger.debug(
                         f"Token tracking - Cumulative: {total_tokens} (in: {input_tokens}, out: {output_tokens}), Last call: {last_call_tokens}"
                     )
 
                 except Exception as e:
-                    _logger.warning(f"Error extracting token usage from collector: {e}")
+                    logger.warning(f"Error extracting token usage from collector: {e}")
 
             # Log metrics to MLflow
             mlflow.log_metrics(
@@ -622,7 +646,7 @@ def create_helper_function(
                 }
             )
 
-            _logger.debug(
+            logger.debug(
                 f"Helper function creator completed. Tokens: {total_tokens}, Time: {execution_time:.2f}s, Success: {final_result.success}"
             )
 
@@ -635,10 +659,7 @@ if __name__ == "__main__":
     from src.agents.cobbie import cobbie
     from src.agents.identify_helper_function import identify_helper_function
     from src.config import TEST_IFC_PATH
-    from src.tools.initial import (
-        query_ifcopenshell_docs,
-        web_search,
-    )
+    from src.tools.initial import query_ifcopenshell_docs
 
     # Try to set up MLflow tracking
     mlflow.set_tracking_uri("http://127.0.0.1:5000")
@@ -647,7 +668,6 @@ if __name__ == "__main__":
     # Setup tools for Cobbie
     tools_dict = {
         "query_ifcopenshell_docs": query_ifcopenshell_docs,
-        "web_search": web_search,
     }
 
     # Test question and model
@@ -657,7 +677,8 @@ if __name__ == "__main__":
 
     # Get list of available BIM models for testing
     import os
-    bim_models_dir = "/Users/sylvainhellin/GitHub/4_phd/cobbie/src/db/bim_models"
+
+    bim_models_dir = "/Users/sylvainhellin/code/tum/cobbie/src/db/bim_models"
     print("=" * 80)
     print("STEP 1: Running Cobbie to answer question")
     print("=" * 80)
@@ -677,7 +698,10 @@ if __name__ == "__main__":
     print(f"Cobbie Answer: {cobbie_result.answer}\n")
 
     # Construct full history
-    full_history = execution_history + f"\n--- Final Answer ---\nThoughts: {cobbie_result.thoughts}\nAnswer: {cobbie_result.answer}"
+    full_history = (
+        execution_history
+        + f"\n--- Final Answer ---\nThoughts: {cobbie_result.thoughts}\nAnswer: {cobbie_result.answer}"
+    )
 
     print("=" * 80)
     print("STEP 2: Identifying helper function")
@@ -685,6 +709,7 @@ if __name__ == "__main__":
 
     # Get existing helper functions
     from src.util.generate_tools_docs import generate_tools_docs
+
     existing_helpers = generate_tools_docs(tools_dict)
 
     # Identify helper function
@@ -724,13 +749,19 @@ if __name__ == "__main__":
 
         # Extract metrics
         total_tokens = 0
-        if creator_collector and hasattr(creator_collector, "usage") and creator_collector.usage:
+        if (
+            creator_collector
+            and hasattr(creator_collector, "usage")
+            and creator_collector.usage
+        ):
             usage = creator_collector.usage
             input_tokens = usage.input_tokens or 0
             output_tokens = usage.output_tokens or 0
             total_tokens = input_tokens + output_tokens
 
         print(f"\nTotal Tokens: {total_tokens}")
-        print(f"Number of LLM Calls: {len(creator_collector.logs) if hasattr(creator_collector, 'logs') else 'N/A'}")
+        print(
+            f"Number of LLM Calls: {len(creator_collector.logs) if hasattr(creator_collector, 'logs') else 'N/A'}"
+        )
     else:
         print("No helper function needed based on analysis.")

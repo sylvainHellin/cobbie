@@ -1,9 +1,9 @@
-from typing import Callable, Dict, Optional
+from typing import Any, Callable, Dict, Optional
 
 import mlflow
 
-from baml_client import b
-from baml_client.types import CodeAction, FinalAnswer
+from src.baml.baml_client import b
+from src.baml.baml_client.types import CodeAction, FinalAnswer
 from src.config import FUNCTION_BOILERPLATE
 from src.util.python_executor import execute_python
 
@@ -14,6 +14,7 @@ def _execute_code_action(
     tools: Dict[str, Callable] = {},
     model_path: Optional[str] = None,
     add_code_prefix: bool = True,
+    interpreter: Optional[Any] = None,
 ) -> str:
     """
     Execute a CodeAction from the agent return the the formated result of the attempt.
@@ -45,6 +46,7 @@ def _execute_code_action(
             python_code=python_code,
             tools=tools,
             model_path=model_path,
+            interpreter=interpreter,
         )
 
         # Update the previous attempt

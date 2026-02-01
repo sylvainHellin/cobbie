@@ -5,6 +5,7 @@ sqlacodegen sqlite:///src/db/db.db --generator sqlmodels --outfile src/db/models
 ```
 """
 
+import sqlite3
 from functools import wraps
 from typing import Callable, List, Optional, TypeVar
 
@@ -12,6 +13,7 @@ from sqlalchemy.orm import selectinload
 from sqlmodel import Session, col, select
 
 import src.db as db
+from src.config import DB_PATH
 from src.db.models import (
     IfcBench,
     Ifcmodels,
@@ -448,3 +450,75 @@ def clear_eval_tool_stats() -> int:
 
         session.commit()
         return count
+
+
+# IFC Bench query functions
+
+
+def fetch_question_data(question_ids: list[int]) -> dict[int, dict]:
+    """Fetch question + project metadata for a list of question IDs.
+
+    Returns dict mapping question_id -> {question, ground_truth, category, project_name, model_name, model_path}.
+    """
+    if not question_ids:
+        return {}
+
+    conn = sqlite3.connect(DB_PATH)
+    cursor = conn.cursor()
+
+    placeholders = ",".join("?" * len(question_ids))
+    query = f"""
+        SELECT
+            ib.id,
+            ib.question,
+            ib.ground_truth,
+            ib.category,
+            im.project_name,
+            im.model_name,
+            im.model_path
+        FROM ifc_bench ib
+        LEFT JOIN ifcmodels im ON ib.ifc_id = im.id
+        WHERE ib.id IN ({placeholders})
+    """
+
+    cursor.execute(query, question_ids)
+    rows = cursor.fetchall()
+    conn.close()
+
+    question_data = {}
+    for row in rows:
+        question_data[row[0]] = {
+            "question": row[1],
+            "ground_truth": row[2],
+            "category": row[3],
+            "project_name": row[4],
+            "model_name": row[5],
+            "model_path": row[6],
+        }
+
+    return question_data
+
+
+def update_ifc_bench_rows(rows: list[dict]) -> int:
+    """Update question, ground_truth, and category in ifc_bench for each row.
+
+    Each dict must have keys: question_id, question, ground_truth, category.
+    Returns count of updated rows.
+    """
+    if not rows:
+        return 0
+
+    conn = sqlite3.connect(DB_PATH)
+    cursor = conn.cursor()
+
+    count = 0
+    for row in rows:
+        cursor.execute(
+            "UPDATE ifc_bench SET question = ?, ground_truth = ?, category = ? WHERE id = ?",
+            (row["question"], row["ground_truth"], row["category"], row["question_id"]),
+        )
+        count += cursor.rowcount
+
+    conn.commit()
+    conn.close()
+    return count
