@@ -7,6 +7,8 @@ from typing import Any, Callable, Dict, Optional
 import tiktoken
 from loguru import logger
 
+from src.config import FUNCTION_BOILERPLATE
+
 
 def count_tokens(text: str, model: str = "gpt-3.5-turbo") -> int:
     """
@@ -90,6 +92,10 @@ def setup_interpreter(
 
         # Create interpreter
         interpreter = InteractiveInterpreter(interpreter_globals)
+
+        # Pre-load common imports (ifcopenshell, math, json, typing)
+        compiled = compile(FUNCTION_BOILERPLATE, '<setup>', 'exec')
+        interpreter.runcode(compiled)
 
         logger.debug(f"Interpreter setup with {len(tools) if tools else 0} tools")
         logger.debug(tool for tool in tools or [])
