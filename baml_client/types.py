@@ -15,7 +15,7 @@ import typing_extensions
 from enum import Enum
 
 
-from pydantic import BaseModel, ConfigDict
+from pydantic import BaseModel, ConfigDict, Field
 
 
 import baml_py
@@ -51,53 +51,53 @@ class QuestionCategory(str, Enum):
 # #########################################################################
 
 class ACCToolAssessment(BaseModel):
-    thoughts: str
-    diagnosis: typing.Union[typing_extensions.Literal['overfitting'], typing_extensions.Literal['missing_generalization'], typing_extensions.Literal['implementation_bug'], typing_extensions.Literal['model_difference'], typing_extensions.Literal['unknown']]
-    improvement_hint: str
-    recommendation: typing.Union[typing_extensions.Literal['keep_tool'], typing_extensions.Literal['retry_with_hint']]
-    confidence: typing.Union[typing_extensions.Literal['high'], typing_extensions.Literal['medium'], typing_extensions.Literal['low']]
+    thoughts: str = Field(description='Step-by-step analysis of tool execution and validation results')
+    diagnosis: typing.Union[typing_extensions.Literal['overfitting'], typing_extensions.Literal['missing_generalization'], typing_extensions.Literal['implementation_bug'], typing_extensions.Literal['model_difference'], typing_extensions.Literal['unknown']] = Field(description='Root cause diagnosis:\n- overfitting: Tool relies on training-specific patterns (e.g., hardcoded values, specific element names)\n- missing_generalization: Tool misses valid cases due to incomplete logic (e.g., missing element types)\n- implementation_bug: Logic error in the tool implementation\n- model_difference: Validation model has structural differences that require different handling\n- unknown: Unable to determine cause from available information')
+    improvement_hint: str = Field(description='Generic guidance for improving the tool. MUST NOT contain validation-specific GUIDs or element identifiers.\nExamples: "Consider checking all IfcSpace subtypes", "Handle spaces with multiple boundary conditions",\n"Check for classification variations in the Name property"')
+    recommendation: typing.Union[typing_extensions.Literal['keep_tool'], typing_extensions.Literal['retry_with_hint']] = Field(description='Final recommendation:\n- keep_tool: Tool is good enough despite imperfect validation (F1 >= threshold or best effort reached)\n- retry_with_hint: Try creating an improved version using the improvement_hint')
+    confidence: typing.Union[typing_extensions.Literal['high'], typing_extensions.Literal['medium'], typing_extensions.Literal['low']] = Field(description='Confidence in this diagnosis:\n- high: Clear pattern identified with strong evidence\n- medium: Likely cause identified but some uncertainty\n- low: Diagnosis is speculative due to limited information')
 
 class AlignedQAPair(BaseModel):
-    thought: str
-    aligned_question: str
-    aligned_answer: str
-    was_modified: bool
+    thought: str = Field(description='Analysis of the alignment between question and answer, and reasoning for any changes')
+    aligned_question: str = Field(description='Question reformulated to align with answer structure and scope (or original if already aligned)')
+    aligned_answer: str = Field(description='Answer with improved formatting/clarity while preserving factual content (or original if already good)')
+    was_modified: bool = Field(description='Whether any modifications were made to question or answer')
 
 class AnswerEvaluationResult(BaseModel):
-    classification: typing.Union[typing_extensions.Literal['correct'], typing_extensions.Literal['wrong'], typing_extensions.Literal['abstained']]
-    justification: str
-    confidence: typing.Union[typing_extensions.Literal['high'], typing_extensions.Literal['medium'], typing_extensions.Literal['low']]
+    classification: typing.Union[typing_extensions.Literal['correct'], typing_extensions.Literal['wrong'], typing_extensions.Literal['abstained']] = Field(description='Classification of the system response')
+    justification: str = Field(description='Brief explanation (2-3 sentences) of why this classification was chosen.')
+    confidence: typing.Union[typing_extensions.Literal['high'], typing_extensions.Literal['medium'], typing_extensions.Literal['low']] = Field(description='Evaluator confidence level')
 
 class AssessmentResult(BaseModel):
-    assessment_status: typing.Union[typing_extensions.Literal['ok'], typing_extensions.Literal['needs_improvement']]
-    assessment_details: str
-    test_execution_log: typing.Optional[str] = None
+    assessment_status: typing.Union[typing_extensions.Literal['ok'], typing_extensions.Literal['needs_improvement']] = Field(description='\'ok\' if function works as expected, \'needs_improvement\' if issues found')
+    assessment_details: str = Field(description='Detailed explanation of test results and any issues discovered')
+    test_execution_log: typing.Optional[str] = Field(default=None, description='Log of function execution and test cases attempted')
 
 class CategoryValidationResult(BaseModel):
-    validated_category: str
-    updated: bool
-    thought: str
+    validated_category: str = Field(description='The correct category (1, 2, 3, or 4) according to the taxonomy')
+    updated: bool = Field(description='Whether the category was changed from the original')
+    thought: str = Field(description='Reasoning for the category classification and any changes made')
 
 class CodeAction(BaseModel):
-    thoughts: str
-    python_code: str
+    thoughts: str = Field(description='Reasoning for next step')
+    python_code: str = Field(description='Code to execute')
 
 class ErrorAnalysisResult(BaseModel):
-    error_category: str
+    error_category: str = Field(description='faulty_tool, missing_tool, other')
     function_name: typing.Optional[str] = None
     needs_new_tool: bool
 
 class FaultyToolAnalysis(BaseModel):
-    thoughts: str
-    faulty_tool: bool
-    faulty_tool_name: str
-    error_description: str
-    confidence: typing.Union[typing_extensions.Literal['high'], typing_extensions.Literal['medium'], typing_extensions.Literal['low']]
+    thoughts: str = Field(description='Chain-of-thought analysis of the execution history to identify tool-related failures')
+    faulty_tool: bool = Field(description='Whether a faulty tool was identified as the primary cause of the wrong answer')
+    faulty_tool_name: str = Field(description='Name of the faulty tool (empty string if faulty_tool is false)')
+    error_description: str = Field(description='Summary of the error and test cases demonstrating the failure (empty string if faulty_tool is false)')
+    confidence: typing.Union[typing_extensions.Literal['high'], typing_extensions.Literal['medium'], typing_extensions.Literal['low']] = Field(description='Confidence level in this faulty tool identification')
 
 class FinalAnswer(BaseModel):
-    thoughts: str
-    answer: str
-    ifc_guids: typing.List[str]
+    thoughts: str = Field(description='Summary of findings')
+    answer: str = Field(description='Final answer to user\'s question')
+    ifc_guids: typing.List[str] = Field(description='IFC GUIDs of elements relevant to the answer. For compliance checks: include all non-compliant element GUIDs. For pairwise violations (e.g., doors too close), include GUIDs of ALL involved elements. Return an empty array [] if no violations or relevant elements are found.')
 
 class FunctionImplementation(BaseModel):
     function_implementation: str
@@ -105,29 +105,29 @@ class FunctionImplementation(BaseModel):
     needs_improvement: bool
 
 class HelperFunctionAssessment(BaseModel):
-    thoughts: str
-    tool_was_used: bool
-    tool_usage_quality: typing.Union[typing_extensions.Literal['helpful'], typing_extensions.Literal['not_used'], typing_extensions.Literal['ignored'], typing_extensions.Literal['misused'], typing_extensions.Literal['harmful']]
-    usage_details: str
-    recommendation: typing.Union[typing_extensions.Literal['keep_tool'], typing_extensions.Literal['discard_tool'], typing_extensions.Literal['improve_tool'], typing_extensions.Literal['unclear']]
-    confidence: typing.Union[typing_extensions.Literal['high'], typing_extensions.Literal['medium'], typing_extensions.Literal['low']]
+    thoughts: str = Field(description='Detailed analysis of how the tool was used during execution')
+    tool_was_used: bool = Field(description='Whether the tool was actually called during execution')
+    tool_usage_quality: typing.Union[typing_extensions.Literal['helpful'], typing_extensions.Literal['not_used'], typing_extensions.Literal['ignored'], typing_extensions.Literal['misused'], typing_extensions.Literal['harmful']] = Field(description='Assessment of how the tool contributed to the answer:\n- helpful: Tool was used correctly and contributed to producing the correct answer\n- not_used: Tool was available but Cobbie didn\'t use it at all\n- ignored: Tool was considered/mentioned but deemed unnecessary or not applicable\n- misused: Tool was used incorrectly (wrong parameters, wrong context, misunderstood purpose)\n- harmful: Tool was used and led to incorrect results or wrong reasoning')
+    usage_details: str = Field(description='Detailed explanation of tool usage patterns and outcomes:\n- If helpful: How the tool contributed to the correct answer\n- If not_used: Why the tool wasn\'t needed or what alternative approach was used\n- If ignored: Why Cobbie chose not to use it\n- If misused: What parameters were wrong or how the usage was incorrect\n- If harmful: How the tool\'s output led to the wrong answer')
+    recommendation: typing.Union[typing_extensions.Literal['keep_tool'], typing_extensions.Literal['discard_tool'], typing_extensions.Literal['improve_tool'], typing_extensions.Literal['unclear']] = Field(description='Final recommendation based on usage analysis:\n- keep_tool: Tool was helpful and should be saved permanently\n- discard_tool: Tool wasn\'t useful, was harmful, or is redundant\n- improve_tool: Tool has potential but needs fixes or refinement\n- unclear: Insufficient evidence to make a confident decision (need more test cases)')
+    confidence: typing.Union[typing_extensions.Literal['high'], typing_extensions.Literal['medium'], typing_extensions.Literal['low']] = Field(description='Confidence level in this assessment:\n- high: Clear evidence from execution history supports the assessment\n- medium: Strong indicators but some ambiguity or edge cases\n- low: Limited evidence or conflicting signals')
 
 class ImprovedImplementation(BaseModel):
-    function_implementation: str
-    reasoning: str
-    changes_summary: typing.Optional[str] = None
+    function_implementation: str = Field(description='Updated Python source code addressing assessment issues')
+    reasoning: str = Field(description='Explanation of changes made and how they address the feedback')
+    changes_summary: typing.Optional[str] = Field(default=None, description='Brief summary of the main changes made')
 
 class NewHelperFunction(BaseModel):
-    thoughts: str
-    function_implementation: str
-    success: bool
+    thoughts: str = Field(description='Summary of development process, testing performed, and validation results')
+    function_implementation: str = Field(description='Complete Python function implementation including imports, docstring, and type hints')
+    success: bool = Field(description='Whether the function is complete, tested, and ready for use')
 
 class NewToolAnalysis(BaseModel):
-    thoughts: str
-    action: typing.Union[typing_extensions.Literal['create_new'], typing_extensions.Literal['enhance_existing'], typing_extensions.Literal['none']]
-    tool_name: str
-    tool_description: str
-    existing_tool_for_enhancement: typing.Optional[str] = None
+    thoughts: str = Field(description='Step-by-step analysis of the execution history to identify reusable patterns')
+    action: typing.Union[typing_extensions.Literal['create_new'], typing_extensions.Literal['enhance_existing'], typing_extensions.Literal['none']] = Field(description='Decision on tool management:\n- create_new: Create a completely new helper function\n- enhance_existing: Enhance existing tool with optional parameters\n- none: No tool creation or enhancement needed')
+    tool_name: str = Field(description='For create_new: Name for new function\nFor enhance_existing: Name of existing tool to enhance\nFor none: Empty string')
+    tool_description: str = Field(description='For create_new: Full function specification\nFor enhance_existing: Enhancement description (what parameters to add)\nFor none: Empty string')
+    existing_tool_for_enhancement: typing.Optional[str] = Field(default=None, description='Only for enhance_existing: Name of tool to enhance (same as tool_name)')
 
 class SimilarityResult(BaseModel):
     similarity_score: float
@@ -135,16 +135,16 @@ class SimilarityResult(BaseModel):
     reasoning: str
 
 class TestAndImproveError(BaseModel):
-    error_message: str
-    iterations_completed: int
-    final_assessment_status: typing.Optional[str] = None
-    partial_function_implementation: typing.Optional[str] = None
+    error_message: str = Field(description='Detailed error description')
+    iterations_completed: int = Field(description='Number of iterations completed before failure')
+    final_assessment_status: typing.Optional[str] = Field(default=None, description='Last known assessment status, if any')
+    partial_function_implementation: typing.Optional[str] = Field(default=None, description='Best function implementation achieved, if any')
 
 class TestAndImproveSuccess(BaseModel):
-    function_implementation: str
-    assessment_details: str
-    iterations_used: int
-    total_time_seconds: float
+    function_implementation: str = Field(description='Final validated function implementation')
+    assessment_details: str = Field(description='Final assessment confirming function works correctly')
+    iterations_used: int = Field(description='Number of iterations needed to achieve success')
+    total_time_seconds: float = Field(description='Total time taken for testing and improvement')
 
 class ToolCreationResult(BaseModel):
     function_name: str
@@ -152,17 +152,17 @@ class ToolCreationResult(BaseModel):
     success: bool
 
 class ToolOptimizationResult(BaseModel):
-    improvement: str
+    improvement: str = Field(description='create_new_tool, merge_existing_tools, update_existing_tool, no_action_needed')
     function_name: typing.Optional[str] = None
     function_requirements: typing.Optional[str] = None
     existing_tool_names: typing.Optional[typing.List[str]] = None
 
 class UpdatedHelperFunction(BaseModel):
-    thoughts: str
-    fixed_implementation: str
-    changes_summary: str
-    success: bool
-    test_cases_provided: str
+    thoughts: str = Field(description='Analysis of the faulty function and explanation of the fixing process')
+    fixed_implementation: str = Field(description='Fixed Python function implementation that addresses the identified issues')
+    changes_summary: str = Field(description='Summary of the main changes made to fix the function')
+    success: bool = Field(description='Whether the function was successfully fixed and is ready for use')
+    test_cases_provided: str = Field(description='Test cases that can be used to verify the fix works correctly')
 
 # #########################################################################
 # Generated type aliases (0)

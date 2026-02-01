@@ -46,3 +46,4 @@ acc/res/*/temp
 acc/bim_models
 .claude
 .ruff_cache
+*.sqlite

@@ -10,7 +10,7 @@ readme = "README.md"
 requires-python = ">=3.12, <3.13"
 dependencies = [
     "arize-phoenix==8.24.0",
-    "baml-py>=0.215.2",
+    "baml-py==0.218.1",
     "fastapi[standard]>=0.115.9",
     "ifcopenshell>=0.8.2",
     "ipykernel>=6.29.5",
