@@ -188,6 +188,10 @@ function Cobbie_ollama(
   Choose ONE of the following actions:
   - CodeAction: You need to explore or analyze the BIM model further with Python code to gather necessary information.
   - FinalAnswer: You have sufficient information to provide a complete and accurate answer to the question.
+    - ALWAYS include ifc_guids in FinalAnswer:
+    - For compliance checks: list ALL GUIDs of non-compliant elements
+    - For pairwise violations (e.g., two doors too close): include GUIDs of ALL elements involved in each violation
+    - If no violations or relevant elements are found: return an empty array []
 
   {{ ctx.output_format }}
 "#
