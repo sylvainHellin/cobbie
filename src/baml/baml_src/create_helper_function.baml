@@ -53,6 +53,9 @@ function HelperFunctionCreator(
     - Description: {{ function_description }}
     {% endif %}
 
+    EXECUTION ENVIRONMENT:
+    Your code runs in a persistent Python session. Variables, imports, loaded models, and test results from previous iterations are still available — reuse them instead of recomputing.
+
     REQUIREMENTS:
     1. **Type Safety**: Use proper type hints (typing.List, typing.Dict, etc.) for all parameters and return types
     2. **Docstring**: Include comprehensive docstring with:

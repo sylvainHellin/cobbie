@@ -17,6 +17,7 @@ from src.baml.baml_client.types import CodeAction, UpdatedHelperFunction
 from src.config import DIRECTORY_IFC_MODELS_PATH
 from src.tools.initial import query_ifcopenshell_docs
 from src.util import _execute_code_action, generate_tools_docs, setup_logger
+from src.util.python_executor import setup_interpreter
 from src.agents import derive_binary_classification
 
 setup_logger()
@@ -157,6 +158,9 @@ def _debug_helper_function(
         else:
             other_bim_models_for_testing = []
             logger.warning(f"BIM models directory not found at {bim_models_dir}")
+
+    # Setup stateful interpreter (persists across iterations)
+    interpreter = setup_interpreter(ifc_model_path, tools)
 
     # Initialize execution history
     previous_attempts = ""
@@ -299,7 +303,8 @@ def _debug_helper_function(
                     iteration=iteration,
                     tools=tools,
                     model_path=ifc_model_path,
-                    add_code_prefix=True,
+                    add_code_prefix=False,
+                    interpreter=interpreter,
                 )
                 previous_attempts += f"\n{current_attempt}\n"
 

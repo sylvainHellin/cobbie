@@ -16,6 +16,7 @@ from loguru import logger
 from src.baml.baml_client.types import CodeAction, NewHelperFunction
 from src.tools.initial import query_ifcopenshell_docs
 from src.util import _execute_code_action, generate_tools_docs, setup_logger
+from src.util.python_executor import setup_interpreter
 
 
 # initialize logger
@@ -178,6 +179,9 @@ def _create_helper_function(
         else:
             other_bim_models_for_testing = []
             logger.warning(f"BIM models directory not found at {bim_models_dir}")
+
+    # Setup stateful interpreter (persists across iterations)
+    interpreter = setup_interpreter(example_bim_model, tools)
 
     # Initialize execution history
     previous_attempts = ""
@@ -379,7 +383,8 @@ def _create_helper_function(
                     iteration=iteration,
                     tools=tools,
                     model_path=example_bim_model,
-                    add_code_prefix=True,
+                    add_code_prefix=False,
+                    interpreter=interpreter,
                 )
                 previous_attempts += f"\n{current_attempt}\n"
 

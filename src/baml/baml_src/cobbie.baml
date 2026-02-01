@@ -16,7 +16,7 @@ function Cobbie(
   {% endif %}
 
   ## EXECUTION ENVIRONMENT
-  Your code runs in a persistent Python session. Variables, loaded models, and computed results from previous iterations are still available. You do NOT need to re-open the IFC model or recompute results if they were already obtained in a previous iteration. Simply reuse existing variables.
+  Your code runs in a persistent Python session. Variables, imports, loaded models, and computed results from previous iterations are still available — reuse them instead of recomputing.
 
   Question: {{ user_input }}
 

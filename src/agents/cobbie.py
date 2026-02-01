@@ -23,7 +23,7 @@ def _cobbie(
     tools: Dict[str, Callable],
     max_iterations: int = 15,
     model_path: Optional[str] = None,
-    add_code_prefix: bool = True,
+    add_code_prefix: bool = False,
     client: str = "GLM_4_7",
     **kwargs,
 ) -> Tuple[FinalAnswer, str]:
@@ -38,7 +38,7 @@ def _cobbie(
         tools: Dictionary of available tools/functions for code execution
         max_iterations: Maximum number of reasoning iterations (default: 10)
         model_path: Optional path to IFC model file
-        add_code_prefix: Whether to add boilerplate code prefix (default: True)
+        add_code_prefix: Whether to add boilerplate code prefix (default: False)
         **kwargs: Additional arguments passed to BAML function
 
     Returns:
@@ -331,7 +331,7 @@ def cobbie(
     tools: Dict[str, Callable],
     max_iterations: int = 15,
     model_path: Optional[str] = None,
-    add_code_prefix: bool = True,
+    add_code_prefix: bool = False,
     client: str = "GLM_4_7",
     mlflow_run_id: Optional[str] = None,
     **kwargs,
@@ -346,7 +346,7 @@ def cobbie(
         tools: Dictionary of available tools/functions
         max_iterations: Maximum number of reasoning iterations
         model_path: Optional path to IFC model file
-        add_code_prefix: Whether to add boilerplate code prefix
+        add_code_prefix: Whether to add boilerplate code prefix (default: False)
         **kwargs: Additional arguments passed to BAML function
 
     Returns:

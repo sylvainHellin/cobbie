@@ -52,6 +52,9 @@ function HelperFunctionDebugger(
     Never rely on your knowledge of this library—you are not familiar with it and the API may have changed.
     You can execute code to test your implementation and query documentation simultaneously in the same iteration.
 
+    EXECUTION ENVIRONMENT:
+    Your code runs in a persistent Python session. Variables, imports, loaded models, and test results from previous iterations are still available — reuse them instead of recomputing.
+
     FAULTY FUNCTION ANALYSIS:
 
     Function Name: {{ faulty_function_name }}
