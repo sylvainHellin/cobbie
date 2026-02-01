@@ -16,7 +16,6 @@ from loguru import logger
 from src.baml.baml_client.types import CodeAction, NewHelperFunction
 from src.tools.initial import query_ifcopenshell_docs
 from src.util.code_act_inner_loop import _execute_code_action
-from src.util.generate_tools_docs import generate_tools_docs
 from src.util import setup_logger
 
 setup_logger()
@@ -57,7 +56,7 @@ def _helper_function_creator_iter(
     Returns:
         CodeAction to continue development or NewHelperFunction when complete
     """
-    from baml_client import b
+    from src.baml.baml_client import b
 
     # Extract baml_options if provided for collector integration
     baml_options = kwargs.get("baml_options", {})
@@ -182,6 +181,9 @@ def _create_helper_function(
 
     # Initialize execution history
     previous_attempts = ""
+
+    # Track last function implementation extracted from CodeAction iterations
+    last_function_implementation = ""
 
     # Initialize counters
     llm_calls = 0
@@ -365,6 +367,10 @@ def _create_helper_function(
                 )
                 previous_attempts += f"\n{current_attempt}\n"
 
+                # Store raw code as fallback; _create_function_from_source_code
+                # (used downstream in _execute_tool) handles full code blocks via exec()
+                last_function_implementation = result.python_code
+
                 iteration_span.set_attributes(
                     {
                         "token_usage.input_tokens": iteration_input_tokens,
@@ -401,9 +407,11 @@ def _create_helper_function(
                 iteration_span.set_status("ERROR")
                 continue
 
-    # Max iterations reached - return incomplete result
+    # Max iterations reached - return last working implementation if available
+    has_implementation = bool(last_function_implementation)
     logger.warning(
-        f"Helper function creator reached max iterations ({max_iterations}) without completion"
+        f"Helper function creator reached max iterations ({max_iterations}) without completion. "
+        f"Last working implementation available: {has_implementation}"
     )
 
     # Log final incomplete iteration span
@@ -415,19 +423,21 @@ def _create_helper_function(
                 "max_iterations": max_iterations,
                 "total_iterations_completed": max_iterations,
                 "llm_calls": llm_calls,
+                "has_last_implementation": has_implementation,
             }
         )
 
         final_result = NewHelperFunction(
-            thoughts=f"Reached maximum iteration limit ({max_iterations}) without completing the function. "
+            thoughts=f"Reached maximum iteration limit ({max_iterations}). "
+            f"{'Using last extracted implementation.' if has_implementation else 'No implementation available.'}\n"
             f"Summary:\n"
             f"- Total iterations: {max_iterations}\n"
             f"- LLM calls: {llm_calls}\n\n"
             f"Last 3 attempts:\n" + "\n".join(previous_attempts.split("\n")[-30:])
             if previous_attempts
             else "No previous attempts",
-            function_implementation="",
-            success=False,
+            function_implementation=last_function_implementation,
+            success=has_implementation,
         )
 
         final_span.set_outputs(
@@ -632,7 +642,6 @@ if __name__ == "__main__":
 
     from src.tools.initial import (
         query_ifcopenshell_docs,
-        web_search,
     )
 
     # Try to set up MLflow tracking
@@ -642,7 +651,6 @@ if __name__ == "__main__":
     # Setup tools for Cobbie
     tools_dict = {
         "query_ifcopenshell_docs": query_ifcopenshell_docs,
-        "web_search": web_search,
     }
 
     # Test question and model

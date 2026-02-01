@@ -30,7 +30,7 @@ from typing import Optional, Tuple
 import mlflow
 from baml_py.baml_py import Collector
 from loguru import logger
-from baml_client.types import ACCToolAssessment, NewHelperFunction
+from src.baml.baml_client.types import ACCToolAssessment, NewHelperFunction
 from src.agents.assess_acc_tool import assess_acc_tool
 from src.agents.create_acc_function import create_helper_function
 from src.acc.guid_comparison import (
@@ -355,12 +355,18 @@ def handle_create_tool(ctx: ACCContext) -> Tuple[ACCTrainingState, ACCContext]:
         ctx.create_tool_history = creation_history
         ctx.create_tool_duration = time.time() - start_time
 
-        if result.success and result.function_implementation:
+        if result.function_implementation:
             ctx.tool_implementation = result.function_implementation
-            logger.info(f"Tool creation succeeded in {ctx.create_tool_duration:.1f}s")
+            if result.success:
+                logger.info(f"Tool creation succeeded in {ctx.create_tool_duration:.1f}s")
+            else:
+                logger.info(
+                    f"Tool creation did not converge in {ctx.create_tool_duration:.1f}s, "
+                    f"proceeding with last extracted implementation"
+                )
             return ACCTrainingState.VALIDATE_TOOL, ctx
         else:
-            logger.warning(f"Tool creation failed: {result.thoughts}")
+            logger.warning(f"Tool creation failed with no implementation: {result.thoughts}")
             ctx.error_message = f"Tool creation failed: {result.thoughts}"
             return ACCTrainingState.ERROR, ctx
 
