@@ -32,6 +32,7 @@ def _helper_function_creator_iter(
     is_enhancement: bool = False,
     existing_implementation: Optional[str] = None,
     previous_attempts: Optional[str] = None,
+    is_final_iteration: bool = False,
     **kwargs,
 ) -> CodeAction | NewHelperFunction:
     """
@@ -79,6 +80,7 @@ def _helper_function_creator_iter(
                 is_enhancement=is_enhancement,
                 existing_implementation=existing_implementation,
                 previous_attempts=previous_attempts,
+                is_final_iteration=is_final_iteration,
                 **kwargs_copy,
             )
         else:
@@ -93,6 +95,7 @@ def _helper_function_creator_iter(
                 is_enhancement=is_enhancement,
                 existing_implementation=existing_implementation,
                 previous_attempts=previous_attempts,
+                is_final_iteration=is_final_iteration,
                 **kwargs_copy,
             )
     except Exception as e:
@@ -216,6 +219,9 @@ def _create_helper_function(
                     }
                 )
 
+                # On the last iteration, force the LLM to return NewHelperFunction
+                is_final = iteration == max_iterations - 1
+
                 # Call the function and capture the full prompt from kwargs
                 result = _helper_function_creator_iter(
                     history=history,
@@ -228,6 +234,7 @@ def _create_helper_function(
                     is_enhancement=is_enhancement,
                     existing_implementation=existing_implementation,
                     previous_attempts=previous_attempts,
+                    is_final_iteration=is_final,
                     **kwargs,
                 )
 
@@ -328,6 +335,20 @@ def _create_helper_function(
 
             # Handle union type flow control
             if isinstance(result, NewHelperFunction):
+                # If this is an error result (e.g. LLM parse failure) and not the
+                # final iteration, retry instead of terminating the loop.
+                if not result.success and not result.function_implementation and not is_final:
+                    logger.warning(
+                        f"Iteration {iteration + 1}: received error result, retrying. "
+                        f"Reason: {result.thoughts[:200]}"
+                    )
+                    previous_attempts += (
+                        f"\n--- Iteration {iteration + 1} ---\n"
+                        f"Error: {result.thoughts}\n"
+                    )
+                    iteration_span.set_status("ERROR")
+                    continue
+
                 logger.info(
                     f"Helper function creation completed after {iteration + 1} iterations"
                 )
@@ -407,10 +428,10 @@ def _create_helper_function(
                 iteration_span.set_status("ERROR")
                 continue
 
-    # Max iterations reached - return last working implementation if available
+    # Safety net: should rarely be reached since the last iteration forces NewHelperFunction
     has_implementation = bool(last_function_implementation)
     logger.warning(
-        f"Helper function creator reached max iterations ({max_iterations}) without completion. "
+        f"Fallback after {max_iterations} iterations (LLM did not return NewHelperFunction on final iteration). "
         f"Last working implementation available: {has_implementation}"
     )
 

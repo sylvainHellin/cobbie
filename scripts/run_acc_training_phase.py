@@ -1,3 +1,8 @@
+# Example usage:
+#   uv run scripts/run_acc_training_phase.py --rules 304_3_1_circular_space
+#   uv run scripts/run_acc_training_phase.py --start 0 --end 5
+#   uv run scripts/run_acc_training_phase.py --start 0 --end 5 --max-retries 3
+
 """
 ACC Training Phase v2 - GUID-Based Validation (Multi-Model)
 
@@ -343,7 +348,7 @@ def handle_create_tool(ctx: ACCContext) -> Tuple[ACCTrainingState, ACCContext]:
             function_name=ctx.tool_name,
             function_description=full_question,
             other_bim_models_for_testing=other_paths,
-            max_iterations=25,
+            max_iterations=15,
             llm_provider="zai",
             llm_name="GLM-4.7",
         )

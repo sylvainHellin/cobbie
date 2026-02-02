@@ -11,7 +11,8 @@ function HelperFunctionCreator(
   function_description: string @description("Detailed description of what the helper function should do (for new) or what enhancement to add (for enhancement), including parameters and return type"),
   is_enhancement: bool @description("True if enhancing existing tool, False if creating new"),
   existing_implementation: string? @description("Current tool implementation (empty if new)"),
-  previous_attempts: string? @description("Previous code execution results and attempts, if any")
+  previous_attempts: string? @description("Previous code execution results and attempts, if any"),
+  is_final_iteration: bool @description("If true, the LLM must return a NewHelperFunction instead of a CodeAction")
 ) -> CodeAction | NewHelperFunction {
   client GLM_4_7
   prompt #"
@@ -114,18 +115,17 @@ function HelperFunctionCreator(
     - Example model: {{ example_bim_model }}
     - Other models: {{ other_bim_models_for_testing | join(", ") }}
 
-      AVAILABLE TOOL FOR DEVELOPMENT:
+    AVAILABLE TOOL FOR DEVELOPMENT:
 
     You have access to the following tool in your Python code execution environment:
 
-    **query_ifcopenshell_docs(query: str, max_tokens: int = 2048) -> str**
+    **query_ifcopenshell_docs(query: str) -> str**
 
     Retrieves up-to-date documentation and code examples from the IFCOpenShell library documentation.
 
     Parameters:
       - query (str): The topic or query to focus the documentation on (e.g., "file reading",
                      "geometry", "IFC entities", "relationship traversal")
-      - max_tokens (int): Maximum number of tokens to retrieve (default: 2048, can be increased for more context)
 
     Returns:
       - str: The documentation text with relevant information and code examples
@@ -134,8 +134,7 @@ function HelperFunctionCreator(
     ```python
     # Query documentation about spatial relationships
     docs = query_ifcopenshell_docs(
-        "How to find which building storey an IfcDoor belongs to using spatial containment relationships",
-        max_tokens=1024
+        "How to find which building storey an IfcDoor belongs to using spatial containment relationships"
     )
     print(docs)
 
@@ -169,6 +168,13 @@ function HelperFunctionCreator(
     Choose your next action based on your progress:
     - Use CodeAction if you need to: query docs, develop the function, test it, or debug issues
     - Use NewHelperFunction when you have a complete, tested, working function
+
+    {% if is_final_iteration %}
+    ⚠️ FINAL ITERATION: You have used all available iterations.
+    You MUST return a NewHelperFunction now — do NOT return a CodeAction.
+    Provide the best implementation you have based on your testing so far.
+    If the function is not fully working, set success to false.
+    {% endif %}
 
     {{ ctx.output_format }}
   "#
@@ -219,5 +225,6 @@ test HelperFunctionCreatorTest {
     function_name "get_elements_by_building_storey"
     function_description "Get IFC elements grouped by their containing IfcBuildingStorey. Takes an IFC model path and element type, returns a dictionary mapping floor names to lists of elements."
     is_enhancement = False
+    is_final_iteration = false
   }
 }
