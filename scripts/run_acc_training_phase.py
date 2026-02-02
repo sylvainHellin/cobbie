@@ -45,7 +45,14 @@ from src.acc.guid_comparison import (
     load_model_splits,
 )
 from src.config import ACC_TOOLS_PATH, get_boilerplate, get_library_docs
+from src.tools.initial import classify_spaces, query_ifcopenshell_docs
 from src.util import setup_logger, save_new_tool
+
+# Tools available to ACC tools at execution time (same as during creation)
+ACC_EXECUTION_TOOLS = {
+    "query_ifcopenshell_docs": query_ifcopenshell_docs,
+    "classify_spaces": classify_spaces,
+}
 
 # Initialize logger
 setup_logger()
@@ -409,27 +416,36 @@ def _execute_tool(
     function_name: str,
     model_path: str,
     boilerplate: Optional[str] = None,
+    tools: Optional[dict] = None,
 ) -> Tuple[list[str], str]:
     """
     Execute an ACC tool and return predicted GUIDs and execution log.
 
     Uses InteractiveInterpreter (same as creation-time) so that helpers,
     constants, and the main function all share a single namespace.
+    Tools (classify_spaces, query_ifcopenshell_docs) are injected so generated
+    code can call them.
 
     Returns:
         Tuple of (predicted_guids, execution_log)
     """
     from src.util.python_executor import setup_interpreter, execute_python
 
+    exec_tools = tools if tools is not None else ACC_EXECUTION_TOOLS
+
     try:
-        interpreter = setup_interpreter(model_path=model_path, tools={}, boilerplate=boilerplate)
+        interpreter = setup_interpreter(
+            model_path=model_path, tools=exec_tools, boilerplate=boilerplate
+        )
 
         # Load the full tool code (including helpers/constants) into the interpreter
-        load_log = execute_python(tool_implementation, tools={}, interpreter=interpreter)
+        load_log = execute_python(
+            tool_implementation, tools=exec_tools, interpreter=interpreter
+        )
 
         # Call the main function with path_ifc_model (already set by setup_interpreter)
         call_code = f"_result = {function_name}(path_ifc_model)"
-        call_log = execute_python(call_code, tools={}, interpreter=interpreter)
+        call_log = execute_python(call_code, tools=exec_tools, interpreter=interpreter)
 
         log = load_log + "\n" + call_log
 
