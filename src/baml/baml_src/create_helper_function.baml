@@ -115,11 +115,11 @@ function HelperFunctionCreator(
     - Example model: {{ example_bim_model }}
     - Other models: {{ other_bim_models_for_testing | join(", ") }}
 
-    AVAILABLE TOOL FOR DEVELOPMENT:
+    AVAILABLE TOOLS FOR DEVELOPMENT:
 
-    You have access to the following tool in your Python code execution environment:
+    You have access to the following tools in your Python code execution environment:
 
-    **query_ifcopenshell_docs(query: str) -> str**
+    **1. query_ifcopenshell_docs(query: str) -> str**
 
     Retrieves up-to-date documentation and code examples from the IFCOpenShell library documentation.
 
@@ -146,6 +146,32 @@ function HelperFunctionCreator(
     CRITICAL: When developing functions that use ifcopenshell, ALWAYS use the query_ifcopenshell_docs tool to verify correct API usage.
     Never rely on your knowledge of this library—you are not familiar with it and the API may have changed.
     You can execute code to test your implementation and query documentation simultaneously in the same iteration.
+
+    **2. classify_spaces(spaces: list[dict], path_ifc_model: str) -> list[dict]**
+
+    Classifies IFC spaces using the model's Space Usage CSV. Matches each space
+    name against glob-style patterns from the CSV and adds a "classification" key.
+
+    Parameters:
+      - spaces (list[dict]): List of dicts, each with at least "guid" and "name" keys
+      - path_ifc_model (str): Path to the IFC model file (CSV is in the same directory)
+
+    Returns:
+      - list[dict]: The same list with a "classification" key added to each dict
+        (e.g. "Circulation", "Habitable", "Office", or "Unclassified" if no match)
+
+    Usage Example:
+    ```python
+    import ifcopenshell
+    model = ifcopenshell.open(path_ifc_model)
+    spaces = [{"guid": s.GlobalId, "name": s.Name or ""} for s in model.by_type("IfcSpace")]
+    classified = classify_spaces(spaces, path_ifc_model)
+    for s in classified:
+        print(f"{s['guid']}  {s['name']}  -> {s['classification']}")
+    ```
+
+    Use this tool when you need to determine the classification/usage type of spaces
+    (e.g. to filter for applicable spaces in accessibility rules).
 
     IMPORTANT GUIDELINES:
     - **Always use query_ifcopenshell_docs** before implementing ifcopenshell code to ensure correct usage

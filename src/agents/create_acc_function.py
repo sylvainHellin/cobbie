@@ -14,7 +14,7 @@ from baml_py.baml_py import Collector
 from loguru import logger
 
 from src.baml.baml_client.types import CodeAction, NewHelperFunction
-from src.tools.initial import query_ifcopenshell_docs
+from src.tools.initial import classify_spaces, query_ifcopenshell_docs
 from src.util.code_act_inner_loop import _execute_code_action
 from src.util import setup_logger
 
@@ -153,6 +153,7 @@ def _create_helper_function(
 
     # Prepare tools for code execution
     tools = {
+        "classify_spaces": classify_spaces,
         "query_ifcopenshell_docs": query_ifcopenshell_docs,
     }
 
