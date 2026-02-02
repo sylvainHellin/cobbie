@@ -5,7 +5,7 @@ import mlflow
 from src.baml.baml_client import b
 from src.baml.baml_client.types import CodeAction, FinalAnswer
 from src.config import FUNCTION_BOILERPLATE
-from src.util.python_executor import execute_python
+from src.util.python_executor import execute_python_safe
 
 
 def _execute_code_action(
@@ -42,10 +42,11 @@ def _execute_code_action(
         )
 
         # Execute the code
-        result_code_evaluation = execute_python(
+        result_code_evaluation = execute_python_safe(
             python_code=python_code,
             tools=tools,
             model_path=model_path,
+            timeout_seconds=300,
             interpreter=interpreter,
         )
 
@@ -115,6 +116,7 @@ def _code_act_iter(
         result = FinalAnswer(
             answer="ERROR",
             thoughts=f"An Exception occured when trying to process the answer. Exception:\n{e}",
+            ifc_guids=[],
         )
 
     return result
