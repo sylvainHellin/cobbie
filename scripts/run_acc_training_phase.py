@@ -131,6 +131,7 @@ class ACCContext:
     max_retries: int = 2
     improvement_hint: Optional[str] = None
     previous_hints: str = ""
+    max_iterations: int = 20
 
     # Best tool tracking
     best_tool_implementation: str = ""
@@ -348,7 +349,7 @@ def handle_create_tool(ctx: ACCContext) -> Tuple[ACCTrainingState, ACCContext]:
             function_name=ctx.tool_name,
             function_description=full_question,
             other_bim_models_for_testing=other_paths,
-            max_iterations=20,
+            max_iterations=ctx.max_iterations,
             llm_provider="zai",
             llm_name="GLM-4.7",
         )
@@ -958,6 +959,10 @@ def main():
         "--max-retries", type=int, default=2,
         help="Maximum retry attempts per rule (default: 2)"
     )
+    parser.add_argument(
+        "--max-iterations", type=int, default=20,
+        help="Maximum number of iterations per rule (default: 20)"
+    )
     args = parser.parse_args()
 
     # Load splits and rule templates
@@ -994,6 +999,7 @@ def main():
             "validation_models": ",".join(validate_models),
             "test_models": ",".join(test_models),
             "max_retries": args.max_retries,
+            "max_iterations": args.max_iterations,
             "rules_count": len(rules_to_process),
         })
 
@@ -1019,6 +1025,7 @@ def main():
                     training_models=train_models,
                     validation_models=validate_models,
                     test_models=test_models,
+                    max_iterations=args.max_iterations,
                 )
 
                 # Run state machine

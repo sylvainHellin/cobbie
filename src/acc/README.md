@@ -99,3 +99,10 @@ The evaluator computes:
 - **Per-issue:** TP, FP, FN, precision, recall, F1
 - **Per-rule:** Aggregated metrics + matched issues count
 - **Overall:** Micro-averaged and macro-averaged P/R/F1
+
+```bash
+uv run mlflow server --host 127.0.0.1 --port 5000 \
+  --backend-store-uri sqlite:///acc.sqlite \
+  --default-artifact-root .mlflow/mlartifacts \
+  --gunicorn-opts "--timeout=120 -w 1"
+```

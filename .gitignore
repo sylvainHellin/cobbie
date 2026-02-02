@@ -49,3 +49,5 @@ src/docs_indexer/external/
 
 # All generated outputs (reports, figures, cache)
 outputs/
+
+scripts/debug_*
