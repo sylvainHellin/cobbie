@@ -21,7 +21,6 @@ wheels/
 
 # big files
 *.ifc
-*.sqlite
 
 # no need to upload
 src/bim_models
@@ -44,6 +43,7 @@ acc/bim_models
 .claude
 .ruff_cache
 *.sqlite
+!acc.sqlite
 # External cloned repos (for docs indexing)
 src/docs_indexer/external/
 
