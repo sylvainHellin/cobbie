@@ -971,12 +971,12 @@ def main():
         help="Specific rule titles to train (overrides --start/--end)"
     )
     parser.add_argument(
-        "--max-retries", type=int, default=2,
-        help="Maximum retry attempts per rule (default: 2)"
+        "--max-retries", type=int, default=1,
+        help="Maximum retry attempts per rule (default: 1)"
     )
     parser.add_argument(
-        "--max-iterations", type=int, default=20,
-        help="Maximum number of iterations per rule (default: 20)"
+        "--max-iterations", type=int, default=15,
+        help="Maximum number of iterations per rule (default: 15)"
     )
     parser.add_argument(
         "--no-geometry", action="store_true",

@@ -678,7 +678,11 @@ def create_helper_function(
                 f"Helper function creator completed. Tokens: {total_tokens}, Time: {execution_time:.2f}s, Success: {final_result.success}"
             )
 
-            return final_result, collector, execution_history
+        # Flush traces outside the span context to ensure all spans
+        # (including long-running ones) are persisted to MLflow.
+        mlflow.flush_trace_async_logging()
+
+        return final_result, collector, execution_history
 
 
 if __name__ == "__main__":

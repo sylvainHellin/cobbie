@@ -43,7 +43,7 @@ def classify_spaces(
     First matching pattern wins. Matching is case-insensitive.
 
     Args:
-        spaces: List of dicts, each with at least "guid" and "name" keys.
+        spaces: List of dicts, each with at least "guid" and "name" keys. Note: The LongName should be used for classification if available.
         path_ifc_model: Path to the IFC model file. The CSV is expected
             in the same directory.
 

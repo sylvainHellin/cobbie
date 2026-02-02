@@ -52,9 +52,9 @@ function HelperFunctionCreator(
     {% endif %}
 
     EXECUTION ENVIRONMENT:
-    Your code runs in a persistent Python session. Variables, imports, loaded models, and test results from previous iterations are still available — reuse them instead of recomputing.
+    Your code runs in a persistent Python session. Variables, imports, loaded models, and test results from previous iterations are still available — for testing purposes reuse them instead of recomputing.
 
-    FUNCTION SIGNATURE:
+    FINAL FUNCTION SIGNATURE (MUST BE USED FOR THE NEW HELPER FUNCTION):
     Your function MUST accept exactly one parameter: `path_ifc_model: str` (the file path to the IFC model).
     Open the model inside the function body: `model = ifcopenshell.open(path_ifc_model)`
     Do NOT accept an already-opened ifcopenshell.file object — always accept the path as a string.
@@ -134,18 +134,7 @@ function HelperFunctionCreator(
     Returns:
       - str: The documentation text with relevant information and code examples
 
-    Usage Example:
-    ```python
-    # Query documentation about spatial relationships
-    docs = query_ifcopenshell_docs(
-        "How to find which building storey an IfcDoor belongs to using spatial containment relationships"
-    )
-    print(docs)
-
-    # Query documentation about opening IFC files
-    docs = query_ifcopenshell_docs("opening IFC files and reading entities")
-    print(docs)
-    ```
+    Usage - return as CodeAction: {"thoughts": "Query docs for spatial containment", "python_code": "docs = query_ifcopenshell_docs(\"How to find which building storey an IfcDoor belongs to using spatial containment relationships\")\nprint(docs)"}
 
     CRITICAL: When developing functions that use ifcopenshell, ALWAYS use the query_ifcopenshell_docs tool to verify correct API usage.
     Never rely on your knowledge of this library—you are not familiar with it and the API may have changed.
@@ -157,22 +146,14 @@ function HelperFunctionCreator(
     name against glob-style patterns from the CSV and adds a "classification" key.
 
     Parameters:
-      - spaces (list[dict]): List of dicts, each with at least "guid" and "name" keys
+      - spaces (list[dict]): List of dicts, each with at least "guid" and "name" keys. Note: The LongName should be used for classification if available.
       - path_ifc_model (str): Path to the IFC model file (CSV is in the same directory)
 
     Returns:
       - list[dict]: The same list with a "classification" key added to each dict
         (e.g. "Circulation", "Habitable", "Office", or "Unclassified" if no match)
 
-    Usage Example:
-    ```python
-    import ifcopenshell
-    model = ifcopenshell.open(path_ifc_model)
-    spaces = [{"guid": s.GlobalId, "name": s.Name or ""} for s in model.by_type("IfcSpace")]
-    classified = classify_spaces(spaces, path_ifc_model)
-    for s in classified:
-        print(f"{s['guid']}  {s['name']}  -> {s['classification']}")
-    ```
+    Usage - return as CodeAction: {"thoughts": "Test classify_spaces on model", "python_code": "import ifcopenshell\nmodel = ifcopenshell.open(path_ifc_model)\nspaces = [{\"guid\": s.GlobalId, \"name\": s.LongName or s.Name or \"\"} for s in model.by_type(\"IfcSpace\")]\nclassified = classify_spaces(spaces, path_ifc_model)\nfor s in classified:\n    print(f\"{s['guid']}  {s['name']}  -> {s['classification']}\")"}
 
     Use this tool when you need to determine the classification/usage type of spaces
     (e.g. to filter for applicable spaces in accessibility rules).
@@ -211,6 +192,12 @@ function HelperFunctionCreator(
     Provide the best implementation you have based on your testing so far.
     If the function is not fully working, set success to false.
     {% endif %}
+
+    CRITICAL - OUTPUT FORMAT:
+    - You MUST respond with the exact schema format specified below
+    - Do NOT wrap code in markdown (```python) - put raw code directly in the python_code or function_implementation field
+    - CodeAction: {"thoughts": "...", "python_code": "raw Python code as string"}
+    - NewHelperFunction: {"thoughts": "...", "function_implementation": "complete def with imports", "success": true}
 
     {{ ctx.output_format }}
   "#

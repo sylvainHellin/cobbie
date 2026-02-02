@@ -1,5 +1,6 @@
 """Python execution utilities for COBBIE and other components."""
 
+import contextvars
 import io
 from contextlib import redirect_stderr, redirect_stdout
 from typing import Any, Callable, Dict, Optional
@@ -209,6 +210,10 @@ def execute_python_safe(
 
     result_container: Dict[str, Any] = {"result": None, "completed": False}
 
+    # Copy the current context (including MLflow trace/span state) so the
+    # child thread inherits the parent's active span hierarchy.
+    ctx = contextvars.copy_context()
+
     def target():
         try:
             result_container["result"] = execute_python(python_code, tools, model_path, max_tokens, interpreter)
@@ -217,8 +222,8 @@ def execute_python_safe(
             result_container["result"] = f"Execution failed: {e}"
             result_container["completed"] = True
 
-    # Start thread
-    thread = threading.Thread(target=target)
+    # Start thread, running within the copied context so MLflow spans nest correctly
+    thread = threading.Thread(target=ctx.run, args=(target,))
     thread.daemon = True
     thread.start()
 
