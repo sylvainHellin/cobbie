@@ -139,6 +139,8 @@ class ACCContext:
     improvement_hint: Optional[str] = None
     previous_hints: str = ""
     max_iterations: int = 20
+    pre_check_count: int = 0
+    max_pre_check_failures: int = 3
 
     # Best tool tracking
     best_tool_implementation: str = ""
@@ -342,7 +344,7 @@ def handle_create_tool(ctx: ACCContext) -> Tuple[ACCTrainingState, ACCContext]:
             if name != ctx.primary_training_model
         ]
 
-        # Include improvement hint if retrying
+        # Include improvement hint if retrying (after validation failure)
         history = ""
         if ctx.improvement_hint:
             history = (
@@ -354,8 +356,19 @@ def handle_create_tool(ctx: ACCContext) -> Tuple[ACCTrainingState, ACCContext]:
                 f"---\n"
             )
 
+        # On pre-check retry: pass full creation history so LLM continues from where it left off
+        initial_previous_attempts = None
+        if ctx.pre_check_count > 0 and ctx.create_tool_history:
+            pre_check_feedback = (
+                f"\n\n--- Pre-check failure ({ctx.pre_check_count}/{ctx.max_pre_check_failures}) ---\n"
+                f"The implementation crashed during execution. Fix the issue and provide an improved implementation.\n"
+                f"Previous hint: {ctx.improvement_hint or 'Execution error'}\n"
+            )
+            initial_previous_attempts = ctx.create_tool_history + pre_check_feedback
+
         result, collector, creation_history = create_helper_function(
             history=history,
+            initial_previous_attempts=initial_previous_attempts,
             example_question=full_question,
             example_answer=expected_answer,
             example_bim_model=primary_path,
@@ -390,7 +403,21 @@ def handle_create_tool(ctx: ACCContext) -> Tuple[ACCTrainingState, ACCContext]:
             _, exec_log = _execute_tool(ctx.tool_implementation, ctx.tool_name, primary_path, boilerplate=ctx.boilerplate)
             is_crash = exec_log.startswith("Failed to create function:") or exec_log.startswith("Execution error:")
             if is_crash:
-                logger.warning("Pre-check failed, retrying CREATE_TOOL without consuming a retry")
+                ctx.pre_check_count += 1
+                if ctx.pre_check_count >= ctx.max_pre_check_failures:
+                    logger.warning(
+                        f"Pre-check failed {ctx.pre_check_count} times (max {ctx.max_pre_check_failures}), "
+                        "treating as tool creation failure"
+                    )
+                    ctx.error_message = (
+                        f"Implementation crashed during pre-check after {ctx.pre_check_count} attempts.\n"
+                        f"Last error:\n{exec_log}"
+                    )
+                    return ACCTrainingState.ERROR, ctx
+                logger.warning(
+                    f"Pre-check failed ({ctx.pre_check_count}/{ctx.max_pre_check_failures}), "
+                    "retrying CREATE_TOOL with full history (no retry consumed)"
+                )
                 ctx.improvement_hint = f"The implementation crashed during execution:\n{exec_log}"
                 if ctx.previous_hints:
                     ctx.previous_hints += f"\n\nPre-check failure:\n{exec_log}"
@@ -398,6 +425,8 @@ def handle_create_tool(ctx: ACCContext) -> Tuple[ACCTrainingState, ACCContext]:
                     ctx.previous_hints = f"Pre-check failure:\n{exec_log}"
                 return ACCTrainingState.CREATE_TOOL, ctx
 
+            # Pre-check passed: reset pre_check_count for next retry cycle
+            ctx.pre_check_count = 0
             return ACCTrainingState.VALIDATE_TOOL, ctx
         else:
             logger.warning(f"Tool creation failed with no implementation: {result.thoughts}")
@@ -667,6 +696,7 @@ def handle_decide_fate(ctx: ACCContext) -> Tuple[ACCTrainingState, ACCContext]:
     if ctx.assessment.recommendation == "retry_with_hint" and ctx.retry_count < ctx.max_retries:
         # Retry with the improvement hint
         ctx.retry_count += 1
+        ctx.pre_check_count = 0  # Reset for new retry cycle
         ctx.improvement_hint = ctx.assessment.improvement_hint
 
         # Accumulate hints for context
@@ -801,6 +831,7 @@ def handle_error(ctx: ACCContext) -> Tuple[ACCTrainingState, ACCContext]:
     """Recover from infrastructure errors by retrying or saving best tool."""
     if ctx.retry_count < ctx.max_retries:
         ctx.retry_count += 1
+        ctx.pre_check_count = 0  # Reset for new retry cycle
         logger.warning(
             f"Error recovery: retrying CREATE_TOOL "
             f"(attempt {ctx.retry_count + 1}/{ctx.max_retries + 1}). "

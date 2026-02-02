@@ -126,6 +126,7 @@ def _create_helper_function(
     existing_implementation: Optional[str] = None,
     other_bim_models_for_testing: Optional[List[str]] = None,
     max_iterations: int = 15,
+    initial_previous_attempts: Optional[str] = None,
     llm_name: str = "GLM-4.6",
     llm_provider: str = "zai",
     boilerplate: Optional[str] = None,
@@ -194,8 +195,8 @@ def _create_helper_function(
             other_bim_models_for_testing = []
             logger.warning(f"BIM models directory not found at {bim_models_dir}")
 
-    # Initialize execution history
-    previous_attempts = ""
+    # Initialize execution history (may continue from previous pre-check retry)
+    previous_attempts = initial_previous_attempts or ""
 
     # Track last function implementation extracted from CodeAction iterations
     last_function_implementation = ""
@@ -504,6 +505,7 @@ def create_helper_function(
     no_classification: bool = False,
     available_tools_docs: Optional[str] = None,
     available_library_docs: Optional[str] = None,
+    initial_previous_attempts: Optional[str] = None,
     **kwargs,
 ) -> Tuple[NewHelperFunction, Collector, str]:
     """
@@ -589,6 +591,7 @@ def create_helper_function(
                 is_enhancement=is_enhancement,
                 existing_implementation=existing_implementation,
                 max_iterations=max_iterations,
+                initial_previous_attempts=initial_previous_attempts,
                 llm_name=llm_name,
                 llm_provider=llm_provider,
                 boilerplate=boilerplate,
