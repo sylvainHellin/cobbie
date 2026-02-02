@@ -353,6 +353,7 @@ def handle_create_tool(ctx: ACCContext) -> Tuple[ACCTrainingState, ACCContext]:
                 f"{ctx.improvement_hint}\n\n"
                 f"Previous hints given:\n{ctx.previous_hints}\n\n"
                 f"Please create an improved version that addresses these issues.\n"
+                f"Here is the previous implementation:\n{ctx.tool_implementation}\n"
                 f"---\n"
             )
 
@@ -1018,8 +1019,8 @@ def main():
         help="Specific rule titles to train (overrides --start/--end)"
     )
     parser.add_argument(
-        "--max-retries", type=int, default=1,
-        help="Maximum retry attempts per rule (default: 1)"
+        "--max-retries", type=int, default=2,
+        help="Maximum retry attempts per rule (default: 2)"
     )
     parser.add_argument(
         "--max-iterations", type=int, default=15,

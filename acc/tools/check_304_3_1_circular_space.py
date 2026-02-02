@@ -1,131 +1,126 @@
 import ifcopenshell
 import ifcopenshell.geom
-import ifcopenshell.util.shape
-from typing import List
-import shapely.geometry as geom
 import trimesh
 import numpy as np
+import shapely.geometry as geom
+from typing import List
+
 
 def check_304_3_1_circular_space(path_ifc_model: str) -> List[str]:
     """
-    Check if spaces have enough room for wheelchair turning space (minimum 1.52m diameter).
+    Rule: 304.3.1 304_3_1_circular_space
+    Circular space shall have a diameter of 1.52 m (60 inches) minimum.
     
-    Rule 304.3.1: Circular space shall have a diameter of 1.52 m (60 inches) minimum.
+    Applicable Space Classifications: Balcony, Circulation, Garage, Habitable,
+    Institutional, Lobby, Mercantile, Office, Parking, Production, Refuge,
+    Stair Hall, Workplace
     
-    Applicable Space Classifications: Balcony, Circulation, Garage, Habitable, Institutional,
-    Lobby, Mercantile, Office, Parking, Production, Refuge, Stair Hall, Workplace.
-    
-    This function analyzes space geometry to determine the maximum circular diameter available
-    for wheelchair turning space. Spaces are filtered based on name/LongName keywords to identify
-    relevant circulation and habitable spaces while excluding utility/secondary spaces.
+    Checks which spaces in the IFC model do not have enough room for wheelchair
+    turning space with the required diameter.
     
     Args:
-        path_ifc_model: Path to the IFC model file.
+        path_ifc_model: Path to the IFC model file
         
     Returns:
-        List of IFC GUIDs of spaces that violate the rule (diameter < 1.52m).
-        Returns empty list if no violations found or if no spaces exist in model.
+        List of IFC GUIDs of all elements that violate this rule (spaces that
+        don't have enough room for wheelchair turning space)
         
     Example:
         >>> violations = check_304_3_1_circular_space('/path/to/model.ifc')
-        >>> print(violations)
-        ['10mjSDZJj9gPS2PrQaxa3z', '10mjSDZJj9gPS2PrQaxa4o']
+        >>> print(f"Found {len(violations)} violations")
     """
-    model = ifcopenshell.open(path_ifc_model)
-    spaces = model.by_type('IfcSpace')
+    # Applicable classifications per rule
+    APPLICABLE_CLASSIFICATIONS = {
+        'Balcony', 'Circulation', 'Garage', 'Habitable', 'Institutional',
+        'Lobby', 'Mercantile', 'Office', 'Parking', 'Production', 'Refuge',
+        'Stair Hall', 'Workplace'
+    }
     
+    MIN_DIAMETER = 1.52  # meters
+    
+    def get_largest_circle_diameter(space) -> float:
+        """Calculate the largest possible circle diameter that fits in a space's footprint."""
+        try:
+            settings = ifcopenshell.geom.settings()
+            shape = ifcopenshell.geom.create_shape(settings, space)
+            
+            # Get vertices and faces
+            verts = np.array(shape.geometry.verts).reshape(-1, 3)
+            faces = shape.geometry.faces
+            
+            # Create mesh
+            mesh = trimesh.Trimesh(vertices=verts, faces=faces)
+            
+            # Project vertices to XY plane (footprint)
+            points_2d = [(v[0], v[1]) for v in verts]
+            
+            # Need at least 3 points to form a polygon
+            if len(points_2d) < 3:
+                return 0.0
+            
+            # Create a polygon from points using convex hull
+            multi_point = geom.MultiPoint(points_2d)
+            footprint = multi_point.convex_hull
+            
+            if footprint.is_empty:
+                return 0.0
+            
+            # Get the minimum rotated rectangle (tightest fitting rectangle)
+            min_rect = footprint.minimum_rotated_rectangle
+            
+            # Get the bounding box of the rotated rectangle
+            minx, miny, maxx, maxy = min_rect.bounds
+            width = maxx - minx
+            height = maxy - miny
+            
+            # The largest circle diameter is the minimum dimension
+            return min(width, height)
+        except Exception:
+            return 0.0
+    
+    # Open the IFC model
+    model = ifcopenshell.open(path_ifc_model)
+    
+    # Get all spaces
+    spaces = model.by_type('IfcSpace')
     if not spaces:
         return []
     
-    # Keywords for spaces that should be checked (circulation and habitable spaces)
-    include_keywords = [
-        'stair', 'stairs', 'hall', 'hallway', 'corridor', 'lobby', 'foyer', 'entry',
-        'circulation', 'room', 'living', 'dining', 'kitchen', 'bedroom', 'office',
-        'garage', 'parking', 'workplace', 'refuge'
-    ]
+    # Prepare spaces for classification
+    spaces_list = []
+    for space in spaces:
+        name = getattr(space, 'LongName', None) or getattr(space, 'Name', None) or ''
+        spaces_list.append({
+            'guid': space.GlobalId,
+            'name': name,
+            'space_obj': space  # Keep reference to original space object
+        })
     
-    # Keywords for spaces that should be excluded (secondary/utility spaces)
-    exclude_keywords = [
-        'bathroom', 'toilet', 'closet', 'storage', 'utility', 'balcony', 'patio',
-        'deck', 'porch', 'terrace', 'mechanical', 'electrical', 'shaft'
-    ]
+    # Classify spaces using the provided tool
+    classified = classify_spaces(spaces_list, path_ifc_model)
     
-    def get_max_diameter(space) -> float:
-        """Calculate maximum circular space diameter using mid-height section."""
-        try:
-            shape = ifcopenshell.geom.create_shape(settings, space)
-            verts = ifcopenshell.util.shape.get_vertices(shape.geometry)
-            faces = ifcopenshell.util.shape.get_faces(shape.geometry)
-            
-            mesh = trimesh.Trimesh(vertices=verts, faces=faces)
-            
-            # Get section at mid-height for 2D footprint
-            z_height = (mesh.bounds[0, 2] + mesh.bounds[1, 2]) / 2
-            section = mesh.section(plane_origin=[0, 0, z_height], plane_normal=[0, 0, 1])
-            
-            if section and len(section.to_planar()) > 0:
-                path2d = section.to_planar()[0]
-                if len(path2d.polygons_full) > 0:
-                    polygon = path2d.polygons_full[0]
-                    
-                    # Use minimum rotated rectangle width as approximation for max inscribed circle
-                    min_rect = polygon.minimum_rotated_rectangle
-                    coords = list(min_rect.exterior.coords)
-                    
-                    if len(coords) >= 5:
-                        p1 = geom.Point(coords[0])
-                        p2 = geom.Point(coords[1])
-                        p3 = geom.Point(coords[2])
-                        width1 = p1.distance(p2)
-                        width2 = p2.distance(p3)
-                        min_dim = min(width1, width2)
-                        return min_dim
-                    
-                    # Fallback: sampling method for more complex shapes
-                    min_bounds = polygon.bounds
-                    x_range = np.linspace(min_bounds[0], min_bounds[2], 50)
-                    y_range = np.linspace(min_bounds[1], min_bounds[3], 50)
-                    
-                    max_inscribed_radius = 0
-                    for x in x_range:
-                        for y in y_range:
-                            pt = geom.Point(x, y)
-                            if polygon.contains(pt):
-                                dist_to_edge = polygon.boundary.distance(pt)
-                                if dist_to_edge > max_inscribed_radius:
-                                    max_inscribed_radius = dist_to_edge
-                    
-                    return max_inscribed_radius * 2
-        except (RuntimeError, AttributeError):
-            pass
-        return 0.0
-    
-    settings = ifcopenshell.geom.settings()
-    min_diameter = 1.52
+    # Check for violations
     violations = []
     skipped = 0
     
-    for space in spaces:
-        name = (getattr(space, 'Name', None) or '').lower()
-        long_name = (getattr(space, 'LongName', None) or '').lower()
-        combined_text = name + ' ' + long_name
+    for space_info in classified:
+        classification = space_info.get('classification', 'Unclassified')
         
-        # Check if space should be excluded (utility/secondary spaces)
-        should_exclude = any(kw in combined_text for kw in exclude_keywords)
-        if should_exclude:
+        # Only check applicable classifications
+        if classification not in APPLICABLE_CLASSIFICATIONS:
             continue
         
-        # Check if space should be included based on keywords
-        should_include = any(kw in combined_text for kw in include_keywords)
-        if not should_include:
-            continue
+        # Calculate largest circle diameter
+        space_obj = space_info['space_obj']
+        diameter = get_largest_circle_diameter(space_obj)
         
-        diameter = get_max_diameter(space)
-        if diameter <= 0:
+        # Check if it meets the requirement
+        if diameter > 0 and diameter < MIN_DIAMETER:
+            violations.append(space_info['guid'])
+        elif diameter == 0:
             skipped += 1
-            continue
-        
-        if diameter < min_diameter:
-            violations.append(space.GlobalId)
+    
+    if skipped > 0:
+        print(f"Warning: Could not calculate diameter for {skipped} spaces")
     
     return violations
