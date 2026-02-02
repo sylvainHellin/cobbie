@@ -12,7 +12,9 @@ function HelperFunctionCreator(
   is_enhancement: bool @description("True if enhancing existing tool, False if creating new"),
   existing_implementation: string? @description("Current tool implementation (empty if new)"),
   previous_attempts: string? @description("Previous code execution results and attempts, if any"),
-  is_final_iteration: bool @description("If true, the LLM must return a NewHelperFunction instead of a CodeAction")
+  is_final_iteration: bool @description("If true, the LLM must return a NewHelperFunction instead of a CodeAction"),
+  available_tools_docs: string? @description("Documentation for available tools (query_ifcopenshell_docs, classify_spaces, etc.). If not provided, defaults are used."),
+  available_library_docs: string? @description("Documentation for available geometry libraries (trimesh, shapely, etc.). Empty if none enabled.")
 ) -> CodeAction | NewHelperFunction {
   client GLM_4_7
   prompt #"
@@ -118,7 +120,9 @@ function HelperFunctionCreator(
     AVAILABLE TOOLS FOR DEVELOPMENT:
 
     You have access to the following tools in your Python code execution environment:
-
+    {% if available_tools_docs %}
+    {{ available_tools_docs }}
+    {% else %}
     **1. query_ifcopenshell_docs(query: str) -> str**
 
     Retrieves up-to-date documentation and code examples from the IFCOpenShell library documentation.
@@ -172,6 +176,12 @@ function HelperFunctionCreator(
 
     Use this tool when you need to determine the classification/usage type of spaces
     (e.g. to filter for applicable spaces in accessibility rules).
+    {% endif %}
+
+    {% if available_library_docs %}
+    AVAILABLE LIBRARIES (pre-imported):
+    {{ available_library_docs }}
+    {% endif %}
 
     IMPORTANT GUIDELINES:
     - **Always use query_ifcopenshell_docs** before implementing ifcopenshell code to ensure correct usage
@@ -252,5 +262,7 @@ test HelperFunctionCreatorTest {
     function_description "Get IFC elements grouped by their containing IfcBuildingStorey. Takes an IFC model path and element type, returns a dictionary mapping floor names to lists of elements."
     is_enhancement = False
     is_final_iteration = false
+    available_tools_docs = null
+    available_library_docs = null
   }
 }

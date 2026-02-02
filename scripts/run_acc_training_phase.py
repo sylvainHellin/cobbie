@@ -44,7 +44,7 @@ from src.acc.guid_comparison import (
     load_rule_templates,
     load_model_splits,
 )
-from src.config import ACC_TOOLS_PATH
+from src.config import ACC_TOOLS_PATH, get_boilerplate, get_library_docs
 from src.util import setup_logger, save_new_tool
 
 # Initialize logger
@@ -136,6 +136,12 @@ class ACCContext:
     # Best tool tracking
     best_tool_implementation: str = ""
     best_tool_f1: float = 0.0
+
+    # Feature flags / boilerplate
+    boilerplate: Optional[str] = None
+    no_classification: bool = False
+    available_tools_docs: Optional[str] = None
+    available_library_docs: Optional[str] = None
 
     # Status
     error_message: Optional[str] = None
@@ -352,6 +358,10 @@ def handle_create_tool(ctx: ACCContext) -> Tuple[ACCTrainingState, ACCContext]:
             max_iterations=ctx.max_iterations,
             llm_provider="zai",
             llm_name="GLM-4.7",
+            boilerplate=ctx.boilerplate,
+            no_classification=ctx.no_classification,
+            available_tools_docs=ctx.available_tools_docs,
+            available_library_docs=ctx.available_library_docs,
         )
 
         ctx.create_tool_result = result
@@ -370,7 +380,7 @@ def handle_create_tool(ctx: ACCContext) -> Tuple[ACCTrainingState, ACCContext]:
                 )
 
             # Pre-check: try executing on primary model before full validation
-            _, exec_log = _execute_tool(ctx.tool_implementation, ctx.tool_name, primary_path)
+            _, exec_log = _execute_tool(ctx.tool_implementation, ctx.tool_name, primary_path, boilerplate=ctx.boilerplate)
             is_crash = exec_log.startswith("Failed to create function:") or exec_log.startswith("Execution error:")
             if is_crash:
                 logger.warning("Pre-check failed, retrying CREATE_TOOL without consuming a retry")
@@ -394,7 +404,12 @@ def handle_create_tool(ctx: ACCContext) -> Tuple[ACCTrainingState, ACCContext]:
         return ACCTrainingState.ERROR, ctx
 
 
-def _execute_tool(tool_implementation: str, function_name: str, model_path: str) -> Tuple[list[str], str]:
+def _execute_tool(
+    tool_implementation: str,
+    function_name: str,
+    model_path: str,
+    boilerplate: Optional[str] = None,
+) -> Tuple[list[str], str]:
     """
     Execute an ACC tool and return predicted GUIDs and execution log.
 
@@ -407,7 +422,7 @@ def _execute_tool(tool_implementation: str, function_name: str, model_path: str)
     from src.util.python_executor import setup_interpreter, execute_python
 
     try:
-        interpreter = setup_interpreter(model_path=model_path, tools={})
+        interpreter = setup_interpreter(model_path=model_path, tools={}, boilerplate=boilerplate)
 
         # Load the full tool code (including helpers/constants) into the interpreter
         load_log = execute_python(tool_implementation, tools={}, interpreter=interpreter)
@@ -453,7 +468,7 @@ def handle_validate_tool(ctx: ACCContext) -> Tuple[ACCTrainingState, ACCContext]
                 logger.warning(f"No IFC path for training model {model_name} — skipping validation")
                 continue
 
-            predicted, run_log = _execute_tool(ctx.tool_implementation, ctx.tool_name, model_path)
+            predicted, run_log = _execute_tool(ctx.tool_implementation, ctx.tool_name, model_path, boilerplate=ctx.boilerplate)
             expected = ctx.training_guids_per_model.get(model_name, [])
             result = compare_guids(set(predicted), set(expected))
 
@@ -500,7 +515,7 @@ def handle_validate_tool(ctx: ACCContext) -> Tuple[ACCTrainingState, ACCContext]
                 logger.warning(f"No IFC path for validation model {model_name} — skipping")
                 continue
 
-            predicted, run_log = _execute_tool(ctx.tool_implementation, ctx.tool_name, model_path)
+            predicted, run_log = _execute_tool(ctx.tool_implementation, ctx.tool_name, model_path, boilerplate=ctx.boilerplate)
             expected = ctx.validation_guids_per_model.get(model_name, [])
             result = compare_guids(set(predicted), set(expected))
 
@@ -713,7 +728,7 @@ def handle_test_tool(ctx: ACCContext) -> Tuple[ACCTrainingState, ACCContext]:
             logger.warning(f"No IFC path for test model {model_name} — skipping")
             continue
 
-        predicted, _ = _execute_tool(implementation, ctx.tool_name, model_path)
+        predicted, _ = _execute_tool(implementation, ctx.tool_name, model_path, boilerplate=ctx.boilerplate)
         expected = ctx.test_guids_per_model.get(model_name, [])
         result = compare_guids(set(predicted), set(expected))
 
@@ -963,7 +978,30 @@ def main():
         "--max-iterations", type=int, default=20,
         help="Maximum number of iterations per rule (default: 20)"
     )
+    parser.add_argument(
+        "--no-geometry", action="store_true",
+        help="Disable both trimesh and shapely (shorthand for --no-trimesh --no-shapely)"
+    )
+    parser.add_argument(
+        "--no-trimesh", action="store_true",
+        help="Disable trimesh imports and documentation in tool creation"
+    )
+    parser.add_argument(
+        "--no-shapely", action="store_true",
+        help="Disable shapely imports and documentation in tool creation"
+    )
+    parser.add_argument(
+        "--no-classification", action="store_true",
+        help="Disable the classify_spaces tool during tool creation"
+    )
     args = parser.parse_args()
+
+    # Compute feature flags
+    no_trimesh = args.no_geometry or args.no_trimesh
+    no_shapely = args.no_geometry or args.no_shapely
+    no_classification: bool = args.no_classification
+    boilerplate = get_boilerplate(no_trimesh=no_trimesh, no_shapely=no_shapely)
+    library_docs = get_library_docs(no_trimesh=no_trimesh, no_shapely=no_shapely)
 
     # Load splits and rule templates
     splits = load_model_splits()
@@ -1001,6 +1039,9 @@ def main():
             "max_retries": args.max_retries,
             "max_iterations": args.max_iterations,
             "rules_count": len(rules_to_process),
+            "no_trimesh": no_trimesh,
+            "no_shapely": no_shapely,
+            "no_classification": no_classification,
         })
 
         results = []
@@ -1026,6 +1067,10 @@ def main():
                     validation_models=validate_models,
                     test_models=test_models,
                     max_iterations=args.max_iterations,
+                    boilerplate=boilerplate,
+                    no_classification=no_classification,
+                    available_tools_docs=None,
+                    available_library_docs=library_docs if library_docs else None,
                 )
 
                 # Run state machine

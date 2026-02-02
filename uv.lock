@@ -567,6 +567,7 @@ dependencies = [
     { name = "scikit-learn" },
     { name = "seaborn" },
     { name = "sentence-transformers" },
+    { name = "shapely" },
     { name = "sqlacodegen" },
     { name = "sqlite-vec" },
     { name = "sqlmodel" },
@@ -574,6 +575,7 @@ dependencies = [
     { name = "tabulate" },
     { name = "tiktoken" },
     { name = "torch", marker = "platform_machine == 'x86_64' and sys_platform == 'darwin'" },
+    { name = "trimesh" },
 ]
 
 [package.optional-dependencies]
@@ -616,6 +618,7 @@ requires-dist = [
     { name = "scikit-learn", specifier = ">=1.6.0" },
     { name = "seaborn", specifier = ">=0.13.2" },
     { name = "sentence-transformers", specifier = ">=5.2.0" },
+    { name = "shapely", specifier = ">=2.0.0" },
     { name = "sqlacodegen", specifier = ">=3.1.1" },
     { name = "sqlite-vec", specifier = ">=0.1.6" },
     { name = "sqlmodel", specifier = ">=0.0.25" },
@@ -623,6 +626,7 @@ requires-dist = [
     { name = "tabulate", specifier = ">=0.9.0" },
     { name = "tiktoken", specifier = ">=0.12.0" },
     { name = "torch", marker = "platform_machine == 'x86_64' and sys_platform == 'darwin'", specifier = ">=2.2,<2.3" },
+    { name = "trimesh", specifier = ">=4.0.0" },
     { name = "ty", marker = "extra == 'dev'", specifier = ">=0.0.1a6" },
 ]
 provides-extras = ["dev"]
@@ -4000,6 +4004,18 @@ dependencies = [
 sdist = { url = "https://files.pythonhosted.org/packages/c4/35/67252acc1b929dc88b6602e8c4a982e64f31e733b804c14bc24b47da35e6/transformers-4.57.6.tar.gz", hash = "sha256:55e44126ece9dc0a291521b7e5492b572e6ef2766338a610b9ab5afbb70689d3", size = 10134912 }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/03/b8/e484ef633af3887baeeb4b6ad12743363af7cce68ae51e938e00aaa0529d/transformers-4.57.6-py3-none-any.whl", hash = "sha256:4c9e9de11333ddfe5114bc872c9f370509198acf0b87a832a0ab9458e2bd0550", size = 11993498 },
+]
+
+[[package]]
+name = "trimesh"
+version = "4.11.1"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "numpy" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/4c/6e/e905f84b31e6f3a7957f26a91c6d2c6337def5a888e55ac89fe2b790241b/trimesh-4.11.1.tar.gz", hash = "sha256:9a10040ca5d1c4438e0b7af94433edf6b043f5204393fc97bb85c9159a8bf21e", size = 835062 }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/b0/be/69fffc97b78f52a5d1372e5d56a0599291e96996a47089fb6312bc023d88/trimesh-4.11.1-py3-none-any.whl", hash = "sha256:bcc082ced94610ecd2c09b031431d0f3ad74352525e23a41b5688a2897b3e3e0", size = 740352 },
 ]
 
 [[package]]

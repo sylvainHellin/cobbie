@@ -64,7 +64,8 @@ def truncate_to_tokens(text: str, max_tokens: int, model: str = "gpt-3.5-turbo")
 
 def setup_interpreter(
     model_path: Optional[str] = None,
-    tools: Optional[Dict[str, Callable]] = None
+    tools: Optional[Dict[str, Callable]] = None,
+    boilerplate: Optional[str] = None,
 ) -> Any:
     """
     Setup Python interpreter with tools and model context.
@@ -72,6 +73,7 @@ def setup_interpreter(
     Args:
         model_path: Optional path to IFC model file
         tools: Dictionary of available tools/functions
+        boilerplate: Optional custom boilerplate code. Falls back to FUNCTION_BOILERPLATE.
 
     Returns:
         Configured Python interpreter object
@@ -94,7 +96,8 @@ def setup_interpreter(
         interpreter = InteractiveInterpreter(interpreter_globals)
 
         # Pre-load common imports (ifcopenshell, math, json, typing)
-        compiled = compile(FUNCTION_BOILERPLATE, '<setup>', 'exec')
+        bp = boilerplate if boilerplate is not None else FUNCTION_BOILERPLATE
+        compiled = compile(bp, '<setup>', 'exec')
         interpreter.runcode(compiled)
 
         logger.debug(f"Interpreter setup with {len(tools) if tools else 0} tools")

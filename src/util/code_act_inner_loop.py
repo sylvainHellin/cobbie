@@ -15,6 +15,7 @@ def _execute_code_action(
     model_path: Optional[str] = None,
     add_code_prefix: bool = True,
     interpreter: Optional[Any] = None,
+    boilerplate: Optional[str] = None,
 ) -> str:
     """
     Execute a CodeAction from the agent return the the formated result of the attempt.
@@ -27,7 +28,8 @@ def _execute_code_action(
 
         # Add the code prefix if so configured
         if add_code_prefix:
-            code_prefix = FUNCTION_BOILERPLATE + "\n"
+            bp = boilerplate if boilerplate is not None else FUNCTION_BOILERPLATE
+            code_prefix = bp + "\n"
 
             if model_path is not None:
                 code_prefix += f"\npath_ifc_model = '{model_path}'"

@@ -7,7 +7,7 @@ import os
 import time
 from contextlib import nullcontext
 from pathlib import Path
-from typing import List, Optional, Tuple
+from typing import Callable, List, Optional, Tuple
 
 import mlflow
 from baml_py.baml_py import Collector
@@ -33,6 +33,8 @@ def _helper_function_creator_iter(
     existing_implementation: Optional[str] = None,
     previous_attempts: Optional[str] = None,
     is_final_iteration: bool = False,
+    available_tools_docs: Optional[str] = None,
+    available_library_docs: Optional[str] = None,
     **kwargs,
 ) -> CodeAction | NewHelperFunction:
     """
@@ -81,6 +83,8 @@ def _helper_function_creator_iter(
                 existing_implementation=existing_implementation,
                 previous_attempts=previous_attempts,
                 is_final_iteration=is_final_iteration,
+                available_tools_docs=available_tools_docs,
+                available_library_docs=available_library_docs,
                 **kwargs_copy,
             )
         else:
@@ -96,6 +100,8 @@ def _helper_function_creator_iter(
                 existing_implementation=existing_implementation,
                 previous_attempts=previous_attempts,
                 is_final_iteration=is_final_iteration,
+                available_tools_docs=available_tools_docs,
+                available_library_docs=available_library_docs,
                 **kwargs_copy,
             )
     except Exception as e:
@@ -122,6 +128,10 @@ def _create_helper_function(
     max_iterations: int = 15,
     llm_name: str = "GLM-4.6",
     llm_provider: str = "zai",
+    boilerplate: Optional[str] = None,
+    no_classification: bool = False,
+    available_tools_docs: Optional[str] = None,
+    available_library_docs: Optional[str] = None,
     **kwargs,
 ) -> Tuple[NewHelperFunction, str]:
     """
@@ -152,10 +162,11 @@ def _create_helper_function(
     logger.info(f"Starting helper function creation for: {function_name}")
 
     # Prepare tools for code execution
-    tools = {
-        "classify_spaces": classify_spaces,
+    tools: dict[str, Callable] = {
         "query_ifcopenshell_docs": query_ifcopenshell_docs,
     }
+    if not no_classification:
+        tools["classify_spaces"] = classify_spaces
 
     # Prepare the paths to the other BIM models if not provided
     if other_bim_models_for_testing is None:
@@ -236,6 +247,8 @@ def _create_helper_function(
                     existing_implementation=existing_implementation,
                     previous_attempts=previous_attempts,
                     is_final_iteration=is_final,
+                    available_tools_docs=available_tools_docs,
+                    available_library_docs=available_library_docs,
                     **kwargs,
                 )
 
@@ -386,6 +399,7 @@ def _create_helper_function(
                     tools=tools,
                     model_path=example_bim_model,
                     add_code_prefix=True,
+                    boilerplate=boilerplate,
                 )
                 previous_attempts += f"\n{current_attempt}\n"
 
@@ -486,6 +500,10 @@ def create_helper_function(
     max_iterations: int = 15,
     llm_provider: str = "zai",
     llm_name: str = "GLM-4.6",
+    boilerplate: Optional[str] = None,
+    no_classification: bool = False,
+    available_tools_docs: Optional[str] = None,
+    available_library_docs: Optional[str] = None,
     **kwargs,
 ) -> Tuple[NewHelperFunction, Collector, str]:
     """
@@ -573,6 +591,10 @@ def create_helper_function(
                 max_iterations=max_iterations,
                 llm_name=llm_name,
                 llm_provider=llm_provider,
+                boilerplate=boilerplate,
+                no_classification=no_classification,
+                available_tools_docs=available_tools_docs,
+                available_library_docs=available_library_docs,
                 **kwargs,
             )
             execution_time = time.time() - start_time
