@@ -30,6 +30,11 @@
 - **Batched Evaluation** (memory-safe): `fish scripts/run_eval_batched.fish --nb-samples 20 --batch-size 5`
   - Runs each batch as a separate process to avoid ifcopenshell memory accumulation
   - First batch = 1 question (creates MLflow run), then prompts for run ID, remaining batches use `--continue`
+- **Eval Analysis App**: `uv run streamlit run scripts/eval_analysis_app.py`
+  - Interactive Streamlit app for error analysis, ground truth correction, and cross-run comparison
+- **Tool Pruning**: `uv run scripts/prune_tools.py --target 24 --dry-run`
+  - Prune created tools to a target count based on deletion scores
+  - Supports `--scoring linear|exponential`, `--grace-period`, `--alpha`, `--beta`, `--yes`
 
 ## Architecture Overview
 
