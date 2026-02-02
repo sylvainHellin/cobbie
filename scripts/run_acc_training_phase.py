@@ -348,7 +348,7 @@ def handle_create_tool(ctx: ACCContext) -> Tuple[ACCTrainingState, ACCContext]:
             function_name=ctx.tool_name,
             function_description=full_question,
             other_bim_models_for_testing=other_paths,
-            max_iterations=15,
+            max_iterations=20,
             llm_provider="zai",
             llm_name="GLM-4.7",
         )
