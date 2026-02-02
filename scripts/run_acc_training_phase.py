@@ -19,9 +19,7 @@ Data Split (from acc/config/model_splits.json):
 """
 
 import argparse
-import io
 import time
-from contextlib import redirect_stdout, redirect_stderr
 from dataclasses import dataclass, field
 from datetime import datetime
 from enum import Enum, auto
@@ -42,7 +40,7 @@ from src.acc.guid_comparison import (
     load_model_splits,
 )
 from src.config import ACC_TOOLS_PATH
-from src.util import setup_logger, save_new_tool, _create_function_from_source_code
+from src.util import setup_logger, save_new_tool
 
 # Initialize logger
 setup_logger()
@@ -394,46 +392,41 @@ def _execute_tool(tool_implementation: str, function_name: str, model_path: str)
     """
     Execute an ACC tool and return predicted GUIDs and execution log.
 
+    Uses InteractiveInterpreter (same as creation-time) so that helpers,
+    constants, and the main function all share a single namespace.
+
     Returns:
         Tuple of (predicted_guids, execution_log)
     """
-    # Create callable from source code
-    result = _create_function_from_source_code(
-        code=tool_implementation,
-        function_name=function_name,
-    )
-
-    if result.is_err():
-        error_msg = f"Failed to create function: {result.unwrap_err()}"
-        return [], error_msg
-
-    tool_fn = result.unwrap()
-
-    # Capture stdout/stderr during execution
-    stdout_capture = io.StringIO()
-    stderr_capture = io.StringIO()
+    from src.util.python_executor import setup_interpreter, execute_python
 
     try:
-        with redirect_stdout(stdout_capture), redirect_stderr(stderr_capture):
-            guids = tool_fn(model_path)
+        interpreter = setup_interpreter(model_path=model_path, tools={})
 
-        # Process result
-        if isinstance(guids, list):
-            predicted = [str(g) for g in guids]
+        # Load the full tool code (including helpers/constants) into the interpreter
+        load_log = execute_python(tool_implementation, tools={}, interpreter=interpreter)
+
+        # Call the main function with path_ifc_model (already set by setup_interpreter)
+        call_code = f"_result = {function_name}(path_ifc_model)"
+        call_log = execute_python(call_code, tools={}, interpreter=interpreter)
+
+        log = load_log + "\n" + call_log
+
+        # Retrieve result from the interpreter namespace
+        if "_result" not in interpreter.locals:
+            return [], f"Execution error: function did not produce a result\n{log}"
+
+        result = interpreter.locals["_result"]
+
+        if isinstance(result, list):
+            predicted = [str(g) for g in result]
         else:
             predicted = []
-
-        log = stdout_capture.getvalue()
-        if stderr_capture.getvalue():
-            log += f"\nSTDERR:\n{stderr_capture.getvalue()}"
 
         return predicted, log
 
     except Exception as e:
-        error_log = f"Execution error: {e}\n"
-        error_log += f"STDOUT:\n{stdout_capture.getvalue()}\n"
-        error_log += f"STDERR:\n{stderr_capture.getvalue()}"
-        return [], error_log
+        return [], f"Execution error: {e}"
 
 
 def handle_validate_tool(ctx: ACCContext) -> Tuple[ACCTrainingState, ACCContext]:

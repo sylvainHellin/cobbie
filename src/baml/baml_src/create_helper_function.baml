@@ -51,6 +51,11 @@ function HelperFunctionCreator(
     EXECUTION ENVIRONMENT:
     Your code runs in a persistent Python session. Variables, imports, loaded models, and test results from previous iterations are still available — reuse them instead of recomputing.
 
+    FUNCTION SIGNATURE:
+    Your function MUST accept exactly one parameter: `path_ifc_model: str` (the file path to the IFC model).
+    Open the model inside the function body: `model = ifcopenshell.open(path_ifc_model)`
+    Do NOT accept an already-opened ifcopenshell.file object — always accept the path as a string.
+
     REQUIREMENTS:
     1. **Type Safety**: Use proper type hints (typing.List, typing.Dict, etc.) for all parameters and return types
     2. **Docstring**: Include comprehensive docstring with:
