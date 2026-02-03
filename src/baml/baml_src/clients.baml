@@ -8,6 +8,10 @@ client<llm> ClaudeHaiku {
     model "claude-3-5-haiku-latest"
     api_key env.ANTHROPIC_API_KEY
     max_tokens 1024
+    http {
+      connect_timeout_ms 10000
+      request_timeout_ms 60000
+    }
   }
 }
 
@@ -21,6 +25,10 @@ client<llm> GLM_4_7{
     api_key env.Z_AI_API_KEY
     temperature 0.1
     max_tokens 8192
+    http {
+      connect_timeout_ms 10000
+      request_timeout_ms 60000
+    }
   }
 }
 
@@ -34,6 +42,10 @@ client<llm> GLM_4_7_Flash {
     api_key env.Z_AI_API_KEY
     temperature 0.1
     max_tokens 8192
+    http {
+      connect_timeout_ms 10000
+      request_timeout_ms 60000
+    }
   }
 }
 
@@ -47,6 +59,10 @@ client<llm> GLM_4_5_air{
     api_key env.Z_AI_API_KEY
     temperature 0.1
     max_tokens 8192
+    http {
+      connect_timeout_ms 10000
+      request_timeout_ms 60000
+    }
   }
 }
 
@@ -56,6 +72,10 @@ client<llm> Devstral {
   options {
     base_url "http://localhost:11434/v1"
     model "devstral-small-2:latest"
+    http {
+      connect_timeout_ms 10000
+      request_timeout_ms 300000
+    }
   }
 }
 
@@ -68,6 +88,10 @@ client<llm> Gemini_2_5_Flash_Lite {
     generationConfig {
       temperature 0.1
     }
+    http {
+      connect_timeout_ms 10000
+      request_timeout_ms 60000
+    }
   }
 }
 
@@ -78,6 +102,10 @@ client<llm> Gemini_3_Pro {
   options {
     model "gemini-3-pro-preview"
     api_key env.GEMINI_API_KEY
+    http {
+      connect_timeout_ms 10000
+      request_timeout_ms 60000
+    }
   }
 }
 
