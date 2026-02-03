@@ -6,11 +6,11 @@ Functional approach using COBBIE component for evaluation.
 Replaces the complex OOP implementation with a clean, functional design.
 
 Usage:
-    # Basic evaluation (default: initial + created tools)
+    # Basic evaluation (no tools by default)
     uv run scripts/run_evaluation.py --start 0 --nb-samples 5
 
-    # Evaluate with different range
-    uv run scripts/run_evaluation.py --start 10 --nb-samples 10
+    # Evaluate with tools
+    uv run scripts/run_evaluation.py --start 0 --nb-samples 5 --tools initial created
 
     # Evaluate with specific tool directories
     uv run scripts/run_evaluation.py --start 0 --nb-samples 5 --tools manual
@@ -1388,8 +1388,8 @@ Examples:
         "--tools",
         nargs="+",
         choices=["initial", "created", "manual"],
-        default=["initial", "created"],
-        help="Tool directories to load (space-separated). Options: initial, created, manual. Default: initial created"
+        default=None,
+        help="Tool directories to load (space-separated). Options: initial, created, manual. Default: no tools"
     )
 
     parser.add_argument(
@@ -1397,12 +1397,6 @@ Examples:
         choices=["cobbie", "baseline"],
         default="cobbie",
         help="QA system to evaluate: 'cobbie' (agentic, default) or 'baseline' (static summary)"
-    )
-
-    parser.add_argument(
-        "--no-tools",
-        action="store_true",
-        help="Run evaluation without any tools (baseline test)"
     )
 
     parser.add_argument(
@@ -1437,28 +1431,21 @@ Examples:
         return 1
 
     # Validate mutually exclusive options
-    if args.merge and args.no_tools:
-        print("Error: --merge and --no-tools are mutually exclusive")
-        return 1
+    if args.merge and not args.tools:
+        # Merge mode requires tools; use default set
+        args.tools = ["initial", "created"]
 
     if args.system == "baseline" and args.merge:
         print("Error: --system baseline and --merge are mutually exclusive")
         return 1
-
-    if args.system == "baseline" and args.no_tools:
-        print("Note: --no-tools is ignored when --system baseline (baseline doesn't use tools)")
-        args.no_tools = False
 
     # Validate and deduplicate tools argument
     if args.merge:
         # In merge mode, we use both initial and created tools (hardcoded)
         args.tools = ["initial", "created"]
         logger.info("Merge mode: using initial and created tool directories")
-    elif args.no_tools:
-        args.tools = []
     elif not args.tools:
-        print("Error: At least one tool directory must be specified (or use --no-tools)")
-        return 1
+        args.tools = []
     else:
         # Remove duplicates while preserving order
         seen = set()
@@ -1476,8 +1463,8 @@ Examples:
         f"Processing {actual_samples} samples from index {args.start} to {end_index - 1}"
     )
     logger.info(f"Using documentation backend: {args.doc}")
-    if args.no_tools:
-        logger.info("Running in no-tools mode (baseline test)")
+    if not args.tools:
+        logger.info("Running without tools")
     else:
         logger.info(f"Loading tools from directories: {', '.join(args.tools)}")
 
@@ -1542,12 +1529,13 @@ Examples:
         except Exception as e:
             logger.error(f"Failed to load tools for merge mode: {e}")
             return 1
-    elif args.no_tools:
+    elif not args.tools:
         tools_dict = {}
         tools_initial = {}
         tools_created = {}
         tools_merger = {}
-        logger.info("No tools loaded (baseline mode)")
+        logger.info("No tools loaded")
+        assert len(tools_dict) == 0, f"BUG: no --tools but tools_dict has {len(tools_dict)} tools: {list(tools_dict.keys())}"
     else:
         try:
             # Cast is safe here because argparse choices ensures valid values
