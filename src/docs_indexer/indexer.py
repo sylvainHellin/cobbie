@@ -128,6 +128,19 @@ def run_indexing(
             useful_chunks = all_chunks
             all_results: list[ReviewResult] = []
             mlflow.set_tag("review_mode", "skipped")
+
+            # Still load cached questions if available
+            cache = load_review_cache()
+            questions_loaded = 0
+            for chunk in useful_chunks:
+                cached = cache.get(chunk.id)
+                if cached and cached.get("questions"):
+                    chunk.questions = cached["questions"]
+                    questions_loaded += 1
+            if questions_loaded:
+                print(f"  Loaded cached questions for {questions_loaded} chunks")
+            else:
+                logger.warning("No cached questions found — question search will be empty")
         else:
             mlflow.set_tag("review_mode", "llm_review")
 

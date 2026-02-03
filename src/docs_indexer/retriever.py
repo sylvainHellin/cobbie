@@ -5,6 +5,7 @@ import time
 from typing import Any
 
 import mlflow
+from loguru import logger
 
 from src.docs_indexer.embedder import embed_text
 from src.docs_indexer.models import DocChunk
@@ -147,6 +148,11 @@ def retrieve(
                 bm25_span.set_attributes({"duration_ms": (time.time() - t0) * 1000})
 
         # 4. Question embedding search
+        if store.count_questions() == 0:
+            logger.warning(
+                "Question collection is empty — question_search will return 0 results. "
+                "Re-run the indexer to populate questions."
+            )
         with mlflow.start_span(name="question_search", span_type="TOOL") as question_span:
             t0 = time.time()
             question_results = store.search_questions(query_embedding, limit=search_limit)
