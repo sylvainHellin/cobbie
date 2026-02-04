@@ -72,19 +72,14 @@ cursor=$start
 if [[ -z "$run_id" ]]; then
     echo ""
     echo "> Running first rule (index ${start}) to create MLflow run..."
-    python scripts/run_acc_training_phase.py --start "$start" --end $(( start + 1 )) "${extra_args[@]}"
-
-    echo ""
-    echo "======================================================="
-    echo "  First rule done. Check MLflow for the new run."
-    echo "  Enter the MLflow run ID to continue:"
-    echo "======================================================="
-    read -rp "Run ID> " run_id
+    output=$(python scripts/run_acc_training_phase.py --start "$start" --end $(( start + 1 )) "${extra_args[@]}")
+    run_id=$(echo "$output" | grep '^MLFLOW_RUN_ID=' | cut -d= -f2)
 
     if [[ -z "$run_id" ]]; then
-        echo "Error: No run ID provided. Aborting."
+        echo "Error: Could not extract MLflow run ID from first batch output."
         exit 1
     fi
+    echo "  Captured run ID: ${run_id}"
 
     cursor=$(( start + 1 ))
 fi

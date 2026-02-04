@@ -1175,6 +1175,10 @@ def main():
 
     with mlflow.start_run(run_id=run_id, run_name=run_name):
         if run_id is None:
+            active_run = mlflow.active_run()
+            assert active_run is not None
+            print(f"MLFLOW_RUN_ID={active_run.info.run_id}")
+
             mlflow.log_params({
                 "training_models": ",".join(train_models),
                 "validation_models": ",".join(validate_models),
