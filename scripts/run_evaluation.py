@@ -18,9 +18,6 @@ Usage:
     # Evaluate with all tool directories
     uv run scripts/run_evaluation.py --start 0 --nb-samples 5 --tools initial created manual
 
-    # Merge mode: run cobbie twice (initial, created) then consolidate
-    uv run scripts/run_evaluation.py --start 0 --nb-samples 5 --merge
-
     # Use context7 documentation backend instead of custom
     uv run scripts/run_evaluation.py --start 0 --nb-samples 5 --doc context7
 """
@@ -888,426 +885,6 @@ def process_question_baseline(
             }
 
 
-# ============================================================================
-# MERGE MODE FUNCTIONS
-# ============================================================================
-
-# Easy to change: modify this list to experiment with different tool sets for the merger
-MERGER_TOOL_DIRECTORIES: List[Literal["initial", "created", "manual"]] = ["initial", "created"]
-
-
-def build_merge_prompt(
-    original_question: str,
-    answer_initial: str,
-    thoughts_initial: str,
-    answer_created: str,
-    thoughts_created: str,
-) -> str:
-    """Build the prompt for the merger cobbie instance.
-
-    Args:
-        original_question: The original user question
-        answer_initial: Answer from cobbie with initial tools only
-        thoughts_initial: Reasoning from cobbie with initial tools only
-        answer_created: Answer from cobbie with created tools
-        thoughts_created: Reasoning from cobbie with created tools
-
-    Returns:
-        A formatted prompt for the merger to consolidate the answers
-    """
-    return f"""You are tasked with consolidating answers from two different system configurations.
-
-## Original Question
-{original_question}
-
-## Answer A (from configuration with initial tools only)
-**Reasoning:**
-{thoughts_initial}
-
-**Answer:**
-{answer_initial}
-
-## Answer B (from configuration with initial + created tools)
-**Reasoning:**
-{thoughts_created}
-
-**Answer:**
-{answer_created}
-
-## Your Task
-1. Compare both answers carefully, examining their reasoning chains
-2. If the answers agree, confirm the consensus answer
-3. If the answers disagree, use the available tools to verify which claims are correct
-4. Provide the most accurate answer based on your analysis
-
-Important: If both answers seem uncertain or contradictory and you cannot verify which is correct, you may indicate uncertainty. Focus on accuracy over confidence.
-
-Now, please provide your consolidated answer to the original question."""
-
-
-def process_question_merged(
-    question_data,
-    question_index: int,
-    tools_initial: Dict[str, Callable],
-    tools_created: Dict[str, Callable],
-    tools_merger: Dict[str, Callable],
-    args,
-) -> Dict:
-    """Process a single question using the merge flow with 3 cobbie calls.
-
-    Flow:
-    1. Run cobbie with initial tools only -> answer_initial
-    2. Run cobbie with initial + created tools -> answer_created
-    3. Run merger cobbie with all tools + consolidated prompt -> merged_answer
-    4. Verify merged_answer against ground truth
-
-    Args:
-        question_data: Dataset question object
-        question_index: Index of the question
-        tools_initial: Dictionary of initial tools only
-        tools_created: Dictionary of initial + created tools
-        tools_merger: Dictionary of tools for the merger (typically all tools)
-        args: Command line arguments
-
-    Returns:
-        Dictionary containing question processing results with merge metadata
-    """
-    question = question_data.question
-    ground_truth = getattr(question_data, "answer", "") or getattr(
-        question_data, "ground_truth", ""
-    )
-    category = getattr(question_data, "category", None)
-    question_id = getattr(question_data, "id", f"q_{question_index + 1}")
-    ifc_path = question_data.ifc.model_path if question_data.ifc else None
-
-    # Skip question if category is not provided
-    if category is None:
-        error_msg = f"ERROR: Question {question_id} missing required 'category' field. SKIPPING this question."
-        logger.error(error_msg)
-        return {
-            "question": question,
-            "ground_truth": ground_truth,
-            "category": None,
-            "status": "error",
-            "error_message": "Missing required 'category' field",
-            "execution_time": 0.0,
-            "classification": None,
-            "input_tokens": 0,
-            "output_tokens": 0,
-            "mlflow_run_id": "skipped_no_category",
-            "merge_mode": True,
-        }
-
-    logger.info(f"[MERGE] Processing question {question_index + 1}: {question[:80]}...")
-
-    run_name = f"question_{question_index}_{question_id}_merged"
-
-    with mlflow.start_run(run_name=run_name, nested=True) as question_run:
-        # Log question parameters
-        client_info = CLIENT_INFO.get(args.client, {"model": args.client, "provider": "unknown"})
-        mlflow.log_params(
-            {
-                "question": question,
-                "ground_truth": ground_truth,
-                "category": category,
-                "question_id": question_id,
-                "llm": client_info["model"],
-                "provider_name": client_info["provider"],
-                "model_path": ifc_path or "None",
-                "merge_mode": True,
-            }
-        )
-
-        # Initialize tracking variables
-        total_input_tokens = 0
-        total_output_tokens = 0
-        total_duration = 0.0
-
-        # ----------------------------------------------------------------
-        # STEP 1: Run cobbie with initial tools only
-        # ----------------------------------------------------------------
-        with mlflow.start_span(name="config_initial", span_type="CHAIN") as span_initial:
-            span_initial.set_inputs({"config": "initial", "question": question})
-            start_initial = time.time()
-
-            try:
-                result_initial = cobbie(
-                    user_input=question,
-                    tools=tools_initial,
-                    model_path=ifc_path,
-                    client=args.client,
-                )
-                duration_initial = time.time() - start_initial
-
-                if result_initial.error:
-                    raise RuntimeError(result_initial.error.error_message)
-
-                answer_initial = result_initial.answer.answer if result_initial.answer else ""
-                thoughts_initial = result_initial.answer.thoughts if result_initial.answer else ""
-
-                tokens_in_initial = 0
-                tokens_out_initial = 0
-                collector_initial = result_initial.collector
-                if collector_initial and hasattr(collector_initial, "usage") and collector_initial.usage:
-                    tokens_in_initial = collector_initial.usage.input_tokens or 0
-                    tokens_out_initial = collector_initial.usage.output_tokens or 0
-
-                span_initial.set_outputs({
-                    "answer": answer_initial,
-                    "duration": duration_initial,
-                    "input_tokens": tokens_in_initial,
-                    "output_tokens": tokens_out_initial,
-                })
-                span_initial.set_status("OK")
-
-                total_input_tokens += tokens_in_initial
-                total_output_tokens += tokens_out_initial
-                total_duration += duration_initial
-
-                logger.info(f"[MERGE] Config initial completed in {duration_initial:.1f}s")
-
-            except Exception as e:
-                logger.error(f"[MERGE] Config initial failed: {e}")
-                span_initial.set_status("ERROR")
-                answer_initial = f"ERROR: {e}"
-                thoughts_initial = ""
-                duration_initial = time.time() - start_initial
-                tokens_in_initial = 0
-                tokens_out_initial = 0
-
-        # ----------------------------------------------------------------
-        # STEP 2: Run cobbie with initial + created tools
-        # ----------------------------------------------------------------
-        with mlflow.start_span(name="config_created", span_type="CHAIN") as span_created:
-            span_created.set_inputs({"config": "initial+created", "question": question})
-            start_created = time.time()
-
-            try:
-                result_created = cobbie(
-                    user_input=question,
-                    tools=tools_created,
-                    model_path=ifc_path,
-                    client=args.client,
-                )
-                duration_created = time.time() - start_created
-
-                if result_created.error:
-                    raise RuntimeError(result_created.error.error_message)
-
-                answer_created = result_created.answer.answer if result_created.answer else ""
-                thoughts_created = result_created.answer.thoughts if result_created.answer else ""
-
-                tokens_in_created = 0
-                tokens_out_created = 0
-                collector_created = result_created.collector
-                if collector_created and hasattr(collector_created, "usage") and collector_created.usage:
-                    tokens_in_created = collector_created.usage.input_tokens or 0
-                    tokens_out_created = collector_created.usage.output_tokens or 0
-
-                span_created.set_outputs({
-                    "answer": answer_created,
-                    "duration": duration_created,
-                    "input_tokens": tokens_in_created,
-                    "output_tokens": tokens_out_created,
-                })
-                span_created.set_status("OK")
-
-                total_input_tokens += tokens_in_created
-                total_output_tokens += tokens_out_created
-                total_duration += duration_created
-
-                logger.info(f"[MERGE] Config created completed in {duration_created:.1f}s")
-
-            except Exception as e:
-                logger.error(f"[MERGE] Config created failed: {e}")
-                span_created.set_status("ERROR")
-                answer_created = f"ERROR: {e}"
-                thoughts_created = ""
-                duration_created = time.time() - start_created
-                tokens_in_created = 0
-                tokens_out_created = 0
-
-        # ----------------------------------------------------------------
-        # STEP 3: Run merger cobbie to consolidate answers
-        # ----------------------------------------------------------------
-        with mlflow.start_span(name="merger", span_type="CHAIN") as span_merger:
-            merge_prompt = build_merge_prompt(
-                original_question=question,
-                answer_initial=answer_initial,
-                thoughts_initial=thoughts_initial,
-                answer_created=answer_created,
-                thoughts_created=thoughts_created,
-            )
-            span_merger.set_inputs({
-                "config": "merger",
-                "merge_prompt_length": len(merge_prompt),
-                "answer_initial": answer_initial[:200],
-                "answer_created": answer_created[:200],
-            })
-            start_merger = time.time()
-
-            try:
-                result_merger = cobbie(
-                    user_input=merge_prompt,
-                    tools=tools_merger,
-                    model_path=ifc_path,
-                    client=args.client,
-                )
-                duration_merger = time.time() - start_merger
-
-                if result_merger.error:
-                    raise RuntimeError(result_merger.error.error_message)
-
-                merged_answer = result_merger.answer.answer if result_merger.answer else ""
-                merged_thoughts = result_merger.answer.thoughts if result_merger.answer else ""
-
-                tokens_in_merger = 0
-                tokens_out_merger = 0
-                collector_merger = result_merger.collector
-                if collector_merger and hasattr(collector_merger, "usage") and collector_merger.usage:
-                    tokens_in_merger = collector_merger.usage.input_tokens or 0
-                    tokens_out_merger = collector_merger.usage.output_tokens or 0
-
-                span_merger.set_outputs({
-                    "answer": merged_answer,
-                    "duration": duration_merger,
-                    "input_tokens": tokens_in_merger,
-                    "output_tokens": tokens_out_merger,
-                })
-                span_merger.set_status("OK")
-
-                total_input_tokens += tokens_in_merger
-                total_output_tokens += tokens_out_merger
-                total_duration += duration_merger
-
-                logger.info(f"[MERGE] Merger completed in {duration_merger:.1f}s")
-
-            except Exception as e:
-                logger.error(f"[MERGE] Merger failed: {e}")
-                span_merger.set_status("ERROR")
-                merged_answer = f"ERROR: {e}"
-                merged_thoughts = ""
-                duration_merger = time.time() - start_merger
-                tokens_in_merger = 0
-                tokens_out_merger = 0
-
-        # ----------------------------------------------------------------
-        # STEP 4: Verify merged answer
-        # ----------------------------------------------------------------
-        classification = None
-        justification = None
-        abstention = None
-        faithfulness = None
-        completeness = None
-        transparency = None
-        relevance = None
-        verifier_input_tokens = 0
-        verifier_output_tokens = 0
-        verifier_duration = 0.0
-
-        if merged_answer and not merged_answer.startswith("ERROR:") and ground_truth:
-            verifier_start = time.time()
-            verifier_result, verifier_collector = verify_answer(
-                question=question,
-                category=category,
-                ground_truth=ground_truth,
-                system_response=merged_answer,
-            )
-            verifier_duration = time.time() - verifier_start
-
-            if isinstance(verifier_result, AgentError):
-                logger.error(f"Merged verification failed: {verifier_result.error_message}")
-                classification = "error"
-                justification = f"Verification error: {verifier_result.error_message}"
-            else:
-                classification = derive_binary_classification(verifier_result)
-                abstention = verifier_result.abstention
-                faithfulness = verifier_result.faithfulness.value
-                completeness = verifier_result.completeness.value
-                transparency = verifier_result.transparency.value
-                relevance = verifier_result.relevance.value
-                justification = verifier_result.justification
-
-            if verifier_collector and hasattr(verifier_collector, "usage") and verifier_collector.usage:
-                verifier_input_tokens = verifier_collector.usage.input_tokens or 0
-                verifier_output_tokens = verifier_collector.usage.output_tokens or 0
-
-            total_input_tokens += verifier_input_tokens
-            total_output_tokens += verifier_output_tokens
-            total_duration += verifier_duration
-
-        # Check if answers agreed
-        answers_agreed = answer_initial.strip() == answer_created.strip()
-
-        # Log all metrics
-        mlflow.log_metrics({
-            # Per-config metrics
-            "config_initial_duration": duration_initial,
-            "config_initial_input_tokens": tokens_in_initial,
-            "config_initial_output_tokens": tokens_out_initial,
-            "config_created_duration": duration_created,
-            "config_created_input_tokens": tokens_in_created,
-            "config_created_output_tokens": tokens_out_created,
-            "merger_duration": duration_merger,
-            "merger_input_tokens": tokens_in_merger,
-            "merger_output_tokens": tokens_out_merger,
-            # Verifier metrics
-            "verifier_duration": verifier_duration,
-            "verifier_input_tokens": verifier_input_tokens,
-            "verifier_output_tokens": verifier_output_tokens,
-            # Totals
-            "total_input_tokens": total_input_tokens,
-            "total_output_tokens": total_output_tokens,
-            "cobbie_duration": total_duration - verifier_duration,
-            "success": 1,
-            "answers_agreed": 1 if answers_agreed else 0,
-        })
-
-        # Log answers as params
-        mlflow.log_params({
-            "answer_initial": answer_initial[:500] if answer_initial else "N/A",
-            "answer_created": answer_created[:500] if answer_created else "N/A",
-            "answer": merged_answer[:500] if merged_answer else "N/A",
-            "classification": classification or "not_evaluated",
-            "justification": justification[:500] if justification else "not_evaluated",
-            "answers_agreed": str(answers_agreed),
-        })
-
-        logger.info(
-            f"[MERGE] Question {question_index + 1} completed: "
-            f"classification={classification}, agreed={answers_agreed}, "
-            f"duration={total_duration:.1f}s"
-        )
-
-        return {
-            "question": question,
-            "ground_truth": ground_truth,
-            "category": category,
-            "status": "success",
-            "answer": merged_answer,
-            "reasoning": merged_thoughts,
-            "execution_time": total_duration,
-            "classification": classification,
-            "justification": justification,
-            "abstention": abstention,
-            "faithfulness": faithfulness,
-            "completeness": completeness,
-            "transparency": transparency,
-            "relevance": relevance,
-            "input_tokens": total_input_tokens,
-            "output_tokens": total_output_tokens,
-            "mlflow_run_id": question_run.info.run_id,
-            # Merge-specific fields
-            "merge_mode": True,
-            "answers_agreed": answers_agreed,
-            "answer_initial": answer_initial,
-            "answer_created": answer_created,
-            "config_initial_duration": duration_initial,
-            "config_created_duration": duration_created,
-            "merger_duration": duration_merger,
-        }
-
-
 def print_tool_metrics_summary():
     """Print summary of tool usage metrics from evaluation."""
     eval_stats = get_all_eval_tool_stats()
@@ -1448,12 +1025,6 @@ Examples:
     )
 
     parser.add_argument(
-        "--merge",
-        action="store_true",
-        help="Enable merging mode: run cobbie with initial tools, then with created tools, then consolidate answers"
-    )
-
-    parser.add_argument(
         "--doc",
         choices=["custom", "context7"],
         default="custom",
@@ -1478,21 +1049,8 @@ Examples:
         print(f"Error: --start ({args.start}) exceeds dataset size ({len(DEVSET)})")
         return 1
 
-    # Validate mutually exclusive options
-    if args.merge and not args.tools:
-        # Merge mode requires tools; use default set
-        args.tools = ["initial", "created"]
-
-    if args.system == "baseline" and args.merge:
-        print("Error: --system baseline and --merge are mutually exclusive")
-        return 1
-
     # Validate and deduplicate tools argument
-    if args.merge:
-        # In merge mode, we use both initial and created tools (hardcoded)
-        args.tools = ["initial", "created"]
-        logger.info("Merge mode: using initial and created tool directories")
-    elif not args.tools:
+    if not args.tools:
         args.tools = []
     else:
         # Remove duplicates while preserving order
@@ -1552,36 +1110,9 @@ Examples:
     if args.system == "baseline":
         # Baseline mode: no tools needed
         tools_dict = {}
-        tools_initial = {}
-        tools_created = {}
-        tools_merger = {}
         logger.info("[BASELINE] No tools loaded (static summary mode)")
-    elif args.merge:
-        # Merge mode: load separate tool sets for each config
-        try:
-            tools_initial = get_tools(
-                directories=["initial"],
-                allow_created_deletion=True
-            )
-            tools_created = get_tools(
-                directories=["initial", "created"],
-                allow_created_deletion=True
-            )
-            tools_merger = get_tools(
-                directories=MERGER_TOOL_DIRECTORIES,
-                allow_created_deletion=True
-            )
-            logger.info(f"[MERGE] Loaded tools - initial: {len(tools_initial)}, created: {len(tools_created)}, merger: {len(tools_merger)}")
-            # For compatibility with non-merge code paths
-            tools_dict = tools_merger
-        except Exception as e:
-            logger.error(f"Failed to load tools for merge mode: {e}")
-            return 1
     elif not args.tools:
         tools_dict = {}
-        tools_initial = {}
-        tools_created = {}
-        tools_merger = {}
         logger.info("No tools loaded")
         assert len(tools_dict) == 0, f"BUG: no --tools but tools_dict has {len(tools_dict)} tools: {list(tools_dict.keys())}"
     else:
@@ -1593,10 +1124,6 @@ Examples:
                 allow_created_deletion=True
             )
             logger.info(f"Loaded {len(tools_dict)} total tools from directories: {', '.join(args.tools)}")
-            # Not used in non-merge mode, but set for type consistency
-            tools_initial = tools_dict
-            tools_created = tools_dict
-            tools_merger = tools_dict
         except Exception as e:
             logger.error(f"Failed to load tools: {e}")
             return 1
@@ -1614,8 +1141,6 @@ Examples:
     else:
         if args.system == "baseline":
             mode_suffix = "_BASELINE"
-        elif args.merge:
-            mode_suffix = "_MERGE"
         else:
             mode_suffix = ""
         run_name = f"Evaluation{mode_suffix}_{datetime.now().strftime('%Y-%m-%d-%H-%M-%S')}"
@@ -1637,13 +1162,8 @@ Examples:
                 "system": args.system,
                 "tools": ", ".join(tools_dict.keys()) if tools_dict else "none",
                 "tools_count": len(tools_dict),
-                "merge_mode": str(args.merge),
                 "doc_backend": args.doc,
             }
-            if args.merge:
-                params["tools_initial_count"] = len(tools_initial)
-                params["tools_created_count"] = len(tools_created)
-                params["tools_merger_count"] = len(tools_merger)
             mlflow.log_params(params)
 
         # Get previous metrics if continuing
@@ -1722,8 +1242,6 @@ Examples:
         model_name = CLIENT_INFO.get(args.client, {"model": args.client})["model"]
         if args.system == "baseline":
             desc = f"Evaluating Baseline QA {model_name}"
-        elif args.merge:
-            desc = f"Evaluating COBBIE {model_name} [MERGE]"
         else:
             desc = f"Evaluating COBBIE {model_name}"
 
@@ -1733,15 +1251,6 @@ Examples:
                     result = process_question_baseline(
                         question_data=question_data,
                         question_index=args.start + i,
-                        args=args,
-                    )
-                elif args.merge:
-                    result = process_question_merged(
-                        question_data=question_data,
-                        question_index=args.start + i,
-                        tools_initial=tools_initial,
-                        tools_created=tools_created,
-                        tools_merger=tools_merger,
                         args=args,
                     )
                 else:
@@ -1779,7 +1288,6 @@ Examples:
         mlflow.set_tag("system", args.system)
         mlflow.set_tag("total_evaluation_time", total_evaluation_time)
         mlflow.set_tag("individual_question_traces", "true")
-        mlflow.set_tag("merge_mode", str(args.merge))
 
         logger.info("Evaluation completed successfully")
         logger.info(f"Success rate: {results_summary['success_rate']:.3f}")

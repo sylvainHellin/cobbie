@@ -6,7 +6,7 @@
 # Usage:
 #   fish scripts/run_eval_batched.fish --nb-samples 20
 #   fish scripts/run_eval_batched.fish --nb-samples 20 --start 5 --batch-size 3
-#   fish scripts/run_eval_batched.fish --nb-samples 20 --client GLM_4_7 --merge --doc context7
+#   fish scripts/run_eval_batched.fish --nb-samples 20 --client GLM_4_7 --doc context7
 #
 #   # Continue an existing run (skips the first-question step):
 #   fish scripts/run_eval_batched.fish --nb-samples 20 --continue <run_id>
