@@ -35,6 +35,10 @@
 - **Tool Pruning**: `uv run scripts/prune_tools.py --target 24 --dry-run`
   - Prune created tools to a target count based on deletion scores
   - Supports `--scoring linear|exponential`, `--grace-period`, `--alpha`, `--beta`, `--yes`
+- **Retry Abstained**: `fish scripts/retry_abstained_batched.fish --parent-run-id <ID>`
+  - Retries abstained evaluation questions (e.g. from 429 errors) in batches
+  - 4 phases: `identify` → `retry` → `cleanup` → `recalculate`
+  - Fish wrapper automates identify + retry; cleanup and recalculate are run manually after verification
 
 ## Architecture Overview
 

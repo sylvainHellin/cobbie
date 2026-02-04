@@ -35,6 +35,7 @@ mlartifacts/
 logs.log
 .cursor
 scripts/text_count_tokens.txt
+.claude/*
 
 # External cloned repos (for docs indexing)
 src/docs_indexer/external/
