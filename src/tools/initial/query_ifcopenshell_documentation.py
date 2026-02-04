@@ -83,9 +83,6 @@ def query_ifcopenshell_docs(query: str) -> str:
     Returns:
         str: The documentation text as a string
 
-    Side Effect:
-        print the retrieved documentation
-
     Example:
         >>> query_ifcopenshell_docs("How to access element properties")
     """
@@ -112,7 +109,6 @@ def query_ifcopenshell_docs(query: str) -> str:
             "result_tokens": result_tokens,
         })
 
-        print(result)
         return result
 
 
@@ -120,3 +116,4 @@ if __name__ == "__main__":
     doc_backend = os.getenv("DOC_BACKEND", "custom")
     print(f"Using backend: {doc_backend}")
     docs = query_ifcopenshell_docs("get bounding box element")
+    print(docs)
