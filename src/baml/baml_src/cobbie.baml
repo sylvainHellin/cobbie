@@ -25,7 +25,9 @@ function Cobbie(
   Available Helper Functions:
   {{ available_tools }}
 
+  {% if "query_ifcopenshell_docs" in available_tools %}
   NOTE: You do NOT know the ifcopenshell API. ALWAYS use `query_ifcopenshell_docs` before writing code that calls ifcopenshell methods directly. You may query docs and execute code in the same iteration.
+  {% endif %}
   {% if previous_attempts %}
 
   ## PREVIOUS ATTEMPTS
@@ -36,7 +38,7 @@ function Cobbie(
   ## EXPLORATION APPROACH
 
   - Prefer helper functions over direct ifcopenshell calls whenever possible.
-  - Before using ifcopenshell directly, ALWAYS query_ifcopenshell_docs first (see tool above).
+  {% if "query_ifcopenshell_docs" in available_tools %}- Before using ifcopenshell directly, ALWAYS query_ifcopenshell_docs first (see tool above).{% endif %}
   - Thoroughly explore the BIM model before answering: check all relevant element types, properties, Psets, and ePsets as needed for the question.
   - Pay careful attention to the specific element types, properties, and scope requested in the question.
 

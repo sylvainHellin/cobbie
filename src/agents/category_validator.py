@@ -3,7 +3,6 @@ Agent that validate the categories for QA pairs in the dataset.
 Validates that questions are correctly categorized according to the 4-category taxonomy.
 """
 
-import json
 import time
 
 import mlflow
@@ -13,6 +12,7 @@ from loguru import logger
 from src.baml.baml_client import b
 from src.db.models import IfcBench
 from src.util import setup_logger
+from src.util.extract_raw_prompt import extract_raw_prompt
 
 setup_logger()
 
@@ -58,91 +58,7 @@ def validate_category(
             )
 
             # Extract raw prompt from collector
-            raw_prompt = None
-            try:
-                if collector.last and collector.last.calls:
-                    first_call = collector.last.calls[0]
-
-                    if hasattr(first_call, "http_request") and first_call.http_request:
-                        http_body = first_call.http_request.body
-
-                        # Try text method first
-                        if hasattr(http_body, "text"):
-                            try:
-                                body_text = http_body.text()
-                                if body_text:
-                                    # Try to parse as JSON to extract messages
-                                    try:
-                                        body_json = json.loads(body_text)
-                                        if (
-                                            isinstance(body_json, dict)
-                                            and "messages" in body_json
-                                        ):
-                                            messages = body_json["messages"]
-                                            if messages and len(messages) > 0:
-                                                # Get the system message content
-                                                for msg in messages:
-                                                    if msg.get("role") == "system":
-                                                        content = msg.get("content", "")
-                                                        if (
-                                                            isinstance(content, list)
-                                                            and len(content) > 0
-                                                        ):
-                                                            raw_prompt = content[0].get(
-                                                                "text", ""
-                                                            )
-                                                        elif isinstance(content, str):
-                                                            raw_prompt = content
-                                                        break
-                                        else:
-                                            # If no messages structure, use the whole text
-                                            raw_prompt = body_text
-                                    except json.JSONDecodeError:
-                                        # If not JSON, use the raw text
-                                        raw_prompt = body_text
-                            except Exception:
-                                pass
-
-                        # Try json method if text didn't work
-                        if not raw_prompt and hasattr(http_body, "json"):
-                            try:
-                                body_json = http_body.json()
-                                if (
-                                    isinstance(body_json, dict)
-                                    and "messages" in body_json
-                                ):
-                                    messages = body_json["messages"]
-                                    if messages and len(messages) > 0:
-                                        # Get the system message content
-                                        for msg in messages:
-                                            if msg.get("role") == "system":
-                                                content = msg.get("content", "")
-                                                if (
-                                                    isinstance(content, list)
-                                                    and len(content) > 0
-                                                ):
-                                                    raw_prompt = content[0].get(
-                                                        "text", ""
-                                                    )
-                                                elif isinstance(content, str):
-                                                    raw_prompt = content
-                                                break
-                                elif isinstance(body_json, str):
-                                    raw_prompt = body_json
-                            except Exception:
-                                pass
-
-                        # Try raw method as last resort
-                        if not raw_prompt and hasattr(http_body, "raw"):
-                            try:
-                                body_raw = http_body.raw()
-                                if isinstance(body_raw, bytes):
-                                    body_raw = body_raw.decode("utf-8")
-                                raw_prompt = body_raw
-                            except Exception:
-                                pass
-            except Exception as e:
-                logger.warning(f"Could not extract raw prompt: {e}")
+            raw_prompt = extract_raw_prompt(collector)
 
             # Parse validated category to integer
             try:

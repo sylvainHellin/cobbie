@@ -14,6 +14,7 @@ from loguru import logger
 
 from src.baml.baml_client.types import CodeAction, FinalAnswer
 from src.util.code_act_inner_loop import _code_act_iter, _execute_code_action
+from src.util.extract_raw_prompt import extract_raw_prompt
 from src.util.generate_tools_docs import generate_tools_docs
 from src.util.python_executor import setup_interpreter
 
@@ -26,7 +27,7 @@ def _cobbie(
     add_code_prefix: bool = False,
     client: str = "GLM_4_7",
     **kwargs,
-) -> Tuple[FinalAnswer, str]:
+) -> Tuple[FinalAnswer, str, str | None]:
     """
     Main COBBIE function for BIM question answering.
 
@@ -42,8 +43,9 @@ def _cobbie(
         **kwargs: Additional arguments passed to BAML function
 
     Returns:
-        Tuple of (FinalAnswer, execution_history) where execution_history contains
-        the complete iteration-by-iteration trace of thoughts, code, and results
+        Tuple of (FinalAnswer, execution_history, rendered_prompt) where execution_history
+        contains the complete iteration-by-iteration trace of thoughts, code, and results,
+        and rendered_prompt is the system prompt from the first LLM call.
     """
     logger.info(f"Answering question: {question[:100]}...")
 
@@ -61,6 +63,9 @@ def _cobbie(
 
     # Track schema validation errors for retry logic
     schema_error_occurred = False
+
+    # Rendered system prompt (captured from the first successful LLM call)
+    rendered_prompt: str | None = None
 
     # Create interpreter ONCE for this question (reused across all iterations)
     interpreter = setup_interpreter(model_path, tools)
@@ -148,6 +153,10 @@ Please retry with the correct format.
                 baml_options = kwargs.get("baml_options", {})
                 collector = baml_options.get("collector")
 
+                # Capture rendered system prompt from the first successful LLM call
+                if iteration == 0 and collector and rendered_prompt is None:
+                    rendered_prompt = extract_raw_prompt(collector)
+
                 if collector and collector.last and collector.last.usage:
                     usage = collector.last.usage
                     iteration_input_tokens = usage.input_tokens or 0
@@ -225,7 +234,7 @@ Please retry with the correct format.
                 )
                 iteration_span.set_status("OK")
 
-                return result, previous_attempts
+                return result, previous_attempts, rendered_prompt
 
             elif isinstance(result, CodeAction):
                 # Update the previous results
@@ -323,7 +332,7 @@ Please retry with the correct format.
         )
         final_span.set_status("OK")
 
-        return final_answer, previous_attempts
+        return final_answer, previous_attempts, rendered_prompt
 
 
 def cobbie(
@@ -406,7 +415,7 @@ def cobbie(
 
             # Execute COBBIE and measure time within the main span context
             start_time = time.time()
-            final_answer, execution_history = _cobbie(
+            final_answer, execution_history, rendered_prompt = _cobbie(
                 question=user_input,
                 tools=tools,
                 max_iterations=max_iterations,
@@ -498,6 +507,7 @@ def cobbie(
                     "collector.calls_count": len(collector.logs)
                     if collector and hasattr(collector, "logs")
                     else 0,
+                    "system_prompt": rendered_prompt or "",
                 }
             )
 
