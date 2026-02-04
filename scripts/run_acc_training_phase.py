@@ -47,6 +47,7 @@ from src.acc.guid_comparison import (
 from src.config import ACC_TOOLS_PATH, get_boilerplate, get_library_docs
 from src.tools.initial import classify_spaces, query_ifcopenshell_docs
 from src.util import setup_logger, save_new_tool
+from src.util.mlflow_utils import determine_run_id
 
 # Tools available to ACC tools at execution time (same as during creation)
 ACC_EXECUTION_TOOLS = {
@@ -388,6 +389,7 @@ def handle_create_tool(ctx: ACCContext) -> Tuple[ACCTrainingState, ACCContext]:
             no_classification=ctx.no_classification,
             available_tools_docs=ctx.available_tools_docs,
             available_library_docs=ctx.available_library_docs,
+            retry_count=ctx.retry_count,
         )
 
         ctx.create_tool_result = result
@@ -1119,6 +1121,13 @@ def main():
         "--no-classification", action="store_true",
         help="Disable the classify_spaces tool during tool creation"
     )
+    parser.add_argument(
+        "--continue",
+        dest="continue_run",
+        type=str,
+        required=False,
+        help="Continue specific MLflow run ID",
+    )
     args = parser.parse_args()
 
     # Compute feature flags
@@ -1145,7 +1154,7 @@ def main():
     if args.rules:
         rules_to_process = [(all_rules.index(r), r) for r in args.rules if r in all_rules]
     else:
-        end_idx = args.end if args.end else len(all_rules)
+        end_idx = min(args.end, len(all_rules)) if args.end else len(all_rules)
         rules_to_process = [(i, all_rules[i]) for i in range(args.start, end_idx)]
 
     logger.info(f"Processing {len(rules_to_process)} rules")
@@ -1154,20 +1163,29 @@ def main():
     mlflow.set_tracking_uri("http://127.0.0.1:5000")
     mlflow.set_experiment("ACC_Training_v2")
 
-    run_name = f"ACC_TRAIN_{datetime.now().strftime('%Y-%m-%d-%H-%M-%S')}"
+    # Determine run ID and name
+    if args.continue_run:
+        run_id = determine_run_id(args.continue_run)
+        run_name = None
+        logger.info(f"Continuing existing MLflow run: {run_id}")
+    else:
+        run_id = None
+        run_name = f"ACC_TRAIN_{datetime.now().strftime('%Y-%m-%d-%H-%M-%S')}"
+        logger.info(f"Creating new MLflow run: {run_name}")
 
-    with mlflow.start_run(run_name=run_name):
-        mlflow.log_params({
-            "training_models": ",".join(train_models),
-            "validation_models": ",".join(validate_models),
-            "test_models": ",".join(test_models),
-            "max_retries": args.max_retries,
-            "max_iterations": args.max_iterations,
-            "rules_count": len(rules_to_process),
-            "no_trimesh": no_trimesh,
-            "no_shapely": no_shapely,
-            "no_classification": no_classification,
-        })
+    with mlflow.start_run(run_id=run_id, run_name=run_name):
+        if run_id is None:
+            mlflow.log_params({
+                "training_models": ",".join(train_models),
+                "validation_models": ",".join(validate_models),
+                "test_models": ",".join(test_models),
+                "max_retries": args.max_retries,
+                "max_iterations": args.max_iterations,
+                "rules_count": len(rules_to_process),
+                "no_trimesh": no_trimesh,
+                "no_shapely": no_shapely,
+                "no_classification": no_classification,
+            })
 
         results = []
 

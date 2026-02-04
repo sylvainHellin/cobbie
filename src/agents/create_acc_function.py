@@ -133,6 +133,7 @@ def _create_helper_function(
     no_classification: bool = False,
     available_tools_docs: Optional[str] = None,
     available_library_docs: Optional[str] = None,
+    retry_count: int = 0,
     **kwargs,
 ) -> Tuple[NewHelperFunction, str]:
     """
@@ -305,7 +306,7 @@ def _create_helper_function(
 
                 # Log BAML call metrics
                 mlflow.log_metric(
-                    f"latency_llm_call_{iteration + 1}", iteration_duration
+                    f"latency_llm_call_{retry_count}_{iteration + 1}", iteration_duration
                 )
 
                 llm_span.set_attributes(
@@ -506,6 +507,7 @@ def create_helper_function(
     available_tools_docs: Optional[str] = None,
     available_library_docs: Optional[str] = None,
     initial_previous_attempts: Optional[str] = None,
+    retry_count: int = 0,
     **kwargs,
 ) -> Tuple[NewHelperFunction, Collector, str]:
     """
@@ -598,6 +600,7 @@ def create_helper_function(
                 no_classification=no_classification,
                 available_tools_docs=available_tools_docs,
                 available_library_docs=available_library_docs,
+                retry_count=retry_count,
                 **kwargs,
             )
             execution_time = time.time() - start_time
@@ -639,13 +642,13 @@ def create_helper_function(
             # Log metrics to MLflow
             mlflow.log_metrics(
                 {
-                    "creator_input_tokens": input_tokens,
-                    "creator_output_tokens": output_tokens,
-                    "creator_total_tokens": total_tokens,
-                    "creator_last_call_tokens": last_call_tokens,
-                    "creator_execution_time": execution_time,
-                    "creator_success": 1 if final_result.success else 0,
-                    "creator_calls_count": len(collector.logs)
+                    f"creator_input_tokens_{retry_count}": input_tokens,
+                    f"creator_output_tokens_{retry_count}": output_tokens,
+                    f"creator_total_tokens_{retry_count}": total_tokens,
+                    f"creator_last_call_tokens_{retry_count}": last_call_tokens,
+                    f"creator_execution_time_{retry_count}": execution_time,
+                    f"creator_success_{retry_count}": 1 if final_result.success else 0,
+                    f"creator_calls_count_{retry_count}": len(collector.logs)
                     if collector and hasattr(collector, "logs")
                     else 0,
                 }
@@ -680,10 +683,6 @@ def create_helper_function(
             logger.debug(
                 f"Helper function creator completed. Tokens: {total_tokens}, Time: {execution_time:.2f}s, Success: {final_result.success}"
             )
-
-        # Flush traces outside the span context to ensure all spans
-        # (including long-running ones) are persisted to MLflow.
-        mlflow.flush_trace_async_logging()
 
         return final_result, collector, execution_history
 
