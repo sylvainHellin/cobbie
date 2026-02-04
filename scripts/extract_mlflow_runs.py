@@ -16,7 +16,7 @@ import sys
 from datetime import datetime, timezone
 from pathlib import Path
 
-DB_PATH = Path(__file__).resolve().parent.parent / "mlflow.sqlite"
+DB_PATH = Path(__file__).resolve().parent.parent / "acc.sqlite"
 
 
 def ms_to_iso(ms: int | None) -> str | None:
@@ -118,6 +118,52 @@ def extract_runs(
     return results
 
 
+_SPLITS = ("training", "validation", "test")
+_SUMMARY_KEYS = ("f1_aggregated", "f1_avg", "precision", "recall", "tp", "fp", "fn")
+
+
+def _extract_split_metrics(metrics: dict[str, object], split: str) -> dict[str, object] | None:
+    """Extract metrics for a single split (training/validation/test).
+
+    Returns None if the split has no metrics at all.
+    """
+    prefix = f"{split}_"
+    out: dict[str, object] = {}
+    for key, value in metrics.items():
+        if not key.startswith(prefix):
+            continue
+        short = key[len(prefix) :]
+        # Keep the well-known keys + any per-model f1/precision/recall scores
+        if short in _SUMMARY_KEYS or short.startswith(("f1_", "precision_", "recall_")):
+            out[short] = value
+    return out or None
+
+
+def build_summary(results: list[dict[str, object]]) -> list[dict[str, object]]:
+    """Build a flat summary of nested runs that have evaluation metrics."""
+    summary: list[dict[str, object]] = []
+    for parent in results:
+        parent_name = parent.get("run_name", "")
+        for nested in parent.get("nested_runs", []):  # type: ignore[union-attr]
+            metrics: dict[str, object] = nested.get("metrics", {})
+            splits: dict[str, object] = {}
+            for split in _SPLITS:
+                split_data = _extract_split_metrics(metrics, split)
+                if split_data is not None:
+                    splits[split] = split_data
+            if not splits:
+                continue
+            summary.append(
+                {
+                    "run_name": nested.get("run_name"),
+                    "parent_run": parent_name,
+                    "status": nested.get("status"),
+                    **splits,
+                }
+            )
+    return summary
+
+
 def main() -> None:
     parser = argparse.ArgumentParser(
         description="Extract MLflow run data from SQLite to JSON."
@@ -168,9 +214,16 @@ def main() -> None:
     conn.close()
 
     output = json.dumps(results, indent=2, ensure_ascii=False)
+    summary = build_summary(results)
+
     if args.output:
-        Path(args.output).write_text(output + "\n")
-        print(f"Written to {args.output}", file=sys.stderr)
+        out_path = Path(args.output)
+        out_path.write_text(output + "\n")
+        print(f"Written to {out_path}", file=sys.stderr)
+
+        summary_path = out_path.with_name(f"{out_path.stem}_summary{out_path.suffix}")
+        summary_path.write_text(json.dumps(summary, indent=2, ensure_ascii=False) + "\n")
+        print(f"Summary written to {summary_path}", file=sys.stderr)
     else:
         print(output)
 

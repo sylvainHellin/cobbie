@@ -10,3 +10,4 @@ TODOs:
 - Remove other_bim_models_for_testing from the create_helper_function.baml and debug_helper_function.baml
 - Check if tools were preloaded
 - Allow nested GUIDs in the ground truth generation and generated tools
+- Query docs for Trimesh + shapely

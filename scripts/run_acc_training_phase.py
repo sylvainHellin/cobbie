@@ -28,7 +28,7 @@ import time
 from dataclasses import dataclass, field
 from datetime import datetime
 from enum import Enum, auto
-from typing import Optional, Tuple
+from typing import Any, Optional, Tuple
 
 import mlflow
 from baml_py.baml_py import Collector
@@ -145,6 +145,11 @@ class ACCContext:
     # Best tool tracking
     best_tool_implementation: str = ""
     best_tool_f1: float = 0.0
+    best_training_f1: float = 0.0  # secondary criterion when all val F1 = 0
+    best_retry_index: int = 0
+
+    # Per-retry snapshots for metric logging
+    retry_snapshots: list[dict[str, Any]] = field(default_factory=list)
 
     # Feature flags / boilerplate
     boilerplate: Optional[str] = None
@@ -600,11 +605,35 @@ def handle_validate_tool(ctx: ACCContext) -> Tuple[ACCTrainingState, ACCContext]
             f"F1_agg={val_f1:.3f}, F1_avg={ctx.validation_result_avg_f1:.3f}"
         )
 
-        # Track best tool by aggregated validation F1
+        # Snapshot this attempt's metrics for per-retry logging
+        _, _, create_tokens = extract_token_metrics(ctx.create_tool_collector)
+        _, _, assess_tokens = extract_token_metrics(ctx.assessment_collector)
+        ctx.retry_snapshots.append({
+            "training_results_per_model": dict(ctx.training_results_per_model),
+            "training_result_aggregated": ctx.training_result_aggregated,
+            "training_result_avg_f1": ctx.training_result_avg_f1,
+            "validation_results_per_model": dict(ctx.validation_results_per_model),
+            "validation_result_aggregated": ctx.validation_result_aggregated,
+            "validation_result_avg_f1": ctx.validation_result_avg_f1,
+            "create_tool_duration": ctx.create_tool_duration,
+            "create_tool_tokens": create_tokens,
+            "validate_duration": ctx.validate_duration,
+            "assessment_duration": ctx.assessment_duration,
+            "assessment_tokens": assess_tokens,
+        })
+        attempt_idx = len(ctx.retry_snapshots) - 1
+
+        # Track best tool: primary = validation F1, fallback = training F1
         if val_f1 > ctx.best_tool_f1:
             ctx.best_tool_f1 = val_f1
             ctx.best_tool_implementation = ctx.tool_implementation
+            ctx.best_retry_index = attempt_idx
             logger.info(f"New best tool! Aggregated validation F1={ctx.best_tool_f1:.3f}")
+        elif val_f1 == 0 and ctx.best_tool_f1 == 0 and agg_f1 > ctx.best_training_f1:
+            ctx.best_training_f1 = agg_f1
+            ctx.best_tool_implementation = ctx.tool_implementation
+            ctx.best_retry_index = attempt_idx
+            logger.info(f"New best tool (by training F1 fallback)! Training F1={agg_f1:.3f}")
 
         # Check for perfect validation match
         if val_f1 == 1.0:
@@ -877,79 +906,127 @@ def process_state(state: ACCTrainingState, ctx: ACCContext) -> Tuple[ACCTraining
         return ACCTrainingState.ERROR, ctx
 
 
+def _emit_split_metrics(
+    metrics: dict[str, float],
+    prefix: str,
+    suffix: str,
+    aggregated: Optional[GUIDComparisonResult],
+    avg_f1: float,
+    per_model: dict[str, GUIDComparisonResult],
+) -> None:
+    """Emit aggregated + per-model metrics for one data split (training/validation/test)."""
+    if aggregated:
+        metrics[f"{prefix}_f1_aggregated{suffix}"] = aggregated.f1
+        metrics[f"{prefix}_precision_aggregated{suffix}"] = aggregated.precision
+        metrics[f"{prefix}_recall_aggregated{suffix}"] = aggregated.recall
+        metrics[f"{prefix}_f1_avg{suffix}"] = avg_f1
+        metrics[f"{prefix}_tp{suffix}"] = aggregated.tp
+        metrics[f"{prefix}_fp{suffix}"] = aggregated.fp
+        metrics[f"{prefix}_fn{suffix}"] = aggregated.fn
+
+    for model_name, result in per_model.items():
+        metrics[f"{prefix}_f1_{model_name}{suffix}"] = result.f1
+        metrics[f"{prefix}_precision_{model_name}{suffix}"] = result.precision
+        metrics[f"{prefix}_recall_{model_name}{suffix}"] = result.recall
+
+
+def _emit_snapshot_metrics(
+    metrics: dict[str, float],
+    snap: dict[str, Any],
+    suffix: str,
+    include_duration_tokens: bool = True,
+) -> None:
+    """Write metrics from a snapshot into *metrics*.
+
+    When *suffix* is "" the keys are unsuffixed (best-retry / fallback).
+    When *suffix* is "_0", "_1", etc. they are per-retry.
+    Set *include_duration_tokens* to False to skip duration/token keys
+    (useful when unsuffixed cumulative totals are already set).
+    """
+    if include_duration_tokens:
+        metrics[f"create_tool_duration{suffix}"] = snap["create_tool_duration"]
+        metrics[f"create_tool_tokens{suffix}"] = snap["create_tool_tokens"]
+        metrics[f"validate_duration{suffix}"] = snap["validate_duration"]
+        metrics[f"assessment_duration{suffix}"] = snap["assessment_duration"]
+        metrics[f"assessment_tokens{suffix}"] = snap["assessment_tokens"]
+
+    for prefix in ("training", "validation"):
+        _emit_split_metrics(
+            metrics, prefix, suffix,
+            snap[f"{prefix}_result_aggregated"],
+            snap[f"{prefix}_result_avg_f1"],
+            snap[f"{prefix}_results_per_model"],
+        )
+
+
 def log_rule_metrics(ctx: ACCContext) -> dict:
     """Log metrics for a single rule to MLflow."""
-    # Extract token metrics
-    _, _, create_total = extract_token_metrics(ctx.create_tool_collector)
-    _, _, assess_total = extract_token_metrics(ctx.assessment_collector)
+    # Cumulative durations and tokens across all retries
+    cum_create_duration = sum(s["create_tool_duration"] for s in ctx.retry_snapshots)
+    cum_create_tokens = sum(s["create_tool_tokens"] for s in ctx.retry_snapshots)
+    cum_validate_duration = sum(s["validate_duration"] for s in ctx.retry_snapshots)
+    cum_assess_duration = sum(s["assessment_duration"] for s in ctx.retry_snapshots)
+    cum_assess_tokens = sum(s["assessment_tokens"] for s in ctx.retry_snapshots)
+
+    # Fallback to ctx fields when no snapshots exist (error before validation)
+    if not ctx.retry_snapshots:
+        _, _, create_total = extract_token_metrics(ctx.create_tool_collector)
+        _, _, assess_total = extract_token_metrics(ctx.assessment_collector)
+        cum_create_duration = ctx.create_tool_duration
+        cum_create_tokens = create_total
+        cum_validate_duration = ctx.validate_duration
+        cum_assess_duration = ctx.assessment_duration
+        cum_assess_tokens = assess_total
+
+    cum_total_tokens = cum_create_tokens + cum_assess_tokens
+    cum_total_duration = cum_create_duration + cum_validate_duration + cum_assess_duration + ctx.test_duration
 
     metrics: dict[str, float] = {
-        "create_tool_duration": ctx.create_tool_duration,
-        "create_tool_tokens": create_total,
-        "validate_duration": ctx.validate_duration,
-        "assessment_duration": ctx.assessment_duration,
-        "assessment_tokens": assess_total,
+        "create_tool_duration": cum_create_duration,
+        "create_tool_tokens": cum_create_tokens,
+        "validate_duration": cum_validate_duration,
+        "assessment_duration": cum_assess_duration,
+        "assessment_tokens": cum_assess_tokens,
         "test_duration": ctx.test_duration,
-        "total_tokens": create_total + assess_total,
-        "total_duration": ctx.create_tool_duration + ctx.validate_duration + ctx.assessment_duration + ctx.test_duration,
+        "total_tokens": cum_total_tokens,
+        "total_duration": cum_total_duration,
         "retry_count": ctx.retry_count,
         "tool_saved": 1 if ctx.tool_saved else 0,
         "error": 1 if ctx.error_message else 0,
     }
 
-    # Add aggregated training metrics
-    if ctx.training_result_aggregated:
-        metrics.update({
-            "training_f1_aggregated": ctx.training_result_aggregated.f1,
-            "training_f1_avg": ctx.training_result_avg_f1,
-            "training_tp": ctx.training_result_aggregated.tp,
-            "training_fp": ctx.training_result_aggregated.fp,
-            "training_fn": ctx.training_result_aggregated.fn,
-            "training_precision": ctx.training_result_aggregated.precision,
-            "training_recall": ctx.training_result_aggregated.recall,
-        })
+    # --- Per-retry snapshot metrics (suffixed with _N) + unsuffixed from best retry ---
+    for i, snap in enumerate(ctx.retry_snapshots):
+        suffix = f"_{i}"
+        _emit_snapshot_metrics(metrics, snap, suffix)
 
-    # Per-model training metrics
-    for model_name, result in ctx.training_results_per_model.items():
-        metrics[f"training_f1_{model_name}"] = result.f1
-        metrics[f"training_precision_{model_name}"] = result.precision
-        metrics[f"training_recall_{model_name}"] = result.recall
+    best_snap = ctx.retry_snapshots[ctx.best_retry_index] if ctx.retry_snapshots else None
+    if best_snap:
+        _emit_snapshot_metrics(metrics, best_snap, "", include_duration_tokens=False)
+    elif ctx.training_result_aggregated or ctx.validation_result_aggregated:
+        # Fallback: no snapshots (e.g. error before any validation ran)
+        fallback_snap: dict[str, Any] = {
+            "create_tool_duration": ctx.create_tool_duration,
+            "create_tool_tokens": cum_create_tokens,
+            "validate_duration": ctx.validate_duration,
+            "assessment_duration": ctx.assessment_duration,
+            "assessment_tokens": cum_assess_tokens,
+            "training_result_aggregated": ctx.training_result_aggregated,
+            "training_result_avg_f1": ctx.training_result_avg_f1,
+            "training_results_per_model": ctx.training_results_per_model,
+            "validation_result_aggregated": ctx.validation_result_aggregated,
+            "validation_result_avg_f1": ctx.validation_result_avg_f1,
+            "validation_results_per_model": ctx.validation_results_per_model,
+        }
+        _emit_snapshot_metrics(metrics, fallback_snap, "", include_duration_tokens=False)
 
-    # Aggregated validation metrics
-    if ctx.validation_result_aggregated:
-        metrics.update({
-            "validation_f1_aggregated": ctx.validation_result_aggregated.f1,
-            "validation_precision_aggregated": ctx.validation_result_aggregated.precision,
-            "validation_recall_aggregated": ctx.validation_result_aggregated.recall,
-            "validation_f1_avg": ctx.validation_result_avg_f1,
-            "validation_tp": ctx.validation_result_aggregated.tp,
-            "validation_fp": ctx.validation_result_aggregated.fp,
-            "validation_fn": ctx.validation_result_aggregated.fn,
-        })
-
-    # Per-model validation metrics
-    for model_name, result in ctx.validation_results_per_model.items():
-        metrics[f"validation_f1_{model_name}"] = result.f1
-        metrics[f"validation_precision_{model_name}"] = result.precision
-        metrics[f"validation_recall_{model_name}"] = result.recall
-
-    # Aggregated test metrics
-    if ctx.test_result_aggregated:
-        metrics.update({
-            "test_f1_aggregated": ctx.test_result_aggregated.f1,
-            "test_precision_aggregated": ctx.test_result_aggregated.precision,
-            "test_recall_aggregated": ctx.test_result_aggregated.recall,
-            "test_f1_avg": ctx.test_result_avg_f1,
-            "test_tp": ctx.test_result_aggregated.tp,
-            "test_fp": ctx.test_result_aggregated.fp,
-            "test_fn": ctx.test_result_aggregated.fn,
-        })
-
-    # Per-model test metrics
-    for model_name, result in ctx.test_results_per_model.items():
-        metrics[f"test_f1_{model_name}"] = result.f1
-        metrics[f"test_precision_{model_name}"] = result.precision
-        metrics[f"test_recall_{model_name}"] = result.recall
+    # Test metrics (single run, no per-retry snapshots)
+    _emit_split_metrics(
+        metrics, "test", "",
+        ctx.test_result_aggregated,
+        ctx.test_result_avg_f1,
+        ctx.test_results_per_model,
+    )
 
     # Best tool F1
     metrics["best_f1"] = ctx.best_tool_f1
@@ -967,8 +1044,8 @@ def log_rule_metrics(ctx: ACCContext) -> dict:
         "best_f1": ctx.best_tool_f1,
         "retry_count": ctx.retry_count,
         "error": bool(ctx.error_message),
-        "total_tokens": create_total + assess_total,
-        "total_duration": ctx.create_tool_duration + ctx.validate_duration + ctx.assessment_duration + ctx.test_duration,
+        "total_tokens": cum_total_tokens,
+        "total_duration": cum_total_duration,
     }
 
 
