@@ -8,11 +8,12 @@ from typing import Tuple
 
 import mlflow
 from baml_py.baml_py import Collector
-from loguru import logger
 
 from src.baml.baml_client import b
 from src.baml.baml_client.types import NewToolAnalysis
+from src.schemas.agent_error import AgentError
 from src.util import setup_logger
+from src.util.baml_retry import call_baml_with_retry
 
 setup_logger()
 
@@ -24,7 +25,7 @@ def identify_helper_function(
     llm_provider: str = "zai",
     llm_name: str = "GLM-4.6",
     **kwargs,
-) -> Tuple[NewToolAnalysis, Collector]:
+) -> Tuple[NewToolAnalysis | AgentError, Collector]:
     """
     Analyze a successful Cobbie execution to identify reusable helper functions.
 
@@ -66,23 +67,19 @@ def identify_helper_function(
         )
 
         # Identify helper function
-        try:
-            tool_identification = b.with_options(
-                **kwargs.pop("baml_options", {})
-            ).HelperFunctionIdentifier(
+        baml_options = kwargs.pop("baml_options", {})
+        tool_identification = call_baml_with_retry(
+            lambda: b.with_options(**baml_options).HelperFunctionIdentifier(
                 history=history,
                 example_question=example_question,
                 existing_helper_functions=existing_helper_functions,
                 **kwargs,
-            )
-        except Exception as e:
-            logger.error(f"Error identifying helper function: {e}")
-            tool_identification = NewToolAnalysis(
-                thoughts=f"An Exception occurred when trying to identify helper function. Exception:\n{e}",
-                action="none",
-                tool_name="",
-                tool_description="",
-            )
+            ),
+            context_name="HelperFunctionIdentifier",
+        )
+
+        if isinstance(tool_identification, AgentError):
+            return tool_identification, collector
 
         # Log outputs
         identifier_span.set_outputs(
@@ -148,7 +145,7 @@ if __name__ == "__main__":
 
     # Run cobbie to get the answer and execution history
     with mlflow.start_run(run_name="HelperFunctionIdentifier_Test"):
-        cobbie_result, cobbie_collector, execution_history = cobbie(
+        cobbie_response = cobbie(
             user_input=test_question,
             tools=tools_dict,
             max_iterations=10,
@@ -157,16 +154,16 @@ if __name__ == "__main__":
             llm_name="GLM-4.6",
         )
 
-        print(f"\nCobbie Answer: {cobbie_result.answer}")
-        print(f"Cobbie Reasoning: {cobbie_result.thoughts}\n")
+        print(f"\nCobbie Answer: {cobbie_response.answer.answer if cobbie_response.answer else 'No answer'}")
+        print(f"Cobbie Reasoning: {cobbie_response.answer.thoughts if cobbie_response.answer else 'No thoughts'}\n")
 
         # Add final answer to the execution history
         full_history = f"""
-{execution_history}
+{cobbie_response.history}
 
 --- Final Answer ---
-Thoughts: {cobbie_result.thoughts}
-Answer: {cobbie_result.answer}
+Thoughts: {cobbie_response.answer.thoughts if cobbie_response.answer else 'No thoughts'}
+Answer: {cobbie_response.answer.answer if cobbie_response.answer else 'No answer'}
         """.strip()
 
         print("=" * 80)
@@ -187,11 +184,14 @@ def query_ifcopenshell_docs(query: str) -> str:
         )
 
         print("\nBAML Helper Function Identifier Test Results:")
-        print(f"\nThoughts:\n{result.thoughts}")
-        print(f"\nAction: {result.action}")
-        if result.action in ("create_new", "enhance_existing"):
-            print(f"Tool name: {result.tool_name}")
-            print(f"\nTool description:\n{result.tool_description}")
+        if isinstance(result, AgentError):
+            print(f"Error: {result.error_message}")
+        else:
+            print(f"\nThoughts:\n{result.thoughts}")
+            print(f"\nAction: {result.action}")
+            if result.action in ("create_new", "enhance_existing"):
+                print(f"Tool name: {result.tool_name}")
+                print(f"\nTool description:\n{result.tool_description}")
 
         # Extract metrics
         input_tokens = 0
@@ -207,10 +207,10 @@ def query_ifcopenshell_docs(query: str) -> str:
         print("\n" + "=" * 80)
         print("Metrics:")
         cobbie_input = (
-            cobbie_collector.usage.input_tokens if cobbie_collector.usage else 0
+            cobbie_response.collector.usage.input_tokens if cobbie_response.collector and cobbie_response.collector.usage else 0
         )
         cobbie_output = (
-            cobbie_collector.usage.output_tokens if cobbie_collector.usage else 0
+            cobbie_response.collector.usage.output_tokens if cobbie_response.collector and cobbie_response.collector.usage else 0
         )
         print(f"Cobbie - Input Tokens: {cobbie_input}")
         print(f"Cobbie - Output Tokens: {cobbie_output}")

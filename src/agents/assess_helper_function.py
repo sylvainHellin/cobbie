@@ -12,6 +12,8 @@ from loguru import logger
 
 from src.baml.baml_client import b
 from src.baml.baml_client.types import HelperFunctionAssessment
+from src.schemas.agent_error import AgentError
+from src.util.baml_retry import call_baml_with_retry
 
 from src.util import setup_logger
 
@@ -28,7 +30,7 @@ def assess_helper_function(
     llm_provider: str = "zai",
     llm_name: str = "GLM-4.6",
     **kwargs,
-) -> Tuple[HelperFunctionAssessment, Collector]:
+) -> Tuple[HelperFunctionAssessment | AgentError, Collector]:
     """
     Assess whether a specific helper function was useful during execution.
 
@@ -81,10 +83,9 @@ def assess_helper_function(
         )
 
         # Assess helper function usage
-        try:
-            assessment = b.with_options(
-                **kwargs.pop("baml_options", {})
-            ).HelperFunctionAssessor(
+        baml_options = kwargs.pop("baml_options", {})
+        assessment = call_baml_with_retry(
+            lambda: b.with_options(**baml_options).HelperFunctionAssessor(
                 execution_history=execution_history,
                 original_question=original_question,
                 ground_truth_answer=ground_truth_answer,
@@ -93,17 +94,12 @@ def assess_helper_function(
                 final_answer=final_answer,
                 answer_correctness=answer_correctness,
                 **kwargs,
-            )
-        except Exception as e:
-            logger.error(f"Error assessing helper function: {e}")
-            assessment = HelperFunctionAssessment(
-                thoughts=f"An Exception occurred when trying to assess helper function. Exception:\n{e}",
-                tool_was_used=False,
-                tool_usage_quality="not_used",
-                usage_details="Error occurred during assessment",
-                recommendation="unclear",
-                confidence="low",
-            )
+            ),
+            context_name="HelperFunctionAssessor",
+        )
+
+        if isinstance(assessment, AgentError):
+            return assessment, collector
 
         # Log outputs
         assessor_span.set_outputs(

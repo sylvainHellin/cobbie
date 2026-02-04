@@ -14,8 +14,10 @@ from baml_py.baml_py import Collector
 from loguru import logger
 
 from src.baml.baml_client.types import CodeAction, NewHelperFunction
+from src.schemas.agent_error import AgentError
 from src.tools.initial import query_ifcopenshell_docs
 from src.util import _execute_code_action, generate_tools_docs, setup_logger
+from src.util.baml_retry import call_baml_with_retry
 from src.util.python_executor import setup_interpreter
 
 
@@ -34,7 +36,7 @@ def _helper_function_creator_iter(
     existing_implementation: Optional[str] = None,
     previous_attempts: Optional[str] = None,
     **kwargs,
-) -> CodeAction | NewHelperFunction:
+) -> CodeAction | NewHelperFunction | AgentError:
     """
     Execute a single iteration of the helper function creator.
 
@@ -55,7 +57,7 @@ def _helper_function_creator_iter(
         **kwargs: Additional arguments for BAML function (including baml_options)
 
     Returns:
-        CodeAction to continue development or NewHelperFunction when complete
+        CodeAction to continue development, NewHelperFunction when complete, or AgentError on failure.
     """
     from src.baml.baml_client import b
 
@@ -66,10 +68,9 @@ def _helper_function_creator_iter(
     kwargs_copy = kwargs.copy()
     kwargs_copy.pop("baml_options", None)
 
-    # Call BAML function with union return type
-    try:
-        if baml_options:
-            result = b.with_options(**baml_options).HelperFunctionCreator(
+    if baml_options:
+        return call_baml_with_retry(
+            lambda: b.with_options(**baml_options).HelperFunctionCreator(
                 history=history,
                 example_question=example_question,
                 example_answer=example_answer,
@@ -81,30 +82,26 @@ def _helper_function_creator_iter(
                 existing_implementation=existing_implementation,
                 previous_attempts=previous_attempts,
                 **kwargs_copy,
-            )
-        else:
-            result = b.HelperFunctionCreator(
-                history=history,
-                example_question=example_question,
-                example_answer=example_answer,
-                example_bim_model=example_bim_model,
-                other_bim_models_for_testing=other_bim_models_for_testing,
-                function_name=function_name,
-                function_description=function_description,
-                is_enhancement=is_enhancement,
-                existing_implementation=existing_implementation,
-                previous_attempts=previous_attempts,
-                **kwargs_copy,
-            )
-    except Exception as e:
-        logger.error(f"Error in HelperFunctionCreator iteration: {e}")
-        result = NewHelperFunction(
-            thoughts=f"An Exception occurred when trying to create the helper function. Exception:\n{e}",
-            function_implementation="",
-            success=False,
+            ),
+            context_name="HelperFunctionCreator",
         )
-
-    return result
+    else:
+        return call_baml_with_retry(
+            lambda: b.HelperFunctionCreator(
+                history=history,
+                example_question=example_question,
+                example_answer=example_answer,
+                example_bim_model=example_bim_model,
+                other_bim_models_for_testing=other_bim_models_for_testing,
+                function_name=function_name,
+                function_description=function_description,
+                is_enhancement=is_enhancement,
+                existing_implementation=existing_implementation,
+                previous_attempts=previous_attempts,
+                **kwargs_copy,
+            ),
+            context_name="HelperFunctionCreator",
+        )
 
 
 def _create_helper_function(
@@ -686,7 +683,7 @@ if __name__ == "__main__":
     print(f"Model: {model_path}\n")
 
     # Run Cobbie
-    cobbie_result, cobbie_collector, execution_history = cobbie(
+    cobbie_response = cobbie(
         user_input=test_question,
         tools=tools_dict,
         max_iterations=10,
@@ -695,12 +692,12 @@ if __name__ == "__main__":
         llm_name="GLM-4.6",
     )
 
-    print(f"Cobbie Answer: {cobbie_result.answer}\n")
+    print(f"Cobbie Answer: {cobbie_response.answer.answer if cobbie_response.answer else 'No answer'}\n")
 
     # Construct full history
     full_history = (
-        execution_history
-        + f"\n--- Final Answer ---\nThoughts: {cobbie_result.thoughts}\nAnswer: {cobbie_result.answer}"
+        cobbie_response.history
+        + f"\n--- Final Answer ---\nThoughts: {cobbie_response.answer.thoughts if cobbie_response.answer else 'No thoughts'}\nAnswer: {cobbie_response.answer.answer if cobbie_response.answer else 'No answer'}"
     )
 
     print("=" * 80)
@@ -721,11 +718,14 @@ if __name__ == "__main__":
         llm_name="GLM-4.6",
     )
 
-    print(f"Tool management action: {tool_identified.action}")
-    print(f"Tool name: {tool_identified.tool_name}")
-    print(f"Tool description: {tool_identified.tool_description}\n")
+    if isinstance(tool_identified, AgentError):
+        print(f"Error: {tool_identified.error_message}")
+    else:
+        print(f"Tool management action: {tool_identified.action}")
+        print(f"Tool name: {tool_identified.tool_name}")
+        print(f"Tool description: {tool_identified.tool_description}\n")
 
-    if tool_identified.action == "create_new":
+    if not isinstance(tool_identified, AgentError) and tool_identified.action == "create_new":
         print("=" * 80)
         print("STEP 3: Creating helper function")
         print("=" * 80)

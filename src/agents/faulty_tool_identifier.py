@@ -8,11 +8,12 @@ from typing import Tuple
 
 import mlflow
 from baml_py.baml_py import Collector
-from loguru import logger
 
 from src.baml.baml_client import b
 from src.baml.baml_client.types import FaultyToolAnalysis
+from src.schemas.agent_error import AgentError
 from src.util import setup_logger
+from src.util.baml_retry import call_baml_with_retry
 from src.agents import derive_binary_classification
 
 setup_logger()
@@ -27,7 +28,7 @@ def identify_faulty_tool(
     llm_provider: str = "zai",
     llm_name: str = "GLM-4.6",
     **kwargs,
-) -> Tuple[FaultyToolAnalysis, Collector]:
+) -> Tuple[FaultyToolAnalysis | AgentError, Collector]:
     """
     Analyze a failed Cobbie execution to identify faulty helper functions.
 
@@ -81,10 +82,9 @@ def identify_faulty_tool(
         )
 
         # Identify faulty tool
-        try:
-            faulty_tool_analysis = b.with_options(
-                **kwargs.pop("baml_options", {})
-            ).FaultyNewToolAnalysis(
+        baml_options = kwargs.pop("baml_options", {})
+        faulty_tool_analysis = call_baml_with_retry(
+            lambda: b.with_options(**baml_options).FaultyNewToolAnalysis(
                 history=history,
                 question=question,
                 ground_truth=ground_truth,
@@ -92,16 +92,12 @@ def identify_faulty_tool(
                 justification=justification,
                 existing_helper_functions=existing_helper_functions,
                 **kwargs,
-            )
-        except Exception as e:
-            logger.error(f"Error identifying faulty tool: {e}")
-            faulty_tool_analysis = FaultyToolAnalysis(
-                thoughts=f"An Exception occurred when trying to identify faulty tool. Exception:\n{e}",
-                faulty_tool=False,
-                faulty_tool_name="",
-                error_description="",
-                confidence="low",
-            )
+            ),
+            context_name="FaultyNewToolAnalysis",
+        )
+
+        if isinstance(faulty_tool_analysis, AgentError):
+            return faulty_tool_analysis, collector
 
         # Log outputs
         identifier_span.set_outputs(
@@ -195,7 +191,7 @@ if __name__ == "__main__":
 
     # Run cobbie to get the answer and execution history
     with mlflow.start_run(run_name="FaultyNewToolAnalysis_Test"):
-        cobbie_result, cobbie_collector, execution_history = cobbie(
+        cobbie_response = cobbie(
             user_input=test_question,
             tools=tools_dict,
             max_iterations=10,
@@ -204,16 +200,16 @@ if __name__ == "__main__":
             llm_name="GLM-4.6",
         )
 
-        print(f"\nCobbie Answer: {cobbie_result.answer}")
-        print(f"Cobbie Reasoning: {cobbie_result.thoughts}\n")
+        print(f"\nCobbie Answer: {cobbie_response.answer.answer if cobbie_response.answer else 'No answer'}")
+        print(f"Cobbie Reasoning: {cobbie_response.answer.thoughts if cobbie_response.answer else 'No thoughts'}\n")
 
         # Add final answer to the execution history
         full_history = f"""
-{execution_history}
+{cobbie_response.history}
 
 --- Final Answer ---
-Thoughts: {cobbie_result.thoughts}
-Answer: {cobbie_result.answer}
+Thoughts: {cobbie_response.answer.thoughts if cobbie_response.answer else 'No thoughts'}
+Answer: {cobbie_response.answer.answer if cobbie_response.answer else 'No answer'}
         """.strip()
 
         print("=" * 80)
@@ -225,13 +221,18 @@ Answer: {cobbie_result.answer}
             question=test_question,
             category=1,  # Category 1 for counting questions
             ground_truth=ground_truth,
-            system_response=cobbie_result.answer,
+            system_response=cobbie_response.answer.answer if cobbie_response.answer else "",
         )
 
-        classification = derive_binary_classification(result=verification_result)
+        if isinstance(verification_result, AgentError):
+            print(f"Error: {verification_result.error_message}")
+            classification = "abstained"
+        else:
+            classification = derive_binary_classification(result=verification_result)
 
         print(f"\nClassification: {classification}")
-        print(f"Justification: {verification_result.justification}")
+        if not isinstance(verification_result, AgentError):
+            print(f"Justification: {verification_result.justification}")
 
         # Only proceed with faulty tool identification if answer was wrong
         if classification == "wrong":
@@ -261,18 +262,21 @@ def count_doors_by_floor(ifc_file_path: str, floor_name: str) -> int:
                 history=full_history,
                 question=test_question,
                 ground_truth=ground_truth,
-                provided_answer=cobbie_result.answer,
-                justification=verification_result.justification,
+                provided_answer=cobbie_response.answer.answer if cobbie_response.answer else "",
+                justification=verification_result.justification if not isinstance(verification_result, AgentError) else "",
                 existing_helper_functions=test_existing_functions,
             )
 
             print("\nBAML Faulty Tool Identifier Test Results:")
-            print(f"\nFaulty Tool Identified: {faulty_tool_result.faulty_tool}")
-            if faulty_tool_result.faulty_tool:
-                print(f"Tool Name: {faulty_tool_result.faulty_tool_name}")
-                print(f"Confidence: {faulty_tool_result.confidence}")
-                print(f"\nError Description:\n{faulty_tool_result.error_description}")
-            print(f"\nThoughts:\n{faulty_tool_result.thoughts}")
+            if isinstance(faulty_tool_result, AgentError):
+                print(f"Error: {faulty_tool_result.error_message}")
+            else:
+                print(f"\nFaulty Tool Identified: {faulty_tool_result.faulty_tool}")
+                if faulty_tool_result.faulty_tool:
+                    print(f"Tool Name: {faulty_tool_result.faulty_tool_name}")
+                    print(f"Confidence: {faulty_tool_result.confidence}")
+                    print(f"\nError Description:\n{faulty_tool_result.error_description}")
+                print(f"\nThoughts:\n{faulty_tool_result.thoughts}")
 
             # Extract metrics
             faulty_tool_input_tokens = 0
@@ -285,8 +289,9 @@ def count_doors_by_floor(ifc_file_path: str, floor_name: str) -> int:
             print("\n" + "=" * 80)
             print("Token Metrics Summary:")
             print("=" * 80)
-            print(f"Cobbie - Input: {cobbie_collector.usage.input_tokens if cobbie_collector.usage else 0}, "
-                  f"Output: {cobbie_collector.usage.output_tokens if cobbie_collector.usage else 0}")
+            cobbie_input = cobbie_response.collector.usage.input_tokens if cobbie_response.collector and cobbie_response.collector.usage else 0
+            cobbie_output = cobbie_response.collector.usage.output_tokens if cobbie_response.collector and cobbie_response.collector.usage else 0
+            print(f"Cobbie - Input: {cobbie_input}, Output: {cobbie_output}")
             print(f"Answer Verifier - Input: {verification_collector.usage.input_tokens if verification_collector.usage else 0}, "
                   f"Output: {verification_collector.usage.output_tokens if verification_collector.usage else 0}")
             print(f"Faulty Tool Identifier - Input: {faulty_tool_input_tokens}, Output: {faulty_tool_output_tokens}")

@@ -40,6 +40,7 @@ from tqdm import tqdm
 from src.agents.answer_verifier import verify_answer, derive_binary_classification
 from src.agents.cobbie import cobbie
 from src.config import ROOT_PATH
+from src.schemas.agent_error import AgentError
 from src.db import DEVSET
 from src.db.query import (
     clear_eval_tool_stats,
@@ -98,6 +99,7 @@ def calculate_and_log_metrics(
     batch_correct_count = sum(1 for c in classifications if c == "correct")
     batch_wrong_count = sum(1 for c in classifications if c == "wrong")
     batch_abstained_count = sum(1 for c in classifications if c == "abstained")
+    batch_error_count = sum(1 for c in classifications if c == "error")
 
     # Performance metrics for current batch
     batch_execution_time = sum(r["execution_time"] for r in question_results)
@@ -118,6 +120,9 @@ def calculate_and_log_metrics(
         cumulative_abstained_count = (
             previous_metrics["abstained_count"] + batch_abstained_count
         )
+        cumulative_error_count = (
+            previous_metrics.get("error_count", 0) + batch_error_count
+        )
         cumulative_input_tokens = (
             previous_metrics["total_input_tokens"] + batch_input_tokens
         )
@@ -132,6 +137,7 @@ def calculate_and_log_metrics(
         cumulative_correct_count = batch_correct_count
         cumulative_wrong_count = batch_wrong_count
         cumulative_abstained_count = batch_abstained_count
+        cumulative_error_count = batch_error_count
         cumulative_input_tokens = batch_input_tokens
         cumulative_output_tokens = batch_output_tokens
         cumulative_execution_time = batch_execution_time
@@ -253,6 +259,7 @@ def calculate_and_log_metrics(
         "correct_count": cumulative_correct_count,
         "wrong_count": cumulative_wrong_count,
         "abstained_count": cumulative_abstained_count,
+        "error_count": cumulative_error_count,
         "total_evaluated": cumulative_total_evaluated,
         # Performance metrics (cumulative)
         "total_execution_time": cumulative_execution_time,
@@ -321,6 +328,7 @@ def print_results(results_summary: Dict):
     print(f"  Correct Answers: {results_summary['correct_count']}")
     print(f"  Wrong Answers: {results_summary['wrong_count']}")
     print(f"  Abstained Answers: {results_summary['abstained_count']}")
+    print(f"  Errors: {results_summary['error_count']}")
     print(f"  Total Evaluated: {results_summary['total_evaluated']}")
     print()
 
@@ -457,13 +465,17 @@ def process_question(
             start_time_cobbie = time.time()
 
             # Run COBBIE with metrics
-            final_answer, collector, execution_history = cobbie(
+            cobbie_result = cobbie(
                 user_input=question,
                 tools=tools_dict,
                 model_path=ifc_path,
                 client=args.client,
             )
             cobbie_duration = time.time() - start_time_cobbie
+
+            final_answer = cobbie_result.answer
+            collector = cobbie_result.collector
+            execution_history = cobbie_result.history
 
             # extract token usage from collector
             cobbie_input_tokens = 0
@@ -488,7 +500,7 @@ def process_question(
             verifier_output_tokens = 0
             verifier_duration = 0
 
-            if final_answer.answer and ground_truth:
+            if final_answer and final_answer.answer and ground_truth:
                 verifier_start = time.time()
                 verifier_result, verifier_collector = verify_answer(
                     question=question,
@@ -499,22 +511,32 @@ def process_question(
 
                 verifier_duration = time.time() - verifier_start
 
-                # Derive binary classification from 5-criterion evaluation
-                classification = derive_binary_classification(verifier_result)
+                if isinstance(verifier_result, AgentError):
+                    logger.error(f"Answer verification failed: {verifier_result.error_message}")
+                    classification = "error"
+                    justification = f"Verification error: {verifier_result.error_message}"
+                    question_span.set_status("ERROR")
+                else:
+                    # Derive binary classification from 5-criterion evaluation
+                    classification = derive_binary_classification(verifier_result)
 
-                # Extract all 5 criteria
-                abstention = verifier_result.abstention
-                faithfulness = verifier_result.faithfulness.value
-                completeness = verifier_result.completeness.value
-                transparency = verifier_result.transparency.value
-                relevance = verifier_result.relevance.value
-                justification = verifier_result.justification
+                    # Extract all 5 criteria
+                    abstention = verifier_result.abstention
+                    faithfulness = verifier_result.faithfulness.value
+                    completeness = verifier_result.completeness.value
+                    transparency = verifier_result.transparency.value
+                    relevance = verifier_result.relevance.value
+                    justification = verifier_result.justification
 
                 verifier_input_tokens = 0
                 verifier_output_tokens = 0
-                if collector.last:
-                    verifier_input_tokens = collector.usage.input_tokens or 0
-                    verifier_output_tokens = collector.usage.output_tokens or 0
+                if verifier_collector and hasattr(verifier_collector, "usage") and verifier_collector.usage:
+                    verifier_input_tokens = verifier_collector.usage.input_tokens or 0
+                    verifier_output_tokens = verifier_collector.usage.output_tokens or 0
+            elif cobbie_result.error:
+                classification = "error"
+                justification = f"Cobbie error: {cobbie_result.error.error_message}"
+                question_span.set_status("ERROR")
 
             # Track tool usage (after answer verification)
             if args.track_tools:
@@ -548,12 +570,14 @@ def process_question(
             )
 
             # Prepare question span outputs
+            answer_text = final_answer.answer if final_answer else ""
+            thoughts_text = final_answer.thoughts if final_answer else ""
             question_outputs = {
                 "status": "success",
                 "execution_time": cobbie_duration,
-                "answer": final_answer.answer,
-                "reasoning": final_answer.thoughts,
-                "reasoning_length": len(final_answer.thoughts),
+                "answer": answer_text,
+                "reasoning": thoughts_text,
+                "reasoning_length": len(thoughts_text),
                 "cobbie_input_tokens": cobbie_input_tokens,
                 "cobbie_output_tokens": cobbie_output_tokens,
                 "cobbie_total_tokens": cobbie_total_tokens,
@@ -571,10 +595,11 @@ def process_question(
             }
 
             question_span.set_outputs(question_outputs)
-            question_span.set_status("OK")
+            if classification != "error":
+                question_span.set_status("OK")
             question_span.set_attributes(
                 {
-                    "question.status": "success",
+                    "question.status": "error" if classification == "error" else "success",
                     "question.category": category,
                     "classification": classification or "not_evaluated",
                 }
@@ -587,7 +612,7 @@ def process_question(
             # Log LLM outputs as parameters
             mlflow.log_params(
                 {
-                    "answer": final_answer.answer,
+                    "answer": answer_text,
                     "classification": classification or "not_evaluated",
                     "justification": justification or "not_evaluated",
                     "abstention": str(abstention) if abstention is not None else "not_evaluated",
@@ -603,8 +628,8 @@ def process_question(
                 "ground_truth": ground_truth,
                 "category": category,
                 "status": "success",
-                "answer": final_answer.answer,
-                "reasoning": final_answer.thoughts,
+                "answer": answer_text,
+                "reasoning": thoughts_text,
                 "execution_time": cobbie_duration,
                 "classification": classification,
                 "justification": justification,
@@ -772,13 +797,19 @@ def process_question_baseline(
                 )
                 verifier_duration = time.time() - verifier_start
 
-                classification = derive_binary_classification(verifier_result)
-                abstention = verifier_result.abstention
-                faithfulness = verifier_result.faithfulness.value
-                completeness = verifier_result.completeness.value
-                transparency = verifier_result.transparency.value
-                relevance = verifier_result.relevance.value
-                justification = verifier_result.justification
+                if isinstance(verifier_result, AgentError):
+                    logger.error(f"Baseline verification failed: {verifier_result.error_message}")
+                    classification = "error"
+                    justification = f"Verification error: {verifier_result.error_message}"
+                    question_span.set_status("ERROR")
+                else:
+                    classification = derive_binary_classification(verifier_result)
+                    abstention = verifier_result.abstention
+                    faithfulness = verifier_result.faithfulness.value
+                    completeness = verifier_result.completeness.value
+                    transparency = verifier_result.transparency.value
+                    relevance = verifier_result.relevance.value
+                    justification = verifier_result.justification
 
                 if verifier_collector and hasattr(verifier_collector, "usage") and verifier_collector.usage:
                     verifier_input_tokens = verifier_collector.usage.input_tokens or 0
@@ -812,8 +843,8 @@ def process_question_baseline(
             }
 
             question_span.set_outputs(question_outputs)
-            question_span.set_status("OK")
-
+            if classification != "error":
+                question_span.set_status("OK")
             logger.info(
                 f"[BASELINE] Question {question_index + 1} completed: classification={classification}, "
                 f"duration={baseline_duration:.2f}s"
@@ -1000,7 +1031,7 @@ def process_question_merged(
             start_initial = time.time()
 
             try:
-                answer_initial_obj, collector_initial, history_initial = cobbie(
+                result_initial = cobbie(
                     user_input=question,
                     tools=tools_initial,
                     model_path=ifc_path,
@@ -1008,11 +1039,15 @@ def process_question_merged(
                 )
                 duration_initial = time.time() - start_initial
 
-                answer_initial = answer_initial_obj.answer
-                thoughts_initial = answer_initial_obj.thoughts
+                if result_initial.error:
+                    raise RuntimeError(result_initial.error.error_message)
+
+                answer_initial = result_initial.answer.answer if result_initial.answer else ""
+                thoughts_initial = result_initial.answer.thoughts if result_initial.answer else ""
 
                 tokens_in_initial = 0
                 tokens_out_initial = 0
+                collector_initial = result_initial.collector
                 if collector_initial and hasattr(collector_initial, "usage") and collector_initial.usage:
                     tokens_in_initial = collector_initial.usage.input_tokens or 0
                     tokens_out_initial = collector_initial.usage.output_tokens or 0
@@ -1048,7 +1083,7 @@ def process_question_merged(
             start_created = time.time()
 
             try:
-                answer_created_obj, collector_created, history_created = cobbie(
+                result_created = cobbie(
                     user_input=question,
                     tools=tools_created,
                     model_path=ifc_path,
@@ -1056,11 +1091,15 @@ def process_question_merged(
                 )
                 duration_created = time.time() - start_created
 
-                answer_created = answer_created_obj.answer
-                thoughts_created = answer_created_obj.thoughts
+                if result_created.error:
+                    raise RuntimeError(result_created.error.error_message)
+
+                answer_created = result_created.answer.answer if result_created.answer else ""
+                thoughts_created = result_created.answer.thoughts if result_created.answer else ""
 
                 tokens_in_created = 0
                 tokens_out_created = 0
+                collector_created = result_created.collector
                 if collector_created and hasattr(collector_created, "usage") and collector_created.usage:
                     tokens_in_created = collector_created.usage.input_tokens or 0
                     tokens_out_created = collector_created.usage.output_tokens or 0
@@ -1108,7 +1147,7 @@ def process_question_merged(
             start_merger = time.time()
 
             try:
-                merged_answer_obj, collector_merger, history_merger = cobbie(
+                result_merger = cobbie(
                     user_input=merge_prompt,
                     tools=tools_merger,
                     model_path=ifc_path,
@@ -1116,11 +1155,15 @@ def process_question_merged(
                 )
                 duration_merger = time.time() - start_merger
 
-                merged_answer = merged_answer_obj.answer
-                merged_thoughts = merged_answer_obj.thoughts
+                if result_merger.error:
+                    raise RuntimeError(result_merger.error.error_message)
+
+                merged_answer = result_merger.answer.answer if result_merger.answer else ""
+                merged_thoughts = result_merger.answer.thoughts if result_merger.answer else ""
 
                 tokens_in_merger = 0
                 tokens_out_merger = 0
+                collector_merger = result_merger.collector
                 if collector_merger and hasattr(collector_merger, "usage") and collector_merger.usage:
                     tokens_in_merger = collector_merger.usage.input_tokens or 0
                     tokens_out_merger = collector_merger.usage.output_tokens or 0
@@ -1172,13 +1215,18 @@ def process_question_merged(
             )
             verifier_duration = time.time() - verifier_start
 
-            classification = derive_binary_classification(verifier_result)
-            abstention = verifier_result.abstention
-            faithfulness = verifier_result.faithfulness.value
-            completeness = verifier_result.completeness.value
-            transparency = verifier_result.transparency.value
-            relevance = verifier_result.relevance.value
-            justification = verifier_result.justification
+            if isinstance(verifier_result, AgentError):
+                logger.error(f"Merged verification failed: {verifier_result.error_message}")
+                classification = "error"
+                justification = f"Verification error: {verifier_result.error_message}"
+            else:
+                classification = derive_binary_classification(verifier_result)
+                abstention = verifier_result.abstention
+                faithfulness = verifier_result.faithfulness.value
+                completeness = verifier_result.completeness.value
+                transparency = verifier_result.transparency.value
+                relevance = verifier_result.relevance.value
+                justification = verifier_result.justification
 
             if verifier_collector and hasattr(verifier_collector, "usage") and verifier_collector.usage:
                 verifier_input_tokens = verifier_collector.usage.input_tokens or 0

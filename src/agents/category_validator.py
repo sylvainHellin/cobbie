@@ -11,7 +11,9 @@ from loguru import logger
 
 from src.baml.baml_client import b
 from src.db.models import IfcBench
+from src.schemas.agent_error import AgentError
 from src.util import setup_logger
+from src.util.baml_retry import call_baml_with_retry
 from src.util.extract_raw_prompt import extract_raw_prompt
 
 setup_logger()
@@ -20,7 +22,7 @@ setup_logger()
 def validate_category(
     qa_pair: IfcBench,
     **kwargs,
-) -> IfcBench:
+) -> IfcBench | AgentError:
     """
     Validate the category of a question-answer pair according to the 4-category taxonomy.
 
@@ -46,92 +48,78 @@ def validate_category(
             }
         )
 
-        try:
-            # Call BAML validation function with collector
-            validation_result = b.with_options(
+        # Call BAML validation function with collector and retry
+        validation_result = call_baml_with_retry(
+            lambda: b.with_options(
                 collector=collector
             ).ValidateQuestionCategory(
                 question=qa_pair.question,
                 answer=qa_pair.ground_truth,
                 current_category=str(qa_pair.category),
                 **kwargs,
-            )
+            ),
+            context_name="ValidateQuestionCategory",
+        )
 
-            # Extract raw prompt from collector
-            raw_prompt = extract_raw_prompt(collector)
-
-            # Parse validated category to integer
-            try:
-                validated_category = int(validation_result.validated_category)
-            except ValueError:
-                logger.error(
-                    f"Invalid category format: {validation_result.validated_category}"
-                )
-                validated_category = qa_pair.category
-
-            # Create new IfcBench instance with validated category
-            validated_qa_pair = IfcBench(
-                id=qa_pair.id,
-                question=qa_pair.question,
-                ground_truth=qa_pair.ground_truth,
-                ifc_id=qa_pair.ifc_id,
-                category=validated_category,
-            )
-
-            # Log outputs (including raw prompt)
+        if isinstance(validation_result, AgentError):
             validator_span.set_outputs(
                 {
-                    "original_category": qa_pair.category,
-                    "validated_category": validated_category,
-                    "thought": validation_result.thought,
-                    "raw_prompt": raw_prompt,
+                    "error": validation_result.error_message,
+                    "error_type": validation_result.error_type,
                 }
             )
-
-            # Calculate metrics
-            duration = time.time() - start
-
-            # Log attributes and metric
-            validator_span.set_attributes(
-                {
-                    "duration": duration,
-                    "original_category": qa_pair.category,
-                    "validated_category": validated_category,
-                    "reasoning": validation_result.thought,
-                }
-            )
-
-            # Log metric for category update
-            mlflow.log_metric("category_updated", 1 if validation_result.updated else 0)
-
-            return validated_qa_pair
-
-        except Exception as e:
-            logger.error(f"Error validating category for QA pair {qa_pair.id}: {e}")
-
-            # Log error
-            validator_span.set_outputs(
-                {
-                    "error": str(e),
-                    "returned_original": True,
-                }
-            )
-
-            # Calculate duration even on error
-            duration = time.time() - start
-            validator_span.set_attributes(
-                {
-                    "duration": duration,
-                    "category_updated": False,
-                    "error_occurred": True,
-                }
-            )
-
-            # Log metric for no update due to error
+            validator_span.set_status("ERROR")
             mlflow.log_metric("category_updated", 0)
+            return validation_result
 
-            # Return original qa_pair on error
-            return qa_pair
+        # Extract raw prompt from collector
+        raw_prompt = extract_raw_prompt(collector)
+
+        # Parse validated category to integer
+        try:
+            validated_category = int(validation_result.validated_category)
+        except ValueError:
+            logger.error(
+                f"Invalid category format: {validation_result.validated_category}"
+            )
+            validated_category = qa_pair.category
+
+        # Create new IfcBench instance with validated category
+        validated_qa_pair = IfcBench(
+            id=qa_pair.id,
+            question=qa_pair.question,
+            ground_truth=qa_pair.ground_truth,
+            ifc_id=qa_pair.ifc_id,
+            category=validated_category,
+        )
+
+        # Log outputs (including raw prompt)
+        validator_span.set_outputs(
+            {
+                "original_category": qa_pair.category,
+                "validated_category": validated_category,
+                "thought": validation_result.thought,
+                "raw_prompt": raw_prompt,
+            }
+        )
+
+        # Calculate metrics
+        duration = time.time() - start
+
+        # Log attributes and metric
+        validator_span.set_attributes(
+            {
+                "duration": duration,
+                "original_category": qa_pair.category,
+                "validated_category": validated_category,
+                "reasoning": validation_result.thought,
+            }
+        )
+
+        # Log metric for category update
+        mlflow.log_metric("category_updated", 1 if validation_result.updated else 0)
+
+        return validated_qa_pair
 
 
 if __name__ == "__main__":
@@ -155,7 +143,10 @@ if __name__ == "__main__":
         f"Original: Question='{test_qa_pair_1.question}', Category={test_qa_pair_1.category}"
     )
     validated_1 = validate_category(test_qa_pair_1)
-    print(f"Validated: Category={validated_1.category}")
+    if isinstance(validated_1, AgentError):
+        print(f"Error: {validated_1.error_message}")
+    else:
+        print(f"Validated: Category={validated_1.category}")
     print()
 
     # Test 2: Category 2 - Should be 2, but marked as 1 (misclassified)
@@ -172,7 +163,10 @@ if __name__ == "__main__":
         f"Original: Question='{test_qa_pair_2.question}', Category={test_qa_pair_2.category}"
     )
     validated_2 = validate_category(test_qa_pair_2)
-    print(f"Validated: Category={validated_2.category}")
+    if isinstance(validated_2, AgentError):
+        print(f"Error: {validated_2.error_message}")
+    else:
+        print(f"Validated: Category={validated_2.category}")
     print()
 
     # Test 3: Category 3 - Geometric computation (correctly classified)
@@ -189,7 +183,10 @@ if __name__ == "__main__":
         f"Original: Question='{test_qa_pair_3.question}', Category={test_qa_pair_3.category}"
     )
     validated_3 = validate_category(test_qa_pair_3)
-    print(f"Validated: Category={validated_3.category}")
+    if isinstance(validated_3, AgentError):
+        print(f"Error: {validated_3.error_message}")
+    else:
+        print(f"Validated: Category={validated_3.category}")
     print()
 
     # Test 4: Category 2 - List with aggregation (borderline case)
@@ -206,7 +203,10 @@ if __name__ == "__main__":
         f"Original: Question='{test_qa_pair_4.question}', Category={test_qa_pair_4.category}"
     )
     validated_4 = validate_category(test_qa_pair_4)
-    print(f"Validated: Category={validated_4.category}")
+    if isinstance(validated_4, AgentError):
+        print(f"Error: {validated_4.error_message}")
+    else:
+        print(f"Validated: Category={validated_4.category}")
     print()
 
     # Test 5: Category 4 - Incomplete information
@@ -223,4 +223,7 @@ if __name__ == "__main__":
         f"Original: Question='{test_qa_pair_5.question}', Category={test_qa_pair_5.category}"
     )
     validated_5 = validate_category(test_qa_pair_5)
-    print(f"Validated: Category={validated_5.category}")
+    if isinstance(validated_5, AgentError):
+        print(f"Error: {validated_5.error_message}")
+    else:
+        print(f"Validated: Category={validated_5.category}")

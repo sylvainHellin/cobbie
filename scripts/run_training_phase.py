@@ -24,6 +24,7 @@ from src.agents import (
     verify_answer,
 )
 from src.config import ROOT_PATH
+from src.schemas.agent_error import AgentError
 from src.db import TRAINSET
 from src.db.query import (
     get_tools_ranked_by_deletion_score,
@@ -158,7 +159,7 @@ def handle_run_cobbie(context: Context) -> Tuple[TrainingState, Context]:
     start_time = time.time()
 
     try:
-        result, collector, history = cobbie(
+        cobbie_result = cobbie(
             user_input=context.qa_pair.question,
             tools=context.tools,
             max_iterations=20,
@@ -166,13 +167,16 @@ def handle_run_cobbie(context: Context) -> Tuple[TrainingState, Context]:
             client="GLM_4_7",
         )
 
-        context.cobbie_result = result
-        context.cobbie_collector = collector
-        context.cobbie_history = history
+        context.cobbie_result = cobbie_result
         context.cobbie_duration = time.time() - start_time
 
+        if cobbie_result.error:
+            logger.error(f"Cobbie returned error: {cobbie_result.error.error_message}")
+            context.error_message = f"Cobbie error: {cobbie_result.error.error_message}"
+            return TrainingState.ERROR, context
+
         logger.info(f"Cobbie completed in {context.cobbie_duration:.2f}s")
-        logger.info(f"Cobbie answer: {result.answer}")
+        logger.info(f"Cobbie answer: {cobbie_result.answer.answer if cobbie_result.answer else 'No answer'}")
 
         return TrainingState.VERIFY_ANSWER, context
 
@@ -203,8 +207,10 @@ def handle_verify_answer(context: Context) -> Tuple[TrainingState, Context]:
     start_time = time.time()
 
     try:
-        if not context.cobbie_result:
-            raise ValueError("Cobbie result is None")
+        if not context.cobbie_result or not context.cobbie_result.answer:
+            raise ValueError("Cobbie result or answer is None")
+
+        cobbie_answer = context.cobbie_result.answer
 
         # Category must be an integer between 1-4
         category = context.qa_pair.category if context.qa_pair.category else 1
@@ -213,10 +219,16 @@ def handle_verify_answer(context: Context) -> Tuple[TrainingState, Context]:
             question=context.qa_pair.question,
             category=category,  # type: ignore
             ground_truth=context.qa_pair.ground_truth,
-            system_response=context.cobbie_result.answer,
+            system_response=cobbie_answer.answer,
             llm_provider="zai",
             llm_name=LLM_NAME,
         )
+
+        if isinstance(result, AgentError):
+            logger.error(f"Answer verification returned error: {result.error_message}")
+            context.error_message = f"Answer verification error: {result.error_message}"
+            context.verify_duration = time.time() - start_time
+            return TrainingState.ERROR, context
 
         context.verify_result = result
         classification = derive_binary_classification(result=result)
@@ -230,7 +242,7 @@ def handle_verify_answer(context: Context) -> Tuple[TrainingState, Context]:
         mlflow.log_params(
             {
                 "justification": result.justification,
-                "cobbie_answer": context.cobbie_result.answer,
+                "cobbie_answer": cobbie_answer.answer,
                 "abstention": str(result.abstention),
                 "faithfulness": str(result.faithfulness),
                 "completeness": str(result.completeness),
@@ -242,7 +254,7 @@ def handle_verify_answer(context: Context) -> Tuple[TrainingState, Context]:
 
         # Track tool usage for this question
         available_tool_names = list(context.tools.keys())
-        tools_used = extract_tools_used(context.cobbie_history, available_tool_names)
+        tools_used = extract_tools_used(context.cobbie_result.history, available_tool_names)
         is_correct = classification == "correct"
         update_tool_usage(tools_used, is_correct, context.global_question_num)
 
@@ -294,18 +306,20 @@ def handle_identify_new_tool(context: Context) -> Tuple[TrainingState, Context]:
     start_time = time.time()
 
     try:
-        if not context.cobbie_result:
-            raise ValueError("Cobbie result is None")
+        if not context.cobbie_result or not context.cobbie_result.answer:
+            raise ValueError("Cobbie result or answer is None")
+
+        cobbie_answer = context.cobbie_result.answer
 
         # Generate existing tools docs
         existing_tools_docs = generate_tools_docs(context.tools)
 
         # Construct full history with final answer
         full_history = (
-            f"{context.cobbie_history}\n\n"
+            f"{context.cobbie_result.history}\n\n"
             f"--- Final Answer ---\n"
-            f"Thoughts: {context.cobbie_result.thoughts}\n"
-            f"Answer: {context.cobbie_result.answer}"
+            f"Thoughts: {cobbie_answer.thoughts}\n"
+            f"Answer: {cobbie_answer.answer}"
         )
 
         result, collector = identify_helper_function(
@@ -315,6 +329,12 @@ def handle_identify_new_tool(context: Context) -> Tuple[TrainingState, Context]:
             llm_provider="zai",
             llm_name=LLM_NAME,
         )
+
+        if isinstance(result, AgentError):
+            logger.error(f"Identify helper function returned error: {result.error_message}")
+            context.error_message = f"Identify new tool error: {result.error_message}"
+            context.identify_tool_duration = time.time() - start_time
+            return TrainingState.ERROR, context
 
         context.identify_tool_result = result
         context.identify_tool_collector = collector
@@ -374,12 +394,14 @@ def handle_create_new_tool(context: Context) -> Tuple[TrainingState, Context]:
     start_time = time.time()
 
     try:
-        if not context.cobbie_result:
-            raise ValueError("Cobbie result is None")
+        if not context.cobbie_result or not context.cobbie_result.answer:
+            raise ValueError("Cobbie result or answer is None")
         if not context.identify_tool_result:
             raise ValueError("Identify tool result is None")
         if not context.tool_name:
             raise ValueError("Tool name is None")
+
+        cobbie_answer = context.cobbie_result.answer
 
         # Get IFC model path from the QA pair (same model used for answering)
         ifc_model_path = context.qa_pair.ifc.model_path if context.qa_pair.ifc else None
@@ -400,10 +422,10 @@ def handle_create_new_tool(context: Context) -> Tuple[TrainingState, Context]:
 
         # Construct full history
         full_history = (
-            f"{context.cobbie_history}\n\n"
+            f"{context.cobbie_result.history}\n\n"
             f"--- Final Answer ---\n"
-            f"Thoughts: {context.cobbie_result.thoughts}\n"
-            f"Answer: {context.cobbie_result.answer}"
+            f"Thoughts: {cobbie_answer.thoughts}\n"
+            f"Answer: {cobbie_answer.answer}"
         )
 
         # Get existing implementation if enhancing
@@ -484,32 +506,40 @@ def handle_identify_faulty_tool(context: Context) -> Tuple[TrainingState, Contex
     start_time = time.time()
 
     try:
-        if not context.cobbie_result:
-            raise ValueError("Cobbie result is None")
+        if not context.cobbie_result or not context.cobbie_result.answer:
+            raise ValueError("Cobbie result or answer is None")
         if not context.verify_result:
             raise ValueError("Verify result is None")
+
+        cobbie_answer = context.cobbie_result.answer
 
         # Generate existing tools docs
         existing_tools_docs = generate_tools_docs(context.tools)
 
         # Construct full history with final answer
         full_history = (
-            f"{context.cobbie_history}\n\n"
+            f"{context.cobbie_result.history}\n\n"
             f"--- Final Answer ---\n"
-            f"Thoughts: {context.cobbie_result.thoughts}\n"
-            f"Answer: {context.cobbie_result.answer}"
+            f"Thoughts: {cobbie_answer.thoughts}\n"
+            f"Answer: {cobbie_answer.answer}"
         )
 
         result, collector = identify_faulty_tool(
             history=full_history,
             question=context.qa_pair.question,
             ground_truth=context.qa_pair.ground_truth,
-            provided_answer=context.cobbie_result.answer,
+            provided_answer=cobbie_answer.answer,
             justification=context.verify_result.justification,
             existing_helper_functions=existing_tools_docs,
             llm_provider="zai",
             llm_name=LLM_NAME,
         )
+
+        if isinstance(result, AgentError):
+            logger.error(f"Identify faulty tool returned error: {result.error_message}")
+            context.error_message = f"Identify faulty tool error: {result.error_message}"
+            context.identify_faulty_duration = time.time() - start_time
+            return TrainingState.ERROR, context
 
         context.identify_faulty_result = result
         context.identify_faulty_collector = collector
@@ -557,12 +587,14 @@ def handle_debug_faulty_tool(context: Context) -> Tuple[TrainingState, Context]:
     start_time = time.time()
 
     try:
-        if not context.cobbie_result:
-            raise ValueError("Cobbie result is None")
+        if not context.cobbie_result or not context.cobbie_result.answer:
+            raise ValueError("Cobbie result or answer is None")
         if not context.identify_faulty_result:
             raise ValueError("Identify faulty result is None")
         if not context.tool_name:
             raise ValueError("Tool name is None")
+
+        cobbie_answer = context.cobbie_result.answer
 
         # Get the faulty tool's source code
         faulty_code_result = get_function_code(context.tool_name)
@@ -582,10 +614,10 @@ def handle_debug_faulty_tool(context: Context) -> Tuple[TrainingState, Context]:
 
         # Construct full history
         full_history = (
-            f"{context.cobbie_history}\n\n"
+            f"{context.cobbie_result.history}\n\n"
             f"--- Final Answer ---\n"
-            f"Thoughts: {context.cobbie_result.thoughts}\n"
-            f"Answer: {context.cobbie_result.answer}"
+            f"Thoughts: {cobbie_answer.thoughts}\n"
+            f"Answer: {cobbie_answer.answer}"
         )
 
         result, collector, debug_history = debug_helper_function(
@@ -693,7 +725,7 @@ def handle_test_tool_with_cobbie(context: Context) -> Tuple[TrainingState, Conte
         ifc_path = context.qa_pair.ifc.model_path if context.qa_pair.ifc else None
 
         # Run Cobbie with enhanced question and test tools
-        result, collector, history = cobbie(
+        test_cobbie_result = cobbie(
             user_input=enhanced_question,
             tools=test_tools,
             max_iterations=20,
@@ -701,12 +733,16 @@ def handle_test_tool_with_cobbie(context: Context) -> Tuple[TrainingState, Conte
             client="GLM_4_7",
         )
 
-        context.test_cobbie_result = result
-        context.test_cobbie_collector = collector
-        context.test_cobbie_history = history
+        context.test_cobbie_result = test_cobbie_result
         context.test_cobbie_duration = time.time() - start_time
 
-        logger.info(f"Tool testing Cobbie run completed: {result.answer[:100]}...")
+        if test_cobbie_result.error:
+            logger.error(f"Test Cobbie returned error: {test_cobbie_result.error.error_message}")
+            context.error_message = f"Tool testing error: {test_cobbie_result.error.error_message}"
+            return TrainingState.ERROR, context
+
+        answer_text = test_cobbie_result.answer.answer if test_cobbie_result.answer else ""
+        logger.info(f"Tool testing Cobbie run completed: {answer_text[:100]}...")
         return TrainingState.ASSESS_TOOL_USAGE, context
 
     except Exception as e:
@@ -751,17 +787,26 @@ def handle_assess_tool_usage(context: Context) -> Tuple[TrainingState, Context]:
 
         # Verify the test answer
         verify_start = time.time()
-        assert context.test_cobbie_result is not None, (
-            "The test_cobbie_result in context cannot be None at this step."
+        assert context.test_cobbie_result is not None and context.test_cobbie_result.answer is not None, (
+            "The test_cobbie_result and its answer in context cannot be None at this step."
         )
+        test_answer = context.test_cobbie_result.answer
+
         verify_result, verify_collector = verify_answer(
             question=context.qa_pair.question,
             category=category,
             ground_truth=context.qa_pair.ground_truth,
-            system_response=context.test_cobbie_result.answer,
+            system_response=test_answer.answer,
             llm_provider="zai",
             llm_name=LLM_NAME,
         )
+
+        if isinstance(verify_result, AgentError):
+            logger.error(f"Test answer verification returned error: {verify_result.error_message}")
+            context.error_message = f"Test verification error: {verify_result.error_message}"
+            context.test_verify_duration = time.time() - verify_start
+            return TrainingState.ERROR, context
+
         context.test_verify_result = verify_result
         context.test_verify_collector = verify_collector
         context.test_verify_duration = time.time() - verify_start
@@ -781,10 +826,10 @@ def handle_assess_tool_usage(context: Context) -> Tuple[TrainingState, Context]:
 
         # Construct full test history with final answer
         full_test_history = (
-            f"{context.test_cobbie_history}\n\n"
+            f"{context.test_cobbie_result.history}\n\n"
             f"--- Final Answer ---\n"
-            f"Thoughts: {context.test_cobbie_result.thoughts}\n"
-            f"Answer: {context.test_cobbie_result.answer}"
+            f"Thoughts: {test_answer.thoughts}\n"
+            f"Answer: {test_answer.answer}"
         )
 
         # Assess tool usage
@@ -795,11 +840,18 @@ def handle_assess_tool_usage(context: Context) -> Tuple[TrainingState, Context]:
             ground_truth_answer=context.qa_pair.ground_truth,
             tested_tool_name=context.tool_name,
             tested_tool_description=tool_description,
-            final_answer=context.test_cobbie_result.answer,
+            final_answer=test_answer.answer,
             answer_correctness=classification,
             llm_provider="zai",
             llm_name=LLM_NAME,
         )
+
+        if isinstance(assessment, AgentError):
+            logger.error(f"Tool assessment returned error: {assessment.error_message}")
+            context.error_message = f"Tool assessment error: {assessment.error_message}"
+            context.tool_assessment_duration = time.time() - assess_start
+            return TrainingState.ERROR, context
+
         context.tool_assessment = assessment
         context.tool_assessment_collector = assessment_collector
         context.tool_assessment_duration = time.time() - assess_start

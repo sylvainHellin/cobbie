@@ -11,6 +11,7 @@ from .generate_tools_docs import generate_tools_docs
 from .delete_tool import delete_tool
 from .extract_tool_usage import extract_tools_used
 from .code_act_inner_loop import _execute_code_action
+from .baml_retry import call_baml_with_retry
 # NOTE: metrics module not imported here to avoid circular import with answer_verifier
 # Import directly from src.util.metrics if needed
 
@@ -29,5 +30,6 @@ __all__ = [
     "generate_tools_docs",
     "delete_tool",
     "extract_tools_used",
-    "_execute_code_action"
+    "_execute_code_action",
+    "call_baml_with_retry",
 ]

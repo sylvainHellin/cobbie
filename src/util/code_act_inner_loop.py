@@ -5,6 +5,8 @@ import mlflow
 from src.baml.baml_client import b
 from src.baml.baml_client.types import CodeAction, FinalAnswer
 from src.config import FUNCTION_BOILERPLATE
+from src.schemas.agent_error import AgentError
+from src.util.baml_retry import call_baml_with_retry
 from src.util.python_executor import execute_python
 
 
@@ -74,7 +76,7 @@ def _code_act_iter(
     previous_attempts: Optional[str] = None,
     model_path: Optional[str] = None,
     **kwargs,
-) -> CodeAction | FinalAnswer:
+) -> CodeAction | FinalAnswer | AgentError:
     """
     Execute a single reasoning step using BAML.
 
@@ -84,37 +86,34 @@ def _code_act_iter(
     Args:
         user_input: The original question or task
         available_tools: Documentation of available tools
-        previous_results: Results from previous iterations
+        previous_attempts: Results from previous iterations
         model_path: Optional path to IFC model file
         **kwargs: Additional arguments for BAML function (including baml_options)
 
     Returns:
-        CodeAction to continue reasoning or FinalAnswer to stop
+        CodeAction to continue reasoning, FinalAnswer to stop, or AgentError on failure.
     """
 
     # Extract baml_options if provided for collector integration
     baml_options = kwargs.pop("baml_options", {})
 
-    # Call BAML function with union return type and proper options handling
-    try:
-        if baml_options:
-            result = b.with_options(**baml_options).Cobbie(
+    if baml_options:
+        return call_baml_with_retry(
+            lambda: b.with_options(**baml_options).Cobbie(
                 user_input=user_input,
                 available_tools=available_tools,
                 previous_attempts=previous_attempts,
                 model_path=model_path,
-            )
-        else:
-            result = b.Cobbie(
-                user_input=user_input,
-                available_tools=available_tools,
-                previous_attempts=previous_attempts,
-                model_path=model_path,
-            )
-    except Exception as e:
-        result = FinalAnswer(
-            answer="ERROR",
-            thoughts=f"An Exception occured when trying to process the answer. Exception:\n{e}",
+            ),
+            context_name="Cobbie",
         )
-
-    return result
+    else:
+        return call_baml_with_retry(
+            lambda: b.Cobbie(
+                user_input=user_input,
+                available_tools=available_tools,
+                previous_attempts=previous_attempts,
+                model_path=model_path,
+            ),
+            context_name="Cobbie",
+        )

@@ -46,7 +46,7 @@ def log_qa_metrics(context: Context) -> dict:
     """
     # Extract token metrics from all collectors
     cobbie_input, cobbie_output, cobbie_total = extract_token_metrics(
-        context.cobbie_collector
+        context.cobbie_result.collector if context.cobbie_result else None
     )
     verify_input, verify_output, verify_total = extract_token_metrics(
         context.verify_collector
@@ -66,7 +66,7 @@ def log_qa_metrics(context: Context) -> dict:
 
     # NEW: Extract test and assessment metrics
     test_cobbie_input, test_cobbie_output, test_cobbie_total = extract_token_metrics(
-        context.test_cobbie_collector
+        context.test_cobbie_result.collector if context.test_cobbie_result else None
     )
     test_verify_input, test_verify_output, test_verify_total = extract_token_metrics(
         context.test_verify_collector

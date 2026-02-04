@@ -15,8 +15,10 @@ from loguru import logger
 
 from src.baml.baml_client.types import CodeAction, UpdatedHelperFunction
 from src.config import DIRECTORY_IFC_MODELS_PATH
+from src.schemas.agent_error import AgentError
 from src.tools.initial import query_ifcopenshell_docs
 from src.util import _execute_code_action, generate_tools_docs, setup_logger
+from src.util.baml_retry import call_baml_with_retry
 from src.util.python_executor import setup_interpreter
 from src.agents import derive_binary_classification
 
@@ -32,7 +34,7 @@ def _helper_function_debugger_iter(
     other_bim_models_for_testing: Optional[List[str]] = None,
     previous_attempts: Optional[str] = None,
     **kwargs,
-) -> CodeAction | UpdatedHelperFunction:
+) -> CodeAction | UpdatedHelperFunction | AgentError:
     """
     Execute a single iteration of the helper function debugger.
 
@@ -50,17 +52,16 @@ def _helper_function_debugger_iter(
         **kwargs: Additional arguments for BAML function (including baml_options)
 
     Returns:
-        CodeAction to continue debugging or UpdatedHelperFunction when complete
+        CodeAction to continue debugging, UpdatedHelperFunction when complete, or AgentError on failure.
     """
     from src.baml.baml_client import b
 
     # Extract baml_options if provided for collector integration
     baml_options = kwargs.pop("baml_options", {})
 
-    # Call BAML function with union return type
-    try:
-        if baml_options:
-            result = b.with_options(**baml_options).HelperFunctionDebugger(
+    if baml_options:
+        return call_baml_with_retry(
+            lambda: b.with_options(**baml_options).HelperFunctionDebugger(
                 faulty_function_name=faulty_function_name,
                 faulty_function_implementation=faulty_function_implementation,
                 history_faulty_tool_use=history_faulty_tool_use,
@@ -68,28 +69,22 @@ def _helper_function_debugger_iter(
                 error_description=error_description,
                 ifc_model_path=ifc_model_path,
                 previous_attempts=previous_attempts,
-            )
-        else:
-            result = b.HelperFunctionDebugger(
-                faulty_function_name=faulty_function_name,
-                faulty_function_implementation=faulty_function_implementation,
-                history_faulty_tool_use=history_faulty_tool_use,
-                other_bim_models_for_testing=other_bim_models_for_testing,
-                error_description=error_description,
-                ifc_model_path=ifc_model_path,
-                previous_attempts=previous_attempts,
-            )
-    except Exception as e:
-        logger.error(f"Error in HelperFunctionDebugger iteration: {e}")
-        result = UpdatedHelperFunction(
-            thoughts=f"An Exception occurred when trying to debug the helper function. Exception:\n{e}",
-            fixed_implementation="",
-            changes_summary="Error occurred during debugging",
-            success=False,
-            test_cases_provided="",
+            ),
+            context_name="HelperFunctionDebugger",
         )
-
-    return result
+    else:
+        return call_baml_with_retry(
+            lambda: b.HelperFunctionDebugger(
+                faulty_function_name=faulty_function_name,
+                faulty_function_implementation=faulty_function_implementation,
+                history_faulty_tool_use=history_faulty_tool_use,
+                other_bim_models_for_testing=other_bim_models_for_testing,
+                error_description=error_description,
+                ifc_model_path=ifc_model_path,
+                previous_attempts=previous_attempts,
+            ),
+            context_name="HelperFunctionDebugger",
+        )
 
 
 def _debug_helper_function(
@@ -627,7 +622,7 @@ if __name__ == "__main__":
 
     with mlflow.start_run(run_name="HelperFunctionDebugger_Test"):
         # Run Cobbie (will get wrong answer due to faulty tool)
-        cobbie_result, cobbie_collector, execution_history = cobbie(
+        cobbie_response = cobbie(
             user_input=test_question,
             tools=tools_dict,
             max_iterations=10,
@@ -636,12 +631,12 @@ if __name__ == "__main__":
             llm_name="GLM-4.6",
         )
 
-        print(f"Cobbie Answer: {cobbie_result.answer}\n")
+        print(f"Cobbie Answer: {cobbie_response.answer.answer if cobbie_response.answer else 'No answer'}\n")
 
         # Construct full history
         full_history = (
-            execution_history
-            + f"\n--- Final Answer ---\nThoughts: {cobbie_result.thoughts}\nAnswer: {cobbie_result.answer}"
+            cobbie_response.history
+            + f"\n--- Final Answer ---\nThoughts: {cobbie_response.answer.thoughts if cobbie_response.answer else 'No thoughts'}\nAnswer: {cobbie_response.answer.answer if cobbie_response.answer else 'No answer'}"
         )
 
         print("=" * 80)
@@ -653,12 +648,17 @@ if __name__ == "__main__":
             question=test_question,
             category=1,
             ground_truth=ground_truth,
-            system_response=cobbie_result.answer,
+            system_response=cobbie_response.answer.answer if cobbie_response.answer else "",
         )
 
-        classification = derive_binary_classification(result=verification)
+        if isinstance(verification, AgentError):
+            print(f"Error: {verification.error_message}")
+            classification = "abstained"
+        else:
+            classification = derive_binary_classification(result=verification)
         print(f"Classification: {classification}")
-        print(f"Justification: {verification.justification}\n")
+        if not isinstance(verification, AgentError):
+            print(f"Justification: {verification.justification}\n")
 
         if classification == "wrong":
             print("=" * 80)
@@ -673,17 +673,21 @@ if __name__ == "__main__":
                 history=full_history,
                 question=test_question,
                 ground_truth=ground_truth,
-                provided_answer=cobbie_result.answer,
-                justification=verification.justification,
+                provided_answer=cobbie_response.answer.answer if cobbie_response.answer else "",
+                justification=verification.justification if not isinstance(verification, AgentError) else "",
                 existing_helper_functions=existing_helpers,
             )
 
-            print(f"Faulty Tool Identified: {faulty_analysis.faulty_tool}")
-            if faulty_analysis.faulty_tool:
-                print(f"Tool Name: {faulty_analysis.faulty_tool_name}")
-                print(f"Confidence: {faulty_analysis.confidence}")
-                print(f"\nError Description:\n{faulty_analysis.error_description}\n")
+            if isinstance(faulty_analysis, AgentError):
+                print(f"Error: {faulty_analysis.error_message}")
+            else:
+                print(f"Faulty Tool Identified: {faulty_analysis.faulty_tool}")
+                if faulty_analysis.faulty_tool:
+                    print(f"Tool Name: {faulty_analysis.faulty_tool_name}")
+                    print(f"Confidence: {faulty_analysis.confidence}")
+                    print(f"\nError Description:\n{faulty_analysis.error_description}\n")
 
+            if not isinstance(faulty_analysis, AgentError) and faulty_analysis.faulty_tool:
                 print("=" * 80)
                 print("STEP 4: Debugging faulty tool")
                 print("=" * 80)

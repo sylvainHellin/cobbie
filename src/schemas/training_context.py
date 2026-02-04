@@ -3,7 +3,6 @@ from src.db.models import IfcBench
 from typing import Optional, Dict, Callable, Literal
 from baml_py.baml_py import Collector
 from src.baml.baml_client.types import (
-    FinalAnswer,
     AnswerEvaluationResult,
     NewToolAnalysis,
     NewHelperFunction,
@@ -11,6 +10,7 @@ from src.baml.baml_client.types import (
     UpdatedHelperFunction,
     HelperFunctionAssessment,
 )
+from src.schemas.agent_error import CobbiResult
 
 
 # Object to handle the context added by each agent for each qa_pair processing
@@ -27,9 +27,7 @@ class Context(BaseModel):
     grace_period: int = 8
 
     # Cobbie agent results
-    cobbie_result: Optional[FinalAnswer] = None
-    cobbie_collector: Optional[Collector] = None
-    cobbie_history: str = ""
+    cobbie_result: Optional[CobbiResult] = None
     cobbie_duration: float = 0.0
 
     # Answer verifier results
@@ -60,9 +58,7 @@ class Context(BaseModel):
     debug_tool_duration: float = 0.0
 
     # Tool testing results (both paths)
-    test_cobbie_result: Optional[FinalAnswer] = None
-    test_cobbie_collector: Optional[Collector] = None
-    test_cobbie_history: str = ""
+    test_cobbie_result: Optional[CobbiResult] = None
     test_cobbie_duration: float = 0.0
     test_verify_result: Optional[AnswerEvaluationResult] = None
     test_verify_collector: Optional[Collector] = None

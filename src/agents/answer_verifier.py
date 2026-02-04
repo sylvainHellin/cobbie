@@ -11,6 +11,8 @@ from baml_py.baml_py import Collector
 
 from src.baml.baml_client import b
 from src.baml.baml_client.types import AnswerEvaluationResult, CriterionResult, QuestionCategory
+from src.schemas.agent_error import AgentError
+from src.util.baml_retry import call_baml_with_retry
 
 
 def _map_category_to_baml(category: Literal[1, 2, 3, 4]) -> QuestionCategory:
@@ -67,7 +69,7 @@ def verify_answer(
     llm_provider: str = "zai",
     llm_name: str = "GLM-4.7",
     **kwargs,
-) -> Tuple[AnswerEvaluationResult, Collector]:
+) -> Tuple[AnswerEvaluationResult | AgentError, Collector]:
     """
     Evaluate an answer and return both result and usage metrics.
 
@@ -110,36 +112,20 @@ def verify_answer(
         baml_category = _map_category_to_baml(category)
 
         # Classify the answer
-        if system_response == "ERROR":
-            answer_classification = AnswerEvaluationResult(
-                abstention=True,
-                faithfulness=CriterionResult.Na,
-                completeness=CriterionResult.Na,
-                transparency=CriterionResult.Na,
-                relevance=CriterionResult.Na,
-                justification="The system could not answer the question",
-            )
-        else:
+        baml_options = kwargs.pop("baml_options", {})
+        answer_classification = call_baml_with_retry(
+            lambda: b.with_options(**baml_options).EvaluateResponse(
+                question=question,
+                category=baml_category,
+                ground_truth=ground_truth,
+                system_response=system_response,
+                **kwargs,
+            ),
+            context_name="EvaluateResponse",
+        )
 
-            try:
-                answer_classification = b.with_options(
-                    **kwargs.pop("baml_options", {})
-                ).EvaluateResponse(
-                    question=question,
-                    category=baml_category,
-                    ground_truth=ground_truth,
-                    system_response=system_response,
-                    **kwargs,
-                )
-            except Exception as e:
-                answer_classification = AnswerEvaluationResult(
-                    abstention=True,
-                    faithfulness=CriterionResult.Na,
-                    completeness=CriterionResult.Na,
-                    transparency=CriterionResult.Na,
-                    relevance=CriterionResult.Na,
-                    justification=f"An Exception occured when trying to classify this answer. Exception:\n{e}",
-                )
+        if isinstance(answer_classification, AgentError):
+            return answer_classification, collector
 
         # Log outputs
         verifier_span.set_outputs(
@@ -195,13 +181,16 @@ if __name__ == "__main__":
     )
 
     print("BAML Answer Verifier Test Results:")
-    print(f"Abstention: {result.abstention}")
-    print(f"Faithfulness: {result.faithfulness}")
-    print(f"Completeness: {result.completeness}")
-    print(f"Transparency: {result.transparency}")
-    print(f"Relevance: {result.relevance}")
-    print(f"Justification: {result.justification}")
-    print(f"Derived Classification: {derive_binary_classification(result)}")
+    if isinstance(result, AgentError):
+        print(f"Error: {result.error_message}")
+    else:
+        print(f"Abstention: {result.abstention}")
+        print(f"Faithfulness: {result.faithfulness}")
+        print(f"Completeness: {result.completeness}")
+        print(f"Transparency: {result.transparency}")
+        print(f"Relevance: {result.relevance}")
+        print(f"Justification: {result.justification}")
+        print(f"Derived Classification: {derive_binary_classification(result)}")
 
     # Extract metrics
     input_tokens = 0
@@ -223,12 +212,15 @@ if __name__ == "__main__":
     )
 
     print("\nBAML Answer Verifier with Metrics Test Results:")
-    print(f"Abstention: {result_with_metrics.abstention}")
-    print(f"Faithfulness: {result_with_metrics.faithfulness}")
-    print(f"Completeness: {result_with_metrics.completeness}")
-    print(f"Transparency: {result_with_metrics.transparency}")
-    print(f"Relevance: {result_with_metrics.relevance}")
-    print(f"Justification: {result_with_metrics.justification}")
-    print(f"Derived Classification: {derive_binary_classification(result_with_metrics)}")
+    if isinstance(result_with_metrics, AgentError):
+        print(f"Error: {result_with_metrics.error_message}")
+    else:
+        print(f"Abstention: {result_with_metrics.abstention}")
+        print(f"Faithfulness: {result_with_metrics.faithfulness}")
+        print(f"Completeness: {result_with_metrics.completeness}")
+        print(f"Transparency: {result_with_metrics.transparency}")
+        print(f"Relevance: {result_with_metrics.relevance}")
+        print(f"Justification: {result_with_metrics.justification}")
+        print(f"Derived Classification: {derive_binary_classification(result_with_metrics)}")
     print(f"Input Tokens: {input_tokens}")
     print(f"Output Tokens: {output_tokens}")
