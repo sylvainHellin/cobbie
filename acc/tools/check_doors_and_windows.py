@@ -3,67 +3,94 @@ import ifcopenshell.util.element
 from typing import List
 
 
-def check_doors_and_windows(model: ifcopenshell.file) -> List[str]:
+def check_doors_and_windows(path_ifc_model: str) -> List[str]:
     """
-    Checks that doors and windows in the model are located in the same floor 
-    as the wall they are related to. Also checks for orphan doors or windows 
-    (elements without a relation to any wall).
+    Validates doors and windows in an IFC model to ensure:
+    1. Doors/windows are located in the same floor (IfcBuildingStorey) as the wall they are related to
+    2. No orphan doors/windows exist (a door or window without a relation to any wall)
+
+    The function checks for wall relationships using IfcRelVoidsElement connections,
+    which is the standard IFC method for relating doors/windows to walls through openings.
 
     Args:
-        model (ifcopenshell.file): The IFC model to check.
+        path_ifc_model: Path to the IFC model file
 
     Returns:
-        List[str]: A list of IFC GUIDs of doors and windows that violate the rule.
+        List of IFC GUIDs of all doors/windows that violate the rule.
+        Violations include:
+        - Orphan doors/windows (no related wall found)
+        - Doors/windows on a different floor than their related wall
 
     Example:
-        >>> import ifcopenshell
-        >>> model = ifcopenshell.open('model.ifc')
-        >>> violations = check_doors_and_windows(model)
-        >>> print(f"Found {len(violations)} violations.")
+        >>> violations = check_doors_and_windows('/path/to/model.ifc')
+        >>> print(f"Found {len(violations)} violations")
     """
-    violating_guids: List[str] = []
+    model = ifcopenshell.open(path_ifc_model)
     
-    try:
-        # Get all doors and windows
-        elements = model.by_type('IfcDoor') + model.by_type('IfcWindow')
-        
-        for element in elements:
-            element_guid = element.GlobalId
+    # Build a lookup map from door/window GUID to their related wall
+    # Using IfcRelVoidsElement → IfcOpeningElement → IfcRelFillsElement chain
+    wall_lookup = {}  # Maps door/window GUID -> wall element
+    skipped_rels = 0
+    
+    for rel in model.by_type('IfcRelVoidsElement'):
+        try:
+            wall = rel.RelatingBuildingElement
+            opening = rel.RelatedOpeningElement
             
-            # Get the spatial container (storey) for the element
-            element_container = ifcopenshell.util.element.get_container(element)
+            # Check if this opening has any fillings (doors/windows)
+            if hasattr(opening, 'HasFillings'):
+                for filling in opening.HasFillings:
+                    if hasattr(filling, 'RelatedBuildingElement'):
+                        filled_elem = filling.RelatedBuildingElement
+                        if filled_elem.is_a() in ('IfcDoor', 'IfcWindow'):
+                            wall_lookup[filled_elem.GlobalId] = wall
+        except AttributeError:
+            skipped_rels += 1
+            continue
+    
+    if skipped_rels > 0:
+        print(f"Warning: Skipped {skipped_rels} IfcRelVoidsElement relations due to missing attributes")
+    
+    # Check all doors and windows for violations
+    violations = []
+    orphan_count = 0
+    storey_mismatch_count = 0
+    skipped_elements = 0
+    
+    for elem in model.by_type('IfcDoor') + model.by_type('IfcWindow'):
+        try:
+            guid = elem.GlobalId
             
-            # Find the related wall
-            # The chain is typically: Element -> IfcRelFillsElement -> IfcOpeningElement -> IfcRelVoidsElement -> Wall
-            related_wall = None
+            # Check if orphan (no related wall found through standard relationship)
+            if guid not in wall_lookup:
+                orphan_count += 1
+                violations.append(guid)
+                continue
             
-            # Step 1: Find IfcRelFillsElement pointing to this element
-            fills_rels = [rel for rel in model.get_inverse(element) if rel.is_a('IfcRelFillsElement')]
+            # Get storey of door/window
+            door_container = ifcopenshell.util.element.get_container(elem)
+            door_storey_id = None
+            if door_container and door_container.is_a() == 'IfcBuildingStorey':
+                door_storey_id = door_container.GlobalId
             
-            if fills_rels:
-                for rel in fills_rels:
-                    opening = rel.RelatingOpeningElement
-                    if opening:
-                        # Step 2: Find IfcRelVoidsElement pointing to this opening
-                        voids_rels = [rel for rel in model.get_inverse(opening) if rel.is_a('IfcRelVoidsElement')]
-                        if voids_rels:
-                            # Found the host wall
-                            related_wall = voids_rels[0].RelatingBuildingElement
-                            break
+            # Get storey of related wall
+            wall = wall_lookup[guid]
+            wall_container = ifcopenshell.util.element.get_container(wall)
+            wall_storey_id = None
+            if wall_container and wall_container.is_a() == 'IfcBuildingStorey':
+                wall_storey_id = wall_container.GlobalId
             
-            if related_wall:
-                # Check storey consistency
-                wall_container = ifcopenshell.util.element.get_container(related_wall)
+            # Compare storeys - only flag as violation if both have storeys and they differ
+            # If either has no storey, we can't definitively determine a mismatch
+            if door_storey_id and wall_storey_id and door_storey_id != wall_storey_id:
+                storey_mismatch_count += 1
+                violations.append(guid)
                 
-                # If containers are different, it's a violation
-                if element_container != wall_container:
-                    violating_guids.append(element_guid)
-            else:
-                # No wall relation found (Orphan)
-                violating_guids.append(element_guid)
-                
-    except Exception as e:
-        print(f"Error during validation: {e}")
-        raise
-        
-    return violating_guids
+        except AttributeError:
+            skipped_elements += 1
+            continue
+    
+    if skipped_elements > 0:
+        print(f"Warning: Skipped {skipped_elements} door/window elements due to missing attributes")
+    
+    return violations
