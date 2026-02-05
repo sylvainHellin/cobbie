@@ -127,7 +127,7 @@ def _create_helper_function(
     other_bim_models_for_testing: Optional[List[str]] = None,
     max_iterations: int = 15,
     initial_previous_attempts: Optional[str] = None,
-    llm_name: str = "GLM-4.6",
+    llm_name: str = "GLM-4.7",
     llm_provider: str = "zai",
     boilerplate: Optional[str] = None,
     no_classification: bool = False,
@@ -153,7 +153,7 @@ def _create_helper_function(
         existing_implementation: Current tool implementation (if enhancing)
         other_bim_models_for_testing: List of other BIM models for testing
         max_iterations: Maximum number of iterations (default: 15)
-        llm_name: LLM model name (default: "GLM-4.6")
+        llm_name: LLM model name (default: "GLM-4.7")
         llm_provider: LLM provider (default: "zai")
         **kwargs: Additional arguments passed to BAML function
 
@@ -501,7 +501,7 @@ def create_helper_function(
     other_bim_models_for_testing: Optional[List[str]] = None,
     max_iterations: int = 15,
     llm_provider: str = "zai",
-    llm_name: str = "GLM-4.6",
+    llm_name: str = "GLM-4.7",
     boilerplate: Optional[str] = None,
     no_classification: bool = False,
     available_tools_docs: Optional[str] = None,
@@ -527,7 +527,7 @@ def create_helper_function(
         other_bim_models_for_testing: List of other BIM models for testing
         max_iterations: Maximum number of iterations (default: 15)
         llm_provider: LLM provider (default: "zai")
-        llm_name: LLM model name (default: "GLM-4.6")
+        llm_name: LLM model name (default: "GLM-4.7")
         **kwargs: Additional arguments passed to BAML function
 
     Returns:
@@ -727,7 +727,7 @@ Question: What spaces in the current IFC model do not have enough room for wheel
         function_description=test_question,
         max_iterations=15,
         llm_provider="zai",
-        llm_name="GLM-4.6",
+        llm_name="GLM-4.7",
     )
 
     print(f"\nCreation successful: {result.success}")

@@ -97,6 +97,7 @@ class ACCContext:
 
     # Per-model training results
     training_results_per_model: dict[str, GUIDComparisonResult] = field(default_factory=dict)
+    training_predicted_per_model: dict[str, list[str]] = field(default_factory=dict)  # name -> predicted GUIDs
     training_result_aggregated: Optional[GUIDComparisonResult] = None  # combined TP/FP/FN
     training_result_avg_f1: float = 0.0  # mean per-model F1
 
@@ -525,6 +526,7 @@ def handle_validate_tool(ctx: ACCContext) -> Tuple[ACCTrainingState, ACCContext]
             expected = ctx.training_guids_per_model.get(model_name, [])
             result = compare_guids(set(predicted), set(expected))
 
+            ctx.training_predicted_per_model[model_name] = predicted
             ctx.training_results_per_model[model_name] = result
             total_tp += result.tp
             total_fp += result.fp
@@ -667,6 +669,10 @@ def handle_assess_generalizability(ctx: ACCContext) -> Tuple[ACCTrainingState, A
         for guids in ctx.training_guids_per_model.values():
             all_training_expected.extend(guids)
 
+        all_training_predicted: list[str] = []
+        for guids in ctx.training_predicted_per_model.values():
+            all_training_predicted.extend(guids)
+
         # Compute aggregated validation expected/predicted counts
         val_expected_count = sum(len(g) for g in ctx.validation_guids_per_model.values())
         val_predicted_count = sum(r.tp + r.fp for r in ctx.validation_results_per_model.values())
@@ -678,7 +684,7 @@ def handle_assess_generalizability(ctx: ACCContext) -> Tuple[ACCTrainingState, A
             question=ctx.question,
             training_model_name=ctx.primary_training_model,
             training_expected_guids=all_training_expected,
-            training_predicted_guids=[],  # not tracked per-model; aggregated metrics used
+            training_predicted_guids=all_training_predicted,
             training_tp=ctx.training_result_aggregated.tp,
             training_fp=ctx.training_result_aggregated.fp,
             training_fn=ctx.training_result_aggregated.fn,
