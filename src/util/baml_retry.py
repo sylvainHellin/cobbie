@@ -10,7 +10,7 @@ from src.schemas.agent_error import AgentError
 
 T = TypeVar("T")
 
-DEFAULT_MAX_RETRIES = 5
+DEFAULT_MAX_RETRIES = 3
 DEFAULT_RETRY_DELAY_S = 30
 
 
