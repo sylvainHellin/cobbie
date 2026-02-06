@@ -36,6 +36,7 @@ from tqdm import tqdm
 
 from src.agents.answer_verifier import verify_answer, derive_binary_classification
 from src.agents.cobbie import cobbie
+from src.agents.static_oneshot import static_oneshot
 from src.config import ROOT_PATH
 from src.schemas.agent_error import AgentError
 from src.db import DEVSET
@@ -885,6 +886,253 @@ def process_question_baseline(
             }
 
 
+# ============================================================================
+# STATIC ONE-SHOT MODE FUNCTION
+# ============================================================================
+
+
+def process_question_static(
+    question_data,
+    question_index: int,
+    tools_dict: Dict[str, Callable],
+    args,
+) -> Dict:
+    """Process a single question using the static one-shot baseline.
+
+    Args:
+        question_data: Dataset question object
+        question_index: Index of the question
+        tools_dict: Dictionary of available tools
+        args: Command line arguments
+
+    Returns:
+        Dictionary containing question processing results
+    """
+    question = question_data.question
+    ground_truth = getattr(question_data, "answer", "") or getattr(
+        question_data, "ground_truth", ""
+    )
+    category = getattr(question_data, "category", None)
+    question_id = getattr(question_data, "id", f"q_{question_index + 1}")
+    ifc_path = question_data.ifc.model_path if question_data.ifc else None
+
+    # Skip question if category is not provided
+    if category is None:
+        error_msg = f"ERROR: Question {question_id} missing required 'category' field. SKIPPING."
+        logger.error(error_msg)
+        return {
+            "question": question,
+            "ground_truth": ground_truth,
+            "category": None,
+            "status": "error",
+            "error_message": "Missing required 'category' field",
+            "execution_time": 0.0,
+            "classification": None,
+            "input_tokens": 0,
+            "output_tokens": 0,
+            "mlflow_run_id": "skipped_no_category",
+        }
+
+    logger.info(f"[STATIC] Processing question {question_index + 1}: {question[:80]}...")
+
+    run_name = f"question_{question_index}_{question_id}_static"
+
+    with mlflow.start_run(run_name=run_name, nested=True) as question_run:
+        client_info = CLIENT_INFO.get(args.client, {"model": args.client, "provider": "unknown"})
+        mlflow.log_params(
+            {
+                "question": question,
+                "ground_truth": ground_truth,
+                "category": category,
+                "question_id": question_id,
+                "llm": client_info["model"],
+                "provider_name": client_info["provider"],
+                "model_path": ifc_path or "None",
+                "system": "static",
+            }
+        )
+
+        with mlflow.start_span(name="StaticOneshot", span_type="CHAIN") as question_span:
+            question_span.set_inputs(
+                {
+                    "question": question,
+                    "ground_truth": ground_truth,
+                    "category": category,
+                    "question_index": question_index + 1,
+                    "model_path": ifc_path or "None",
+                }
+            )
+            question_span.set_attributes(
+                {
+                    "system": "static",
+                    "model": client_info["model"],
+                    "provider": client_info["provider"],
+                }
+            )
+
+            start_time_static = time.time()
+
+            # Run static one-shot
+            static_result = static_oneshot(
+                user_input=question,
+                tools=tools_dict,
+                model_path=ifc_path,
+                client=args.client,
+            )
+            static_duration = time.time() - start_time_static
+
+            final_answer = static_result.answer
+            collector = static_result.collector
+            execution_history = static_result.history
+
+            # Extract token usage from collector
+            static_input_tokens = 0
+            static_output_tokens = 0
+
+            if collector and hasattr(collector, "usage") and collector.usage:
+                usage = collector.usage
+                static_input_tokens = usage.input_tokens or 0
+                static_output_tokens = usage.output_tokens or 0
+
+            # Run AnswerVerifier if we have a successful answer
+            classification = None
+            justification = None
+            abstention = None
+            faithfulness = None
+            completeness = None
+            transparency = None
+            relevance = None
+            verifier_input_tokens = 0
+            verifier_output_tokens = 0
+            verifier_duration = 0.0
+
+            if final_answer and final_answer.answer and ground_truth:
+                verifier_start = time.time()
+                verifier_result, verifier_collector = verify_answer(
+                    question=question,
+                    category=category,
+                    ground_truth=ground_truth,
+                    system_response=final_answer.answer,
+                )
+                verifier_duration = time.time() - verifier_start
+
+                if isinstance(verifier_result, AgentError):
+                    logger.error(f"Static verification failed: {verifier_result.error_message}")
+                    classification = "error"
+                    justification = f"Verification error: {verifier_result.error_message}"
+                    question_span.set_status("ERROR")
+                else:
+                    classification = derive_binary_classification(verifier_result)
+                    abstention = verifier_result.abstention
+                    faithfulness = verifier_result.faithfulness.value
+                    completeness = verifier_result.completeness.value
+                    transparency = verifier_result.transparency.value
+                    relevance = verifier_result.relevance.value
+                    justification = verifier_result.justification
+
+                if verifier_collector and hasattr(verifier_collector, "usage") and verifier_collector.usage:
+                    verifier_input_tokens = verifier_collector.usage.input_tokens or 0
+                    verifier_output_tokens = verifier_collector.usage.output_tokens or 0
+            elif static_result.error:
+                classification = "error"
+                justification = f"Static error: {static_result.error.error_message}"
+                question_span.set_status("ERROR")
+
+            # Track tool usage
+            if args.track_tools:
+                available_tool_names = list(tools_dict.keys())
+                increment_eval_tool_inclusion(available_tool_names)
+
+                tools_used = extract_tools_used(execution_history, available_tool_names)
+                is_correct = classification == "correct"
+                update_eval_tool_usage(tools_used, is_correct)
+
+                mlflow.log_metric("num_tools_used", len(tools_used))
+                logger.info(f"Tracked usage of {len(tools_used)} tools: {tools_used}")
+
+            # Log question-level metrics
+            mlflow.log_metrics(
+                {
+                    "static_duration": static_duration,
+                    "verifier_duration": verifier_duration,
+                    "static_input_tokens": static_input_tokens,
+                    "static_output_tokens": static_output_tokens,
+                    "verifier_input_tokens": verifier_input_tokens,
+                    "verifier_output_tokens": verifier_output_tokens,
+                    "total_input_tokens": static_input_tokens + verifier_input_tokens,
+                    "total_output_tokens": static_output_tokens + verifier_output_tokens,
+                    "success": 1,
+                }
+            )
+
+            answer_text = final_answer.answer if final_answer else ""
+            thoughts_text = final_answer.thoughts if final_answer else ""
+            question_outputs = {
+                "status": "success",
+                "execution_time": static_duration,
+                "answer": answer_text,
+                "reasoning": thoughts_text,
+                "static_input_tokens": static_input_tokens,
+                "static_output_tokens": static_output_tokens,
+                "verifier_input_tokens": verifier_input_tokens,
+                "verifier_output_tokens": verifier_output_tokens,
+                "classification": classification,
+            }
+
+            question_span.set_outputs(question_outputs)
+            if classification != "error":
+                question_span.set_status("OK")
+            question_span.set_attributes(
+                {
+                    "question.status": "error" if classification == "error" else "success",
+                    "question.category": category,
+                    "classification": classification or "not_evaluated",
+                }
+            )
+
+            logger.info(
+                f"[STATIC] Question {question_index + 1} completed: classification={classification}, "
+                f"duration={static_duration:.2f}s"
+            )
+
+            mlflow.log_params(
+                {
+                    "answer": answer_text,
+                    "classification": classification or "not_evaluated",
+                    "justification": justification or "not_evaluated",
+                    "abstention": str(abstention) if abstention is not None else "not_evaluated",
+                    "faithfulness": faithfulness or "not_evaluated",
+                    "completeness": completeness or "not_evaluated",
+                    "transparency": transparency or "not_evaluated",
+                    "relevance": relevance or "not_evaluated",
+                }
+            )
+
+            return {
+                "question": question,
+                "ground_truth": ground_truth,
+                "category": category,
+                "status": "success",
+                "answer": answer_text,
+                "reasoning": thoughts_text,
+                "execution_time": static_duration,
+                "classification": classification,
+                "justification": justification,
+                "abstention": abstention,
+                "faithfulness": faithfulness,
+                "completeness": completeness,
+                "transparency": transparency,
+                "relevance": relevance,
+                "input_tokens": static_input_tokens + verifier_input_tokens,
+                "output_tokens": static_output_tokens + verifier_output_tokens,
+                "static_input_tokens": static_input_tokens,
+                "static_output_tokens": static_output_tokens,
+                "verifier_input_tokens": verifier_input_tokens,
+                "verifier_output_tokens": verifier_output_tokens,
+                "mlflow_run_id": question_run.info.run_id,
+            }
+
+
 def print_tool_metrics_summary():
     """Print summary of tool usage metrics from evaluation."""
     eval_stats = get_all_eval_tool_stats()
@@ -1019,9 +1267,9 @@ Examples:
 
     parser.add_argument(
         "--system",
-        choices=["cobbie", "baseline"],
+        choices=["cobbie", "baseline", "static"],
         default="cobbie",
-        help="QA system to evaluate: 'cobbie' (agentic, default) or 'baseline' (static summary)"
+        help="QA system to evaluate: 'cobbie' (agentic), 'baseline' (static summary), or 'static' (one-shot code)"
     )
 
     parser.add_argument(
@@ -1141,6 +1389,8 @@ Examples:
     else:
         if args.system == "baseline":
             mode_suffix = "_BASELINE"
+        elif args.system == "static":
+            mode_suffix = "_STATIC"
         else:
             mode_suffix = ""
         run_name = f"Evaluation{mode_suffix}_{datetime.now().strftime('%Y-%m-%d-%H-%M-%S')}"
@@ -1153,7 +1403,12 @@ Examples:
 
         # Log immutable configuration parameters (only for new runs)
         if run_id is None:
-            component_name = "BaselineQA" if args.system == "baseline" else "COBBIE"
+            if args.system == "baseline":
+                component_name = "BaselineQA"
+            elif args.system == "static":
+                component_name = "StaticOneshot"
+            else:
+                component_name = "COBBIE"
             client_info = CLIENT_INFO.get(args.client, {"model": args.client, "provider": "unknown"})
             params = {
                 "model_name": client_info["model"],
@@ -1242,6 +1497,8 @@ Examples:
         model_name = CLIENT_INFO.get(args.client, {"model": args.client})["model"]
         if args.system == "baseline":
             desc = f"Evaluating Baseline QA {model_name}"
+        elif args.system == "static":
+            desc = f"Evaluating Static One-Shot {model_name}"
         else:
             desc = f"Evaluating COBBIE {model_name}"
 
@@ -1251,6 +1508,13 @@ Examples:
                     result = process_question_baseline(
                         question_data=question_data,
                         question_index=args.start + i,
+                        args=args,
+                    )
+                elif args.system == "static":
+                    result = process_question_static(
+                        question_data=question_data,
+                        question_index=args.start + i,
+                        tools_dict=tools_dict,
                         args=args,
                     )
                 else:
@@ -1282,7 +1546,12 @@ Examples:
         mlflow.log_metrics(batch_metrics)
 
         # Log additional info to main run
-        component_tag = "BaselineQA" if args.system == "baseline" else "COBBIE"
+        if args.system == "baseline":
+            component_tag = "BaselineQA"
+        elif args.system == "static":
+            component_tag = "StaticOneshot"
+        else:
+            component_tag = "COBBIE"
         mlflow.set_tag("evaluation_status", "completed")
         mlflow.set_tag("component", component_tag)
         mlflow.set_tag("system", args.system)
@@ -1299,7 +1568,7 @@ Examples:
         print_results(results_summary)
 
         # Print tool metrics summary (not applicable for baseline)
-        if args.track_tools and args.system != "baseline":
+        if args.track_tools and args.system not in ("baseline",):
             print_tool_metrics_summary()
 
     print("\nEvaluation completed successfully!")
