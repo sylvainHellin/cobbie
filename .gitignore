@@ -36,9 +36,12 @@ logs.log
 .cursor
 scripts/text_count_tokens.txt
 .claude/*
+src/baml/baml_client
 
 # External cloned repos (for docs indexing)
 src/docs_indexer/external/
 
 # All generated outputs (reports, figures, cache)
 outputs/
+src/db/Solibri-BIM-F
+src/db/Solibri-BIM-F.zip
