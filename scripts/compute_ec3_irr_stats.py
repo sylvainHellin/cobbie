@@ -775,7 +775,7 @@ def plot_agreement_bars(agreement_df: pd.DataFrame) -> None:
 
     ax.set_title("Percentage Agreement by Criterion")
     ax.set_ylim(0, 100)
-    ax.legend(title="", bbox_to_anchor=(1.02, 1), loc="upper left")
+    ax.legend(title="", bbox_to_anchor=(1.02, 1), loc="upper left", fontsize=11)
 
     plt.tight_layout()
     plt.savefig(FIGURES_DIR / "agreement_bars.png")
@@ -1097,9 +1097,9 @@ def plot_cross_system_comparison(all_systems: pd.DataFrame) -> None:
                 )
             else:
                 # Yes/No/Na
-                for val in ["Yes", "No", "Na"]:
+                for val, label in [("Yes", "Yes"), ("No", "No"), ("Na", "N/A")]:
                     rate = (sys_data[criterion] == val).mean() * 100
-                    plot_data.append({"System": system, "Value": val, "Rate": rate})
+                    plot_data.append({"System": system, "Value": label, "Rate": rate})
 
         plot_df = pd.DataFrame(plot_data)
 
