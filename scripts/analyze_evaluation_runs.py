@@ -337,6 +337,13 @@ Examples:
         help="Export to Excel file: outputs/eval/Evaluation_YYYY-MM-DD_NAME.xlsx",
     )
 
+    parser.add_argument(
+        "--fair",
+        action="store_true",
+        default=False,
+        help="Only compare questions present in ALL runs (intersection). Requires multiple --run-ids.",
+    )
+
     args = parser.parse_args()
 
     print("=" * 80)
@@ -389,6 +396,19 @@ Examples:
     # Build DataFrame
     print("Building DataFrame...")
     df = build_dataframe(all_run_data, question_data)
+
+    # Fair mode: restrict to questions present in all runs
+    if args.fair and len(run_names) > 1 and "parent_run_name" in df.columns:
+        qid_sets = {
+            name: set(df.loc[df["parent_run_name"] == name, "question_id"])
+            for name in run_names
+        }
+        common_qids = set.intersection(*qid_sets.values())
+        print(f"\n[Fair mode] Using {len(common_qids)} questions common to all {len(run_names)} runs")
+        for name, qids in qid_sets.items():
+            excluded = len(qids) - len(qids & common_qids)
+            print(f"[Fair mode]   {name}: excluded {excluded} questions")
+        df = pd.DataFrame(df[df["question_id"].isin(list(common_qids))])
 
     # Calculate statistics
     print("Calculating statistics...")
