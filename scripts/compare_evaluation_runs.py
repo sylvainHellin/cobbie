@@ -434,6 +434,13 @@ Examples:
         help="MLflow run IDs to compare (minimum 2, space-separated)",
     )
 
+    parser.add_argument(
+        "--fair",
+        action="store_true",
+        default=False,
+        help="Only compare questions present in ALL runs (intersection). Requires multiple --run-ids.",
+    )
+
     args = parser.parse_args()
 
     if len(args.run_ids) < 2:
@@ -478,6 +485,21 @@ Examples:
     # Enrich dataframes with category and project data
     for name in run_names:
         run_dfs[name] = enrich_dataframe(run_dfs[name], question_data)
+
+    # Fair mode: restrict to questions present in all runs
+    if args.fair:
+        qid_sets = {
+            name: set(df["question_id"].dropna().astype(int))
+            for name, df in run_dfs.items()
+        }
+        common_qids = set.intersection(*qid_sets.values())
+        print(f"\n[Fair mode] Using {len(common_qids)} questions common to all {len(run_names)} runs")
+        for name, qids in qid_sets.items():
+            excluded = len(qids) - len(qids & common_qids)
+            print(f"[Fair mode]   {name}: excluded {excluded} questions")
+        common_qids_list = list(common_qids)
+        for name in run_names:
+            run_dfs[name] = pd.DataFrame(run_dfs[name][run_dfs[name]["question_id"].isin(common_qids_list)])
 
     # Calculate stats for each run
     run_stats = {name: calculate_run_stats(df) for name, df in run_dfs.items()}
