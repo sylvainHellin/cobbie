@@ -39,6 +39,10 @@
   - Retries abstained evaluation questions (e.g. from 429 errors) in batches
   - 4 phases: `identify` → `retry` → `cleanup` → `recalculate`
   - Fish wrapper automates identify + retry; cleanup and recalculate are run manually after verification
+- **IFC Validation**: `uv run scripts/validate_ifc_models.py`
+  - Validates all IFC models in `src/db/bim_models/` for schema compliance
+  - Supports `--verbose` (per-category breakdown), `--sort-by project|issues|entities`
+  - `--csv` and `--md` export reports to `outputs/ifc-bench/`
 
 ## Architecture Overview
 
@@ -104,12 +108,27 @@ outputs/
 ├── ec3/            # EC3 paper analysis (CSVs, TEX tables, markdown reports)
 │   └── figures/    # All figures (PNG + PDF)
 ├── eval/           # Evaluation outputs (Evaluation_*.xlsx, grading sheets)
+├── ifc-bench/      # IFC model validation reports (CSV, markdown)
 └── training/       # Training outputs (TRAINING_*.xlsx)
 ```
 
 - **Never** write generated files to the project root or ad-hoc directories.
 - New scripts must write to one of the three existing subdirectories.
 - If a new output doesn't fit any of them, **ask permission** before creating a new subdirectory under `outputs/`.
+
+### Evaluation Matrix Runs
+
+| Run Name | Run ID | CLI Args |
+|---|---|---|
+| `dynamic-manual-doc` | `316c9f396ced42e6bfb14d86063a2cd8` | `--system cobbie --tools manual --doc context7` |
+| `dynamic-auto-doc` | `2f976d9502b14496857a5334acfcc1a6` | `--system cobbie --tools created --doc context7` |
+| `dynamic-None-doc` | `4ab1263aff1c43a589a7e15bb2d67b48` | `--system cobbie --doc context7` |
+| `dynamic-manual-no_doc` | `b18012e63c424101b139d91f1e3a4066` | `--system cobbie --tools manual --doc custom` |
+| `dynamic-auto-no_doc` | `437a86bd3b864de1863456ecb38d6821` | `--system cobbie --tools created --doc custom` |
+| `dynamic-None-no_doc` | `389125f2d3654b718bf4606d306182cb` | `--system cobbie --doc custom` |
+| `static-manual` | `77e41658053f458fadb33bb7a253bb50` | `--system static --tools manual` |
+| `static-created` | `b03fc6134c5847fe83da0b0c201db52d` | `--system static --tools created` |
+| `static-None` | `d252e3844235428aa52ced2470b9b846` | `--system static` |
 
 ## Important Guidelines
 - Use `uv run` prefix for all Python commands
