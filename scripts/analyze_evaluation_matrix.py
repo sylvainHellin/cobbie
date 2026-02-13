@@ -387,6 +387,69 @@ def print_manual_tool_bias(bias_df: pd.DataFrame) -> None:
                 print("=> No significant manual tool bias detected")
 
 
+def analysis_split_by_dev_projects(
+    master: pd.DataFrame,
+) -> tuple[pd.DataFrame, pd.DataFrame, dict[str, str | float], dict[str, str | float]]:
+    """Build separate 3x3 matrices for dev projects vs other projects.
+
+    Returns (dev_matrix, other_matrix, dev_best, other_best) where *_best
+    dicts contain {"row", "col", "correct_rate"} of the highest-performing cell.
+    """
+    dev_list = list(DEV_PROJECTS)
+    dev_df = pd.DataFrame(master[master["project_name"].isin(dev_list)])
+    other_df = pd.DataFrame(master[~master["project_name"].isin(dev_list)])
+
+    dev_matrix = analysis_3x3_matrix(dev_df)
+    other_matrix = analysis_3x3_matrix(other_df)
+
+    def _find_best(matrix: pd.DataFrame) -> dict[str, str | float]:
+        best: dict[str, str | float] = {"row": "", "col": "", "correct_rate": -1.0}
+        for _, row in matrix.iterrows():
+            for col in COL_LABELS:
+                cr = float(row[f"{col}_cr"])
+                if not pd.isna(cr) and cr > float(best["correct_rate"]):
+                    best = {"row": str(row["Config"]), "col": col, "correct_rate": float(cr)}
+        return best
+
+    return dev_matrix, other_matrix, _find_best(dev_matrix), _find_best(other_matrix)
+
+
+def print_split_by_dev_projects(
+    dev_matrix: pd.DataFrame,
+    other_matrix: pd.DataFrame,
+    dev_best: dict[str, str | float],
+    other_best: dict[str, str | float],
+    dev_n: int,
+    other_n: int,
+) -> None:
+    """Print the two 3x3 matrices (dev vs other) with best cell highlighted."""
+    print("\n" + "=" * 80)
+    print("3x3 MATRIX SPLIT BY DEV PROJECTS")
+    print(f"Dev projects: {', '.join(sorted(DEV_PROJECTS))} (n={dev_n})")
+    print(f"Other projects (n={other_n})")
+    print("=" * 80)
+
+    def _format_matrix(matrix: pd.DataFrame, best: dict[str, str | float]) -> list[list[str]]:
+        table = []
+        for _, row in matrix.iterrows():
+            table_row: list[str] = [str(row["Config"])]
+            for col in COL_LABELS:
+                cr = pct(row[f"{col}_cr"])
+                n = int(row[f"{col}_n"])
+                cell = f"{cr} (n={n})"
+                if row["Config"] == best["row"] and col == best["col"]:
+                    cell += " <-- best"
+                table_row.append(cell)
+            table.append(table_row)
+        return table
+
+    print(f"\n--- Dev Projects ({', '.join(sorted(DEV_PROJECTS))}) ---")
+    print(tabulate(_format_matrix(dev_matrix, dev_best), headers=[""] + COL_LABELS, tablefmt="grid"))
+
+    print("\n--- Other Projects ---")
+    print(tabulate(_format_matrix(other_matrix, other_best), headers=[""] + COL_LABELS, tablefmt="grid"))
+
+
 # --- Step 3: Excel export ---
 
 
@@ -397,6 +460,8 @@ def export_to_excel(
     cat_tables: dict[int, pd.DataFrame],
     project_df: pd.DataFrame,
     bias_df: pd.DataFrame,
+    dev_matrix: pd.DataFrame,
+    other_matrix: pd.DataFrame,
 ) -> str:
     """Write all analysis results to an Excel file. Returns the file path."""
     date_str = datetime.now().strftime("%Y-%m-%d")
@@ -434,6 +499,10 @@ def export_to_excel(
 
         # Manual Tool Bias
         bias_df.to_excel(writer, sheet_name="Manual Tool Bias", index=False)
+
+        # 3x3 split by dev projects
+        dev_matrix.to_excel(writer, sheet_name="3x3 Dev Projects", index=False)
+        other_matrix.to_excel(writer, sheet_name="3x3 Other Projects", index=False)
 
     return path
 
@@ -487,9 +556,18 @@ def main() -> None:
     bias_df = analysis_manual_tool_bias(master)
     print_manual_tool_bias(bias_df)
 
+    dev_matrix, other_matrix, dev_best, other_best = analysis_split_by_dev_projects(master)
+    dev_list = list(DEV_PROJECTS)
+    dev_n = len(master[master["project_name"].isin(dev_list)]) // master["config"].nunique()
+    other_n = len(master[~master["project_name"].isin(dev_list)]) // master["config"].nunique()
+    print_split_by_dev_projects(dev_matrix, other_matrix, dev_best, other_best, dev_n, other_n)
+
     # Step 3: Excel export
     if args.export:
-        path = export_to_excel(master, matrix_df, marginal_tables, cat_tables, project_df, bias_df)
+        path = export_to_excel(
+            master, matrix_df, marginal_tables, cat_tables, project_df, bias_df,
+            dev_matrix, other_matrix,
+        )
         print(f"\nExported to: {path}")
 
     print("\nDone.")
