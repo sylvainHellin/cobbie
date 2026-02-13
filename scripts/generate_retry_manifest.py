@@ -13,6 +13,7 @@ Outputs JSON manifest to outputs/eval/retry_manifest.json.
 Usage:
     uv run scripts/generate_retry_manifest.py
     uv run scripts/generate_retry_manifest.py --dry-run
+    uv run scripts/generate_retry_manifest.py --override-class abstained --only-runs dynamic-manual-doc dynamic-None-doc
 """
 
 import argparse
@@ -87,6 +88,12 @@ def build_qid_to_devset_index() -> dict[int, int]:
 def main() -> None:
     parser = argparse.ArgumentParser(description="Generate retry manifest for matrix errors.")
     parser.add_argument("--dry-run", action="store_true", help="Print summary only, don't write JSON")
+    parser.add_argument("--override-class", type=str, default=None,
+                        help="Override retry classification for all selected runs (e.g. 'abstained')")
+    parser.add_argument("--only-runs", nargs="+", default=None,
+                        help="Only include these run names (space-separated)")
+    parser.add_argument("--output", type=str, default=OUTPUT_PATH,
+                        help=f"Output path for manifest JSON (default: {OUTPUT_PATH})")
     args = parser.parse_args()
 
     mlflow.set_tracking_uri(MLFLOW_URI)
@@ -97,9 +104,17 @@ def main() -> None:
     manifest: list[dict] = []
     summary_rows: list[list] = []
 
-    for run_name, config in RUN_CONFIG.items():
+    selected_runs = {k: v for k, v in RUN_CONFIG.items()
+                     if args.only_runs is None or k in args.only_runs}
+
+    if args.only_runs:
+        unknown = set(args.only_runs) - set(RUN_CONFIG)
+        if unknown:
+            print(f"WARNING: Unknown run names: {unknown}")
+
+    for run_name, config in selected_runs.items():
         run_id = config["run_id"]
-        target_class = config["retry_classification"]
+        target_class = args.override_class or config["retry_classification"]
 
         # Get experiment_id from the parent run
         parent_run = client.get_run(run_id)
@@ -154,9 +169,9 @@ def main() -> None:
         print("\n[Dry run] No file written.")
         return
 
-    with open(OUTPUT_PATH, "w") as f:
+    with open(args.output, "w") as f:
         json.dump(manifest, f, indent=2)
-    print(f"\nManifest written to: {OUTPUT_PATH}")
+    print(f"\nManifest written to: {args.output}")
 
 
 if __name__ == "__main__":
