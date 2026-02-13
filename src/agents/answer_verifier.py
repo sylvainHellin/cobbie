@@ -38,11 +38,8 @@ def derive_binary_classification(
 
     Classification logic:
     - "abstained": System explicitly declined to answer (abstention = True)
-    - "correct": Answer provided AND faithful AND complete (both = Yes)
-    - "wrong": Answer provided but fails faithfulness OR completeness
-
-    Note: Transparency and relevance criteria are not used for backward compatibility
-    classification, but are logged separately for analysis.
+    - "correct": Answer provided AND all 4 criteria satisfied (Yes)
+    - "wrong": Answer provided but fails any criterion
 
     Args:
         result: AnswerEvaluationResult with 5-criterion evaluation
@@ -55,6 +52,8 @@ def derive_binary_classification(
     elif (
         result.faithfulness == CriterionResult.Yes
         and result.completeness == CriterionResult.Yes
+        and result.transparency == CriterionResult.Yes
+        and result.relevance == CriterionResult.Yes
     ):
         return "correct"
     else:

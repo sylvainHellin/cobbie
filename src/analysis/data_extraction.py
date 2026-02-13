@@ -55,6 +55,19 @@ def extract_run_data(run) -> dict:
     if classification == "not_evaluated":
         classification = "unknown"
 
+    # Re-derive classification from stored criteria to apply current 4-criteria logic
+    # (faithfulness + completeness + transparency + relevance must all be "Yes")
+    faithfulness = params.get("faithfulness", "not_evaluated")
+    completeness = params.get("completeness", "not_evaluated")
+    transparency = params.get("transparency", "not_evaluated")
+    relevance = params.get("relevance", "not_evaluated")
+
+    if classification not in ("unknown", "abstained"):
+        if all(c == "Yes" for c in (faithfulness, completeness, transparency, relevance)):
+            classification = "correct"
+        else:
+            classification = "wrong"
+
     data = {
         "question_id": question_id,
         "run_id": run.info.run_id,
@@ -74,10 +87,10 @@ def extract_run_data(run) -> dict:
         "total_input_tokens": metrics.get("total_input_tokens", 0),
         "total_output_tokens": metrics.get("total_output_tokens", 0),
         "success": metrics.get("success", 0) == 1,
-        "faithfulness": params.get("faithfulness", "not_evaluated"),
-        "completeness": params.get("completeness", "not_evaluated"),
-        "transparency": params.get("transparency", "not_evaluated"),
-        "relevance": params.get("relevance", "not_evaluated"),
+        "faithfulness": faithfulness,
+        "completeness": completeness,
+        "transparency": transparency,
+        "relevance": relevance,
     }
 
     return data
