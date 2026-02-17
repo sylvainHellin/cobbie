@@ -27,6 +27,7 @@ import gc
 import os
 import sys
 import time
+import traceback
 from datetime import datetime
 from typing import Callable, cast, Dict, List, Literal, Optional
 
@@ -1504,26 +1505,64 @@ Examples:
 
         with tqdm(total=len(dataset), desc=desc) as pbar:
             for i, question_data in enumerate(dataset):
-                if args.system == "baseline":
-                    result = process_question_baseline(
-                        question_data=question_data,
-                        question_index=args.start + i,
-                        args=args,
+                question_index = args.start + i
+                question_id = getattr(question_data, "id", f"q_{question_index + 1}")
+
+                try:
+                    if args.system == "baseline":
+                        result = process_question_baseline(
+                            question_data=question_data,
+                            question_index=question_index,
+                            args=args,
+                        )
+                    elif args.system == "static":
+                        result = process_question_static(
+                            question_data=question_data,
+                            question_index=question_index,
+                            tools_dict=tools_dict,
+                            args=args,
+                        )
+                    else:
+                        result = process_question(
+                            question_data=question_data,
+                            question_index=question_index,
+                            tools_dict=tools_dict,
+                            args=args,
+                        )
+                except Exception as e:
+                    tb = traceback.format_exc()
+                    logger.error(
+                        f"Unexpected error processing question {question_id} "
+                        f"(index {question_index}): {e}",
+                        exc_info=True,
                     )
-                elif args.system == "static":
-                    result = process_question_static(
-                        question_data=question_data,
-                        question_index=args.start + i,
-                        tools_dict=tools_dict,
-                        args=args,
-                    )
-                else:
-                    result = process_question(
-                        question_data=question_data,
-                        question_index=args.start + i,
-                        tools_dict=tools_dict,
-                        args=args,
-                    )
+
+                    # Log the error in a nested MLflow run
+                    run_name = f"question_{question_index}_{question_id}_error"
+                    with mlflow.start_run(run_name=run_name, nested=True):
+                        mlflow.set_tag("status", "exception")
+                        mlflow.log_params({
+                            "question_id": question_id,
+                            "question": getattr(question_data, "question", "unknown"),
+                            "error_type": type(e).__name__,
+                            "error_traceback": tb[:5000],
+                        })
+
+                    result = {
+                        "question": getattr(question_data, "question", "unknown"),
+                        "ground_truth": getattr(question_data, "answer", "")
+                            or getattr(question_data, "ground_truth", ""),
+                        "category": getattr(question_data, "category", None),
+                        "status": "error",
+                        "error_message": f"{type(e).__name__}: {e}",
+                        "execution_time": 0.0,
+                        "classification": "error",
+                        "justification": f"Exception: {e}",
+                        "input_tokens": 0,
+                        "output_tokens": 0,
+                        "mlflow_run_id": "exception",
+                    }
+
                 question_results.append(result)
                 pbar.update(1)
 
