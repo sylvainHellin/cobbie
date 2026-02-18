@@ -70,18 +70,15 @@ def _query_custom(query: str) -> str:
     return query_docs(query, top_k=5)
 
 
-def query_ifcopenshell_docs(query: str) -> str:
+def query_ifcopenshell_docs(query: str) -> None:
     """
-    Retrieve documentation from IfcOpenShell based on a query.
+    Retrieve and display documentation from IfcOpenShell based on a query.
 
     Uses either Context7 API or local vector store depending on DOC_BACKEND.
-    Results are traced via MLflow when running within an active trace context.
+    Results are printed to stdout.
 
     Args:
         query: The topic or query to focus the documentation on (e.g., "finds all entities of type `IfcWall`", "element bounding box", "clash detection", etc.)
-
-    Returns:
-        str: The documentation text as a string
 
     Example:
         >>> query_ifcopenshell_docs("How to access element properties")
@@ -109,7 +106,7 @@ def query_ifcopenshell_docs(query: str) -> str:
             "result_tokens": result_tokens,
         })
 
-        return result
+        print(result)
 
 
 if __name__ == "__main__":

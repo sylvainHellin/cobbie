@@ -162,7 +162,7 @@ def execute_python(
         elif stderr_output:
             result = f"STDERR:\n{stderr_output}"
         else:
-            result = "Code executed successfully (no output)"
+            result = "Code executed successfully but produced no visible output. If you called a function that returns a value, make sure to print it: result = my_function(...); print(result)"
 
         result = result.strip()
 

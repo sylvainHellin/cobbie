@@ -17,6 +17,7 @@ function Cobbie(
 
   ## EXECUTION ENVIRONMENT
   Your code runs in a persistent Python session. Variables, imports, loaded models, and computed results from previous iterations are still available — reuse them instead of recomputing.
+  Note: only stdout and stderr are visible in the execution results.
 
   Question: {{ user_input }}
 
