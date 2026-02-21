@@ -1,10 +1,10 @@
 #!/usr/bin/env python3
 """
-Analyze 3x3 Evaluation Matrix from MLflow.
+Analyze 3x4 Evaluation Matrix from MLflow.
 
-Loads all 9 evaluation runs (3 system types x 3 tool strategies), builds a
+Loads all 11 evaluation runs (3 model rows x 4 augmentation strategies), builds a
 unified DataFrame, and produces comparative analyses across dimensions
-(system type, doc backend, tool strategy) with breakdowns by question category
+(model variant, augmentation strategy) with breakdowns by question category
 and IFC project. Special focus on manual tool bias for duplex/dental_clinic.
 
 Usage:
@@ -13,6 +13,7 @@ Usage:
 
 import argparse
 from datetime import datetime
+from pathlib import Path
 
 import mlflow
 import pandas as pd
@@ -21,7 +22,6 @@ from tabulate import tabulate
 
 from src.analysis.data_extraction import (
     CATEGORY_NAMES,
-    list_evaluation_runs,
     load_run_dataframe,
 )
 from src.config import MLFLOW_URI
@@ -30,22 +30,26 @@ from src.config import MLFLOW_URI
 
 REPORTS_DIR = "outputs/eval"
 
-# Run name -> (system, tools, doc)
-RUN_CONFIG: dict[str, tuple[str, str, str]] = {
-    "dynamic-manual-doc": ("dynamic", "manual", "yes"),
-    "dynamic-auto-doc": ("dynamic", "auto", "yes"),
-    "dynamic-None-doc": ("dynamic", "none", "yes"),
-    "dynamic-manual-no_doc": ("dynamic", "manual", "no"),
-    "dynamic-auto-no_doc": ("dynamic", "auto", "no"),
-    "dynamic-None-no_doc": ("dynamic", "none", "no"),
-    "static-manual": ("static", "manual", "n/a"),
-    "static-created": ("static", "auto", "n/a"),
-    "static-None": ("static", "none", "n/a"),
+# (model_row, augmentation) -> run_id
+RUN_IDS: dict[tuple[str, str], str] = {
+    # dynamic GLM 4.7
+    ("dynamic-4.7", "none"): "389125f2d3654b718bf4606d306182cb",
+    ("dynamic-4.7", "doc"): "4ab1263aff1c43a589a7e15bb2d67b48",
+    ("dynamic-4.7", "manual"): "b18012e63c424101b139d91f1e3a4066",
+    ("dynamic-4.7", "auto"): "437a86bd3b864de1863456ecb38d6821",
+    # dynamic GLM 4.5 air
+    ("dynamic-4.5", "none"): "3b232ec1bc224457be7300ab73a0bbf6",
+    ("dynamic-4.5", "doc"): "78fdd42f57314b9198746bddfcc9fb0c",
+    ("dynamic-4.5", "manual"): "cb8b67457a7f457ab3830ea9b2ac2c3b",
+    ("dynamic-4.5", "auto"): "3fb49ba2784c4541825d602fbb69f9dc",
+    # static GLM 4.7 (no doc variant exists)
+    ("static-4.7", "none"): "d252e3844235428aa52ced2470b9b846",
+    ("static-4.7", "manual"): "77e41658053f458fadb33bb7a253bb50",
+    ("static-4.7", "auto"): "b03fc6134c5847fe83da0b0c201db52d",
 }
 
-# Row labels for the 3x3 matrix
-ROW_LABELS = ["dynamic+doc", "dynamic-no_doc", "static"]
-COL_LABELS = ["manual", "auto", "none"]
+ROW_LABELS = ["dynamic-4.7", "dynamic-4.5", "static-4.7"]
+COL_LABELS = ["none", "doc", "manual", "auto"]
 
 # Projects where manual tools were developed (for bias analysis)
 DEV_PROJECTS = {"duplex", "dental_clinic"}
@@ -93,13 +97,6 @@ def compute_marginal_stats(df: pd.DataFrame) -> dict:
     return stats
 
 
-def row_key(system: str, doc: str) -> str:
-    """Map (system, doc) to a row label."""
-    if system == "static":
-        return "static"
-    return "dynamic+doc" if doc == "yes" else "dynamic-no_doc"
-
-
 def pct(val: object) -> str:
     """Format a float as a percentage string, or '-' if NaN."""
     if pd.isna(val):  # type: ignore[arg-type]
@@ -107,31 +104,19 @@ def pct(val: object) -> str:
     return f"{float(val):.1%}"  # type: ignore[arg-type]
 
 
-# --- Step 1: Load & tag all 9 runs ---
+# --- Step 1: Load & tag all runs ---
 
 
 def load_matrix(client: MlflowClient) -> pd.DataFrame:
-    """Discover the 9 expected runs, load and tag each, return concatenated DF."""
-    all_runs = list_evaluation_runs(client)
-    run_by_name: dict[str, str] = {}
-    for run in all_runs:
-        name = run["run_name"]
-        if name in RUN_CONFIG and name not in run_by_name:
-            run_by_name[name] = run["run_id"]
-
-    missing = set(RUN_CONFIG) - set(run_by_name)
-    if missing:
-        print(f"WARNING: Missing runs: {missing}")
-
+    """Load all runs by ID, tag each with model_row and augmentation, return concatenated DF."""
     frames: list[pd.DataFrame] = []
-    for name, run_id in sorted(run_by_name.items()):
-        system, tools, doc = RUN_CONFIG[name]
-        print(f"  Loading {name} ({run_id[:8]}...)  [{system}/{tools}/{doc}]")
+    for (model_row, augmentation), run_id in sorted(RUN_IDS.items()):
+        config = f"{model_row}-{augmentation}"
+        print(f"  Loading {config} ({run_id[:8]}...)  [{model_row}/{augmentation}]")
         df = load_run_dataframe(client, run_id)
-        df["system"] = system
-        df["tools"] = tools
-        df["doc"] = doc
-        df["config"] = name
+        df["model_row"] = model_row
+        df["augmentation"] = augmentation
+        df["config"] = config
         frames.append(df)
 
     if not frames:
@@ -141,7 +126,7 @@ def load_matrix(client: MlflowClient) -> pd.DataFrame:
 
 
 def apply_fair_filter(master: pd.DataFrame) -> pd.DataFrame:
-    """Keep only question_ids present in all 9 run configs."""
+    """Keep only question_ids present in all run configs."""
     configs = master["config"].unique()
     qid_sets = [set(master.loc[master["config"] == c, "question_id"]) for c in configs]
     common = set.intersection(*qid_sets) if qid_sets else set()
@@ -156,18 +141,13 @@ def apply_fair_filter(master: pd.DataFrame) -> pd.DataFrame:
 # --- Step 2: Analyses ---
 
 
-def analysis_3x3_matrix(master: pd.DataFrame) -> pd.DataFrame:
-    """Build the 3x3 accuracy matrix (rows: system+doc, cols: tool strategy)."""
+def analysis_matrix(master: pd.DataFrame) -> pd.DataFrame:
+    """Build the 3x4 accuracy matrix (rows: model variant, cols: augmentation strategy)."""
     rows = []
     for rl in ROW_LABELS:
         row: dict[str, str | float] = {"Config": rl}
         for col in COL_LABELS:
-            if rl == "static":
-                mask = (master["system"] == "static") & (master["tools"] == col)
-            elif rl == "dynamic+doc":
-                mask = (master["system"] == "dynamic") & (master["doc"] == "yes") & (master["tools"] == col)
-            else:
-                mask = (master["system"] == "dynamic") & (master["doc"] == "no") & (master["tools"] == col)
+            mask = (master["model_row"] == rl) & (master["augmentation"] == col)
             stats = compute_cell_stats(pd.DataFrame(master[mask]))
             row[f"{col}_cr"] = stats["correct_rate"]
             row[f"{col}_acc"] = stats["accuracy"]
@@ -178,21 +158,24 @@ def analysis_3x3_matrix(master: pd.DataFrame) -> pd.DataFrame:
     return pd.DataFrame(rows)
 
 
-def print_3x3_matrix(matrix_df: pd.DataFrame) -> None:
-    """Print the 3x3 matrix to console."""
+def print_matrix(matrix_df: pd.DataFrame) -> None:
+    """Print the 3x4 matrix to console."""
     print("\n" + "=" * 80)
-    print("3x3 ACCURACY MATRIX")
+    print("3x4 ACCURACY MATRIX")
     print("=" * 80)
 
     table = []
     for _, row in matrix_df.iterrows():
         table_row = [row["Config"]]
         for col in COL_LABELS:
-            cr = pct(row[f"{col}_cr"])
-            abst = pct(row[f"{col}_abst"])
-            err = pct(row[f"{col}_err"])
             n = int(row[f"{col}_n"])
-            table_row.append(f"{cr} (abst: {abst}, err: {err}, n={n})")
+            if n == 0:
+                table_row.append("-")
+            else:
+                cr = pct(row[f"{col}_cr"])
+                abst = pct(row[f"{col}_abst"])
+                err = pct(row[f"{col}_err"])
+                table_row.append(f"{cr} (abst: {abst}, err: {err}, n={n})")
         table.append(table_row)
 
     print(tabulate(table, headers=[""] + COL_LABELS, tablefmt="grid"))
@@ -202,30 +185,21 @@ def analysis_marginal_effects(master: pd.DataFrame) -> dict[str, pd.DataFrame]:
     """Compute marginal effects along each dimension."""
     tables: dict[str, pd.DataFrame] = {}
 
-    # 1. System type: dynamic vs static
+    # 1. Model row
     rows = []
-    for sys in ("dynamic", "static"):
-        subset = pd.DataFrame(master[master["system"] == sys])
+    for rl in ROW_LABELS:
+        subset = pd.DataFrame(master[master["model_row"] == rl])
         stats = compute_marginal_stats(subset)
-        rows.append({"Dimension": sys, **stats})
-    tables["system"] = pd.DataFrame(rows)
+        rows.append({"Dimension": rl, **stats})
+    tables["model_row"] = pd.DataFrame(rows)
 
-    # 2. Doc backend: yes vs no (dynamic only)
+    # 2. Augmentation strategy
     rows = []
-    dynamic = pd.DataFrame(master[master["system"] == "dynamic"])
-    for d in ("yes", "no"):
-        subset = pd.DataFrame(dynamic[dynamic["doc"] == d])
+    for col in COL_LABELS:
+        subset = pd.DataFrame(master[master["augmentation"] == col])
         stats = compute_marginal_stats(subset)
-        rows.append({"Dimension": f"doc={d}", **stats})
-    tables["doc"] = pd.DataFrame(rows)
-
-    # 3. Tool strategy: manual vs auto vs none
-    rows = []
-    for t in COL_LABELS:
-        subset = pd.DataFrame(master[master["tools"] == t])
-        stats = compute_marginal_stats(subset)
-        rows.append({"Dimension": t, **stats})
-    tables["tools"] = pd.DataFrame(rows)
+        rows.append({"Dimension": col, **stats})
+    tables["augmentation"] = pd.DataFrame(rows)
 
     return tables
 
@@ -236,7 +210,7 @@ def print_marginal_effects(tables: dict[str, pd.DataFrame]) -> None:
     print("MARGINAL EFFECTS")
     print("=" * 80)
 
-    labels = {"system": "System Type", "doc": "Doc Backend (dynamic only)", "tools": "Tool Strategy"}
+    labels = {"model_row": "Model Variant", "augmentation": "Augmentation Strategy"}
     for key, df in tables.items():
         print(f"\n--- {labels[key]} ---")
         table = []
@@ -259,16 +233,16 @@ def print_marginal_effects(tables: dict[str, pd.DataFrame]) -> None:
 
 
 def analysis_by_category(master: pd.DataFrame) -> dict[int, pd.DataFrame]:
-    """For each category, build a mini 3x3 matrix."""
+    """For each category, build a mini 3x4 matrix."""
     result: dict[int, pd.DataFrame] = {}
     for cat in sorted(master["category"].dropna().unique()):
         cat_df = pd.DataFrame(master[master["category"] == cat])
-        result[int(cat)] = analysis_3x3_matrix(cat_df)
+        result[int(cat)] = analysis_matrix(cat_df)
     return result
 
 
 def print_by_category(cat_tables: dict[int, pd.DataFrame]) -> None:
-    """Print per-category 3x3 matrices."""
+    """Print per-category 3x4 matrices."""
     print("\n" + "=" * 80)
     print("CATEGORY BREAKDOWN")
     print("=" * 80)
@@ -280,9 +254,12 @@ def print_by_category(cat_tables: dict[int, pd.DataFrame]) -> None:
         for _, row in matrix_df.iterrows():
             table_row = [row["Config"]]
             for col in COL_LABELS:
-                cr = pct(row[f"{col}_cr"])
                 n = int(row[f"{col}_n"])
-                table_row.append(f"{cr} (n={n})")
+                if n == 0:
+                    table_row.append("-")
+                else:
+                    cr = pct(row[f"{col}_cr"])
+                    table_row.append(f"{cr} (n={n})")
             table.append(table_row)
         print(tabulate(table, headers=[""] + COL_LABELS, tablefmt="grid"))
 
@@ -322,21 +299,18 @@ def print_by_project(project_df: pd.DataFrame) -> None:
 
 
 def analysis_manual_tool_bias(master: pd.DataFrame) -> pd.DataFrame:
-    """Compare manual-tool accuracy on dev projects vs other projects."""
+    """Compare accuracy on dev projects vs other projects across all augmentation strategies."""
     dev_list = list(DEV_PROJECTS)
-    manual = pd.DataFrame(master[master["tools"] == "manual"])
-    auto = pd.DataFrame(master[master["tools"] == "auto"])
-    none_ = pd.DataFrame(master[master["tools"] == "none"])
-
     rows = []
-    for label, subset in [("manual", manual), ("auto", auto), ("none", none_)]:
+    for aug in COL_LABELS:
+        subset = pd.DataFrame(master[master["augmentation"] == aug])
         dev = pd.DataFrame(subset[subset["project_name"].isin(dev_list)])
         other = pd.DataFrame(subset[~subset["project_name"].isin(dev_list)])
         dev_stats = compute_cell_stats(dev)
         other_stats = compute_cell_stats(other)
         delta = dev_stats["correct_rate"] - other_stats["correct_rate"]
         rows.append({
-            "Tools": label,
+            "Augmentation": aug,
             "Dev Correct Rate": dev_stats["correct_rate"],
             "Dev n": dev_stats["n"],
             "Other Correct Rate": other_stats["correct_rate"],
@@ -358,7 +332,7 @@ def print_manual_tool_bias(bias_df: pd.DataFrame) -> None:
         delta = float(row["Delta"])
         flag = " <--" if not pd.isna(delta) and delta > 0.05 else ""
         table.append([
-            row["Tools"],
+            row["Augmentation"],
             pct(row["Dev Correct Rate"]),
             int(row["Dev n"]),
             pct(row["Other Correct Rate"]),
@@ -368,16 +342,16 @@ def print_manual_tool_bias(bias_df: pd.DataFrame) -> None:
         ])
     print(tabulate(
         table,
-        headers=["Tools", "Dev CR", "Dev n", "Other CR", "Other n", "Delta", ""],
+        headers=["Augmentation", "Dev CR", "Dev n", "Other CR", "Other n", "Delta", ""],
         tablefmt="grid",
     ))
 
-    # Check if manual bias is larger than for other tool strategies
-    manual_rows = pd.DataFrame(bias_df[bias_df["Tools"] == "manual"])
+    # Check if manual bias is larger than for other augmentation strategies
+    manual_rows = pd.DataFrame(bias_df[bias_df["Augmentation"] == "manual"])
     if len(manual_rows) > 0:
         manual_delta = float(manual_rows.iloc[0]["Delta"])
         if not pd.isna(manual_delta):
-            other_deltas = pd.DataFrame(bias_df[bias_df["Tools"] != "manual"])["Delta"]
+            other_deltas = pd.DataFrame(bias_df[bias_df["Augmentation"] != "manual"])["Delta"]
             avg_other_delta = float(other_deltas.mean())
             print(f"\nManual tools dev-project delta: {pct(manual_delta)}")
             print(f"Average delta for other strategies: {pct(avg_other_delta)}")
@@ -390,7 +364,7 @@ def print_manual_tool_bias(bias_df: pd.DataFrame) -> None:
 def analysis_split_by_dev_projects(
     master: pd.DataFrame,
 ) -> tuple[pd.DataFrame, pd.DataFrame, dict[str, str | float], dict[str, str | float]]:
-    """Build separate 3x3 matrices for dev projects vs other projects.
+    """Build separate 3x4 matrices for dev projects vs other projects.
 
     Returns (dev_matrix, other_matrix, dev_best, other_best) where *_best
     dicts contain {"row", "col", "correct_rate"} of the highest-performing cell.
@@ -399,8 +373,8 @@ def analysis_split_by_dev_projects(
     dev_df = pd.DataFrame(master[master["project_name"].isin(dev_list)])
     other_df = pd.DataFrame(master[~master["project_name"].isin(dev_list)])
 
-    dev_matrix = analysis_3x3_matrix(dev_df)
-    other_matrix = analysis_3x3_matrix(other_df)
+    dev_matrix = analysis_matrix(dev_df)
+    other_matrix = analysis_matrix(other_df)
 
     def _find_best(matrix: pd.DataFrame) -> dict[str, str | float]:
         best: dict[str, str | float] = {"row": "", "col": "", "correct_rate": -1.0}
@@ -422,9 +396,9 @@ def print_split_by_dev_projects(
     dev_n: int,
     other_n: int,
 ) -> None:
-    """Print the two 3x3 matrices (dev vs other) with best cell highlighted."""
+    """Print the two 3x4 matrices (dev vs other) with best cell highlighted."""
     print("\n" + "=" * 80)
-    print("3x3 MATRIX SPLIT BY DEV PROJECTS")
+    print("3x4 MATRIX SPLIT BY DEV PROJECTS")
     print(f"Dev projects: {', '.join(sorted(DEV_PROJECTS))} (n={dev_n})")
     print(f"Other projects (n={other_n})")
     print("=" * 80)
@@ -434,11 +408,14 @@ def print_split_by_dev_projects(
         for _, row in matrix.iterrows():
             table_row: list[str] = [str(row["Config"])]
             for col in COL_LABELS:
-                cr = pct(row[f"{col}_cr"])
                 n = int(row[f"{col}_n"])
-                cell = f"{cr} (n={n})"
-                if row["Config"] == best["row"] and col == best["col"]:
-                    cell += " <-- best"
+                if n == 0:
+                    cell = "-"
+                else:
+                    cr = pct(row[f"{col}_cr"])
+                    cell = f"{cr} (n={n})"
+                    if row["Config"] == best["row"] and col == best["col"]:
+                        cell += " <-- best"
                 table_row.append(cell)
             table.append(table_row)
         return table
@@ -450,7 +427,7 @@ def print_split_by_dev_projects(
     print(tabulate(_format_matrix(other_matrix, other_best), headers=[""] + COL_LABELS, tablefmt="grid"))
 
 
-# --- Step 3: Excel export ---
+# --- Step 3: Excel export & changelog ---
 
 
 def export_to_excel(
@@ -471,10 +448,10 @@ def export_to_excel(
         # Raw Data
         master.to_excel(writer, sheet_name="Raw Data", index=False)
 
-        # 3x3 Matrix
-        matrix_df.to_excel(writer, sheet_name="3x3 Matrix", index=False)
+        # 3x4 Matrix
+        matrix_df.to_excel(writer, sheet_name="3x4 Matrix", index=False)
 
-        # Marginal Effects — concatenate all three tables with a label column
+        # Marginal Effects
         marginal_frames = []
         for key, df in marginal_tables.items():
             labeled = df.copy()
@@ -484,7 +461,7 @@ def export_to_excel(
             writer, sheet_name="Marginal Effects", index=False
         )
 
-        # By Category — one block per category
+        # By Category
         cat_frames = []
         for cat, df in sorted(cat_tables.items()):
             labeled = df.copy()
@@ -500,11 +477,39 @@ def export_to_excel(
         # Manual Tool Bias
         bias_df.to_excel(writer, sheet_name="Manual Tool Bias", index=False)
 
-        # 3x3 split by dev projects
-        dev_matrix.to_excel(writer, sheet_name="3x3 Dev Projects", index=False)
-        other_matrix.to_excel(writer, sheet_name="3x3 Other Projects", index=False)
+        # 3x4 split by dev projects
+        dev_matrix.to_excel(writer, sheet_name="3x4 Dev Projects", index=False)
+        other_matrix.to_excel(writer, sheet_name="3x4 Other Projects", index=False)
 
     return path
+
+
+def write_changelog(path: str) -> None:
+    """Write a changelog summarising the matrix restructuring."""
+    content = """\
+# Evaluation Matrix Changelog
+
+## 2026-02-21: Restructured from 3x3 to 3x4
+
+### Before (3x3)
+- **Rows**: dynamic+doc, dynamic-no_doc, static (system type x doc backend)
+- **Columns**: manual, auto, none (tool strategy)
+- **Runs**: 9 (GLM 4.7 only)
+- Doc was a cross-cutting dimension within the dynamic system type.
+
+### After (3x4)
+- **Rows**: dynamic-4.7, dynamic-4.5, static-4.7 (model variant)
+- **Columns**: none, doc, manual, auto (augmentation strategy)
+- **Runs**: 11 (GLM 4.7 + GLM 4.5 air)
+- Doc is now a standalone augmentation column (no longer cross-cutting).
+- static-4.7 + doc is N/A (no run exists).
+
+### Impact on downstream artifacts
+- Excel sheet names changed: "3x3 Matrix" -> "3x4 Matrix", "3x3 Dev/Other" -> "3x4 Dev/Other"
+- Marginal effects now have two dimensions (model_row, augmentation) instead of three (system, doc, tools)
+- Manual tool bias table column renamed: "Tools" -> "Augmentation", now includes 4 strategies instead of 3
+"""
+    Path(path).write_text(content)
 
 
 # --- Main ---
@@ -512,7 +517,7 @@ def export_to_excel(
 
 def main() -> None:
     parser = argparse.ArgumentParser(
-        description="Analyze the 3x3 evaluation matrix from MLflow.",
+        description="Analyze the 3x4 evaluation matrix from MLflow.",
     )
     parser.add_argument(
         "--export", action="store_true", default=False,
@@ -525,7 +530,7 @@ def main() -> None:
     args = parser.parse_args()
 
     print("=" * 80)
-    print("Evaluation Matrix Analysis (3x3)")
+    print("Evaluation Matrix Analysis (3x4)")
     print("=" * 80)
 
     # Setup MLflow
@@ -541,8 +546,8 @@ def main() -> None:
         master = apply_fair_filter(master)
 
     # Step 2: Analyses
-    matrix_df = analysis_3x3_matrix(master)
-    print_3x3_matrix(matrix_df)
+    matrix_df = analysis_matrix(master)
+    print_matrix(matrix_df)
 
     marginal_tables = analysis_marginal_effects(master)
     print_marginal_effects(marginal_tables)
@@ -569,6 +574,10 @@ def main() -> None:
             dev_matrix, other_matrix,
         )
         print(f"\nExported to: {path}")
+
+        changelog_path = f"{REPORTS_DIR}/matrix_changelog.md"
+        write_changelog(changelog_path)
+        print(f"Changelog written to: {changelog_path}")
 
     print("\nDone.")
 
