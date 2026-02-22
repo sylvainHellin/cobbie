@@ -1,139 +1,142 @@
-# Technical Report: `query_ifcopenshell_docs` Implementation
+# Documentation Retrieval Pipeline
 
 ## Overview
 
-`query_ifcopenshell_docs` is a hybrid documentation retrieval system that combines dense vector search, lexical BM25 search, and cross-encoder reranking to retrieve relevant IfcOpenShell documentation chunks.
+`query_ifcopenshell_docs` is a hybrid documentation retrieval system that combines dense vector search, BM25 lexical search, reverse-question search, and cross-encoder reranking to retrieve relevant IfcOpenShell documentation chunks.
 
 **Entry point**: `src/tools/initial/query_ifcopenshell_documentation.py`
 
 ---
 
-## Architecture Diagram
+## Algorithm (LaTeX)
 
-```mermaid
-flowchart TB
-    subgraph Input
-        Q[User Query]
-    end
-
-    subgraph Indexing["Indexing Pipeline (offline)"]
-        direction TB
-        RST[RST Tutorial Files<br/>9 files]
-        PY[Python Docstrings<br/>ifcopenshell modules]
-
-        RST --> Parser1[RST Parser]
-        PY --> Parser2[Python Parser]
-
-        Parser1 --> Chunks[DocChunks]
-        Parser2 --> Chunks
-
-        Chunks --> Review[LLM Review<br/>GLM 4.7]
-        Review --> |useful chunks| Embed[Embedding<br/>Ollama qwen3]
-        Embed --> Store[(Storage)]
-
-        subgraph Store
-            Chroma[(ChromaDB<br/>Dense Vectors)]
-            BM25[(BM25 Index<br/>Lexical)]
-            QEmbed[(Question<br/>Embeddings)]
-        end
-    end
-
-    subgraph Retrieval["Retrieval Pipeline (runtime)"]
-        direction TB
-        Q --> EmbedQ[Embed Query]
-
-        EmbedQ --> Dense[Dense Search<br/>ChromaDB]
-        EmbedQ --> Lexical[BM25 Search]
-        EmbedQ --> QSearch[Question Search]
-
-        Dense --> RRF[RRF Fusion<br/>k=60]
-        Lexical --> RRF
-        QSearch --> RRF
-
-        RRF --> Rerank[Jina Reranker<br/>Cross-encoder]
-        Rerank --> Format[Format Results<br/>Markdown]
-    end
-
-    Store --> Dense
-    Store --> Lexical
-    Store --> QSearch
-
-    Format --> Output[Formatted<br/>Documentation]
+```latex
+\begin{algorithm}[t]
+\caption{Documentation Retrieval Pipeline}
+\label{alg:doc-retrieval}
+\begin{algorithmic}[1]
+\REQUIRE Query $q$, chunk collection $\mathcal{C}$, question collection $\mathcal{Q}$, BM25 index $\mathcal{B}$
+\ENSURE Top-$k$ relevant documentation chunks
+\STATE \textbf{Parameters:} $k{=}5$, $n{=}25$, $n_r{=}15$, $k_{\text{rrf}}{=}60$
+\STATE \textbf{Models:} embed $=$ \texttt{qwen3-embedding:0.6b}, rerank $=$ \texttt{jina-reranker-v3}
+\STATE $\mathbf{e}_q \gets \textsc{Embed}(q)$ \COMMENT{Dense query embedding, dim$=$1024}
+\STATE $R_1 \gets \textsc{DenseSearch}(\mathcal{C}, \mathbf{e}_q, n)$ \COMMENT{Cosine similarity over chunk embeddings}
+\STATE $R_2 \gets \textsc{BM25}(\mathcal{B}, q, n)$ \COMMENT{Lexical search with BM25-Okapi}
+\STATE $R_3 \gets \textsc{DenseSearch}(\mathcal{Q}, \mathbf{e}_q, n)$ \COMMENT{Search over reverse questions}
+\STATE $S \gets \emptyset$ \COMMENT{Reciprocal rank fusion}
+\FOR{$R \in \{R_1, R_2, R_3\}$}
+    \FOR{each document $d$ at rank $r$ in $R$}
+        \STATE $S[d] \gets S[d] + \frac{1}{k_{\text{rrf}} + r}$
+    \ENDFOR
+\ENDFOR
+\STATE $\mathcal{F} \gets \text{top-}n_r \text{ from } S \text{ by score}$ \COMMENT{Fusion candidates}
+\STATE $\mathcal{F}^* \gets \textsc{Rerank}(q, \mathcal{F}, k)$ \COMMENT{Cross-encoder reranking, return top-$k$}
+\RETURN $\mathcal{F}^*$
+\end{algorithmic}
+\end{algorithm}
 ```
 
 ---
 
-## Key Components
+## Parameters
 
-### 1. Documentation Sources
+| Parameter | Value | Source file |
+|---|---|---|
+| Embedding model | `qwen3-embedding:0.6b` (Ollama) | `src/docs_indexer/embedder.py:15` |
+| Embedding dimension | 1024 | `src/docs_indexer/embedder.py:11` |
+| Reranker model | `jina-reranker-v3-mlx` | `src/docs_indexer/retriever.py:16` |
+| Dense vector store | ChromaDB (cosine HNSW) | `src/docs_indexer/storage.py:128` |
+| Sparse index | `rank_bm25.BM25Okapi` | `src/docs_indexer/storage.py:12` |
+| Search limit per method ($n$) | 25 | `src/docs_indexer/retriever.py:81` |
+| RRF constant ($k_{\text{rrf}}$) | 60 | `src/docs_indexer/retriever.py:18` |
+| Rerank candidates ($n_r$) | 15 | `src/docs_indexer/retriever.py:82` |
+| Final top-$k$ | 5 | `src/docs_indexer/retriever.py:80` |
 
-| Source | Location | Content |
-|--------|----------|---------|
-| RST Tutorials | `src/docs_indexer/external/ifcopenshell-docs/.../docs/` | 9 tutorial files (hello_world, geometry, selectors, etc.) |
-| Python Docstrings | `src/docs_indexer/external/ifcopenshell-docs/.../ifcopenshell/` | Module, class, function docstrings |
+---
 
-### 2. Chunking (`src/docs_indexer/`)
+## Pipeline Details
 
-- **Python**: Extracts module docstrings, class docstrings with methods, public functions (>30 chars)
-- **RST**: Splits by section headers, cleans directives, converts to markdown
+### 1. Document Corpus and Chunking
 
-### 3. Chunk Model
+The documentation corpus is the IfcOpenShell Python library source and its accompanying tutorials, cloned into `src/docs_indexer/external/ifcopenshell-docs/`.
 
-```python
-@dataclass
-class DocChunk:
-    id: str              # SHA256 hash (16 chars)
-    content: str         # Documentation text
-    chunk_type: str      # "function", "class", "method", "module", "tutorial_section"
-    name: str            # Identifier name
-    module: str          # Python module path
-    signature: str       # Function/class signature
-    questions: list[str] # LLM-generated hypothetical questions
-```
+Chunking is **semantic, not fixed-size** -- there is no chunk size or overlap parameter:
 
-### 4. Embedding
+- **Python source files** (`parser_python.py`): AST-based extraction of docstrings per function, class, and method. Each chunk contains the function name, signature, and docstring as a self-contained unit.
+- **RST tutorial files** (`parser_rst.py`): Split by section headers (detected via RST underline characters `=`, `-`, `~`, `^`). Each section becomes one chunk with its title and content.
 
-- **Backend**: Ollama (`qwen3-embedding:0.6b`) or sentence-transformers (`BAAI/bge-m3`)
-- **Dimension**: 1024
+### 2. Chunk Review and Reverse Question Generation
 
-### 5. Hybrid Retrieval (`src/docs_indexer/retriever.py`)
+At index time, each chunk is reviewed by an LLM (Claude Haiku via BAML) in `chunk_reviewer.py`. The reviewer:
 
-| Method | Source | Purpose |
-|--------|--------|---------|
-| Dense Search | ChromaDB | Semantic similarity via cosine distance |
-| BM25 Search | Pickle index | Lexical/keyword matching |
-| Question Search | ChromaDB | Match against hypothetical Q&A pairs |
+1. **Filters**: determines whether the chunk is useful for answering BIM-related queries (non-useful chunks are discarded).
+2. **Generates reverse questions**: for each useful chunk, produces 3-5 hypothetical questions that a user might ask and that this chunk would answer.
 
-**RRF Fusion**: `score(d) = Σ 1/(k + rank(d))` with k=60
+These reverse questions are embedded separately and stored in a dedicated ChromaDB collection (`doc_questions`), enabling the third retrieval channel (line 6 in the algorithm). Results are cached to `src/db/doc_review_cache.json` to avoid redundant LLM calls on re-indexing.
+
+### 3. Indexing
+
+For each useful chunk:
+- The chunk content (name + signature + content) is embedded with `qwen3-embedding:0.6b` and stored in ChromaDB (`doc_chunks` collection, cosine HNSW).
+- Its reverse questions are embedded and stored in ChromaDB (`doc_questions` collection, cosine HNSW), with metadata linking back to the parent chunk.
+- The chunk text is tokenized and added to a BM25-Okapi index (persisted as `src/db/bm25_index.pkl`).
+
+### 4. Query-Time Retrieval
+
+Given a user query $q$, the pipeline runs three retrieval channels:
+
+1. **Dense chunk search** (line 4): embed $q$, retrieve top-25 from `doc_chunks` by cosine similarity.
+2. **BM25 lexical search** (line 5): tokenize $q$, retrieve top-25 from the BM25 index by Okapi BM25 score.
+3. **Dense question search** (line 6): embed $q$, retrieve top-25 from `doc_questions` by cosine similarity. Matches are mapped back to their parent chunk IDs.
+
+### 5. Fusion
+
+The three ranked lists are combined using **Reciprocal Rank Fusion** (RRF) with $k_{\text{rrf}} = 60$ (lines 8-12). For each document appearing in any list:
+
+$$S[d] = \sum_{R} \frac{1}{k_{\text{rrf}} + \text{rank}_R(d)}$$
+
+The top $n_r = 15$ candidates by RRF score are retained.
 
 ### 6. Reranking
 
-- **Model**: Jina Reranker v3 MLX (`jinaai/jina-reranker-v3-mlx`)
-- **Purpose**: Cross-encoder semantic reranking of top candidates
+The 15 fusion candidates are reranked using **Jina Reranker v3** (`jina-reranker-v3-mlx`, optimized for Apple Silicon). The reranker is a cross-encoder that scores each (query, document) pair. The top $k = 5$ chunks after reranking are returned.
+
+### 7. Context Assembly
+
+Retrieved chunks are formatted by `format_results()` in `retriever.py:230` as numbered markdown blocks:
+
+```
+## 1. function_name (module.path)
+```python
+def function_name(args) -> return_type
+```
+<chunk content>
+
+---
+
+## 2. next_function ...
+```
+
+This formatted string is printed to stdout by the `query_ifcopenshell_docs` tool (`src/tools/initial/query_ifcopenshell_documentation.py:109`), which the agent sees as tool output in its execution history.
 
 ---
 
 ## Storage
 
-| Component | Path | Size |
-|-----------|------|------|
-| ChromaDB | `src/db/chroma_docs/chroma.sqlite3` | ~10MB |
-| BM25 Index | `src/db/bm25_index.pkl` | ~874KB |
-| Review Cache | `src/db/doc_review_cache.json` | ~343KB |
+| Component | Path |
+|---|---|
+| ChromaDB | `src/db/chroma_docs/` |
+| BM25 Index | `src/db/bm25_index.pkl` |
+| Review Cache | `src/db/doc_review_cache.json` |
 
 ---
 
-## Configuration
+## Backend Selection
 
-| Variable | Default | Options |
-|----------|---------|---------|
-| `DOC_BACKEND` | `custom` | `custom`, `context7` |
-| `EMBEDDING_BACKEND` | `ollama` | `ollama`, `st` |
+The tool supports two backends, selected via the `DOC_BACKEND` environment variable:
 
-**Retrieval Parameters**:
-- `top_k=5` (final results)
-- `search_limit=25` (per-method candidates)
-- `rerank_limit=15` (passed to reranker)
+- `custom` (default): the local hybrid retrieval pipeline described above.
+- `context7`: queries the Context7 API for IfcOpenShell documentation (library ID `/ifcopenshell/ifcopenshell`). Used as the external baseline in the evaluation matrix.
 
 ---
 
@@ -142,22 +145,3 @@ class DocChunk:
 All retrieval steps are traced with nested spans:
 - `query_ifcopenshell_docs` (parent)
   - `embed_query`, `dense_search`, `bm25_search`, `question_search`, `rrf_fusion`, `reranking`
-
----
-
-## Output Format
-
-Returns markdown with ranked chunks:
-
-```markdown
-## 1. function_name (module.path)
-```python
-def function_name(args) -> return_type
-```
-Docstring content...
-
----
-
-## 2. another_function (module.path)
-...
-```
