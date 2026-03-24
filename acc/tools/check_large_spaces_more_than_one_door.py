@@ -1,117 +1,111 @@
 import ifcopenshell
 import ifcopenshell.util.element
 from typing import List
+import os
+
 
 def check_large_spaces_more_than_one_door(path_ifc_model: str) -> List[str]:
     """
-    Check if large spaces (area ≥ 50.0) have at least 2 doors.
+    Check if large spaces (area >= 50) have at least 2 doors.
     
-    Large spaces must have at least 2 doors, excluding:
-    - Spaces with usage: Outdoor Space, Parking, Terrace
-    - Spaces with 'roof' in the name (typically outdoor/excluded)
-    - Doors that are hatches
+    Rule Parameters:
+    - Include Space Group Type: Is Undefined (no filtering)
+    - Include Space Area: >= 50.0
+    - Exclude - Space Usage: One Of [Outdoor Space, Parking, Terrace]
+    - Target Value: 2 doors minimum
+    - Exclude door = Hatch
     
     Args:
         path_ifc_model: Path to the IFC model file
         
     Returns:
-        List of IFC GUIDs of spaces that violate the rule (large spaces
-        with fewer than 2 doors)
+        List of IFC GUIDs of spaces that violate the rule
+        (large spaces with fewer than 2 non-hatch doors)
         
     Example:
-        >>> violations = check_large_spaces_more_than_one_door('model.ifc')
-        >>> print(f"Found {len(violations)} violations")
+        >>> guids = check_large_spaces_more_than_one_door('model.ifc')
+        >>> print(f"Found {len(guids)} violations")
     """
     model = ifcopenshell.open(path_ifc_model)
-    violations = []
+    violating_guids: List[str] = []
     
     # Get all spaces
-    spaces = model.by_type("IfcSpace")
+    spaces = model.by_type('IfcSpace')
     if not spaces:
-        return violations
+        return []
+    
+    # Get all IfcRelSpaceBoundary for door counting
+    rel_boundaries = model.by_type('IfcRelSpaceBoundary')
     
     # Prepare space data for classification
     spaces_data = []
     for space in spaces:
-        spaces_data.append({
-            "guid": space.GlobalId,
-            "name": space.LongName or space.Name or ""
-        })
+        name = getattr(space, 'LongName', None) or getattr(space, 'Name', '') or ''
+        spaces_data.append({"guid": space.GlobalId, "name": name})
     
     # Classify spaces
-    classified_spaces = classify_spaces(spaces_data, path_ifc_model)
+    classified = classify_spaces(spaces_data, path_ifc_model)
     
-    # Create classification lookup
-    classification_map = {s["guid"]: s["classification"] for s in classified_spaces}
+    # Create mapping from guid to classification
+    classification_map = {c['guid']: c['classification'] for c in classified}
     
     # Excluded space usages
-    excluded_usages = {"Outdoor Space", "Parking", "Terrace"}
+    excluded_usages = {'Outdoor Space', 'Parking', 'Terrace'}
     
-    skipped = 0
-    
+    # Check each space
     for space in spaces:
-        try:
-            guid = space.GlobalId
-            name_lower = (space.LongName or space.Name or "").lower()
-            
-            # Skip excluded space usages
-            classification = classification_map.get(guid, "Unclassified")
-            if classification in excluded_usages:
-                continue
-            
-            # Skip roof spaces (typically outdoor)
-            if "roof" in name_lower:
-                continue
-            
-            # Get space area
-            area = None
-            qtos = ifcopenshell.util.element.get_psets(space, qtos_only=True)
-            
-            # Try different quantity sets for area
-            for qset_name, qset in qtos.items():
-                # Check common area keys
-                for area_key in ["GSA BIM Area", "Area", "NetFloorArea", "FloorArea"]:
-                    if area_key in qset:
-                        area = qset[area_key]
-                        break
-                if area is not None:
-                    break
-            
-            if area is None:
-                skipped += 1
-                continue
-            
-            # Check if space is large enough (≥ 50.0)
-            if area < 50.0:
-                continue
-            
-            # Count doors (excluding hatches)
-            door_count = 0
-            for rel in space.BoundedBy:
-                if rel.RelatedBuildingElement:
-                    elem = rel.RelatedBuildingElement
-                    if elem.is_a() == "IfcDoor":
-                        # Check if it's a hatch
-                        is_hatch = False
-                        try:
-                            door_type = ifcopenshell.util.element.get_type(elem)
-                            if door_type and door_type.Name and "hatch" in door_type.Name.lower():
-                                is_hatch = True
-                        except (AttributeError, RuntimeError):
-                            pass
-                        
-                        if not is_hatch:
-                            door_count += 1
-            
-            # Check if space has at least 2 doors
-            if door_count < 2:
-                violations.append(guid)
-                
-        except (AttributeError, KeyError, RuntimeError) as e:
-            skipped += 1
+        guid = space.GlobalId
+        
+        # Check if space is in excluded usage
+        if guid not in classification_map:
             continue
+        classification = classification_map[guid]
+        if classification in excluded_usages:
+            continue
+        
+        # Get space area
+        psets = ifcopenshell.util.element.get_psets(space)
+        area = None
+        for pset_name, props in psets.items():
+            if 'Area' in props:
+                area_val = props['Area']
+                if isinstance(area_val, (int, float)) and area_val >= 50.0:
+                    area = area_val
+                    break
+        
+        # Only check spaces with area >= 50
+        if area is None:
+            continue
+        
+        # Count doors (excluding hatch doors)
+        door_count = 0
+        for rel in rel_boundaries:
+            if rel.RelatingSpace and rel.RelatingSpace.GlobalId == guid:
+                if rel.RelatedBuildingElement and 'Door' in rel.RelatedBuildingElement.is_a():
+                    door = rel.RelatedBuildingElement
+                    
+                    # Check if door is a hatch door (exclude)
+                    is_hatch = False
+                    door_name = getattr(door, 'Name', '')
+                    if door_name and 'Hatch' in door_name:
+                        is_hatch = True
+                    
+                    # Also check door properties for 'Hatch'
+                    if not is_hatch:
+                        door_psets = ifcopenshell.util.element.get_psets(door)
+                        for pset_name, props in door_psets.items():
+                            for key, val in props.items():
+                                if isinstance(val, str) and 'Hatch' in val:
+                                    is_hatch = True
+                                    break
+                            if is_hatch:
+                                break
+                    
+                    if not is_hatch:
+                        door_count += 1
+        
+        # Check if space has less than 2 doors
+        if door_count < 2:
+            violating_guids.append(guid)
     
-    if skipped > 0:
-        print(f"Warning: Skipped {skipped} elements due to missing data or errors")
-    
-    return violations
+    return violating_guids

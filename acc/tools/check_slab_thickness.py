@@ -2,88 +2,79 @@ import ifcopenshell
 import ifcopenshell.util.element
 from typing import List
 
-
 def check_slab_thickness(path_ifc_model: str) -> List[str]:
     """
-    Validates slab thickness in an IFC model against specified minimum and maximum values.
+    Rule: BIM Validation: Slab Thickness slab_thickness
     
-    This rule checks that slab thickness is not too small or too large.
-    Minimum thickness: 0.30 m, maximum thickness: 1.0 m.
+    Checks that slab thickness is not too small or too large.
+    Minimum thickness: 0.30 m, Maximum thickness: 1.0 m.
     
-    Parameters:
-        - Exclude Slab Building Elements - General: One Of [Fixed Furnishings, Suspended Ceilings]
-        - Include Slab Thickness: >= 0.30 m
-        - Include Slab Thickness: <= 1.0 m
-
+    Excludes slabs with PredefinedType 'FIXED_FURNISHING' or 'SUSPENDED_CEILING'.
+    
     Args:
         path_ifc_model: Path to the IFC model file.
-
+        
     Returns:
         List of IFC GUIDs of all slab elements that violate the thickness rule.
-        Returns an empty list if no violations are found or if no applicable slabs exist.
-
+        Returns empty list if no violations found or no valid slabs to check.
+        
     Example:
-        >>> violations = check_slab_thickness('/path/to/model.ifc')
-        >>> print(f"Found {len(violations)} thickness violations")
+        >>> violating_guids = check_slab_thickness('model.ifc')
+        >>> print(f'Found {len(violating_guids)} violations')
     """
+    # Define parameters
+    MIN_THICKNESS = 0.30  # meters
+    MAX_THICKNESS = 1.0   # meters
+    EXCLUDED_TYPES = {'FIXED_FURNISHING', 'SUSPENDED_CEILING'}
+    
+    # Open the IFC model
     model = ifcopenshell.open(path_ifc_model)
+    
+    violating_guids = []
+    skipped_count = 0
+    
+    # Get all IfcSlab elements
     slabs = model.by_type('IfcSlab')
     
-    violations = []
-    skipped = 0
+    if not slabs:
+        return []
     
     for slab in slabs:
-        guid = slab.GlobalId
-        predefined_type = getattr(slab, 'PredefinedType', None)
-        name = slab.Name or ''
-        
-        # Exclude Fixed Furnishings and Suspended Ceilings based on PredefinedType
-        if predefined_type in ['FIXEDFURNISHING', 'SUSPENDEDCEILING']:
-            continue
-        
-        # Get thickness from property sets
-        thickness = None
-        psets = ifcopenshell.util.element.get_psets(slab)
-        
-        for pset_name, pset in psets.items():
-            if 'Thickness' in pset:
-                thickness = pset['Thickness']
-                break
-        
-        # If thickness not found in instance psets, check type psets
-        if thickness is None:
-            try:
-                slab_type = ifcopenshell.util.element.get_type(slab)
-                if slab_type:
-                    type_psets = ifcopenshell.util.element.get_psets(slab_type)
-                    for pset_name, pset in type_psets.items():
-                        if 'Thickness' in pset:
-                            thickness = pset['Thickness']
-                            break
-            except (AttributeError, RuntimeError):
-                skipped += 1
+        try:
+            # Check if slab should be excluded based on PredefinedType
+            predefined_type = getattr(slab, 'PredefinedType', None)
+            if predefined_type in EXCLUDED_TYPES:
                 continue
-        
-        # Check Reference field from Pset_SlabCommon for filtering
-        reference = ''
-        if 'Pset_SlabCommon' in psets:
-            reference = str(psets['Pset_SlabCommon'].get('Reference', ''))
-        
-        # Only check thickness for finish floor elements
-        # (containing 'Finish' in name or reference)
-        if 'Finish' not in name and 'Finish' not in reference:
-            continue
-        
-        # Validate thickness against requirements
-        if thickness is not None:
-            try:
-                if thickness < 0.30 or thickness > 1.0:
-                    violations.append(guid)
-            except TypeError:
-                skipped += 1
+            
+            # Exclude slabs on grade - these are structural foundation slabs
+            slab_name = getattr(slab, 'Name', '')
+            if 'Slab on Grade' in slab_name:
                 continue
+            
+            # Get all psets (both properties and quantities)
+            # Thickness can be in properties like PSet_Revit_Dimensions
+            all_psets = ifcopenshell.util.element.get_psets(slab)
+            
+            # Look for thickness in any pset (properties or quantities)
+            thickness = None
+            for pset_name, pset in all_psets.items():
+                if 'Thickness' in pset:
+                    thickness = pset['Thickness']
+                    break
+            
+            if thickness is None:
+                skipped_count += 1
+                continue
+            
+            # Check if thickness violates rules
+            if thickness < MIN_THICKNESS or thickness > MAX_THICKNESS:
+                violating_guids.append(slab.GlobalId)
+                
+        except (AttributeError, KeyError, TypeError):
+            skipped_count += 1
+            continue
     
-    if skipped > 0:
-        print(f"Warning: Skipped {skipped} elements due to missing data or access errors")
+    if skipped_count > 0:
+        print(f"Warning: Skipped {skipped_count} elements due to missing data or errors")
     
-    return violations
+    return violating_guids

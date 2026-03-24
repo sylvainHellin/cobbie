@@ -1,99 +1,87 @@
 import ifcopenshell
-import ifcopenshell.util.element
+import ifcopenshell.geom
 from typing import List
+
 
 def check_504_2_stair_slab_connection(path_ifc_model: str) -> List[str]:
     """
-    Check if all stairs are properly connected to slabs in the IFC model.
+    Check if stairs are properly connected to slabs according to rule 504.2.
     
-    A stair is considered connected to slabs if it resides in the same building storey
-    as at least one external floor slab. External slabs are those that are NOT part
-    of a stair assembly (i.e., not decomposed by an IfcRelAggregates relationship
-    where the relating object is an IfcStair).
+    All stairs shall be connected to slabs. This function identifies stairs that
+    are not properly connected to external floor slabs (slabs not part of the
+    stair's own decomposition structure).
 
     Args:
-        path_ifc_model: Path to the IFC model file
+        path_ifc_model: Path to the IFC model file.
 
     Returns:
-        List of IFC GUIDs of stair elements that are not properly connected to slabs.
-        Returns an empty list if the model contains no stairs or if all stairs are
-        properly connected.
-
-    Raises:
-        RuntimeError: If the IFC file cannot be opened.
+        List of IFC GUIDs of stairs that violate the rule (not connected to
+        external floor slabs). Returns empty list if no violations found or if
+        no stairs exist in the model.
 
     Example:
-        >>> guids = check_504_2_stair_slab_connection('/path/to/model.ifc')
-        >>> print(f'Violations: {len(guids)}')
-        >>> for guid in guids:
-        ...     print(f'  {guid}')
+        >>> violations = check_504_2_stair_slab_connection('model.ifc')
+        >>> print(violations)
+        ['3NhaIUfh12PAdrGa$S3z3M', '0mxk1RW8H5mvX1dNnpRqBK']
     """
-    # Open the model
     model = ifcopenshell.open(path_ifc_model)
     
-    violations: List[str] = []
-    skipped: int = 0
-    
-    # Get all stairs and slabs
+    # Get all stairs and slabs in the model
     stairs = model.by_type('IfcStair')
-    slabs = model.by_type('IfcSlab')
+    all_slabs = model.by_type('IfcSlab')
     
-    # Early return if no stairs in the model
+    # Return empty list if no stairs to check
     if not stairs:
         return []
     
-    # Function to check if a slab is internal to a stair assembly
-    def is_internal_to_stair(slab) -> bool:
-        """Check if a slab is part of a stair assembly (decomposed by IfcStair)."""
-        try:
-            inverses = model.get_inverse(slab)
-            for rel in inverses:
-                if rel.is_a() == 'IfcRelAggregates':
-                    relating_obj = rel.RelatingObject
-                    if relating_obj and relating_obj.is_a() == 'IfcStair':
-                        return True
-        except (AttributeError, RuntimeError):
-            pass
-        return False
+    # Collect ALL elements that are part of any stair's decomposition.
+    # These include stair flights, internal landing slabs, railings, etc.
+    all_stair_elements = set()
+    for stair in stairs:
+        for rel in stair.IsDecomposedBy or []:
+            for obj in rel.RelatedObjects or []:
+                all_stair_elements.add(obj)
     
-    # Filter slabs to identify external (building floor) slabs
-    external_slabs = []
-    for slab in slabs:
-        try:
-            if not is_internal_to_stair(slab):
-                external_slabs.append(slab)
-        except (AttributeError, RuntimeError):
-            skipped += 1
-            continue
+    # External slabs are those NOT part of any stair's decomposition.
+    # These represent true floor slabs that stairs should connect to.
+    external_slabs = [s for s in all_slabs if s not in all_stair_elements]
     
-    # Build a set of storey GUIDs that contain external slabs
-    external_slab_storeys = set()
-    for slab in external_slabs:
-        try:
-            container = ifcopenshell.util.element.get_container(slab)
-            if container is not None:
-                external_slab_storeys.add(container.GlobalId)
-        except (AttributeError, RuntimeError):
-            skipped += 1
-            continue
+    violations = []
+    skipped = 0
     
-    # Check each stair for connection to external slabs
     for stair in stairs:
         try:
-            container = ifcopenshell.util.element.get_container(stair)
-            
-            if container is None:
-                # Stair not in any storey - violation
+            # Check if there are any external floor slabs in the model
+            if len(external_slabs) == 0:
+                # No external floor slabs exist - this is a violation
                 violations.append(stair.GlobalId)
-            elif container.GlobalId not in external_slab_storeys:
-                # Stair in a storey without any external slabs - violation
-                violations.append(stair.GlobalId)
-            
-        except (AttributeError, RuntimeError):
+            else:
+                # Check if stair geometrically touches any external floor slab
+                settings = ifcopenshell.geom.settings()
+                tree = ifcopenshell.geom.tree()
+                tree.add([stair] + external_slabs)
+                
+                connected = False
+                for ext_slab in external_slabs:
+                    # Use collision detection with touching allowed
+                    clashes = tree.clash_collision_many(
+                        [stair],
+                        [ext_slab],
+                        allow_touching=True
+                    )
+                    if clashes:
+                        connected = True
+                        break
+                
+                if not connected:
+                    violations.append(stair.GlobalId)
+                    
+        except (AttributeError, RuntimeError) as e:
+            # Skip elements with geometry processing errors
             skipped += 1
             continue
     
     if skipped > 0:
-        print(f"Warning: Skipped {skipped} elements due to errors")
+        print(f"Warning: Skipped {skipped} stairs due to geometry processing errors")
     
     return violations

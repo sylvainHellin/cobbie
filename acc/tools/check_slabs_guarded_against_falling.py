@@ -2,297 +2,219 @@ import ifcopenshell
 import ifcopenshell.geom
 import ifcopenshell.util.shape
 import numpy as np
-import shapely.geometry as geom
-from typing import List, Dict, Tuple, Optional, Set
-from scipy.spatial import ConvexHull
-import multiprocessing
+import shapely.geometry as sg
+from typing import List, Dict, Optional
 
-# Parameters from the rule
-MIN_BARRIER_HEIGHT = 1.0  # meters
-MAX_GAP_PLATFORM = 0.1  # meters
-MAX_FALL = 0.5  # meters
-MAX_DISTANCE_LANDING = 0.1  # meters
-MIN_LANDING_WIDTH = 0.2  # meters
-EDGE_SAMPLE_INTERVAL = 0.25  # Sample every 25cm
+# Rule Parameters
+MIN_BARRIER_HEIGHT = 1.0       # meters
+MAX_GAP_BARRIER = 0.1        # meters (horizontal/vertical)
+MAX_GAP_LANDING = 0.1        # meters (distance to landing)
+MAX_FALL_HEIGHT = 0.5        # meters
+SAMPLING_INTERVAL = 0.2      # meters (increased for efficiency)
+
+def _get_element_geometry(model: ifcopenshell.file, element, settings) -> Optional[Dict]:
+    """
+    Extracts 2D footprint and Z-bounds from an IFC element.
+    """
+    try:
+        shape = ifcopenshell.geom.create_shape(settings, element)
+        verts = ifcopenshell.util.shape.get_vertices(shape.geometry)
+        
+        if len(verts) == 0:
+            return None
+            
+        # Transform vertices to world coordinates
+        matrix = ifcopenshell.util.shape.get_shape_matrix(shape)
+        ones = np.ones((verts.shape[0], 1))
+        verts_h = np.hstack([verts, ones])
+        verts_world = (matrix @ verts_h.T).T[:, :3]
+        
+        min_z = np.min(verts_world[:, 2])
+        max_z = np.max(verts_world[:, 2])
+        
+        # Create 2D footprint using convex hull for robustness
+        points_2d = [sg.Point(v[0], v[1]) for v in verts_world]
+        if not points_2d:
+            return None
+            
+        multi_point = sg.MultiPoint(points_2d)
+        poly_2d = multi_point.convex_hull
+        
+        if poly_2d.is_empty or poly_2d.area < 1e-6:
+            return None
+            
+        return {
+            'guid': element.GlobalId,
+            'type': element.is_a(),
+            'max_z': max_z,
+            'min_z': min_z,
+            'poly': poly_2d,
+            'bounds': poly_2d.bounds
+        }
+    except (RuntimeError, AttributeError, ValueError):
+        return None
 
 def check_slabs_guarded_against_falling(path_ifc_model: str) -> List[str]:
     """
-    Check if slabs are guarded against falling.
+    Checks if slabs in the IFC model are guarded against falling.
     
-    This rule checks that it is not possible to fall from slabs. The rule checks that
-    horizontal components are surrounded by vertical components, such as walls or railings.
-    If no vertical component exists on the edge of a horizontal component, another horizontal
-    component or stairs needs to continue and the drop to the other horizontal component
-    must not be more than specified.
-    
+    The rule checks that horizontal components (slabs) are surrounded by vertical
+    components (barriers) or have an acceptable drop to a landing surface.
+
     Args:
-        path_ifc_model: Path to the IFC model file.
-        
+        path_ifc_model: Path to the IFC file.
+
     Returns:
-        List of IFC GUIDs of all slab elements that violate this rule.
+        List of IFC GUIDs of slabs that violate the rule (unguarded edges).
+        Returns an empty list if no violations are found or if model is empty.
         
-    Example:
-        >>> violations = check_slabs_guarded_against_falling('/path/to/model.ifc')
-        >>> print(f"Found {len(violations)} violations")
+    Rules Applied:
+    - Slab Types: Floor, BaseSlab, Balcony.
+    - Barrier Types: Wall, Railing, BuildingElementProxy, Column, Stair.
+    - Landing Types: Slab, Stair, Ramp, Site.
+    - Min barrier height: 1.0 m (relative to slab).
+    - Max gap to barrier/landing: 0.1 m.
+    - Max fall height: 0.5 m.
     """
     model = ifcopenshell.open(path_ifc_model)
+    settings = ifcopenshell.geom.settings()
     
-    def get_element_geometry_with_height(element):
-        """Extract world coordinate geometry and height info for an element."""
-        try:
-            settings = ifcopenshell.geom.settings()
-            shape = ifcopenshell.geom.create_shape(settings, element)
-            verts = ifcopenshell.util.shape.get_vertices(shape.geometry)
-            matrix = ifcopenshell.util.shape.get_shape_matrix(shape)
-            
-            verts_homogeneous = np.hstack([verts, np.ones((len(verts), 1))])
-            verts_world = (matrix @ verts_homogeneous.T).T[:, :3]
-            
-            z_min = verts_world[:, 2].min()
-            z_max = verts_world[:, 2].max()
-            height = z_max - z_min
-            
-            return verts_world, z_min, z_max, height
-        except Exception:
-            return None, None, None, None
+    # 1. Identify Elements by IFC Type and PredefinedType
+    # Target Slabs
+    all_slabs = model.by_type('IfcSlab')
+    target_slabs = []
     
-    def get_top_face_polygon(verts_world: np.ndarray) -> Optional[geom.Polygon]:
-        """Extract the top face of a slab as a 2D polygon."""
-        if verts_world is None or len(verts_world) < 3:
-            return None
-        
-        z_max = verts_world[:, 2].max()
-        z_tolerance = 0.02
-        
-        top_mask = np.abs(verts_world[:, 2] - z_max) < z_tolerance
-        top_verts = verts_world[top_mask][:, :2]
-        
-        if len(top_verts) < 3:
-            return None
-        
-        try:
-            hull = ConvexHull(top_verts)
-            boundary_verts = top_verts[hull.vertices]
-            return geom.Polygon(boundary_verts)
-        except Exception:
-            try:
-                return geom.MultiPoint(top_verts).convex_hull
-            except Exception:
-                return None
+    # Slab types to check (from requirements: Floor Slabs, Balconies)
+    valid_slab_types = {'FLOOR', 'BASESLAB', 'BALCONY'}
     
-    def get_edge_points_by_interval(polygon: geom.Polygon, interval: float = EDGE_SAMPLE_INTERVAL) -> List[Tuple[float, float]]:
-        """Sample points along polygon edges at specified intervals."""
-        if polygon.is_empty:
-            return []
-        
-        points = []
-        coords = list(polygon.exterior.coords)
-        
-        for i in range(len(coords) - 1):
-            p1 = np.array(coords[i])
-            p2 = np.array(coords[i + 1])
+    for s in all_slabs:
+        ptype = getattr(s, 'PredefinedType', 'NOTDEFINED')
+        # Check if PredefinedType is valid
+        if ptype in valid_slab_types:
+            target_slabs.append(s)
             
-            dist = np.linalg.norm(p2 - p1)
-            num_samples = max(2, int(dist / interval) + 1)
+    if not target_slabs:
+        return []
+    
+    # Barrier Components: Wall, Railing, Object (Proxy), Column, Stair
+    barriers = model.by_type('IfcWall') + model.by_type('IfcRailing') + \
+              model.by_type('IfcBuildingElementProxy') + model.by_type('IfcColumn') + \
+              model.by_type('IfcStair')
+              
+    # Fall and Landing: Slab, Stair, Ramp, Site
+    landings = model.by_type('IfcSlab') + model.by_type('IfcStair') + \
+               model.by_type('IfcRamp')
+    
+    # Check Sites for geometry
+    sites = model.by_type('IfcSite')
+    for site in sites:
+        if hasattr(site, 'Representation') and site.Representation is not None:
+            landings.append(site)
+    
+    # 2. Extract Geometry
+    unique_elements = list(set(target_slabs + barriers + landings))
+    
+    geom_map = {}
+    skipped_count = 0
+    
+    for elem in unique_elements:
+        geom = _get_element_geometry(model, elem, settings)
+        if geom:
+            geom_map[geom['guid']] = geom
+        else:
+            skipped_count += 1
             
-            for j in range(num_samples):
-                t = j / (num_samples - 1)
-                point = p1 + t * (p2 - p1)
-                points.append((point[0], point[1]))
+    if skipped_count > 0:
+        print(f"Warning: Skipped {skipped_count} elements due to geometry errors.")
+    
+    # 3. Categorize Geometries
+    slab_geoms = [g for g in geom_map.values() if g['guid'] in {s.GlobalId for s in target_slabs}]
+    barrier_geoms = [g for g in geom_map.values() if g['guid'] in {b.GlobalId for b in barriers}]
+    landing_geoms = [g for g in geom_map.values() if g['guid'] in {l.GlobalId for l in landings}]
+    
+    violating_guids = []
+    
+    # 4. Analyze Each Slab
+    for slab in slab_geoms:
+        slab_guid = slab['guid']
+        slab_poly = slab['poly']
+        slab_z = slab['max_z']
         
-        # Remove duplicates
-        unique_points = []
-        for p in points:
-            is_duplicate = False
-            for up in unique_points:
-                if np.linalg.norm(np.array(p) - np.array(up)) < 0.001:
-                    is_duplicate = True
+        # Prepare polygons to check (exterior + holes)
+        polygons = []
+        if slab_poly.geom_type == 'Polygon':
+            polygons.append(slab_poly)
+        elif slab_poly.geom_type == 'MultiPolygon':
+            polygons.extend(list(slab_poly.geoms))
+            
+        is_safe = True
+        
+        for poly in polygons:
+            if not is_safe:
+                break
+            
+            # Check all rings (exterior and interior holes)
+            rings = [poly.exterior] + list(poly.interiors)
+            
+            for ring in rings:
+                if not is_safe:
                     break
-            if not is_duplicate:
-                unique_points.append(p)
-        
-        return unique_points
-    
-    def build_geometry_tree():
-        """Build a geometry tree for spatial queries."""
-        tree = ifcopenshell.geom.tree()
-        settings = ifcopenshell.geom.settings()
-        iterator = ifcopenshell.geom.iterator(settings, model, multiprocessing.cpu_count())
-        
-        if iterator.initialize():
-            while True:
-                tree.add_element(iterator.get())
-                if not iterator.next():
-                    break
-        
-        return tree
-    
-    def cache_element_geometry(element_types: List[str]) -> Dict[str, Dict]:
-        """Cache geometry info including 2D footprint for elements."""
-        cache = {}
-        skipped = 0
-        
-        for etype in element_types:
-            for elem in model.by_type(etype):
-                try:
-                    geom_data, z_min, z_max, height = get_element_geometry_with_height(elem)
-                    if geom_data is not None:
-                        verts_2d = geom_data[:, :2]
-                        cache[elem.GlobalId] = {
-                            'z_min': z_min,
-                            'z_max': z_max,
-                            'height': height,
-                            'type': elem.is_a(),
-                            'verts_2d': verts_2d
-                        }
-                except Exception:
-                    skipped += 1
-                    continue
-        
-        if skipped > 0:
-            print(f"Warning: Skipped {skipped} elements due to geometry processing errors")
-        
-        return cache
-    
-    def check_point_protection(point: Tuple[float, float], slab_z_min: float,
-                               tree, geom_cache: Dict,
-                               barrier_types: Set, landing_types: Set) -> Tuple[bool, str]:
-        """Check if a point is protected using geometry tree and cached geometry."""
-        px, py = point
-        search_radius = 0.5
-        
-        try:
-            nearby_elements = tree.select((px, py, slab_z_min), extend=search_radius)
-        except Exception:
-            try:
-                nearby_elements = tree.select((px, py, slab_z_min))
-            except Exception:
-                return False, "query_error"
-        
-        found_adequate_barrier = False
-        found_low_barrier = False
-        
-        for elem in nearby_elements:
-            if elem.GlobalId not in geom_cache:
-                continue
-            
-            info = geom_cache[elem.GlobalId]
-            
-            if info['type'] in barrier_types:
-                if info['z_max'] < slab_z_min - 0.3:
-                    continue
-                if info['z_min'] > slab_z_min + 0.3:
+                
+                length = ring.length
+                if length == 0:
                     continue
                 
-                verts_2d = info['verts_2d']
-                distances = np.sqrt((verts_2d[:, 0] - px)**2 + (verts_2d[:, 1] - py)**2)
-                min_dist = distances.min()
+                # Sample points along the edge
+                num_samples = max(2, int(length / SAMPLING_INTERVAL))
+                points_on_edge = [ring.interpolate(i / num_samples, normalized=True) for i in range(num_samples)]
                 
-                if min_dist <= MAX_GAP_PLATFORM:
-                    if info['height'] >= MIN_BARRIER_HEIGHT:
-                        return True, "adequate_barrier"
-                    elif info['height'] > 0.2:
-                        found_low_barrier = True
-            
-            elif info['type'] in landing_types:
-                if info['type'] == 'IfcSlab':
-                    if abs(info['z_min'] - slab_z_min) < 0.1:
-                        continue
-                
-                fall_height = slab_z_min - info['z_max']
-                
-                if 0 < fall_height <= MAX_FALL:
-                    verts_2d = info['verts_2d']
-                    distances = np.sqrt((verts_2d[:, 0] - px)**2 + (verts_2d[:, 1] - py)**2)
-                    min_dist = distances.min()
+                for pt in points_on_edge:
+                    # A. Check for Valid Barrier
+                    has_barrier = False
                     
-                    if min_dist <= MAX_DISTANCE_LANDING:
-                        try:
-                            landing_poly = geom.MultiPoint(verts_2d).convex_hull
-                            min_dim = min(landing_poly.bounds[2] - landing_poly.bounds[0],
-                                          landing_poly.bounds[3] - landing_poly.bounds[1])
-                            if min_dim >= MIN_LANDING_WIDTH:
-                                return True, "acceptable_fall"
-                        except Exception:
-                            pass
+                    for bar in barrier_geoms:
+                        if bar['guid'] == slab_guid:
+                            continue
+                        
+                        # Height Check: Barrier top must be >= Slab top + Min Height
+                        required_barrier_height = slab_z + MIN_BARRIER_HEIGHT
+                        if bar['max_z'] < required_barrier_height:
+                            continue
+                            
+                        # Horizontal Distance Check
+                        dist = bar['poly'].distance(pt)
+                        if dist <= MAX_GAP_BARRIER:
+                            has_barrier = True
+                            break
+                    
+                    if has_barrier:
+                        continue
+                        
+                    # B. Check for Safe Landing
+                    has_landing = False
+                    
+                    for land in landing_geoms:
+                        if land['guid'] == slab_guid:
+                            continue
+                        
+                        # Horizontal Distance Check
+                        dist = land['poly'].distance(pt)
+                        if dist > MAX_GAP_LANDING:
+                            continue
+                            
+                        # Vertical Drop Check
+                        fall_height = slab_z - land['max_z']
+                        
+                        # Safe if: step up/flat (fall_height <= 0) OR small drop (fall_height <= MAX_FALL_HEIGHT)
+                        if fall_height <= 0 or fall_height <= MAX_FALL_HEIGHT:
+                            has_landing = True
+                            break
+                    
+                    if not has_barrier and not has_landing:
+                        is_safe = False
+                        break
         
-        if found_low_barrier:
-            return False, "low_barrier"
-        
-        return False, "no_protection"
+        if not is_safe:
+            violating_guids.append(slab_guid)
     
-    def check_slab_falling_protection(slab, tree, geom_cache: Dict,
-                                       barrier_types: Set, landing_types: Set) -> Tuple[bool, str]:
-        """Check if a slab is properly guarded against falling."""
-        slab_geom, slab_z_min, slab_z_max, _ = get_element_geometry_with_height(slab)
-        if slab_geom is None:
-            return True, "no_geometry"
-        
-        slab_poly = get_top_face_polygon(slab_geom)
-        if slab_poly is None:
-            return True, "no_polygon"
-        
-        edge_points = get_edge_points_by_interval(slab_poly, interval=EDGE_SAMPLE_INTERVAL)
-        if not edge_points:
-            return True, "no_edge_points"
-        
-        unprotected_count = 0
-        low_barrier_count = 0
-        
-        for point in edge_points:
-            is_protected, reason = check_point_protection(
-                point, slab_z_min, tree, geom_cache, barrier_types, landing_types
-            )
-            
-            if not is_protected:
-                if reason == "low_barrier":
-                    low_barrier_count += 1
-                else:
-                    unprotected_count += 1
-        
-        if unprotected_count > 0:
-            return False, "missing_barriers"
-        
-        if low_barrier_count > 0:
-            return False, "low_barriers"
-        
-        return True, "protected"
-    
-    # Main execution
-    if not model:
-        return []
-    
-    print("Building geometry tree...")
-    tree = build_geometry_tree()
-    
-    print("Caching element geometry...")
-    barrier_types = {'IfcWall', 'IfcRailing', 'IfcColumn', 'IfcStair', 'IfcBuildingElementProxy'}
-    landing_types = {'IfcSlab', 'IfcSite', 'IfcStair', 'IfcRamp'}
-    all_types = list(barrier_types | landing_types)
-    
-    geom_cache = cache_element_geometry(all_types)
-    print(f"Cached {len(geom_cache)} elements")
-    
-    print("Checking slabs...")
-    slabs = model.by_type('IfcSlab')
-    floor_slabs = [s for s in slabs if getattr(s, 'PredefinedType', None) in ('FLOOR', 'BASESLAB')]
-    
-    if not floor_slabs:
-        print("No floor slabs found in model")
-        return []
-    
-    violations = []
-    
-    for i, slab in enumerate(floor_slabs):
-        is_protected, reason = check_slab_falling_protection(
-            slab, tree, geom_cache, barrier_types, landing_types
-        )
-        
-        if not is_protected:
-            violations.append(slab.GlobalId)
-        
-        if (i + 1) % 10 == 0:
-            print(f"  Processed {i + 1}/{len(floor_slabs)} slabs, {len(violations)} violations found")
-    
-    print(f"Total violations: {len(violations)}")
-    return violations
+    return violating_guids

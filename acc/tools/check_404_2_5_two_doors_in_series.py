@@ -1,154 +1,130 @@
 import ifcopenshell
 import ifcopenshell.util.element
-import ifcopenshell.util.placement
+import ifcopenshell.geom
 import numpy as np
-from typing import List, Optional, Set
-
-
-def get_door_world_position(model: ifcopenshell.file, door: ifcopenshell.entity_instance) -> Optional[np.ndarray]:
-    """Get the world position (X, Y, Z) of a door."""
-    try:
-        if not door.ObjectPlacement:
-            return None
-        matrix = ifcopenshell.util.placement.get_local_placement(door.ObjectPlacement)
-        return matrix[:,3][:3]
-    except (AttributeError, IndexError):
-        return None
-
-
-def get_connected_spaces(model: ifcopenshell.file, door: ifcopenshell.entity_instance) -> Set[ifcopenshell.entity_instance]:
-    """Get all spaces connected to a door via IfcRelSpaceBoundary."""
-    spaces = set()
-    try:
-        for rel in model.get_inverse(door):
-            if rel.is_a('IfcRelSpaceBoundary') and rel.RelatingSpace:
-                spaces.add(rel.RelatingSpace)
-    except AttributeError:
-        pass
-    return spaces
+from typing import List, Dict, Set, Tuple
 
 
 def check_404_2_5_two_doors_in_series(path_ifc_model: str) -> List[str]:
     """
-    Check if pairs of doors in series violate accessibility rule 404.2.5.
+    Check compliance with Rule 404.2.5: Two Doors in Series.
     
-    Rule 404.2.5 Two Doors in Series:
     Distance between two hinged or pivoted doors in series shall be 48 inches (1220 mm) 
     minimum plus the width of any door swinging into the space.
     
-    Parameters:
-    - Space Classification: One space must be Circulation, the other can be any classification (*)
-    - Door Defaults: Frame thickness = 0.03 m, Panel thickness = 0.04 m, Threshold height = 0.01 m
-    
     Args:
-        path_ifc_model: Path to the IFC model file
+        path_ifc_model: Path to the IFC model file.
         
     Returns:
-        List[str]: List of IFC GUIDs of doors that violate this rule
+        List of IFC GUIDs of doors that violate this rule.
         
     Example:
-        >>> guids = check_404_2_5_two_doors_in_series('/path/to/model.ifc')
-        >>> print(f"Found {len(guids)} violations")
+        >>> violations = check_404_2_5_two_doors_in_series('model.ifc')
+        >>> print(f'Found {len(violations)} violating doors')
     """
-    try:
-        model = ifcopenshell.open(path_ifc_model)
-    except Exception as e:
-        print(f"Error opening IFC model: {e}")
-        return []
+    model = ifcopenshell.open(path_ifc_model)
     
     # Get all doors
     doors = model.by_type('IfcDoor')
     if not doors:
         return []
     
-    # Get all spaces and classify them
+    # Get all spaces for classification
     spaces = model.by_type('IfcSpace')
-    space_classifications = {}
+    spaces_data = [{'guid': s.GlobalId, 'name': s.LongName or s.Name or ''} for s in spaces]
     
-    if spaces:
-        try:
-            space_data = [{"guid": s.GlobalId, "name": getattr(s, 'LongName', None) or getattr(s, 'Name', '')} for s in spaces]
-            classified = classify_spaces(space_data, path_ifc_model)
-            space_classifications = {s['guid']: s['classification'] for s in classified}
-        except Exception as e:
-            print(f"Warning: Could not classify spaces: {e}")
+    # Classify spaces to identify circulation spaces
+    classified_spaces = classify_spaces(spaces_data, path_ifc_model)
+    circulation_space_guids = {s['guid'] for s in classified_spaces if s.get('classification') == 'Circulation'}
     
-    # Build door info structure
-    door_info_list = []
+    if not circulation_space_guids:
+        return []
+    
+    # Get door-space relationships using IfcRelSpaceBoundary
+    rel_boundaries = model.by_type('IfcRelSpaceBoundary')
+    door_to_spaces: Dict[str, Set[str]] = {}  # door GUID -> set of space GUIDs
+    space_to_doors: Dict[str, Set[str]] = {}  # space GUID -> set of door GUIDs
+    
+    for rel in rel_boundaries:
+        if hasattr(rel, 'RelatedBuildingElement'):
+            elem = rel.RelatedBuildingElement
+            if elem and elem.is_a('IfcDoor'):
+                door_guid = elem.GlobalId
+                space = rel.RelatingSpace
+                if space:
+                    space_guid = space.GlobalId
+                    if door_guid not in door_to_spaces:
+                        door_to_spaces[door_guid] = set()
+                    door_to_spaces[door_guid].add(space_guid)
+                    
+                    if space_guid not in space_to_doors:
+                        space_to_doors[space_guid] = set()
+                    space_to_doors[space_guid].add(door_guid)
+    
+    # Get door geometry centers for distance calculation
+    door_centers: Dict[str, np.ndarray] = {}
+    
+    settings = ifcopenshell.geom.settings()
+    settings.set(settings.DISABLE_OPENING_SUBTRACTIONS, True)
+    
     skipped_doors = 0
-    
     for door in doors:
+        door_guid = door.GlobalId
+        # Only process doors that have space connections
+        if door_guid not in door_to_spaces:
+            skipped_doors += 1
+            continue
         try:
-            position = get_door_world_position(model, door)
-            if position is None:
-                skipped_doors += 1
-                continue
-            
-            connected_spaces = get_connected_spaces(model, door)
-            
-            # Check if any connected space is Circulation
-            has_circulation = any(
-                space_classifications.get(s.GlobalId) == 'Circulation' 
-                for s in connected_spaces
-            )
-            
-            door_info_list.append({
-                'door': door,
-                'guid': door.GlobalId,
-                'position': position,
-                'connected_spaces': connected_spaces,
-                'has_circulation': has_circulation
-            })
-        except (AttributeError, KeyError):
+            # Get geometry center
+            shape = ifcopenshell.geom.create_shape(settings, door)
+            verts = np.array(shape.geometry.verts).reshape(-1, 3)
+            center = verts.mean(axis=0)
+            door_centers[door_guid] = center
+        except Exception:
             skipped_doors += 1
             continue
     
-    if skipped_doors > 0:
-        print(f"Warning: Skipped {skipped_doors} doors due to missing data")
-    
-    if len(door_info_list) < 2:
+    if len(door_centers) < 2:
         return []
     
-    # Find pairs of doors in series that violate the rule
-    violation_guids = set()
-    MIN_BASE_DISTANCE = 1.22  # 1220 mm in meters
-    PROXIMITY_THRESHOLD = 2.1  # meters - doors within this range are considered potentially 'in series'
-    VERTICAL_TOLERANCE = 0.3  # meters - doors must be on same floor
+    # Find door pairs in the same circulation space
+    door_pairs: Set[Tuple[str, str]] = set()
     
-    for i, door1 in enumerate(door_info_list):
-        for j, door2 in enumerate(door_info_list):
-            if i >= j:
-                continue
-            
-            # Check if they share at least one space (doors are in series)
-            shared_spaces = door1['connected_spaces'] & door2['connected_spaces']
-            
-            # Check if at least one connects to a circulation space
-            if not (door1['has_circulation'] or door2['has_circulation']):
-                continue
-            
-            # Check if on same floor (within vertical tolerance)
-            pos1 = door1['position']
-            pos2 = door2['position']
-            if abs(pos1[2] - pos2[2]) > VERTICAL_TOLERANCE:
-                continue
-            
-            # Calculate horizontal distance
-            horizontal_distance = np.sqrt(
-                (pos1[0] - pos2[0])**2 + (pos1[1] - pos2[1])**2
-            )
-            
-            # Doors must share a space OR be very close
-            if not shared_spaces and horizontal_distance > 1.5:
-                continue
-            
-            # Only consider doors within proximity threshold
-            if horizontal_distance > PROXIMITY_THRESHOLD:
-                continue
-            
-            # Check if distance is less than minimum required
-            if horizontal_distance < MIN_BASE_DISTANCE:
-                violation_guids.add(door1['guid'])
-                violation_guids.add(door2['guid'])
+    for space_guid in circulation_space_guids:
+        if space_guid in space_to_doors:
+            door_list = list(space_to_doors[space_guid])
+            if len(door_list) >= 2:
+                # Create all pairs of doors in this circulation space
+                for i in range(len(door_list)):
+                    for j in range(i + 1, len(door_list)):
+                        door1 = door_list[i]
+                        door2 = door_list[j]
+                        
+                        # Both doors must have geometry
+                        if door1 in door_centers and door2 in door_centers:
+                            pair = tuple(sorted([door1, door2]))
+                            door_pairs.add(pair)
     
-    return sorted(list(violation_guids))
+    if not door_pairs:
+        return []
+    
+    # Check each door pair for distance violations
+    violation_guids: Set[str] = set()
+    min_distance = 1.22  # 1220 mm in meters
+    
+    for door1_guid, door2_guid in door_pairs:
+        center1 = door_centers[door1_guid]
+        center2 = door_centers[door2_guid]
+        
+        # Calculate horizontal distance (ignore Z difference)
+        horizontal_dist = np.sqrt(
+            (center1[0] - center2[0])**2 + 
+            (center1[1] - center2[1])**2
+        )
+        
+        # Check if distance is less than minimum
+        if horizontal_dist < min_distance:
+            violation_guids.add(door1_guid)
+            violation_guids.add(door2_guid)
+    
+    return list(violation_guids)
