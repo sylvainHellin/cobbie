@@ -24,6 +24,7 @@ Data Split (from acc/config/model_splits.json):
 """
 
 import argparse
+import multiprocessing
 import time
 from dataclasses import dataclass, field
 from datetime import datetime
@@ -409,7 +410,7 @@ def handle_create_tool(ctx: ACCContext) -> Tuple[ACCTrainingState, ACCContext]:
                 )
 
             # Pre-check: try executing on primary model before full validation
-            _, exec_log = _execute_tool(ctx.tool_implementation, ctx.tool_name, primary_path, boilerplate=ctx.boilerplate)
+            _, exec_log = execute_tool_safe(ctx.tool_implementation, ctx.tool_name, primary_path, boilerplate=ctx.boilerplate)
             is_crash = exec_log.startswith("Failed to create function:") or exec_log.startswith("Execution error:")
             if is_crash:
                 ctx.pre_check_count += 1
@@ -504,6 +505,67 @@ def _execute_tool(
         return [], f"Execution error: {e}"
 
 
+def _execute_tool_worker(
+    queue: multiprocessing.Queue,
+    tool_implementation: str,
+    function_name: str,
+    model_path: str,
+    boilerplate: Optional[str],
+) -> None:
+    """Worker process for tool execution. Puts (status, guids, log) into queue."""
+    try:
+        guids, log = _execute_tool(tool_implementation, function_name, model_path, boilerplate=boilerplate)
+        queue.put(("ok", guids, log))
+    except Exception as e:
+        queue.put(("error", [], str(e)))
+
+
+def execute_tool_safe(
+    tool_implementation: str,
+    function_name: str,
+    model_path: str,
+    boilerplate: Optional[str] = None,
+    timeout: int = 300,  # 5 min default
+    max_segfault_retries: int = 2,
+) -> Tuple[list[str], str]:
+    """Execute tool in isolated subprocess to survive segfaults. Retries on SIGSEGV."""
+    mp_ctx = multiprocessing.get_context("spawn")  # "spawn" = clean process, no shared state
+
+    for attempt in range(max_segfault_retries + 1):
+        queue = mp_ctx.Queue()
+        proc = mp_ctx.Process(
+            target=_execute_tool_worker,
+            args=(queue, tool_implementation, function_name, model_path, boilerplate),
+        )
+        proc.start()
+        proc.join(timeout=timeout)
+
+        if proc.is_alive():
+            proc.terminate()
+            proc.join(timeout=5)
+            return [], f"Execution error: timeout after {timeout}s"
+
+        exit_code = proc.exitcode
+        if exit_code == 0:
+            status, guids, log = queue.get_nowait()
+            if status == "ok":
+                return guids, log
+            else:
+                return [], f"Execution error: {log}"
+        elif exit_code is not None and exit_code < 0:
+            signal_num = -exit_code
+            if signal_num == 11:  # SIGSEGV
+                if attempt < max_segfault_retries:
+                    logger.warning(f"Segfault on attempt {attempt + 1}/{max_segfault_retries + 1}, retrying...")
+                    continue
+                return [], f"Execution error: segfault after {max_segfault_retries + 1} attempts"
+            return [], f"Execution error: process killed by signal {signal_num}"
+        else:
+            return [], f"Execution error: process exited with code {exit_code}"
+
+    return [], "Execution error: unexpected loop exit"
+
+
 def handle_validate_tool(ctx: ACCContext) -> Tuple[ACCTrainingState, ACCContext]:
     """Execute tool on all training models and validation model, compare GUIDs."""
     logger.info("Validating tool on training models and validation model...")
@@ -522,7 +584,7 @@ def handle_validate_tool(ctx: ACCContext) -> Tuple[ACCTrainingState, ACCContext]
                 logger.warning(f"No IFC path for training model {model_name} — skipping validation")
                 continue
 
-            predicted, run_log = _execute_tool(ctx.tool_implementation, ctx.tool_name, model_path, boilerplate=ctx.boilerplate)
+            predicted, run_log = execute_tool_safe(ctx.tool_implementation, ctx.tool_name, model_path, boilerplate=ctx.boilerplate)
             expected = ctx.training_guids_per_model.get(model_name, [])
             result = compare_guids(set(predicted), set(expected))
 
@@ -570,7 +632,7 @@ def handle_validate_tool(ctx: ACCContext) -> Tuple[ACCTrainingState, ACCContext]
                 logger.warning(f"No IFC path for validation model {model_name} — skipping")
                 continue
 
-            predicted, run_log = _execute_tool(ctx.tool_implementation, ctx.tool_name, model_path, boilerplate=ctx.boilerplate)
+            predicted, run_log = execute_tool_safe(ctx.tool_implementation, ctx.tool_name, model_path, boilerplate=ctx.boilerplate)
             expected = ctx.validation_guids_per_model.get(model_name, [])
             result = compare_guids(set(predicted), set(expected))
 
@@ -812,7 +874,7 @@ def handle_test_tool(ctx: ACCContext) -> Tuple[ACCTrainingState, ACCContext]:
             logger.warning(f"No IFC path for test model {model_name} — skipping")
             continue
 
-        predicted, _ = _execute_tool(implementation, ctx.tool_name, model_path, boilerplate=ctx.boilerplate)
+        predicted, _ = execute_tool_safe(implementation, ctx.tool_name, model_path, boilerplate=ctx.boilerplate)
         expected = ctx.test_guids_per_model.get(model_name, [])
         result = compare_guids(set(predicted), set(expected))
 

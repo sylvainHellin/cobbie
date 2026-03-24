@@ -43,7 +43,7 @@ acc/bim_models
 .claude
 .ruff_cache
 *.sqlite
-!acc.sqlite
+*.db
 # External cloned repos (for docs indexing)
 src/docs_indexer/external/
 

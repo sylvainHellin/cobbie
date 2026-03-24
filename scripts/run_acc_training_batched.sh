@@ -10,7 +10,7 @@
 #   bash scripts/run_acc_training_batched.sh --nb-samples 20 --no-geometry
 #
 #   # Continue an existing run (skips the first-question step):
-#   bash scripts/run_acc_training_batched.sh --nb-samples 20 --continue <run_id>
+#   bash scripts/run_acc_training_batched.sh --nb-samples 20 --batch-size 1 --start 11 --continue 7ca5817aba3e40879b3205398d958102
 #
 # Without --continue: first batch = 1 rule (creates MLflow run), then prompts for run ID.
 # With --continue: all rules run in batches against the provided run ID.
