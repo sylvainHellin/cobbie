@@ -1088,6 +1088,8 @@
             "2O2Fr$t4X7Zf8NOew3FLTF"
           ],
           "extraction_element": [
+            "IfcColumn",
+            "IfcCurtainWall",
             "IfcWall",
             "IfcWallStandardCase"
           ]
@@ -1121,6 +1123,8 @@
             "2O2Fr$t4X7Zf8NOew3FLR9"
           ],
           "extraction_element": [
+            "IfcColumn",
+            "IfcCurtainWall",
             "IfcWall",
             "IfcWallStandardCase"
           ]

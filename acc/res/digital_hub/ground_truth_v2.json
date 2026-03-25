@@ -1825,6 +1825,8 @@
             "3LF03GdXv2GhSTK1xTZzXD"
           ],
           "extraction_element": [
+            "IfcColumn",
+            "IfcCurtainWall",
             "IfcWall",
             "IfcWallStandardCase"
           ]
@@ -1864,6 +1866,8 @@
             "0YVU7tDBX86u6UVVsSmdwK"
           ],
           "extraction_element": [
+            "IfcColumn",
+            "IfcCurtainWall",
             "IfcWall",
             "IfcWallStandardCase"
           ]

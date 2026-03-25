@@ -1,4 +1,422 @@
 {
+  "103": [
+    {
+      "rule": "305_3_size",
+      "v1_count": 4,
+      "v2_count": 5,
+      "added": [
+        "1IxvzNl1bDoQE1td6$pX2x",
+        "1IxvzNl1bDoQE1td6$pYbO",
+        "1IxvzNl1bDoQE1td6$pYvb",
+        "1IxvzNl1bDoQE1td6$pZOt"
+      ],
+      "removed": [
+        "0F$VU_mGX7p9x903GgmK8K",
+        "0tnAJJyQ16qeS5r74HbJvW",
+        "1IxvzNl1bDoQE1td6$pW$O"
+      ]
+    },
+    {
+      "rule": "clearance_front_of_doors",
+      "v1_count": 17,
+      "v2_count": 17,
+      "added": [
+        "0F$VU_mGX7p9x903GgmKBe",
+        "0F$VU_mGX7p9x903GgmKBf",
+        "0F$VU_mGX7p9x903GgmKBv",
+        "0F$VU_mGX7p9x903GgmKBw",
+        "0F$VU_mGX7p9x903GgmKBx",
+        "0F$VU_mGX7p9x903GgmKBy",
+        "0F$VU_mGX7p9x903GgmKIX",
+        "0F$VU_mGX7p9x903GgmKIY",
+        "0F$VU_mGX7p9x903GgmKIZ",
+        "0F$VU_mGX7p9x903GgmKIa",
+        "0F$VU_mGX7p9x903GgmKIb",
+        "0F$VU_mGX7p9x903GgmKIg",
+        "0F$VU_mGX7p9x903GgmKIh",
+        "0tnAJJyQ16qeS5r74HbJXR",
+        "1IxvzNl1bDoQE1td6$pX78"
+      ],
+      "removed": [
+        "0F$VU_mGX7p9x903GgmK7d",
+        "0F$VU_mGX7p9x903GgmKBc",
+        "0F$VU_mGX7p9x903GgmKBd",
+        "0F$VU_mGX7p9x903GgmKBr",
+        "0F$VU_mGX7p9x903GgmKBs",
+        "0F$VU_mGX7p9x903GgmKBt",
+        "0F$VU_mGX7p9x903GgmKBu",
+        "0F$VU_mGX7p9x903GgmKEA",
+        "0F$VU_mGX7p9x903GgmKI0",
+        "0F$VU_mGX7p9x903GgmKI1",
+        "0F$VU_mGX7p9x903GgmKI2",
+        "0F$VU_mGX7p9x903GgmKI3",
+        "0F$VU_mGX7p9x903GgmKI4",
+        "0F$VU_mGX7p9x903GgmKIA",
+        "0F$VU_mGX7p9x903GgmKIB"
+      ]
+    }
+  ],
+  "141": [
+    {
+      "rule": "305_3_size",
+      "v1_count": 2,
+      "v2_count": 13,
+      "added": [
+        "0dKN4mXNDAnAFrDMHX6hYE",
+        "0dKN4mXNDAnAFrDMHX6hY_",
+        "0dKN4mXNDAnAFrDMHX6hYg",
+        "0dKN4mXNDAnAFrDMHX6hYr",
+        "2HHWvRxiD0NO14TN9miPxS",
+        "2HHWvRxiD0NO14TN9miPxd",
+        "2HHWvRxiD0NO14TN9miPxf",
+        "2HHWvRxiD0NO14TN9miPxg",
+        "2HHWvRxiD0NO14TN9miQ4a",
+        "2HHWvRxiD0NO14TN9miQ4l",
+        "2HHWvRxiD0NO14TN9miQ4o",
+        "2HHWvRxiD0NO14TN9miQ4q"
+      ],
+      "removed": [
+        "0CpFrpVKTErOvvNJQ1xWtW"
+      ]
+    },
+    {
+      "rule": "504_2_riser_height",
+      "v1_count": 2,
+      "v2_count": 1,
+      "added": [],
+      "removed": [
+        "1h3hC3BBjB$Af_CPYDzLhe"
+      ]
+    },
+    {
+      "rule": "clearance_front_of_doors",
+      "v1_count": 10,
+      "v2_count": 10,
+      "added": [
+        "294IZm1s9CWxkDIbbHNRJ6",
+        "2BBCNtipfAzRdC1d8kachd"
+      ],
+      "removed": [
+        "294IZm1s9CWxkDIbbHNRJ4",
+        "2BBCNtipfAzRdC1d8kaceQ"
+      ]
+    },
+    {
+      "rule": "slabs_guarded_against_falling",
+      "v1_count": 82,
+      "v2_count": 27,
+      "added": [],
+      "removed": [
+        "0DMk1Gofz60BkW8YQc5$WR",
+        "0DMk1Gofz60BkW8YQc5$Wf",
+        "0DMk1Gofz60BkW8YQc5$XV",
+        "0DMk1Gofz60BkW8YQc5$Xv",
+        "0DMk1Gofz60BkW8YQc5$Z0",
+        "0DMk1Gofz60BkW8YQc5$cD",
+        "0DMk1Gofz60BkW8YQc5_OT",
+        "0DMk1Gofz60BkW8YQc5_O_",
+        "0DMk1Gofz60BkW8YQc5_Ph",
+        "0DMk1Gofz60BkW8YQc5_SY",
+        "0DMk1Gofz60BkW8YQc5_TG",
+        "0DMk1Gofz60BkW8YQc5_Tm",
+        "0DMk1Gofz60BkW8YQc5_V7",
+        "0DMk1Gofz60BkW8YQc5_VX",
+        "1ZEoaRdQbAF8ybJt6T1y0F",
+        "1ZEoaRdQbAF8ybJt6T1y4D",
+        "1ZEoaRdQbAF8ybJt6T1y5K",
+        "1ZEoaRdQbAF8ybJt6T1y6t",
+        "1ZEoaRdQbAF8ybJt6T1y7P",
+        "1ZEoaRdQbAF8ybJt6T1y7h",
+        "1ZEoaRdQbAF8ybJt6T1y7z",
+        "1ZEoaRdQbAF8ybJt6T1yO1",
+        "1ZEoaRdQbAF8ybJt6T1yPZ",
+        "1ZEoaRdQbAF8ybJt6T1yRF",
+        "1h3hC3BBjB$Af_CPYDzLtG",
+        "1h3hC3BBjB$Af_CPYDzLtI",
+        "1h3hC3BBjB$Af_CPYDzLtK",
+        "1h3hC3BBjB$Af_CPYDzLtM",
+        "1h3hC3BBjB$Af_CPYDzLtV",
+        "1h3hC3BBjB$Af_CPYDzLtl",
+        "2bkLLv$bP568CSiynWm70X",
+        "2bkLLv$bP568CSiynWm70x",
+        "2bkLLv$bP568CSiynWm71D",
+        "2bkLLv$bP568CSiynWm71Y",
+        "2bkLLv$bP568CSiynWm71e",
+        "2bkLLv$bP568CSiynWm71f",
+        "2bkLLv$bP568CSiynWm71k",
+        "2bkLLv$bP568CSiynWm71l",
+        "2bkLLv$bP568CSiynWm71o",
+        "2bkLLv$bP568CSiynWm71p",
+        "2bkLLv$bP568CSiynWm71z",
+        "2bkLLv$bP568CSiynWm7E1",
+        "2bkLLv$bP568CSiynWm7E6",
+        "2bkLLv$bP568CSiynWm7EK",
+        "2bkLLv$bP568CSiynWm7EL",
+        "2bkLLv$bP568CSiynWm7EM",
+        "2bkLLv$bP568CSiynWm7EN",
+        "2bkLLv$bP568CSiynWm7Eb",
+        "2bkLLv$bP568CSiynWm7Ee",
+        "2bkLLv$bP568CSiynWm7Eg",
+        "2bkLLv$bP568CSiynWm7Eh",
+        "2bkLLv$bP568CSiynWm7_4",
+        "3HU9chNKD4ZQZehthRXeuJ",
+        "3HU9chNKD4ZQZehthRXeuS",
+        "3_3e8hPlTBFQmkqfJTZ0n3"
+      ]
+    }
+  ],
+  "166": [
+    {
+      "rule": "305_3_size",
+      "v1_count": 1,
+      "v2_count": 5,
+      "added": [
+        "2Q4p8vO3f7xfeTuXPVwexW",
+        "2Q4p8vO3f7xfeTuXPVwezU",
+        "3ilNunKRzC8O5AE9O61ty0",
+        "3uUWHjHcfEwfBz0Ci_6GKr",
+        "3uUWHjHcfEwfBz0Ci_6GMX"
+      ],
+      "removed": [
+        "0jno74fnz3JA4_tWzynQV0"
+      ]
+    },
+    {
+      "rule": "clearance_front_of_doors",
+      "v1_count": 13,
+      "v2_count": 13,
+      "added": [
+        "2ci8AX44j6O8Lr29eFxLyp",
+        "3xJqPJrvz2sQPZbf6JPpGL"
+      ],
+      "removed": [
+        "1xxBAYOm5EU8_Pw3pzr54H",
+        "3KDZhy$nzFoQxETLFlDfTL"
+      ]
+    },
+    {
+      "rule": "slabs_guarded_against_falling",
+      "v1_count": 46,
+      "v2_count": 4,
+      "added": [],
+      "removed": [
+        "021Pqtlf91HwMpw7JVoT$x",
+        "02sTr6M6vE9Qf5C1OPPy8X",
+        "02sTr6M6vE9Qf5C1OPPy9L",
+        "02sTr6M6vE9Qf5C1OPPy9U",
+        "02sTr6M6vE9Qf5C1OPPy9h",
+        "02sTr6M6vE9Qf5C1OPPyE3",
+        "02sTr6M6vE9Qf5C1OPPyE7",
+        "02sTr6M6vE9Qf5C1OPPyEq",
+        "02sTr6M6vE9Qf5C1OPPyEt",
+        "02sTr6M6vE9Qf5C1OPPyEu",
+        "02sTr6M6vE9Qf5C1OPPyFW",
+        "02sTr6M6vE9Qf5C1OPPyFi",
+        "02sTr6M6vE9Qf5C1OPPyFq",
+        "0WJf9giaLFxAIlkBabbQjv",
+        "0jno74fnz3JA4_tWzynQPP",
+        "0jno74fnz3JA4_tWzynQUx",
+        "0jno74fnz3JA4_tWzynQVu",
+        "12f5QcaEv27vYRG99unEXL",
+        "12f5QcaEv27vYRG99unEXM",
+        "12f5QcaEv27vYRG99unEXN",
+        "12f5QcaEv27vYRG99unEXe",
+        "1R$KBYTRP3QOdXlCBx2d$D",
+        "1R$KBYTRP3QOdXlCBx2d$Z",
+        "1R$KBYTRP3QOdXlCBx2d_7",
+        "1R$KBYTRP3QOdXlCBx2d_9",
+        "1R$KBYTRP3QOdXlCBx2d_v",
+        "1R$KBYTRP3QOdXlCBx2dhn",
+        "1R$KBYTRP3QOdXlCBx2dzp",
+        "2Ev12zif18qhpprOVbtAHO",
+        "2Ev12zif18qhpprOVbtAHV",
+        "2k4hklcZX0AhLEYFO5nizC",
+        "38F_bUbFvBfv9QXygUod3X",
+        "38F_bUbFvBfv9QXygUodOj",
+        "38F_bUbFvBfv9QXygUodUF",
+        "38F_bUbFvBfv9QXygUodUH",
+        "38F_bUbFvBfv9QXygUodUJ",
+        "38F_bUbFvBfv9QXygUodUu",
+        "38F_bUbFvBfv9QXygUodVR",
+        "38F_bUbFvBfv9QXygUodVt",
+        "3KT7y79217qhD1ukhFstrg",
+        "3qHHwYbFDANA3sEF6iPkYV",
+        "3qHHwYbFDANA3sEF6iPkaT"
+      ]
+    }
+  ],
+  "4351": [
+    {
+      "rule": "clearance_front_of_doors",
+      "v1_count": 2,
+      "v2_count": 2,
+      "added": [
+        "2gTG8I4eL6z9beKMqLBe0M",
+        "3aFPed1ijDewmDm14mfRrH"
+      ],
+      "removed": [
+        "0S4TGKDX5FsvETM2lopwZJ",
+        "3aFPed1ijDewmDm14mfR5G"
+      ]
+    },
+    {
+      "rule": "slabs_guarded_against_falling",
+      "v1_count": 16,
+      "v2_count": 3,
+      "added": [],
+      "removed": [
+        "05IUfpHsL9BgFcXObHJJxD",
+        "0QunSioVvB2xY3ux28I6JO",
+        "0zm_RkrLH2tRithg6zqEqi",
+        "0zm_RkrLH2tRithg6zqEsr",
+        "0zm_RkrLH2tRithg6zqFIz",
+        "1AMAMzZITBfejW_xu2IBMi",
+        "1AMAMzZITBfejW_xu2IB_D",
+        "1o6iSxmUv8P91r$iXVGWW4",
+        "2AIxs0u4bALRCp$bA8lTiR",
+        "2rY6ZB_FT3bRLgI3yFLROE",
+        "2t7Cp302P04g8y50Ws9Abn",
+        "2yrvjJLF5DO99bzmxJnJrl",
+        "3PaccedUL48Q9C0HOcrtmk"
+      ]
+    }
+  ],
+  "ac20": [
+    {
+      "rule": "305_3_size",
+      "v1_count": 5,
+      "v2_count": 5,
+      "added": [
+        "0jhU4VZ6XCxee3pjfx5VMh",
+        "24vVAUYDH2SetutQQsZBMv",
+        "2xcLNHPon6VO6wB_n0EQLF",
+        "3UEb2iq7D2tOgbX6Mufs$X",
+        "3uvYP4OyH5ufyPIMbZD86h"
+      ],
+      "removed": [
+        "0$h$6iqvH7uuMv8xHW4e2S",
+        "0BwbUEtUXCveHWZ7HWUQrv",
+        "0Md6zOio1EyORL9lp07Mhq",
+        "0f4DwHFrj33es5$Uo7ry7l",
+        "0wOs8cwRn3Cgmq_aLC_Oc2"
+      ]
+    },
+    {
+      "rule": "slabs_guarded_against_falling",
+      "v1_count": 2,
+      "v2_count": 1,
+      "added": [],
+      "removed": [
+        "2udBPbKibCZ8zbfpJmtDTM"
+      ]
+    }
+  ],
+  "dental_clinic": [
+    {
+      "rule": "clearance_front_of_doors",
+      "v1_count": 9,
+      "v2_count": 10,
+      "added": [
+        "1oCmeD_UH0NAQ13DTKAKXn",
+        "2NHD_$8fb3ZexljM$wSStT",
+        "3LjuaIy0TB9BYwqsSadrQS",
+        "3eIXtbz01CQuZOCQ8qhuxf",
+        "3o5ntlA212uQCF0q6eQsZI"
+      ],
+      "removed": [
+        "0bpfxAz3XBrAx$RjFuHv$S",
+        "0bpfxAz3XBrAx$RjFuHvgD",
+        "0otfaO0qPDAhynjJ6DnLX$",
+        "1I_Rp6d3j27fE7zFUMgaqZ"
+      ]
+    }
+  ],
+  "digital_hub": [
+    {
+      "rule": "504_2_riser_height",
+      "v1_count": 3,
+      "v2_count": 2,
+      "added": [],
+      "removed": [
+        "23Np8uMAvEN9H6Ds49deXD"
+      ]
+    },
+    {
+      "rule": "slabs_guarded_against_falling",
+      "v1_count": 17,
+      "v2_count": 1,
+      "added": [],
+      "removed": [
+        "12bPoIwbv0tBGfPfnvCUW2",
+        "12bPoIwbv0tBGfPfnvCUYu",
+        "12bPoIwbv0tBGfPfnvCUau",
+        "12bPoIwbv0tBGfPfnvCUc2",
+        "23Np8uMAvEN9H6Ds49de1S",
+        "23Np8uMAvEN9H6Ds49de3t",
+        "23Np8uMAvEN9H6Ds49de4U",
+        "23Np8uMAvEN9H6Ds49de77",
+        "23Np8uMAvEN9H6Ds49dh$Z",
+        "23Np8uMAvEN9H6Ds49dh_f",
+        "23Np8uMAvEN9H6Ds49dhvA",
+        "23Np8uMAvEN9H6Ds49dhvb",
+        "23Np8uMAvEN9H6Ds49dhw1",
+        "23Np8uMAvEN9H6Ds49dhxn",
+        "23Np8uMAvEN9H6Ds49dhyz",
+        "23Np8uMAvEN9H6Ds49dhzi"
+      ]
+    }
+  ],
+  "duplex": [
+    {
+      "rule": "504_2_non_uniform_risers_treads",
+      "v1_count": 2,
+      "v2_count": 2,
+      "added": [
+        "21ldoMpbP4VfsJ0XGY_34d"
+      ],
+      "removed": [
+        "1hOSvn6df7F8_7GcBWlRqU"
+      ]
+    },
+    {
+      "rule": "504_2_riser_height",
+      "v1_count": 6,
+      "v2_count": 2,
+      "added": [],
+      "removed": [
+        "2O2Fr$t4X7Zf8NOew3FK4F",
+        "2O2Fr$t4X7Zf8NOew3FKcz",
+        "2OBrcmyk58NupXoVOHUtgP",
+        "2OBrcmyk58NupXoVOHUtxr"
+      ]
+    }
+  ],
+  "fzk_house": [
+    {
+      "rule": "504_2_non_uniform_risers_treads",
+      "v1_count": 1,
+      "v2_count": 1,
+      "added": [
+        "38a9vdh9bF5Qg28GWyHhlr"
+      ],
+      "removed": [
+        "2RGlQk4xH47RHK93zcTzUL"
+      ]
+    },
+    {
+      "rule": "slabs_guarded_against_falling",
+      "v1_count": 6,
+      "v2_count": 1,
+      "added": [],
+      "removed": [
+        "0knNIAVBPBFvBy_m5QVHsU",
+        "0o5vgCKyTBzO5$QJcI2YDP",
+        "25OWQvmXj5BPgyergP43tY",
+        "3Ttjr$59XEWfWN1WUHjelZ",
+        "3VCarUKgH1buLo22Ozxe6J"
+      ]
+    }
+  ],
   "samuel_macalister_sample_house": [
     {
       "rule": "305_3_size",
@@ -53,6 +471,90 @@
         "3lLx0gNe59vvExhby0Bff1",
         "3rPRxvVIT7WRZKOFIc3wXL",
         "3vi8Xy_cHA1R$gUoZ0tZjz"
+      ]
+    }
+  ],
+  "smiley_west": [
+    {
+      "rule": "305_3_size",
+      "v1_count": 7,
+      "v2_count": 13,
+      "added": [
+        "0V95TNYbX1PfwH1RlgqMqt",
+        "0bJ1uLaIzFOvpvhkN$XOpn",
+        "0qf1mmZjTBMRMW8ttJqleG",
+        "19AFpizAX06gIjmlbRQDfk",
+        "1dFkzi10v3yRLoKy5ClqDV",
+        "2Uh4jhm8f4_vL1M3gaiGgj",
+        "2n8EbY$rj1RQ$ya9rrqSXX",
+        "2tQbNfNw5ErBlIFlcWbE2S",
+        "35yKaUayr2LPWpST3GOIZw",
+        "3B4IVY1mL1OB855TfGPpKl",
+        "3sjLk6T$b3_OpDigmhkMCw"
+      ],
+      "removed": [
+        "06$jwnwYzB2xtme_3oKazV",
+        "0S2gRn2gb1FQt9ZThjw2Ou",
+        "0TQkmcTzL0ZfxeqP2F29Ye",
+        "16_jQJDFf88RMg5oYNRe9p",
+        "1LaDLhlXT1SfpE6m4AGlnb"
+      ]
+    },
+    {
+      "rule": "504_2_non_uniform_risers_treads",
+      "v1_count": 20,
+      "v2_count": 20,
+      "added": [
+        "0uwvn0rsH3TwwO9ofSpG$Z",
+        "1TvHaVzJ9Adeff_bvNBb2u",
+        "1j$7ZnItf9w8NhsmNAVsUC",
+        "1jrsHyC71DBgnw9PDYFtiF",
+        "2sCZlN66z3VRHFYWiRyds2",
+        "35ekX5Yo1Dfukg3nu72L7e",
+        "3IOQCxw_X6Ke2y0YTPcDfs",
+        "3Q2l6$dVb38gEzYyvoCq8n",
+        "3nW4x$Jg16U96R9aDX4eIB",
+        "3pVBj07CXCfOzKgRPWMAW4",
+        "3suS2IjjTFFQ$LB$aFEe0H",
+        "3ueKRIyo1EFxA71NCIUXnt"
+      ],
+      "removed": [
+        "061uoB$LH0ag1L6KqLFPT_",
+        "0DOKeP6Rb0SfiAb4_gXtGE",
+        "0EwxF4nBz6rQtu719baEc0",
+        "0GJvSj0jnCaefe7DGyDSfw",
+        "0cggic8xT0hgsmR4RhAz8g",
+        "0eiot5uOX9pwYpVvGE7Wc0",
+        "1Bc0_i_tn3DPexWTpXxWsw",
+        "1I0Sj0K1v549rPkKPuCzAy",
+        "2GHcfUS55Dau7AqJvZ6bPJ",
+        "34a7ezr_X8M9v$Ux70lj48",
+        "3bEEUyaGL2o8dKqgzsowWR",
+        "3uQXfLRwD39hn$ztGVdzE5"
+      ]
+    }
+  ],
+  "wbdg_office": [
+    {
+      "rule": "504_2_stair_slab_connection",
+      "v1_count": 5,
+      "v2_count": 2,
+      "added": [],
+      "removed": [
+        "1Cckmc_QjEFAHHQ3e8qDFi",
+        "27dLDsxMX8Sv5rKurGZypo",
+        "37hauuzqP2MBAzwN0mWNjY"
+      ]
+    },
+    {
+      "rule": "clearance_front_of_doors",
+      "v1_count": 1,
+      "v2_count": 1,
+      "added": [
+        "1giqnsgvr6uA16isIlsnGp"
+      ],
+      "removed": [
+        "0zG59wlnT37e_nm5jeqGJp"
       ]
     }
   ]
