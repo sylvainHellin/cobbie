@@ -45,7 +45,7 @@ echo "======================================================="
 if [[ -z "$run_id" ]]; then
     echo ""
     echo "=== Training: ${RULES[0]} (creates MLflow run) ==="
-    output=$(uv run scripts/run_acc_training_phase.py --rules "${RULES[0]}")
+    output=$(python scripts/run_acc_training_phase.py --rules "${RULES[0]}")
     run_id=$(echo "$output" | grep '^MLFLOW_RUN_ID=' | cut -d= -f2)
 
     if [[ -z "$run_id" ]]; then
@@ -63,7 +63,7 @@ fi
 for rule in "${RULES[@]}"; do
     echo ""
     echo "=== Training: ${rule} ==="
-    uv run scripts/run_acc_training_phase.py --rules "$rule" --continue "$run_id"
+    python scripts/run_acc_training_phase.py --rules "$rule" --continue "$run_id"
 
     if [[ $? -ne 0 ]]; then
         echo ""
