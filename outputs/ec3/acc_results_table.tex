@@ -1,0 +1,39 @@
+\begin{table*}[t]
+\centering
+\caption{ACC training and evaluation results per rule.}
+\label{tab:acc_results}
+\small
+\begin{tabular}{l c | cccc | cccc | cccc}
+\toprule
+ & & \multicolumn{4}{c|}{Training} & \multicolumn{4}{c|}{Validation} & \multicolumn{4}{c}{Test} \\
+Rule & Cl. & F1$_\text{avg}$ & P$_\text{agg}$ & R$_\text{agg}$ & F1$_\text{agg}$ & F1$_\text{avg}$ & P$_\text{agg}$ & R$_\text{agg}$ & F1$_\text{agg}$ & F1$_\text{avg}$ & P$_\text{agg}$ & R$_\text{agg}$ & F1$_\text{agg}$ \\
+\midrule
+Slab thickness & 1 & 1.00 & 1.00 & 1.00 & 1.00 & 1.00$^\dagger$ & 1.00$^\dagger$ & 1.00$^\dagger$ & 1.00$^\dagger$ & 0.75 & 0.00 & 0.00 & 0.00 \\
+Riser height & 1 & 0.56 & 0.17 & 0.25 & 0.20 & 0.85 & 0.64 & 1.00 & 0.78 & 0.30 & 0.03 & 0.25 & 0.05 \\
+Tread length & 1 & 0.75 & 0.33 & 1.00 & 0.50 & 0.50 & 1.00 & 0.80 & 0.89 & 0.92 & 0.50 & 1.00 & 0.67 \\
+\midrule
+Non-uniform risers/treads & 2 & 0.88 & 0.50 & 0.50 & 0.50 & 0.50 & 0.00 & 0.00 & 0.00 & 0.75$^\dagger$ & 0.00$^\dagger$ & 0.00$^\dagger$ & 0.00$^\dagger$ \\
+Stair--slab connection & 2 & 1.00 & 1.00 & 1.00 & 1.00 & 1.00$^\dagger$ & 1.00$^\dagger$ & 1.00$^\dagger$ & 1.00$^\dagger$ & 0.89 & 1.00 & 0.40 & 0.57 \\
+Doors and windows & 2 & 1.00 & 1.00 & 1.00 & 1.00 & 1.00$^\dagger$ & 1.00$^\dagger$ & 1.00$^\dagger$ & 1.00$^\dagger$ & 0.62 & 0.14 & 1.00 & 0.25 \\
+Large spaces $\geq$\,2 doors & 2 & 0.62 & 0.64 & 0.32 & 0.42 & 0.75 & 1.00 & 0.89 & 0.94 & 0.14 & 0.80 & 0.16 & 0.27 \\
+Same-storey elevation & 2 & 1.00 & 1.00 & 1.00 & 1.00 & 0.75 & 1.00 & 0.24 & 0.38 & 1.00 & 1.00 & 1.00 & 1.00 \\
+Space validation (inside) & 2 & 0.56 & 0.67 & 0.12 & 0.20 & 0.50 & 0.00 & 0.00 & 0.00 & 0.42 & 1.00 & 0.18 & 0.30 \\
+Space validation (intersect) & 2 & 0.04 & 0.07 & 0.08 & 0.08 & 0.22 & 0.20 & 0.31 & 0.24 & 0.39 & 0.29 & 0.91 & 0.44 \\
+\midrule
+Circular space (304.3.1) & 3 & 0.75 & 0.40 & 1.00 & 0.57 & 0.75 & 1.00 & 0.05 & 0.09 & 1.00 & 1.00 & 1.00 & 1.00 \\
+Clear floor space (305.3) & 3 & 0.09 & 0.03 & 0.29 & 0.05 & 0.30 & 0.17 & 0.08 & 0.11 & 0.50 & 0.00 & 0.00 & 0.00 \\
+Two doors in series (404.2.5) & 3 & 0.37 & 0.02 & 0.62 & 0.04 & 0.50$^\dagger$ & 0.00$^\dagger$ & 0.00$^\dagger$ & 0.00$^\dagger$ & 0.50 & 0.00 & 0.00 & 0.00 \\
+Clearance front of doors & 3 & 0.16 & 0.07 & 0.45 & 0.12 & 0.08 & 0.08 & 0.23 & 0.12 & 0.04 & 0.09 & 0.55 & 0.15 \\
+Slabs guarded against falling & 3 & 0.58 & 0.69 & 0.34 & 0.45 & 0.04 & 0.11 & 0.08 & 0.09 & 0.04 & 0.12 & 0.03 & 0.05 \\
+Unallocated areas & 3 & 0.60 & 0.21 & 0.67 & 0.32 & 0.75$^\dagger$ & 0.00$^\dagger$ & 0.00$^\dagger$ & 0.00$^\dagger$ & 0.00 & 0.00 & 0.00 & 0.00 \\
+\midrule
+\textit{Class 1 avg.} &  & 0.77 & 0.50 & 0.75 & 0.57 & 0.78 & 0.88 & 0.93 & 0.89 & 0.65 & 0.18 & 0.42 & 0.24 \\
+\textit{Class 2 avg.} &  & 0.73 & 0.70 & 0.57 & 0.60 & 0.67 & 0.60 & 0.49 & 0.51 & 0.60 & 0.61 & 0.52 & 0.40 \\
+\textit{Class 3 avg.} &  & 0.43 & 0.24 & 0.56 & 0.26 & 0.40 & 0.23 & 0.07 & 0.07 & 0.35 & 0.20 & 0.26 & 0.20 \\
+\midrule
+\textit{Overall avg.} &  & 0.62 & 0.49 & 0.60 & 0.47 & 0.59 & 0.51 & 0.42 & 0.41 & 0.52 & 0.37 & 0.40 & 0.30 \\
+\bottomrule
+\end{tabular}
+\vspace{1mm}
+\footnotesize{$^\dagger$ All models compliant (TP + FN = 0); F1 is undefined.}
+\end{table*}
