@@ -1,0 +1,914 @@
+{
+  "metadata": {
+    "model_name": "ac20",
+    "version": "v2",
+    "total_topics": 15,
+    "rules_count": 16,
+    "pass_rules_count": 12
+  },
+  "rules": {
+    "305_3_size": {
+      "rule_code": "305.3",
+      "rule_title": "305_3_size",
+      "question": "What spaces in the current IFC model have inaccessible areas?",
+      "rule": "305.3 Size\nThe clear floor or ground space shall be 30 inches (760 mm) minimum by 48 inches (1220 mm) minimum.",
+      "parameters": "Applicable Space Classifications: Balcony, Circulation, Garage, Habitable, Institutional, Lobby, Mercantile, Office, Parking, Production, Refuge, Stair Hall, Workplace",
+      "issues_count": 5,
+      "issues": [
+        {
+          "topic_id": "a9e03ee8-ab68-4dc5-83ab-85bdec2167fe",
+          "title": "Space.-1.1 : Besprechungsraum I[001]",
+          "description": "305.3 Size\nSpace.-1.1 : Besprechungsraum I[001] has inaccessible areas.\n",
+          "all_guids": [
+            "0$h$6iqvH7uuMv8xHW4e2S",
+            "0OwNcV9erFMvQIJeFqhaw0",
+            "0aYqrniYTF5OrgY8FDqrZ5",
+            "10477ZVeHF7f0uosceJBkS",
+            "1286tJlcX2qvmyh3QzzVxk",
+            "14gIVRaHXBJ8Coly$UiFBy",
+            "17cPNULgTCcun2tAvF_kd4",
+            "1BQdTQ$pv3fPMiik0mgcWd",
+            "1PjIpUMEnBpAnz4ixm0QoT",
+            "1R0L929Q9CdAWif7mN_tix",
+            "1q4vzT$i54VvZIWlsohkjs",
+            "1rOyQwjfjEiBsbGTIeM8xP",
+            "1wThYq9f17wPWKLBsNOeYG",
+            "1x6b5f29L53P6PEc81$dZn",
+            "29Qs7IkSHDse$fFtMm_UoG",
+            "2Bcq7G1OfCQxI3Qq2VL1RX",
+            "2CH_JhJHP4QhBNQW5I_$p3",
+            "2S81_Ddrv5IO_9FQklmGZn",
+            "2xj7SPlwX4qx17_F2_8HgV",
+            "3Pom8En7165Ovrq1bs5st9",
+            "3UEb2iq7D2tOgbX6Mufs$X",
+            "3UFdUoOUjCKeAYjOsvjsYa",
+            "3e4dHd2$bDqPCEQxkITpEq"
+          ],
+          "all_guids_enriched": [
+            {
+              "guid": "0$h$6iqvH7uuMv8xHW4e2S",
+              "ifc_type": "IfcFurnishingElement"
+            },
+            {
+              "guid": "0OwNcV9erFMvQIJeFqhaw0",
+              "ifc_type": "IfcFurnishingElement"
+            },
+            {
+              "guid": "0aYqrniYTF5OrgY8FDqrZ5",
+              "ifc_type": "IfcFurnishingElement"
+            },
+            {
+              "guid": "10477ZVeHF7f0uosceJBkS",
+              "ifc_type": "IfcFurnishingElement"
+            },
+            {
+              "guid": "1286tJlcX2qvmyh3QzzVxk",
+              "ifc_type": "IfcFurnishingElement"
+            },
+            {
+              "guid": "14gIVRaHXBJ8Coly$UiFBy",
+              "ifc_type": "IfcFurnishingElement"
+            },
+            {
+              "guid": "17cPNULgTCcun2tAvF_kd4",
+              "ifc_type": "IfcFurnishingElement"
+            },
+            {
+              "guid": "1BQdTQ$pv3fPMiik0mgcWd",
+              "ifc_type": "IfcFurnishingElement"
+            },
+            {
+              "guid": "1PjIpUMEnBpAnz4ixm0QoT",
+              "ifc_type": "IfcFurnishingElement"
+            },
+            {
+              "guid": "1R0L929Q9CdAWif7mN_tix",
+              "ifc_type": "IfcFurnishingElement"
+            },
+            {
+              "guid": "1q4vzT$i54VvZIWlsohkjs",
+              "ifc_type": "IfcFurnishingElement"
+            },
+            {
+              "guid": "1rOyQwjfjEiBsbGTIeM8xP",
+              "ifc_type": "IfcFurnishingElement"
+            },
+            {
+              "guid": "1wThYq9f17wPWKLBsNOeYG",
+              "ifc_type": "IfcFurnishingElement"
+            },
+            {
+              "guid": "1x6b5f29L53P6PEc81$dZn",
+              "ifc_type": "IfcFurnishingElement"
+            },
+            {
+              "guid": "29Qs7IkSHDse$fFtMm_UoG",
+              "ifc_type": "IfcFurnishingElement"
+            },
+            {
+              "guid": "2Bcq7G1OfCQxI3Qq2VL1RX",
+              "ifc_type": "IfcFurnishingElement"
+            },
+            {
+              "guid": "2CH_JhJHP4QhBNQW5I_$p3",
+              "ifc_type": "IfcFurnishingElement"
+            },
+            {
+              "guid": "2S81_Ddrv5IO_9FQklmGZn",
+              "ifc_type": "IfcFurnishingElement"
+            },
+            {
+              "guid": "2xj7SPlwX4qx17_F2_8HgV",
+              "ifc_type": "IfcFurnishingElement"
+            },
+            {
+              "guid": "3Pom8En7165Ovrq1bs5st9",
+              "ifc_type": "IfcFurnishingElement"
+            },
+            {
+              "guid": "3UEb2iq7D2tOgbX6Mufs$X",
+              "ifc_type": "IfcSpace"
+            },
+            {
+              "guid": "3UFdUoOUjCKeAYjOsvjsYa",
+              "ifc_type": "IfcFurnishingElement"
+            },
+            {
+              "guid": "3e4dHd2$bDqPCEQxkITpEq",
+              "ifc_type": "IfcFurnishingElement"
+            }
+          ],
+          "required_guids": [
+            "3UEb2iq7D2tOgbX6Mufs$X"
+          ],
+          "extraction_element": [
+            "IfcSpace"
+          ]
+        },
+        {
+          "topic_id": "e95298d9-5bad-412a-a32a-fe3980f48a64",
+          "title": "Space.-1.6 : Besprechungsraum Ii[002]",
+          "description": "305.3 Size\nSpace.-1.6 : Besprechungsraum II[002] has inaccessible areas.\n",
+          "all_guids": [
+            "0Md6zOio1EyORL9lp07Mhq",
+            "0YPT$aZi92A9SqKimjlZgJ",
+            "0ei_X4ZTnDtPQ5R8atgCEB",
+            "0ejPu6D1zDhuDjPRSjdhyK",
+            "0g$WjhniHFtBP2XpihTmVn",
+            "0pFEckBM5Dw8FooBjva_0M",
+            "0qrtF4SJ55A9KOb0lFJdBL",
+            "0rj_H3BP1CLuO9levpij_h",
+            "0wyjKOWj91FBee0XT_xPUt",
+            "0z_RS2_6n1I8yHTIAjSqL9",
+            "1aHvr85u1DxuE5GbK6n65k",
+            "1rF0m$ayDDZwrULyvU6hAS",
+            "1xQpZQIW58RfNRU7w3kJuF",
+            "1xsJfsSWbCSBCPqZG84tEN",
+            "1y8o9bXb9Emg30E5lE5c4o",
+            "2BAQ2TsDfFQwm_jkfGU81b",
+            "2pan8BLsn6mP58YLsASNfY",
+            "2xcLNHPon6VO6wB_n0EQLF",
+            "2zuBJSHsD0OOQvyAI$1_oh",
+            "3HkP5rwynD2O5u77hTbWsv",
+            "3Js595fxzAHfThl4exBD3r",
+            "3bK3oxhJ59BBUaTh_RU3nb",
+            "3s8qTSU1jDRh5lmNIPbN4u"
+          ],
+          "all_guids_enriched": [
+            {
+              "guid": "0Md6zOio1EyORL9lp07Mhq",
+              "ifc_type": "IfcFurnishingElement"
+            },
+            {
+              "guid": "0YPT$aZi92A9SqKimjlZgJ",
+              "ifc_type": "IfcFurnishingElement"
+            },
+            {
+              "guid": "0ei_X4ZTnDtPQ5R8atgCEB",
+              "ifc_type": "IfcFurnishingElement"
+            },
+            {
+              "guid": "0ejPu6D1zDhuDjPRSjdhyK",
+              "ifc_type": "IfcFurnishingElement"
+            },
+            {
+              "guid": "0g$WjhniHFtBP2XpihTmVn",
+              "ifc_type": "IfcFurnishingElement"
+            },
+            {
+              "guid": "0pFEckBM5Dw8FooBjva_0M",
+              "ifc_type": "IfcFurnishingElement"
+            },
+            {
+              "guid": "0qrtF4SJ55A9KOb0lFJdBL",
+              "ifc_type": "IfcFurnishingElement"
+            },
+            {
+              "guid": "0rj_H3BP1CLuO9levpij_h",
+              "ifc_type": "IfcFurnishingElement"
+            },
+            {
+              "guid": "0wyjKOWj91FBee0XT_xPUt",
+              "ifc_type": "IfcFurnishingElement"
+            },
+            {
+              "guid": "0z_RS2_6n1I8yHTIAjSqL9",
+              "ifc_type": "IfcFurnishingElement"
+            },
+            {
+              "guid": "1aHvr85u1DxuE5GbK6n65k",
+              "ifc_type": "IfcFurnishingElement"
+            },
+            {
+              "guid": "1rF0m$ayDDZwrULyvU6hAS",
+              "ifc_type": "IfcFurnishingElement"
+            },
+            {
+              "guid": "1xQpZQIW58RfNRU7w3kJuF",
+              "ifc_type": "IfcFurnishingElement"
+            },
+            {
+              "guid": "1xsJfsSWbCSBCPqZG84tEN",
+              "ifc_type": "IfcFurnishingElement"
+            },
+            {
+              "guid": "1y8o9bXb9Emg30E5lE5c4o",
+              "ifc_type": "IfcFurnishingElement"
+            },
+            {
+              "guid": "2BAQ2TsDfFQwm_jkfGU81b",
+              "ifc_type": "IfcFurnishingElement"
+            },
+            {
+              "guid": "2pan8BLsn6mP58YLsASNfY",
+              "ifc_type": "IfcFurnishingElement"
+            },
+            {
+              "guid": "2xcLNHPon6VO6wB_n0EQLF",
+              "ifc_type": "IfcSpace"
+            },
+            {
+              "guid": "2zuBJSHsD0OOQvyAI$1_oh",
+              "ifc_type": "IfcFurnishingElement"
+            },
+            {
+              "guid": "3HkP5rwynD2O5u77hTbWsv",
+              "ifc_type": "IfcFurnishingElement"
+            },
+            {
+              "guid": "3Js595fxzAHfThl4exBD3r",
+              "ifc_type": "IfcFurnishingElement"
+            },
+            {
+              "guid": "3bK3oxhJ59BBUaTh_RU3nb",
+              "ifc_type": "IfcFurnishingElement"
+            },
+            {
+              "guid": "3s8qTSU1jDRh5lmNIPbN4u",
+              "ifc_type": "IfcFurnishingElement"
+            }
+          ],
+          "required_guids": [
+            "2xcLNHPon6VO6wB_n0EQLF"
+          ],
+          "extraction_element": [
+            "IfcSpace"
+          ]
+        },
+        {
+          "topic_id": "9c5d42cb-a660-4b0e-9746-b9995a47d602",
+          "title": "Space.0.13 : Buero Studenten Iii[114]",
+          "description": "305.3 Size\nSpace.0.13 : Buero Studenten III[114] has inaccessible areas.\n",
+          "all_guids": [
+            "0BwbUEtUXCveHWZ7HWUQrv",
+            "0hvwmXBX99MB50mF38yTGl",
+            "0jhU4VZ6XCxee3pjfx5VMh",
+            "1BgnCX27rAT9D_Cf$w4d3b",
+            "1QWDYFVQXFiuwoubSkSG48",
+            "1SOfm38Sr3TuQ2VmMVHkIk",
+            "1X8ISgOSf99vUFSjfvAmt3",
+            "1axMfr5oLBgOS3LHyi46$t",
+            "1f$gTvlHX8GhKd604sQm2W",
+            "2c3SDDFBjDRevm_iMuG2$P",
+            "3EyCDlgjv8R9_MyCxnwYxS",
+            "3Rt$$LAsTF7vMcZ8JzPVr4",
+            "3SNBWCgSrBZu7WfzpF18w1",
+            "3WgKK2GqL2thS5m4gLxriY",
+            "3_bYofZKP9lAUHAD3P9WWN",
+            "3kjBbM7cvCYRZ9LLqGksoU"
+          ],
+          "all_guids_enriched": [
+            {
+              "guid": "0BwbUEtUXCveHWZ7HWUQrv",
+              "ifc_type": "IfcFurnishingElement"
+            },
+            {
+              "guid": "0hvwmXBX99MB50mF38yTGl",
+              "ifc_type": "IfcFurnishingElement"
+            },
+            {
+              "guid": "0jhU4VZ6XCxee3pjfx5VMh",
+              "ifc_type": "IfcSpace"
+            },
+            {
+              "guid": "1BgnCX27rAT9D_Cf$w4d3b",
+              "ifc_type": "IfcFurnishingElement"
+            },
+            {
+              "guid": "1QWDYFVQXFiuwoubSkSG48",
+              "ifc_type": "IfcFurnishingElement"
+            },
+            {
+              "guid": "1SOfm38Sr3TuQ2VmMVHkIk",
+              "ifc_type": "IfcFurnishingElement"
+            },
+            {
+              "guid": "1X8ISgOSf99vUFSjfvAmt3",
+              "ifc_type": "IfcFurnishingElement"
+            },
+            {
+              "guid": "1axMfr5oLBgOS3LHyi46$t",
+              "ifc_type": "IfcFurnishingElement"
+            },
+            {
+              "guid": "1f$gTvlHX8GhKd604sQm2W",
+              "ifc_type": "IfcFurnishingElement"
+            },
+            {
+              "guid": "2c3SDDFBjDRevm_iMuG2$P",
+              "ifc_type": "IfcFurnishingElement"
+            },
+            {
+              "guid": "3EyCDlgjv8R9_MyCxnwYxS",
+              "ifc_type": "IfcFurnishingElement"
+            },
+            {
+              "guid": "3Rt$$LAsTF7vMcZ8JzPVr4",
+              "ifc_type": "IfcFurnishingElement"
+            },
+            {
+              "guid": "3SNBWCgSrBZu7WfzpF18w1",
+              "ifc_type": "IfcFurnishingElement"
+            },
+            {
+              "guid": "3WgKK2GqL2thS5m4gLxriY",
+              "ifc_type": "IfcFurnishingElement"
+            },
+            {
+              "guid": "3_bYofZKP9lAUHAD3P9WWN",
+              "ifc_type": "IfcFurnishingElement"
+            },
+            {
+              "guid": "3kjBbM7cvCYRZ9LLqGksoU",
+              "ifc_type": "IfcFurnishingElement"
+            }
+          ],
+          "required_guids": [
+            "0jhU4VZ6XCxee3pjfx5VMh"
+          ],
+          "extraction_element": [
+            "IfcSpace"
+          ]
+        },
+        {
+          "topic_id": "7fb708c6-933b-47a3-b5d7-0180269799e0",
+          "title": "Space.1.17 : Buero Il[207]",
+          "description": "305.3 Size\nSpace.1.17 : Buero IL[207] has inaccessible areas.\n",
+          "all_guids": [
+            "0f4DwHFrj33es5$Uo7ry7l",
+            "1NXpkcMSL7LwDALwcFkxMv",
+            "24vVAUYDH2SetutQQsZBMv",
+            "2ESvsFh7v5BhidcSw$NlVS",
+            "2W4u8ksTjDWgY$_q7S_hDw",
+            "2xQk5kDfXAPuhPwfXZ$rgr",
+            "3TT6371QXFwBiALT2JVdDR",
+            "3eUvS6q0P14OC1IuUt0pvP"
+          ],
+          "all_guids_enriched": [
+            {
+              "guid": "0f4DwHFrj33es5$Uo7ry7l",
+              "ifc_type": "IfcFurnishingElement"
+            },
+            {
+              "guid": "1NXpkcMSL7LwDALwcFkxMv",
+              "ifc_type": "IfcFurnishingElement"
+            },
+            {
+              "guid": "24vVAUYDH2SetutQQsZBMv",
+              "ifc_type": "IfcSpace"
+            },
+            {
+              "guid": "2ESvsFh7v5BhidcSw$NlVS",
+              "ifc_type": "IfcFurnishingElement"
+            },
+            {
+              "guid": "2W4u8ksTjDWgY$_q7S_hDw",
+              "ifc_type": "IfcFurnishingElement"
+            },
+            {
+              "guid": "2xQk5kDfXAPuhPwfXZ$rgr",
+              "ifc_type": "IfcFurnishingElement"
+            },
+            {
+              "guid": "3TT6371QXFwBiALT2JVdDR",
+              "ifc_type": "IfcFurnishingElement"
+            },
+            {
+              "guid": "3eUvS6q0P14OC1IuUt0pvP",
+              "ifc_type": "IfcFurnishingElement"
+            }
+          ],
+          "required_guids": [
+            "24vVAUYDH2SetutQQsZBMv"
+          ],
+          "extraction_element": [
+            "IfcSpace"
+          ]
+        },
+        {
+          "topic_id": "61bedc2d-d0c3-4ac1-a1e6-269ac7f51380",
+          "title": "Space.2.1 : Buero[307]",
+          "description": "305.3 Size\nSpace.2.1 : Buero[307] has inaccessible areas.\n",
+          "all_guids": [
+            "0wOs8cwRn3Cgmq_aLC_Oc2",
+            "0yQDJsqyH8SxODovysDAPx",
+            "1K_d1XY_H0eR6YQt18Z3A$",
+            "1bBYVH$oL5ORExvNxEoec1",
+            "3knwp7Zd90qPHbstf1VRar",
+            "3uvYP4OyH5ufyPIMbZD86h",
+            "3yNXKcVj99lAvPT2UEyZ2b"
+          ],
+          "all_guids_enriched": [
+            {
+              "guid": "0wOs8cwRn3Cgmq_aLC_Oc2",
+              "ifc_type": "IfcFurnishingElement"
+            },
+            {
+              "guid": "0yQDJsqyH8SxODovysDAPx",
+              "ifc_type": "IfcFurnishingElement"
+            },
+            {
+              "guid": "1K_d1XY_H0eR6YQt18Z3A$",
+              "ifc_type": "IfcFurnishingElement"
+            },
+            {
+              "guid": "1bBYVH$oL5ORExvNxEoec1",
+              "ifc_type": "IfcFurnishingElement"
+            },
+            {
+              "guid": "3knwp7Zd90qPHbstf1VRar",
+              "ifc_type": "IfcFurnishingElement"
+            },
+            {
+              "guid": "3uvYP4OyH5ufyPIMbZD86h",
+              "ifc_type": "IfcSpace"
+            },
+            {
+              "guid": "3yNXKcVj99lAvPT2UEyZ2b",
+              "ifc_type": "IfcFurnishingElement"
+            }
+          ],
+          "required_guids": [
+            "3uvYP4OyH5ufyPIMbZD86h"
+          ],
+          "extraction_element": [
+            "IfcSpace"
+          ]
+        }
+      ]
+    },
+    "large_spaces_more_than_one_door": {
+      "rule_code": "Advanced Space Check: Large Spaces Have to Have More than One Door",
+      "rule_title": "large_spaces_more_than_one_door",
+      "question": "What large spaces in the current IFC model do not have the required minimum number of doors?",
+      "rule": "Large Spaces Have to Have More than One Door\nLarge spaces must have at least 2 doors.",
+      "parameters": "Include Space Group Type: Is Undefined; Include Space Area: ≥ 50.0; Exclude - Space Usage: One Of [Outdoor Space, Parking, Terrace]; Target Value: 2; Exclude door = Hatch",
+      "issues_count": 5,
+      "issues": [
+        {
+          "topic_id": "45e82ffc-d358-4fc1-a015-bd6e755cae54",
+          "title": "Space.-1.13 : Seminarraum[006]: Count (0) Of The Components Does Not Match The Requirement: ≥ 2",
+          "description": "Large Spaces Have to Have More than One Door\nCount (0) of the components does not match the requirement: ≥ 2.\n",
+          "all_guids": [
+            "0dXE$xLxz8MwbtYoTqJPiO"
+          ],
+          "all_guids_enriched": [
+            {
+              "guid": "0dXE$xLxz8MwbtYoTqJPiO",
+              "ifc_type": "IfcSpace"
+            }
+          ],
+          "required_guids": [
+            "0dXE$xLxz8MwbtYoTqJPiO"
+          ],
+          "extraction_element": [
+            "IfcSpace"
+          ]
+        },
+        {
+          "topic_id": "d0f0dd46-eae6-41bb-be4d-000cfb990f36",
+          "title": "Space.0.18 : Flur Eg Eingang[117]: Count (0) Of The Components Does Not Match The Requirement: ≥ 2",
+          "description": "Large Spaces Have to Have More than One Door\nCount (0) of the components does not match the requirement: ≥ 2.\n",
+          "all_guids": [
+            "1RP4kkhTDFJuLugWfrM_1s"
+          ],
+          "all_guids_enriched": [
+            {
+              "guid": "1RP4kkhTDFJuLugWfrM_1s",
+              "ifc_type": "IfcSpace"
+            }
+          ],
+          "required_guids": [
+            "1RP4kkhTDFJuLugWfrM_1s"
+          ],
+          "extraction_element": [
+            "IfcSpace"
+          ]
+        },
+        {
+          "topic_id": "a0b67d26-b3bf-4fff-ae95-05059998dc5d",
+          "title": "Space.3.1 : Dachboden-1[402]: Count (0) Of The Components Does Not Match The Requirement: ≥ 2",
+          "description": "Large Spaces Have to Have More than One Door\nCount (0) of the components does not match the requirement: ≥ 2.\n",
+          "all_guids": [
+            "0jbV$RErb7o9P7rp7ALEd$"
+          ],
+          "all_guids_enriched": [
+            {
+              "guid": "0jbV$RErb7o9P7rp7ALEd$",
+              "ifc_type": "IfcSpace"
+            }
+          ],
+          "required_guids": [
+            "0jbV$RErb7o9P7rp7ALEd$"
+          ],
+          "extraction_element": [
+            "IfcSpace"
+          ]
+        },
+        {
+          "topic_id": "0748a7fc-e14e-43f5-85e0-ff102938f975",
+          "title": "Space.3.2 : Dachboden-2[403]: Count (0) Of The Components Does Not Match The Requirement: ≥ 2",
+          "description": "Large Spaces Have to Have More than One Door\nCount (0) of the components does not match the requirement: ≥ 2.\n",
+          "all_guids": [
+            "3txvJd9V1BPhyU$48F$mnF"
+          ],
+          "all_guids_enriched": [
+            {
+              "guid": "3txvJd9V1BPhyU$48F$mnF",
+              "ifc_type": "IfcSpace"
+            }
+          ],
+          "required_guids": [
+            "3txvJd9V1BPhyU$48F$mnF"
+          ],
+          "extraction_element": [
+            "IfcSpace"
+          ]
+        },
+        {
+          "topic_id": "59d170ea-4d60-4710-a34f-d826a84f251a",
+          "title": "Space.3.3 : Flur 3.og Treppe[401]: Count (0) Of The Components Does Not Match The Requirement: ≥ 2",
+          "description": "Large Spaces Have to Have More than One Door\nCount (0) of the components does not match the requirement: ≥ 2.\n",
+          "all_guids": [
+            "2_rG4oliv3CxmStpGPieup"
+          ],
+          "all_guids_enriched": [
+            {
+              "guid": "2_rG4oliv3CxmStpGPieup",
+              "ifc_type": "IfcSpace"
+            }
+          ],
+          "required_guids": [
+            "2_rG4oliv3CxmStpGPieup"
+          ],
+          "extraction_element": [
+            "IfcSpace"
+          ]
+        }
+      ]
+    },
+    "slabs_guarded_against_falling": {
+      "rule_code": "Slabs must be Guarded against Falling",
+      "rule_title": "slabs_guarded_against_falling",
+      "question": "What slabs in the current IFC model are not guarded against falling (missing barriers or acceptable drop to landing)?",
+      "rule": "Slabs must be Guarded against Falling\nThis rule checks that it is not possible to fall from slabs. The rule checks that horizontal components are surrounded by vertical components, such as walls or railings. If no vertical component exists on the edge of a horizontal component, another horizontal component or stairs needs to continue and the drop to the other horizontal component must not be more than specified.",
+      "parameters": "Include Slab Building Elements - General: One Of [Balconies, Floor Slabs]. Barrier Components: Include Wall, Railing, Object, Column, Stair. Min barrier total height 1 m; max horizontal or vertical gap between barriers 0.1 m; max horizontal or vertical gap from platform to barriers 0.1 m. Fall and Landing: Include Slab, Site, Stair, Ramp. Max distance to landing 0.1 m; max fall 0.5 m; min landing width 0.2 m. Barrier height and climbable: distance to top of barrier (longest reach) 1 m; height of climb (unclimbable above) 0.6 m; side width (min foothold) 0.15 m. Barrier height measured from top of climbable curb: False",
+      "issues_count": 2,
+      "issues": [
+        {
+          "topic_id": "59e72e53-3aff-4df1-a428-aa3c702c76dd",
+          "title": "Slab.1.1",
+          "description": "Slabs must be Guarded against Falling\nSlab.1.1 has vertical barriers that are not fully guarding its edges.\n",
+          "all_guids": [
+            "2Og5$70yb1DxR1TY1w8bzN",
+            "2udBPbKibCZ8zbfpJmtDTM"
+          ],
+          "all_guids_enriched": [
+            {
+              "guid": "2Og5$70yb1DxR1TY1w8bzN",
+              "ifc_type": "IfcSlab"
+            },
+            {
+              "guid": "2udBPbKibCZ8zbfpJmtDTM",
+              "ifc_type": "IfcWallStandardCase"
+            }
+          ],
+          "required_guids": [
+            "2Og5$70yb1DxR1TY1w8bzN"
+          ],
+          "extraction_element": [
+            "IfcSlab"
+          ]
+        },
+        {
+          "topic_id": "3aa92723-4a45-43e2-afe0-ccb0b2d04aa6",
+          "title": "Slab.1.1",
+          "description": "Slabs must be Guarded against Falling\nSlab.1.1 is missing a barrier/barriers.\n",
+          "all_guids": [
+            "2Og5$70yb1DxR1TY1w8bzN"
+          ],
+          "all_guids_enriched": [
+            {
+              "guid": "2Og5$70yb1DxR1TY1w8bzN",
+              "ifc_type": "IfcSlab"
+            }
+          ],
+          "required_guids": [
+            "2Og5$70yb1DxR1TY1w8bzN"
+          ],
+          "extraction_element": [
+            "IfcSlab"
+          ]
+        }
+      ]
+    },
+    "space_validation_intersect": {
+      "rule_code": "General Space Check: Space Validation",
+      "rule_title": "space_validation_intersect",
+      "question": "What spaces in the current IFC model intersect with slabs, walls or other components (space validation - intersect check)?",
+      "rule": "Space Validation\nThis rule checks that space geometry and location are correct. It checks that space does not incorrectly intersect with slabs, walls or other components. This template focuses only on the 'intersect' check.",
+      "parameters": "Include: Wall, CurtainWall, Column, Slab, Roof. Tolerance 0.03 m. Check Bottom surface: True; Check Top surface: False; Exclude: If component is fully inside the space.",
+      "issues_count": 3,
+      "issues": [
+        {
+          "topic_id": "86ed1f36-df4f-4b9f-a038-8889de77a0e9",
+          "title": "Space.3.1 : Dachboden-1[402], 1.64 M",
+          "description": "Space Validation\n- Space intersects with Roof.3.1, Roof.3.12, Roof.3.14, Roof.3.2, Roof.3.5, and Roof.3.6. The intersection area is 173.64 m2.\n- Space height 1.64 m is less than required 2.10 m.\n\n",
+          "all_guids": [
+            "01Q5XSApT1A8MVwFMrw27s",
+            "03TjDzhOTFX9jbLMrZ04Ko",
+            "0jbV$RErb7o9P7rp7ALEd$",
+            "1GL3Bl4yrCY9XKlcdMQiXb",
+            "1m13_kW2X8DhPK7Uom15kV",
+            "1sX1eJEdn4tx6WnOEIL8As",
+            "3qT9lE$bTCQB_T41jFK_q6"
+          ],
+          "all_guids_enriched": [
+            {
+              "guid": "01Q5XSApT1A8MVwFMrw27s",
+              "ifc_type": "IfcSlab"
+            },
+            {
+              "guid": "03TjDzhOTFX9jbLMrZ04Ko",
+              "ifc_type": "IfcSlab"
+            },
+            {
+              "guid": "0jbV$RErb7o9P7rp7ALEd$",
+              "ifc_type": "IfcSpace"
+            },
+            {
+              "guid": "1GL3Bl4yrCY9XKlcdMQiXb",
+              "ifc_type": "IfcSlab"
+            },
+            {
+              "guid": "1m13_kW2X8DhPK7Uom15kV",
+              "ifc_type": "IfcSlab"
+            },
+            {
+              "guid": "1sX1eJEdn4tx6WnOEIL8As",
+              "ifc_type": "IfcSlab"
+            },
+            {
+              "guid": "3qT9lE$bTCQB_T41jFK_q6",
+              "ifc_type": "IfcSlab"
+            }
+          ],
+          "required_guids": [
+            "0jbV$RErb7o9P7rp7ALEd$"
+          ],
+          "extraction_element": [
+            "IfcSpace"
+          ]
+        },
+        {
+          "topic_id": "2b25faeb-159b-46af-9468-c86dc25fcf1f",
+          "title": "Space.3.2 : Dachboden-2[403], 1.64 M",
+          "description": "Space Validation\n- Space intersects with Roof.3.10, Roof.3.11, Roof.3.15, Roof.3.3, Roof.3.4, and Roof.3.9. The intersection area is 173.64 m2.\n- Space height 1.64 m is less than required 2.10 m.\n\n",
+          "all_guids": [
+            "01DPZ9SBn5r9Sivd0bV8Ar",
+            "0NhW4VLIbBiuXKiyGrq3kz",
+            "0UobTn5dzETeVPsaqJjGpw",
+            "0hEXM06OrA5gv_ZOu0dPhm",
+            "3Kn4W2ZqD4K8KzX7iS3xhj",
+            "3txvJd9V1BPhyU$48F$mnF",
+            "3x663a8XD65viEHNLVdTxd"
+          ],
+          "all_guids_enriched": [
+            {
+              "guid": "01DPZ9SBn5r9Sivd0bV8Ar",
+              "ifc_type": "IfcSlab"
+            },
+            {
+              "guid": "0NhW4VLIbBiuXKiyGrq3kz",
+              "ifc_type": "IfcSlab"
+            },
+            {
+              "guid": "0UobTn5dzETeVPsaqJjGpw",
+              "ifc_type": "IfcSlab"
+            },
+            {
+              "guid": "0hEXM06OrA5gv_ZOu0dPhm",
+              "ifc_type": "IfcSlab"
+            },
+            {
+              "guid": "3Kn4W2ZqD4K8KzX7iS3xhj",
+              "ifc_type": "IfcSlab"
+            },
+            {
+              "guid": "3txvJd9V1BPhyU$48F$mnF",
+              "ifc_type": "IfcSpace"
+            },
+            {
+              "guid": "3x663a8XD65viEHNLVdTxd",
+              "ifc_type": "IfcSlab"
+            }
+          ],
+          "required_guids": [
+            "3txvJd9V1BPhyU$48F$mnF"
+          ],
+          "extraction_element": [
+            "IfcSpace"
+          ]
+        },
+        {
+          "topic_id": "a5531d0d-ca9b-40ab-a119-03702d904df2",
+          "title": "Space.3.3 : Flur 3.og Treppe[401]",
+          "description": "Space Validation\n- Space intersects with Roof.3.17, Roof.3.19, Roof.3.20, Roof.3.21, Roof.3.7, and Roof.3.8. The intersection area is 61.99 m2.\n- Space touches slab, roof, or space surface below itself, but the area of touching is only 56.76 m2, which is 78% of the components surface.\n\n",
+          "all_guids": [
+            "09JX$lRj14w8LMwtAomZqY",
+            "0LG1dnAtn4qQamxBPgaWX7",
+            "1mNoyQNRjFqALu0EZLqVjE",
+            "2_rG4oliv3CxmStpGPieup",
+            "2s4YT_DyvEIwBQu$XLcqVB",
+            "2sqOrgHH1BIwrN$KcJhc_B",
+            "2xTaNf8DzFMfTdt$AJsD2d"
+          ],
+          "all_guids_enriched": [
+            {
+              "guid": "09JX$lRj14w8LMwtAomZqY",
+              "ifc_type": "IfcSlab"
+            },
+            {
+              "guid": "0LG1dnAtn4qQamxBPgaWX7",
+              "ifc_type": "IfcSlab"
+            },
+            {
+              "guid": "1mNoyQNRjFqALu0EZLqVjE",
+              "ifc_type": "IfcSlab"
+            },
+            {
+              "guid": "2_rG4oliv3CxmStpGPieup",
+              "ifc_type": "IfcSpace"
+            },
+            {
+              "guid": "2s4YT_DyvEIwBQu$XLcqVB",
+              "ifc_type": "IfcSlab"
+            },
+            {
+              "guid": "2sqOrgHH1BIwrN$KcJhc_B",
+              "ifc_type": "IfcSlab"
+            },
+            {
+              "guid": "2xTaNf8DzFMfTdt$AJsD2d",
+              "ifc_type": "IfcSlab"
+            }
+          ],
+          "required_guids": [
+            "2_rG4oliv3CxmStpGPieup"
+          ],
+          "extraction_element": [
+            "IfcSpace"
+          ]
+        }
+      ]
+    },
+    "304_3_1_circular_space": {
+      "rule_code": "304.3.1",
+      "rule_title": "304_3_1_circular_space",
+      "question": "What spaces in the current IFC model do not have enough room for wheelchair turning space with the required diameter?",
+      "rule": "304.3.1 Circular Space\nCircular space shall have a diameter of 1.52 m (60 inches) minimum.",
+      "parameters": "Applicable Space Classifications: Balcony, Circulation, Garage, Habitable, Institutional, Lobby, Mercantile, Office, Parking, Production, Refuge, Stair Hall, Workplace",
+      "issues_count": 0,
+      "issues": []
+    },
+    "404_2_5_two_doors_in_series": {
+      "rule_code": "404.2.5",
+      "rule_title": "404_2_5_two_doors_in_series",
+      "question": "What pairs of doors in series in the current IFC model do not have the minimum required distance between them?",
+      "rule": "404.2.5 Two Doors in Series\nDistance between two hinged or pivoted doors in series shall be 48 inches (1220 mm) minimum plus the width of any door swinging into the space.",
+      "parameters": "Space Classification: One space must be Circulation, the other can be any classification (*); Door Defaults: Frame thickness = 0.03 m, Panel thickness = 0.04 m, Threshold height = 0.01 m",
+      "issues_count": 0,
+      "issues": []
+    },
+    "504_2_stair_slab_connection": {
+      "rule_code": "504.2",
+      "rule_title": "504_2_stair_slab_connection",
+      "question": "What stairs in the current IFC model are not properly connected to slabs?",
+      "rule": "504.2 Treads and Risers\nAll stairs shall be connected to slabs.",
+      "parameters": "Stair Classification: Stair*",
+      "issues_count": 0,
+      "issues": []
+    },
+    "504_2_non_uniform_risers_treads": {
+      "rule_code": "504.2",
+      "rule_title": "504_2_non_uniform_risers_treads",
+      "question": "What stairs in the current IFC model have non-uniform riser heights or tread depths?",
+      "rule": "504.2 Treads and Risers\nAll steps on a flight of stairs shall have uniform riser heights and uniform tread depths.",
+      "parameters": "Stair Classification: Stair*",
+      "issues_count": 0,
+      "issues": []
+    },
+    "504_2_riser_height": {
+      "rule_code": "504.2",
+      "rule_title": "504_2_riser_height",
+      "question": "What stairs in the current IFC model have riser heights that do not meet the required minimum or maximum?",
+      "rule": "504.2 Treads and Risers\nRisers shall be 4 inches (100 mm) high minimum and 7 inches (180 mm) high maximum.",
+      "parameters": "Stair Classification: Stair*",
+      "issues_count": 0,
+      "issues": []
+    },
+    "504_2_tread_length": {
+      "rule_code": "504.2",
+      "rule_title": "504_2_tread_length",
+      "question": "What stairs in the current IFC model have tread lengths that do not meet the required minimum?",
+      "rule": "504.2 Treads and Risers\nTreads shall be 11 inches (280 mm) deep minimum.",
+      "parameters": "Stair Classification: Stair*",
+      "issues_count": 0,
+      "issues": []
+    },
+    "clearance_front_of_doors": {
+      "rule_code": "BIM Validation: Clearance in Front of Doors",
+      "rule_title": "clearance_front_of_doors",
+      "question": "What doors in the current IFC model do not have the required clearance in front of them because a component intersects the free area?",
+      "rule": "Clearance in Front of Doors\nThis rule checks there is enough clearance in front of doors.",
+      "parameters": "Width, Depth, Height Adjustment: 0.05 m; Check both sides: false; Exclude: Door is Hatch",
+      "issues_count": 0,
+      "issues": []
+    },
+    "doors_and_windows": {
+      "rule_code": "BIM Validation: Doors and Windows",
+      "rule_title": "doors_and_windows",
+      "question": "What doors or windows in the current IFC model are not located in the same floor as the wall they are related to, or are orphan doors/windows without a relation to any wall?",
+      "rule": "Doors and Windows\nThis rule checks that doors and windows in the model are located in the same floor as the wall they are related to. The rule checks also that the model doesn't contain any orphan doors or windows (a door or a window, which doesn't have a relation to any wall).",
+      "parameters": "Check Orphan Doors and Windows: True",
+      "issues_count": 0,
+      "issues": []
+    },
+    "slab_thickness": {
+      "rule_code": "BIM Validation: Slab Thickness",
+      "rule_title": "slab_thickness",
+      "question": "What slabs in the current IFC model have thickness that does not meet the required minimum or maximum?",
+      "rule": "Slab Thickness\nThis rule checks that slab thickness is not too small or too large. Minimum thickness 0.30 m, maximum 1.0 m.",
+      "parameters": "Exclude Slab Building Elements - General: One Of [Fixed Furnishings, Suspended Ceilings]; Include Slab Thickness: ≥ 0.30 m; Include Slab Thickness: ≤ 1.0 m",
+      "issues_count": 0,
+      "issues": []
+    },
+    "space_validation_inside": {
+      "rule_code": "General Space Check: Space Validation",
+      "rule_title": "space_validation_inside",
+      "question": "What spaces in the current IFC model have components incorrectly inside the space (space validation - inside check)?",
+      "rule": "Space Validation\nThis rule checks that space geometry and location are correct. It also checks intersections (inside only) with other components. This template focuses only on the 'inside' check: components that are inside the space.",
+      "parameters": "Include: Wall, CurtainWall, Column, Slab, Roof. Tolerance 0.03 m. Check Bottom surface: True; Check Top surface: False",
+      "issues_count": 0,
+      "issues": []
+    },
+    "spaces_same_storey_same_bottom_elevation": {
+      "rule_code": "Spaces in Same Building Storey Must Have Same Bottom Elevation",
+      "rule_title": "spaces_same_storey_same_bottom_elevation",
+      "question": "What spaces in the same building storey in the current IFC model do not have the same bottom elevation?",
+      "rule": "Spaces in Same Building Storey Must Have Same Bottom Elevation\nThe rule checks that components in the model or in the same building storey with the same construction type have same dimensions.",
+      "parameters": "",
+      "issues_count": 0,
+      "issues": []
+    },
+    "unallocated_areas": {
+      "rule_code": "Unallocated Areas",
+      "rule_title": "unallocated_areas",
+      "question": "Where in the current IFC model are there unallocated areas (floor area not assigned to any space) that exceed the maximum allowed?",
+      "rule": "Unallocated Areas\nThis rule checks that space geometry and location are correct.",
+      "parameters": "Maximum allowed Unallocated space: 0.50 m2; Return Surrounding Walls",
+      "issues_count": 0,
+      "issues": []
+    }
+  }
+}

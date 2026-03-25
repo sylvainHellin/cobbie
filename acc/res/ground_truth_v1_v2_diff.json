@@ -1,0 +1,59 @@
+{
+  "samuel_macalister_sample_house": [
+    {
+      "rule": "305_3_size",
+      "v1_count": 1,
+      "v2_count": 1,
+      "added": [
+        "3ch3OBgkrCEw4mDhJ2eObq"
+      ],
+      "removed": [
+        "0lntrd6l1AGwfcnKJK5r3q"
+      ]
+    },
+    {
+      "rule": "404_2_5_two_doors_in_series",
+      "v1_count": 1,
+      "v2_count": 2,
+      "added": [
+        "1$p8tACJ938vr1_lKOJJ9g",
+        "1PDnLIM013wvkZO9Lb4$s7"
+      ],
+      "removed": [
+        "3ch3OBgkrCEw4mDhJ2eOWH"
+      ]
+    },
+    {
+      "rule": "slabs_guarded_against_falling",
+      "v1_count": 27,
+      "v2_count": 3,
+      "added": [],
+      "removed": [
+        "0H7vgQcNjEo8efFHzwVpwh",
+        "1$p8tACJ938vr1_lKOJJ0t",
+        "1PDnLIM013wvkZO9Lb4$GV",
+        "1PDnLIM013wvkZO9Lb4$j_",
+        "1PDnLIM013wvkZO9Lb4$wc",
+        "1RUi90wQT3ihQ$96bMNGiu",
+        "1RUi90wQT3ihQ$96bMNGvH",
+        "1oPutv5ADAxgWEbAZbN6Wv",
+        "29jzdd0Ab5sOIOupfzx0h8",
+        "29jzdd0Ab5sOIOupfzx1Ur",
+        "29jzdd0Ab5sOIOupfzx2y0",
+        "2OulbipBrAkwQNv_KJRUYY",
+        "2OulbipBrAkwQNv_KJRUgr",
+        "2ZlFFrvcbDavSm_g3LjLIb",
+        "2ZlFFrvcbDavSm_g3LjLIe",
+        "2hD3j_DmLBXxhCCy1gOWVy",
+        "2pfAHb2EL46hq_sMVbImEh",
+        "38NblWsDL1I8DljLvn67Sd",
+        "3NtsDuzRb1WReLiDQX$2CA",
+        "3Yxgiuz3TDpeHhosGP5a_d",
+        "3lIj7B0LnBjf0mvxk2zve8",
+        "3lLx0gNe59vvExhby0Bff1",
+        "3rPRxvVIT7WRZKOFIc3wXL",
+        "3vi8Xy_cHA1R$gUoZ0tZjz"
+      ]
+    }
+  ]
+}
