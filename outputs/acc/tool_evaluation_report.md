@@ -36,7 +36,7 @@ Models: 4351, digital_hub, samuel_macalister_sample_house, wbdg_office
 ### 304_3_1_circular_space — F1=1.000 (PERFECT)
 No errors on test models.
 
-### 305_3_size — F1=0.000
+### 305_3_size — F1=0.000 --- Should rerun --- Groundtruth expected wall rather than space.
 
 **4351**: PASS (TP=0)
 **digital_hub**: PASS (TP=0)
@@ -58,7 +58,7 @@ Space.2.8 : Master Bedroom[206] has inaccessible areas.
     - `{'guid': '2$Ac70E451LvAGNHpGKDt5', 'type': 'IfcFurnishingElement'}`
 
 
-### 404_2_5_two_doors_in_series — F1=0.000
+### 404_2_5_two_doors_in_series — F1=0.000 --- Rerun --- should look for the doors, not the space between them. Groundtruth expected space rather than door.
 
 **4351**: PASS (TP=0)
 **digital_hub**: PASS (TP=0)
