@@ -1,10 +1,9 @@
 {
   "metadata": {
-    "model_name": "wbdg_office",
-    "version": "v2",
     "total_topics": 20,
     "rules_count": 16,
-    "pass_rules_count": 11
+    "pass_rules_count": 11,
+    "model_name": "wbdg_office"
   },
   "rules": {
     "504_2_stair_slab_connection": {
@@ -23,22 +22,11 @@
             "1Cckmc_QjEFAHHQ3e8qDFi",
             "27dLDsxMX8Sv5rKurGZyJX"
           ],
-          "all_guids_enriched": [
-            {
-              "guid": "1Cckmc_QjEFAHHQ3e8qDFi",
-              "ifc_type": "IfcSlab"
-            },
-            {
-              "guid": "27dLDsxMX8Sv5rKurGZyJX",
-              "ifc_type": "IfcStair"
-            }
-          ],
           "required_guids": [
+            "1Cckmc_QjEFAHHQ3e8qDFi",
             "27dLDsxMX8Sv5rKurGZyJX"
           ],
-          "extraction_element": [
-            "IfcStair"
-          ]
+          "guid_strategy": "single"
         },
         {
           "topic_id": "be14e072-f99c-49c6-8bea-050617c9fa4c",
@@ -49,26 +37,12 @@
             "27dLDsxMX8Sv5rKurGZypo",
             "37hauuzqP2MBAzwN0mWNjY"
           ],
-          "all_guids_enriched": [
-            {
-              "guid": "27dLDsxMX8Sv5rKurGZyoR",
-              "ifc_type": "IfcStair"
-            },
-            {
-              "guid": "27dLDsxMX8Sv5rKurGZypo",
-              "ifc_type": "IfcRailing"
-            },
-            {
-              "guid": "37hauuzqP2MBAzwN0mWNjY",
-              "ifc_type": "IfcSlab"
-            }
-          ],
           "required_guids": [
-            "27dLDsxMX8Sv5rKurGZyoR"
+            "27dLDsxMX8Sv5rKurGZyoR",
+            "27dLDsxMX8Sv5rKurGZypo",
+            "37hauuzqP2MBAzwN0mWNjY"
           ],
-          "extraction_element": [
-            "IfcStair"
-          ]
+          "guid_strategy": "single"
         }
       ]
     },
@@ -88,22 +62,10 @@
             "0zG59wlnT37e_nm5jeqGJp",
             "1giqnsgvr6uA16isIlsnGp"
           ],
-          "all_guids_enriched": [
-            {
-              "guid": "0zG59wlnT37e_nm5jeqGJp",
-              "ifc_type": "IfcFlowTerminal"
-            },
-            {
-              "guid": "1giqnsgvr6uA16isIlsnGp",
-              "ifc_type": "IfcDoor"
-            }
-          ],
           "required_guids": [
-            "1giqnsgvr6uA16isIlsnGp"
+            "0zG59wlnT37e_nm5jeqGJp"
           ],
-          "extraction_element": [
-            "IfcDoor"
-          ]
+          "guid_strategy": "primary_and_cause"
         }
       ]
     },
@@ -122,18 +84,10 @@
           "all_guids": [
             "04Sq57eS5FffNezn2ilgC3"
           ],
-          "all_guids_enriched": [
-            {
-              "guid": "04Sq57eS5FffNezn2ilgC3",
-              "ifc_type": "IfcSpace"
-            }
-          ],
           "required_guids": [
             "04Sq57eS5FffNezn2ilgC3"
           ],
-          "extraction_element": [
-            "IfcSpace"
-          ]
+          "guid_strategy": "single"
         },
         {
           "topic_id": "85420585-b177-48ee-b6c7-8d37deb500be",
@@ -142,18 +96,10 @@
           "all_guids": [
             "04Sq57eS5FffNezn2ilg3j"
           ],
-          "all_guids_enriched": [
-            {
-              "guid": "04Sq57eS5FffNezn2ilg3j",
-              "ifc_type": "IfcSpace"
-            }
-          ],
           "required_guids": [
             "04Sq57eS5FffNezn2ilg3j"
           ],
-          "extraction_element": [
-            "IfcSpace"
-          ]
+          "guid_strategy": "single"
         },
         {
           "topic_id": "a382e4f8-5398-40cc-87cf-842a364ab048",
@@ -162,18 +108,10 @@
           "all_guids": [
             "04Sq57eS5FffNezn2ilg3k"
           ],
-          "all_guids_enriched": [
-            {
-              "guid": "04Sq57eS5FffNezn2ilg3k",
-              "ifc_type": "IfcSpace"
-            }
-          ],
           "required_guids": [
             "04Sq57eS5FffNezn2ilg3k"
           ],
-          "extraction_element": [
-            "IfcSpace"
-          ]
+          "guid_strategy": "single"
         },
         {
           "topic_id": "c3f6621b-444b-475e-93c3-65ffd5a1e261",
@@ -182,18 +120,10 @@
           "all_guids": [
             "04Sq57eS5FffNezn2ilgt2"
           ],
-          "all_guids_enriched": [
-            {
-              "guid": "04Sq57eS5FffNezn2ilgt2",
-              "ifc_type": "IfcSpace"
-            }
-          ],
           "required_guids": [
             "04Sq57eS5FffNezn2ilgt2"
           ],
-          "extraction_element": [
-            "IfcSpace"
-          ]
+          "guid_strategy": "single"
         },
         {
           "topic_id": "d33f071c-9ea1-4cfd-b233-f04452722bbc",
@@ -202,18 +132,10 @@
           "all_guids": [
             "04Sq57eS5FffNezn2ilgCR"
           ],
-          "all_guids_enriched": [
-            {
-              "guid": "04Sq57eS5FffNezn2ilgCR",
-              "ifc_type": "IfcSpace"
-            }
-          ],
           "required_guids": [
             "04Sq57eS5FffNezn2ilgCR"
           ],
-          "extraction_element": [
-            "IfcSpace"
-          ]
+          "guid_strategy": "single"
         },
         {
           "topic_id": "c2873356-989f-4dea-b79a-c67c3a1b5019",
@@ -222,18 +144,10 @@
           "all_guids": [
             "04Sq57eS5FffNezn2ilgtD"
           ],
-          "all_guids_enriched": [
-            {
-              "guid": "04Sq57eS5FffNezn2ilgtD",
-              "ifc_type": "IfcSpace"
-            }
-          ],
           "required_guids": [
             "04Sq57eS5FffNezn2ilgtD"
           ],
-          "extraction_element": [
-            "IfcSpace"
-          ]
+          "guid_strategy": "single"
         },
         {
           "topic_id": "c3d4b835-2c09-460e-843d-770679276123",
@@ -242,18 +156,10 @@
           "all_guids": [
             "04Sq57eS5FffNezn2ilgmr"
           ],
-          "all_guids_enriched": [
-            {
-              "guid": "04Sq57eS5FffNezn2ilgmr",
-              "ifc_type": "IfcSpace"
-            }
-          ],
           "required_guids": [
             "04Sq57eS5FffNezn2ilgmr"
           ],
-          "extraction_element": [
-            "IfcSpace"
-          ]
+          "guid_strategy": "single"
         },
         {
           "topic_id": "1ca8dc48-a246-4671-964c-427815cf4423",
@@ -262,18 +168,10 @@
           "all_guids": [
             "06njXbG3HC4RydTXssDqYC"
           ],
-          "all_guids_enriched": [
-            {
-              "guid": "06njXbG3HC4RydTXssDqYC",
-              "ifc_type": "IfcSpace"
-            }
-          ],
           "required_guids": [
             "06njXbG3HC4RydTXssDqYC"
           ],
-          "extraction_element": [
-            "IfcSpace"
-          ]
+          "guid_strategy": "single"
         },
         {
           "topic_id": "c27f5b80-43b0-44ee-ad91-bd1f72e1ee79",
@@ -282,18 +180,10 @@
           "all_guids": [
             "06njXbG3HC4RydTXssDqXB"
           ],
-          "all_guids_enriched": [
-            {
-              "guid": "06njXbG3HC4RydTXssDqXB",
-              "ifc_type": "IfcSpace"
-            }
-          ],
           "required_guids": [
             "06njXbG3HC4RydTXssDqXB"
           ],
-          "extraction_element": [
-            "IfcSpace"
-          ]
+          "guid_strategy": "single"
         }
       ]
     },
@@ -313,22 +203,10 @@
             "04Sq57eS5FffNezn2ilgC_",
             "1Cckmc_QjEFAHHQ3e8qDFi"
           ],
-          "all_guids_enriched": [
-            {
-              "guid": "04Sq57eS5FffNezn2ilgC_",
-              "ifc_type": "IfcSpace"
-            },
-            {
-              "guid": "1Cckmc_QjEFAHHQ3e8qDFi",
-              "ifc_type": "IfcSlab"
-            }
-          ],
           "required_guids": [
             "04Sq57eS5FffNezn2ilgC_"
           ],
-          "extraction_element": [
-            "IfcSpace"
-          ]
+          "guid_strategy": "element"
         },
         {
           "topic_id": "76853e01-b95f-4cb6-8b04-dcced7680f09",
@@ -338,22 +216,10 @@
             "04Sq57eS5FffNezn2ilgt8",
             "37hauuzqP2MBAzwN0mWNjY"
           ],
-          "all_guids_enriched": [
-            {
-              "guid": "04Sq57eS5FffNezn2ilgt8",
-              "ifc_type": "IfcSpace"
-            },
-            {
-              "guid": "37hauuzqP2MBAzwN0mWNjY",
-              "ifc_type": "IfcSlab"
-            }
-          ],
           "required_guids": [
             "04Sq57eS5FffNezn2ilgt8"
           ],
-          "extraction_element": [
-            "IfcSpace"
-          ]
+          "guid_strategy": "element"
         },
         {
           "topic_id": "9eb82072-d18b-47a7-a5d8-86d639fbe923",
@@ -367,38 +233,10 @@
             "27dLDsxMX8Sv5rKurGZzHv",
             "27dLDsxMX8Sv5rKurGZzI4"
           ],
-          "all_guids_enriched": [
-            {
-              "guid": "04Sq57eS5FffNezn2ilgsV",
-              "ifc_type": "IfcSpace"
-            },
-            {
-              "guid": "1giqnsgvr6uA16isIlsn_B",
-              "ifc_type": "IfcWallStandardCase"
-            },
-            {
-              "guid": "1giqnsgvr6uA16isIlsnuJ",
-              "ifc_type": "IfcWallStandardCase"
-            },
-            {
-              "guid": "1giqnsgvr6uA16isIlsnuk",
-              "ifc_type": "IfcWallStandardCase"
-            },
-            {
-              "guid": "27dLDsxMX8Sv5rKurGZzHv",
-              "ifc_type": "IfcWallStandardCase"
-            },
-            {
-              "guid": "27dLDsxMX8Sv5rKurGZzI4",
-              "ifc_type": "IfcWallStandardCase"
-            }
-          ],
           "required_guids": [
             "04Sq57eS5FffNezn2ilgsV"
           ],
-          "extraction_element": [
-            "IfcSpace"
-          ]
+          "guid_strategy": "element"
         },
         {
           "topic_id": "dfd42d2c-b113-4dcf-a31d-0a5208bd5972",
@@ -410,30 +248,10 @@
             "1giqnsgvr6uA16isIlsm3v",
             "1giqnsgvr6uA16isIlsnzo"
           ],
-          "all_guids_enriched": [
-            {
-              "guid": "04Sq57eS5FffNezn2ilgrW",
-              "ifc_type": "IfcSpace"
-            },
-            {
-              "guid": "1giqnsgvr6uA16isIlsm2j",
-              "ifc_type": "IfcWallStandardCase"
-            },
-            {
-              "guid": "1giqnsgvr6uA16isIlsm3v",
-              "ifc_type": "IfcWallStandardCase"
-            },
-            {
-              "guid": "1giqnsgvr6uA16isIlsnzo",
-              "ifc_type": "IfcWallStandardCase"
-            }
-          ],
           "required_guids": [
             "04Sq57eS5FffNezn2ilgrW"
           ],
-          "extraction_element": [
-            "IfcSpace"
-          ]
+          "guid_strategy": "element"
         },
         {
           "topic_id": "ffe86e66-5689-4194-a1ea-7f58498e8708",
@@ -445,30 +263,10 @@
             "27dLDsxMX8Sv5rKurGZzuO",
             "27dLDsxMX8Sv5rKurGZzuP"
           ],
-          "all_guids_enriched": [
-            {
-              "guid": "06njXbG3HC4RydTXssDqYj",
-              "ifc_type": "IfcSpace"
-            },
-            {
-              "guid": "27dLDsxMX8Sv5rKurGZzlx",
-              "ifc_type": "IfcWallStandardCase"
-            },
-            {
-              "guid": "27dLDsxMX8Sv5rKurGZzuO",
-              "ifc_type": "IfcWallStandardCase"
-            },
-            {
-              "guid": "27dLDsxMX8Sv5rKurGZzuP",
-              "ifc_type": "IfcWallStandardCase"
-            }
-          ],
           "required_guids": [
             "06njXbG3HC4RydTXssDqYj"
           ],
-          "extraction_element": [
-            "IfcSpace"
-          ]
+          "guid_strategy": "element"
         },
         {
           "topic_id": "10020691-6093-4d7e-b1c1-93ba2b542a1b",
@@ -479,26 +277,10 @@
             "27dLDsxMX8Sv5rKurGZzpI",
             "27dLDsxMX8Sv5rKurGZzpJ"
           ],
-          "all_guids_enriched": [
-            {
-              "guid": "06njXbG3HC4RydTXssDqYd",
-              "ifc_type": "IfcSpace"
-            },
-            {
-              "guid": "27dLDsxMX8Sv5rKurGZzpI",
-              "ifc_type": "IfcWallStandardCase"
-            },
-            {
-              "guid": "27dLDsxMX8Sv5rKurGZzpJ",
-              "ifc_type": "IfcWallStandardCase"
-            }
-          ],
           "required_guids": [
             "06njXbG3HC4RydTXssDqYd"
           ],
-          "extraction_element": [
-            "IfcSpace"
-          ]
+          "guid_strategy": "element"
         }
       ]
     },
@@ -517,18 +299,10 @@
           "all_guids": [
             "04Sq57eS5FffNezn2ilgsy"
           ],
-          "all_guids_enriched": [
-            {
-              "guid": "04Sq57eS5FffNezn2ilgsy",
-              "ifc_type": "IfcSpace"
-            }
-          ],
           "required_guids": [
             "04Sq57eS5FffNezn2ilgsy"
           ],
-          "extraction_element": [
-            "IfcSpace"
-          ]
+          "guid_strategy": "multiple"
         },
         {
           "topic_id": "f75e4e7b-68ba-487e-82bc-9c3f3f4f47ef",
@@ -595,244 +369,6 @@
             "2p9k3Vk8DEmPDRJ6691rGh",
             "3If4otxpvBjO9DSa$bK$$x"
           ],
-          "all_guids_enriched": [
-            {
-              "guid": "04Sq57eS5FffNezn2ilg3X",
-              "ifc_type": "IfcSpace"
-            },
-            {
-              "guid": "04Sq57eS5FffNezn2ilg3Y",
-              "ifc_type": "IfcSpace"
-            },
-            {
-              "guid": "04Sq57eS5FffNezn2ilg3d",
-              "ifc_type": "IfcSpace"
-            },
-            {
-              "guid": "04Sq57eS5FffNezn2ilg3e",
-              "ifc_type": "IfcSpace"
-            },
-            {
-              "guid": "04Sq57eS5FffNezn2ilg3j",
-              "ifc_type": "IfcSpace"
-            },
-            {
-              "guid": "04Sq57eS5FffNezn2ilg3k",
-              "ifc_type": "IfcSpace"
-            },
-            {
-              "guid": "04Sq57eS5FffNezn2ilgC3",
-              "ifc_type": "IfcSpace"
-            },
-            {
-              "guid": "04Sq57eS5FffNezn2ilgC4",
-              "ifc_type": "IfcSpace"
-            },
-            {
-              "guid": "04Sq57eS5FffNezn2ilgC9",
-              "ifc_type": "IfcSpace"
-            },
-            {
-              "guid": "04Sq57eS5FffNezn2ilgCA",
-              "ifc_type": "IfcSpace"
-            },
-            {
-              "guid": "04Sq57eS5FffNezn2ilgCF",
-              "ifc_type": "IfcSpace"
-            },
-            {
-              "guid": "04Sq57eS5FffNezn2ilgCG",
-              "ifc_type": "IfcSpace"
-            },
-            {
-              "guid": "04Sq57eS5FffNezn2ilgCL",
-              "ifc_type": "IfcSpace"
-            },
-            {
-              "guid": "04Sq57eS5FffNezn2ilgCM",
-              "ifc_type": "IfcSpace"
-            },
-            {
-              "guid": "04Sq57eS5FffNezn2ilgCR",
-              "ifc_type": "IfcSpace"
-            },
-            {
-              "guid": "04Sq57eS5FffNezn2ilgCS",
-              "ifc_type": "IfcSpace"
-            },
-            {
-              "guid": "04Sq57eS5FffNezn2ilgC_",
-              "ifc_type": "IfcSpace"
-            },
-            {
-              "guid": "04Sq57eS5FffNezn2ilgCu",
-              "ifc_type": "IfcSpace"
-            },
-            {
-              "guid": "04Sq57eS5FffNezn2ilgCz",
-              "ifc_type": "IfcSpace"
-            },
-            {
-              "guid": "04Sq57eS5FffNezn2ilgmZ",
-              "ifc_type": "IfcSpace"
-            },
-            {
-              "guid": "04Sq57eS5FffNezn2ilgma",
-              "ifc_type": "IfcSpace"
-            },
-            {
-              "guid": "04Sq57eS5FffNezn2ilgmf",
-              "ifc_type": "IfcSpace"
-            },
-            {
-              "guid": "04Sq57eS5FffNezn2ilgmg",
-              "ifc_type": "IfcSpace"
-            },
-            {
-              "guid": "04Sq57eS5FffNezn2ilgml",
-              "ifc_type": "IfcSpace"
-            },
-            {
-              "guid": "04Sq57eS5FffNezn2ilgmm",
-              "ifc_type": "IfcSpace"
-            },
-            {
-              "guid": "04Sq57eS5FffNezn2ilgmr",
-              "ifc_type": "IfcSpace"
-            },
-            {
-              "guid": "04Sq57eS5FffNezn2ilgms",
-              "ifc_type": "IfcSpace"
-            },
-            {
-              "guid": "04Sq57eS5FffNezn2ilgmx",
-              "ifc_type": "IfcSpace"
-            },
-            {
-              "guid": "04Sq57eS5FffNezn2ilgmy",
-              "ifc_type": "IfcSpace"
-            },
-            {
-              "guid": "04Sq57eS5FffNezn2ilgn0",
-              "ifc_type": "IfcSpace"
-            },
-            {
-              "guid": "04Sq57eS5FffNezn2ilgnT",
-              "ifc_type": "IfcSpace"
-            },
-            {
-              "guid": "04Sq57eS5FffNezn2ilgnU",
-              "ifc_type": "IfcSpace"
-            },
-            {
-              "guid": "04Sq57eS5FffNezn2ilgrW",
-              "ifc_type": "IfcSpace"
-            },
-            {
-              "guid": "04Sq57eS5FffNezn2ilgrb",
-              "ifc_type": "IfcSpace"
-            },
-            {
-              "guid": "04Sq57eS5FffNezn2ilgrc",
-              "ifc_type": "IfcSpace"
-            },
-            {
-              "guid": "04Sq57eS5FffNezn2ilgrh",
-              "ifc_type": "IfcSpace"
-            },
-            {
-              "guid": "04Sq57eS5FffNezn2ilgs1",
-              "ifc_type": "IfcSpace"
-            },
-            {
-              "guid": "04Sq57eS5FffNezn2ilgs2",
-              "ifc_type": "IfcSpace"
-            },
-            {
-              "guid": "04Sq57eS5FffNezn2ilgs7",
-              "ifc_type": "IfcSpace"
-            },
-            {
-              "guid": "04Sq57eS5FffNezn2ilgs8",
-              "ifc_type": "IfcSpace"
-            },
-            {
-              "guid": "04Sq57eS5FffNezn2ilgsD",
-              "ifc_type": "IfcSpace"
-            },
-            {
-              "guid": "04Sq57eS5FffNezn2ilgsE",
-              "ifc_type": "IfcSpace"
-            },
-            {
-              "guid": "04Sq57eS5FffNezn2ilgsJ",
-              "ifc_type": "IfcSpace"
-            },
-            {
-              "guid": "04Sq57eS5FffNezn2ilgsK",
-              "ifc_type": "IfcSpace"
-            },
-            {
-              "guid": "04Sq57eS5FffNezn2ilgsP",
-              "ifc_type": "IfcSpace"
-            },
-            {
-              "guid": "04Sq57eS5FffNezn2ilgsQ",
-              "ifc_type": "IfcSpace"
-            },
-            {
-              "guid": "04Sq57eS5FffNezn2ilgsV",
-              "ifc_type": "IfcSpace"
-            },
-            {
-              "guid": "04Sq57eS5FffNezn2ilgt1",
-              "ifc_type": "IfcSpace"
-            },
-            {
-              "guid": "04Sq57eS5FffNezn2ilgt2",
-              "ifc_type": "IfcSpace"
-            },
-            {
-              "guid": "04Sq57eS5FffNezn2ilgt7",
-              "ifc_type": "IfcSpace"
-            },
-            {
-              "guid": "04Sq57eS5FffNezn2ilgt8",
-              "ifc_type": "IfcSpace"
-            },
-            {
-              "guid": "04Sq57eS5FffNezn2ilgtD",
-              "ifc_type": "IfcSpace"
-            },
-            {
-              "guid": "04Sq57eS5FffNezn2ilgtE",
-              "ifc_type": "IfcSpace"
-            },
-            {
-              "guid": "04Sq57eS5FffNezn2ilgtJ",
-              "ifc_type": "IfcSpace"
-            },
-            {
-              "guid": "04Sq57eS5FffNezn2ilgts",
-              "ifc_type": "IfcSpace"
-            },
-            {
-              "guid": "04Sq57eS5FffNezn2ilgtx",
-              "ifc_type": "IfcSpace"
-            },
-            {
-              "guid": "04Sq57eS5FffNezn2ilgty",
-              "ifc_type": "IfcSpace"
-            },
-            {
-              "guid": "2p9k3Vk8DEmPDRJ6691rGh",
-              "ifc_type": "IfcSpace"
-            },
-            {
-              "guid": "3If4otxpvBjO9DSa$bK$$x",
-              "ifc_type": "IfcSpace"
-            }
-          ],
           "required_guids": [
             "04Sq57eS5FffNezn2ilg3X",
             "04Sq57eS5FffNezn2ilg3Y",
@@ -894,9 +430,7 @@
             "2p9k3Vk8DEmPDRJ6691rGh",
             "3If4otxpvBjO9DSa$bK$$x"
           ],
-          "extraction_element": [
-            "IfcSpace"
-          ]
+          "guid_strategy": "multiple"
         }
       ]
     },

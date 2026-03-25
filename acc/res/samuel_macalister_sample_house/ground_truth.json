@@ -1,9 +1,10 @@
 {
   "metadata": {
+    "model_name": "samuel_macalister_sample_house",
+    "version": "v2",
     "total_topics": 27,
     "rules_count": 16,
-    "pass_rules_count": 7,
-    "model_name": "samuel_macalister_sample_house"
+    "pass_rules_count": 7
   },
   "rules": {
     "305_3_size": {
@@ -22,10 +23,22 @@
             "0lntrd6l1AGwfcnKJK5r3q",
             "3ch3OBgkrCEw4mDhJ2eObq"
           ],
-          "required_guids": [
-            "0lntrd6l1AGwfcnKJK5r3q"
+          "all_guids_enriched": [
+            {
+              "guid": "0lntrd6l1AGwfcnKJK5r3q",
+              "ifc_type": "IfcWall"
+            },
+            {
+              "guid": "3ch3OBgkrCEw4mDhJ2eObq",
+              "ifc_type": "IfcSpace"
+            }
           ],
-          "guid_strategy": "primary_and_cause"
+          "required_guids": [
+            "3ch3OBgkrCEw4mDhJ2eObq"
+          ],
+          "extraction_element": [
+            "IfcSpace"
+          ]
         }
       ]
     },
@@ -46,10 +59,27 @@
             "1PDnLIM013wvkZO9Lb4$s7",
             "3ch3OBgkrCEw4mDhJ2eOWH"
           ],
-          "required_guids": [
-            "3ch3OBgkrCEw4mDhJ2eOWH"
+          "all_guids_enriched": [
+            {
+              "guid": "1$p8tACJ938vr1_lKOJJ9g",
+              "ifc_type": "IfcDoor"
+            },
+            {
+              "guid": "1PDnLIM013wvkZO9Lb4$s7",
+              "ifc_type": "IfcDoor"
+            },
+            {
+              "guid": "3ch3OBgkrCEw4mDhJ2eOWH",
+              "ifc_type": "IfcSpace"
+            }
           ],
-          "guid_strategy": "context_and_primary"
+          "required_guids": [
+            "1$p8tACJ938vr1_lKOJJ9g",
+            "1PDnLIM013wvkZO9Lb4$s7"
+          ],
+          "extraction_element": [
+            "IfcDoor"
+          ]
         }
       ]
     },
@@ -68,10 +98,18 @@
           "all_guids": [
             "2ZlFFrvcbDavSm_g3LjLIe"
           ],
+          "all_guids_enriched": [
+            {
+              "guid": "2ZlFFrvcbDavSm_g3LjLIe",
+              "ifc_type": "IfcStair"
+            }
+          ],
           "required_guids": [
             "2ZlFFrvcbDavSm_g3LjLIe"
           ],
-          "guid_strategy": "single"
+          "extraction_element": [
+            "IfcStair"
+          ]
         }
       ]
     },
@@ -91,10 +129,22 @@
             "2wm6PO6TX9IxXwLP21HySo",
             "2wm6PO6TX9IxXwLP21Hyl3"
           ],
+          "all_guids_enriched": [
+            {
+              "guid": "2wm6PO6TX9IxXwLP21HySo",
+              "ifc_type": "IfcDoor"
+            },
+            {
+              "guid": "2wm6PO6TX9IxXwLP21Hyl3",
+              "ifc_type": "IfcWallStandardCase"
+            }
+          ],
           "required_guids": [
             "2wm6PO6TX9IxXwLP21HySo"
           ],
-          "guid_strategy": "primary_and_cause"
+          "extraction_element": [
+            "IfcDoor"
+          ]
         },
         {
           "topic_id": "7ee33ce2-2c7d-4260-b947-a730305007b5",
@@ -104,10 +154,22 @@
             "2wm6PO6TX9IxXwLP21HyWr",
             "2wm6PO6TX9IxXwLP21Hyl3"
           ],
+          "all_guids_enriched": [
+            {
+              "guid": "2wm6PO6TX9IxXwLP21HyWr",
+              "ifc_type": "IfcDoor"
+            },
+            {
+              "guid": "2wm6PO6TX9IxXwLP21Hyl3",
+              "ifc_type": "IfcWallStandardCase"
+            }
+          ],
           "required_guids": [
             "2wm6PO6TX9IxXwLP21HyWr"
           ],
-          "guid_strategy": "primary_and_cause"
+          "extraction_element": [
+            "IfcDoor"
+          ]
         }
       ]
     },
@@ -126,10 +188,18 @@
           "all_guids": [
             "3ch3OBgkrCEw4mDhJ2eOZ3"
           ],
+          "all_guids_enriched": [
+            {
+              "guid": "3ch3OBgkrCEw4mDhJ2eOZ3",
+              "ifc_type": "IfcSpace"
+            }
+          ],
           "required_guids": [
             "3ch3OBgkrCEw4mDhJ2eOZ3"
           ],
-          "guid_strategy": "single"
+          "extraction_element": [
+            "IfcSpace"
+          ]
         },
         {
           "topic_id": "26048f10-36d3-41a5-9200-46ac4d68550c",
@@ -138,10 +208,18 @@
           "all_guids": [
             "3ch3OBgkrCEw4mDhJ2eOci"
           ],
+          "all_guids_enriched": [
+            {
+              "guid": "3ch3OBgkrCEw4mDhJ2eOci",
+              "ifc_type": "IfcSpace"
+            }
+          ],
           "required_guids": [
             "3ch3OBgkrCEw4mDhJ2eOci"
           ],
-          "guid_strategy": "single"
+          "extraction_element": [
+            "IfcSpace"
+          ]
         }
       ]
     },
@@ -160,10 +238,18 @@
           "all_guids": [
             "0NWseyvsH7_gBW225aGtZP"
           ],
+          "all_guids_enriched": [
+            {
+              "guid": "0NWseyvsH7_gBW225aGtZP",
+              "ifc_type": "IfcSlab"
+            }
+          ],
           "required_guids": [
             "0NWseyvsH7_gBW225aGtZP"
           ],
-          "guid_strategy": "single"
+          "extraction_element": [
+            "IfcSlab"
+          ]
         },
         {
           "topic_id": "2f8baee5-c85d-4a4f-bb17-e67b2db36fa7",
@@ -195,33 +281,110 @@
             "3rPRxvVIT7WRZKOFIc3wXL",
             "3vi8Xy_cHA1R$gUoZ0tZjz"
           ],
-          "required_guids": [
-            "0H7vgQcNjEo8efFHzwVpwh",
-            "1$p8tACJ938vr1_lKOJJ0t",
-            "1PDnLIM013wvkZO9Lb4$GV",
-            "1PDnLIM013wvkZO9Lb4$j_",
-            "1PDnLIM013wvkZO9Lb4$wc",
-            "1RUi90wQT3ihQ$96bMNGiu",
-            "1RUi90wQT3ihQ$96bMNGvH",
-            "1cCK8nA61FduUezO75i8dB",
-            "1oPutv5ADAxgWEbAZbN6Wv",
-            "29jzdd0Ab5sOIOupfzx0h8",
-            "29jzdd0Ab5sOIOupfzx1Ur",
-            "29jzdd0Ab5sOIOupfzx2y0",
-            "2OulbipBrAkwQNv_KJRUYY",
-            "2OulbipBrAkwQNv_KJRUgr",
-            "2ZlFFrvcbDavSm_g3LjLIb",
-            "2ZlFFrvcbDavSm_g3LjLIe",
-            "2hD3j_DmLBXxhCCy1gOWVy",
-            "2pfAHb2EL46hq_sMVbImEh",
-            "38NblWsDL1I8DljLvn67Sd",
-            "3NtsDuzRb1WReLiDQX$2CA",
-            "3Yxgiuz3TDpeHhosGP5a_d",
-            "3lLx0gNe59vvExhby0Bff1",
-            "3rPRxvVIT7WRZKOFIc3wXL",
-            "3vi8Xy_cHA1R$gUoZ0tZjz"
+          "all_guids_enriched": [
+            {
+              "guid": "0H7vgQcNjEo8efFHzwVpwh",
+              "ifc_type": "IfcBuildingElementProxy"
+            },
+            {
+              "guid": "1$p8tACJ938vr1_lKOJJ0t",
+              "ifc_type": "IfcWallStandardCase"
+            },
+            {
+              "guid": "1PDnLIM013wvkZO9Lb4$GV",
+              "ifc_type": "IfcWallStandardCase"
+            },
+            {
+              "guid": "1PDnLIM013wvkZO9Lb4$j_",
+              "ifc_type": "IfcCurtainWall"
+            },
+            {
+              "guid": "1PDnLIM013wvkZO9Lb4$wc",
+              "ifc_type": "IfcWallStandardCase"
+            },
+            {
+              "guid": "1RUi90wQT3ihQ$96bMNGiu",
+              "ifc_type": "IfcWallStandardCase"
+            },
+            {
+              "guid": "1RUi90wQT3ihQ$96bMNGvH",
+              "ifc_type": "IfcWallStandardCase"
+            },
+            {
+              "guid": "1cCK8nA61FduUezO75i8dB",
+              "ifc_type": "IfcSlab"
+            },
+            {
+              "guid": "1oPutv5ADAxgWEbAZbN6Wv",
+              "ifc_type": "IfcWallStandardCase"
+            },
+            {
+              "guid": "29jzdd0Ab5sOIOupfzx0h8",
+              "ifc_type": "IfcBuildingElementProxy"
+            },
+            {
+              "guid": "29jzdd0Ab5sOIOupfzx1Ur",
+              "ifc_type": "IfcBuildingElementProxy"
+            },
+            {
+              "guid": "29jzdd0Ab5sOIOupfzx2y0",
+              "ifc_type": "IfcBuildingElementProxy"
+            },
+            {
+              "guid": "2OulbipBrAkwQNv_KJRUYY",
+              "ifc_type": "IfcCurtainWall"
+            },
+            {
+              "guid": "2OulbipBrAkwQNv_KJRUgr",
+              "ifc_type": "IfcCurtainWall"
+            },
+            {
+              "guid": "2ZlFFrvcbDavSm_g3LjLIb",
+              "ifc_type": "IfcStairFlight"
+            },
+            {
+              "guid": "2ZlFFrvcbDavSm_g3LjLIe",
+              "ifc_type": "IfcStair"
+            },
+            {
+              "guid": "2hD3j_DmLBXxhCCy1gOWVy",
+              "ifc_type": "IfcCurtainWall"
+            },
+            {
+              "guid": "2pfAHb2EL46hq_sMVbImEh",
+              "ifc_type": "IfcWallStandardCase"
+            },
+            {
+              "guid": "38NblWsDL1I8DljLvn67Sd",
+              "ifc_type": "IfcWallStandardCase"
+            },
+            {
+              "guid": "3NtsDuzRb1WReLiDQX$2CA",
+              "ifc_type": "IfcCurtainWall"
+            },
+            {
+              "guid": "3Yxgiuz3TDpeHhosGP5a_d",
+              "ifc_type": "IfcColumn"
+            },
+            {
+              "guid": "3lLx0gNe59vvExhby0Bff1",
+              "ifc_type": "IfcWallStandardCase"
+            },
+            {
+              "guid": "3rPRxvVIT7WRZKOFIc3wXL",
+              "ifc_type": "IfcWallStandardCase"
+            },
+            {
+              "guid": "3vi8Xy_cHA1R$gUoZ0tZjz",
+              "ifc_type": "IfcBuildingElementProxy"
+            }
           ],
-          "guid_strategy": "single"
+          "required_guids": [
+            "1cCK8nA61FduUezO75i8dB"
+          ],
+          "extraction_element": [
+            "IfcSlab"
+          ]
         },
         {
           "topic_id": "134f06ac-f009-4243-b564-ff6ab83cea24",
@@ -231,11 +394,22 @@
             "38BWtPCUX0VgAKmmGnoLQm",
             "3lIj7B0LnBjf0mvxk2zve8"
           ],
-          "required_guids": [
-            "38BWtPCUX0VgAKmmGnoLQm",
-            "3lIj7B0LnBjf0mvxk2zve8"
+          "all_guids_enriched": [
+            {
+              "guid": "38BWtPCUX0VgAKmmGnoLQm",
+              "ifc_type": "IfcSlab"
+            },
+            {
+              "guid": "3lIj7B0LnBjf0mvxk2zve8",
+              "ifc_type": "IfcSite"
+            }
           ],
-          "guid_strategy": "single"
+          "required_guids": [
+            "38BWtPCUX0VgAKmmGnoLQm"
+          ],
+          "extraction_element": [
+            "IfcSlab"
+          ]
         },
         {
           "topic_id": "c39a781b-e61d-44ba-92d9-6f1991e5e7a2",
@@ -244,10 +418,18 @@
           "all_guids": [
             "38BWtPCUX0VgAKmmGnoLQm"
           ],
+          "all_guids_enriched": [
+            {
+              "guid": "38BWtPCUX0VgAKmmGnoLQm",
+              "ifc_type": "IfcSlab"
+            }
+          ],
           "required_guids": [
             "38BWtPCUX0VgAKmmGnoLQm"
           ],
-          "guid_strategy": "single"
+          "extraction_element": [
+            "IfcSlab"
+          ]
         }
       ]
     },
@@ -268,10 +450,26 @@
             "1N_4TwOEH5194SbNmRTDH0",
             "3ch3OBgkrCEw4mDhJ2eOZ3"
           ],
+          "all_guids_enriched": [
+            {
+              "guid": "0LKJKCHUL1kBtnlFfddz6a",
+              "ifc_type": "IfcRoof"
+            },
+            {
+              "guid": "1N_4TwOEH5194SbNmRTDH0",
+              "ifc_type": "IfcSlab"
+            },
+            {
+              "guid": "3ch3OBgkrCEw4mDhJ2eOZ3",
+              "ifc_type": "IfcSpace"
+            }
+          ],
           "required_guids": [
             "3ch3OBgkrCEw4mDhJ2eOZ3"
           ],
-          "guid_strategy": "element"
+          "extraction_element": [
+            "IfcSpace"
+          ]
         }
       ]
     },
@@ -307,10 +505,86 @@
             "3lIj7B0LnBjf0mvxk2zuuc",
             "3lLx0gNe59vvExhby0Bff1"
           ],
+          "all_guids_enriched": [
+            {
+              "guid": "0lntrd6l1AGwfcnKJK5q$g",
+              "ifc_type": "IfcWallStandardCase"
+            },
+            {
+              "guid": "0lntrd6l1AGwfcnKJK5qmF",
+              "ifc_type": "IfcWallStandardCase"
+            },
+            {
+              "guid": "0lntrd6l1AGwfcnKJK5quT",
+              "ifc_type": "IfcWallStandardCase"
+            },
+            {
+              "guid": "0lntrd6l1AGwfcnKJK5qv8",
+              "ifc_type": "IfcWallStandardCase"
+            },
+            {
+              "guid": "0lntrd6l1AGwfcnKJK5r28",
+              "ifc_type": "IfcWallStandardCase"
+            },
+            {
+              "guid": "0lntrd6l1AGwfcnKJK5r3q",
+              "ifc_type": "IfcWall"
+            },
+            {
+              "guid": "0nbT7BoYn1WRd0KTefRTuG",
+              "ifc_type": "IfcWallStandardCase"
+            },
+            {
+              "guid": "1jq3WIaE92UPTHNxmrWm6f",
+              "ifc_type": "IfcWallStandardCase"
+            },
+            {
+              "guid": "2MWqvKy9535viQk_YsG9eF",
+              "ifc_type": "IfcWallStandardCase"
+            },
+            {
+              "guid": "2MWqvKy9535viQk_YsG9km",
+              "ifc_type": "IfcWallStandardCase"
+            },
+            {
+              "guid": "2wm6PO6TX9IxXwLP21Hyl3",
+              "ifc_type": "IfcWallStandardCase"
+            },
+            {
+              "guid": "2wm6PO6TX9IxXwLP21HynH",
+              "ifc_type": "IfcWallStandardCase"
+            },
+            {
+              "guid": "2wm6PO6TX9IxXwLP21Hz10",
+              "ifc_type": "IfcWallStandardCase"
+            },
+            {
+              "guid": "38NblWsDL1I8DljLvn67bV",
+              "ifc_type": "IfcWall"
+            },
+            {
+              "guid": "3OLNF2_DL6hfPgh8Bw7fI7",
+              "ifc_type": "IfcSlab"
+            },
+            {
+              "guid": "3ch3OBgkrCEw4mDhJ2eOci",
+              "ifc_type": "IfcSpace"
+            },
+            {
+              "guid": "3lIj7B0LnBjf0mvxk2zuuc",
+              "ifc_type": "IfcColumn"
+            },
+            {
+              "guid": "3lLx0gNe59vvExhby0Bff1",
+              "ifc_type": "IfcWallStandardCase"
+            }
+          ],
           "required_guids": [
             "3ch3OBgkrCEw4mDhJ2eOci"
           ],
-          "guid_strategy": "element"
+          "extraction_element": [
+            "IfcSpace"
+          ]
         },
         {
           "topic_id": "23d57255-fb48-46e8-888e-8dd46b7a683d",
@@ -327,10 +601,50 @@
             "3ch3OBgkrCEw4mDhJ2eOZQ",
             "3rPRxvVIT7WRZKOFIc3wXL"
           ],
+          "all_guids_enriched": [
+            {
+              "guid": "0LKJKCHUL1kBtnlFfddz6a",
+              "ifc_type": "IfcRoof"
+            },
+            {
+              "guid": "0lntrd6l1AGwfcnKJK5r3q",
+              "ifc_type": "IfcWall"
+            },
+            {
+              "guid": "1N_4TwOEH5194SbNmRTDH0",
+              "ifc_type": "IfcSlab"
+            },
+            {
+              "guid": "28i3i5WDD8Ju0YHnzXOzdu",
+              "ifc_type": "IfcWallStandardCase"
+            },
+            {
+              "guid": "38NblWsDL1I8DljLvn67bV",
+              "ifc_type": "IfcWall"
+            },
+            {
+              "guid": "38NblWsDL1I8DljLvn67cw",
+              "ifc_type": "IfcWall"
+            },
+            {
+              "guid": "3OLNF2_DL6hfPgh8Bw7fI7",
+              "ifc_type": "IfcSlab"
+            },
+            {
+              "guid": "3ch3OBgkrCEw4mDhJ2eOZQ",
+              "ifc_type": "IfcSpace"
+            },
+            {
+              "guid": "3rPRxvVIT7WRZKOFIc3wXL",
+              "ifc_type": "IfcWallStandardCase"
+            }
+          ],
           "required_guids": [
             "3ch3OBgkrCEw4mDhJ2eOZQ"
           ],
-          "guid_strategy": "element"
+          "extraction_element": [
+            "IfcSpace"
+          ]
         },
         {
           "topic_id": "2efe78dc-e70d-46f8-9412-5e5243667d73",
@@ -341,10 +655,26 @@
             "2cgXCjpDT0ZxBvxMSr3pfm",
             "3ch3OBgkrCEw4mDhJ2eObq"
           ],
+          "all_guids_enriched": [
+            {
+              "guid": "0lntrd6l1AGwfcnKJK5r3q",
+              "ifc_type": "IfcWall"
+            },
+            {
+              "guid": "2cgXCjpDT0ZxBvxMSr3pfm",
+              "ifc_type": "IfcRoof"
+            },
+            {
+              "guid": "3ch3OBgkrCEw4mDhJ2eObq",
+              "ifc_type": "IfcSpace"
+            }
+          ],
           "required_guids": [
             "3ch3OBgkrCEw4mDhJ2eObq"
           ],
-          "guid_strategy": "element"
+          "extraction_element": [
+            "IfcSpace"
+          ]
         },
         {
           "topic_id": "b4085a2e-141e-4ad5-b9c8-2aa8c390294a",
@@ -357,10 +687,34 @@
             "3ch3OBgkrCEw4mDhJ2eObg",
             "3lLx0gNe59vvExhby0Bfew"
           ],
+          "all_guids_enriched": [
+            {
+              "guid": "2cgXCjpDT0ZxBvxMSr3pfm",
+              "ifc_type": "IfcRoof"
+            },
+            {
+              "guid": "38NblWsDL1I8DljLvn67bV",
+              "ifc_type": "IfcWall"
+            },
+            {
+              "guid": "38NblWsDL1I8DljLvn67cw",
+              "ifc_type": "IfcWall"
+            },
+            {
+              "guid": "3ch3OBgkrCEw4mDhJ2eObg",
+              "ifc_type": "IfcSpace"
+            },
+            {
+              "guid": "3lLx0gNe59vvExhby0Bfew",
+              "ifc_type": "IfcWallStandardCase"
+            }
+          ],
           "required_guids": [
             "3ch3OBgkrCEw4mDhJ2eObg"
           ],
-          "guid_strategy": "element"
+          "extraction_element": [
+            "IfcSpace"
+          ]
         },
         {
           "topic_id": "905e1b98-51f7-443a-9bf9-bd2ea9004c28",
@@ -370,10 +724,22 @@
             "2cgXCjpDT0ZxBvxMSr3pfm",
             "2wm6PO6TX9IxXwLP21HyQg"
           ],
+          "all_guids_enriched": [
+            {
+              "guid": "2cgXCjpDT0ZxBvxMSr3pfm",
+              "ifc_type": "IfcRoof"
+            },
+            {
+              "guid": "2wm6PO6TX9IxXwLP21HyQg",
+              "ifc_type": "IfcSpace"
+            }
+          ],
           "required_guids": [
             "2wm6PO6TX9IxXwLP21HyQg"
           ],
-          "guid_strategy": "element"
+          "extraction_element": [
+            "IfcSpace"
+          ]
         },
         {
           "topic_id": "ac0be54b-3dda-46dc-9f1b-142224737715",
@@ -383,10 +749,22 @@
             "2cgXCjpDT0ZxBvxMSr3pfm",
             "3ch3OBgkrCEw4mDhJ2eObb"
           ],
+          "all_guids_enriched": [
+            {
+              "guid": "2cgXCjpDT0ZxBvxMSr3pfm",
+              "ifc_type": "IfcRoof"
+            },
+            {
+              "guid": "3ch3OBgkrCEw4mDhJ2eObb",
+              "ifc_type": "IfcSpace"
+            }
+          ],
           "required_guids": [
             "3ch3OBgkrCEw4mDhJ2eObb"
           ],
-          "guid_strategy": "element"
+          "extraction_element": [
+            "IfcSpace"
+          ]
         },
         {
           "topic_id": "2911ad06-0aea-41c4-bec4-67d5d37eb920",
@@ -396,10 +774,22 @@
             "2cgXCjpDT0ZxBvxMSr3pfm",
             "3ch3OBgkrCEw4mDhJ2eOb_"
           ],
+          "all_guids_enriched": [
+            {
+              "guid": "2cgXCjpDT0ZxBvxMSr3pfm",
+              "ifc_type": "IfcRoof"
+            },
+            {
+              "guid": "3ch3OBgkrCEw4mDhJ2eOb_",
+              "ifc_type": "IfcSpace"
+            }
+          ],
           "required_guids": [
             "3ch3OBgkrCEw4mDhJ2eOb_"
           ],
-          "guid_strategy": "element"
+          "extraction_element": [
+            "IfcSpace"
+          ]
         },
         {
           "topic_id": "d034c13a-08c5-4f82-bfe7-6036ade53553",
@@ -409,10 +799,22 @@
             "2cgXCjpDT0ZxBvxMSr3pfm",
             "3ch3OBgkrCEw4mDhJ2eObW"
           ],
+          "all_guids_enriched": [
+            {
+              "guid": "2cgXCjpDT0ZxBvxMSr3pfm",
+              "ifc_type": "IfcRoof"
+            },
+            {
+              "guid": "3ch3OBgkrCEw4mDhJ2eObW",
+              "ifc_type": "IfcSpace"
+            }
+          ],
           "required_guids": [
             "3ch3OBgkrCEw4mDhJ2eObW"
           ],
-          "guid_strategy": "element"
+          "extraction_element": [
+            "IfcSpace"
+          ]
         },
         {
           "topic_id": "9b2b2f34-57bd-4064-8fbd-209e4c852df3",
@@ -422,10 +824,22 @@
             "2cgXCjpDT0ZxBvxMSr3pfm",
             "3ch3OBgkrCEw4mDhJ2eObZ"
           ],
+          "all_guids_enriched": [
+            {
+              "guid": "2cgXCjpDT0ZxBvxMSr3pfm",
+              "ifc_type": "IfcRoof"
+            },
+            {
+              "guid": "3ch3OBgkrCEw4mDhJ2eObZ",
+              "ifc_type": "IfcSpace"
+            }
+          ],
           "required_guids": [
             "3ch3OBgkrCEw4mDhJ2eObZ"
           ],
-          "guid_strategy": "element"
+          "extraction_element": [
+            "IfcSpace"
+          ]
         },
         {
           "topic_id": "68e37882-f989-473f-a385-cabb1d9ac08b",
@@ -435,10 +849,22 @@
             "2cgXCjpDT0ZxBvxMSr3pfm",
             "3ch3OBgkrCEw4mDhJ2eObv"
           ],
+          "all_guids_enriched": [
+            {
+              "guid": "2cgXCjpDT0ZxBvxMSr3pfm",
+              "ifc_type": "IfcRoof"
+            },
+            {
+              "guid": "3ch3OBgkrCEw4mDhJ2eObv",
+              "ifc_type": "IfcSpace"
+            }
+          ],
           "required_guids": [
             "3ch3OBgkrCEw4mDhJ2eObv"
           ],
-          "guid_strategy": "element"
+          "extraction_element": [
+            "IfcSpace"
+          ]
         },
         {
           "topic_id": "dc4e5379-7e65-4843-bb7f-f9955c5319cb",
@@ -450,10 +876,30 @@
             "3ch3OBgkrCEw4mDhJ2eOdV",
             "3rPRxvVIT7WRZKOFIc3wXL"
           ],
+          "all_guids_enriched": [
+            {
+              "guid": "28i3i5WDD8Ju0YHnzXOzdu",
+              "ifc_type": "IfcWallStandardCase"
+            },
+            {
+              "guid": "3OLNF2_DL6hfPgh8Bw7fI7",
+              "ifc_type": "IfcSlab"
+            },
+            {
+              "guid": "3ch3OBgkrCEw4mDhJ2eOdV",
+              "ifc_type": "IfcSpace"
+            },
+            {
+              "guid": "3rPRxvVIT7WRZKOFIc3wXL",
+              "ifc_type": "IfcWallStandardCase"
+            }
+          ],
           "required_guids": [
             "3ch3OBgkrCEw4mDhJ2eOdV"
           ],
-          "guid_strategy": "element"
+          "extraction_element": [
+            "IfcSpace"
+          ]
         },
         {
           "topic_id": "2ed01b28-6a15-4409-8cbb-04582f3c8cb6",
@@ -463,10 +909,22 @@
             "2pfAHb2EL46hq_sMVbImE4",
             "3OLNF2_DL6hfPgh8Bw7fI7"
           ],
+          "all_guids_enriched": [
+            {
+              "guid": "2pfAHb2EL46hq_sMVbImE4",
+              "ifc_type": "IfcSpace"
+            },
+            {
+              "guid": "3OLNF2_DL6hfPgh8Bw7fI7",
+              "ifc_type": "IfcSlab"
+            }
+          ],
           "required_guids": [
             "2pfAHb2EL46hq_sMVbImE4"
           ],
-          "guid_strategy": "element"
+          "extraction_element": [
+            "IfcSpace"
+          ]
         },
         {
           "topic_id": "64933a15-c4d9-4dfc-9266-1290d1e3a439",
@@ -476,10 +934,22 @@
             "3OLNF2_DL6hfPgh8Bw7fI7",
             "3ch3OBgkrCEw4mDhJ2eOWH"
           ],
+          "all_guids_enriched": [
+            {
+              "guid": "3OLNF2_DL6hfPgh8Bw7fI7",
+              "ifc_type": "IfcSlab"
+            },
+            {
+              "guid": "3ch3OBgkrCEw4mDhJ2eOWH",
+              "ifc_type": "IfcSpace"
+            }
+          ],
           "required_guids": [
             "3ch3OBgkrCEw4mDhJ2eOWH"
           ],
-          "guid_strategy": "element"
+          "extraction_element": [
+            "IfcSpace"
+          ]
         }
       ]
     },
@@ -506,6 +976,44 @@
             "39NeMDaWPEh9g8$CxWwg0v",
             "3lIj7B0LnBjf0mvxk2zuuc"
           ],
+          "all_guids_enriched": [
+            {
+              "guid": "0NWseyvsH7_gBW225aGtuD",
+              "ifc_type": "IfcWall"
+            },
+            {
+              "guid": "0NWseyvsH7_gBW225aGtwW",
+              "ifc_type": "IfcWallStandardCase"
+            },
+            {
+              "guid": "2OulbipBrAkwQNv_KJRUYY",
+              "ifc_type": "IfcCurtainWall"
+            },
+            {
+              "guid": "2OulbipBrAkwQNv_KJRUgr",
+              "ifc_type": "IfcCurtainWall"
+            },
+            {
+              "guid": "2hD3j_DmLBXxhCCy1gOWVy",
+              "ifc_type": "IfcCurtainWall"
+            },
+            {
+              "guid": "38NblWsDL1I8DljLvn67bV",
+              "ifc_type": "IfcWall"
+            },
+            {
+              "guid": "38NblWsDL1I8DljLvn67cw",
+              "ifc_type": "IfcWall"
+            },
+            {
+              "guid": "39NeMDaWPEh9g8$CxWwg0v",
+              "ifc_type": "IfcWallStandardCase"
+            },
+            {
+              "guid": "3lIj7B0LnBjf0mvxk2zuuc",
+              "ifc_type": "IfcColumn"
+            }
+          ],
           "required_guids": [
             "0NWseyvsH7_gBW225aGtuD",
             "0NWseyvsH7_gBW225aGtwW",
@@ -517,7 +1025,12 @@
             "39NeMDaWPEh9g8$CxWwg0v",
             "3lIj7B0LnBjf0mvxk2zuuc"
           ],
-          "guid_strategy": "multiple"
+          "extraction_element": [
+            "IfcColumn",
+            "IfcCurtainWall",
+            "IfcWall",
+            "IfcWallStandardCase"
+          ]
         },
         {
           "topic_id": "181ce00b-094a-49aa-a69f-433c63f89135",
@@ -531,6 +1044,32 @@
             "38NblWsDL1I8DljLvn67cw",
             "39NeMDaWPEh9g8$CxWwg0v"
           ],
+          "all_guids_enriched": [
+            {
+              "guid": "0lntrd6l1AGwfcnKJK5qmF",
+              "ifc_type": "IfcWallStandardCase"
+            },
+            {
+              "guid": "1jq3WIaE92UPTHNxmrWm6f",
+              "ifc_type": "IfcWallStandardCase"
+            },
+            {
+              "guid": "38NblWsDL1I8DljLvn67bV",
+              "ifc_type": "IfcWall"
+            },
+            {
+              "guid": "38NblWsDL1I8DljLvn67cE",
+              "ifc_type": "IfcCurtainWall"
+            },
+            {
+              "guid": "38NblWsDL1I8DljLvn67cw",
+              "ifc_type": "IfcWall"
+            },
+            {
+              "guid": "39NeMDaWPEh9g8$CxWwg0v",
+              "ifc_type": "IfcWallStandardCase"
+            }
+          ],
           "required_guids": [
             "0lntrd6l1AGwfcnKJK5qmF",
             "1jq3WIaE92UPTHNxmrWm6f",
@@ -539,7 +1078,12 @@
             "38NblWsDL1I8DljLvn67cw",
             "39NeMDaWPEh9g8$CxWwg0v"
           ],
-          "guid_strategy": "multiple"
+          "extraction_element": [
+            "IfcColumn",
+            "IfcCurtainWall",
+            "IfcWall",
+            "IfcWallStandardCase"
+          ]
         }
       ]
     },

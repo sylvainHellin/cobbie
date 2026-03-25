@@ -1,10 +1,9 @@
 {
   "metadata": {
-    "model_name": "fzk_house",
-    "version": "v2",
     "total_topics": 6,
     "rules_count": 16,
-    "pass_rules_count": 11
+    "pass_rules_count": 11,
+    "model_name": "fzk_house"
   },
   "rules": {
     "504_2_non_uniform_risers_treads": {
@@ -23,22 +22,10 @@
             "2RGlQk4xH47RHK93zcTzUL",
             "38a9vdh9bF5Qg28GWyHhlr"
           ],
-          "all_guids_enriched": [
-            {
-              "guid": "2RGlQk4xH47RHK93zcTzUL",
-              "ifc_type": "IfcSlab"
-            },
-            {
-              "guid": "38a9vdh9bF5Qg28GWyHhlr",
-              "ifc_type": "IfcStair"
-            }
-          ],
           "required_guids": [
-            "38a9vdh9bF5Qg28GWyHhlr"
+            "2RGlQk4xH47RHK93zcTzUL"
           ],
-          "extraction_element": [
-            "IfcStair"
-          ]
+          "guid_strategy": "primary_and_cause"
         }
       ]
     },
@@ -57,18 +44,10 @@
           "all_guids": [
             "38a9vdh9bF5Qg28GWyHhlr"
           ],
-          "all_guids_enriched": [
-            {
-              "guid": "38a9vdh9bF5Qg28GWyHhlr",
-              "ifc_type": "IfcStair"
-            }
-          ],
           "required_guids": [
             "38a9vdh9bF5Qg28GWyHhlr"
           ],
-          "extraction_element": [
-            "IfcStair"
-          ]
+          "guid_strategy": "single"
         }
       ]
     },
@@ -87,18 +66,10 @@
           "all_guids": [
             "2dQFggKBb1fOc1CqZDIDlx"
           ],
-          "all_guids_enriched": [
-            {
-              "guid": "2dQFggKBb1fOc1CqZDIDlx",
-              "ifc_type": "IfcSpace"
-            }
-          ],
           "required_guids": [
             "2dQFggKBb1fOc1CqZDIDlx"
           ],
-          "extraction_element": [
-            "IfcSpace"
-          ]
+          "guid_strategy": "single"
         }
       ]
     },
@@ -121,34 +92,14 @@
             "3Ttjr$59XEWfWN1WUHjelZ",
             "3VCarUKgH1buLo22Ozxe6J"
           ],
-          "all_guids_enriched": [
-            {
-              "guid": "0knNIAVBPBFvBy_m5QVHsU",
-              "ifc_type": "IfcWallStandardCase"
-            },
-            {
-              "guid": "25OWQvmXj5BPgyergP43tY",
-              "ifc_type": "IfcWallStandardCase"
-            },
-            {
-              "guid": "2RGlQk4xH47RHK93zcTzUL",
-              "ifc_type": "IfcSlab"
-            },
-            {
-              "guid": "3Ttjr$59XEWfWN1WUHjelZ",
-              "ifc_type": "IfcWallStandardCase"
-            },
-            {
-              "guid": "3VCarUKgH1buLo22Ozxe6J",
-              "ifc_type": "IfcWallStandardCase"
-            }
-          ],
           "required_guids": [
-            "2RGlQk4xH47RHK93zcTzUL"
+            "0knNIAVBPBFvBy_m5QVHsU",
+            "25OWQvmXj5BPgyergP43tY",
+            "2RGlQk4xH47RHK93zcTzUL",
+            "3Ttjr$59XEWfWN1WUHjelZ",
+            "3VCarUKgH1buLo22Ozxe6J"
           ],
-          "extraction_element": [
-            "IfcSlab"
-          ]
+          "guid_strategy": "single"
         },
         {
           "topic_id": "9e9b6611-9089-407f-81f6-d0c753d14e00",
@@ -158,22 +109,11 @@
             "0o5vgCKyTBzO5$QJcI2YDP",
             "2RGlQk4xH47RHK93zcTzUL"
           ],
-          "all_guids_enriched": [
-            {
-              "guid": "0o5vgCKyTBzO5$QJcI2YDP",
-              "ifc_type": "IfcRailing"
-            },
-            {
-              "guid": "2RGlQk4xH47RHK93zcTzUL",
-              "ifc_type": "IfcSlab"
-            }
-          ],
           "required_guids": [
+            "0o5vgCKyTBzO5$QJcI2YDP",
             "2RGlQk4xH47RHK93zcTzUL"
           ],
-          "extraction_element": [
-            "IfcSlab"
-          ]
+          "guid_strategy": "single"
         }
       ]
     },
@@ -194,26 +134,10 @@
             "2IxUUNUVPB6Ob$eicCfP2N",
             "2dQFggKBb1fOc1CqZDIDlx"
           ],
-          "all_guids_enriched": [
-            {
-              "guid": "07Enbsqm9C7AQC9iyBwfSD",
-              "ifc_type": "IfcSlab"
-            },
-            {
-              "guid": "2IxUUNUVPB6Ob$eicCfP2N",
-              "ifc_type": "IfcSlab"
-            },
-            {
-              "guid": "2dQFggKBb1fOc1CqZDIDlx",
-              "ifc_type": "IfcSpace"
-            }
-          ],
           "required_guids": [
             "2dQFggKBb1fOc1CqZDIDlx"
           ],
-          "extraction_element": [
-            "IfcSpace"
-          ]
+          "guid_strategy": "element"
         }
       ]
     },

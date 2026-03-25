@@ -1,9 +1,10 @@
 {
   "metadata": {
+    "model_name": "digital_hub",
+    "version": "v2",
     "total_topics": 49,
     "rules_count": 16,
-    "pass_rules_count": 5,
-    "model_name": "digital_hub"
+    "pass_rules_count": 5
   },
   "rules": {
     "304_3_1_circular_space": {
@@ -21,10 +22,18 @@
           "all_guids": [
             "3DCde23Rb8uBrhrJgjcLQA"
           ],
+          "all_guids_enriched": [
+            {
+              "guid": "3DCde23Rb8uBrhrJgjcLQA",
+              "ifc_type": "IfcSpace"
+            }
+          ],
           "required_guids": [
             "3DCde23Rb8uBrhrJgjcLQA"
           ],
-          "guid_strategy": "single"
+          "extraction_element": [
+            "IfcSpace"
+          ]
         },
         {
           "topic_id": "12b2c74f-bb39-4b8b-a981-5484df51cf28",
@@ -33,10 +42,18 @@
           "all_guids": [
             "3DCde23Rb8uBrhrJgjcLQn"
           ],
+          "all_guids_enriched": [
+            {
+              "guid": "3DCde23Rb8uBrhrJgjcLQn",
+              "ifc_type": "IfcSpace"
+            }
+          ],
           "required_guids": [
             "3DCde23Rb8uBrhrJgjcLQn"
           ],
-          "guid_strategy": "single"
+          "extraction_element": [
+            "IfcSpace"
+          ]
         }
       ]
     },
@@ -55,10 +72,18 @@
           "all_guids": [
             "0YVU7tDBX86u6UVVsSmdwD"
           ],
+          "all_guids_enriched": [
+            {
+              "guid": "0YVU7tDBX86u6UVVsSmdwD",
+              "ifc_type": "IfcStair"
+            }
+          ],
           "required_guids": [
             "0YVU7tDBX86u6UVVsSmdwD"
           ],
-          "guid_strategy": "single"
+          "extraction_element": [
+            "IfcStair"
+          ]
         },
         {
           "topic_id": "69a98fd8-fb46-4ecf-a39d-6480d0881209",
@@ -67,10 +92,18 @@
           "all_guids": [
             "3LF03GdXv2GhSTK1xTZzXh"
           ],
+          "all_guids_enriched": [
+            {
+              "guid": "3LF03GdXv2GhSTK1xTZzXh",
+              "ifc_type": "IfcStair"
+            }
+          ],
           "required_guids": [
             "3LF03GdXv2GhSTK1xTZzXh"
           ],
-          "guid_strategy": "single"
+          "extraction_element": [
+            "IfcStair"
+          ]
         }
       ]
     },
@@ -90,11 +123,22 @@
             "0YVU7tDBX86u6UVVsSmdx$",
             "23Np8uMAvEN9H6Ds49deXD"
           ],
-          "required_guids": [
-            "0YVU7tDBX86u6UVVsSmdx$",
-            "23Np8uMAvEN9H6Ds49deXD"
+          "all_guids_enriched": [
+            {
+              "guid": "0YVU7tDBX86u6UVVsSmdx$",
+              "ifc_type": "IfcStair"
+            },
+            {
+              "guid": "23Np8uMAvEN9H6Ds49deXD",
+              "ifc_type": "IfcSlab"
+            }
           ],
-          "guid_strategy": "single"
+          "required_guids": [
+            "0YVU7tDBX86u6UVVsSmdx$"
+          ],
+          "extraction_element": [
+            "IfcStair"
+          ]
         },
         {
           "topic_id": "c699791b-7821-4db9-92b2-7e6e5b3d9bc0",
@@ -104,11 +148,22 @@
             "23Np8uMAvEN9H6Ds49deXD",
             "3LF03GdXv2GhSTK1xTZzXx"
           ],
+          "all_guids_enriched": [
+            {
+              "guid": "23Np8uMAvEN9H6Ds49deXD",
+              "ifc_type": "IfcSlab"
+            },
+            {
+              "guid": "3LF03GdXv2GhSTK1xTZzXx",
+              "ifc_type": "IfcStair"
+            }
+          ],
           "required_guids": [
-            "23Np8uMAvEN9H6Ds49deXD",
             "3LF03GdXv2GhSTK1xTZzXx"
           ],
-          "guid_strategy": "single"
+          "extraction_element": [
+            "IfcStair"
+          ]
         }
       ]
     },
@@ -128,10 +183,22 @@
             "3LF03GdXv2GhSTK1xTZzYt",
             "3LJODRGPbDdfXHXShFLBhv"
           ],
+          "all_guids_enriched": [
+            {
+              "guid": "3LF03GdXv2GhSTK1xTZzYt",
+              "ifc_type": "IfcDoor"
+            },
+            {
+              "guid": "3LJODRGPbDdfXHXShFLBhv",
+              "ifc_type": "IfcSlab"
+            }
+          ],
           "required_guids": [
             "3LF03GdXv2GhSTK1xTZzYt"
           ],
-          "guid_strategy": "primary_and_cause"
+          "extraction_element": [
+            "IfcDoor"
+          ]
         },
         {
           "topic_id": "4bb89281-3fe2-4cfc-9f2b-cd9e5c99f1cf",
@@ -141,10 +208,22 @@
             "3LF03GdXv2GhSTK1xTZzXF",
             "3LJODRGPbDdfXHXShFLBhv"
           ],
+          "all_guids_enriched": [
+            {
+              "guid": "3LF03GdXv2GhSTK1xTZzXF",
+              "ifc_type": "IfcDoor"
+            },
+            {
+              "guid": "3LJODRGPbDdfXHXShFLBhv",
+              "ifc_type": "IfcSlab"
+            }
+          ],
           "required_guids": [
             "3LF03GdXv2GhSTK1xTZzXF"
           ],
-          "guid_strategy": "primary_and_cause"
+          "extraction_element": [
+            "IfcDoor"
+          ]
         },
         {
           "topic_id": "6eb39146-03e6-4437-93df-16aae504abf7",
@@ -154,10 +233,22 @@
             "0YVU7tDBX86u6UVVsSmdsz",
             "3LJODRGPbDdfXHXShFLBXo"
           ],
+          "all_guids_enriched": [
+            {
+              "guid": "0YVU7tDBX86u6UVVsSmdsz",
+              "ifc_type": "IfcDoor"
+            },
+            {
+              "guid": "3LJODRGPbDdfXHXShFLBXo",
+              "ifc_type": "IfcSlab"
+            }
+          ],
           "required_guids": [
             "0YVU7tDBX86u6UVVsSmdsz"
           ],
-          "guid_strategy": "primary_and_cause"
+          "extraction_element": [
+            "IfcDoor"
+          ]
         },
         {
           "topic_id": "b030fc94-8e73-4780-a496-7c6149021148",
@@ -167,10 +258,22 @@
             "0YVU7tDBX86u6UVVsSmdwl",
             "3LJODRGPbDdfXHXShFLBXo"
           ],
+          "all_guids_enriched": [
+            {
+              "guid": "0YVU7tDBX86u6UVVsSmdwl",
+              "ifc_type": "IfcDoor"
+            },
+            {
+              "guid": "3LJODRGPbDdfXHXShFLBXo",
+              "ifc_type": "IfcSlab"
+            }
+          ],
           "required_guids": [
             "0YVU7tDBX86u6UVVsSmdwl"
           ],
-          "guid_strategy": "primary_and_cause"
+          "extraction_element": [
+            "IfcDoor"
+          ]
         },
         {
           "topic_id": "c475e5bc-7dae-45bf-8d5d-e0cd255174b8",
@@ -181,10 +284,26 @@
             "3LJODRGPbDdfXHXShFLAxF",
             "3LJODRGPbDdfXHXShFLBb7"
           ],
+          "all_guids_enriched": [
+            {
+              "guid": "3LJODRGPbDdfXHXShFLASv",
+              "ifc_type": "IfcDoor"
+            },
+            {
+              "guid": "3LJODRGPbDdfXHXShFLAxF",
+              "ifc_type": "IfcSlab"
+            },
+            {
+              "guid": "3LJODRGPbDdfXHXShFLBb7",
+              "ifc_type": "IfcSlab"
+            }
+          ],
           "required_guids": [
             "3LJODRGPbDdfXHXShFLASv"
           ],
-          "guid_strategy": "primary_and_cause"
+          "extraction_element": [
+            "IfcDoor"
+          ]
         },
         {
           "topic_id": "ea44ab83-f60d-48de-a880-7201238004cd",
@@ -195,10 +314,26 @@
             "3LJODRGPbDdfXHXShFLAxF",
             "3LJODRGPbDdfXHXShFLBWf"
           ],
+          "all_guids_enriched": [
+            {
+              "guid": "3LJODRGPbDdfXHXShFLAS$",
+              "ifc_type": "IfcDoor"
+            },
+            {
+              "guid": "3LJODRGPbDdfXHXShFLAxF",
+              "ifc_type": "IfcSlab"
+            },
+            {
+              "guid": "3LJODRGPbDdfXHXShFLBWf",
+              "ifc_type": "IfcSlab"
+            }
+          ],
           "required_guids": [
             "3LJODRGPbDdfXHXShFLAS$"
           ],
-          "guid_strategy": "primary_and_cause"
+          "extraction_element": [
+            "IfcDoor"
+          ]
         }
       ]
     },
@@ -217,10 +352,18 @@
           "all_guids": [
             "3DCde23Rb8uBrhrJgjcLQ2"
           ],
+          "all_guids_enriched": [
+            {
+              "guid": "3DCde23Rb8uBrhrJgjcLQ2",
+              "ifc_type": "IfcSpace"
+            }
+          ],
           "required_guids": [
             "3DCde23Rb8uBrhrJgjcLQ2"
           ],
-          "guid_strategy": "single"
+          "extraction_element": [
+            "IfcSpace"
+          ]
         },
         {
           "topic_id": "a56147be-641f-4cc1-8525-c03f4d87f7a4",
@@ -229,10 +372,18 @@
           "all_guids": [
             "3DCde23Rb8uBrhrJgjcLQU"
           ],
+          "all_guids_enriched": [
+            {
+              "guid": "3DCde23Rb8uBrhrJgjcLQU",
+              "ifc_type": "IfcSpace"
+            }
+          ],
           "required_guids": [
             "3DCde23Rb8uBrhrJgjcLQU"
           ],
-          "guid_strategy": "single"
+          "extraction_element": [
+            "IfcSpace"
+          ]
         },
         {
           "topic_id": "658f7e6c-2650-4812-80fb-38aa3f3acb0d",
@@ -241,10 +392,18 @@
           "all_guids": [
             "3DCde23Rb8uBrhrJgjcLQ6"
           ],
+          "all_guids_enriched": [
+            {
+              "guid": "3DCde23Rb8uBrhrJgjcLQ6",
+              "ifc_type": "IfcSpace"
+            }
+          ],
           "required_guids": [
             "3DCde23Rb8uBrhrJgjcLQ6"
           ],
-          "guid_strategy": "single"
+          "extraction_element": [
+            "IfcSpace"
+          ]
         },
         {
           "topic_id": "b2fcdaea-992b-4cad-9000-bc60da45dbb7",
@@ -253,10 +412,18 @@
           "all_guids": [
             "3DCde23Rb8uBrhrJgjcLQ3"
           ],
+          "all_guids_enriched": [
+            {
+              "guid": "3DCde23Rb8uBrhrJgjcLQ3",
+              "ifc_type": "IfcSpace"
+            }
+          ],
           "required_guids": [
             "3DCde23Rb8uBrhrJgjcLQ3"
           ],
-          "guid_strategy": "single"
+          "extraction_element": [
+            "IfcSpace"
+          ]
         },
         {
           "topic_id": "f53e5236-b494-4799-9e72-73e0e629cc7d",
@@ -265,10 +432,18 @@
           "all_guids": [
             "3DCde23Rb8uBrhrJgjcLQ0"
           ],
+          "all_guids_enriched": [
+            {
+              "guid": "3DCde23Rb8uBrhrJgjcLQ0",
+              "ifc_type": "IfcSpace"
+            }
+          ],
           "required_guids": [
             "3DCde23Rb8uBrhrJgjcLQ0"
           ],
-          "guid_strategy": "single"
+          "extraction_element": [
+            "IfcSpace"
+          ]
         },
         {
           "topic_id": "79eb7990-7c92-48e3-8f15-2a465f236cbc",
@@ -277,10 +452,18 @@
           "all_guids": [
             "1aFRCtje92oh3_jKdNxTM3"
           ],
+          "all_guids_enriched": [
+            {
+              "guid": "1aFRCtje92oh3_jKdNxTM3",
+              "ifc_type": "IfcSpace"
+            }
+          ],
           "required_guids": [
             "1aFRCtje92oh3_jKdNxTM3"
           ],
-          "guid_strategy": "single"
+          "extraction_element": [
+            "IfcSpace"
+          ]
         },
         {
           "topic_id": "23619426-b86c-4c7f-ba42-e153725190bb",
@@ -289,10 +472,18 @@
           "all_guids": [
             "1aFRCtje92oh3_jKdNxTMU"
           ],
+          "all_guids_enriched": [
+            {
+              "guid": "1aFRCtje92oh3_jKdNxTMU",
+              "ifc_type": "IfcSpace"
+            }
+          ],
           "required_guids": [
             "1aFRCtje92oh3_jKdNxTMU"
           ],
-          "guid_strategy": "single"
+          "extraction_element": [
+            "IfcSpace"
+          ]
         },
         {
           "topic_id": "81e83d66-d417-4409-a21b-ae8af5c31ada",
@@ -301,10 +492,18 @@
           "all_guids": [
             "1aFRCtje92oh3_jKdNxTMQ"
           ],
+          "all_guids_enriched": [
+            {
+              "guid": "1aFRCtje92oh3_jKdNxTMQ",
+              "ifc_type": "IfcSpace"
+            }
+          ],
           "required_guids": [
             "1aFRCtje92oh3_jKdNxTMQ"
           ],
-          "guid_strategy": "single"
+          "extraction_element": [
+            "IfcSpace"
+          ]
         },
         {
           "topic_id": "7ff0e915-aafa-4062-9fdb-eb34d53bd013",
@@ -313,10 +512,18 @@
           "all_guids": [
             "3DbdJyICv8GP1HEYzu7WjX"
           ],
+          "all_guids_enriched": [
+            {
+              "guid": "3DbdJyICv8GP1HEYzu7WjX",
+              "ifc_type": "IfcSpace"
+            }
+          ],
           "required_guids": [
             "3DbdJyICv8GP1HEYzu7WjX"
           ],
-          "guid_strategy": "single"
+          "extraction_element": [
+            "IfcSpace"
+          ]
         },
         {
           "topic_id": "74e03264-5f5d-46c9-a0af-4b2c7d5867f4",
@@ -325,10 +532,18 @@
           "all_guids": [
             "3DbdJyICv8GP1HEYzu7Wje"
           ],
+          "all_guids_enriched": [
+            {
+              "guid": "3DbdJyICv8GP1HEYzu7Wje",
+              "ifc_type": "IfcSpace"
+            }
+          ],
           "required_guids": [
             "3DbdJyICv8GP1HEYzu7Wje"
           ],
-          "guid_strategy": "single"
+          "extraction_element": [
+            "IfcSpace"
+          ]
         },
         {
           "topic_id": "7af88e5c-c123-450e-932d-1ae81e7541d8",
@@ -337,10 +552,18 @@
           "all_guids": [
             "3DbdJyICv8GP1HEYzu7WjQ"
           ],
+          "all_guids_enriched": [
+            {
+              "guid": "3DbdJyICv8GP1HEYzu7WjQ",
+              "ifc_type": "IfcSpace"
+            }
+          ],
           "required_guids": [
             "3DbdJyICv8GP1HEYzu7WjQ"
           ],
-          "guid_strategy": "single"
+          "extraction_element": [
+            "IfcSpace"
+          ]
         }
       ]
     },
@@ -359,10 +582,18 @@
           "all_guids": [
             "3A8hY1UoD7JhnLeZeDyU2J"
           ],
+          "all_guids_enriched": [
+            {
+              "guid": "3A8hY1UoD7JhnLeZeDyU2J",
+              "ifc_type": "IfcSlab"
+            }
+          ],
           "required_guids": [
             "3A8hY1UoD7JhnLeZeDyU2J"
           ],
-          "guid_strategy": "multiple"
+          "extraction_element": [
+            "IfcSlab"
+          ]
         },
         {
           "topic_id": "aabe6aa4-649d-4e0d-b339-9ff29d4c43c2",
@@ -372,11 +603,23 @@
             "3LJODRGPbDdfXHXShFL93Z",
             "3LJODRGPbDdfXHXShFL9C6"
           ],
+          "all_guids_enriched": [
+            {
+              "guid": "3LJODRGPbDdfXHXShFL93Z",
+              "ifc_type": "IfcSlab"
+            },
+            {
+              "guid": "3LJODRGPbDdfXHXShFL9C6",
+              "ifc_type": "IfcSlab"
+            }
+          ],
           "required_guids": [
             "3LJODRGPbDdfXHXShFL93Z",
             "3LJODRGPbDdfXHXShFL9C6"
           ],
-          "guid_strategy": "multiple"
+          "extraction_element": [
+            "IfcSlab"
+          ]
         }
       ]
     },
@@ -411,26 +654,82 @@
             "23Np8uMAvEN9H6Ds49dhzi",
             "3BmeJtEDj3AQO77Os2w6ld"
           ],
+          "all_guids_enriched": [
+            {
+              "guid": "12bPoIwbv0tBGfPfnvCUW2",
+              "ifc_type": "IfcWall"
+            },
+            {
+              "guid": "12bPoIwbv0tBGfPfnvCUYu",
+              "ifc_type": "IfcWall"
+            },
+            {
+              "guid": "12bPoIwbv0tBGfPfnvCUau",
+              "ifc_type": "IfcWall"
+            },
+            {
+              "guid": "12bPoIwbv0tBGfPfnvCUc2",
+              "ifc_type": "IfcWall"
+            },
+            {
+              "guid": "23Np8uMAvEN9H6Ds49de1S",
+              "ifc_type": "IfcWall"
+            },
+            {
+              "guid": "23Np8uMAvEN9H6Ds49de3t",
+              "ifc_type": "IfcWall"
+            },
+            {
+              "guid": "23Np8uMAvEN9H6Ds49de4U",
+              "ifc_type": "IfcWall"
+            },
+            {
+              "guid": "23Np8uMAvEN9H6Ds49de77",
+              "ifc_type": "IfcWall"
+            },
+            {
+              "guid": "23Np8uMAvEN9H6Ds49dh$Z",
+              "ifc_type": "IfcWall"
+            },
+            {
+              "guid": "23Np8uMAvEN9H6Ds49dh_f",
+              "ifc_type": "IfcWall"
+            },
+            {
+              "guid": "23Np8uMAvEN9H6Ds49dhvA",
+              "ifc_type": "IfcWall"
+            },
+            {
+              "guid": "23Np8uMAvEN9H6Ds49dhvb",
+              "ifc_type": "IfcWall"
+            },
+            {
+              "guid": "23Np8uMAvEN9H6Ds49dhw1",
+              "ifc_type": "IfcWall"
+            },
+            {
+              "guid": "23Np8uMAvEN9H6Ds49dhxn",
+              "ifc_type": "IfcWall"
+            },
+            {
+              "guid": "23Np8uMAvEN9H6Ds49dhyz",
+              "ifc_type": "IfcWall"
+            },
+            {
+              "guid": "23Np8uMAvEN9H6Ds49dhzi",
+              "ifc_type": "IfcWall"
+            },
+            {
+              "guid": "3BmeJtEDj3AQO77Os2w6ld",
+              "ifc_type": "IfcSlab"
+            }
+          ],
           "required_guids": [
-            "12bPoIwbv0tBGfPfnvCUW2",
-            "12bPoIwbv0tBGfPfnvCUYu",
-            "12bPoIwbv0tBGfPfnvCUau",
-            "12bPoIwbv0tBGfPfnvCUc2",
-            "23Np8uMAvEN9H6Ds49de1S",
-            "23Np8uMAvEN9H6Ds49de3t",
-            "23Np8uMAvEN9H6Ds49de4U",
-            "23Np8uMAvEN9H6Ds49de77",
-            "23Np8uMAvEN9H6Ds49dh$Z",
-            "23Np8uMAvEN9H6Ds49dh_f",
-            "23Np8uMAvEN9H6Ds49dhvA",
-            "23Np8uMAvEN9H6Ds49dhvb",
-            "23Np8uMAvEN9H6Ds49dhw1",
-            "23Np8uMAvEN9H6Ds49dhxn",
-            "23Np8uMAvEN9H6Ds49dhyz",
-            "23Np8uMAvEN9H6Ds49dhzi",
             "3BmeJtEDj3AQO77Os2w6ld"
           ],
-          "guid_strategy": "single"
+          "extraction_element": [
+            "IfcSlab"
+          ]
         }
       ]
     },
@@ -464,10 +763,78 @@
             "3DbdJyICv8GP1HEYzu7WjQ",
             "3LJODRGPbDdfXHXShFLAxF"
           ],
+          "all_guids_enriched": [
+            {
+              "guid": "0CWDnGbzX4Sf1BesL9Tj4o",
+              "ifc_type": "IfcRoof"
+            },
+            {
+              "guid": "23Np8uMAvEN9H6Ds49dhvA",
+              "ifc_type": "IfcWall"
+            },
+            {
+              "guid": "23Np8uMAvEN9H6Ds49dhvb",
+              "ifc_type": "IfcWall"
+            },
+            {
+              "guid": "23Np8uMAvEN9H6Ds49dhw1",
+              "ifc_type": "IfcWall"
+            },
+            {
+              "guid": "23Np8uMAvEN9H6Ds49dhzi",
+              "ifc_type": "IfcWall"
+            },
+            {
+              "guid": "3BmeJtEDj3AQO77Os2w6fK",
+              "ifc_type": "IfcColumn"
+            },
+            {
+              "guid": "3BmeJtEDj3AQO77Os2w6fM",
+              "ifc_type": "IfcColumn"
+            },
+            {
+              "guid": "3BmeJtEDj3AQO77Os2w6fW",
+              "ifc_type": "IfcColumn"
+            },
+            {
+              "guid": "3BmeJtEDj3AQO77Os2w6fY",
+              "ifc_type": "IfcColumn"
+            },
+            {
+              "guid": "3BmeJtEDj3AQO77Os2w6fe",
+              "ifc_type": "IfcColumn"
+            },
+            {
+              "guid": "3BmeJtEDj3AQO77Os2w6fg",
+              "ifc_type": "IfcColumn"
+            },
+            {
+              "guid": "3BmeJtEDj3AQO77Os2w6fi",
+              "ifc_type": "IfcColumn"
+            },
+            {
+              "guid": "3BmeJtEDj3AQO77Os2w6fk",
+              "ifc_type": "IfcColumn"
+            },
+            {
+              "guid": "3BmeJtEDj3AQO77Os2w6ld",
+              "ifc_type": "IfcSlab"
+            },
+            {
+              "guid": "3DbdJyICv8GP1HEYzu7WjQ",
+              "ifc_type": "IfcSpace"
+            },
+            {
+              "guid": "3LJODRGPbDdfXHXShFLAxF",
+              "ifc_type": "IfcSlab"
+            }
+          ],
           "required_guids": [
             "3DbdJyICv8GP1HEYzu7WjQ"
           ],
-          "guid_strategy": "element"
+          "extraction_element": [
+            "IfcSpace"
+          ]
         },
         {
           "topic_id": "3f5c59b4-41bf-4e50-9d6e-234ead8a53eb",
@@ -480,10 +847,34 @@
             "3DCde23Rb8uBrhrJgjcLQr",
             "3LJODRGPbDdfXHXShFLBXo"
           ],
+          "all_guids_enriched": [
+            {
+              "guid": "0YVU7tDBX86u6UVVsSmdw3",
+              "ifc_type": "IfcSlab"
+            },
+            {
+              "guid": "0YVU7tDBX86u6UVVsSmdwD",
+              "ifc_type": "IfcStair"
+            },
+            {
+              "guid": "3BmeJtEDj3AQO77Os2w6ZR",
+              "ifc_type": "IfcSlab"
+            },
+            {
+              "guid": "3DCde23Rb8uBrhrJgjcLQr",
+              "ifc_type": "IfcSpace"
+            },
+            {
+              "guid": "3LJODRGPbDdfXHXShFLBXo",
+              "ifc_type": "IfcSlab"
+            }
+          ],
           "required_guids": [
             "3DCde23Rb8uBrhrJgjcLQr"
           ],
-          "guid_strategy": "element"
+          "extraction_element": [
+            "IfcSpace"
+          ]
         },
         {
           "topic_id": "6f386219-2c14-4339-a122-7138752373ec",
@@ -496,10 +887,34 @@
             "3LF03GdXv2GhSTK1xTZzXh",
             "3LJODRGPbDdfXHXShFLBhv"
           ],
+          "all_guids_enriched": [
+            {
+              "guid": "3BmeJtEDj3AQO77Os2w6ZR",
+              "ifc_type": "IfcSlab"
+            },
+            {
+              "guid": "3DCde23Rb8uBrhrJgjcLQE",
+              "ifc_type": "IfcSpace"
+            },
+            {
+              "guid": "3LF03GdXv2GhSTK1xTZzXT",
+              "ifc_type": "IfcSlab"
+            },
+            {
+              "guid": "3LF03GdXv2GhSTK1xTZzXh",
+              "ifc_type": "IfcStair"
+            },
+            {
+              "guid": "3LJODRGPbDdfXHXShFLBhv",
+              "ifc_type": "IfcSlab"
+            }
+          ],
           "required_guids": [
             "3DCde23Rb8uBrhrJgjcLQE"
           ],
-          "guid_strategy": "element"
+          "extraction_element": [
+            "IfcSpace"
+          ]
         },
         {
           "topic_id": "c46e54cf-7d66-4158-825d-5f64009faea5",
@@ -512,10 +927,34 @@
             "3LF03GdXv2GhSTK1xTZzjL",
             "3LF03GdXv2GhSTK1xTZzjV"
           ],
+          "all_guids_enriched": [
+            {
+              "guid": "12bPoIwbv0tBGfPfnvCUq4",
+              "ifc_type": "IfcWall"
+            },
+            {
+              "guid": "3BmeJtEDj3AQO77Os2w6ZR",
+              "ifc_type": "IfcSlab"
+            },
+            {
+              "guid": "3DCde23Rb8uBrhrJgjcLQU",
+              "ifc_type": "IfcSpace"
+            },
+            {
+              "guid": "3LF03GdXv2GhSTK1xTZzjL",
+              "ifc_type": "IfcStair"
+            },
+            {
+              "guid": "3LF03GdXv2GhSTK1xTZzjV",
+              "ifc_type": "IfcSlab"
+            }
+          ],
           "required_guids": [
             "3DCde23Rb8uBrhrJgjcLQU"
           ],
-          "guid_strategy": "element"
+          "extraction_element": [
+            "IfcSpace"
+          ]
         },
         {
           "topic_id": "ee7119f6-a9a5-45b4-8719-93fac2656aa9",
@@ -527,10 +966,30 @@
             "1aFRCtje92oh3_jKdNxTMP",
             "3LJODRGPbDdfXHXShFL8tL"
           ],
+          "all_guids_enriched": [
+            {
+              "guid": "0YVU7tDBX86u6UVVsSmdx$",
+              "ifc_type": "IfcStair"
+            },
+            {
+              "guid": "0YVU7tDBX86u6UVVsSmdxr",
+              "ifc_type": "IfcSlab"
+            },
+            {
+              "guid": "1aFRCtje92oh3_jKdNxTMP",
+              "ifc_type": "IfcSpace"
+            },
+            {
+              "guid": "3LJODRGPbDdfXHXShFL8tL",
+              "ifc_type": "IfcSlab"
+            }
+          ],
           "required_guids": [
             "1aFRCtje92oh3_jKdNxTMP"
           ],
-          "guid_strategy": "element"
+          "extraction_element": [
+            "IfcSpace"
+          ]
         },
         {
           "topic_id": "c1b468dc-dab1-4f17-ace2-8a5cd849d497",
@@ -542,10 +1001,30 @@
             "3LF03GdXv2GhSTK1xTZzXx",
             "3LJODRGPbDdfXHXShFL8tL"
           ],
+          "all_guids_enriched": [
+            {
+              "guid": "1aFRCtje92oh3_jKdNxTMR",
+              "ifc_type": "IfcSpace"
+            },
+            {
+              "guid": "3LF03GdXv2GhSTK1xTZzXj",
+              "ifc_type": "IfcSlab"
+            },
+            {
+              "guid": "3LF03GdXv2GhSTK1xTZzXx",
+              "ifc_type": "IfcStair"
+            },
+            {
+              "guid": "3LJODRGPbDdfXHXShFL8tL",
+              "ifc_type": "IfcSlab"
+            }
+          ],
           "required_guids": [
             "1aFRCtje92oh3_jKdNxTMR"
           ],
-          "guid_strategy": "element"
+          "extraction_element": [
+            "IfcSpace"
+          ]
         },
         {
           "topic_id": "bcc534fa-ee2c-40cd-9ea9-68b7ba9c2fad",
@@ -555,10 +1034,22 @@
             "3DbdJyICv8GP1HEYzu7Wjo",
             "3LJODRGPbDdfXHXShFLBb7"
           ],
+          "all_guids_enriched": [
+            {
+              "guid": "3DbdJyICv8GP1HEYzu7Wjo",
+              "ifc_type": "IfcSpace"
+            },
+            {
+              "guid": "3LJODRGPbDdfXHXShFLBb7",
+              "ifc_type": "IfcSlab"
+            }
+          ],
           "required_guids": [
             "3DbdJyICv8GP1HEYzu7Wjo"
           ],
-          "guid_strategy": "element"
+          "extraction_element": [
+            "IfcSpace"
+          ]
         },
         {
           "topic_id": "5e094567-876e-40c7-8395-9758a264c866",
@@ -568,10 +1059,22 @@
             "3DbdJyICv8GP1HEYzu7WjO",
             "3LJODRGPbDdfXHXShFLBWf"
           ],
+          "all_guids_enriched": [
+            {
+              "guid": "3DbdJyICv8GP1HEYzu7WjO",
+              "ifc_type": "IfcSpace"
+            },
+            {
+              "guid": "3LJODRGPbDdfXHXShFLBWf",
+              "ifc_type": "IfcSlab"
+            }
+          ],
           "required_guids": [
             "3DbdJyICv8GP1HEYzu7WjO"
           ],
-          "guid_strategy": "element"
+          "extraction_element": [
+            "IfcSpace"
+          ]
         },
         {
           "topic_id": "b71fcfc1-2d5e-4b05-96f2-9e8b75f657d4",
@@ -582,10 +1085,26 @@
             "3DCde23Rb8uBrhrJgjcLQV",
             "3QqcDduqPAKPdXx7VmKQHt"
           ],
+          "all_guids_enriched": [
+            {
+              "guid": "1f8xgw5JXATObUegeSYZe0",
+              "ifc_type": "IfcWall"
+            },
+            {
+              "guid": "3DCde23Rb8uBrhrJgjcLQV",
+              "ifc_type": "IfcSpace"
+            },
+            {
+              "guid": "3QqcDduqPAKPdXx7VmKQHt",
+              "ifc_type": "IfcWall"
+            }
+          ],
           "required_guids": [
             "3DCde23Rb8uBrhrJgjcLQV"
           ],
-          "guid_strategy": "element"
+          "extraction_element": [
+            "IfcSpace"
+          ]
         },
         {
           "topic_id": "85978cc7-5bf0-4cde-815b-f93ae38c0280",
@@ -596,10 +1115,26 @@
             "1f8xgw5JXATObUegeSYdES",
             "3DCde23Rb8uBrhrJgjcLQQ"
           ],
+          "all_guids_enriched": [
+            {
+              "guid": "1f8xgw5JXATObUegeSYZBU",
+              "ifc_type": "IfcWall"
+            },
+            {
+              "guid": "1f8xgw5JXATObUegeSYdES",
+              "ifc_type": "IfcWall"
+            },
+            {
+              "guid": "3DCde23Rb8uBrhrJgjcLQQ",
+              "ifc_type": "IfcSpace"
+            }
+          ],
           "required_guids": [
             "3DCde23Rb8uBrhrJgjcLQQ"
           ],
-          "guid_strategy": "element"
+          "extraction_element": [
+            "IfcSpace"
+          ]
         }
       ]
     },
@@ -619,10 +1154,22 @@
             "3DCde23Rb8uBrhrJgjcLQS",
             "3QqcDduqPAKPdXx7VmKQJ3"
           ],
+          "all_guids_enriched": [
+            {
+              "guid": "3DCde23Rb8uBrhrJgjcLQS",
+              "ifc_type": "IfcSpace"
+            },
+            {
+              "guid": "3QqcDduqPAKPdXx7VmKQJ3",
+              "ifc_type": "IfcWall"
+            }
+          ],
           "required_guids": [
             "3DCde23Rb8uBrhrJgjcLQS"
           ],
-          "guid_strategy": "element"
+          "extraction_element": [
+            "IfcSpace"
+          ]
         },
         {
           "topic_id": "44682ec8-628d-41c0-98e4-be33693831d4",
@@ -632,10 +1179,22 @@
             "1f8xgw5JXATObUegeSYdTC",
             "3DCde23Rb8uBrhrJgjcLQT"
           ],
+          "all_guids_enriched": [
+            {
+              "guid": "1f8xgw5JXATObUegeSYdTC",
+              "ifc_type": "IfcWall"
+            },
+            {
+              "guid": "3DCde23Rb8uBrhrJgjcLQT",
+              "ifc_type": "IfcSpace"
+            }
+          ],
           "required_guids": [
             "3DCde23Rb8uBrhrJgjcLQT"
           ],
-          "guid_strategy": "element"
+          "extraction_element": [
+            "IfcSpace"
+          ]
         },
         {
           "topic_id": "1edd9e23-d9fa-45e5-a272-89a99cbec84a",
@@ -646,10 +1205,26 @@
             "1DnXIsP9rDi8TggM6J4GnJ",
             "3DbdJyICv8GP1HEYzu7Wjj"
           ],
+          "all_guids_enriched": [
+            {
+              "guid": "1DnXIsP9rDi8TggM6J4Ggf",
+              "ifc_type": "IfcWall"
+            },
+            {
+              "guid": "1DnXIsP9rDi8TggM6J4GnJ",
+              "ifc_type": "IfcWall"
+            },
+            {
+              "guid": "3DbdJyICv8GP1HEYzu7Wjj",
+              "ifc_type": "IfcSpace"
+            }
+          ],
           "required_guids": [
             "3DbdJyICv8GP1HEYzu7Wjj"
           ],
-          "guid_strategy": "element"
+          "extraction_element": [
+            "IfcSpace"
+          ]
         },
         {
           "topic_id": "e935e202-7812-4dbf-992e-a37cfa4acdda",
@@ -660,10 +1235,26 @@
             "1DnXIsP9rDi8TggM6J4GnJ",
             "3DbdJyICv8GP1HEYzu7Wjk"
           ],
+          "all_guids_enriched": [
+            {
+              "guid": "1DnXIsP9rDi8TggM6J4GiX",
+              "ifc_type": "IfcWall"
+            },
+            {
+              "guid": "1DnXIsP9rDi8TggM6J4GnJ",
+              "ifc_type": "IfcWall"
+            },
+            {
+              "guid": "3DbdJyICv8GP1HEYzu7Wjk",
+              "ifc_type": "IfcSpace"
+            }
+          ],
           "required_guids": [
             "3DbdJyICv8GP1HEYzu7Wjk"
           ],
-          "guid_strategy": "element"
+          "extraction_element": [
+            "IfcSpace"
+          ]
         },
         {
           "topic_id": "130162d5-d15f-45d2-a549-fb1a478fdc06",
@@ -674,10 +1265,26 @@
             "1DnXIsP9rDi8TggM6J4GJu",
             "3DbdJyICv8GP1HEYzu7WjJ"
           ],
+          "all_guids_enriched": [
+            {
+              "guid": "1DnXIsP9rDi8TggM6J4G3X",
+              "ifc_type": "IfcWall"
+            },
+            {
+              "guid": "1DnXIsP9rDi8TggM6J4GJu",
+              "ifc_type": "IfcWall"
+            },
+            {
+              "guid": "3DbdJyICv8GP1HEYzu7WjJ",
+              "ifc_type": "IfcSpace"
+            }
+          ],
           "required_guids": [
             "3DbdJyICv8GP1HEYzu7WjJ"
           ],
-          "guid_strategy": "element"
+          "extraction_element": [
+            "IfcSpace"
+          ]
         },
         {
           "topic_id": "37da61e4-5844-4689-966d-e571de86326c",
@@ -688,10 +1295,26 @@
             "1DnXIsP9rDi8TggM6J4GJu",
             "3DbdJyICv8GP1HEYzu7WjK"
           ],
+          "all_guids_enriched": [
+            {
+              "guid": "1DnXIsP9rDi8TggM6J4G7S",
+              "ifc_type": "IfcWall"
+            },
+            {
+              "guid": "1DnXIsP9rDi8TggM6J4GJu",
+              "ifc_type": "IfcWall"
+            },
+            {
+              "guid": "3DbdJyICv8GP1HEYzu7WjK",
+              "ifc_type": "IfcSpace"
+            }
+          ],
           "required_guids": [
             "3DbdJyICv8GP1HEYzu7WjK"
           ],
-          "guid_strategy": "element"
+          "extraction_element": [
+            "IfcSpace"
+          ]
         }
       ]
     },
@@ -735,6 +1358,112 @@
             "3DCde23Rb8uBrhrJgjcLQr",
             "3DbdJyICv8GP1HEYzu7WlY"
           ],
+          "all_guids_enriched": [
+            {
+              "guid": "3DCde23Rb8uBrhrJgjcLQ0",
+              "ifc_type": "IfcSpace"
+            },
+            {
+              "guid": "3DCde23Rb8uBrhrJgjcLQ1",
+              "ifc_type": "IfcSpace"
+            },
+            {
+              "guid": "3DCde23Rb8uBrhrJgjcLQ2",
+              "ifc_type": "IfcSpace"
+            },
+            {
+              "guid": "3DCde23Rb8uBrhrJgjcLQ3",
+              "ifc_type": "IfcSpace"
+            },
+            {
+              "guid": "3DCde23Rb8uBrhrJgjcLQ4",
+              "ifc_type": "IfcSpace"
+            },
+            {
+              "guid": "3DCde23Rb8uBrhrJgjcLQ5",
+              "ifc_type": "IfcSpace"
+            },
+            {
+              "guid": "3DCde23Rb8uBrhrJgjcLQ6",
+              "ifc_type": "IfcSpace"
+            },
+            {
+              "guid": "3DCde23Rb8uBrhrJgjcLQ7",
+              "ifc_type": "IfcSpace"
+            },
+            {
+              "guid": "3DCde23Rb8uBrhrJgjcLQ8",
+              "ifc_type": "IfcSpace"
+            },
+            {
+              "guid": "3DCde23Rb8uBrhrJgjcLQ9",
+              "ifc_type": "IfcSpace"
+            },
+            {
+              "guid": "3DCde23Rb8uBrhrJgjcLQA",
+              "ifc_type": "IfcSpace"
+            },
+            {
+              "guid": "3DCde23Rb8uBrhrJgjcLQB",
+              "ifc_type": "IfcSpace"
+            },
+            {
+              "guid": "3DCde23Rb8uBrhrJgjcLQC",
+              "ifc_type": "IfcSpace"
+            },
+            {
+              "guid": "3DCde23Rb8uBrhrJgjcLQD",
+              "ifc_type": "IfcSpace"
+            },
+            {
+              "guid": "3DCde23Rb8uBrhrJgjcLQE",
+              "ifc_type": "IfcSpace"
+            },
+            {
+              "guid": "3DCde23Rb8uBrhrJgjcLQF",
+              "ifc_type": "IfcSpace"
+            },
+            {
+              "guid": "3DCde23Rb8uBrhrJgjcLQQ",
+              "ifc_type": "IfcSpace"
+            },
+            {
+              "guid": "3DCde23Rb8uBrhrJgjcLQS",
+              "ifc_type": "IfcSpace"
+            },
+            {
+              "guid": "3DCde23Rb8uBrhrJgjcLQT",
+              "ifc_type": "IfcSpace"
+            },
+            {
+              "guid": "3DCde23Rb8uBrhrJgjcLQU",
+              "ifc_type": "IfcSpace"
+            },
+            {
+              "guid": "3DCde23Rb8uBrhrJgjcLQV",
+              "ifc_type": "IfcSpace"
+            },
+            {
+              "guid": "3DCde23Rb8uBrhrJgjcLQm",
+              "ifc_type": "IfcSpace"
+            },
+            {
+              "guid": "3DCde23Rb8uBrhrJgjcLQn",
+              "ifc_type": "IfcSpace"
+            },
+            {
+              "guid": "3DCde23Rb8uBrhrJgjcLQo",
+              "ifc_type": "IfcSpace"
+            },
+            {
+              "guid": "3DCde23Rb8uBrhrJgjcLQr",
+              "ifc_type": "IfcSpace"
+            },
+            {
+              "guid": "3DbdJyICv8GP1HEYzu7WlY",
+              "ifc_type": "IfcSpace"
+            }
+          ],
           "required_guids": [
             "3DCde23Rb8uBrhrJgjcLQ0",
             "3DCde23Rb8uBrhrJgjcLQ1",
@@ -763,7 +1492,9 @@
             "3DCde23Rb8uBrhrJgjcLQr",
             "3DbdJyICv8GP1HEYzu7WlY"
           ],
-          "guid_strategy": "multiple"
+          "extraction_element": [
+            "IfcSpace"
+          ]
         },
         {
           "topic_id": "60543d81-396d-4c1b-a65c-a6fb236ec07a",
@@ -782,6 +1513,52 @@
             "1aFRCtje92oh3_jKdNxTMU",
             "1aFRCtje92oh3_jKdNxTMV"
           ],
+          "all_guids_enriched": [
+            {
+              "guid": "1aFRCtje92oh3_jKdNxTM0",
+              "ifc_type": "IfcSpace"
+            },
+            {
+              "guid": "1aFRCtje92oh3_jKdNxTM1",
+              "ifc_type": "IfcSpace"
+            },
+            {
+              "guid": "1aFRCtje92oh3_jKdNxTM2",
+              "ifc_type": "IfcSpace"
+            },
+            {
+              "guid": "1aFRCtje92oh3_jKdNxTM3",
+              "ifc_type": "IfcSpace"
+            },
+            {
+              "guid": "1aFRCtje92oh3_jKdNxTM4",
+              "ifc_type": "IfcSpace"
+            },
+            {
+              "guid": "1aFRCtje92oh3_jKdNxTMP",
+              "ifc_type": "IfcSpace"
+            },
+            {
+              "guid": "1aFRCtje92oh3_jKdNxTMQ",
+              "ifc_type": "IfcSpace"
+            },
+            {
+              "guid": "1aFRCtje92oh3_jKdNxTMR",
+              "ifc_type": "IfcSpace"
+            },
+            {
+              "guid": "1aFRCtje92oh3_jKdNxTMT",
+              "ifc_type": "IfcSpace"
+            },
+            {
+              "guid": "1aFRCtje92oh3_jKdNxTMU",
+              "ifc_type": "IfcSpace"
+            },
+            {
+              "guid": "1aFRCtje92oh3_jKdNxTMV",
+              "ifc_type": "IfcSpace"
+            }
+          ],
           "required_guids": [
             "1aFRCtje92oh3_jKdNxTM0",
             "1aFRCtje92oh3_jKdNxTM1",
@@ -795,7 +1572,9 @@
             "1aFRCtje92oh3_jKdNxTMU",
             "1aFRCtje92oh3_jKdNxTMV"
           ],
-          "guid_strategy": "multiple"
+          "extraction_element": [
+            "IfcSpace"
+          ]
         },
         {
           "topic_id": "ee6d6fd3-6687-4486-9906-018b6352fca5",
@@ -806,12 +1585,28 @@
             "3DbdJyICv8GP1HEYzu7WjQ",
             "3DbdJyICv8GP1HEYzu7Wjo"
           ],
+          "all_guids_enriched": [
+            {
+              "guid": "3DbdJyICv8GP1HEYzu7WjO",
+              "ifc_type": "IfcSpace"
+            },
+            {
+              "guid": "3DbdJyICv8GP1HEYzu7WjQ",
+              "ifc_type": "IfcSpace"
+            },
+            {
+              "guid": "3DbdJyICv8GP1HEYzu7Wjo",
+              "ifc_type": "IfcSpace"
+            }
+          ],
           "required_guids": [
             "3DbdJyICv8GP1HEYzu7WjO",
             "3DbdJyICv8GP1HEYzu7WjQ",
             "3DbdJyICv8GP1HEYzu7Wjo"
           ],
-          "guid_strategy": "multiple"
+          "extraction_element": [
+            "IfcSpace"
+          ]
         },
         {
           "topic_id": "45274f77-168f-4f37-9f9a-5071f40ff92f",
@@ -820,10 +1615,18 @@
           "all_guids": [
             "1aFRCtje92oh3_jKdNxTMS"
           ],
+          "all_guids_enriched": [
+            {
+              "guid": "1aFRCtje92oh3_jKdNxTMS",
+              "ifc_type": "IfcSpace"
+            }
+          ],
           "required_guids": [
             "1aFRCtje92oh3_jKdNxTMS"
           ],
-          "guid_strategy": "multiple"
+          "extraction_element": [
+            "IfcSpace"
+          ]
         },
         {
           "topic_id": "88614809-6c8e-4a0a-ac97-bf096c841956",
@@ -854,6 +1657,100 @@
             "3DbdJyICv8GP1HEYzu7Wjj",
             "3DbdJyICv8GP1HEYzu7Wjk"
           ],
+          "all_guids_enriched": [
+            {
+              "guid": "3DbdJyICv8GP1HEYzu7WjJ",
+              "ifc_type": "IfcSpace"
+            },
+            {
+              "guid": "3DbdJyICv8GP1HEYzu7WjK",
+              "ifc_type": "IfcSpace"
+            },
+            {
+              "guid": "3DbdJyICv8GP1HEYzu7WjP",
+              "ifc_type": "IfcSpace"
+            },
+            {
+              "guid": "3DbdJyICv8GP1HEYzu7WjR",
+              "ifc_type": "IfcSpace"
+            },
+            {
+              "guid": "3DbdJyICv8GP1HEYzu7WjS",
+              "ifc_type": "IfcSpace"
+            },
+            {
+              "guid": "3DbdJyICv8GP1HEYzu7WjT",
+              "ifc_type": "IfcSpace"
+            },
+            {
+              "guid": "3DbdJyICv8GP1HEYzu7WjU",
+              "ifc_type": "IfcSpace"
+            },
+            {
+              "guid": "3DbdJyICv8GP1HEYzu7WjV",
+              "ifc_type": "IfcSpace"
+            },
+            {
+              "guid": "3DbdJyICv8GP1HEYzu7WjW",
+              "ifc_type": "IfcSpace"
+            },
+            {
+              "guid": "3DbdJyICv8GP1HEYzu7WjX",
+              "ifc_type": "IfcSpace"
+            },
+            {
+              "guid": "3DbdJyICv8GP1HEYzu7WjY",
+              "ifc_type": "IfcSpace"
+            },
+            {
+              "guid": "3DbdJyICv8GP1HEYzu7WjZ",
+              "ifc_type": "IfcSpace"
+            },
+            {
+              "guid": "3DbdJyICv8GP1HEYzu7Wja",
+              "ifc_type": "IfcSpace"
+            },
+            {
+              "guid": "3DbdJyICv8GP1HEYzu7Wjb",
+              "ifc_type": "IfcSpace"
+            },
+            {
+              "guid": "3DbdJyICv8GP1HEYzu7Wjc",
+              "ifc_type": "IfcSpace"
+            },
+            {
+              "guid": "3DbdJyICv8GP1HEYzu7Wjd",
+              "ifc_type": "IfcSpace"
+            },
+            {
+              "guid": "3DbdJyICv8GP1HEYzu7Wje",
+              "ifc_type": "IfcSpace"
+            },
+            {
+              "guid": "3DbdJyICv8GP1HEYzu7Wjf",
+              "ifc_type": "IfcSpace"
+            },
+            {
+              "guid": "3DbdJyICv8GP1HEYzu7Wjg",
+              "ifc_type": "IfcSpace"
+            },
+            {
+              "guid": "3DbdJyICv8GP1HEYzu7Wjh",
+              "ifc_type": "IfcSpace"
+            },
+            {
+              "guid": "3DbdJyICv8GP1HEYzu7Wji",
+              "ifc_type": "IfcSpace"
+            },
+            {
+              "guid": "3DbdJyICv8GP1HEYzu7Wjj",
+              "ifc_type": "IfcSpace"
+            },
+            {
+              "guid": "3DbdJyICv8GP1HEYzu7Wjk",
+              "ifc_type": "IfcSpace"
+            }
+          ],
           "required_guids": [
             "3DbdJyICv8GP1HEYzu7WjJ",
             "3DbdJyICv8GP1HEYzu7WjK",
@@ -879,7 +1776,9 @@
             "3DbdJyICv8GP1HEYzu7Wjj",
             "3DbdJyICv8GP1HEYzu7Wjk"
           ],
-          "guid_strategy": "multiple"
+          "extraction_element": [
+            "IfcSpace"
+          ]
         }
       ]
     },
@@ -901,13 +1800,36 @@
             "3LF03GdXv2GhSTK1xTZzXC",
             "3LF03GdXv2GhSTK1xTZzXD"
           ],
+          "all_guids_enriched": [
+            {
+              "guid": "3LF03GdXv2GhSTK1xTZzX0",
+              "ifc_type": "IfcWall"
+            },
+            {
+              "guid": "3LF03GdXv2GhSTK1xTZzX3",
+              "ifc_type": "IfcWall"
+            },
+            {
+              "guid": "3LF03GdXv2GhSTK1xTZzXC",
+              "ifc_type": "IfcWall"
+            },
+            {
+              "guid": "3LF03GdXv2GhSTK1xTZzXD",
+              "ifc_type": "IfcWall"
+            }
+          ],
           "required_guids": [
             "3LF03GdXv2GhSTK1xTZzX0",
             "3LF03GdXv2GhSTK1xTZzX3",
             "3LF03GdXv2GhSTK1xTZzXC",
             "3LF03GdXv2GhSTK1xTZzXD"
           ],
-          "guid_strategy": "multiple"
+          "extraction_element": [
+            "IfcColumn",
+            "IfcCurtainWall",
+            "IfcWall",
+            "IfcWallStandardCase"
+          ]
         },
         {
           "topic_id": "3a7794ea-5be9-4471-9e38-dec047dc36e2",
@@ -919,13 +1841,36 @@
             "0YVU7tDBX86u6UVVsSmdwJ",
             "0YVU7tDBX86u6UVVsSmdwK"
           ],
+          "all_guids_enriched": [
+            {
+              "guid": "0YVU7tDBX86u6UVVsSmdwG",
+              "ifc_type": "IfcWall"
+            },
+            {
+              "guid": "0YVU7tDBX86u6UVVsSmdwH",
+              "ifc_type": "IfcWall"
+            },
+            {
+              "guid": "0YVU7tDBX86u6UVVsSmdwJ",
+              "ifc_type": "IfcWall"
+            },
+            {
+              "guid": "0YVU7tDBX86u6UVVsSmdwK",
+              "ifc_type": "IfcWall"
+            }
+          ],
           "required_guids": [
             "0YVU7tDBX86u6UVVsSmdwG",
             "0YVU7tDBX86u6UVVsSmdwH",
             "0YVU7tDBX86u6UVVsSmdwJ",
             "0YVU7tDBX86u6UVVsSmdwK"
           ],
-          "guid_strategy": "multiple"
+          "extraction_element": [
+            "IfcColumn",
+            "IfcCurtainWall",
+            "IfcWall",
+            "IfcWallStandardCase"
+          ]
         }
       ]
     },

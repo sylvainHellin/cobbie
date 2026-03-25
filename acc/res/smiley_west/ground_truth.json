@@ -1,9 +1,10 @@
 {
   "metadata": {
+    "model_name": "smiley_west",
+    "version": "v2",
     "total_topics": 122,
     "rules_count": 16,
-    "pass_rules_count": 11,
-    "model_name": "smiley_west"
+    "pass_rules_count": 11
   },
   "rules": {
     "305_3_size": {
@@ -23,10 +24,27 @@
             "0bJ1uLaIzFOvpvhkN$XOpn",
             "0qf1mmZjTBMRMW8ttJqleG"
           ],
-          "required_guids": [
-            "0TQkmcTzL0ZfxeqP2F29Ye"
+          "all_guids_enriched": [
+            {
+              "guid": "0TQkmcTzL0ZfxeqP2F29Ye",
+              "ifc_type": "IfcWallStandardCase"
+            },
+            {
+              "guid": "0bJ1uLaIzFOvpvhkN$XOpn",
+              "ifc_type": "IfcSpace"
+            },
+            {
+              "guid": "0qf1mmZjTBMRMW8ttJqleG",
+              "ifc_type": "IfcSpace"
+            }
           ],
-          "guid_strategy": "primary_and_cause"
+          "required_guids": [
+            "0bJ1uLaIzFOvpvhkN$XOpn",
+            "0qf1mmZjTBMRMW8ttJqleG"
+          ],
+          "extraction_element": [
+            "IfcSpace"
+          ]
         },
         {
           "topic_id": "fe33f278-4e7f-4ec7-9ff3-33f9d6fdfe2d",
@@ -37,10 +55,27 @@
             "0V95TNYbX1PfwH1RlgqMqt",
             "19AFpizAX06gIjmlbRQDfk"
           ],
-          "required_guids": [
-            "0S2gRn2gb1FQt9ZThjw2Ou"
+          "all_guids_enriched": [
+            {
+              "guid": "0S2gRn2gb1FQt9ZThjw2Ou",
+              "ifc_type": "IfcWallStandardCase"
+            },
+            {
+              "guid": "0V95TNYbX1PfwH1RlgqMqt",
+              "ifc_type": "IfcSpace"
+            },
+            {
+              "guid": "19AFpizAX06gIjmlbRQDfk",
+              "ifc_type": "IfcSpace"
+            }
           ],
-          "guid_strategy": "primary_and_cause"
+          "required_guids": [
+            "0V95TNYbX1PfwH1RlgqMqt",
+            "19AFpizAX06gIjmlbRQDfk"
+          ],
+          "extraction_element": [
+            "IfcSpace"
+          ]
         },
         {
           "topic_id": "223872f2-fe9b-4c2e-89ce-08e31564a02c",
@@ -51,10 +86,27 @@
             "2Uh4jhm8f4_vL1M3gaiGgj",
             "3B4IVY1mL1OB855TfGPpKl"
           ],
-          "required_guids": [
-            "06$jwnwYzB2xtme_3oKazV"
+          "all_guids_enriched": [
+            {
+              "guid": "06$jwnwYzB2xtme_3oKazV",
+              "ifc_type": "IfcWallStandardCase"
+            },
+            {
+              "guid": "2Uh4jhm8f4_vL1M3gaiGgj",
+              "ifc_type": "IfcSpace"
+            },
+            {
+              "guid": "3B4IVY1mL1OB855TfGPpKl",
+              "ifc_type": "IfcSpace"
+            }
           ],
-          "guid_strategy": "primary_and_cause"
+          "required_guids": [
+            "2Uh4jhm8f4_vL1M3gaiGgj",
+            "3B4IVY1mL1OB855TfGPpKl"
+          ],
+          "extraction_element": [
+            "IfcSpace"
+          ]
         },
         {
           "topic_id": "7e39845c-900f-4dd2-b364-cc60b542d9b1",
@@ -65,10 +117,27 @@
             "2tQbNfNw5ErBlIFlcWbE2S",
             "35yKaUayr2LPWpST3GOIZw"
           ],
-          "required_guids": [
-            "16_jQJDFf88RMg5oYNRe9p"
+          "all_guids_enriched": [
+            {
+              "guid": "16_jQJDFf88RMg5oYNRe9p",
+              "ifc_type": "IfcWallStandardCase"
+            },
+            {
+              "guid": "2tQbNfNw5ErBlIFlcWbE2S",
+              "ifc_type": "IfcSpace"
+            },
+            {
+              "guid": "35yKaUayr2LPWpST3GOIZw",
+              "ifc_type": "IfcSpace"
+            }
           ],
-          "guid_strategy": "primary_and_cause"
+          "required_guids": [
+            "2tQbNfNw5ErBlIFlcWbE2S",
+            "35yKaUayr2LPWpST3GOIZw"
+          ],
+          "extraction_element": [
+            "IfcSpace"
+          ]
         },
         {
           "topic_id": "8873c1de-923a-41bc-b7b6-b8248b9000f7",
@@ -79,10 +148,27 @@
             "2n8EbY$rj1RQ$ya9rrqSXX",
             "3wFJKTD698YPFAruMsPCGu"
           ],
-          "required_guids": [
-            "1kXAW24bT8ehxAhZCgepH3"
+          "all_guids_enriched": [
+            {
+              "guid": "1kXAW24bT8ehxAhZCgepH3",
+              "ifc_type": "IfcSpace"
+            },
+            {
+              "guid": "2n8EbY$rj1RQ$ya9rrqSXX",
+              "ifc_type": "IfcSpace"
+            },
+            {
+              "guid": "3wFJKTD698YPFAruMsPCGu",
+              "ifc_type": "IfcWallStandardCase"
+            }
           ],
-          "guid_strategy": "primary_and_cause"
+          "required_guids": [
+            "1kXAW24bT8ehxAhZCgepH3",
+            "2n8EbY$rj1RQ$ya9rrqSXX"
+          ],
+          "extraction_element": [
+            "IfcSpace"
+          ]
         },
         {
           "topic_id": "527d454f-106f-4898-a8ad-15e6cd862629",
@@ -93,10 +179,27 @@
             "111K32PabEKu1rIfxbAEPD",
             "1dFkzi10v3yRLoKy5ClqDV"
           ],
-          "required_guids": [
-            "0wX3Bl_XTAJ8lER5kq87y0"
+          "all_guids_enriched": [
+            {
+              "guid": "0wX3Bl_XTAJ8lER5kq87y0",
+              "ifc_type": "IfcSpace"
+            },
+            {
+              "guid": "111K32PabEKu1rIfxbAEPD",
+              "ifc_type": "IfcWallStandardCase"
+            },
+            {
+              "guid": "1dFkzi10v3yRLoKy5ClqDV",
+              "ifc_type": "IfcSpace"
+            }
           ],
-          "guid_strategy": "primary_and_cause"
+          "required_guids": [
+            "0wX3Bl_XTAJ8lER5kq87y0",
+            "1dFkzi10v3yRLoKy5ClqDV"
+          ],
+          "extraction_element": [
+            "IfcSpace"
+          ]
         },
         {
           "topic_id": "d70be323-d5a5-47f8-a0cb-b95d3e0c224d",
@@ -106,10 +209,22 @@
             "1LaDLhlXT1SfpE6m4AGlnb",
             "3sjLk6T$b3_OpDigmhkMCw"
           ],
-          "required_guids": [
-            "1LaDLhlXT1SfpE6m4AGlnb"
+          "all_guids_enriched": [
+            {
+              "guid": "1LaDLhlXT1SfpE6m4AGlnb",
+              "ifc_type": "IfcWallStandardCase"
+            },
+            {
+              "guid": "3sjLk6T$b3_OpDigmhkMCw",
+              "ifc_type": "IfcSpace"
+            }
           ],
-          "guid_strategy": "primary_and_cause"
+          "required_guids": [
+            "3sjLk6T$b3_OpDigmhkMCw"
+          ],
+          "extraction_element": [
+            "IfcSpace"
+          ]
         }
       ]
     },
@@ -128,10 +243,18 @@
           "all_guids": [
             "1HA569_750YQ6p1wDgzt4W"
           ],
+          "all_guids_enriched": [
+            {
+              "guid": "1HA569_750YQ6p1wDgzt4W",
+              "ifc_type": "IfcStair"
+            }
+          ],
           "required_guids": [
             "1HA569_750YQ6p1wDgzt4W"
           ],
-          "guid_strategy": "single"
+          "extraction_element": [
+            "IfcStair"
+          ]
         },
         {
           "topic_id": "7b05c7f6-a78d-47af-8808-055426dce897",
@@ -140,10 +263,18 @@
           "all_guids": [
             "0j2BPntubCLvFyPyFS3XrS"
           ],
+          "all_guids_enriched": [
+            {
+              "guid": "0j2BPntubCLvFyPyFS3XrS",
+              "ifc_type": "IfcStair"
+            }
+          ],
           "required_guids": [
             "0j2BPntubCLvFyPyFS3XrS"
           ],
-          "guid_strategy": "single"
+          "extraction_element": [
+            "IfcStair"
+          ]
         },
         {
           "topic_id": "cc97a7bc-720d-449c-9dc2-fbd27c457c41",
@@ -152,10 +283,18 @@
           "all_guids": [
             "3Ohp$OuUb3IhgebzR81n9X"
           ],
+          "all_guids_enriched": [
+            {
+              "guid": "3Ohp$OuUb3IhgebzR81n9X",
+              "ifc_type": "IfcStair"
+            }
+          ],
           "required_guids": [
             "3Ohp$OuUb3IhgebzR81n9X"
           ],
-          "guid_strategy": "single"
+          "extraction_element": [
+            "IfcStair"
+          ]
         },
         {
           "topic_id": "9298e5bc-f933-4ce4-bdd4-bd495dc0df55",
@@ -164,10 +303,18 @@
           "all_guids": [
             "1KW$AVfrjEkB34OWNk8Cdy"
           ],
+          "all_guids_enriched": [
+            {
+              "guid": "1KW$AVfrjEkB34OWNk8Cdy",
+              "ifc_type": "IfcStair"
+            }
+          ],
           "required_guids": [
             "1KW$AVfrjEkB34OWNk8Cdy"
           ],
-          "guid_strategy": "single"
+          "extraction_element": [
+            "IfcStair"
+          ]
         },
         {
           "topic_id": "96773735-f5b7-4c53-ab36-982cb58399b9",
@@ -176,10 +323,18 @@
           "all_guids": [
             "00g$7A$xj1Yw7$pz0Gu5Jl"
           ],
+          "all_guids_enriched": [
+            {
+              "guid": "00g$7A$xj1Yw7$pz0Gu5Jl",
+              "ifc_type": "IfcStair"
+            }
+          ],
           "required_guids": [
             "00g$7A$xj1Yw7$pz0Gu5Jl"
           ],
-          "guid_strategy": "single"
+          "extraction_element": [
+            "IfcStair"
+          ]
         },
         {
           "topic_id": "a19f4319-f345-489c-b7b5-6dd0b0d60c79",
@@ -188,10 +343,18 @@
           "all_guids": [
             "0QL6xmUc54YQTL8_HTe$PR"
           ],
+          "all_guids_enriched": [
+            {
+              "guid": "0QL6xmUc54YQTL8_HTe$PR",
+              "ifc_type": "IfcStair"
+            }
+          ],
           "required_guids": [
             "0QL6xmUc54YQTL8_HTe$PR"
           ],
-          "guid_strategy": "single"
+          "extraction_element": [
+            "IfcStair"
+          ]
         },
         {
           "topic_id": "1c26b17d-6c16-42e7-97b4-7dd597972eb3",
@@ -200,10 +363,18 @@
           "all_guids": [
             "2QdKt0EeDDihduxfDG8NT8"
           ],
+          "all_guids_enriched": [
+            {
+              "guid": "2QdKt0EeDDihduxfDG8NT8",
+              "ifc_type": "IfcStair"
+            }
+          ],
           "required_guids": [
             "2QdKt0EeDDihduxfDG8NT8"
           ],
-          "guid_strategy": "single"
+          "extraction_element": [
+            "IfcStair"
+          ]
         },
         {
           "topic_id": "60ff144e-b046-4c6f-b9ff-1bbc51c89d6c",
@@ -212,10 +383,18 @@
           "all_guids": [
             "2WCholb_92w9VGgEQcoe8M"
           ],
+          "all_guids_enriched": [
+            {
+              "guid": "2WCholb_92w9VGgEQcoe8M",
+              "ifc_type": "IfcStair"
+            }
+          ],
           "required_guids": [
             "2WCholb_92w9VGgEQcoe8M"
           ],
-          "guid_strategy": "single"
+          "extraction_element": [
+            "IfcStair"
+          ]
         },
         {
           "topic_id": "db2a057c-aaf8-4f75-ac96-96118b5f865f",
@@ -224,10 +403,18 @@
           "all_guids": [
             "3QuFvRNNbDWRsEhil9DPsO"
           ],
+          "all_guids_enriched": [
+            {
+              "guid": "3QuFvRNNbDWRsEhil9DPsO",
+              "ifc_type": "IfcStair"
+            }
+          ],
           "required_guids": [
             "3QuFvRNNbDWRsEhil9DPsO"
           ],
-          "guid_strategy": "single"
+          "extraction_element": [
+            "IfcStair"
+          ]
         },
         {
           "topic_id": "9845219a-f328-432f-adae-cad08ac6b3b4",
@@ -236,10 +423,18 @@
           "all_guids": [
             "1wkrvIms59MRradq0vI9vQ"
           ],
+          "all_guids_enriched": [
+            {
+              "guid": "1wkrvIms59MRradq0vI9vQ",
+              "ifc_type": "IfcStair"
+            }
+          ],
           "required_guids": [
             "1wkrvIms59MRradq0vI9vQ"
           ],
-          "guid_strategy": "single"
+          "extraction_element": [
+            "IfcStair"
+          ]
         },
         {
           "topic_id": "0296c77d-d19e-4000-a4b5-01c8b8a75473",
@@ -248,10 +443,18 @@
           "all_guids": [
             "0oroRk3ur3MfFxCiMbvU8Z"
           ],
+          "all_guids_enriched": [
+            {
+              "guid": "0oroRk3ur3MfFxCiMbvU8Z",
+              "ifc_type": "IfcStair"
+            }
+          ],
           "required_guids": [
             "0oroRk3ur3MfFxCiMbvU8Z"
           ],
-          "guid_strategy": "single"
+          "extraction_element": [
+            "IfcStair"
+          ]
         },
         {
           "topic_id": "0c817a3f-006d-4c98-9bf9-43994b5def29",
@@ -260,10 +463,18 @@
           "all_guids": [
             "1j$7ZnItf9w8NhsmNAVsUC"
           ],
+          "all_guids_enriched": [
+            {
+              "guid": "1j$7ZnItf9w8NhsmNAVsUC",
+              "ifc_type": "IfcStair"
+            }
+          ],
           "required_guids": [
             "1j$7ZnItf9w8NhsmNAVsUC"
           ],
-          "guid_strategy": "single"
+          "extraction_element": [
+            "IfcStair"
+          ]
         },
         {
           "topic_id": "6cead0cb-efd6-4c71-99d8-3bdb7094b3cf",
@@ -272,10 +483,18 @@
           "all_guids": [
             "2sCZlN66z3VRHFYWiRyds2"
           ],
+          "all_guids_enriched": [
+            {
+              "guid": "2sCZlN66z3VRHFYWiRyds2",
+              "ifc_type": "IfcStair"
+            }
+          ],
           "required_guids": [
             "2sCZlN66z3VRHFYWiRyds2"
           ],
-          "guid_strategy": "single"
+          "extraction_element": [
+            "IfcStair"
+          ]
         },
         {
           "topic_id": "2eb783ba-0463-43b0-a7db-68733a3b23a3",
@@ -284,10 +503,18 @@
           "all_guids": [
             "2poy0Rs_PAA8_MxNpUfhKp"
           ],
+          "all_guids_enriched": [
+            {
+              "guid": "2poy0Rs_PAA8_MxNpUfhKp",
+              "ifc_type": "IfcStair"
+            }
+          ],
           "required_guids": [
             "2poy0Rs_PAA8_MxNpUfhKp"
           ],
-          "guid_strategy": "single"
+          "extraction_element": [
+            "IfcStair"
+          ]
         },
         {
           "topic_id": "68a521f2-390f-462f-884e-7e6e4ea1b5f7",
@@ -296,10 +523,18 @@
           "all_guids": [
             "3suS2IjjTFFQ$LB$aFEe0H"
           ],
+          "all_guids_enriched": [
+            {
+              "guid": "3suS2IjjTFFQ$LB$aFEe0H",
+              "ifc_type": "IfcStair"
+            }
+          ],
           "required_guids": [
             "3suS2IjjTFFQ$LB$aFEe0H"
           ],
-          "guid_strategy": "single"
+          "extraction_element": [
+            "IfcStair"
+          ]
         },
         {
           "topic_id": "16b9e0b3-cf58-4242-b806-cb44a6368d2e",
@@ -308,10 +543,18 @@
           "all_guids": [
             "26BDoJJR1FHePpGVh8cUT3"
           ],
+          "all_guids_enriched": [
+            {
+              "guid": "26BDoJJR1FHePpGVh8cUT3",
+              "ifc_type": "IfcStair"
+            }
+          ],
           "required_guids": [
             "26BDoJJR1FHePpGVh8cUT3"
           ],
-          "guid_strategy": "single"
+          "extraction_element": [
+            "IfcStair"
+          ]
         },
         {
           "topic_id": "8b58f8ba-baaa-4a58-b938-5eedd834b534",
@@ -320,10 +563,18 @@
           "all_guids": [
             "26kJT26ej3NPFaeOpFPyS6"
           ],
+          "all_guids_enriched": [
+            {
+              "guid": "26kJT26ej3NPFaeOpFPyS6",
+              "ifc_type": "IfcStair"
+            }
+          ],
           "required_guids": [
             "26kJT26ej3NPFaeOpFPyS6"
           ],
-          "guid_strategy": "single"
+          "extraction_element": [
+            "IfcStair"
+          ]
         },
         {
           "topic_id": "a2dfcf21-c357-455e-bb5b-edfd10ac4682",
@@ -332,10 +583,18 @@
           "all_guids": [
             "1y22KIc6T1yAtqFqylhpTs"
           ],
+          "all_guids_enriched": [
+            {
+              "guid": "1y22KIc6T1yAtqFqylhpTs",
+              "ifc_type": "IfcStair"
+            }
+          ],
           "required_guids": [
             "1y22KIc6T1yAtqFqylhpTs"
           ],
-          "guid_strategy": "single"
+          "extraction_element": [
+            "IfcStair"
+          ]
         },
         {
           "topic_id": "c1681414-feb2-4f56-9ce8-4f8c62411547",
@@ -344,10 +603,18 @@
           "all_guids": [
             "0uwvn0rsH3TwwO9ofSpG$Z"
           ],
+          "all_guids_enriched": [
+            {
+              "guid": "0uwvn0rsH3TwwO9ofSpG$Z",
+              "ifc_type": "IfcStair"
+            }
+          ],
           "required_guids": [
             "0uwvn0rsH3TwwO9ofSpG$Z"
           ],
-          "guid_strategy": "single"
+          "extraction_element": [
+            "IfcStair"
+          ]
         },
         {
           "topic_id": "66b864b3-1b99-4654-9fc1-3c864f696d0b",
@@ -356,10 +623,18 @@
           "all_guids": [
             "3ueKRIyo1EFxA71NCIUXnt"
           ],
+          "all_guids_enriched": [
+            {
+              "guid": "3ueKRIyo1EFxA71NCIUXnt",
+              "ifc_type": "IfcStair"
+            }
+          ],
           "required_guids": [
             "3ueKRIyo1EFxA71NCIUXnt"
           ],
-          "guid_strategy": "single"
+          "extraction_element": [
+            "IfcStair"
+          ]
         },
         {
           "topic_id": "60647cae-15b7-4cec-aa78-fa8da597e491",
@@ -368,10 +643,18 @@
           "all_guids": [
             "1jrsHyC71DBgnw9PDYFtiF"
           ],
+          "all_guids_enriched": [
+            {
+              "guid": "1jrsHyC71DBgnw9PDYFtiF",
+              "ifc_type": "IfcStair"
+            }
+          ],
           "required_guids": [
             "1jrsHyC71DBgnw9PDYFtiF"
           ],
-          "guid_strategy": "single"
+          "extraction_element": [
+            "IfcStair"
+          ]
         },
         {
           "topic_id": "bfbf9ecb-e8d7-47cb-9043-fb35a4ee6743",
@@ -380,10 +663,18 @@
           "all_guids": [
             "3nW4x$Jg16U96R9aDX4eIB"
           ],
+          "all_guids_enriched": [
+            {
+              "guid": "3nW4x$Jg16U96R9aDX4eIB",
+              "ifc_type": "IfcStair"
+            }
+          ],
           "required_guids": [
             "3nW4x$Jg16U96R9aDX4eIB"
           ],
-          "guid_strategy": "single"
+          "extraction_element": [
+            "IfcStair"
+          ]
         },
         {
           "topic_id": "714a88e1-1aa5-44ef-b5ce-86becf732654",
@@ -392,10 +683,18 @@
           "all_guids": [
             "3IOQCxw_X6Ke2y0YTPcDfs"
           ],
+          "all_guids_enriched": [
+            {
+              "guid": "3IOQCxw_X6Ke2y0YTPcDfs",
+              "ifc_type": "IfcStair"
+            }
+          ],
           "required_guids": [
             "3IOQCxw_X6Ke2y0YTPcDfs"
           ],
-          "guid_strategy": "single"
+          "extraction_element": [
+            "IfcStair"
+          ]
         },
         {
           "topic_id": "8b39663b-fd35-4b24-be4f-1165c0905457",
@@ -404,10 +703,18 @@
           "all_guids": [
             "35ekX5Yo1Dfukg3nu72L7e"
           ],
+          "all_guids_enriched": [
+            {
+              "guid": "35ekX5Yo1Dfukg3nu72L7e",
+              "ifc_type": "IfcStair"
+            }
+          ],
           "required_guids": [
             "35ekX5Yo1Dfukg3nu72L7e"
           ],
-          "guid_strategy": "single"
+          "extraction_element": [
+            "IfcStair"
+          ]
         },
         {
           "topic_id": "4ba4377a-b2d6-44b1-b6d6-6fc0aac69fc0",
@@ -416,10 +723,18 @@
           "all_guids": [
             "3Q2l6$dVb38gEzYyvoCq8n"
           ],
+          "all_guids_enriched": [
+            {
+              "guid": "3Q2l6$dVb38gEzYyvoCq8n",
+              "ifc_type": "IfcStair"
+            }
+          ],
           "required_guids": [
             "3Q2l6$dVb38gEzYyvoCq8n"
           ],
-          "guid_strategy": "single"
+          "extraction_element": [
+            "IfcStair"
+          ]
         },
         {
           "topic_id": "7cd177ae-dc33-496f-87b5-27ef7fac7d50",
@@ -428,10 +743,18 @@
           "all_guids": [
             "3pVBj07CXCfOzKgRPWMAW4"
           ],
+          "all_guids_enriched": [
+            {
+              "guid": "3pVBj07CXCfOzKgRPWMAW4",
+              "ifc_type": "IfcStair"
+            }
+          ],
           "required_guids": [
             "3pVBj07CXCfOzKgRPWMAW4"
           ],
-          "guid_strategy": "single"
+          "extraction_element": [
+            "IfcStair"
+          ]
         },
         {
           "topic_id": "09110c47-696e-4234-a94c-c59710b3bca4",
@@ -440,10 +763,18 @@
           "all_guids": [
             "0KmzPuWR16OeBClGLrbNUM"
           ],
+          "all_guids_enriched": [
+            {
+              "guid": "0KmzPuWR16OeBClGLrbNUM",
+              "ifc_type": "IfcStair"
+            }
+          ],
           "required_guids": [
             "0KmzPuWR16OeBClGLrbNUM"
           ],
-          "guid_strategy": "single"
+          "extraction_element": [
+            "IfcStair"
+          ]
         },
         {
           "topic_id": "4a12a78b-38e6-4528-aedf-cb19eb4a19af",
@@ -452,10 +783,18 @@
           "all_guids": [
             "0GpcF2R9n4MQJi2Z0vVVYD"
           ],
+          "all_guids_enriched": [
+            {
+              "guid": "0GpcF2R9n4MQJi2Z0vVVYD",
+              "ifc_type": "IfcStair"
+            }
+          ],
           "required_guids": [
             "0GpcF2R9n4MQJi2Z0vVVYD"
           ],
-          "guid_strategy": "single"
+          "extraction_element": [
+            "IfcStair"
+          ]
         },
         {
           "topic_id": "083c5412-ce44-487e-ac1a-1f72ea9075cc",
@@ -464,10 +803,18 @@
           "all_guids": [
             "1TvHaVzJ9Adeff_bvNBb2u"
           ],
+          "all_guids_enriched": [
+            {
+              "guid": "1TvHaVzJ9Adeff_bvNBb2u",
+              "ifc_type": "IfcStair"
+            }
+          ],
           "required_guids": [
             "1TvHaVzJ9Adeff_bvNBb2u"
           ],
-          "guid_strategy": "single"
+          "extraction_element": [
+            "IfcStair"
+          ]
         },
         {
           "topic_id": "f1ce9ba8-60e9-49f1-a2cf-b20a0f5d065e",
@@ -476,10 +823,18 @@
           "all_guids": [
             "2RUFxCtH97MPVZRusJ3kSL"
           ],
+          "all_guids_enriched": [
+            {
+              "guid": "2RUFxCtH97MPVZRusJ3kSL",
+              "ifc_type": "IfcStair"
+            }
+          ],
           "required_guids": [
             "2RUFxCtH97MPVZRusJ3kSL"
           ],
-          "guid_strategy": "single"
+          "extraction_element": [
+            "IfcStair"
+          ]
         }
       ]
     },
@@ -498,10 +853,18 @@
           "all_guids": [
             "1HA569_750YQ6p1wDgzt4W"
           ],
+          "all_guids_enriched": [
+            {
+              "guid": "1HA569_750YQ6p1wDgzt4W",
+              "ifc_type": "IfcStair"
+            }
+          ],
           "required_guids": [
             "1HA569_750YQ6p1wDgzt4W"
           ],
-          "guid_strategy": "single"
+          "extraction_element": [
+            "IfcStair"
+          ]
         },
         {
           "topic_id": "1993de91-d55a-47fd-980e-57d4481d3e41",
@@ -510,10 +873,18 @@
           "all_guids": [
             "0j2BPntubCLvFyPyFS3XrS"
           ],
+          "all_guids_enriched": [
+            {
+              "guid": "0j2BPntubCLvFyPyFS3XrS",
+              "ifc_type": "IfcStair"
+            }
+          ],
           "required_guids": [
             "0j2BPntubCLvFyPyFS3XrS"
           ],
-          "guid_strategy": "single"
+          "extraction_element": [
+            "IfcStair"
+          ]
         },
         {
           "topic_id": "ee04b6ba-d786-41e2-8442-19de67b3dd9e",
@@ -522,10 +893,18 @@
           "all_guids": [
             "3Ohp$OuUb3IhgebzR81n9X"
           ],
+          "all_guids_enriched": [
+            {
+              "guid": "3Ohp$OuUb3IhgebzR81n9X",
+              "ifc_type": "IfcStair"
+            }
+          ],
           "required_guids": [
             "3Ohp$OuUb3IhgebzR81n9X"
           ],
-          "guid_strategy": "single"
+          "extraction_element": [
+            "IfcStair"
+          ]
         },
         {
           "topic_id": "38f352f2-0f6a-4f66-875b-dc7d6a95a96f",
@@ -534,10 +913,18 @@
           "all_guids": [
             "1KW$AVfrjEkB34OWNk8Cdy"
           ],
+          "all_guids_enriched": [
+            {
+              "guid": "1KW$AVfrjEkB34OWNk8Cdy",
+              "ifc_type": "IfcStair"
+            }
+          ],
           "required_guids": [
             "1KW$AVfrjEkB34OWNk8Cdy"
           ],
-          "guid_strategy": "single"
+          "extraction_element": [
+            "IfcStair"
+          ]
         },
         {
           "topic_id": "ec7e3267-c63d-473a-abe4-7dcaa7175b44",
@@ -546,10 +933,18 @@
           "all_guids": [
             "00g$7A$xj1Yw7$pz0Gu5Jl"
           ],
+          "all_guids_enriched": [
+            {
+              "guid": "00g$7A$xj1Yw7$pz0Gu5Jl",
+              "ifc_type": "IfcStair"
+            }
+          ],
           "required_guids": [
             "00g$7A$xj1Yw7$pz0Gu5Jl"
           ],
-          "guid_strategy": "single"
+          "extraction_element": [
+            "IfcStair"
+          ]
         },
         {
           "topic_id": "d48a0c99-fbc0-4b78-837f-415b267c4a3d",
@@ -558,10 +953,18 @@
           "all_guids": [
             "0QL6xmUc54YQTL8_HTe$PR"
           ],
+          "all_guids_enriched": [
+            {
+              "guid": "0QL6xmUc54YQTL8_HTe$PR",
+              "ifc_type": "IfcStair"
+            }
+          ],
           "required_guids": [
             "0QL6xmUc54YQTL8_HTe$PR"
           ],
-          "guid_strategy": "single"
+          "extraction_element": [
+            "IfcStair"
+          ]
         },
         {
           "topic_id": "c588d5b1-f9cf-45c9-9577-b0da95b2a57b",
@@ -570,10 +973,18 @@
           "all_guids": [
             "2QdKt0EeDDihduxfDG8NT8"
           ],
+          "all_guids_enriched": [
+            {
+              "guid": "2QdKt0EeDDihduxfDG8NT8",
+              "ifc_type": "IfcStair"
+            }
+          ],
           "required_guids": [
             "2QdKt0EeDDihduxfDG8NT8"
           ],
-          "guid_strategy": "single"
+          "extraction_element": [
+            "IfcStair"
+          ]
         },
         {
           "topic_id": "def4cbeb-0a28-4a5c-bbf5-630e7b903c14",
@@ -582,10 +993,18 @@
           "all_guids": [
             "2WCholb_92w9VGgEQcoe8M"
           ],
+          "all_guids_enriched": [
+            {
+              "guid": "2WCholb_92w9VGgEQcoe8M",
+              "ifc_type": "IfcStair"
+            }
+          ],
           "required_guids": [
             "2WCholb_92w9VGgEQcoe8M"
           ],
-          "guid_strategy": "single"
+          "extraction_element": [
+            "IfcStair"
+          ]
         },
         {
           "topic_id": "c32772e2-5d97-4792-b317-a22ae188edf0",
@@ -594,10 +1013,18 @@
           "all_guids": [
             "3QuFvRNNbDWRsEhil9DPsO"
           ],
+          "all_guids_enriched": [
+            {
+              "guid": "3QuFvRNNbDWRsEhil9DPsO",
+              "ifc_type": "IfcStair"
+            }
+          ],
           "required_guids": [
             "3QuFvRNNbDWRsEhil9DPsO"
           ],
-          "guid_strategy": "single"
+          "extraction_element": [
+            "IfcStair"
+          ]
         },
         {
           "topic_id": "72c7579b-56e1-45ed-ab27-dc2c793879c1",
@@ -606,10 +1033,18 @@
           "all_guids": [
             "1wkrvIms59MRradq0vI9vQ"
           ],
+          "all_guids_enriched": [
+            {
+              "guid": "1wkrvIms59MRradq0vI9vQ",
+              "ifc_type": "IfcStair"
+            }
+          ],
           "required_guids": [
             "1wkrvIms59MRradq0vI9vQ"
           ],
-          "guid_strategy": "single"
+          "extraction_element": [
+            "IfcStair"
+          ]
         },
         {
           "topic_id": "6ba8b890-3dd5-4fec-9b2e-2ca93580bc33",
@@ -618,10 +1053,18 @@
           "all_guids": [
             "0oroRk3ur3MfFxCiMbvU8Z"
           ],
+          "all_guids_enriched": [
+            {
+              "guid": "0oroRk3ur3MfFxCiMbvU8Z",
+              "ifc_type": "IfcStair"
+            }
+          ],
           "required_guids": [
             "0oroRk3ur3MfFxCiMbvU8Z"
           ],
-          "guid_strategy": "single"
+          "extraction_element": [
+            "IfcStair"
+          ]
         },
         {
           "topic_id": "78a66ad0-2008-4979-9891-920f6bcdaf75",
@@ -630,10 +1073,18 @@
           "all_guids": [
             "1j$7ZnItf9w8NhsmNAVsUC"
           ],
+          "all_guids_enriched": [
+            {
+              "guid": "1j$7ZnItf9w8NhsmNAVsUC",
+              "ifc_type": "IfcStair"
+            }
+          ],
           "required_guids": [
             "1j$7ZnItf9w8NhsmNAVsUC"
           ],
-          "guid_strategy": "single"
+          "extraction_element": [
+            "IfcStair"
+          ]
         },
         {
           "topic_id": "a6e5e7fc-1ce1-4a26-96e6-cd1227a90614",
@@ -642,10 +1093,18 @@
           "all_guids": [
             "2sCZlN66z3VRHFYWiRyds2"
           ],
+          "all_guids_enriched": [
+            {
+              "guid": "2sCZlN66z3VRHFYWiRyds2",
+              "ifc_type": "IfcStair"
+            }
+          ],
           "required_guids": [
             "2sCZlN66z3VRHFYWiRyds2"
           ],
-          "guid_strategy": "single"
+          "extraction_element": [
+            "IfcStair"
+          ]
         },
         {
           "topic_id": "54b6d270-5a1f-4821-9e24-d8f4d14c8d11",
@@ -654,10 +1113,18 @@
           "all_guids": [
             "2poy0Rs_PAA8_MxNpUfhKp"
           ],
+          "all_guids_enriched": [
+            {
+              "guid": "2poy0Rs_PAA8_MxNpUfhKp",
+              "ifc_type": "IfcStair"
+            }
+          ],
           "required_guids": [
             "2poy0Rs_PAA8_MxNpUfhKp"
           ],
-          "guid_strategy": "single"
+          "extraction_element": [
+            "IfcStair"
+          ]
         },
         {
           "topic_id": "31409db0-a678-4a4e-89d7-349f413f5427",
@@ -666,10 +1133,18 @@
           "all_guids": [
             "3suS2IjjTFFQ$LB$aFEe0H"
           ],
+          "all_guids_enriched": [
+            {
+              "guid": "3suS2IjjTFFQ$LB$aFEe0H",
+              "ifc_type": "IfcStair"
+            }
+          ],
           "required_guids": [
             "3suS2IjjTFFQ$LB$aFEe0H"
           ],
-          "guid_strategy": "single"
+          "extraction_element": [
+            "IfcStair"
+          ]
         },
         {
           "topic_id": "652310f4-76f8-4415-a99e-99a10b5c638f",
@@ -678,10 +1153,18 @@
           "all_guids": [
             "26BDoJJR1FHePpGVh8cUT3"
           ],
+          "all_guids_enriched": [
+            {
+              "guid": "26BDoJJR1FHePpGVh8cUT3",
+              "ifc_type": "IfcStair"
+            }
+          ],
           "required_guids": [
             "26BDoJJR1FHePpGVh8cUT3"
           ],
-          "guid_strategy": "single"
+          "extraction_element": [
+            "IfcStair"
+          ]
         },
         {
           "topic_id": "3d4b59ad-f3c2-47ca-8422-c1309f832219",
@@ -690,10 +1173,18 @@
           "all_guids": [
             "26kJT26ej3NPFaeOpFPyS6"
           ],
+          "all_guids_enriched": [
+            {
+              "guid": "26kJT26ej3NPFaeOpFPyS6",
+              "ifc_type": "IfcStair"
+            }
+          ],
           "required_guids": [
             "26kJT26ej3NPFaeOpFPyS6"
           ],
-          "guid_strategy": "single"
+          "extraction_element": [
+            "IfcStair"
+          ]
         },
         {
           "topic_id": "b486f965-3ae2-4526-8ced-ecee3d9cef84",
@@ -702,10 +1193,18 @@
           "all_guids": [
             "1y22KIc6T1yAtqFqylhpTs"
           ],
+          "all_guids_enriched": [
+            {
+              "guid": "1y22KIc6T1yAtqFqylhpTs",
+              "ifc_type": "IfcStair"
+            }
+          ],
           "required_guids": [
             "1y22KIc6T1yAtqFqylhpTs"
           ],
-          "guid_strategy": "single"
+          "extraction_element": [
+            "IfcStair"
+          ]
         },
         {
           "topic_id": "0f8b760b-8054-4c7c-a83a-76e1c7caa681",
@@ -714,10 +1213,18 @@
           "all_guids": [
             "0uwvn0rsH3TwwO9ofSpG$Z"
           ],
+          "all_guids_enriched": [
+            {
+              "guid": "0uwvn0rsH3TwwO9ofSpG$Z",
+              "ifc_type": "IfcStair"
+            }
+          ],
           "required_guids": [
             "0uwvn0rsH3TwwO9ofSpG$Z"
           ],
-          "guid_strategy": "single"
+          "extraction_element": [
+            "IfcStair"
+          ]
         },
         {
           "topic_id": "6c807f9b-8cfb-4c95-bbb4-82544c2ffb1d",
@@ -726,10 +1233,18 @@
           "all_guids": [
             "3ueKRIyo1EFxA71NCIUXnt"
           ],
+          "all_guids_enriched": [
+            {
+              "guid": "3ueKRIyo1EFxA71NCIUXnt",
+              "ifc_type": "IfcStair"
+            }
+          ],
           "required_guids": [
             "3ueKRIyo1EFxA71NCIUXnt"
           ],
-          "guid_strategy": "single"
+          "extraction_element": [
+            "IfcStair"
+          ]
         },
         {
           "topic_id": "fb7f9f64-2f99-4bc5-8159-099d4ba56133",
@@ -738,10 +1253,18 @@
           "all_guids": [
             "1jrsHyC71DBgnw9PDYFtiF"
           ],
+          "all_guids_enriched": [
+            {
+              "guid": "1jrsHyC71DBgnw9PDYFtiF",
+              "ifc_type": "IfcStair"
+            }
+          ],
           "required_guids": [
             "1jrsHyC71DBgnw9PDYFtiF"
           ],
-          "guid_strategy": "single"
+          "extraction_element": [
+            "IfcStair"
+          ]
         },
         {
           "topic_id": "4a03be7a-3ca8-414c-8e8c-5385d691899f",
@@ -750,10 +1273,18 @@
           "all_guids": [
             "3nW4x$Jg16U96R9aDX4eIB"
           ],
+          "all_guids_enriched": [
+            {
+              "guid": "3nW4x$Jg16U96R9aDX4eIB",
+              "ifc_type": "IfcStair"
+            }
+          ],
           "required_guids": [
             "3nW4x$Jg16U96R9aDX4eIB"
           ],
-          "guid_strategy": "single"
+          "extraction_element": [
+            "IfcStair"
+          ]
         },
         {
           "topic_id": "9764f8da-8c4e-4ddf-8b87-89b2feee07fd",
@@ -762,10 +1293,18 @@
           "all_guids": [
             "3IOQCxw_X6Ke2y0YTPcDfs"
           ],
+          "all_guids_enriched": [
+            {
+              "guid": "3IOQCxw_X6Ke2y0YTPcDfs",
+              "ifc_type": "IfcStair"
+            }
+          ],
           "required_guids": [
             "3IOQCxw_X6Ke2y0YTPcDfs"
           ],
-          "guid_strategy": "single"
+          "extraction_element": [
+            "IfcStair"
+          ]
         },
         {
           "topic_id": "4e29eefe-87cf-4450-9c10-587dabcf95dd",
@@ -774,10 +1313,18 @@
           "all_guids": [
             "35ekX5Yo1Dfukg3nu72L7e"
           ],
+          "all_guids_enriched": [
+            {
+              "guid": "35ekX5Yo1Dfukg3nu72L7e",
+              "ifc_type": "IfcStair"
+            }
+          ],
           "required_guids": [
             "35ekX5Yo1Dfukg3nu72L7e"
           ],
-          "guid_strategy": "single"
+          "extraction_element": [
+            "IfcStair"
+          ]
         },
         {
           "topic_id": "b0e087e2-61e1-4455-b1b9-998beed4ce84",
@@ -786,10 +1333,18 @@
           "all_guids": [
             "3Q2l6$dVb38gEzYyvoCq8n"
           ],
+          "all_guids_enriched": [
+            {
+              "guid": "3Q2l6$dVb38gEzYyvoCq8n",
+              "ifc_type": "IfcStair"
+            }
+          ],
           "required_guids": [
             "3Q2l6$dVb38gEzYyvoCq8n"
           ],
-          "guid_strategy": "single"
+          "extraction_element": [
+            "IfcStair"
+          ]
         },
         {
           "topic_id": "cf176b09-9741-4379-b008-81ffa8bf3a4e",
@@ -798,10 +1353,18 @@
           "all_guids": [
             "3pVBj07CXCfOzKgRPWMAW4"
           ],
+          "all_guids_enriched": [
+            {
+              "guid": "3pVBj07CXCfOzKgRPWMAW4",
+              "ifc_type": "IfcStair"
+            }
+          ],
           "required_guids": [
             "3pVBj07CXCfOzKgRPWMAW4"
           ],
-          "guid_strategy": "single"
+          "extraction_element": [
+            "IfcStair"
+          ]
         },
         {
           "topic_id": "a7f82b21-c794-43c4-90f7-ee80c8096a8a",
@@ -810,10 +1373,18 @@
           "all_guids": [
             "0KmzPuWR16OeBClGLrbNUM"
           ],
+          "all_guids_enriched": [
+            {
+              "guid": "0KmzPuWR16OeBClGLrbNUM",
+              "ifc_type": "IfcStair"
+            }
+          ],
           "required_guids": [
             "0KmzPuWR16OeBClGLrbNUM"
           ],
-          "guid_strategy": "single"
+          "extraction_element": [
+            "IfcStair"
+          ]
         },
         {
           "topic_id": "c1f31c9d-bd6e-4df0-80a1-b0a88dc2807f",
@@ -822,10 +1393,18 @@
           "all_guids": [
             "0GpcF2R9n4MQJi2Z0vVVYD"
           ],
+          "all_guids_enriched": [
+            {
+              "guid": "0GpcF2R9n4MQJi2Z0vVVYD",
+              "ifc_type": "IfcStair"
+            }
+          ],
           "required_guids": [
             "0GpcF2R9n4MQJi2Z0vVVYD"
           ],
-          "guid_strategy": "single"
+          "extraction_element": [
+            "IfcStair"
+          ]
         },
         {
           "topic_id": "6c8cc831-9c65-49cd-9392-114f99ae4f72",
@@ -834,10 +1413,18 @@
           "all_guids": [
             "1TvHaVzJ9Adeff_bvNBb2u"
           ],
+          "all_guids_enriched": [
+            {
+              "guid": "1TvHaVzJ9Adeff_bvNBb2u",
+              "ifc_type": "IfcStair"
+            }
+          ],
           "required_guids": [
             "1TvHaVzJ9Adeff_bvNBb2u"
           ],
-          "guid_strategy": "single"
+          "extraction_element": [
+            "IfcStair"
+          ]
         },
         {
           "topic_id": "b2ef9919-fb37-4446-bbe0-5228a277428a",
@@ -846,10 +1433,18 @@
           "all_guids": [
             "2RUFxCtH97MPVZRusJ3kSL"
           ],
+          "all_guids_enriched": [
+            {
+              "guid": "2RUFxCtH97MPVZRusJ3kSL",
+              "ifc_type": "IfcStair"
+            }
+          ],
           "required_guids": [
             "2RUFxCtH97MPVZRusJ3kSL"
           ],
-          "guid_strategy": "single"
+          "extraction_element": [
+            "IfcStair"
+          ]
         }
       ]
     },
@@ -869,10 +1464,22 @@
             "0oroRk3ur3MfFxCiMbvU8Z",
             "2R1qYwa$zC9f7Ycv2g988Q"
           ],
+          "all_guids_enriched": [
+            {
+              "guid": "0oroRk3ur3MfFxCiMbvU8Z",
+              "ifc_type": "IfcStair"
+            },
+            {
+              "guid": "2R1qYwa$zC9f7Ycv2g988Q",
+              "ifc_type": "IfcSlab"
+            }
+          ],
           "required_guids": [
             "0oroRk3ur3MfFxCiMbvU8Z"
           ],
-          "guid_strategy": "primary_and_cause"
+          "extraction_element": [
+            "IfcStair"
+          ]
         },
         {
           "topic_id": "c72b4288-589d-4527-bd7c-986077e11d58",
@@ -882,10 +1489,22 @@
             "0EwxF4nBz6rQtu719baEc0",
             "1j$7ZnItf9w8NhsmNAVsUC"
           ],
-          "required_guids": [
-            "0EwxF4nBz6rQtu719baEc0"
+          "all_guids_enriched": [
+            {
+              "guid": "0EwxF4nBz6rQtu719baEc0",
+              "ifc_type": "IfcSlab"
+            },
+            {
+              "guid": "1j$7ZnItf9w8NhsmNAVsUC",
+              "ifc_type": "IfcStair"
+            }
           ],
-          "guid_strategy": "primary_and_cause"
+          "required_guids": [
+            "1j$7ZnItf9w8NhsmNAVsUC"
+          ],
+          "extraction_element": [
+            "IfcStair"
+          ]
         },
         {
           "topic_id": "ab7ca34c-8f9c-4704-83dc-69acc92d2b4b",
@@ -895,10 +1514,22 @@
             "1I0Sj0K1v549rPkKPuCzAy",
             "2sCZlN66z3VRHFYWiRyds2"
           ],
-          "required_guids": [
-            "1I0Sj0K1v549rPkKPuCzAy"
+          "all_guids_enriched": [
+            {
+              "guid": "1I0Sj0K1v549rPkKPuCzAy",
+              "ifc_type": "IfcSlab"
+            },
+            {
+              "guid": "2sCZlN66z3VRHFYWiRyds2",
+              "ifc_type": "IfcStair"
+            }
           ],
-          "guid_strategy": "primary_and_cause"
+          "required_guids": [
+            "2sCZlN66z3VRHFYWiRyds2"
+          ],
+          "extraction_element": [
+            "IfcStair"
+          ]
         },
         {
           "topic_id": "3d20e6f5-f58e-44ef-8d0c-854f46011041",
@@ -908,10 +1539,22 @@
             "2poy0Rs_PAA8_MxNpUfhKp",
             "3u$LTT4IP8HhVPN6af4IEW"
           ],
+          "all_guids_enriched": [
+            {
+              "guid": "2poy0Rs_PAA8_MxNpUfhKp",
+              "ifc_type": "IfcStair"
+            },
+            {
+              "guid": "3u$LTT4IP8HhVPN6af4IEW",
+              "ifc_type": "IfcSlab"
+            }
+          ],
           "required_guids": [
             "2poy0Rs_PAA8_MxNpUfhKp"
           ],
-          "guid_strategy": "primary_and_cause"
+          "extraction_element": [
+            "IfcStair"
+          ]
         },
         {
           "topic_id": "b2a91966-23e0-4a10-afa8-ab2b6e4d251e",
@@ -921,10 +1564,22 @@
             "34a7ezr_X8M9v$Ux70lj48",
             "3suS2IjjTFFQ$LB$aFEe0H"
           ],
-          "required_guids": [
-            "34a7ezr_X8M9v$Ux70lj48"
+          "all_guids_enriched": [
+            {
+              "guid": "34a7ezr_X8M9v$Ux70lj48",
+              "ifc_type": "IfcSlab"
+            },
+            {
+              "guid": "3suS2IjjTFFQ$LB$aFEe0H",
+              "ifc_type": "IfcStair"
+            }
           ],
-          "guid_strategy": "primary_and_cause"
+          "required_guids": [
+            "3suS2IjjTFFQ$LB$aFEe0H"
+          ],
+          "extraction_element": [
+            "IfcStair"
+          ]
         },
         {
           "topic_id": "e9a7adaa-1747-4389-9502-abfb575b8308",
@@ -934,10 +1589,22 @@
             "26BDoJJR1FHePpGVh8cUT3",
             "2GlvzXHc9FQuvZMq6ig4MR"
           ],
+          "all_guids_enriched": [
+            {
+              "guid": "26BDoJJR1FHePpGVh8cUT3",
+              "ifc_type": "IfcStair"
+            },
+            {
+              "guid": "2GlvzXHc9FQuvZMq6ig4MR",
+              "ifc_type": "IfcSlab"
+            }
+          ],
           "required_guids": [
             "26BDoJJR1FHePpGVh8cUT3"
           ],
-          "guid_strategy": "primary_and_cause"
+          "extraction_element": [
+            "IfcStair"
+          ]
         },
         {
           "topic_id": "f18c9257-21a2-4b51-aed7-85c5c4722de0",
@@ -947,10 +1614,22 @@
             "26kJT26ej3NPFaeOpFPyS6",
             "30ZXiOcMb5genQip_0pTMX"
           ],
+          "all_guids_enriched": [
+            {
+              "guid": "26kJT26ej3NPFaeOpFPyS6",
+              "ifc_type": "IfcStair"
+            },
+            {
+              "guid": "30ZXiOcMb5genQip_0pTMX",
+              "ifc_type": "IfcSlab"
+            }
+          ],
           "required_guids": [
             "26kJT26ej3NPFaeOpFPyS6"
           ],
-          "guid_strategy": "primary_and_cause"
+          "extraction_element": [
+            "IfcStair"
+          ]
         },
         {
           "topic_id": "86ebdc77-4315-44b1-a273-c0b2e6e6145c",
@@ -960,10 +1639,22 @@
             "1y22KIc6T1yAtqFqylhpTs",
             "244ue3rtD9UQz5nr1r8tUH"
           ],
+          "all_guids_enriched": [
+            {
+              "guid": "1y22KIc6T1yAtqFqylhpTs",
+              "ifc_type": "IfcStair"
+            },
+            {
+              "guid": "244ue3rtD9UQz5nr1r8tUH",
+              "ifc_type": "IfcSlab"
+            }
+          ],
           "required_guids": [
             "1y22KIc6T1yAtqFqylhpTs"
           ],
-          "guid_strategy": "primary_and_cause"
+          "extraction_element": [
+            "IfcStair"
+          ]
         },
         {
           "topic_id": "544f4e02-5a3c-4984-806f-f7416e6d0b0d",
@@ -973,10 +1664,22 @@
             "0GJvSj0jnCaefe7DGyDSfw",
             "0uwvn0rsH3TwwO9ofSpG$Z"
           ],
-          "required_guids": [
-            "0GJvSj0jnCaefe7DGyDSfw"
+          "all_guids_enriched": [
+            {
+              "guid": "0GJvSj0jnCaefe7DGyDSfw",
+              "ifc_type": "IfcSlab"
+            },
+            {
+              "guid": "0uwvn0rsH3TwwO9ofSpG$Z",
+              "ifc_type": "IfcStair"
+            }
           ],
-          "guid_strategy": "primary_and_cause"
+          "required_guids": [
+            "0uwvn0rsH3TwwO9ofSpG$Z"
+          ],
+          "extraction_element": [
+            "IfcStair"
+          ]
         },
         {
           "topic_id": "3c10533d-7b70-423d-8757-0a2612e469c2",
@@ -986,10 +1689,22 @@
             "3uQXfLRwD39hn$ztGVdzE5",
             "3ueKRIyo1EFxA71NCIUXnt"
           ],
-          "required_guids": [
-            "3uQXfLRwD39hn$ztGVdzE5"
+          "all_guids_enriched": [
+            {
+              "guid": "3uQXfLRwD39hn$ztGVdzE5",
+              "ifc_type": "IfcSlab"
+            },
+            {
+              "guid": "3ueKRIyo1EFxA71NCIUXnt",
+              "ifc_type": "IfcStair"
+            }
           ],
-          "guid_strategy": "primary_and_cause"
+          "required_guids": [
+            "3ueKRIyo1EFxA71NCIUXnt"
+          ],
+          "extraction_element": [
+            "IfcStair"
+          ]
         },
         {
           "topic_id": "d06e4aec-f0dc-4346-a4ec-8ed3cd4d6929",
@@ -999,10 +1714,22 @@
             "1Bc0_i_tn3DPexWTpXxWsw",
             "1jrsHyC71DBgnw9PDYFtiF"
           ],
-          "required_guids": [
-            "1Bc0_i_tn3DPexWTpXxWsw"
+          "all_guids_enriched": [
+            {
+              "guid": "1Bc0_i_tn3DPexWTpXxWsw",
+              "ifc_type": "IfcSlab"
+            },
+            {
+              "guid": "1jrsHyC71DBgnw9PDYFtiF",
+              "ifc_type": "IfcStair"
+            }
           ],
-          "guid_strategy": "primary_and_cause"
+          "required_guids": [
+            "1jrsHyC71DBgnw9PDYFtiF"
+          ],
+          "extraction_element": [
+            "IfcStair"
+          ]
         },
         {
           "topic_id": "62e7c63b-95aa-41bc-b3f6-404a8b1c5608",
@@ -1012,10 +1739,22 @@
             "0DOKeP6Rb0SfiAb4_gXtGE",
             "3nW4x$Jg16U96R9aDX4eIB"
           ],
-          "required_guids": [
-            "0DOKeP6Rb0SfiAb4_gXtGE"
+          "all_guids_enriched": [
+            {
+              "guid": "0DOKeP6Rb0SfiAb4_gXtGE",
+              "ifc_type": "IfcSlab"
+            },
+            {
+              "guid": "3nW4x$Jg16U96R9aDX4eIB",
+              "ifc_type": "IfcStair"
+            }
           ],
-          "guid_strategy": "primary_and_cause"
+          "required_guids": [
+            "3nW4x$Jg16U96R9aDX4eIB"
+          ],
+          "extraction_element": [
+            "IfcStair"
+          ]
         },
         {
           "topic_id": "5569fd82-dabb-4b96-8af8-51e9e30a02d2",
@@ -1025,10 +1764,22 @@
             "0eiot5uOX9pwYpVvGE7Wc0",
             "3IOQCxw_X6Ke2y0YTPcDfs"
           ],
-          "required_guids": [
-            "0eiot5uOX9pwYpVvGE7Wc0"
+          "all_guids_enriched": [
+            {
+              "guid": "0eiot5uOX9pwYpVvGE7Wc0",
+              "ifc_type": "IfcSlab"
+            },
+            {
+              "guid": "3IOQCxw_X6Ke2y0YTPcDfs",
+              "ifc_type": "IfcStair"
+            }
           ],
-          "guid_strategy": "primary_and_cause"
+          "required_guids": [
+            "3IOQCxw_X6Ke2y0YTPcDfs"
+          ],
+          "extraction_element": [
+            "IfcStair"
+          ]
         },
         {
           "topic_id": "1b1f877c-56e4-474f-9db3-48cf1afc3a13",
@@ -1038,10 +1789,22 @@
             "0cggic8xT0hgsmR4RhAz8g",
             "35ekX5Yo1Dfukg3nu72L7e"
           ],
-          "required_guids": [
-            "0cggic8xT0hgsmR4RhAz8g"
+          "all_guids_enriched": [
+            {
+              "guid": "0cggic8xT0hgsmR4RhAz8g",
+              "ifc_type": "IfcSlab"
+            },
+            {
+              "guid": "35ekX5Yo1Dfukg3nu72L7e",
+              "ifc_type": "IfcStair"
+            }
           ],
-          "guid_strategy": "primary_and_cause"
+          "required_guids": [
+            "35ekX5Yo1Dfukg3nu72L7e"
+          ],
+          "extraction_element": [
+            "IfcStair"
+          ]
         },
         {
           "topic_id": "eb021ebe-cd9b-4082-8ecf-f7488828b102",
@@ -1051,10 +1814,22 @@
             "2GHcfUS55Dau7AqJvZ6bPJ",
             "3Q2l6$dVb38gEzYyvoCq8n"
           ],
-          "required_guids": [
-            "2GHcfUS55Dau7AqJvZ6bPJ"
+          "all_guids_enriched": [
+            {
+              "guid": "2GHcfUS55Dau7AqJvZ6bPJ",
+              "ifc_type": "IfcSlab"
+            },
+            {
+              "guid": "3Q2l6$dVb38gEzYyvoCq8n",
+              "ifc_type": "IfcStair"
+            }
           ],
-          "guid_strategy": "primary_and_cause"
+          "required_guids": [
+            "3Q2l6$dVb38gEzYyvoCq8n"
+          ],
+          "extraction_element": [
+            "IfcStair"
+          ]
         },
         {
           "topic_id": "38312f19-1ee4-4e4d-a54f-6815087e87e6",
@@ -1064,10 +1839,22 @@
             "3bEEUyaGL2o8dKqgzsowWR",
             "3pVBj07CXCfOzKgRPWMAW4"
           ],
-          "required_guids": [
-            "3bEEUyaGL2o8dKqgzsowWR"
+          "all_guids_enriched": [
+            {
+              "guid": "3bEEUyaGL2o8dKqgzsowWR",
+              "ifc_type": "IfcSlab"
+            },
+            {
+              "guid": "3pVBj07CXCfOzKgRPWMAW4",
+              "ifc_type": "IfcStair"
+            }
           ],
-          "guid_strategy": "primary_and_cause"
+          "required_guids": [
+            "3pVBj07CXCfOzKgRPWMAW4"
+          ],
+          "extraction_element": [
+            "IfcStair"
+          ]
         },
         {
           "topic_id": "65d999c2-63e6-4a27-a665-93b8019d00ac",
@@ -1077,10 +1864,22 @@
             "0KmzPuWR16OeBClGLrbNUM",
             "1PqHNNyXTA3weWfTD$$k3P"
           ],
+          "all_guids_enriched": [
+            {
+              "guid": "0KmzPuWR16OeBClGLrbNUM",
+              "ifc_type": "IfcStair"
+            },
+            {
+              "guid": "1PqHNNyXTA3weWfTD$$k3P",
+              "ifc_type": "IfcSlab"
+            }
+          ],
           "required_guids": [
             "0KmzPuWR16OeBClGLrbNUM"
           ],
-          "guid_strategy": "primary_and_cause"
+          "extraction_element": [
+            "IfcStair"
+          ]
         },
         {
           "topic_id": "d6cc927a-8544-46cb-9a43-bef659dd22be",
@@ -1090,10 +1889,22 @@
             "0GpcF2R9n4MQJi2Z0vVVYD",
             "3IFGH_f0v45fiaG8u$OWgY"
           ],
+          "all_guids_enriched": [
+            {
+              "guid": "0GpcF2R9n4MQJi2Z0vVVYD",
+              "ifc_type": "IfcStair"
+            },
+            {
+              "guid": "3IFGH_f0v45fiaG8u$OWgY",
+              "ifc_type": "IfcSlab"
+            }
+          ],
           "required_guids": [
             "0GpcF2R9n4MQJi2Z0vVVYD"
           ],
-          "guid_strategy": "primary_and_cause"
+          "extraction_element": [
+            "IfcStair"
+          ]
         },
         {
           "topic_id": "8d133318-0637-42d6-9117-0c0f02852f0d",
@@ -1103,10 +1914,22 @@
             "061uoB$LH0ag1L6KqLFPT_",
             "1TvHaVzJ9Adeff_bvNBb2u"
           ],
-          "required_guids": [
-            "061uoB$LH0ag1L6KqLFPT_"
+          "all_guids_enriched": [
+            {
+              "guid": "061uoB$LH0ag1L6KqLFPT_",
+              "ifc_type": "IfcSlab"
+            },
+            {
+              "guid": "1TvHaVzJ9Adeff_bvNBb2u",
+              "ifc_type": "IfcStair"
+            }
           ],
-          "guid_strategy": "primary_and_cause"
+          "required_guids": [
+            "1TvHaVzJ9Adeff_bvNBb2u"
+          ],
+          "extraction_element": [
+            "IfcStair"
+          ]
         },
         {
           "topic_id": "d64e027b-6b82-4369-adc9-2158012bdb1b",
@@ -1116,10 +1939,22 @@
             "2RUFxCtH97MPVZRusJ3kSL",
             "2tUY_n9Ov6jBX5FbirpoD0"
           ],
+          "all_guids_enriched": [
+            {
+              "guid": "2RUFxCtH97MPVZRusJ3kSL",
+              "ifc_type": "IfcStair"
+            },
+            {
+              "guid": "2tUY_n9Ov6jBX5FbirpoD0",
+              "ifc_type": "IfcSlab"
+            }
+          ],
           "required_guids": [
             "2RUFxCtH97MPVZRusJ3kSL"
           ],
-          "guid_strategy": "primary_and_cause"
+          "extraction_element": [
+            "IfcStair"
+          ]
         }
       ]
     },
@@ -1139,10 +1974,22 @@
             "1k8iISLXn9nREfHhjAYpoB",
             "2WnMPs5Xb17QiiJ0MF9q51"
           ],
+          "all_guids_enriched": [
+            {
+              "guid": "1k8iISLXn9nREfHhjAYpoB",
+              "ifc_type": "IfcWallStandardCase"
+            },
+            {
+              "guid": "2WnMPs5Xb17QiiJ0MF9q51",
+              "ifc_type": "IfcSpace"
+            }
+          ],
           "required_guids": [
             "2WnMPs5Xb17QiiJ0MF9q51"
           ],
-          "guid_strategy": "element"
+          "extraction_element": [
+            "IfcSpace"
+          ]
         },
         {
           "topic_id": "3c877b16-18e8-4c47-9316-ae0ae1100dc8",
@@ -1152,10 +1999,22 @@
             "16WPXvPav859E6mauX8ifr",
             "1UP9yIqQD1tPB3BC5hmzej"
           ],
+          "all_guids_enriched": [
+            {
+              "guid": "16WPXvPav859E6mauX8ifr",
+              "ifc_type": "IfcSpace"
+            },
+            {
+              "guid": "1UP9yIqQD1tPB3BC5hmzej",
+              "ifc_type": "IfcWallStandardCase"
+            }
+          ],
           "required_guids": [
             "16WPXvPav859E6mauX8ifr"
           ],
-          "guid_strategy": "element"
+          "extraction_element": [
+            "IfcSpace"
+          ]
         },
         {
           "topic_id": "457840de-00a3-40c9-8621-6894d0a1d50c",
@@ -1165,10 +2024,22 @@
             "1LaBUYUR53Pxq$OuwxUsod",
             "3dnMNUqgT2veqoMuJUHsfQ"
           ],
+          "all_guids_enriched": [
+            {
+              "guid": "1LaBUYUR53Pxq$OuwxUsod",
+              "ifc_type": "IfcSpace"
+            },
+            {
+              "guid": "3dnMNUqgT2veqoMuJUHsfQ",
+              "ifc_type": "IfcWallStandardCase"
+            }
+          ],
           "required_guids": [
             "1LaBUYUR53Pxq$OuwxUsod"
           ],
-          "guid_strategy": "element"
+          "extraction_element": [
+            "IfcSpace"
+          ]
         },
         {
           "topic_id": "f414feeb-1950-497c-89d9-4a1c963b96ec",
@@ -1178,10 +2049,22 @@
             "25gp_VVyD9lvFvbEG2imfd",
             "3XvQQHam50_u$RF0oNlgpi"
           ],
+          "all_guids_enriched": [
+            {
+              "guid": "25gp_VVyD9lvFvbEG2imfd",
+              "ifc_type": "IfcSpace"
+            },
+            {
+              "guid": "3XvQQHam50_u$RF0oNlgpi",
+              "ifc_type": "IfcWallStandardCase"
+            }
+          ],
           "required_guids": [
             "25gp_VVyD9lvFvbEG2imfd"
           ],
-          "guid_strategy": "element"
+          "extraction_element": [
+            "IfcSpace"
+          ]
         },
         {
           "topic_id": "a2b0f6fb-3b16-41fb-a78c-1df649c7e9f6",
@@ -1191,10 +2074,22 @@
             "1QJW0EW_H4Vwf8W_jP6RTh",
             "2m3q9noR993uEdVygJK11m"
           ],
+          "all_guids_enriched": [
+            {
+              "guid": "1QJW0EW_H4Vwf8W_jP6RTh",
+              "ifc_type": "IfcWallStandardCase"
+            },
+            {
+              "guid": "2m3q9noR993uEdVygJK11m",
+              "ifc_type": "IfcSpace"
+            }
+          ],
           "required_guids": [
             "2m3q9noR993uEdVygJK11m"
           ],
-          "guid_strategy": "element"
+          "extraction_element": [
+            "IfcSpace"
+          ]
         },
         {
           "topic_id": "57f3d639-14d3-4d2d-916b-76cc4e3960b3",
@@ -1204,10 +2099,22 @@
             "0fwchbH1r5zR_O89iZ8ddS",
             "2AlgoAEhD08Pc9zNFXF2Ew"
           ],
+          "all_guids_enriched": [
+            {
+              "guid": "0fwchbH1r5zR_O89iZ8ddS",
+              "ifc_type": "IfcSpace"
+            },
+            {
+              "guid": "2AlgoAEhD08Pc9zNFXF2Ew",
+              "ifc_type": "IfcWallStandardCase"
+            }
+          ],
           "required_guids": [
             "0fwchbH1r5zR_O89iZ8ddS"
           ],
-          "guid_strategy": "element"
+          "extraction_element": [
+            "IfcSpace"
+          ]
         },
         {
           "topic_id": "69a59809-ebaf-4e9c-b807-43378ac01cdc",
@@ -1217,10 +2124,22 @@
             "0$hBkuhEPFm81JrKzxmoiS",
             "3Up9T7OpvA4weoaf2xxqnk"
           ],
+          "all_guids_enriched": [
+            {
+              "guid": "0$hBkuhEPFm81JrKzxmoiS",
+              "ifc_type": "IfcWallStandardCase"
+            },
+            {
+              "guid": "3Up9T7OpvA4weoaf2xxqnk",
+              "ifc_type": "IfcSpace"
+            }
+          ],
           "required_guids": [
             "3Up9T7OpvA4weoaf2xxqnk"
           ],
-          "guid_strategy": "element"
+          "extraction_element": [
+            "IfcSpace"
+          ]
         },
         {
           "topic_id": "cfeff745-ed0c-49cd-828e-6f43d36fc70e",
@@ -1230,10 +2149,22 @@
             "0Bcix2yknD4QQ4NucZ2LZ3",
             "1F9gMOuYLAmApGAEj_zA6P"
           ],
+          "all_guids_enriched": [
+            {
+              "guid": "0Bcix2yknD4QQ4NucZ2LZ3",
+              "ifc_type": "IfcSpace"
+            },
+            {
+              "guid": "1F9gMOuYLAmApGAEj_zA6P",
+              "ifc_type": "IfcWallStandardCase"
+            }
+          ],
           "required_guids": [
             "0Bcix2yknD4QQ4NucZ2LZ3"
           ],
-          "guid_strategy": "element"
+          "extraction_element": [
+            "IfcSpace"
+          ]
         },
         {
           "topic_id": "9c97efe6-9fcc-4860-85b8-a6d69a525855",
@@ -1243,10 +2174,22 @@
             "0wX3Bl_XTAJ8lER5kq87y0",
             "111K32PabEKu1rIfxbAEPD"
           ],
+          "all_guids_enriched": [
+            {
+              "guid": "0wX3Bl_XTAJ8lER5kq87y0",
+              "ifc_type": "IfcSpace"
+            },
+            {
+              "guid": "111K32PabEKu1rIfxbAEPD",
+              "ifc_type": "IfcWallStandardCase"
+            }
+          ],
           "required_guids": [
             "0wX3Bl_XTAJ8lER5kq87y0"
           ],
-          "guid_strategy": "element"
+          "extraction_element": [
+            "IfcSpace"
+          ]
         },
         {
           "topic_id": "dd5345cd-aebb-49e5-964b-6377dd4b11e9",
@@ -1256,10 +2199,22 @@
             "111K32PabEKu1rIfxbAEPD",
             "1dFkzi10v3yRLoKy5ClqDV"
           ],
+          "all_guids_enriched": [
+            {
+              "guid": "111K32PabEKu1rIfxbAEPD",
+              "ifc_type": "IfcWallStandardCase"
+            },
+            {
+              "guid": "1dFkzi10v3yRLoKy5ClqDV",
+              "ifc_type": "IfcSpace"
+            }
+          ],
           "required_guids": [
             "1dFkzi10v3yRLoKy5ClqDV"
           ],
-          "guid_strategy": "element"
+          "extraction_element": [
+            "IfcSpace"
+          ]
         },
         {
           "topic_id": "9dcfbe9a-830c-4135-8b82-ccf75b9663f7",
@@ -1269,10 +2224,22 @@
             "0TQkmcTzL0ZfxeqP2F29Ye",
             "0bJ1uLaIzFOvpvhkN$XOpn"
           ],
+          "all_guids_enriched": [
+            {
+              "guid": "0TQkmcTzL0ZfxeqP2F29Ye",
+              "ifc_type": "IfcWallStandardCase"
+            },
+            {
+              "guid": "0bJ1uLaIzFOvpvhkN$XOpn",
+              "ifc_type": "IfcSpace"
+            }
+          ],
           "required_guids": [
             "0bJ1uLaIzFOvpvhkN$XOpn"
           ],
-          "guid_strategy": "element"
+          "extraction_element": [
+            "IfcSpace"
+          ]
         },
         {
           "topic_id": "0d1a748d-3a27-4600-af33-3926bd9b514c",
@@ -1282,10 +2249,22 @@
             "0TQkmcTzL0ZfxeqP2F29Ye",
             "0qf1mmZjTBMRMW8ttJqleG"
           ],
+          "all_guids_enriched": [
+            {
+              "guid": "0TQkmcTzL0ZfxeqP2F29Ye",
+              "ifc_type": "IfcWallStandardCase"
+            },
+            {
+              "guid": "0qf1mmZjTBMRMW8ttJqleG",
+              "ifc_type": "IfcSpace"
+            }
+          ],
           "required_guids": [
             "0qf1mmZjTBMRMW8ttJqleG"
           ],
-          "guid_strategy": "element"
+          "extraction_element": [
+            "IfcSpace"
+          ]
         },
         {
           "topic_id": "1c673bce-c14f-4b39-a17e-675748f72bf3",
@@ -1295,10 +2274,22 @@
             "16_jQJDFf88RMg5oYNRe9p",
             "35yKaUayr2LPWpST3GOIZw"
           ],
+          "all_guids_enriched": [
+            {
+              "guid": "16_jQJDFf88RMg5oYNRe9p",
+              "ifc_type": "IfcWallStandardCase"
+            },
+            {
+              "guid": "35yKaUayr2LPWpST3GOIZw",
+              "ifc_type": "IfcSpace"
+            }
+          ],
           "required_guids": [
             "35yKaUayr2LPWpST3GOIZw"
           ],
-          "guid_strategy": "element"
+          "extraction_element": [
+            "IfcSpace"
+          ]
         },
         {
           "topic_id": "8022fe64-5091-45e2-b264-46706161ff58",
@@ -1308,10 +2299,22 @@
             "16_jQJDFf88RMg5oYNRe9p",
             "2tQbNfNw5ErBlIFlcWbE2S"
           ],
+          "all_guids_enriched": [
+            {
+              "guid": "16_jQJDFf88RMg5oYNRe9p",
+              "ifc_type": "IfcWallStandardCase"
+            },
+            {
+              "guid": "2tQbNfNw5ErBlIFlcWbE2S",
+              "ifc_type": "IfcSpace"
+            }
+          ],
           "required_guids": [
             "2tQbNfNw5ErBlIFlcWbE2S"
           ],
-          "guid_strategy": "element"
+          "extraction_element": [
+            "IfcSpace"
+          ]
         },
         {
           "topic_id": "9e166279-22df-4f47-821f-ae4893553f12",
@@ -1321,10 +2324,22 @@
             "06$jwnwYzB2xtme_3oKazV",
             "2Uh4jhm8f4_vL1M3gaiGgj"
           ],
+          "all_guids_enriched": [
+            {
+              "guid": "06$jwnwYzB2xtme_3oKazV",
+              "ifc_type": "IfcWallStandardCase"
+            },
+            {
+              "guid": "2Uh4jhm8f4_vL1M3gaiGgj",
+              "ifc_type": "IfcSpace"
+            }
+          ],
           "required_guids": [
             "2Uh4jhm8f4_vL1M3gaiGgj"
           ],
-          "guid_strategy": "element"
+          "extraction_element": [
+            "IfcSpace"
+          ]
         },
         {
           "topic_id": "ec0d3e9c-0468-4712-8433-ac5b8455ad7c",
@@ -1334,10 +2349,22 @@
             "06$jwnwYzB2xtme_3oKazV",
             "3B4IVY1mL1OB855TfGPpKl"
           ],
+          "all_guids_enriched": [
+            {
+              "guid": "06$jwnwYzB2xtme_3oKazV",
+              "ifc_type": "IfcWallStandardCase"
+            },
+            {
+              "guid": "3B4IVY1mL1OB855TfGPpKl",
+              "ifc_type": "IfcSpace"
+            }
+          ],
           "required_guids": [
             "3B4IVY1mL1OB855TfGPpKl"
           ],
-          "guid_strategy": "element"
+          "extraction_element": [
+            "IfcSpace"
+          ]
         },
         {
           "topic_id": "666db45c-c82d-48cb-9ce6-2f559237973c",
@@ -1347,10 +2374,22 @@
             "0BuxB_Yoz2bxinyZI$3Ehs",
             "1V0NY3m$XFIulBQ7rRUBma"
           ],
+          "all_guids_enriched": [
+            {
+              "guid": "0BuxB_Yoz2bxinyZI$3Ehs",
+              "ifc_type": "IfcWallStandardCase"
+            },
+            {
+              "guid": "1V0NY3m$XFIulBQ7rRUBma",
+              "ifc_type": "IfcSpace"
+            }
+          ],
           "required_guids": [
             "1V0NY3m$XFIulBQ7rRUBma"
           ],
-          "guid_strategy": "element"
+          "extraction_element": [
+            "IfcSpace"
+          ]
         },
         {
           "topic_id": "931d2625-47ea-40f3-b961-a5f968fa71c4",
@@ -1360,10 +2399,22 @@
             "1LaDLhlXT1SfpE6m4AGlnb",
             "2ksjHtO5DDGhKmT4AUwUI0"
           ],
+          "all_guids_enriched": [
+            {
+              "guid": "1LaDLhlXT1SfpE6m4AGlnb",
+              "ifc_type": "IfcWallStandardCase"
+            },
+            {
+              "guid": "2ksjHtO5DDGhKmT4AUwUI0",
+              "ifc_type": "IfcSpace"
+            }
+          ],
           "required_guids": [
             "2ksjHtO5DDGhKmT4AUwUI0"
           ],
-          "guid_strategy": "element"
+          "extraction_element": [
+            "IfcSpace"
+          ]
         },
         {
           "topic_id": "1ba76b39-5777-4557-a1cf-347d1c287555",
@@ -1373,10 +2424,22 @@
             "1LaDLhlXT1SfpE6m4AGlnb",
             "3sjLk6T$b3_OpDigmhkMCw"
           ],
+          "all_guids_enriched": [
+            {
+              "guid": "1LaDLhlXT1SfpE6m4AGlnb",
+              "ifc_type": "IfcWallStandardCase"
+            },
+            {
+              "guid": "3sjLk6T$b3_OpDigmhkMCw",
+              "ifc_type": "IfcSpace"
+            }
+          ],
           "required_guids": [
             "3sjLk6T$b3_OpDigmhkMCw"
           ],
-          "guid_strategy": "element"
+          "extraction_element": [
+            "IfcSpace"
+          ]
         },
         {
           "topic_id": "a513e252-74a0-46b7-a791-b6656e59bfbd",
@@ -1386,10 +2449,22 @@
             "0S2gRn2gb1FQt9ZThjw2Ou",
             "0V95TNYbX1PfwH1RlgqMqt"
           ],
+          "all_guids_enriched": [
+            {
+              "guid": "0S2gRn2gb1FQt9ZThjw2Ou",
+              "ifc_type": "IfcWallStandardCase"
+            },
+            {
+              "guid": "0V95TNYbX1PfwH1RlgqMqt",
+              "ifc_type": "IfcSpace"
+            }
+          ],
           "required_guids": [
             "0V95TNYbX1PfwH1RlgqMqt"
           ],
-          "guid_strategy": "element"
+          "extraction_element": [
+            "IfcSpace"
+          ]
         },
         {
           "topic_id": "7b83a462-b941-47e8-a42b-07a42f7d249b",
@@ -1399,10 +2474,22 @@
             "0S2gRn2gb1FQt9ZThjw2Ou",
             "19AFpizAX06gIjmlbRQDfk"
           ],
+          "all_guids_enriched": [
+            {
+              "guid": "0S2gRn2gb1FQt9ZThjw2Ou",
+              "ifc_type": "IfcWallStandardCase"
+            },
+            {
+              "guid": "19AFpizAX06gIjmlbRQDfk",
+              "ifc_type": "IfcSpace"
+            }
+          ],
           "required_guids": [
             "19AFpizAX06gIjmlbRQDfk"
           ],
-          "guid_strategy": "element"
+          "extraction_element": [
+            "IfcSpace"
+          ]
         },
         {
           "topic_id": "257b806d-4e6b-4732-8a3b-e731e234089b",
@@ -1412,10 +2499,22 @@
             "0_NR7mqGTDv8K9xdVwLtaV",
             "0q9XnEUyL4vQPpZsmw9U0v"
           ],
+          "all_guids_enriched": [
+            {
+              "guid": "0_NR7mqGTDv8K9xdVwLtaV",
+              "ifc_type": "IfcSpace"
+            },
+            {
+              "guid": "0q9XnEUyL4vQPpZsmw9U0v",
+              "ifc_type": "IfcWallStandardCase"
+            }
+          ],
           "required_guids": [
             "0_NR7mqGTDv8K9xdVwLtaV"
           ],
-          "guid_strategy": "element"
+          "extraction_element": [
+            "IfcSpace"
+          ]
         },
         {
           "topic_id": "0ab999f8-a869-445d-8363-3e2c6bb028ce",
@@ -1425,10 +2524,22 @@
             "1kXAW24bT8ehxAhZCgepH3",
             "3wFJKTD698YPFAruMsPCGu"
           ],
+          "all_guids_enriched": [
+            {
+              "guid": "1kXAW24bT8ehxAhZCgepH3",
+              "ifc_type": "IfcSpace"
+            },
+            {
+              "guid": "3wFJKTD698YPFAruMsPCGu",
+              "ifc_type": "IfcWallStandardCase"
+            }
+          ],
           "required_guids": [
             "1kXAW24bT8ehxAhZCgepH3"
           ],
-          "guid_strategy": "element"
+          "extraction_element": [
+            "IfcSpace"
+          ]
         },
         {
           "topic_id": "8b4078c3-54c8-485f-90c8-e10dcfb6f508",
@@ -1438,10 +2549,22 @@
             "2n8EbY$rj1RQ$ya9rrqSXX",
             "3wFJKTD698YPFAruMsPCGu"
           ],
+          "all_guids_enriched": [
+            {
+              "guid": "2n8EbY$rj1RQ$ya9rrqSXX",
+              "ifc_type": "IfcSpace"
+            },
+            {
+              "guid": "3wFJKTD698YPFAruMsPCGu",
+              "ifc_type": "IfcWallStandardCase"
+            }
+          ],
           "required_guids": [
             "2n8EbY$rj1RQ$ya9rrqSXX"
           ],
-          "guid_strategy": "element"
+          "extraction_element": [
+            "IfcSpace"
+          ]
         },
         {
           "topic_id": "de78a26a-2367-423b-90bb-d2a66bcb135b",
@@ -1451,10 +2574,22 @@
             "2s4148sIr0m91B5JLpVUam",
             "3PTZNBmtHBhvoBsTI2RxL_"
           ],
+          "all_guids_enriched": [
+            {
+              "guid": "2s4148sIr0m91B5JLpVUam",
+              "ifc_type": "IfcWallStandardCase"
+            },
+            {
+              "guid": "3PTZNBmtHBhvoBsTI2RxL_",
+              "ifc_type": "IfcSpace"
+            }
+          ],
           "required_guids": [
             "3PTZNBmtHBhvoBsTI2RxL_"
           ],
-          "guid_strategy": "element"
+          "extraction_element": [
+            "IfcSpace"
+          ]
         },
         {
           "topic_id": "ce057a5c-85d5-488f-93ab-0052027abf21",
@@ -1464,10 +2599,22 @@
             "1dp4w1f6nBkAGYM$3pSHfL",
             "33_o3qLuT6R813gZk2l2TJ"
           ],
+          "all_guids_enriched": [
+            {
+              "guid": "1dp4w1f6nBkAGYM$3pSHfL",
+              "ifc_type": "IfcWallStandardCase"
+            },
+            {
+              "guid": "33_o3qLuT6R813gZk2l2TJ",
+              "ifc_type": "IfcSpace"
+            }
+          ],
           "required_guids": [
             "33_o3qLuT6R813gZk2l2TJ"
           ],
-          "guid_strategy": "element"
+          "extraction_element": [
+            "IfcSpace"
+          ]
         },
         {
           "topic_id": "ebda8c55-d589-42c9-ac9b-2353ccb1a085",
@@ -1477,10 +2624,22 @@
             "1etFtRm8bAXABiyIjaXy6H",
             "2ElUjenkj6rPeXtjB4anPa"
           ],
+          "all_guids_enriched": [
+            {
+              "guid": "1etFtRm8bAXABiyIjaXy6H",
+              "ifc_type": "IfcWallStandardCase"
+            },
+            {
+              "guid": "2ElUjenkj6rPeXtjB4anPa",
+              "ifc_type": "IfcSpace"
+            }
+          ],
           "required_guids": [
             "2ElUjenkj6rPeXtjB4anPa"
           ],
-          "guid_strategy": "element"
+          "extraction_element": [
+            "IfcSpace"
+          ]
         },
         {
           "topic_id": "fbd8e46e-2bcb-4633-99bc-55b7f3ce54a8",
@@ -1490,10 +2649,22 @@
             "0ph9UIbnDFpfTMD7OzouEK",
             "19_wX24lz2HgsjUlrtrRuT"
           ],
+          "all_guids_enriched": [
+            {
+              "guid": "0ph9UIbnDFpfTMD7OzouEK",
+              "ifc_type": "IfcWallStandardCase"
+            },
+            {
+              "guid": "19_wX24lz2HgsjUlrtrRuT",
+              "ifc_type": "IfcSpace"
+            }
+          ],
           "required_guids": [
             "19_wX24lz2HgsjUlrtrRuT"
           ],
-          "guid_strategy": "element"
+          "extraction_element": [
+            "IfcSpace"
+          ]
         },
         {
           "topic_id": "cdc9cd4d-f3c7-4870-aa10-7efdea102884",
@@ -1503,10 +2674,22 @@
             "0ZdLQ0aRb7$RxLLRWu7nQb",
             "3w0Hzip0bCywcQNk9ZbG4J"
           ],
+          "all_guids_enriched": [
+            {
+              "guid": "0ZdLQ0aRb7$RxLLRWu7nQb",
+              "ifc_type": "IfcSpace"
+            },
+            {
+              "guid": "3w0Hzip0bCywcQNk9ZbG4J",
+              "ifc_type": "IfcWallStandardCase"
+            }
+          ],
           "required_guids": [
             "0ZdLQ0aRb7$RxLLRWu7nQb"
           ],
-          "guid_strategy": "element"
+          "extraction_element": [
+            "IfcSpace"
+          ]
         },
         {
           "topic_id": "b2bf22d5-95f8-4ffd-93ce-9bc4bfdf2485",
@@ -1516,10 +2699,22 @@
             "0xXSbLVZXBiQ_VigTVWI9d",
             "3Iwj2SKh1EY9eya8U_IOJh"
           ],
+          "all_guids_enriched": [
+            {
+              "guid": "0xXSbLVZXBiQ_VigTVWI9d",
+              "ifc_type": "IfcWallStandardCase"
+            },
+            {
+              "guid": "3Iwj2SKh1EY9eya8U_IOJh",
+              "ifc_type": "IfcSpace"
+            }
+          ],
           "required_guids": [
             "3Iwj2SKh1EY9eya8U_IOJh"
           ],
-          "guid_strategy": "element"
+          "extraction_element": [
+            "IfcSpace"
+          ]
         },
         {
           "topic_id": "9776f557-e9f3-489b-b54a-03cbf3a666f5",
@@ -1529,10 +2724,22 @@
             "1WN11damb5TPUsdK4_GYif",
             "20yJe0ynPCPe6$KrRcRlQJ"
           ],
+          "all_guids_enriched": [
+            {
+              "guid": "1WN11damb5TPUsdK4_GYif",
+              "ifc_type": "IfcSpace"
+            },
+            {
+              "guid": "20yJe0ynPCPe6$KrRcRlQJ",
+              "ifc_type": "IfcWallStandardCase"
+            }
+          ],
           "required_guids": [
             "1WN11damb5TPUsdK4_GYif"
           ],
-          "guid_strategy": "element"
+          "extraction_element": [
+            "IfcSpace"
+          ]
         },
         {
           "topic_id": "00cf1758-6d0a-4e8f-82e4-47321f371324",
@@ -1542,10 +2749,22 @@
             "0XuK1zyDLBLfW3sPJOAJdq",
             "2oWgdxxp51he3VxoaZAQlo"
           ],
+          "all_guids_enriched": [
+            {
+              "guid": "0XuK1zyDLBLfW3sPJOAJdq",
+              "ifc_type": "IfcSpace"
+            },
+            {
+              "guid": "2oWgdxxp51he3VxoaZAQlo",
+              "ifc_type": "IfcWallStandardCase"
+            }
+          ],
           "required_guids": [
             "0XuK1zyDLBLfW3sPJOAJdq"
           ],
-          "guid_strategy": "element"
+          "extraction_element": [
+            "IfcSpace"
+          ]
         },
         {
           "topic_id": "0f459000-1c3b-471d-aa1e-596c7932d792",
@@ -1555,10 +2774,22 @@
             "0pvRnLEFnDlgJwhVZiBzzI",
             "0wjflNfwX6Zv6qZCdRZCf1"
           ],
+          "all_guids_enriched": [
+            {
+              "guid": "0pvRnLEFnDlgJwhVZiBzzI",
+              "ifc_type": "IfcSpace"
+            },
+            {
+              "guid": "0wjflNfwX6Zv6qZCdRZCf1",
+              "ifc_type": "IfcWallStandardCase"
+            }
+          ],
           "required_guids": [
             "0pvRnLEFnDlgJwhVZiBzzI"
           ],
-          "guid_strategy": "element"
+          "extraction_element": [
+            "IfcSpace"
+          ]
         },
         {
           "topic_id": "dc0bd694-d6fe-4f13-adf0-d6022c21563f",
@@ -1568,10 +2799,22 @@
             "0rWfxolgP4lea5bh97P$8m",
             "1g2L6IHXP7cgvhTQkZ908W"
           ],
+          "all_guids_enriched": [
+            {
+              "guid": "0rWfxolgP4lea5bh97P$8m",
+              "ifc_type": "IfcSpace"
+            },
+            {
+              "guid": "1g2L6IHXP7cgvhTQkZ908W",
+              "ifc_type": "IfcWallStandardCase"
+            }
+          ],
           "required_guids": [
             "0rWfxolgP4lea5bh97P$8m"
           ],
-          "guid_strategy": "element"
+          "extraction_element": [
+            "IfcSpace"
+          ]
         },
         {
           "topic_id": "a9da51ab-ad60-4242-abac-d4aec215478e",
@@ -1581,10 +2824,22 @@
             "1BrP9AHlPEtgybu83cA2rC",
             "3uSBpk4gb47fDgxC$BrK2I"
           ],
+          "all_guids_enriched": [
+            {
+              "guid": "1BrP9AHlPEtgybu83cA2rC",
+              "ifc_type": "IfcWallStandardCase"
+            },
+            {
+              "guid": "3uSBpk4gb47fDgxC$BrK2I",
+              "ifc_type": "IfcSpace"
+            }
+          ],
           "required_guids": [
             "3uSBpk4gb47fDgxC$BrK2I"
           ],
-          "guid_strategy": "element"
+          "extraction_element": [
+            "IfcSpace"
+          ]
         }
       ]
     },

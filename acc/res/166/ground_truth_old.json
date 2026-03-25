@@ -1,10 +1,9 @@
 {
   "metadata": {
-    "model_name": "166",
-    "version": "v2",
     "total_topics": 41,
     "rules_count": 16,
-    "pass_rules_count": 8
+    "pass_rules_count": 8,
+    "model_name": "166"
   },
   "rules": {
     "304_3_1_circular_space": {
@@ -31,48 +30,6 @@
             "38F_bUbFvBfv9QXygUodTG",
             "38F_bUbFvBfv9QXygUodUq"
           ],
-          "all_guids_enriched": [
-            {
-              "guid": "02sTr6M6vE9Qf5C1OPPy8j",
-              "ifc_type": "IfcSpace"
-            },
-            {
-              "guid": "02sTr6M6vE9Qf5C1OPPyEC",
-              "ifc_type": "IfcSpace"
-            },
-            {
-              "guid": "0jno74fnz3JA4_tWzynQ3m",
-              "ifc_type": "IfcSpace"
-            },
-            {
-              "guid": "0jno74fnz3JA4_tWzynQUb",
-              "ifc_type": "IfcSpace"
-            },
-            {
-              "guid": "1R$KBYTRP3QOdXlCBx2dzk",
-              "ifc_type": "IfcSpace"
-            },
-            {
-              "guid": "1kDD1yopT87PgXGbHYxDrf",
-              "ifc_type": "IfcSpace"
-            },
-            {
-              "guid": "2ci8AX44j6O8Lr29eFxLyf",
-              "ifc_type": "IfcSpace"
-            },
-            {
-              "guid": "2k4hklcZX0AhLEYFO5nh2H",
-              "ifc_type": "IfcSpace"
-            },
-            {
-              "guid": "38F_bUbFvBfv9QXygUodTG",
-              "ifc_type": "IfcSpace"
-            },
-            {
-              "guid": "38F_bUbFvBfv9QXygUodUq",
-              "ifc_type": "IfcSpace"
-            }
-          ],
           "required_guids": [
             "02sTr6M6vE9Qf5C1OPPy8j",
             "02sTr6M6vE9Qf5C1OPPyEC",
@@ -85,9 +42,7 @@
             "38F_bUbFvBfv9QXygUodTG",
             "38F_bUbFvBfv9QXygUodUq"
           ],
-          "extraction_element": [
-            "IfcSpace"
-          ]
+          "guid_strategy": "single"
         },
         {
           "topic_id": "dc90342c-841d-4f6b-8f9f-cd8aed38c950",
@@ -105,48 +60,6 @@
             "38F_bUbFvBfv9QXygUodU9",
             "38F_bUbFvBfv9QXygUodVn"
           ],
-          "all_guids_enriched": [
-            {
-              "guid": "02sTr6M6vE9Qf5C1OPPy9f",
-              "ifc_type": "IfcSpace"
-            },
-            {
-              "guid": "02sTr6M6vE9Qf5C1OPPyFA",
-              "ifc_type": "IfcSpace"
-            },
-            {
-              "guid": "0jno74fnz3JA4_tWzynQ3r",
-              "ifc_type": "IfcSpace"
-            },
-            {
-              "guid": "0jno74fnz3JA4_tWzynQUg",
-              "ifc_type": "IfcSpace"
-            },
-            {
-              "guid": "1R$KBYTRP3QOdXlCBx2d_t",
-              "ifc_type": "IfcSpace"
-            },
-            {
-              "guid": "1R$KBYTRP3QOdXlCBx2dzn",
-              "ifc_type": "IfcSpace"
-            },
-            {
-              "guid": "1kDD1yopT87PgXGbHYxDrg",
-              "ifc_type": "IfcSpace"
-            },
-            {
-              "guid": "2ci8AX44j6O8Lr29eFxLyk",
-              "ifc_type": "IfcSpace"
-            },
-            {
-              "guid": "38F_bUbFvBfv9QXygUodU9",
-              "ifc_type": "IfcSpace"
-            },
-            {
-              "guid": "38F_bUbFvBfv9QXygUodVn",
-              "ifc_type": "IfcSpace"
-            }
-          ],
           "required_guids": [
             "02sTr6M6vE9Qf5C1OPPy9f",
             "02sTr6M6vE9Qf5C1OPPyFA",
@@ -159,9 +72,7 @@
             "38F_bUbFvBfv9QXygUodU9",
             "38F_bUbFvBfv9QXygUodVn"
           ],
-          "extraction_element": [
-            "IfcSpace"
-          ]
+          "guid_strategy": "single"
         },
         {
           "topic_id": "48aad3f1-79e7-4de0-a883-16b00090e23e",
@@ -170,18 +81,10 @@
           "all_guids": [
             "12f5QcaEv27vYRG99unEhW"
           ],
-          "all_guids_enriched": [
-            {
-              "guid": "12f5QcaEv27vYRG99unEhW",
-              "ifc_type": "IfcSpace"
-            }
-          ],
           "required_guids": [
             "12f5QcaEv27vYRG99unEhW"
           ],
-          "extraction_element": [
-            "IfcSpace"
-          ]
+          "guid_strategy": "single"
         }
       ]
     },
@@ -206,46 +109,10 @@
             "3uUWHjHcfEwfBz0Ci_6GKr",
             "3uUWHjHcfEwfBz0Ci_6GMX"
           ],
-          "all_guids_enriched": [
-            {
-              "guid": "0jno74fnz3JA4_tWzynQV0",
-              "ifc_type": "IfcWall"
-            },
-            {
-              "guid": "2Q4p8vO3f7xfeTuXPVwexW",
-              "ifc_type": "IfcSpace"
-            },
-            {
-              "guid": "2Q4p8vO3f7xfeTuXPVwezU",
-              "ifc_type": "IfcSpace"
-            },
-            {
-              "guid": "3$FAt$zaL8xQnSrjNsTfy8",
-              "ifc_type": "IfcWall"
-            },
-            {
-              "guid": "3ilNunKRzC8O5AE9O61ty0",
-              "ifc_type": "IfcSpace"
-            },
-            {
-              "guid": "3uUWHjHcfEwfBz0Ci_6GKr",
-              "ifc_type": "IfcSpace"
-            },
-            {
-              "guid": "3uUWHjHcfEwfBz0Ci_6GMX",
-              "ifc_type": "IfcSpace"
-            }
-          ],
           "required_guids": [
-            "2Q4p8vO3f7xfeTuXPVwexW",
-            "2Q4p8vO3f7xfeTuXPVwezU",
-            "3ilNunKRzC8O5AE9O61ty0",
-            "3uUWHjHcfEwfBz0Ci_6GKr",
-            "3uUWHjHcfEwfBz0Ci_6GMX"
+            "0jno74fnz3JA4_tWzynQV0"
           ],
-          "extraction_element": [
-            "IfcSpace"
-          ]
+          "guid_strategy": "primary_and_cause"
         }
       ]
     },
@@ -264,18 +131,10 @@
           "all_guids": [
             "2epRaYhqX0DxnJHWOF5J_G"
           ],
-          "all_guids_enriched": [
-            {
-              "guid": "2epRaYhqX0DxnJHWOF5J_G",
-              "ifc_type": "IfcStair"
-            }
-          ],
           "required_guids": [
             "2epRaYhqX0DxnJHWOF5J_G"
           ],
-          "extraction_element": [
-            "IfcStair"
-          ]
+          "guid_strategy": "single"
         },
         {
           "topic_id": "06c047f8-642e-4ad0-ab9c-4f13edd84fe2",
@@ -284,18 +143,10 @@
           "all_guids": [
             "33ANSOGgzDP9smaVGaDGQt"
           ],
-          "all_guids_enriched": [
-            {
-              "guid": "33ANSOGgzDP9smaVGaDGQt",
-              "ifc_type": "IfcStair"
-            }
-          ],
           "required_guids": [
             "33ANSOGgzDP9smaVGaDGQt"
           ],
-          "extraction_element": [
-            "IfcStair"
-          ]
+          "guid_strategy": "single"
         },
         {
           "topic_id": "cee1cdaa-022e-404a-9929-cb0b7ebb36e9",
@@ -304,18 +155,10 @@
           "all_guids": [
             "2epRaYhqX0DxnJHWOF5Jnz"
           ],
-          "all_guids_enriched": [
-            {
-              "guid": "2epRaYhqX0DxnJHWOF5Jnz",
-              "ifc_type": "IfcStair"
-            }
-          ],
           "required_guids": [
             "2epRaYhqX0DxnJHWOF5Jnz"
           ],
-          "extraction_element": [
-            "IfcStair"
-          ]
+          "guid_strategy": "single"
         },
         {
           "topic_id": "f15708cd-1363-4681-b9fc-563baddc7b1f",
@@ -324,18 +167,10 @@
           "all_guids": [
             "2epRaYhqX0DxnJHWOF5JzT"
           ],
-          "all_guids_enriched": [
-            {
-              "guid": "2epRaYhqX0DxnJHWOF5JzT",
-              "ifc_type": "IfcStair"
-            }
-          ],
           "required_guids": [
             "2epRaYhqX0DxnJHWOF5JzT"
           ],
-          "extraction_element": [
-            "IfcStair"
-          ]
+          "guid_strategy": "single"
         },
         {
           "topic_id": "53bc1a82-3f17-4dcb-8a95-fb5cfc18a3a7",
@@ -344,18 +179,10 @@
           "all_guids": [
             "2Ev12zif18qhpprOVbtAFL"
           ],
-          "all_guids_enriched": [
-            {
-              "guid": "2Ev12zif18qhpprOVbtAFL",
-              "ifc_type": "IfcStair"
-            }
-          ],
           "required_guids": [
             "2Ev12zif18qhpprOVbtAFL"
           ],
-          "extraction_element": [
-            "IfcStair"
-          ]
+          "guid_strategy": "single"
         },
         {
           "topic_id": "884e5e2b-a77d-46ad-95cf-801828aee026",
@@ -364,18 +191,10 @@
           "all_guids": [
             "2Ev12zif18qhpprOVbtAEU"
           ],
-          "all_guids_enriched": [
-            {
-              "guid": "2Ev12zif18qhpprOVbtAEU",
-              "ifc_type": "IfcStair"
-            }
-          ],
           "required_guids": [
             "2Ev12zif18qhpprOVbtAEU"
           ],
-          "extraction_element": [
-            "IfcStair"
-          ]
+          "guid_strategy": "single"
         },
         {
           "topic_id": "1fa613ad-0a2c-4406-8ea4-a2e34406ec5c",
@@ -384,18 +203,10 @@
           "all_guids": [
             "2Ev12zif18qhpprOVbtAIt"
           ],
-          "all_guids_enriched": [
-            {
-              "guid": "2Ev12zif18qhpprOVbtAIt",
-              "ifc_type": "IfcStair"
-            }
-          ],
           "required_guids": [
             "2Ev12zif18qhpprOVbtAIt"
           ],
-          "extraction_element": [
-            "IfcStair"
-          ]
+          "guid_strategy": "single"
         },
         {
           "topic_id": "9398fd04-99cd-4397-a767-559c3c5a5e22",
@@ -404,18 +215,10 @@
           "all_guids": [
             "2Ev12zif18qhpprOVbtAHO"
           ],
-          "all_guids_enriched": [
-            {
-              "guid": "2Ev12zif18qhpprOVbtAHO",
-              "ifc_type": "IfcStair"
-            }
-          ],
           "required_guids": [
             "2Ev12zif18qhpprOVbtAHO"
           ],
-          "extraction_element": [
-            "IfcStair"
-          ]
+          "guid_strategy": "single"
         }
       ]
     },
@@ -436,26 +239,10 @@
             "1xxBAYOm5EU8_Pw3pzr538",
             "1xxBAYOm5EU8_Pw3pzr5V2"
           ],
-          "all_guids_enriched": [
-            {
-              "guid": "12f5QcaEv27vYRG99unEiM",
-              "ifc_type": "IfcDoor"
-            },
-            {
-              "guid": "1xxBAYOm5EU8_Pw3pzr538",
-              "ifc_type": "IfcFurniture"
-            },
-            {
-              "guid": "1xxBAYOm5EU8_Pw3pzr5V2",
-              "ifc_type": "IfcFurniture"
-            }
-          ],
           "required_guids": [
             "12f5QcaEv27vYRG99unEiM"
           ],
-          "extraction_element": [
-            "IfcDoor"
-          ]
+          "guid_strategy": "primary_and_cause"
         },
         {
           "topic_id": "6a0e56e8-3667-445b-94ad-c55304894466",
@@ -465,22 +252,10 @@
             "02sTr6M6vE9Qf5C1OPPy8g",
             "3KDZhy$nzFoQxETLFlDfOu"
           ],
-          "all_guids_enriched": [
-            {
-              "guid": "02sTr6M6vE9Qf5C1OPPy8g",
-              "ifc_type": "IfcDoor"
-            },
-            {
-              "guid": "3KDZhy$nzFoQxETLFlDfOu",
-              "ifc_type": "IfcFurniture"
-            }
-          ],
           "required_guids": [
             "02sTr6M6vE9Qf5C1OPPy8g"
           ],
-          "extraction_element": [
-            "IfcDoor"
-          ]
+          "guid_strategy": "primary_and_cause"
         },
         {
           "topic_id": "20b278a8-3f09-4b85-97e5-e04b9298f17a",
@@ -490,22 +265,10 @@
             "0jno74fnz3JA4_tWzynQ3f",
             "3KDZhy$nzFoQxETLFlDfVv"
           ],
-          "all_guids_enriched": [
-            {
-              "guid": "0jno74fnz3JA4_tWzynQ3f",
-              "ifc_type": "IfcDoor"
-            },
-            {
-              "guid": "3KDZhy$nzFoQxETLFlDfVv",
-              "ifc_type": "IfcFurniture"
-            }
-          ],
           "required_guids": [
             "0jno74fnz3JA4_tWzynQ3f"
           ],
-          "extraction_element": [
-            "IfcDoor"
-          ]
+          "guid_strategy": "primary_and_cause"
         },
         {
           "topic_id": "d9e81e39-7a63-4a0e-bb0f-0294c7354198",
@@ -515,22 +278,10 @@
             "0jno74fnz3JA4_tWzynQ3O",
             "3KDZhy$nzFoQxETLFlDfVz"
           ],
-          "all_guids_enriched": [
-            {
-              "guid": "0jno74fnz3JA4_tWzynQ3O",
-              "ifc_type": "IfcDoor"
-            },
-            {
-              "guid": "3KDZhy$nzFoQxETLFlDfVz",
-              "ifc_type": "IfcFurniture"
-            }
-          ],
           "required_guids": [
             "0jno74fnz3JA4_tWzynQ3O"
           ],
-          "extraction_element": [
-            "IfcDoor"
-          ]
+          "guid_strategy": "primary_and_cause"
         },
         {
           "topic_id": "07711026-bdbc-470c-b678-819adf8b8110",
@@ -540,22 +291,10 @@
             "3KDZhy$nzFoQxETLFlDfTL",
             "3xJqPJrvz2sQPZbf6JPpGL"
           ],
-          "all_guids_enriched": [
-            {
-              "guid": "3KDZhy$nzFoQxETLFlDfTL",
-              "ifc_type": "IfcFurniture"
-            },
-            {
-              "guid": "3xJqPJrvz2sQPZbf6JPpGL",
-              "ifc_type": "IfcDoor"
-            }
-          ],
           "required_guids": [
-            "3xJqPJrvz2sQPZbf6JPpGL"
+            "3KDZhy$nzFoQxETLFlDfTL"
           ],
-          "extraction_element": [
-            "IfcDoor"
-          ]
+          "guid_strategy": "primary_and_cause"
         },
         {
           "topic_id": "f3312b51-1e99-412b-83c8-42d9d4f24f9e",
@@ -565,22 +304,10 @@
             "02sTr6M6vE9Qf5C1OPPyEr",
             "3KDZhy$nzFoQxETLFlDfOm"
           ],
-          "all_guids_enriched": [
-            {
-              "guid": "02sTr6M6vE9Qf5C1OPPyEr",
-              "ifc_type": "IfcDoor"
-            },
-            {
-              "guid": "3KDZhy$nzFoQxETLFlDfOm",
-              "ifc_type": "IfcFurniture"
-            }
-          ],
           "required_guids": [
             "02sTr6M6vE9Qf5C1OPPyEr"
           ],
-          "extraction_element": [
-            "IfcDoor"
-          ]
+          "guid_strategy": "primary_and_cause"
         },
         {
           "topic_id": "a2fa4814-3985-459d-a711-861cd00f55ea",
@@ -591,26 +318,10 @@
             "3KDZhy$nzFoQxETLFlDfVu",
             "3KDZhy$nzFoQxETLFlDfVx"
           ],
-          "all_guids_enriched": [
-            {
-              "guid": "0jno74fnz3JA4_tWzynQ3d",
-              "ifc_type": "IfcDoor"
-            },
-            {
-              "guid": "3KDZhy$nzFoQxETLFlDfVu",
-              "ifc_type": "IfcFurniture"
-            },
-            {
-              "guid": "3KDZhy$nzFoQxETLFlDfVx",
-              "ifc_type": "IfcFurniture"
-            }
-          ],
           "required_guids": [
             "0jno74fnz3JA4_tWzynQ3d"
           ],
-          "extraction_element": [
-            "IfcDoor"
-          ]
+          "guid_strategy": "primary_and_cause"
         },
         {
           "topic_id": "ae699a5d-e790-4b21-a55d-a9399502cb98",
@@ -621,26 +332,10 @@
             "3KDZhy$nzFoQxETLFlDfO$",
             "3KDZhy$nzFoQxETLFlDfOw"
           ],
-          "all_guids_enriched": [
-            {
-              "guid": "02sTr6M6vE9Qf5C1OPPy8h",
-              "ifc_type": "IfcDoor"
-            },
-            {
-              "guid": "3KDZhy$nzFoQxETLFlDfO$",
-              "ifc_type": "IfcFurniture"
-            },
-            {
-              "guid": "3KDZhy$nzFoQxETLFlDfOw",
-              "ifc_type": "IfcFurniture"
-            }
-          ],
           "required_guids": [
             "02sTr6M6vE9Qf5C1OPPy8h"
           ],
-          "extraction_element": [
-            "IfcDoor"
-          ]
+          "guid_strategy": "primary_and_cause"
         },
         {
           "topic_id": "9f399dc2-7832-4b8a-827b-cf122f14035a",
@@ -650,22 +345,10 @@
             "38F_bUbFvBfv9QXygUodUv",
             "3KDZhy$nzFoQxETLFlDfVO"
           ],
-          "all_guids_enriched": [
-            {
-              "guid": "38F_bUbFvBfv9QXygUodUv",
-              "ifc_type": "IfcDoor"
-            },
-            {
-              "guid": "3KDZhy$nzFoQxETLFlDfVO",
-              "ifc_type": "IfcFurniture"
-            }
-          ],
           "required_guids": [
             "38F_bUbFvBfv9QXygUodUv"
           ],
-          "extraction_element": [
-            "IfcDoor"
-          ]
+          "guid_strategy": "primary_and_cause"
         },
         {
           "topic_id": "02eb30f5-9220-4b5e-a102-c81a4c592dd2",
@@ -675,22 +358,10 @@
             "38F_bUbFvBfv9QXygUodUn",
             "3KDZhy$nzFoQxETLFlDfVK"
           ],
-          "all_guids_enriched": [
-            {
-              "guid": "38F_bUbFvBfv9QXygUodUn",
-              "ifc_type": "IfcDoor"
-            },
-            {
-              "guid": "3KDZhy$nzFoQxETLFlDfVK",
-              "ifc_type": "IfcFurniture"
-            }
-          ],
           "required_guids": [
             "38F_bUbFvBfv9QXygUodUn"
           ],
-          "extraction_element": [
-            "IfcDoor"
-          ]
+          "guid_strategy": "primary_and_cause"
         },
         {
           "topic_id": "d8111757-10d0-482e-87c5-8cf9e7e24306",
@@ -700,22 +371,10 @@
             "1R$KBYTRP3QOdXlCBx2dzb",
             "3KDZhy$nzFoQxETLFlDfVC"
           ],
-          "all_guids_enriched": [
-            {
-              "guid": "1R$KBYTRP3QOdXlCBx2dzb",
-              "ifc_type": "IfcDoor"
-            },
-            {
-              "guid": "3KDZhy$nzFoQxETLFlDfVC",
-              "ifc_type": "IfcFurniture"
-            }
-          ],
           "required_guids": [
             "1R$KBYTRP3QOdXlCBx2dzb"
           ],
-          "extraction_element": [
-            "IfcDoor"
-          ]
+          "guid_strategy": "primary_and_cause"
         },
         {
           "topic_id": "4575dd97-ae63-4bcb-856b-77a2ee07367c",
@@ -725,22 +384,10 @@
             "1xxBAYOm5EU8_Pw3pzr54H",
             "2ci8AX44j6O8Lr29eFxLyp"
           ],
-          "all_guids_enriched": [
-            {
-              "guid": "1xxBAYOm5EU8_Pw3pzr54H",
-              "ifc_type": "IfcFurniture"
-            },
-            {
-              "guid": "2ci8AX44j6O8Lr29eFxLyp",
-              "ifc_type": "IfcDoor"
-            }
-          ],
           "required_guids": [
-            "2ci8AX44j6O8Lr29eFxLyp"
+            "1xxBAYOm5EU8_Pw3pzr54H"
           ],
-          "extraction_element": [
-            "IfcDoor"
-          ]
+          "guid_strategy": "primary_and_cause"
         },
         {
           "topic_id": "ea82d1cd-2bd4-49f4-bdf8-29173d564a6f",
@@ -750,22 +397,10 @@
             "2k4hklcZX0AhLEYFO5nizD",
             "3KDZhy$nzFoQxETLFlDfVG"
           ],
-          "all_guids_enriched": [
-            {
-              "guid": "2k4hklcZX0AhLEYFO5nizD",
-              "ifc_type": "IfcDoor"
-            },
-            {
-              "guid": "3KDZhy$nzFoQxETLFlDfVG",
-              "ifc_type": "IfcFurniture"
-            }
-          ],
           "required_guids": [
             "2k4hklcZX0AhLEYFO5nizD"
           ],
-          "extraction_element": [
-            "IfcDoor"
-          ]
+          "guid_strategy": "primary_and_cause"
         }
       ]
     },
@@ -823,177 +458,49 @@
             "3qHHwYbFDANA3sEF6iPkYV",
             "3qHHwYbFDANA3sEF6iPkaT"
           ],
-          "all_guids_enriched": [
-            {
-              "guid": "02sTr6M6vE9Qf5C1OPPy8X",
-              "ifc_type": "IfcWall"
-            },
-            {
-              "guid": "02sTr6M6vE9Qf5C1OPPy9L",
-              "ifc_type": "IfcWall"
-            },
-            {
-              "guid": "02sTr6M6vE9Qf5C1OPPy9U",
-              "ifc_type": "IfcWall"
-            },
-            {
-              "guid": "02sTr6M6vE9Qf5C1OPPy9h",
-              "ifc_type": "IfcWall"
-            },
-            {
-              "guid": "02sTr6M6vE9Qf5C1OPPyE3",
-              "ifc_type": "IfcWall"
-            },
-            {
-              "guid": "02sTr6M6vE9Qf5C1OPPyE7",
-              "ifc_type": "IfcWall"
-            },
-            {
-              "guid": "02sTr6M6vE9Qf5C1OPPyEq",
-              "ifc_type": "IfcWall"
-            },
-            {
-              "guid": "02sTr6M6vE9Qf5C1OPPyEt",
-              "ifc_type": "IfcWall"
-            },
-            {
-              "guid": "02sTr6M6vE9Qf5C1OPPyEu",
-              "ifc_type": "IfcWall"
-            },
-            {
-              "guid": "02sTr6M6vE9Qf5C1OPPyFW",
-              "ifc_type": "IfcWall"
-            },
-            {
-              "guid": "02sTr6M6vE9Qf5C1OPPyFi",
-              "ifc_type": "IfcWall"
-            },
-            {
-              "guid": "02sTr6M6vE9Qf5C1OPPyFq",
-              "ifc_type": "IfcWall"
-            },
-            {
-              "guid": "0gMZ1IS1D3FvSg_p9VAdYB",
-              "ifc_type": "IfcSlab"
-            },
-            {
-              "guid": "0gMZ1IS1D3FvSg_p9VAdds",
-              "ifc_type": "IfcSlab"
-            },
-            {
-              "guid": "0jno74fnz3JA4_tWzynQVu",
-              "ifc_type": "IfcWall"
-            },
-            {
-              "guid": "12f5QcaEv27vYRG99unEXL",
-              "ifc_type": "IfcColumn"
-            },
-            {
-              "guid": "12f5QcaEv27vYRG99unEXM",
-              "ifc_type": "IfcColumn"
-            },
-            {
-              "guid": "12f5QcaEv27vYRG99unEXN",
-              "ifc_type": "IfcColumn"
-            },
-            {
-              "guid": "12f5QcaEv27vYRG99unEXe",
-              "ifc_type": "IfcColumn"
-            },
-            {
-              "guid": "1R$KBYTRP3QOdXlCBx2d$D",
-              "ifc_type": "IfcWall"
-            },
-            {
-              "guid": "1R$KBYTRP3QOdXlCBx2d$Z",
-              "ifc_type": "IfcWall"
-            },
-            {
-              "guid": "1R$KBYTRP3QOdXlCBx2d_7",
-              "ifc_type": "IfcWall"
-            },
-            {
-              "guid": "1R$KBYTRP3QOdXlCBx2d_9",
-              "ifc_type": "IfcWall"
-            },
-            {
-              "guid": "1R$KBYTRP3QOdXlCBx2d_v",
-              "ifc_type": "IfcWall"
-            },
-            {
-              "guid": "1R$KBYTRP3QOdXlCBx2dhn",
-              "ifc_type": "IfcWall"
-            },
-            {
-              "guid": "1R$KBYTRP3QOdXlCBx2dzp",
-              "ifc_type": "IfcWall"
-            },
-            {
-              "guid": "2k4hklcZX0AhLEYFO5nizC",
-              "ifc_type": "IfcWall"
-            },
-            {
-              "guid": "2rgc2m7xv6XO$hLnzZPAj1",
-              "ifc_type": "IfcSlab"
-            },
-            {
-              "guid": "33ANSOGgzDP9smaVGaDGKR",
-              "ifc_type": "IfcSlab"
-            },
-            {
-              "guid": "38F_bUbFvBfv9QXygUod3X",
-              "ifc_type": "IfcWall"
-            },
-            {
-              "guid": "38F_bUbFvBfv9QXygUodOj",
-              "ifc_type": "IfcWall"
-            },
-            {
-              "guid": "38F_bUbFvBfv9QXygUodUF",
-              "ifc_type": "IfcWall"
-            },
-            {
-              "guid": "38F_bUbFvBfv9QXygUodUH",
-              "ifc_type": "IfcWall"
-            },
-            {
-              "guid": "38F_bUbFvBfv9QXygUodUJ",
-              "ifc_type": "IfcWall"
-            },
-            {
-              "guid": "38F_bUbFvBfv9QXygUodUu",
-              "ifc_type": "IfcWall"
-            },
-            {
-              "guid": "38F_bUbFvBfv9QXygUodVR",
-              "ifc_type": "IfcWall"
-            },
-            {
-              "guid": "38F_bUbFvBfv9QXygUodVt",
-              "ifc_type": "IfcWall"
-            },
-            {
-              "guid": "3KT7y79217qhD1ukhFstrg",
-              "ifc_type": "IfcWall"
-            },
-            {
-              "guid": "3qHHwYbFDANA3sEF6iPkYV",
-              "ifc_type": "IfcWall"
-            },
-            {
-              "guid": "3qHHwYbFDANA3sEF6iPkaT",
-              "ifc_type": "IfcWall"
-            }
-          ],
           "required_guids": [
+            "02sTr6M6vE9Qf5C1OPPy8X",
+            "02sTr6M6vE9Qf5C1OPPy9L",
+            "02sTr6M6vE9Qf5C1OPPy9U",
+            "02sTr6M6vE9Qf5C1OPPy9h",
+            "02sTr6M6vE9Qf5C1OPPyE3",
+            "02sTr6M6vE9Qf5C1OPPyE7",
+            "02sTr6M6vE9Qf5C1OPPyEq",
+            "02sTr6M6vE9Qf5C1OPPyEt",
+            "02sTr6M6vE9Qf5C1OPPyEu",
+            "02sTr6M6vE9Qf5C1OPPyFW",
+            "02sTr6M6vE9Qf5C1OPPyFi",
+            "02sTr6M6vE9Qf5C1OPPyFq",
             "0gMZ1IS1D3FvSg_p9VAdYB",
             "0gMZ1IS1D3FvSg_p9VAdds",
+            "0jno74fnz3JA4_tWzynQVu",
+            "12f5QcaEv27vYRG99unEXL",
+            "12f5QcaEv27vYRG99unEXM",
+            "12f5QcaEv27vYRG99unEXN",
+            "12f5QcaEv27vYRG99unEXe",
+            "1R$KBYTRP3QOdXlCBx2d$D",
+            "1R$KBYTRP3QOdXlCBx2d$Z",
+            "1R$KBYTRP3QOdXlCBx2d_7",
+            "1R$KBYTRP3QOdXlCBx2d_9",
+            "1R$KBYTRP3QOdXlCBx2d_v",
+            "1R$KBYTRP3QOdXlCBx2dhn",
+            "1R$KBYTRP3QOdXlCBx2dzp",
+            "2k4hklcZX0AhLEYFO5nizC",
             "2rgc2m7xv6XO$hLnzZPAj1",
-            "33ANSOGgzDP9smaVGaDGKR"
+            "33ANSOGgzDP9smaVGaDGKR",
+            "38F_bUbFvBfv9QXygUod3X",
+            "38F_bUbFvBfv9QXygUodOj",
+            "38F_bUbFvBfv9QXygUodUF",
+            "38F_bUbFvBfv9QXygUodUH",
+            "38F_bUbFvBfv9QXygUodUJ",
+            "38F_bUbFvBfv9QXygUodUu",
+            "38F_bUbFvBfv9QXygUodVR",
+            "38F_bUbFvBfv9QXygUodVt",
+            "3KT7y79217qhD1ukhFstrg",
+            "3qHHwYbFDANA3sEF6iPkYV",
+            "3qHHwYbFDANA3sEF6iPkaT"
           ],
-          "extraction_element": [
-            "IfcSlab"
-          ]
+          "guid_strategy": "single"
         },
         {
           "topic_id": "5c128d0a-fe24-4d1d-b544-b11d19477fa7",
@@ -1002,18 +509,10 @@
           "all_guids": [
             "2rgc2m7xv6XO$hLnzZPAj1"
           ],
-          "all_guids_enriched": [
-            {
-              "guid": "2rgc2m7xv6XO$hLnzZPAj1",
-              "ifc_type": "IfcSlab"
-            }
-          ],
           "required_guids": [
             "2rgc2m7xv6XO$hLnzZPAj1"
           ],
-          "extraction_element": [
-            "IfcSlab"
-          ]
+          "guid_strategy": "single"
         },
         {
           "topic_id": "051b8432-55d0-4734-8eb2-a8141e42eacc",
@@ -1022,18 +521,10 @@
           "all_guids": [
             "0gMZ1IS1D3FvSg_p9VAdds"
           ],
-          "all_guids_enriched": [
-            {
-              "guid": "0gMZ1IS1D3FvSg_p9VAdds",
-              "ifc_type": "IfcSlab"
-            }
-          ],
           "required_guids": [
             "0gMZ1IS1D3FvSg_p9VAdds"
           ],
-          "extraction_element": [
-            "IfcSlab"
-          ]
+          "guid_strategy": "single"
         },
         {
           "topic_id": "61b54b19-5a55-46a7-902a-1c058351b636",
@@ -1044,26 +535,12 @@
             "2Ev12zif18qhpprOVbtAHO",
             "2Ev12zif18qhpprOVbtAHV"
           ],
-          "all_guids_enriched": [
-            {
-              "guid": "0gMZ1IS1D3FvSg_p9VAdYB",
-              "ifc_type": "IfcSlab"
-            },
-            {
-              "guid": "2Ev12zif18qhpprOVbtAHO",
-              "ifc_type": "IfcStair"
-            },
-            {
-              "guid": "2Ev12zif18qhpprOVbtAHV",
-              "ifc_type": "IfcStairFlight"
-            }
-          ],
           "required_guids": [
-            "0gMZ1IS1D3FvSg_p9VAdYB"
+            "0gMZ1IS1D3FvSg_p9VAdYB",
+            "2Ev12zif18qhpprOVbtAHO",
+            "2Ev12zif18qhpprOVbtAHV"
           ],
-          "extraction_element": [
-            "IfcSlab"
-          ]
+          "guid_strategy": "single"
         },
         {
           "topic_id": "386a37d6-35ba-4923-bbfd-82e41027a577",
@@ -1072,18 +549,10 @@
           "all_guids": [
             "0gMZ1IS1D3FvSg_p9VAdYB"
           ],
-          "all_guids_enriched": [
-            {
-              "guid": "0gMZ1IS1D3FvSg_p9VAdYB",
-              "ifc_type": "IfcSlab"
-            }
-          ],
           "required_guids": [
             "0gMZ1IS1D3FvSg_p9VAdYB"
           ],
-          "extraction_element": [
-            "IfcSlab"
-          ]
+          "guid_strategy": "single"
         },
         {
           "topic_id": "2b11b619-5b43-4c90-bec3-f21802f937b3",
@@ -1096,34 +565,14 @@
             "0jno74fnz3JA4_tWzynQUx",
             "33ANSOGgzDP9smaVGaDGKR"
           ],
-          "all_guids_enriched": [
-            {
-              "guid": "021Pqtlf91HwMpw7JVoT$x",
-              "ifc_type": "IfcCurtainWall"
-            },
-            {
-              "guid": "0WJf9giaLFxAIlkBabbQjv",
-              "ifc_type": "IfcCurtainWall"
-            },
-            {
-              "guid": "0jno74fnz3JA4_tWzynQPP",
-              "ifc_type": "IfcCurtainWall"
-            },
-            {
-              "guid": "0jno74fnz3JA4_tWzynQUx",
-              "ifc_type": "IfcCurtainWall"
-            },
-            {
-              "guid": "33ANSOGgzDP9smaVGaDGKR",
-              "ifc_type": "IfcSlab"
-            }
-          ],
           "required_guids": [
+            "021Pqtlf91HwMpw7JVoT$x",
+            "0WJf9giaLFxAIlkBabbQjv",
+            "0jno74fnz3JA4_tWzynQPP",
+            "0jno74fnz3JA4_tWzynQUx",
             "33ANSOGgzDP9smaVGaDGKR"
           ],
-          "extraction_element": [
-            "IfcSlab"
-          ]
+          "guid_strategy": "single"
         }
       ]
     },
@@ -1145,30 +594,10 @@
             "3$FAt$zaL8xQnSrjNsTfy8",
             "3uUWHjHcfEwfBz0Ci_6GMX"
           ],
-          "all_guids_enriched": [
-            {
-              "guid": "0jno74fnz3JA4_tWzynQV0",
-              "ifc_type": "IfcWall"
-            },
-            {
-              "guid": "2rgc2m7xv6XO$hLnzZPAj1",
-              "ifc_type": "IfcSlab"
-            },
-            {
-              "guid": "3$FAt$zaL8xQnSrjNsTfy8",
-              "ifc_type": "IfcWall"
-            },
-            {
-              "guid": "3uUWHjHcfEwfBz0Ci_6GMX",
-              "ifc_type": "IfcSpace"
-            }
-          ],
           "required_guids": [
             "3uUWHjHcfEwfBz0Ci_6GMX"
           ],
-          "extraction_element": [
-            "IfcSpace"
-          ]
+          "guid_strategy": "element"
         },
         {
           "topic_id": "2d924435-9aa4-4d1d-9d8d-8eae060f8163",
@@ -1178,22 +607,10 @@
             "0jno74fnz3JA4_tWzynQUf",
             "0jno74fnz3JA4_tWzynQVy"
           ],
-          "all_guids_enriched": [
-            {
-              "guid": "0jno74fnz3JA4_tWzynQUf",
-              "ifc_type": "IfcSpace"
-            },
-            {
-              "guid": "0jno74fnz3JA4_tWzynQVy",
-              "ifc_type": "IfcWall"
-            }
-          ],
           "required_guids": [
             "0jno74fnz3JA4_tWzynQUf"
           ],
-          "extraction_element": [
-            "IfcSpace"
-          ]
+          "guid_strategy": "element"
         },
         {
           "topic_id": "071d1121-35e8-4ab5-a95a-bcb2bb396f6c",
@@ -1203,22 +620,10 @@
             "0f9vpvusf8o9jkjUUYDyxE",
             "1kDD1yopT87PgXGbHYxDrk"
           ],
-          "all_guids_enriched": [
-            {
-              "guid": "0f9vpvusf8o9jkjUUYDyxE",
-              "ifc_type": "IfcWall"
-            },
-            {
-              "guid": "1kDD1yopT87PgXGbHYxDrk",
-              "ifc_type": "IfcSpace"
-            }
-          ],
           "required_guids": [
             "1kDD1yopT87PgXGbHYxDrk"
           ],
-          "extraction_element": [
-            "IfcSpace"
-          ]
+          "guid_strategy": "element"
         }
       ]
     },
@@ -1238,22 +643,10 @@
             "0jno74fnz3JA4_tWzynQP0",
             "2rgc2m7xv6XO$hLnzZPAj1"
           ],
-          "all_guids_enriched": [
-            {
-              "guid": "0jno74fnz3JA4_tWzynQP0",
-              "ifc_type": "IfcSpace"
-            },
-            {
-              "guid": "2rgc2m7xv6XO$hLnzZPAj1",
-              "ifc_type": "IfcSlab"
-            }
-          ],
           "required_guids": [
             "0jno74fnz3JA4_tWzynQP0"
           ],
-          "extraction_element": [
-            "IfcSpace"
-          ]
+          "guid_strategy": "element"
         },
         {
           "topic_id": "418a148f-04eb-4eaa-b1fb-1eaad7a35c67",
@@ -1263,22 +656,10 @@
             "1Y97YmJfPCNx2s3uSKGZDf",
             "2rgc2m7xv6XO$hLnzZPAj1"
           ],
-          "all_guids_enriched": [
-            {
-              "guid": "1Y97YmJfPCNx2s3uSKGZDf",
-              "ifc_type": "IfcSpace"
-            },
-            {
-              "guid": "2rgc2m7xv6XO$hLnzZPAj1",
-              "ifc_type": "IfcSlab"
-            }
-          ],
           "required_guids": [
             "1Y97YmJfPCNx2s3uSKGZDf"
           ],
-          "extraction_element": [
-            "IfcSpace"
-          ]
+          "guid_strategy": "element"
         },
         {
           "topic_id": "830b15ee-e8a8-403f-a581-0a244377bc14",
@@ -1288,22 +669,10 @@
             "0gMZ1IS1D3FvSg_p9VAdds",
             "3m224$uFjFqBV3ckWFbLG7"
           ],
-          "all_guids_enriched": [
-            {
-              "guid": "0gMZ1IS1D3FvSg_p9VAdds",
-              "ifc_type": "IfcSlab"
-            },
-            {
-              "guid": "3m224$uFjFqBV3ckWFbLG7",
-              "ifc_type": "IfcSpace"
-            }
-          ],
           "required_guids": [
             "3m224$uFjFqBV3ckWFbLG7"
           ],
-          "extraction_element": [
-            "IfcSpace"
-          ]
+          "guid_strategy": "element"
         },
         {
           "topic_id": "4d9589dd-fac2-4679-b40f-77a0055fdf72",
@@ -1313,22 +682,10 @@
             "0gMZ1IS1D3FvSg_p9VAdYB",
             "2k4hklcZX0AhLEYFO5nh8P"
           ],
-          "all_guids_enriched": [
-            {
-              "guid": "0gMZ1IS1D3FvSg_p9VAdYB",
-              "ifc_type": "IfcSlab"
-            },
-            {
-              "guid": "2k4hklcZX0AhLEYFO5nh8P",
-              "ifc_type": "IfcSpace"
-            }
-          ],
           "required_guids": [
             "2k4hklcZX0AhLEYFO5nh8P"
           ],
-          "extraction_element": [
-            "IfcSpace"
-          ]
+          "guid_strategy": "element"
         }
       ]
     },
@@ -1383,156 +740,6 @@
             "3uUWHjHcfEwfBz0Ci_6GMX",
             "3uUWHjHcfEwfBz0Ci_6GTk"
           ],
-          "all_guids_enriched": [
-            {
-              "guid": "0jno74fnz3JA4_tWzynQ3l",
-              "ifc_type": "IfcSpace"
-            },
-            {
-              "guid": "0jno74fnz3JA4_tWzynQ3m",
-              "ifc_type": "IfcSpace"
-            },
-            {
-              "guid": "0jno74fnz3JA4_tWzynQ3n",
-              "ifc_type": "IfcSpace"
-            },
-            {
-              "guid": "0jno74fnz3JA4_tWzynQ3r",
-              "ifc_type": "IfcSpace"
-            },
-            {
-              "guid": "0jno74fnz3JA4_tWzynQ3s",
-              "ifc_type": "IfcSpace"
-            },
-            {
-              "guid": "0jno74fnz3JA4_tWzynQ3t",
-              "ifc_type": "IfcSpace"
-            },
-            {
-              "guid": "0jno74fnz3JA4_tWzynQP0",
-              "ifc_type": "IfcSpace"
-            },
-            {
-              "guid": "0jno74fnz3JA4_tWzynQPT",
-              "ifc_type": "IfcSpace"
-            },
-            {
-              "guid": "0jno74fnz3JA4_tWzynQUa",
-              "ifc_type": "IfcSpace"
-            },
-            {
-              "guid": "0jno74fnz3JA4_tWzynQUb",
-              "ifc_type": "IfcSpace"
-            },
-            {
-              "guid": "0jno74fnz3JA4_tWzynQUc",
-              "ifc_type": "IfcSpace"
-            },
-            {
-              "guid": "0jno74fnz3JA4_tWzynQUf",
-              "ifc_type": "IfcSpace"
-            },
-            {
-              "guid": "0jno74fnz3JA4_tWzynQUg",
-              "ifc_type": "IfcSpace"
-            },
-            {
-              "guid": "0jno74fnz3JA4_tWzynQUh",
-              "ifc_type": "IfcSpace"
-            },
-            {
-              "guid": "12f5QcaEv27vYRG99unEhW",
-              "ifc_type": "IfcSpace"
-            },
-            {
-              "guid": "1Y97YmJfPCNx2s3uSKGZDf",
-              "ifc_type": "IfcSpace"
-            },
-            {
-              "guid": "1kDD1yopT87PgXGbHYxACp",
-              "ifc_type": "IfcSpace"
-            },
-            {
-              "guid": "1kDD1yopT87PgXGbHYxDqM",
-              "ifc_type": "IfcSpace"
-            },
-            {
-              "guid": "1kDD1yopT87PgXGbHYxDrW",
-              "ifc_type": "IfcSpace"
-            },
-            {
-              "guid": "1kDD1yopT87PgXGbHYxDre",
-              "ifc_type": "IfcSpace"
-            },
-            {
-              "guid": "1kDD1yopT87PgXGbHYxDrf",
-              "ifc_type": "IfcSpace"
-            },
-            {
-              "guid": "1kDD1yopT87PgXGbHYxDrg",
-              "ifc_type": "IfcSpace"
-            },
-            {
-              "guid": "1kDD1yopT87PgXGbHYxDrh",
-              "ifc_type": "IfcSpace"
-            },
-            {
-              "guid": "1kDD1yopT87PgXGbHYxDrj",
-              "ifc_type": "IfcSpace"
-            },
-            {
-              "guid": "1kDD1yopT87PgXGbHYxDrk",
-              "ifc_type": "IfcSpace"
-            },
-            {
-              "guid": "2Q4p8vO3f7xfeTuXPVwexW",
-              "ifc_type": "IfcSpace"
-            },
-            {
-              "guid": "2Q4p8vO3f7xfeTuXPVwezU",
-              "ifc_type": "IfcSpace"
-            },
-            {
-              "guid": "2ci8AX44j6O8Lr29eFxLye",
-              "ifc_type": "IfcSpace"
-            },
-            {
-              "guid": "2ci8AX44j6O8Lr29eFxLyf",
-              "ifc_type": "IfcSpace"
-            },
-            {
-              "guid": "2ci8AX44j6O8Lr29eFxLyg",
-              "ifc_type": "IfcSpace"
-            },
-            {
-              "guid": "2ci8AX44j6O8Lr29eFxLyk",
-              "ifc_type": "IfcSpace"
-            },
-            {
-              "guid": "2ci8AX44j6O8Lr29eFxLyl",
-              "ifc_type": "IfcSpace"
-            },
-            {
-              "guid": "2ci8AX44j6O8Lr29eFxLym",
-              "ifc_type": "IfcSpace"
-            },
-            {
-              "guid": "3ilNunKRzC8O5AE9O61ty0",
-              "ifc_type": "IfcSpace"
-            },
-            {
-              "guid": "3uUWHjHcfEwfBz0Ci_6GKr",
-              "ifc_type": "IfcSpace"
-            },
-            {
-              "guid": "3uUWHjHcfEwfBz0Ci_6GMX",
-              "ifc_type": "IfcSpace"
-            },
-            {
-              "guid": "3uUWHjHcfEwfBz0Ci_6GTk",
-              "ifc_type": "IfcSpace"
-            }
-          ],
           "required_guids": [
             "0jno74fnz3JA4_tWzynQ3l",
             "0jno74fnz3JA4_tWzynQ3m",
@@ -1572,9 +779,7 @@
             "3uUWHjHcfEwfBz0Ci_6GMX",
             "3uUWHjHcfEwfBz0Ci_6GTk"
           ],
-          "extraction_element": [
-            "IfcSpace"
-          ]
+          "guid_strategy": "multiple"
         },
         {
           "topic_id": "02b853a3-52b1-4087-afd2-a0e71307c0c1",
@@ -1611,124 +816,6 @@
             "38F_bUbFvBfv9QXygUodVp",
             "3m224$uFjFqBV3ckWFbLG7"
           ],
-          "all_guids_enriched": [
-            {
-              "guid": "1R$KBYTRP3QOdXlCBx2d_p",
-              "ifc_type": "IfcSpace"
-            },
-            {
-              "guid": "1R$KBYTRP3QOdXlCBx2d_s",
-              "ifc_type": "IfcSpace"
-            },
-            {
-              "guid": "1R$KBYTRP3QOdXlCBx2d_t",
-              "ifc_type": "IfcSpace"
-            },
-            {
-              "guid": "1R$KBYTRP3QOdXlCBx2dxV",
-              "ifc_type": "IfcSpace"
-            },
-            {
-              "guid": "1R$KBYTRP3QOdXlCBx2dzk",
-              "ifc_type": "IfcSpace"
-            },
-            {
-              "guid": "1R$KBYTRP3QOdXlCBx2dzl",
-              "ifc_type": "IfcSpace"
-            },
-            {
-              "guid": "1R$KBYTRP3QOdXlCBx2dzm",
-              "ifc_type": "IfcSpace"
-            },
-            {
-              "guid": "1R$KBYTRP3QOdXlCBx2dzn",
-              "ifc_type": "IfcSpace"
-            },
-            {
-              "guid": "2k4hklcZX0AhLEYFO5nh24",
-              "ifc_type": "IfcSpace"
-            },
-            {
-              "guid": "2k4hklcZX0AhLEYFO5nh2G",
-              "ifc_type": "IfcSpace"
-            },
-            {
-              "guid": "2k4hklcZX0AhLEYFO5nh2H",
-              "ifc_type": "IfcSpace"
-            },
-            {
-              "guid": "2k4hklcZX0AhLEYFO5nh2V",
-              "ifc_type": "IfcSpace"
-            },
-            {
-              "guid": "2k4hklcZX0AhLEYFO5nh8P",
-              "ifc_type": "IfcSpace"
-            },
-            {
-              "guid": "38F_bUbFvBfv9QXygUod2Q",
-              "ifc_type": "IfcSpace"
-            },
-            {
-              "guid": "38F_bUbFvBfv9QXygUod2S",
-              "ifc_type": "IfcSpace"
-            },
-            {
-              "guid": "38F_bUbFvBfv9QXygUod2V",
-              "ifc_type": "IfcSpace"
-            },
-            {
-              "guid": "38F_bUbFvBfv9QXygUod3D",
-              "ifc_type": "IfcSpace"
-            },
-            {
-              "guid": "38F_bUbFvBfv9QXygUodTG",
-              "ifc_type": "IfcSpace"
-            },
-            {
-              "guid": "38F_bUbFvBfv9QXygUodTL",
-              "ifc_type": "IfcSpace"
-            },
-            {
-              "guid": "38F_bUbFvBfv9QXygUodTN",
-              "ifc_type": "IfcSpace"
-            },
-            {
-              "guid": "38F_bUbFvBfv9QXygUodU9",
-              "ifc_type": "IfcSpace"
-            },
-            {
-              "guid": "38F_bUbFvBfv9QXygUodUA",
-              "ifc_type": "IfcSpace"
-            },
-            {
-              "guid": "38F_bUbFvBfv9QXygUodUB",
-              "ifc_type": "IfcSpace"
-            },
-            {
-              "guid": "38F_bUbFvBfv9QXygUodUh",
-              "ifc_type": "IfcSpace"
-            },
-            {
-              "guid": "38F_bUbFvBfv9QXygUodUq",
-              "ifc_type": "IfcSpace"
-            },
-            {
-              "guid": "38F_bUbFvBfv9QXygUodVn",
-              "ifc_type": "IfcSpace"
-            },
-            {
-              "guid": "38F_bUbFvBfv9QXygUodVo",
-              "ifc_type": "IfcSpace"
-            },
-            {
-              "guid": "38F_bUbFvBfv9QXygUodVp",
-              "ifc_type": "IfcSpace"
-            },
-            {
-              "guid": "3m224$uFjFqBV3ckWFbLG7",
-              "ifc_type": "IfcSpace"
-            }
-          ],
           "required_guids": [
             "1R$KBYTRP3QOdXlCBx2d_p",
             "1R$KBYTRP3QOdXlCBx2d_s",
@@ -1760,9 +847,7 @@
             "38F_bUbFvBfv9QXygUodVp",
             "3m224$uFjFqBV3ckWFbLG7"
           ],
-          "extraction_element": [
-            "IfcSpace"
-          ]
+          "guid_strategy": "multiple"
         },
         {
           "topic_id": "8bc8950a-be8c-4c56-83a7-49b4c48ba5be",
@@ -1788,80 +873,6 @@
             "02sTr6M6vE9Qf5C1OPPyFA",
             "02sTr6M6vE9Qf5C1OPPyFB"
           ],
-          "all_guids_enriched": [
-            {
-              "guid": "02sTr6M6vE9Qf5C1OPPy8Y",
-              "ifc_type": "IfcSpace"
-            },
-            {
-              "guid": "02sTr6M6vE9Qf5C1OPPy8e",
-              "ifc_type": "IfcSpace"
-            },
-            {
-              "guid": "02sTr6M6vE9Qf5C1OPPy8i",
-              "ifc_type": "IfcSpace"
-            },
-            {
-              "guid": "02sTr6M6vE9Qf5C1OPPy8j",
-              "ifc_type": "IfcSpace"
-            },
-            {
-              "guid": "02sTr6M6vE9Qf5C1OPPy8k",
-              "ifc_type": "IfcSpace"
-            },
-            {
-              "guid": "02sTr6M6vE9Qf5C1OPPy9I",
-              "ifc_type": "IfcSpace"
-            },
-            {
-              "guid": "02sTr6M6vE9Qf5C1OPPy9f",
-              "ifc_type": "IfcSpace"
-            },
-            {
-              "guid": "02sTr6M6vE9Qf5C1OPPy9k",
-              "ifc_type": "IfcSpace"
-            },
-            {
-              "guid": "02sTr6M6vE9Qf5C1OPPy9l",
-              "ifc_type": "IfcSpace"
-            },
-            {
-              "guid": "02sTr6M6vE9Qf5C1OPPyE9",
-              "ifc_type": "IfcSpace"
-            },
-            {
-              "guid": "02sTr6M6vE9Qf5C1OPPyEB",
-              "ifc_type": "IfcSpace"
-            },
-            {
-              "guid": "02sTr6M6vE9Qf5C1OPPyEC",
-              "ifc_type": "IfcSpace"
-            },
-            {
-              "guid": "02sTr6M6vE9Qf5C1OPPyED",
-              "ifc_type": "IfcSpace"
-            },
-            {
-              "guid": "02sTr6M6vE9Qf5C1OPPyEF",
-              "ifc_type": "IfcSpace"
-            },
-            {
-              "guid": "02sTr6M6vE9Qf5C1OPPyEy",
-              "ifc_type": "IfcSpace"
-            },
-            {
-              "guid": "02sTr6M6vE9Qf5C1OPPyF8",
-              "ifc_type": "IfcSpace"
-            },
-            {
-              "guid": "02sTr6M6vE9Qf5C1OPPyFA",
-              "ifc_type": "IfcSpace"
-            },
-            {
-              "guid": "02sTr6M6vE9Qf5C1OPPyFB",
-              "ifc_type": "IfcSpace"
-            }
-          ],
           "required_guids": [
             "02sTr6M6vE9Qf5C1OPPy8Y",
             "02sTr6M6vE9Qf5C1OPPy8e",
@@ -1882,9 +893,7 @@
             "02sTr6M6vE9Qf5C1OPPyFA",
             "02sTr6M6vE9Qf5C1OPPyFB"
           ],
-          "extraction_element": [
-            "IfcSpace"
-          ]
+          "guid_strategy": "multiple"
         }
       ]
     },

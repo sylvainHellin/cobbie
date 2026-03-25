@@ -1,9 +1,10 @@
 {
   "metadata": {
+    "model_name": "141",
+    "version": "v2",
     "total_topics": 16,
     "rules_count": 16,
-    "pass_rules_count": 12,
-    "model_name": "141"
+    "pass_rules_count": 12
   },
   "rules": {
     "305_3_size": {
@@ -128,10 +129,457 @@
             "3_3e8hPlTBFQmkqfJTZ0oR",
             "3_3e8hPlTBFQmkqfJTZ0oT"
           ],
-          "required_guids": [
-            "0CpFrpVKTErOvvNJQ1xWtW"
+          "all_guids_enriched": [
+            {
+              "guid": "0CpFrpVKTErOvvNJQ1xWtW",
+              "ifc_type": "IfcFurniture"
+            },
+            {
+              "guid": "0CpFrpVKTErOvvNJQ1xX$8",
+              "ifc_type": "IfcFurniture"
+            },
+            {
+              "guid": "0CpFrpVKTErOvvNJQ1xX7h",
+              "ifc_type": "IfcFurniture"
+            },
+            {
+              "guid": "0CpFrpVKTErOvvNJQ1xXLE",
+              "ifc_type": "IfcFurniture"
+            },
+            {
+              "guid": "0CpFrpVKTErOvvNJQ1xXbB",
+              "ifc_type": "IfcFurniture"
+            },
+            {
+              "guid": "0CpFrpVKTErOvvNJQ1xcAN",
+              "ifc_type": "IfcFurniture"
+            },
+            {
+              "guid": "0CpFrpVKTErOvvNJQ1xciq",
+              "ifc_type": "IfcFurniture"
+            },
+            {
+              "guid": "0CpFrpVKTErOvvNJQ1xcxr",
+              "ifc_type": "IfcFurniture"
+            },
+            {
+              "guid": "0dKN4mXNDAnAFrDMHX6hYE",
+              "ifc_type": "IfcSpace"
+            },
+            {
+              "guid": "0dKN4mXNDAnAFrDMHX6hY_",
+              "ifc_type": "IfcSpace"
+            },
+            {
+              "guid": "0dKN4mXNDAnAFrDMHX6hYg",
+              "ifc_type": "IfcSpace"
+            },
+            {
+              "guid": "0dKN4mXNDAnAFrDMHX6hYr",
+              "ifc_type": "IfcSpace"
+            },
+            {
+              "guid": "2HHWvRxiD0NO14TN9miPxS",
+              "ifc_type": "IfcSpace"
+            },
+            {
+              "guid": "2HHWvRxiD0NO14TN9miPxd",
+              "ifc_type": "IfcSpace"
+            },
+            {
+              "guid": "2HHWvRxiD0NO14TN9miPxf",
+              "ifc_type": "IfcSpace"
+            },
+            {
+              "guid": "2HHWvRxiD0NO14TN9miPxg",
+              "ifc_type": "IfcSpace"
+            },
+            {
+              "guid": "2HHWvRxiD0NO14TN9miQ4a",
+              "ifc_type": "IfcSpace"
+            },
+            {
+              "guid": "2HHWvRxiD0NO14TN9miQ4l",
+              "ifc_type": "IfcSpace"
+            },
+            {
+              "guid": "2HHWvRxiD0NO14TN9miQ4o",
+              "ifc_type": "IfcSpace"
+            },
+            {
+              "guid": "2HHWvRxiD0NO14TN9miQ4q",
+              "ifc_type": "IfcSpace"
+            },
+            {
+              "guid": "2Lqo0Hhe57th$mRbbdlXhW",
+              "ifc_type": "IfcFurniture"
+            },
+            {
+              "guid": "2Lqo0Hhe57th$mRbbdlXhY",
+              "ifc_type": "IfcFurniture"
+            },
+            {
+              "guid": "2Lqo0Hhe57th$mRbbdlXhZ",
+              "ifc_type": "IfcFurniture"
+            },
+            {
+              "guid": "2Lqo0Hhe57th$mRbbdlXha",
+              "ifc_type": "IfcFurniture"
+            },
+            {
+              "guid": "2Lqo0Hhe57th$mRbbdlXhb",
+              "ifc_type": "IfcFurniture"
+            },
+            {
+              "guid": "2Lqo0Hhe57th$mRbbdlXhd",
+              "ifc_type": "IfcFurniture"
+            },
+            {
+              "guid": "2Lqo0Hhe57th$mRbbdlXj$",
+              "ifc_type": "IfcFurniture"
+            },
+            {
+              "guid": "2Lqo0Hhe57th$mRbbdlXjW",
+              "ifc_type": "IfcFurniture"
+            },
+            {
+              "guid": "2Lqo0Hhe57th$mRbbdlXjX",
+              "ifc_type": "IfcFurniture"
+            },
+            {
+              "guid": "2Lqo0Hhe57th$mRbbdlXj_",
+              "ifc_type": "IfcFurniture"
+            },
+            {
+              "guid": "2Lqo0Hhe57th$mRbbdlXjy",
+              "ifc_type": "IfcFurniture"
+            },
+            {
+              "guid": "2Lqo0Hhe57th$mRbbdlXjz",
+              "ifc_type": "IfcFurniture"
+            },
+            {
+              "guid": "3AUzwv4Jf2cxVtECK5ADt$",
+              "ifc_type": "IfcFurniture"
+            },
+            {
+              "guid": "3AUzwv4Jf2cxVtECK5ADt_",
+              "ifc_type": "IfcFurniture"
+            },
+            {
+              "guid": "3AUzwv4Jf2cxVtECK5ADtq",
+              "ifc_type": "IfcFurniture"
+            },
+            {
+              "guid": "3AUzwv4Jf2cxVtECK5ADtr",
+              "ifc_type": "IfcFurniture"
+            },
+            {
+              "guid": "3AUzwv4Jf2cxVtECK5ADtu",
+              "ifc_type": "IfcFurniture"
+            },
+            {
+              "guid": "3AUzwv4Jf2cxVtECK5ADtv",
+              "ifc_type": "IfcFurniture"
+            },
+            {
+              "guid": "3AUzwv4Jf2cxVtECK5ADtw",
+              "ifc_type": "IfcFurniture"
+            },
+            {
+              "guid": "3AUzwv4Jf2cxVtECK5ADtx",
+              "ifc_type": "IfcFurniture"
+            },
+            {
+              "guid": "3AUzwv4Jf2cxVtECK5ADv$",
+              "ifc_type": "IfcFurniture"
+            },
+            {
+              "guid": "3AUzwv4Jf2cxVtECK5ADv_",
+              "ifc_type": "IfcFurniture"
+            },
+            {
+              "guid": "3AUzwv4Jf2cxVtECK5ADve",
+              "ifc_type": "IfcFurniture"
+            },
+            {
+              "guid": "3AUzwv4Jf2cxVtECK5ADvf",
+              "ifc_type": "IfcFurniture"
+            },
+            {
+              "guid": "3AUzwv4Jf2cxVtECK5ADvg",
+              "ifc_type": "IfcFurniture"
+            },
+            {
+              "guid": "3AUzwv4Jf2cxVtECK5ADvh",
+              "ifc_type": "IfcFurniture"
+            },
+            {
+              "guid": "3AUzwv4Jf2cxVtECK5ADvi",
+              "ifc_type": "IfcFurniture"
+            },
+            {
+              "guid": "3AUzwv4Jf2cxVtECK5ADvj",
+              "ifc_type": "IfcFurniture"
+            },
+            {
+              "guid": "3AUzwv4Jf2cxVtECK5ADvk",
+              "ifc_type": "IfcFurniture"
+            },
+            {
+              "guid": "3AUzwv4Jf2cxVtECK5ADvl",
+              "ifc_type": "IfcFurniture"
+            },
+            {
+              "guid": "3AUzwv4Jf2cxVtECK5ADvq",
+              "ifc_type": "IfcFurniture"
+            },
+            {
+              "guid": "3AUzwv4Jf2cxVtECK5ADvr",
+              "ifc_type": "IfcFurniture"
+            },
+            {
+              "guid": "3AUzwv4Jf2cxVtECK5ADvu",
+              "ifc_type": "IfcFurniture"
+            },
+            {
+              "guid": "3AUzwv4Jf2cxVtECK5ADvv",
+              "ifc_type": "IfcFurniture"
+            },
+            {
+              "guid": "3AUzwv4Jf2cxVtECK5ADvw",
+              "ifc_type": "IfcFurniture"
+            },
+            {
+              "guid": "3AUzwv4Jf2cxVtECK5ADvx",
+              "ifc_type": "IfcFurniture"
+            },
+            {
+              "guid": "3HU9chNKD4ZQZehthRXev0",
+              "ifc_type": "IfcFurniture"
+            },
+            {
+              "guid": "3HU9chNKD4ZQZehthRXev1",
+              "ifc_type": "IfcFurniture"
+            },
+            {
+              "guid": "3HU9chNKD4ZQZehthRXev2",
+              "ifc_type": "IfcFurniture"
+            },
+            {
+              "guid": "3HU9chNKD4ZQZehthRXev3",
+              "ifc_type": "IfcFurniture"
+            },
+            {
+              "guid": "3HU9chNKD4ZQZehthRXevC",
+              "ifc_type": "IfcFurniture"
+            },
+            {
+              "guid": "3HU9chNKD4ZQZehthRXevD",
+              "ifc_type": "IfcFurniture"
+            },
+            {
+              "guid": "3HU9chNKD4ZQZehthRXevE",
+              "ifc_type": "IfcFurniture"
+            },
+            {
+              "guid": "3HU9chNKD4ZQZehthRXevF",
+              "ifc_type": "IfcFurniture"
+            },
+            {
+              "guid": "3HU9chNKD4ZQZehthRXevI",
+              "ifc_type": "IfcFurniture"
+            },
+            {
+              "guid": "3HU9chNKD4ZQZehthRXevO",
+              "ifc_type": "IfcFurniture"
+            },
+            {
+              "guid": "3HU9chNKD4ZQZehthRXevP",
+              "ifc_type": "IfcFurniture"
+            },
+            {
+              "guid": "3HU9chNKD4ZQZehthRXevU",
+              "ifc_type": "IfcFurniture"
+            },
+            {
+              "guid": "3HU9chNKD4ZQZehthRXevV",
+              "ifc_type": "IfcFurniture"
+            },
+            {
+              "guid": "3HU9chNKD4ZQZehthRXevW",
+              "ifc_type": "IfcFurniture"
+            },
+            {
+              "guid": "3HU9chNKD4ZQZehthRXevX",
+              "ifc_type": "IfcFurniture"
+            },
+            {
+              "guid": "3HU9chNKD4ZQZehthRXevY",
+              "ifc_type": "IfcFurniture"
+            },
+            {
+              "guid": "3HU9chNKD4ZQZehthRXevZ",
+              "ifc_type": "IfcFurniture"
+            },
+            {
+              "guid": "3HU9chNKD4ZQZehthRXeva",
+              "ifc_type": "IfcFurniture"
+            },
+            {
+              "guid": "3HU9chNKD4ZQZehthRXevb",
+              "ifc_type": "IfcFurniture"
+            },
+            {
+              "guid": "3HU9chNKD4ZQZehthRXevc",
+              "ifc_type": "IfcFurniture"
+            },
+            {
+              "guid": "3HU9chNKD4ZQZehthRXevd",
+              "ifc_type": "IfcFurniture"
+            },
+            {
+              "guid": "3HU9chNKD4ZQZehthRXevo",
+              "ifc_type": "IfcFurniture"
+            },
+            {
+              "guid": "3HU9chNKD4ZQZehthRXevp",
+              "ifc_type": "IfcFurniture"
+            },
+            {
+              "guid": "3HU9chNKD4ZQZehthRXevs",
+              "ifc_type": "IfcFurniture"
+            },
+            {
+              "guid": "3HU9chNKD4ZQZehthRXevy",
+              "ifc_type": "IfcFurniture"
+            },
+            {
+              "guid": "3HU9chNKD4ZQZehthRXevz",
+              "ifc_type": "IfcFurniture"
+            },
+            {
+              "guid": "3_3e8hPlTBFQmkqfJTZ0nX",
+              "ifc_type": "IfcFurniture"
+            },
+            {
+              "guid": "3_3e8hPlTBFQmkqfJTZ0nm",
+              "ifc_type": "IfcFurniture"
+            },
+            {
+              "guid": "3_3e8hPlTBFQmkqfJTZ0nn",
+              "ifc_type": "IfcFurniture"
+            },
+            {
+              "guid": "3_3e8hPlTBFQmkqfJTZ0no",
+              "ifc_type": "IfcFurniture"
+            },
+            {
+              "guid": "3_3e8hPlTBFQmkqfJTZ0np",
+              "ifc_type": "IfcFurniture"
+            },
+            {
+              "guid": "3_3e8hPlTBFQmkqfJTZ0nr",
+              "ifc_type": "IfcFurniture"
+            },
+            {
+              "guid": "3_3e8hPlTBFQmkqfJTZ0nu",
+              "ifc_type": "IfcFurniture"
+            },
+            {
+              "guid": "3_3e8hPlTBFQmkqfJTZ0nw",
+              "ifc_type": "IfcFurniture"
+            },
+            {
+              "guid": "3_3e8hPlTBFQmkqfJTZ0nx",
+              "ifc_type": "IfcFurniture"
+            },
+            {
+              "guid": "3_3e8hPlTBFQmkqfJTZ0nz",
+              "ifc_type": "IfcFurniture"
+            },
+            {
+              "guid": "3_3e8hPlTBFQmkqfJTZ0o0",
+              "ifc_type": "IfcFurniture"
+            },
+            {
+              "guid": "3_3e8hPlTBFQmkqfJTZ0o2",
+              "ifc_type": "IfcFurniture"
+            },
+            {
+              "guid": "3_3e8hPlTBFQmkqfJTZ0o3",
+              "ifc_type": "IfcFurniture"
+            },
+            {
+              "guid": "3_3e8hPlTBFQmkqfJTZ0o5",
+              "ifc_type": "IfcFurniture"
+            },
+            {
+              "guid": "3_3e8hPlTBFQmkqfJTZ0o9",
+              "ifc_type": "IfcFurniture"
+            },
+            {
+              "guid": "3_3e8hPlTBFQmkqfJTZ0oC",
+              "ifc_type": "IfcFurniture"
+            },
+            {
+              "guid": "3_3e8hPlTBFQmkqfJTZ0oE",
+              "ifc_type": "IfcFurniture"
+            },
+            {
+              "guid": "3_3e8hPlTBFQmkqfJTZ0oF",
+              "ifc_type": "IfcFurniture"
+            },
+            {
+              "guid": "3_3e8hPlTBFQmkqfJTZ0oK",
+              "ifc_type": "IfcFurniture"
+            },
+            {
+              "guid": "3_3e8hPlTBFQmkqfJTZ0oM",
+              "ifc_type": "IfcFurniture"
+            },
+            {
+              "guid": "3_3e8hPlTBFQmkqfJTZ0oN",
+              "ifc_type": "IfcFurniture"
+            },
+            {
+              "guid": "3_3e8hPlTBFQmkqfJTZ0oO",
+              "ifc_type": "IfcFurniture"
+            },
+            {
+              "guid": "3_3e8hPlTBFQmkqfJTZ0oP",
+              "ifc_type": "IfcFurniture"
+            },
+            {
+              "guid": "3_3e8hPlTBFQmkqfJTZ0oQ",
+              "ifc_type": "IfcFurniture"
+            },
+            {
+              "guid": "3_3e8hPlTBFQmkqfJTZ0oR",
+              "ifc_type": "IfcFurniture"
+            },
+            {
+              "guid": "3_3e8hPlTBFQmkqfJTZ0oT",
+              "ifc_type": "IfcFurniture"
+            }
           ],
-          "guid_strategy": "primary_and_cause"
+          "required_guids": [
+            "0dKN4mXNDAnAFrDMHX6hYE",
+            "0dKN4mXNDAnAFrDMHX6hY_",
+            "0dKN4mXNDAnAFrDMHX6hYg",
+            "0dKN4mXNDAnAFrDMHX6hYr",
+            "2HHWvRxiD0NO14TN9miPxS",
+            "2HHWvRxiD0NO14TN9miPxd",
+            "2HHWvRxiD0NO14TN9miPxf",
+            "2HHWvRxiD0NO14TN9miPxg",
+            "2HHWvRxiD0NO14TN9miQ4a",
+            "2HHWvRxiD0NO14TN9miQ4l",
+            "2HHWvRxiD0NO14TN9miQ4o",
+            "2HHWvRxiD0NO14TN9miQ4q"
+          ],
+          "extraction_element": [
+            "IfcSpace"
+          ]
         },
         {
           "topic_id": "884aefa9-7605-4f36-bbcf-b3ce3d5d960f",
@@ -154,10 +602,74 @@
             "3Sv2T6yPDDMe7abn3BlTiJ",
             "3Sv2T6yPDDMe7abn3BlTyA"
           ],
+          "all_guids_enriched": [
+            {
+              "guid": "2e6obW4U18k8fWnjcAEwga",
+              "ifc_type": "IfcSpace"
+            },
+            {
+              "guid": "3Sv2T6yPDDMe7abn3BlS7c",
+              "ifc_type": "IfcFurniture"
+            },
+            {
+              "guid": "3Sv2T6yPDDMe7abn3BlS8z",
+              "ifc_type": "IfcFurniture"
+            },
+            {
+              "guid": "3Sv2T6yPDDMe7abn3BlSN9",
+              "ifc_type": "IfcFurniture"
+            },
+            {
+              "guid": "3Sv2T6yPDDMe7abn3BlSRr",
+              "ifc_type": "IfcFurniture"
+            },
+            {
+              "guid": "3Sv2T6yPDDMe7abn3BlSWo",
+              "ifc_type": "IfcFurniture"
+            },
+            {
+              "guid": "3Sv2T6yPDDMe7abn3BlT8a",
+              "ifc_type": "IfcFurniture"
+            },
+            {
+              "guid": "3Sv2T6yPDDMe7abn3BlTAt",
+              "ifc_type": "IfcFurniture"
+            },
+            {
+              "guid": "3Sv2T6yPDDMe7abn3BlTCI",
+              "ifc_type": "IfcFurniture"
+            },
+            {
+              "guid": "3Sv2T6yPDDMe7abn3BlTNG",
+              "ifc_type": "IfcFurniture"
+            },
+            {
+              "guid": "3Sv2T6yPDDMe7abn3BlTP1",
+              "ifc_type": "IfcFurniture"
+            },
+            {
+              "guid": "3Sv2T6yPDDMe7abn3BlTPH",
+              "ifc_type": "IfcFurniture"
+            },
+            {
+              "guid": "3Sv2T6yPDDMe7abn3BlTc0",
+              "ifc_type": "IfcFurniture"
+            },
+            {
+              "guid": "3Sv2T6yPDDMe7abn3BlTiJ",
+              "ifc_type": "IfcFurniture"
+            },
+            {
+              "guid": "3Sv2T6yPDDMe7abn3BlTyA",
+              "ifc_type": "IfcFurniture"
+            }
+          ],
           "required_guids": [
             "2e6obW4U18k8fWnjcAEwga"
           ],
-          "guid_strategy": "primary_and_cause"
+          "extraction_element": [
+            "IfcSpace"
+          ]
         }
       ]
     },
@@ -177,11 +689,22 @@
             "1h3hC3BBjB$Af_CPYDzLhe",
             "3_3e8hPlTBFQmkqfJTZ0n3"
           ],
+          "all_guids_enriched": [
+            {
+              "guid": "1h3hC3BBjB$Af_CPYDzLhe",
+              "ifc_type": "IfcSlab"
+            },
+            {
+              "guid": "3_3e8hPlTBFQmkqfJTZ0n3",
+              "ifc_type": "IfcStair"
+            }
+          ],
           "required_guids": [
-            "1h3hC3BBjB$Af_CPYDzLhe",
             "3_3e8hPlTBFQmkqfJTZ0n3"
           ],
-          "guid_strategy": "single"
+          "extraction_element": [
+            "IfcStair"
+          ]
         }
       ]
     },
@@ -202,10 +725,26 @@
             "2BBCNtipfAzRdC1d8kachd",
             "2BBCNtipfAzRdC1d8kadJX"
           ],
-          "required_guids": [
-            "2BBCNtipfAzRdC1d8kaceQ"
+          "all_guids_enriched": [
+            {
+              "guid": "2BBCNtipfAzRdC1d8kaceQ",
+              "ifc_type": "IfcFlowTerminal"
+            },
+            {
+              "guid": "2BBCNtipfAzRdC1d8kachd",
+              "ifc_type": "IfcDoor"
+            },
+            {
+              "guid": "2BBCNtipfAzRdC1d8kadJX",
+              "ifc_type": "IfcFlowTerminal"
+            }
           ],
-          "guid_strategy": "primary_and_cause"
+          "required_guids": [
+            "2BBCNtipfAzRdC1d8kachd"
+          ],
+          "extraction_element": [
+            "IfcDoor"
+          ]
         },
         {
           "topic_id": "3bbb55b2-c34c-4f3f-86f5-69ce353347ef",
@@ -216,10 +755,26 @@
             "3HU9chNKD4ZQZehthRXfom",
             "3HU9chNKD4ZQZehthRXfoo"
           ],
+          "all_guids_enriched": [
+            {
+              "guid": "3AUzwv4Jf2cxVtECK5ADvs",
+              "ifc_type": "IfcDoor"
+            },
+            {
+              "guid": "3HU9chNKD4ZQZehthRXfom",
+              "ifc_type": "IfcFlowTerminal"
+            },
+            {
+              "guid": "3HU9chNKD4ZQZehthRXfoo",
+              "ifc_type": "IfcFlowTerminal"
+            }
+          ],
           "required_guids": [
             "3AUzwv4Jf2cxVtECK5ADvs"
           ],
-          "guid_strategy": "primary_and_cause"
+          "extraction_element": [
+            "IfcDoor"
+          ]
         },
         {
           "topic_id": "7ef123d3-990b-458e-a0e7-9c6285105aef",
@@ -230,10 +785,26 @@
             "3HU9chNKD4ZQZehthRXfJ9",
             "3HU9chNKD4ZQZehthRXfjI"
           ],
+          "all_guids_enriched": [
+            {
+              "guid": "0CpFrpVKTErOvvNJQ1xWhr",
+              "ifc_type": "IfcDoor"
+            },
+            {
+              "guid": "3HU9chNKD4ZQZehthRXfJ9",
+              "ifc_type": "IfcFlowTerminal"
+            },
+            {
+              "guid": "3HU9chNKD4ZQZehthRXfjI",
+              "ifc_type": "IfcFlowTerminal"
+            }
+          ],
           "required_guids": [
             "0CpFrpVKTErOvvNJQ1xWhr"
           ],
-          "guid_strategy": "primary_and_cause"
+          "extraction_element": [
+            "IfcDoor"
+          ]
         },
         {
           "topic_id": "c619db4e-829d-4232-a97d-59f4732876aa",
@@ -244,10 +815,26 @@
             "294IZm1s9CWxkDIbbHNRJ5",
             "294IZm1s9CWxkDIbbHNRJ6"
           ],
-          "required_guids": [
-            "294IZm1s9CWxkDIbbHNRJ4"
+          "all_guids_enriched": [
+            {
+              "guid": "294IZm1s9CWxkDIbbHNRJ4",
+              "ifc_type": "IfcFlowTerminal"
+            },
+            {
+              "guid": "294IZm1s9CWxkDIbbHNRJ5",
+              "ifc_type": "IfcFlowTerminal"
+            },
+            {
+              "guid": "294IZm1s9CWxkDIbbHNRJ6",
+              "ifc_type": "IfcDoor"
+            }
           ],
-          "guid_strategy": "primary_and_cause"
+          "required_guids": [
+            "294IZm1s9CWxkDIbbHNRJ6"
+          ],
+          "extraction_element": [
+            "IfcDoor"
+          ]
         },
         {
           "topic_id": "f27dc153-8eb5-4a7d-ab60-3b99ad402075",
@@ -258,10 +845,26 @@
             "3HU9chNKD4ZQZehthRXfOe",
             "3HU9chNKD4ZQZehthRXfqt"
           ],
+          "all_guids_enriched": [
+            {
+              "guid": "3AUzwv4Jf2cxVtECK5ADts",
+              "ifc_type": "IfcDoor"
+            },
+            {
+              "guid": "3HU9chNKD4ZQZehthRXfOe",
+              "ifc_type": "IfcFlowTerminal"
+            },
+            {
+              "guid": "3HU9chNKD4ZQZehthRXfqt",
+              "ifc_type": "IfcFlowTerminal"
+            }
+          ],
           "required_guids": [
             "3AUzwv4Jf2cxVtECK5ADts"
           ],
-          "guid_strategy": "primary_and_cause"
+          "extraction_element": [
+            "IfcDoor"
+          ]
         },
         {
           "topic_id": "b9e28fb2-5776-498d-990d-b896f8d32e49",
@@ -272,10 +875,26 @@
             "3HU9chNKD4ZQZehthRXfon",
             "3HU9chNKD4ZQZehthRXfop"
           ],
+          "all_guids_enriched": [
+            {
+              "guid": "3AUzwv4Jf2cxVtECK5ADva",
+              "ifc_type": "IfcDoor"
+            },
+            {
+              "guid": "3HU9chNKD4ZQZehthRXfon",
+              "ifc_type": "IfcFlowTerminal"
+            },
+            {
+              "guid": "3HU9chNKD4ZQZehthRXfop",
+              "ifc_type": "IfcFlowTerminal"
+            }
+          ],
           "required_guids": [
             "3AUzwv4Jf2cxVtECK5ADva"
           ],
-          "guid_strategy": "primary_and_cause"
+          "extraction_element": [
+            "IfcDoor"
+          ]
         },
         {
           "topic_id": "fdf62ac2-d3cd-41fb-9368-23c610148b06",
@@ -286,10 +905,26 @@
             "3HU9chNKD4ZQZehthRXfm2",
             "3HU9chNKD4ZQZehthRXfmC"
           ],
+          "all_guids_enriched": [
+            {
+              "guid": "3HU9chNKD4ZQZehthRXev_",
+              "ifc_type": "IfcDoor"
+            },
+            {
+              "guid": "3HU9chNKD4ZQZehthRXfm2",
+              "ifc_type": "IfcFlowTerminal"
+            },
+            {
+              "guid": "3HU9chNKD4ZQZehthRXfmC",
+              "ifc_type": "IfcFlowTerminal"
+            }
+          ],
           "required_guids": [
             "3HU9chNKD4ZQZehthRXev_"
           ],
-          "guid_strategy": "primary_and_cause"
+          "extraction_element": [
+            "IfcDoor"
+          ]
         },
         {
           "topic_id": "b35cd11b-080e-4ff1-838c-6a6da1240e75",
@@ -300,10 +935,26 @@
             "3HU9chNKD4ZQZehthRXfm3",
             "3HU9chNKD4ZQZehthRXfmD"
           ],
+          "all_guids_enriched": [
+            {
+              "guid": "3HU9chNKD4ZQZehthRXevi",
+              "ifc_type": "IfcDoor"
+            },
+            {
+              "guid": "3HU9chNKD4ZQZehthRXfm3",
+              "ifc_type": "IfcFlowTerminal"
+            },
+            {
+              "guid": "3HU9chNKD4ZQZehthRXfmD",
+              "ifc_type": "IfcFlowTerminal"
+            }
+          ],
           "required_guids": [
             "3HU9chNKD4ZQZehthRXevi"
           ],
-          "guid_strategy": "primary_and_cause"
+          "extraction_element": [
+            "IfcDoor"
+          ]
         },
         {
           "topic_id": "60bd4881-b662-4a8a-95e3-c4cfc8ed9d48",
@@ -314,10 +965,26 @@
             "3HU9chNKD4ZQZehthRXfm0",
             "3HU9chNKD4ZQZehthRXfm6"
           ],
+          "all_guids_enriched": [
+            {
+              "guid": "3HU9chNKD4ZQZehthRXevQ",
+              "ifc_type": "IfcDoor"
+            },
+            {
+              "guid": "3HU9chNKD4ZQZehthRXfm0",
+              "ifc_type": "IfcFlowTerminal"
+            },
+            {
+              "guid": "3HU9chNKD4ZQZehthRXfm6",
+              "ifc_type": "IfcFlowTerminal"
+            }
+          ],
           "required_guids": [
             "3HU9chNKD4ZQZehthRXevQ"
           ],
-          "guid_strategy": "primary_and_cause"
+          "extraction_element": [
+            "IfcDoor"
+          ]
         },
         {
           "topic_id": "0b92f88e-f705-4ef4-bd40-98e14a8059d1",
@@ -328,10 +995,26 @@
             "3HU9chNKD4ZQZehthRXfm1",
             "3HU9chNKD4ZQZehthRXfm7"
           ],
+          "all_guids_enriched": [
+            {
+              "guid": "3HU9chNKD4ZQZehthRXev8",
+              "ifc_type": "IfcDoor"
+            },
+            {
+              "guid": "3HU9chNKD4ZQZehthRXfm1",
+              "ifc_type": "IfcFlowTerminal"
+            },
+            {
+              "guid": "3HU9chNKD4ZQZehthRXfm7",
+              "ifc_type": "IfcFlowTerminal"
+            }
+          ],
           "required_guids": [
             "3HU9chNKD4ZQZehthRXev8"
           ],
-          "guid_strategy": "primary_and_cause"
+          "extraction_element": [
+            "IfcDoor"
+          ]
         }
       ]
     },
@@ -374,6 +1057,108 @@
             "1r8CYT0Xz2dhgZ7ykPyU8o",
             "1r8CYT0Xz2dhgZ7ykPyU8r"
           ],
+          "all_guids_enriched": [
+            {
+              "guid": "1h3hC3BBjB$Af_CPYDzLeu",
+              "ifc_type": "IfcSlab"
+            },
+            {
+              "guid": "1h3hC3BBjB$Af_CPYDzLhe",
+              "ifc_type": "IfcSlab"
+            },
+            {
+              "guid": "1h3hC3BBjB$Af_CPYDzLjb",
+              "ifc_type": "IfcSlab"
+            },
+            {
+              "guid": "1r8CYT0Xz2dhgZ7ykPyHqu",
+              "ifc_type": "IfcSlab"
+            },
+            {
+              "guid": "1r8CYT0Xz2dhgZ7ykPyU0V",
+              "ifc_type": "IfcSlab"
+            },
+            {
+              "guid": "1r8CYT0Xz2dhgZ7ykPyU0d",
+              "ifc_type": "IfcSlab"
+            },
+            {
+              "guid": "1r8CYT0Xz2dhgZ7ykPyU0l",
+              "ifc_type": "IfcSlab"
+            },
+            {
+              "guid": "1r8CYT0Xz2dhgZ7ykPyU7g",
+              "ifc_type": "IfcSlab"
+            },
+            {
+              "guid": "1r8CYT0Xz2dhgZ7ykPyU7i",
+              "ifc_type": "IfcSlab"
+            },
+            {
+              "guid": "1r8CYT0Xz2dhgZ7ykPyU7j",
+              "ifc_type": "IfcSlab"
+            },
+            {
+              "guid": "1r8CYT0Xz2dhgZ7ykPyU7l",
+              "ifc_type": "IfcSlab"
+            },
+            {
+              "guid": "1r8CYT0Xz2dhgZ7ykPyU7m",
+              "ifc_type": "IfcSlab"
+            },
+            {
+              "guid": "1r8CYT0Xz2dhgZ7ykPyU7n",
+              "ifc_type": "IfcSlab"
+            },
+            {
+              "guid": "1r8CYT0Xz2dhgZ7ykPyU7o",
+              "ifc_type": "IfcSlab"
+            },
+            {
+              "guid": "1r8CYT0Xz2dhgZ7ykPyU7p",
+              "ifc_type": "IfcSlab"
+            },
+            {
+              "guid": "1r8CYT0Xz2dhgZ7ykPyU7v",
+              "ifc_type": "IfcSlab"
+            },
+            {
+              "guid": "1r8CYT0Xz2dhgZ7ykPyU84",
+              "ifc_type": "IfcSlab"
+            },
+            {
+              "guid": "1r8CYT0Xz2dhgZ7ykPyU86",
+              "ifc_type": "IfcSlab"
+            },
+            {
+              "guid": "1r8CYT0Xz2dhgZ7ykPyU87",
+              "ifc_type": "IfcSlab"
+            },
+            {
+              "guid": "1r8CYT0Xz2dhgZ7ykPyU8P",
+              "ifc_type": "IfcSlab"
+            },
+            {
+              "guid": "1r8CYT0Xz2dhgZ7ykPyU8c",
+              "ifc_type": "IfcSlab"
+            },
+            {
+              "guid": "1r8CYT0Xz2dhgZ7ykPyU8i",
+              "ifc_type": "IfcSlab"
+            },
+            {
+              "guid": "1r8CYT0Xz2dhgZ7ykPyU8j",
+              "ifc_type": "IfcSlab"
+            },
+            {
+              "guid": "1r8CYT0Xz2dhgZ7ykPyU8o",
+              "ifc_type": "IfcSlab"
+            },
+            {
+              "guid": "1r8CYT0Xz2dhgZ7ykPyU8r",
+              "ifc_type": "IfcSlab"
+            }
+          ],
           "required_guids": [
             "1h3hC3BBjB$Af_CPYDzLeu",
             "1h3hC3BBjB$Af_CPYDzLhe",
@@ -401,7 +1186,9 @@
             "1r8CYT0Xz2dhgZ7ykPyU8o",
             "1r8CYT0Xz2dhgZ7ykPyU8r"
           ],
-          "guid_strategy": "single"
+          "extraction_element": [
+            "IfcSlab"
+          ]
         },
         {
           "topic_id": "921df13b-4970-47da-bd09-b71a80e83468",
@@ -466,66 +1253,245 @@
             "3HU9chNKD4ZQZehthRXeuS",
             "3_3e8hPlTBFQmkqfJTZ0n3"
           ],
+          "all_guids_enriched": [
+            {
+              "guid": "0DMk1Gofz60BkW8YQc5$WR",
+              "ifc_type": "IfcRailing"
+            },
+            {
+              "guid": "0DMk1Gofz60BkW8YQc5$Wf",
+              "ifc_type": "IfcRailing"
+            },
+            {
+              "guid": "0DMk1Gofz60BkW8YQc5$XV",
+              "ifc_type": "IfcRailing"
+            },
+            {
+              "guid": "0DMk1Gofz60BkW8YQc5$Xv",
+              "ifc_type": "IfcRailing"
+            },
+            {
+              "guid": "0DMk1Gofz60BkW8YQc5$Z0",
+              "ifc_type": "IfcRailing"
+            },
+            {
+              "guid": "0DMk1Gofz60BkW8YQc5$cD",
+              "ifc_type": "IfcRailing"
+            },
+            {
+              "guid": "0DMk1Gofz60BkW8YQc5_OT",
+              "ifc_type": "IfcRailing"
+            },
+            {
+              "guid": "0DMk1Gofz60BkW8YQc5_O_",
+              "ifc_type": "IfcRailing"
+            },
+            {
+              "guid": "0DMk1Gofz60BkW8YQc5_Ph",
+              "ifc_type": "IfcRailing"
+            },
+            {
+              "guid": "0DMk1Gofz60BkW8YQc5_SY",
+              "ifc_type": "IfcRailing"
+            },
+            {
+              "guid": "0DMk1Gofz60BkW8YQc5_TG",
+              "ifc_type": "IfcRailing"
+            },
+            {
+              "guid": "0DMk1Gofz60BkW8YQc5_Tm",
+              "ifc_type": "IfcRailing"
+            },
+            {
+              "guid": "0DMk1Gofz60BkW8YQc5_V7",
+              "ifc_type": "IfcRailing"
+            },
+            {
+              "guid": "0DMk1Gofz60BkW8YQc5_VX",
+              "ifc_type": "IfcRailing"
+            },
+            {
+              "guid": "1ZEoaRdQbAF8ybJt6T1y0F",
+              "ifc_type": "IfcRailing"
+            },
+            {
+              "guid": "1ZEoaRdQbAF8ybJt6T1y4D",
+              "ifc_type": "IfcRailing"
+            },
+            {
+              "guid": "1ZEoaRdQbAF8ybJt6T1y5K",
+              "ifc_type": "IfcRailing"
+            },
+            {
+              "guid": "1ZEoaRdQbAF8ybJt6T1y6t",
+              "ifc_type": "IfcRailing"
+            },
+            {
+              "guid": "1ZEoaRdQbAF8ybJt6T1y7P",
+              "ifc_type": "IfcRailing"
+            },
+            {
+              "guid": "1ZEoaRdQbAF8ybJt6T1y7h",
+              "ifc_type": "IfcRailing"
+            },
+            {
+              "guid": "1ZEoaRdQbAF8ybJt6T1y7z",
+              "ifc_type": "IfcRailing"
+            },
+            {
+              "guid": "1ZEoaRdQbAF8ybJt6T1yO1",
+              "ifc_type": "IfcRailing"
+            },
+            {
+              "guid": "1ZEoaRdQbAF8ybJt6T1yPZ",
+              "ifc_type": "IfcRailing"
+            },
+            {
+              "guid": "1ZEoaRdQbAF8ybJt6T1yRF",
+              "ifc_type": "IfcRailing"
+            },
+            {
+              "guid": "1h3hC3BBjB$Af_CPYDzLeu",
+              "ifc_type": "IfcSlab"
+            },
+            {
+              "guid": "1h3hC3BBjB$Af_CPYDzLhG",
+              "ifc_type": "IfcSlab"
+            },
+            {
+              "guid": "1h3hC3BBjB$Af_CPYDzLhO",
+              "ifc_type": "IfcSlab"
+            },
+            {
+              "guid": "1h3hC3BBjB$Af_CPYDzLjb",
+              "ifc_type": "IfcSlab"
+            },
+            {
+              "guid": "1h3hC3BBjB$Af_CPYDzLtG",
+              "ifc_type": "IfcWall"
+            },
+            {
+              "guid": "1h3hC3BBjB$Af_CPYDzLtI",
+              "ifc_type": "IfcWall"
+            },
+            {
+              "guid": "1h3hC3BBjB$Af_CPYDzLtK",
+              "ifc_type": "IfcWall"
+            },
+            {
+              "guid": "1h3hC3BBjB$Af_CPYDzLtM",
+              "ifc_type": "IfcWall"
+            },
+            {
+              "guid": "1h3hC3BBjB$Af_CPYDzLtV",
+              "ifc_type": "IfcWall"
+            },
+            {
+              "guid": "2bkLLv$bP568CSiynWm70X",
+              "ifc_type": "IfcColumn"
+            },
+            {
+              "guid": "2bkLLv$bP568CSiynWm70x",
+              "ifc_type": "IfcColumn"
+            },
+            {
+              "guid": "2bkLLv$bP568CSiynWm71D",
+              "ifc_type": "IfcColumn"
+            },
+            {
+              "guid": "2bkLLv$bP568CSiynWm71Y",
+              "ifc_type": "IfcColumn"
+            },
+            {
+              "guid": "2bkLLv$bP568CSiynWm71e",
+              "ifc_type": "IfcColumn"
+            },
+            {
+              "guid": "2bkLLv$bP568CSiynWm71f",
+              "ifc_type": "IfcColumn"
+            },
+            {
+              "guid": "2bkLLv$bP568CSiynWm71k",
+              "ifc_type": "IfcColumn"
+            },
+            {
+              "guid": "2bkLLv$bP568CSiynWm71l",
+              "ifc_type": "IfcColumn"
+            },
+            {
+              "guid": "2bkLLv$bP568CSiynWm71o",
+              "ifc_type": "IfcColumn"
+            },
+            {
+              "guid": "2bkLLv$bP568CSiynWm71p",
+              "ifc_type": "IfcColumn"
+            },
+            {
+              "guid": "2bkLLv$bP568CSiynWm71z",
+              "ifc_type": "IfcColumn"
+            },
+            {
+              "guid": "2bkLLv$bP568CSiynWm7E1",
+              "ifc_type": "IfcColumn"
+            },
+            {
+              "guid": "2bkLLv$bP568CSiynWm7E6",
+              "ifc_type": "IfcColumn"
+            },
+            {
+              "guid": "2bkLLv$bP568CSiynWm7EK",
+              "ifc_type": "IfcColumn"
+            },
+            {
+              "guid": "2bkLLv$bP568CSiynWm7EL",
+              "ifc_type": "IfcColumn"
+            },
+            {
+              "guid": "2bkLLv$bP568CSiynWm7EM",
+              "ifc_type": "IfcColumn"
+            },
+            {
+              "guid": "2bkLLv$bP568CSiynWm7EN",
+              "ifc_type": "IfcColumn"
+            },
+            {
+              "guid": "2bkLLv$bP568CSiynWm7Eb",
+              "ifc_type": "IfcColumn"
+            },
+            {
+              "guid": "2bkLLv$bP568CSiynWm7Ee",
+              "ifc_type": "IfcColumn"
+            },
+            {
+              "guid": "2bkLLv$bP568CSiynWm7Eg",
+              "ifc_type": "IfcColumn"
+            },
+            {
+              "guid": "2bkLLv$bP568CSiynWm7Eh",
+              "ifc_type": "IfcColumn"
+            },
+            {
+              "guid": "2bkLLv$bP568CSiynWm7_4",
+              "ifc_type": "IfcColumn"
+            },
+            {
+              "guid": "3HU9chNKD4ZQZehthRXeuS",
+              "ifc_type": "IfcWall"
+            },
+            {
+              "guid": "3_3e8hPlTBFQmkqfJTZ0n3",
+              "ifc_type": "IfcStair"
+            }
+          ],
           "required_guids": [
-            "0DMk1Gofz60BkW8YQc5$WR",
-            "0DMk1Gofz60BkW8YQc5$Wf",
-            "0DMk1Gofz60BkW8YQc5$XV",
-            "0DMk1Gofz60BkW8YQc5$Xv",
-            "0DMk1Gofz60BkW8YQc5$Z0",
-            "0DMk1Gofz60BkW8YQc5$cD",
-            "0DMk1Gofz60BkW8YQc5_OT",
-            "0DMk1Gofz60BkW8YQc5_O_",
-            "0DMk1Gofz60BkW8YQc5_Ph",
-            "0DMk1Gofz60BkW8YQc5_SY",
-            "0DMk1Gofz60BkW8YQc5_TG",
-            "0DMk1Gofz60BkW8YQc5_Tm",
-            "0DMk1Gofz60BkW8YQc5_V7",
-            "0DMk1Gofz60BkW8YQc5_VX",
-            "1ZEoaRdQbAF8ybJt6T1y0F",
-            "1ZEoaRdQbAF8ybJt6T1y4D",
-            "1ZEoaRdQbAF8ybJt6T1y5K",
-            "1ZEoaRdQbAF8ybJt6T1y6t",
-            "1ZEoaRdQbAF8ybJt6T1y7P",
-            "1ZEoaRdQbAF8ybJt6T1y7h",
-            "1ZEoaRdQbAF8ybJt6T1y7z",
-            "1ZEoaRdQbAF8ybJt6T1yO1",
-            "1ZEoaRdQbAF8ybJt6T1yPZ",
-            "1ZEoaRdQbAF8ybJt6T1yRF",
             "1h3hC3BBjB$Af_CPYDzLeu",
             "1h3hC3BBjB$Af_CPYDzLhG",
             "1h3hC3BBjB$Af_CPYDzLhO",
-            "1h3hC3BBjB$Af_CPYDzLjb",
-            "1h3hC3BBjB$Af_CPYDzLtG",
-            "1h3hC3BBjB$Af_CPYDzLtI",
-            "1h3hC3BBjB$Af_CPYDzLtK",
-            "1h3hC3BBjB$Af_CPYDzLtM",
-            "1h3hC3BBjB$Af_CPYDzLtV",
-            "2bkLLv$bP568CSiynWm70X",
-            "2bkLLv$bP568CSiynWm70x",
-            "2bkLLv$bP568CSiynWm71D",
-            "2bkLLv$bP568CSiynWm71Y",
-            "2bkLLv$bP568CSiynWm71e",
-            "2bkLLv$bP568CSiynWm71f",
-            "2bkLLv$bP568CSiynWm71k",
-            "2bkLLv$bP568CSiynWm71l",
-            "2bkLLv$bP568CSiynWm71o",
-            "2bkLLv$bP568CSiynWm71p",
-            "2bkLLv$bP568CSiynWm71z",
-            "2bkLLv$bP568CSiynWm7E1",
-            "2bkLLv$bP568CSiynWm7E6",
-            "2bkLLv$bP568CSiynWm7EK",
-            "2bkLLv$bP568CSiynWm7EL",
-            "2bkLLv$bP568CSiynWm7EM",
-            "2bkLLv$bP568CSiynWm7EN",
-            "2bkLLv$bP568CSiynWm7Eb",
-            "2bkLLv$bP568CSiynWm7Ee",
-            "2bkLLv$bP568CSiynWm7Eg",
-            "2bkLLv$bP568CSiynWm7Eh",
-            "2bkLLv$bP568CSiynWm7_4",
-            "3HU9chNKD4ZQZehthRXeuS",
-            "3_3e8hPlTBFQmkqfJTZ0n3"
+            "1h3hC3BBjB$Af_CPYDzLjb"
           ],
-          "guid_strategy": "single"
+          "extraction_element": [
+            "IfcSlab"
+          ]
         },
         {
           "topic_id": "13b907c0-0390-40dd-b9ad-28d2ea250914",
@@ -537,13 +1503,30 @@
             "2bkLLv$bP568CSiynWm71k",
             "3HU9chNKD4ZQZehthRXeuJ"
           ],
-          "required_guids": [
-            "1h3hC3BBjB$Af_CPYDzLeu",
-            "1h3hC3BBjB$Af_CPYDzLtl",
-            "2bkLLv$bP568CSiynWm71k",
-            "3HU9chNKD4ZQZehthRXeuJ"
+          "all_guids_enriched": [
+            {
+              "guid": "1h3hC3BBjB$Af_CPYDzLeu",
+              "ifc_type": "IfcSlab"
+            },
+            {
+              "guid": "1h3hC3BBjB$Af_CPYDzLtl",
+              "ifc_type": "IfcWall"
+            },
+            {
+              "guid": "2bkLLv$bP568CSiynWm71k",
+              "ifc_type": "IfcColumn"
+            },
+            {
+              "guid": "3HU9chNKD4ZQZehthRXeuJ",
+              "ifc_type": "IfcWall"
+            }
           ],
-          "guid_strategy": "single"
+          "required_guids": [
+            "1h3hC3BBjB$Af_CPYDzLeu"
+          ],
+          "extraction_element": [
+            "IfcSlab"
+          ]
         }
       ]
     },
