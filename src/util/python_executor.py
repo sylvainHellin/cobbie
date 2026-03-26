@@ -1,7 +1,10 @@
 """Python execution utilities for COBBIE and other components."""
 
+from __future__ import annotations
+
 import contextvars
 import io
+import multiprocessing
 from contextlib import redirect_stderr, redirect_stdout
 from typing import Any, Callable, Dict, Optional
 
@@ -87,7 +90,7 @@ def setup_interpreter(
 
         # Add path_ifc_model if provided
         if model_path:
-            interpreter_globals['path_ifc_model'] = model_path
+            interpreter_globals["path_ifc_model"] = model_path
 
         # Add tools to interpreter namespace
         if tools:
@@ -98,7 +101,7 @@ def setup_interpreter(
 
         # Pre-load common imports (ifcopenshell, math, json, typing)
         bp = boilerplate if boilerplate is not None else FUNCTION_BOILERPLATE
-        compiled = compile(bp, '<setup>', 'exec')
+        compiled = compile(bp, "<setup>", "exec")
         interpreter.runcode(compiled)
 
         logger.debug(f"Interpreter setup with {len(tools) if tools else 0} tools")
@@ -147,7 +150,7 @@ def execute_python(
         with redirect_stdout(stdout_buffer), redirect_stderr(stderr_buffer):
             try:
                 # Try to compile first to catch syntax errors
-                compiled = compile(python_code, '<string>', 'exec')
+                compiled = compile(python_code, "<string>", "exec")
                 interpreter.runcode(compiled)
             except SyntaxError as e:
                 return f"Syntax Error: {e}"
@@ -184,7 +187,98 @@ def execute_python(
         return error_msg
 
 
+def _execute_python_subprocess_worker(
+    queue: "multiprocessing.Queue[tuple[str, str]]",
+    python_code: str,
+    tools: Dict[str, Callable],
+    model_path: Optional[str],
+    max_tokens: int,
+    boilerplate: Optional[str],
+) -> None:
+    """Worker for subprocess-isolated Python execution."""
+    try:
+        result = execute_python(
+            python_code, tools, model_path, max_tokens, interpreter=None
+        )
+        queue.put(("ok", result))
+    except Exception as e:
+        queue.put(("error", f"Execution failed: {e}"))
+
+
 def execute_python_safe(
+    python_code: str,
+    tools: Dict[str, Callable],
+    model_path: Optional[str] = None,
+    timeout_seconds: int = 30,
+    max_tokens: int = 2048,
+    interpreter: Optional[Any] = None,
+    boilerplate: Optional[str] = None,
+) -> str:
+    """
+    Execute Python code in an isolated subprocess to survive segfaults.
+
+    Falls back to thread-based execution if an interpreter is provided
+    (interpreter objects can't be pickled across processes).
+
+    Args:
+        python_code: Python code to execute
+        tools: Dictionary of available tools/functions
+        model_path: Optional path to IFC model file
+        timeout_seconds: Maximum execution time in seconds
+        max_tokens: Maximum number of tokens in output (default: 2048)
+        interpreter: Optional existing interpreter to reuse (forces thread mode)
+        boilerplate: Optional custom boilerplate code
+
+    Returns:
+        String output from code execution or error/timeout message
+    """
+    # If an interpreter is provided, we can't use subprocess isolation
+    # (interpreter objects aren't picklable). Fall back to thread mode.
+    if interpreter is not None:
+        return _execute_python_safe_threaded(
+            python_code, tools, model_path, timeout_seconds, max_tokens, interpreter
+        )
+
+    # Subprocess-isolated execution (survives segfaults)
+    mp_ctx = multiprocessing.get_context("spawn")
+    max_segfault_retries = 1
+
+    for attempt in range(max_segfault_retries + 1):
+        queue: multiprocessing.Queue[tuple[str, str]] = mp_ctx.Queue()
+        proc = mp_ctx.Process(
+            target=_execute_python_subprocess_worker,
+            args=(queue, python_code, tools, model_path, max_tokens, boilerplate),
+        )
+        proc.start()
+        proc.join(timeout=timeout_seconds)
+
+        if proc.is_alive():
+            proc.terminate()
+            proc.join(timeout=5)
+            return f"Execution timed out after {timeout_seconds} seconds"
+
+        exit_code = proc.exitcode
+        if exit_code == 0:
+            status, result = queue.get_nowait()
+            return result
+        elif exit_code is not None and exit_code < 0:
+            signal_num = -exit_code
+            if signal_num == 11 and attempt < max_segfault_retries:
+                logger.warning(
+                    f"Segfault during code execution (attempt {attempt + 1}), retrying..."
+                )
+                continue
+            return (
+                f"Execution error: process killed by signal {signal_num} "
+                f"(segfault) after {attempt + 1} attempt(s)"
+            )
+        else:
+            return f"Execution error: process exited with code {exit_code}"
+
+    return "Execution error: unexpected loop exit"
+
+
+def _execute_python_safe_threaded(
     python_code: str,
     tools: Dict[str, Callable],
     model_path: Optional[str] = None,
@@ -193,18 +287,10 @@ def execute_python_safe(
     interpreter: Optional[Any] = None,
 ) -> str:
     """
-    Execute Python code with timeout protection.
+    Thread-based execution with timeout (legacy fallback).
 
-    Args:
-        python_code: Python code to execute
-        tools: Dictionary of available tools/functions
-        model_path: Optional path to IFC model file
-        timeout_seconds: Maximum execution time in seconds
-        max_tokens: Maximum number of tokens in output (default: 2048)
-        interpreter: Optional existing interpreter to reuse
-
-    Returns:
-        String output from code execution or timeout message
+    Used when an interpreter is provided, since interpreter objects
+    can't be sent across process boundaries.
     """
     import threading
 
@@ -216,7 +302,9 @@ def execute_python_safe(
 
     def target():
         try:
-            result_container["result"] = execute_python(python_code, tools, model_path, max_tokens, interpreter)
+            result_container["result"] = execute_python(
+                python_code, tools, model_path, max_tokens, interpreter
+            )
             result_container["completed"] = True
         except Exception as e:
             result_container["result"] = f"Execution failed: {e}"
