@@ -1,31 +1,31 @@
 # ACC Tool Evaluation Report — Test Models
 
-Generated: 2026-03-26T06:49:28.708943
+Generated: 2026-03-25T06:28:00.681422
 Models: 4351, digital_hub, samuel_macalister_sample_house, wbdg_office
 
 ## Global Summary
 | Metric | Value |
 |--------|-------|
-| F1 (aggregated) | **0.516** |
+| F1 (aggregated) | **0.475** |
 | Precision | 0.412 |
-| Recall | 0.691 |
-| TP / FP / FN | 168 / 240 / 75 |
+| Recall | 0.562 |
+| TP / FP / FN | 168 / 240 / 131 |
 
 ## Per-Rule Summary
 | Rule | F1 | Precision | Recall | TP | FP | FN |
 |------|---:|----------:|-------:|---:|---:|---:|
 | 304_3_1_circular_space | 1.000 | 1.000 | 1.000 | 2 | 0 | 0 |
 | 305_3_size | 0.000 | 0.000 | 0.000 | 0 | 7 | 1 |
-| 404_2_5_two_doors_in_series | 0.000 | 0.000 | 0.000 | 0 | 46 | 2 |
+| 404_2_5_two_doors_in_series | 0.000 | 0.000 | 0.000 | 0 | 46 | 1 |
 | 504_2_non_uniform_risers_treads | 0.000 | 0.000 | 0.000 | 0 | 1 | 0 |
-| 504_2_riser_height | 0.053 | 0.029 | 0.333 | 1 | 34 | 2 |
-| 504_2_stair_slab_connection | 1.000 | 1.000 | 1.000 | 2 | 0 | 0 |
+| 504_2_riser_height | 0.051 | 0.029 | 0.250 | 1 | 34 | 3 |
+| 504_2_stair_slab_connection | 0.571 | 1.000 | 0.400 | 2 | 0 | 3 |
 | 504_2_tread_length | 0.667 | 0.500 | 1.000 | 2 | 2 | 0 |
 | clearance_front_of_doors | 0.154 | 0.090 | 0.545 | 6 | 61 | 5 |
 | doors_and_windows | 0.250 | 0.143 | 1.000 | 2 | 12 | 0 |
 | large_spaces_more_than_one_door | 0.267 | 0.800 | 0.160 | 4 | 1 | 21 |
 | slab_thickness | 0.000 | 0.000 | 0.000 | 0 | 0 | 3 |
-| slabs_guarded_against_falling | 0.167 | 0.118 | 0.286 | 2 | 15 | 5 |
+| slabs_guarded_against_falling | 0.052 | 0.118 | 0.033 | 2 | 15 | 58 |
 | space_validation_inside | 0.300 | 1.000 | 0.176 | 3 | 0 | 14 |
 | space_validation_intersect | 0.444 | 0.294 | 0.909 | 20 | 48 | 2 |
 | spaces_same_storey_same_bottom_elevation | 1.000 | 1.000 | 1.000 | 124 | 0 | 0 |
@@ -36,7 +36,7 @@ Models: 4351, digital_hub, samuel_macalister_sample_house, wbdg_office
 ### 304_3_1_circular_space — F1=1.000 (PERFECT)
 No errors on test models.
 
-### 305_3_size — F1=0.000
+### 305_3_size — F1=0.000 --- Should rerun --- Groundtruth expected wall rather than space.
 
 **4351**: PASS (TP=0)
 **digital_hub**: PASS (TP=0)
@@ -50,7 +50,7 @@ No errors on test models.
   - **False Negatives** (expected but missed): 1 GUIDs
     - **Space.2.8 : Master Bedroom[206]**: 305.3 Size
 Space.2.8 : Master Bedroom[206] has inaccessible areas.
-      - `{'guid': '3ch3OBgkrCEw4mDhJ2eObq', 'type': 'IfcSpace'}`
+      - `{'guid': '0lntrd6l1AGwfcnKJK5r3q', 'type': 'IfcWall'}`
 
 **wbdg_office**: F1=0.00 | P=0.00 R=0.00 | TP=0 FP=2 FN=0
   - **False Positives** (predicted but not expected): 2 GUIDs
@@ -58,16 +58,15 @@ Space.2.8 : Master Bedroom[206] has inaccessible areas.
     - `{'guid': '2$Ac70E451LvAGNHpGKDt5', 'type': 'IfcFurnishingElement'}`
 
 
-### 404_2_5_two_doors_in_series — F1=0.000
+### 404_2_5_two_doors_in_series — F1=0.000 --- Rerun --- should look for the doors, not the space between them. Groundtruth expected space rather than door.
 
 **4351**: PASS (TP=0)
 **digital_hub**: PASS (TP=0)
-**samuel_macalister_sample_house**: F1=0.00 | P=0.00 R=0.00 | TP=0 FP=0 FN=2
-  - **False Negatives** (expected but missed): 2 GUIDs
+**samuel_macalister_sample_house**: F1=0.00 | P=0.00 R=0.00 | TP=0 FP=0 FN=1
+  - **False Negatives** (expected but missed): 1 GUIDs
     - **Door.0.2 And Door.0.3**: 404.2.5 Two Doors in Series
 Distance between doors is 1.16 m. The minimum distance is 1.22 m.
-      - `{'guid': '1$p8tACJ938vr1_lKOJJ9g', 'type': 'IfcDoor'}`
-      - `{'guid': '1PDnLIM013wvkZO9Lb4$s7', 'type': 'IfcDoor'}`
+      - `{'guid': '3ch3OBgkrCEw4mDhJ2eOWH', 'type': 'IfcSpace'}`
 
 **wbdg_office**: F1=0.00 | P=0.00 R=0.00 | TP=0 FP=46 FN=0
   - **False Positives** (predicted but not expected): 46 GUIDs
@@ -129,7 +128,7 @@ Distance between doors is 1.16 m. The minimum distance is 1.22 m.
 **samuel_macalister_sample_house**: PASS (TP=0)
 **wbdg_office**: PASS (TP=0)
 
-### 504_2_riser_height — F1=0.053
+### 504_2_riser_height — F1=0.051
 
 **4351**: F1=0.00 | P=0.00 R=0.00 | TP=0 FP=17 FN=0
   - **False Positives** (predicted but not expected): 17 GUIDs
@@ -151,7 +150,7 @@ Distance between doors is 1.16 m. The minimum distance is 1.22 m.
     - `{'guid': '2yrvjJLF5DO99bzmxJnJrl', 'type': 'IfcStair'}`
     - `{'guid': '3GUUpM0_TFyOHeW8WSUinC', 'type': 'IfcStairFlight'}`
 
-**digital_hub**: F1=0.00 | P=0.00 R=0.00 | TP=0 FP=8 FN=2
+**digital_hub**: F1=0.00 | P=0.00 R=0.00 | TP=0 FP=8 FN=3
   - **False Positives** (predicted but not expected): 8 GUIDs
     - `{'guid': '0YVU7tDBX86u6UVVsSmdw5', 'type': 'IfcStairFlight'}`
     - `{'guid': '0YVU7tDBX86u6UVVsSmdwA', 'type': 'IfcStairFlight'}`
@@ -161,12 +160,14 @@ Distance between doors is 1.16 m. The minimum distance is 1.22 m.
     - `{'guid': '3LF03GdXv2GhSTK1xTZzXK', 'type': 'IfcStairFlight'}`
     - `{'guid': '3LF03GdXv2GhSTK1xTZzXZ', 'type': 'IfcStairFlight'}`
     - `{'guid': '3LF03GdXv2GhSTK1xTZzXa', 'type': 'IfcStairFlight'}`
-  - **False Negatives** (expected but missed): 2 GUIDs
+  - **False Negatives** (expected but missed): 3 GUIDs
     - **Stair.-2.1: 329 Mm**: 504.2 Treads and Risers
 Stair Stair.-2.1 has steps at the beginning that are non-uniform. Riser height at beginning is 0.33 m and elsewhere 0.18 m.
       - `{'guid': '0YVU7tDBX86u6UVVsSmdx$', 'type': 'IfcStair'}`
+      - `{'guid': '23Np8uMAvEN9H6Ds49deXD', 'type': 'IfcSlab'}`
     - **Stair.-2.2: 329 Mm**: 504.2 Treads and Risers
 Stair Stair.-2.2 has steps at the beginning that are non-uniform. Riser height at beginning is 0.33 m and elsewhere 0.18 m.
+      - `{'guid': '23Np8uMAvEN9H6Ds49deXD', 'type': 'IfcSlab'}`
       - `{'guid': '3LF03GdXv2GhSTK1xTZzXx', 'type': 'IfcStair'}`
 
 **samuel_macalister_sample_house**: F1=0.18 | P=0.10 R=1.00 | TP=1 FP=9 FN=0
@@ -183,8 +184,21 @@ Stair Stair.-2.2 has steps at the beginning that are non-uniform. Riser height a
 
 **wbdg_office**: PASS (TP=0)
 
-### 504_2_stair_slab_connection — F1=1.000 (PERFECT)
-No errors on test models.
+### 504_2_stair_slab_connection — F1=0.571
+
+**4351**: PASS (TP=0)
+**digital_hub**: PASS (TP=0)
+**samuel_macalister_sample_house**: PASS (TP=0)
+**wbdg_office**: F1=0.57 | P=1.00 R=0.40 | TP=2 FP=0 FN=3
+  - **False Negatives** (expected but missed): 3 GUIDs
+    - **Stair.0.1**: 504.2 Treads and Risers
+Stair Stair.0.1 is not connected to slabs at the end. Slab might be missing.
+      - `{'guid': '1Cckmc_QjEFAHHQ3e8qDFi', 'type': 'IfcSlab'}`
+    - **Stair.0.2**: 504.2 Treads and Risers
+Stair Stair.0.2 is not connected to slabs at the end. Slab might be missing.
+      - `{'guid': '27dLDsxMX8Sv5rKurGZypo', 'type': 'IfcRailing'}`
+      - `{'guid': '37hauuzqP2MBAzwN0mWNjY', 'type': 'IfcSlab'}`
+
 
 ### 504_2_tread_length — F1=0.667
 
@@ -205,10 +219,10 @@ No errors on test models.
   - **False Negatives** (expected but missed): 2 GUIDs
     - **Slab.2.1 Too Close To Door.1.1 Component**: Clearance in Front of Doors
 - Component Slab.2.1 intersects the required free area with dimensions 1.07 m and 0.15 m.
-      - `{'guid': '2gTG8I4eL6z9beKMqLBe0M', 'type': 'IfcDoor'}`
+      - `{'guid': '0S4TGKDX5FsvETM2lopwZJ', 'type': 'IfcSlab'}`
     - **Wall.2.8 Too Close To Door.2.2 Component**: Clearance in Front of Doors
 - Component Wall.2.8 intersects the required free area with dimensions 0.07 m and 0.05 m.
-      - `{'guid': '3aFPed1ijDewmDm14mfRrH', 'type': 'IfcDoor'}`
+      - `{'guid': '3aFPed1ijDewmDm14mfR5G', 'type': 'IfcWallStandardCase'}`
 
 **digital_hub**: F1=0.17 | P=0.09 R=1.00 | TP=6 FP=58 FN=0
   - **False Positives** (predicted but not expected): 58 GUIDs
@@ -287,7 +301,7 @@ No errors on test models.
   - **False Negatives** (expected but missed): 1 GUIDs
     - **Sanitary Terminal.0.33.2 Too Close To Door.0.18 Component**: Clearance in Front of Doors
 - Component Sanitary Terminal.0.33.2 intersects the required free area with dimensions 0.16 m and 0.02 m.
-      - `{'guid': '1giqnsgvr6uA16isIlsnGp', 'type': 'IfcDoor'}`
+      - `{'guid': '0zG59wlnT37e_nm5jeqGJp', 'type': 'IfcFlowTerminal'}`
 
 
 ### doors_and_windows — F1=0.250
@@ -409,31 +423,62 @@ Slab component(s) have wrong value. The actual value of Property: Thickness is 0
 **samuel_macalister_sample_house**: PASS (TP=0)
 **wbdg_office**: PASS (TP=0)
 
-### slabs_guarded_against_falling — F1=0.167
+### slabs_guarded_against_falling — F1=0.052
 
-**4351**: F1=0.40 | P=0.50 R=0.33 | TP=1 FP=1 FN=2
+**4351**: F1=0.11 | P=0.50 R=0.06 | TP=1 FP=1 FN=15
   - **False Positives** (predicted but not expected): 1 GUIDs
     - `{'guid': '1rJwPna6j36Ryf9BeRhyi1', 'type': 'IfcSlab'}`
-  - **False Negatives** (expected but missed): 2 GUIDs
+  - **False Negatives** (expected but missed): 15 GUIDs
+    - **Slab.1.1**: Slabs must be Guarded against Falling
+Slab.1.1 has barriers that are too low. The required height of a barrier is 1.00 m, and the height in the model is 0.91 m.
+      - `{'guid': '1o6iSxmUv8P91r$iXVGWW4', 'type': 'IfcWallStandardCase'}`
+      - `{'guid': '2AIxs0u4bALRCp$bA8lTiR', 'type': 'IfcRailing'}`
+      - `{'guid': '2yrvjJLF5DO99bzmxJnJrl', 'type': 'IfcStair'}`
     - **Slab.1.2**: Slabs must be Guarded against Falling
 Slab.1.2 has barriers that are too low. The required height of a barrier is 1.00 m, and the height in the model is 0.91 m.
+      - `{'guid': '05IUfpHsL9BgFcXObHJJxD', 'type': 'IfcMember'}`
+      - `{'guid': '0QunSioVvB2xY3ux28I6JO', 'type': 'IfcMember'}`
+      - `{'guid': '1AMAMzZITBfejW_xu2IBMi', 'type': 'IfcStair'}`
+      - `{'guid': '1AMAMzZITBfejW_xu2IB_D', 'type': 'IfcRailing'}`
+      - `{'guid': '2t7Cp302P04g8y50Ws9Abn', 'type': 'IfcStairFlight'}`
+      - `{'guid': '3PaccedUL48Q9C0HOcrtmk', 'type': 'IfcRailing'}`
       - `{'guid': '3iAO9JyKfEt9Ta5BddcDnh', 'type': 'IfcSlab'}`
     - **Slab.2.1**: Slabs must be Guarded against Falling
 Slab.2.1 has barriers that are too low. The required height of a barrier is 1.00 m, and the height in the model is 0.59 m.
       - `{'guid': '0S4TGKDX5FsvETM2lopwZJ', 'type': 'IfcSlab'}`
+      - `{'guid': '0zm_RkrLH2tRithg6zqEqi', 'type': 'IfcRailing'}`
+      - `{'guid': '0zm_RkrLH2tRithg6zqEsr', 'type': 'IfcRailing'}`
+      - `{'guid': '0zm_RkrLH2tRithg6zqFIz', 'type': 'IfcStair'}`
+      - `{'guid': '2rY6ZB_FT3bRLgI3yFLROE', 'type': 'IfcWall'}`
 
-**digital_hub**: F1=0.00 | P=0.00 R=0.00 | TP=0 FP=4 FN=1
+**digital_hub**: F1=0.00 | P=0.00 R=0.00 | TP=0 FP=4 FN=17
   - **False Positives** (predicted but not expected): 4 GUIDs
     - `{'guid': '0CWDnGbzX4Sf1BesL9TjKx', 'type': 'IfcSlab'}`
     - `{'guid': '0qHt$K$J1CDgKrHmzIgbUy', 'type': 'IfcSlab'}`
     - `{'guid': '3A8hY1UoD7JhnLeZeDyU2J', 'type': 'IfcSlab'}`
     - `{'guid': '3LJODRGPbDdfXHXShFL9C6', 'type': 'IfcSlab'}`
-  - **False Negatives** (expected but missed): 1 GUIDs
+  - **False Negatives** (expected but missed): 17 GUIDs
     - **Slab.0.4**: Slabs must be Guarded against Falling
 Slab.0.4 has barriers that are too low. The required height of a barrier is 1.00 m, and the height in the model is 0.50 m.
+      - `{'guid': '12bPoIwbv0tBGfPfnvCUW2', 'type': 'IfcWall'}`
+      - `{'guid': '12bPoIwbv0tBGfPfnvCUYu', 'type': 'IfcWall'}`
+      - `{'guid': '12bPoIwbv0tBGfPfnvCUau', 'type': 'IfcWall'}`
+      - `{'guid': '12bPoIwbv0tBGfPfnvCUc2', 'type': 'IfcWall'}`
+      - `{'guid': '23Np8uMAvEN9H6Ds49de1S', 'type': 'IfcWall'}`
+      - `{'guid': '23Np8uMAvEN9H6Ds49de3t', 'type': 'IfcWall'}`
+      - `{'guid': '23Np8uMAvEN9H6Ds49de4U', 'type': 'IfcWall'}`
+      - `{'guid': '23Np8uMAvEN9H6Ds49de77', 'type': 'IfcWall'}`
+      - `{'guid': '23Np8uMAvEN9H6Ds49dh$Z', 'type': 'IfcWall'}`
+      - `{'guid': '23Np8uMAvEN9H6Ds49dh_f', 'type': 'IfcWall'}`
+      - `{'guid': '23Np8uMAvEN9H6Ds49dhvA', 'type': 'IfcWall'}`
+      - `{'guid': '23Np8uMAvEN9H6Ds49dhvb', 'type': 'IfcWall'}`
+      - `{'guid': '23Np8uMAvEN9H6Ds49dhw1', 'type': 'IfcWall'}`
+      - `{'guid': '23Np8uMAvEN9H6Ds49dhxn', 'type': 'IfcWall'}`
+      - `{'guid': '23Np8uMAvEN9H6Ds49dhyz', 'type': 'IfcWall'}`
+      - `{'guid': '23Np8uMAvEN9H6Ds49dhzi', 'type': 'IfcWall'}`
       - `{'guid': '3BmeJtEDj3AQO77Os2w6ld', 'type': 'IfcSlab'}`
 
-**samuel_macalister_sample_house**: F1=0.17 | P=0.11 R=0.33 | TP=1 FP=8 FN=2
+**samuel_macalister_sample_house**: F1=0.06 | P=0.11 R=0.04 | TP=1 FP=8 FN=26
   - **False Positives** (predicted but not expected): 8 GUIDs
     - `{'guid': '0LKJKCHUL1kBtnlFXddz6a', 'type': 'IfcSlab'}`
     - `{'guid': '0PSFPzOkvFnf082fy0SVrB', 'type': 'IfcSlab'}`
@@ -443,13 +488,37 @@ Slab.0.4 has barriers that are too low. The required height of a barrier is 1.00
     - `{'guid': '1ypci01sD9aQpE0S$W9jFF', 'type': 'IfcSlab'}`
     - `{'guid': '3OLNF2_DL6hfPgh8Bw7fI7', 'type': 'IfcSlab'}`
     - `{'guid': '3Pf5WxDcT7yf4sAHDxknUs', 'type': 'IfcSlab'}`
-  - **False Negatives** (expected but missed): 2 GUIDs
+  - **False Negatives** (expected but missed): 26 GUIDs
     - **Slab.0.3**: Slabs must be Guarded against Falling
 Slab.0.3 has barriers that are too low. The required height of a barrier is 1.00 m, and the height in the model is 0.79 m.
+      - `{'guid': '0H7vgQcNjEo8efFHzwVpwh', 'type': 'IfcBuildingElementProxy'}`
+      - `{'guid': '1$p8tACJ938vr1_lKOJJ0t', 'type': 'IfcWallStandardCase'}`
+      - `{'guid': '1PDnLIM013wvkZO9Lb4$GV', 'type': 'IfcWallStandardCase'}`
+      - `{'guid': '1PDnLIM013wvkZO9Lb4$j_', 'type': 'IfcCurtainWall'}`
+      - `{'guid': '1PDnLIM013wvkZO9Lb4$wc', 'type': 'IfcWallStandardCase'}`
+      - `{'guid': '1RUi90wQT3ihQ$96bMNGiu', 'type': 'IfcWallStandardCase'}`
+      - `{'guid': '1RUi90wQT3ihQ$96bMNGvH', 'type': 'IfcWallStandardCase'}`
       - `{'guid': '1cCK8nA61FduUezO75i8dB', 'type': 'IfcSlab'}`
+      - `{'guid': '1oPutv5ADAxgWEbAZbN6Wv', 'type': 'IfcWallStandardCase'}`
+      - `{'guid': '29jzdd0Ab5sOIOupfzx0h8', 'type': 'IfcBuildingElementProxy'}`
+      - `{'guid': '29jzdd0Ab5sOIOupfzx1Ur', 'type': 'IfcBuildingElementProxy'}`
+      - `{'guid': '29jzdd0Ab5sOIOupfzx2y0', 'type': 'IfcBuildingElementProxy'}`
+      - `{'guid': '2OulbipBrAkwQNv_KJRUYY', 'type': 'IfcCurtainWall'}`
+      - `{'guid': '2OulbipBrAkwQNv_KJRUgr', 'type': 'IfcCurtainWall'}`
+      - `{'guid': '2ZlFFrvcbDavSm_g3LjLIb', 'type': 'IfcStairFlight'}`
+      - `{'guid': '2ZlFFrvcbDavSm_g3LjLIe', 'type': 'IfcStair'}`
+      - `{'guid': '2hD3j_DmLBXxhCCy1gOWVy', 'type': 'IfcCurtainWall'}`
+      - `{'guid': '2pfAHb2EL46hq_sMVbImEh', 'type': 'IfcWallStandardCase'}`
+      - `{'guid': '38NblWsDL1I8DljLvn67Sd', 'type': 'IfcWallStandardCase'}`
+      - `{'guid': '3NtsDuzRb1WReLiDQX$2CA', 'type': 'IfcCurtainWall'}`
+      - `{'guid': '3Yxgiuz3TDpeHhosGP5a_d', 'type': 'IfcColumn'}`
+      - `{'guid': '3lLx0gNe59vvExhby0Bff1', 'type': 'IfcWallStandardCase'}`
+      - `{'guid': '3rPRxvVIT7WRZKOFIc3wXL', 'type': 'IfcWallStandardCase'}`
+      - `{'guid': '3vi8Xy_cHA1R$gUoZ0tZjz', 'type': 'IfcBuildingElementProxy'}`
     - **Slab.2.3**: Slabs must be Guarded against Falling
 Slab.2.3 has adjacent landing components that are too far below. The maximum allowed drop is 0.50 m, and the height in the model is 1.20 m.
       - `{'guid': '38BWtPCUX0VgAKmmGnoLQm', 'type': 'IfcSlab'}`
+      - `{'guid': '3lIj7B0LnBjf0mvxk2zve8', 'type': 'IfcSite'}`
     - **Slab.2.3**: Slabs must be Guarded against Falling
 Slab.2.3 is missing a barrier/barriers.
       - `{'guid': '38BWtPCUX0VgAKmmGnoLQm', 'type': 'IfcSlab'}`

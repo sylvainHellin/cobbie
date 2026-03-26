@@ -443,6 +443,7 @@ def generate_report(results: dict) -> str:
 # ---------------------------------------------------------------------------
 
 if __name__ == "__main__":
+    OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
     results = run_evaluation()
 
     # Save JSON
