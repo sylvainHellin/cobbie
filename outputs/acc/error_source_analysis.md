@@ -24,12 +24,14 @@ door rules).
 
 ## Perfect Rules (F1 = 1.000)
 
-### circular_space, stair_slab_connection, same_storey_elevation
+### circular_space, stair_slab_connection, same_storey_elevation, doors_and_windows
 
-These 3 rules achieve perfect F1 on all test models. Their logic is unambiguous:
+These 4 rules achieve perfect F1 on all test models:
+
 - `circular_space`: single geometric measurement (inscribed circle diameter)
 - `stair_slab_connection`: geometric collision detection between stairs and slabs
 - `same_storey_elevation`: property comparison (bottom elevation equality)
+- `doors_and_windows`: floor-level comparison + orphan detection via IFC relationships (F1=1.0, 18 TP)
 
 No errors to analyse.
 
@@ -118,18 +120,6 @@ geometric interference.
 
 ---
 
-### 6. doors_and_windows — F1=0.250 (TP=2, FP=12, FN=0)
-
-**TP: 2 IfcWindow. FP: 8 IfcWindow + 4 IfcDoor.**
-
-**Root cause: E4 — Missing rule logic + E6 — Model-specific structure.**
-The tool checks if doors/windows are on a different floor than their host wall.
-The 12 FPs are elements flagged as mismatched but considered compliant by Solibri.
-Likely causes:
-- Doors/windows spanning storey boundaries are legitimate
-- `get_container()` returns a different storey than expected for some elements
-- Elements without a spatial container are incorrectly flagged
-
 ---
 
 ### 7. large_spaces_more_than_one_door — F1=0.267 (TP=4, FP=1, FN=21)
@@ -150,8 +140,7 @@ The digital_hub model (11 FN) is the worst — likely has poor/missing
 ---
 
 ### 8. slabs_guarded_against_falling — F1=0.167 (TP=1, FP=4, FN=6)
---- Double-check ---probably geometry-based
-
+--- Seems geometry-based --- non optimised heuistic. Height from geometry rather than quantity/property.
 
 **All elements are IfcSlab.** V2 ground truth dramatically simplified this rule
 (was 58 FN with V1, now 6 FN) by only expecting slab GUIDs, not barrier GUIDs.
@@ -171,6 +160,11 @@ tool doesn't robustly detect "missing barrier" scenarios.
 
 ### 9. space_validation_inside — F1=0.300 (TP=3, FP=0, FN=14)
 
+--- Geometry checks too restricive + Solibri parameters not descibed enough. Multiple sub-rules in one rule.
+
+Check Bottom Surface: True" in SOL/202 (Space Validation) means: the bottom surface of each space must touch a slab or another space
+  below it. If no slab is found beneath the space, it gets flagged.
+
 **All elements are IfcSpace.** Perfect precision but low recall.
 
 **FN root cause: E3 — Geometry approximation + E4 — Missing sub-rule.**
@@ -185,6 +179,7 @@ or space surface below itself" — a separate sub-rule the tool doesn't implemen
 ---
 
 ### 10. space_validation_intersect — F1=0.444 (TP=20, FP=48, FN=2)
+--- Geomtry check too restrictive
 
 **All elements are IfcSpace.** High recall (0.91) but low precision (0.29).
 
@@ -202,6 +197,8 @@ relevant elements for this model.
 
 ### 11. 305_3_size — F1=0.000 (FP=0, FN=1)
 
+-- heuristic used for checking - rotating bounding box and chekcing every 5 degrees.
+
 **1 FN: IfcSpace in samuel_macalister** (Master Bedroom with inaccessible areas).
 
 **Root cause: E3 — Geometry approximation.**
@@ -212,6 +209,8 @@ The single FN space has inaccessible areas the sampling failed to detect.
 ---
 
 ### 12. 404_2_5_two_doors_in_series — F1=0.000 (FP=0, FN=2)
+
+----- confirmed - Models have no IfcRelSpaceBoundary, so the tool can't count doors per space. The tool relies on `IfcRelSpaceBoundary` to navigate from Spaces to their bounding elments, i.e., walls. - More training models would help. Or export problem/missing relationsips.
 
 **2 FN: IfcDoor in samuel_macalister.** Distance between doors is 1.16m (min = 1.22m).
 
@@ -224,6 +223,8 @@ With V2 ground truth, both door GUIDs are now expected (was 1 with V1's
 ---
 
 ### 13. unallocated_areas — F1=0.000 (FP=13, FN=20)
+
+--- Geometry-based heuristic
 
 **FP types: 7 IfcWallStandardCase + 6 IfcWall.**
 **FN types: 11 IfcWall + 4 IfcWallStandardCase + 4 IfcCurtainWall + 1 IfcColumn.**
@@ -248,10 +249,13 @@ approach doesn't detect as boundaries of unallocated areas.
 | **E3: Geometry approximation** | clearance_doors, slabs_guarded, space_inside, space_intersect, 305_3, unallocated | 125 | 23 |
 | **E2: Relationship traversal** | large_spaces, 404_2_5 | 0 | 23 |
 | **E5: Threshold/tolerance mismatch** | riser_height, tread_length, non_uniform, space_intersect | 12 | 0 |
-| **E4: Missing rule logic** | clearance_doors, space_inside, riser_height, doors_windows | 0 | 12 |
+| **E4: Missing rule logic** | clearance_doors, space_inside, riser_height | 0 | 12 |
 | **E1: Property lookup failure** | slab_thickness | 0 | 3 |
-| **E6: Model-specific structure** | doors_windows, space_intersect | 12 | 2 |
+| **E6: Model-specific structure** | space_intersect | 0 | 2 |
 
-**Top error source:** Geometry approximation (E3) accounts for 77% of FPs and 30% of FNs.
+**Top error source:** Geometry approximation (E3) accounts for 83% of FPs and 30% of FNs.
 Relationship traversal gaps (E2) account for 30% of FNs — these are models where
 `IfcRelSpaceBoundary` is incomplete, forcing geometric approaches.
+
+Note: 4 rules achieve perfect F1=1.0 on test (circular_space, stair_slab_connection,
+same_storey_elevation, doors_and_windows), accounting for 146 of 182 total TPs.

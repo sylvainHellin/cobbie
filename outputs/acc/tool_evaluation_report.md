@@ -1,15 +1,15 @@
 # ACC Tool Evaluation Report — Test Models
 
-Generated: 2026-03-27T07:12:44.681576
+Generated: 2026-03-27T21:13:58.844796
 Models: 4351, digital_hub, samuel_macalister_sample_house, wbdg_office
 
 ## Global Summary
 | Metric | Value |
 |--------|-------|
-| F1 (aggregated) | **0.580** |
-| Precision | 0.505 |
-| Recall | 0.683 |
-| TP / FP / FN | 166 / 163 / 77 |
+| F1 (aggregated) | **0.615** |
+| Precision | 0.546 |
+| Recall | 0.703 |
+| TP / FP / FN | 182 / 151 / 77 |
 
 ## Per-Rule Summary
 | Rule | F1 | Precision | Recall | TP | FP | FN |
@@ -22,7 +22,7 @@ Models: 4351, digital_hub, samuel_macalister_sample_house, wbdg_office
 | 504_2_stair_slab_connection | 1.000 | 1.000 | 1.000 | 2 | 0 | 0 |
 | 504_2_tread_length | 0.667 | 0.500 | 1.000 | 2 | 2 | 0 |
 | clearance_front_of_doors | 0.112 | 0.064 | 0.455 | 5 | 73 | 6 |
-| doors_and_windows | 0.250 | 0.143 | 1.000 | 2 | 12 | 0 |
+| doors_and_windows | 1.000 | 1.000 | 1.000 | 18 | 0 | 0 |
 | large_spaces_more_than_one_door | 0.267 | 0.800 | 0.160 | 4 | 1 | 21 |
 | slab_thickness | 0.000 | 0.000 | 0.000 | 0 | 0 | 3 |
 | slabs_guarded_against_falling | 0.167 | 0.200 | 0.143 | 1 | 4 | 6 |
@@ -225,28 +225,8 @@ No errors on test models.
       - `{'guid': '1giqnsgvr6uA16isIlsnGp', 'type': 'IfcDoor'}`
 
 
-### doors_and_windows — F1=0.250
-
-**4351**: F1=0.50 | P=0.33 R=1.00 | TP=2 FP=4 FN=0
-  - **False Positives** (predicted but not expected): 4 GUIDs
-    - `{'guid': '1Vp_ZIf01ANQz9mYpe1Peb', 'type': 'IfcDoor'}`
-    - `{'guid': '2SqDm2VurA4wpcRwks3Xlh', 'type': 'IfcDoor'}`
-    - `{'guid': '2gTG8I4eL6z9beKMqLBe0M', 'type': 'IfcDoor'}`
-    - `{'guid': '2gTG8I4eL6z9beKMqLBe0q', 'type': 'IfcDoor'}`
-
-**digital_hub**: PASS (TP=0)
-**samuel_macalister_sample_house**: F1=0.00 | P=0.00 R=0.00 | TP=0 FP=8 FN=0
-  - **False Positives** (predicted but not expected): 8 GUIDs
-    - `{'guid': '20nhVaBTTAJguMI9o6oBQ8', 'type': 'IfcWindow'}`
-    - `{'guid': '20nhVaBTTAJguMI9o6oBQ9', 'type': 'IfcWindow'}`
-    - `{'guid': '20nhVaBTTAJguMI9o6oBQE', 'type': 'IfcWindow'}`
-    - `{'guid': '20nhVaBTTAJguMI9o6oBQF', 'type': 'IfcWindow'}`
-    - `{'guid': '20nhVaBTTAJguMI9o6oD2l', 'type': 'IfcWindow'}`
-    - `{'guid': '20nhVaBTTAJguMI9o6oD4T', 'type': 'IfcWindow'}`
-    - `{'guid': '20nhVaBTTAJguMI9o6oD5Q', 'type': 'IfcWindow'}`
-    - `{'guid': '20nhVaBTTAJguMI9o6oDQ8', 'type': 'IfcWindow'}`
-
-**wbdg_office**: PASS (TP=0)
+### doors_and_windows — F1=1.000 (PERFECT)
+No errors on test models.
 
 ### large_spaces_more_than_one_door — F1=0.267
 

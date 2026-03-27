@@ -1,6 +1,6 @@
 {
   "metadata": {
-    "timestamp": "2026-03-27T07:12:44.681576",
+    "timestamp": "2026-03-27T21:13:58.844796",
     "num_tools": 16,
     "num_models": 4,
     "models": [
@@ -26,7 +26,7 @@
           "recall": 1.0,
           "f1": 1.0,
           "is_perfect_match": true,
-          "elapsed_seconds": 9.0,
+          "elapsed_seconds": 7.5,
           "fn_context": [],
           "log": "Code executed successfully (no output)\nCode executed successfully (no output)"
         },
@@ -70,7 +70,7 @@
           "recall": 1.0,
           "f1": 1.0,
           "is_perfect_match": true,
-          "elapsed_seconds": 6.3,
+          "elapsed_seconds": 7.7,
           "fn_context": [],
           "log": "Code executed successfully (no output)\nCode executed successfully (no output)"
         },
@@ -87,7 +87,7 @@
           "recall": 1.0,
           "f1": 1.0,
           "is_perfect_match": true,
-          "elapsed_seconds": 7.5,
+          "elapsed_seconds": 9.9,
           "fn_context": [],
           "log": "Code executed successfully (no output)\nCode executed successfully (no output)"
         },
@@ -104,7 +104,7 @@
           "recall": 1.0,
           "f1": 1.0,
           "is_perfect_match": true,
-          "elapsed_seconds": 5.2,
+          "elapsed_seconds": 6.9,
           "fn_context": [],
           "log": "Code executed successfully (no output)\nCode executed successfully (no output)"
         }
@@ -133,7 +133,7 @@
           "recall": 1.0,
           "f1": 1.0,
           "is_perfect_match": true,
-          "elapsed_seconds": 5.0,
+          "elapsed_seconds": 6.7,
           "fn_context": [],
           "log": "Code executed successfully (no output)\nCode executed successfully (no output)"
         },
@@ -150,7 +150,7 @@
           "recall": 1.0,
           "f1": 1.0,
           "is_perfect_match": true,
-          "elapsed_seconds": 8.2,
+          "elapsed_seconds": 12.7,
           "fn_context": [],
           "log": "Code executed successfully (no output)\nCode executed successfully (no output)"
         },
@@ -177,7 +177,7 @@
           "recall": 0.0,
           "f1": 0.0,
           "is_perfect_match": false,
-          "elapsed_seconds": 8.7,
+          "elapsed_seconds": 12.1,
           "fn_context": [
             {
               "title": "Space.2.8 : Master Bedroom[206]",
@@ -215,7 +215,7 @@
           "recall": 1.0,
           "f1": 1.0,
           "is_perfect_match": true,
-          "elapsed_seconds": 5.5,
+          "elapsed_seconds": 7.4,
           "fn_context": [],
           "log": "Code executed successfully (no output)\nCode executed successfully (no output)"
         }
@@ -244,7 +244,7 @@
           "recall": 1.0,
           "f1": 1.0,
           "is_perfect_match": true,
-          "elapsed_seconds": 5.4,
+          "elapsed_seconds": 7.0,
           "fn_context": [],
           "log": "Code executed successfully (no output)\nCode executed successfully (no output)"
         },
@@ -261,7 +261,7 @@
           "recall": 1.0,
           "f1": 1.0,
           "is_perfect_match": true,
-          "elapsed_seconds": 5.7,
+          "elapsed_seconds": 7.4,
           "fn_context": [],
           "log": "Code executed successfully (no output)\nCode executed successfully (no output)"
         },
@@ -296,7 +296,7 @@
           "recall": 0.0,
           "f1": 0.0,
           "is_perfect_match": false,
-          "elapsed_seconds": 9.3,
+          "elapsed_seconds": 10.3,
           "fn_context": [
             {
               "title": "Door.0.2 And Door.0.3",
@@ -342,7 +342,7 @@
           "recall": 1.0,
           "f1": 1.0,
           "is_perfect_match": true,
-          "elapsed_seconds": 5.3,
+          "elapsed_seconds": 7.1,
           "fn_context": [],
           "log": "Code executed successfully (no output)\nCode executed successfully (no output)"
         }
@@ -389,7 +389,7 @@
           "recall": 0.0,
           "f1": 0.0,
           "is_perfect_match": false,
-          "elapsed_seconds": 5.7,
+          "elapsed_seconds": 7.2,
           "fn_context": [],
           "log": "Code executed successfully (no output)\nWarning: Skipped 2 stairs and 0 flights due to missing data"
         },
@@ -406,7 +406,7 @@
           "recall": 1.0,
           "f1": 1.0,
           "is_perfect_match": true,
-          "elapsed_seconds": 5.6,
+          "elapsed_seconds": 7.3,
           "fn_context": [],
           "log": "Code executed successfully (no output)\nCode executed successfully (no output)"
         },
@@ -449,7 +449,7 @@
           "recall": 0.0,
           "f1": 0.0,
           "is_perfect_match": false,
-          "elapsed_seconds": 8.0,
+          "elapsed_seconds": 9.9,
           "fn_context": [],
           "log": "Code executed successfully (no output)\nCode executed successfully (no output)"
         },
@@ -466,7 +466,7 @@
           "recall": 1.0,
           "f1": 1.0,
           "is_perfect_match": true,
-          "elapsed_seconds": 5.0,
+          "elapsed_seconds": 6.3,
           "fn_context": [],
           "log": "Code executed successfully (no output)\nCode executed successfully (no output)"
         }
@@ -521,7 +521,7 @@
           "recall": 0.0,
           "f1": 0.0,
           "is_perfect_match": false,
-          "elapsed_seconds": 5.3,
+          "elapsed_seconds": 6.8,
           "fn_context": [],
           "log": "Code executed successfully (no output)\nWarning: Could not find riser height data for 1 stair(s)"
         },
@@ -556,7 +556,7 @@
           "recall": 0.0,
           "f1": 0.0,
           "is_perfect_match": false,
-          "elapsed_seconds": 5.3,
+          "elapsed_seconds": 7.2,
           "fn_context": [
             {
               "title": "Stair.-2.1: 329 Mm",
@@ -646,7 +646,7 @@
           "recall": 1.0,
           "f1": 0.5,
           "is_perfect_match": false,
-          "elapsed_seconds": 8.0,
+          "elapsed_seconds": 10.1,
           "fn_context": [],
           "log": "Code executed successfully (no output)\nCode executed successfully (no output)"
         },
@@ -663,7 +663,7 @@
           "recall": 1.0,
           "f1": 1.0,
           "is_perfect_match": true,
-          "elapsed_seconds": 4.9,
+          "elapsed_seconds": 6.2,
           "fn_context": [],
           "log": "Code executed successfully (no output)\nCode executed successfully (no output)"
         }
@@ -692,7 +692,7 @@
           "recall": 1.0,
           "f1": 1.0,
           "is_perfect_match": true,
-          "elapsed_seconds": 10.1,
+          "elapsed_seconds": 12.5,
           "fn_context": [],
           "log": "Code executed successfully (no output)\nCode executed successfully (no output)"
         },
@@ -709,7 +709,7 @@
           "recall": 1.0,
           "f1": 1.0,
           "is_perfect_match": true,
-          "elapsed_seconds": 7.9,
+          "elapsed_seconds": 10.9,
           "fn_context": [],
           "log": "Code executed successfully (no output)\nCode executed successfully (no output)"
         },
@@ -726,7 +726,7 @@
           "recall": 1.0,
           "f1": 1.0,
           "is_perfect_match": true,
-          "elapsed_seconds": 83.5,
+          "elapsed_seconds": 106.6,
           "fn_context": [],
           "log": "Code executed successfully (no output)\nSTDERR:\n/Users/stefanfuchs/Repos/cobbie/.venv/lib/python3.12/site-packages/trimesh/triangles.py:302: RuntimeWarning: invalid value encountered in divide\n  center_mass = integrated[1:4] / volume"
         },
@@ -770,7 +770,7 @@
           "recall": 1.0,
           "f1": 1.0,
           "is_perfect_match": true,
-          "elapsed_seconds": 5.9,
+          "elapsed_seconds": 9.1,
           "fn_context": [],
           "log": "Code executed successfully (no output)\nCode executed successfully (no output)"
         }
@@ -799,7 +799,7 @@
           "recall": 1.0,
           "f1": 1.0,
           "is_perfect_match": true,
-          "elapsed_seconds": 5.0,
+          "elapsed_seconds": 7.0,
           "fn_context": [],
           "log": "Code executed successfully (no output)\nWarning: Skipped 1/4 stair elements due to missing tread length data"
         },
@@ -860,7 +860,7 @@
           "recall": 1.0,
           "f1": 0.6666666666666666,
           "is_perfect_match": false,
-          "elapsed_seconds": 5.3,
+          "elapsed_seconds": 6.9,
           "fn_context": [],
           "log": "Code executed successfully (no output)\nCode executed successfully (no output)"
         },
@@ -877,7 +877,7 @@
           "recall": 1.0,
           "f1": 1.0,
           "is_perfect_match": true,
-          "elapsed_seconds": 7.4,
+          "elapsed_seconds": 11.0,
           "fn_context": [],
           "log": "Code executed successfully (no output)\nCode executed successfully (no output)"
         },
@@ -894,7 +894,7 @@
           "recall": 1.0,
           "f1": 1.0,
           "is_perfect_match": true,
-          "elapsed_seconds": 4.7,
+          "elapsed_seconds": 6.2,
           "fn_context": [],
           "log": "Code executed successfully (no output)\nCode executed successfully (no output)"
         }
@@ -951,7 +951,7 @@
           "recall": 0.0,
           "f1": 0.0,
           "is_perfect_match": false,
-          "elapsed_seconds": 59.9,
+          "elapsed_seconds": 73.4,
           "fn_context": [
             {
               "title": "Slab.2.1 Too Close To Door.1.1 Component",
@@ -1314,7 +1314,7 @@
           "recall": 0.8333333333333334,
           "f1": 0.25,
           "is_perfect_match": false,
-          "elapsed_seconds": 46.1,
+          "elapsed_seconds": 60.6,
           "fn_context": [
             {
               "title": "Slab.0.1, Slab.0.3 Too Close To Door.0.1 Component",
@@ -1374,7 +1374,7 @@
           "recall": 0.0,
           "f1": 0.0,
           "is_perfect_match": false,
-          "elapsed_seconds": 51.2,
+          "elapsed_seconds": 67.8,
           "fn_context": [
             {
               "title": "Wall.2.30 Too Close To Door.2.1 Component",
@@ -1788,7 +1788,7 @@
           "recall": 0.0,
           "f1": 0.0,
           "is_perfect_match": false,
-          "elapsed_seconds": 17.1,
+          "elapsed_seconds": 21.0,
           "fn_context": [
             {
               "title": "Sanitary Terminal.0.33.2 Too Close To Door.0.18 Component",
@@ -1860,19 +1860,7 @@
             {
               "guid": "0wgESE2Yb7g8PPk_szuqQW",
               "type": "IfcWindow"
-            }
-          ],
-          "tp_guids": [
-            {
-              "guid": "0Y750fYpD0FwowATjAsR7u",
-              "type": "IfcWindow"
             },
-            {
-              "guid": "0wgESE2Yb7g8PPk_szuqQW",
-              "type": "IfcWindow"
-            }
-          ],
-          "fp_guids": [
             {
               "guid": "1Vp_ZIf01ANQz9mYpe1Peb",
               "type": "IfcDoor"
@@ -1890,15 +1878,42 @@
               "type": "IfcDoor"
             }
           ],
+          "tp_guids": [
+            {
+              "guid": "0Y750fYpD0FwowATjAsR7u",
+              "type": "IfcWindow"
+            },
+            {
+              "guid": "0wgESE2Yb7g8PPk_szuqQW",
+              "type": "IfcWindow"
+            },
+            {
+              "guid": "1Vp_ZIf01ANQz9mYpe1Peb",
+              "type": "IfcDoor"
+            },
+            {
+              "guid": "2SqDm2VurA4wpcRwks3Xlh",
+              "type": "IfcDoor"
+            },
+            {
+              "guid": "2gTG8I4eL6z9beKMqLBe0M",
+              "type": "IfcDoor"
+            },
+            {
+              "guid": "2gTG8I4eL6z9beKMqLBe0q",
+              "type": "IfcDoor"
+            }
+          ],
+          "fp_guids": [],
           "fn_guids": [],
-          "tp": 2,
-          "fp": 4,
+          "tp": 6,
+          "fp": 0,
           "fn": 0,
-          "precision": 0.3333333333333333,
+          "precision": 1.0,
           "recall": 1.0,
-          "f1": 0.5,
-          "is_perfect_match": false,
-          "elapsed_seconds": 8.6,
+          "f1": 1.0,
+          "is_perfect_match": true,
+          "elapsed_seconds": 7.1,
           "fn_context": [],
           "log": "Code executed successfully (no output)\nCode executed successfully (no output)"
         },
@@ -1915,13 +1930,21 @@
           "recall": 1.0,
           "f1": 1.0,
           "is_perfect_match": true,
-          "elapsed_seconds": 6.8,
+          "elapsed_seconds": 7.3,
           "fn_context": [],
           "log": "Code executed successfully (no output)\nCode executed successfully (no output)"
         },
         "samuel_macalister_sample_house": {
           "predicted": [
             {
+              "guid": "12QTT5rufCoeOFfLiN060S",
+              "type": "IfcWindow"
+            },
+            {
+              "guid": "12QTT5rufCoeOFfLiN06FB",
+              "type": "IfcWindow"
+            },
+            {
               "guid": "20nhVaBTTAJguMI9o6oBQ8",
               "type": "IfcWindow"
             },
@@ -1952,11 +1975,25 @@
             {
               "guid": "20nhVaBTTAJguMI9o6oDQ8",
               "type": "IfcWindow"
+            },
+            {
+              "guid": "2wm6PO6TX9IxXwLP21HySo",
+              "type": "IfcDoor"
+            },
+            {
+              "guid": "2wm6PO6TX9IxXwLP21HyWr",
+              "type": "IfcDoor"
             }
           ],
-          "expected": [],
-          "tp_guids": [],
-          "fp_guids": [
+          "expected": [
+            {
+              "guid": "12QTT5rufCoeOFfLiN060S",
+              "type": "IfcWindow"
+            },
+            {
+              "guid": "12QTT5rufCoeOFfLiN06FB",
+              "type": "IfcWindow"
+            },
             {
               "guid": "20nhVaBTTAJguMI9o6oBQ8",
               "type": "IfcWindow"
@@ -1988,17 +2025,76 @@
             {
               "guid": "20nhVaBTTAJguMI9o6oDQ8",
               "type": "IfcWindow"
+            },
+            {
+              "guid": "2wm6PO6TX9IxXwLP21HySo",
+              "type": "IfcDoor"
+            },
+            {
+              "guid": "2wm6PO6TX9IxXwLP21HyWr",
+              "type": "IfcDoor"
             }
           ],
+          "tp_guids": [
+            {
+              "guid": "12QTT5rufCoeOFfLiN060S",
+              "type": "IfcWindow"
+            },
+            {
+              "guid": "12QTT5rufCoeOFfLiN06FB",
+              "type": "IfcWindow"
+            },
+            {
+              "guid": "20nhVaBTTAJguMI9o6oBQ8",
+              "type": "IfcWindow"
+            },
+            {
+              "guid": "20nhVaBTTAJguMI9o6oBQ9",
+              "type": "IfcWindow"
+            },
+            {
+              "guid": "20nhVaBTTAJguMI9o6oBQE",
+              "type": "IfcWindow"
+            },
+            {
+              "guid": "20nhVaBTTAJguMI9o6oBQF",
+              "type": "IfcWindow"
+            },
+            {
+              "guid": "20nhVaBTTAJguMI9o6oD2l",
+              "type": "IfcWindow"
+            },
+            {
+              "guid": "20nhVaBTTAJguMI9o6oD4T",
+              "type": "IfcWindow"
+            },
+            {
+              "guid": "20nhVaBTTAJguMI9o6oD5Q",
+              "type": "IfcWindow"
+            },
+            {
+              "guid": "20nhVaBTTAJguMI9o6oDQ8",
+              "type": "IfcWindow"
+            },
+            {
+              "guid": "2wm6PO6TX9IxXwLP21HySo",
+              "type": "IfcDoor"
+            },
+            {
+              "guid": "2wm6PO6TX9IxXwLP21HyWr",
+              "type": "IfcDoor"
+            }
+          ],
+          "fp_guids": [],
           "fn_guids": [],
-          "tp": 0,
-          "fp": 8,
+          "tp": 12,
+          "fp": 0,
           "fn": 0,
-          "precision": 0.0,
-          "recall": 0.0,
-          "f1": 0.0,
-          "is_perfect_match": false,
-          "elapsed_seconds": 9.4,
+          "precision": 1.0,
+          "recall": 1.0,
+          "f1": 1.0,
+          "is_perfect_match": true,
+          "elapsed_seconds": 10.3,
           "fn_context": [],
           "log": "Code executed successfully (no output)\nCode executed successfully (no output)"
         },
@@ -2015,18 +2111,18 @@
           "recall": 1.0,
           "f1": 1.0,
           "is_perfect_match": true,
-          "elapsed_seconds": 5.7,
+          "elapsed_seconds": 6.5,
           "fn_context": [],
           "log": "Code executed successfully (no output)\nCode executed successfully (no output)"
         }
       },
       "aggregated": {
-        "tp": 2,
-        "fp": 12,
+        "tp": 18,
+        "fp": 0,
         "fn": 0,
-        "precision": 0.1429,
+        "precision": 1.0,
         "recall": 1.0,
-        "f1": 0.25
+        "f1": 1.0
       }
     },
     "large_spaces_more_than_one_door": {
@@ -2070,7 +2166,7 @@
           "recall": 0.0,
           "f1": 0.0,
           "is_perfect_match": false,
-          "elapsed_seconds": 6.0,
+          "elapsed_seconds": 7.1,
           "fn_context": [
             {
               "title": "Space.0.2 : 1st Floor[4]: Count (0) Of The Components Does Not Match The Requirement: ≥ 2",
@@ -2226,7 +2322,7 @@
           "recall": 0.0,
           "f1": 0.0,
           "is_perfect_match": false,
-          "elapsed_seconds": 6.2,
+          "elapsed_seconds": 7.1,
           "fn_context": [
             {
               "title": "Space.-1.1 : Vr/ar Lab[1-11]: Count (0) Of The Components Does Not Match The Requirement: ≥ 2",
@@ -2438,7 +2534,7 @@
           "recall": 0.0,
           "f1": 0.0,
           "is_perfect_match": false,
-          "elapsed_seconds": 8.5,
+          "elapsed_seconds": 10.4,
           "fn_context": [
             {
               "title": "Space.0.2 : Living[106]: Count (0) Of The Components Does Not Match The Requirement: ≥ 2",
@@ -2589,7 +2685,7 @@
           "recall": 0.4444444444444444,
           "f1": 0.5714285714285714,
           "is_perfect_match": false,
-          "elapsed_seconds": 6.4,
+          "elapsed_seconds": 7.6,
           "fn_context": [
             {
               "title": "Space.0.13 : Scif Open Office[143]: Count (0) Of The Components Does Not Match The Requirement: ≥ 2",
@@ -2699,7 +2795,7 @@
           "recall": 1.0,
           "f1": 1.0,
           "is_perfect_match": true,
-          "elapsed_seconds": 5.9,
+          "elapsed_seconds": 7.0,
           "fn_context": [],
           "log": "Code executed successfully (no output)\nWarning: Skipped 1 elements due to missing data or errors"
         },
@@ -2742,7 +2838,7 @@
           "recall": 0.0,
           "f1": 0.0,
           "is_perfect_match": false,
-          "elapsed_seconds": 6.0,
+          "elapsed_seconds": 7.4,
           "fn_context": [
             {
               "title": "Wrong Value Of Property - Thickness: 0.00 M",
@@ -2800,7 +2896,7 @@
           "recall": 1.0,
           "f1": 1.0,
           "is_perfect_match": true,
-          "elapsed_seconds": 8.4,
+          "elapsed_seconds": 10.4,
           "fn_context": [],
           "log": "Code executed successfully (no output)\nWarning: Skipped 12 elements due to missing data or errors"
         },
@@ -2817,7 +2913,7 @@
           "recall": 1.0,
           "f1": 1.0,
           "is_perfect_match": true,
-          "elapsed_seconds": 5.3,
+          "elapsed_seconds": 6.5,
           "fn_context": [],
           "log": "Code executed successfully (no output)\nWarning: Skipped 2 elements due to missing data or errors"
         }
@@ -2887,7 +2983,7 @@
           "recall": 0.3333333333333333,
           "f1": 0.4,
           "is_perfect_match": false,
-          "elapsed_seconds": 40.8,
+          "elapsed_seconds": 51.6,
           "fn_context": [
             {
               "title": "Slab.1.2",
@@ -2997,7 +3093,7 @@
           "recall": 0.0,
           "f1": 0.0,
           "is_perfect_match": false,
-          "elapsed_seconds": 131.4,
+          "elapsed_seconds": 187.3,
           "fn_context": [
             {
               "title": "Slab.0.4",
@@ -3125,7 +3221,7 @@
           "recall": 0.0,
           "f1": 0.0,
           "is_perfect_match": false,
-          "elapsed_seconds": 133.1,
+          "elapsed_seconds": 166.5,
           "fn_context": [
             {
               "title": "Slab.0.1",
@@ -3321,7 +3417,7 @@
           "recall": 0.0,
           "f1": 0.0,
           "is_perfect_match": false,
-          "elapsed_seconds": 12.3,
+          "elapsed_seconds": 13.5,
           "fn_context": [],
           "log": "Code executed successfully (no output)\nCode executed successfully (no output)"
         }
@@ -3350,7 +3446,7 @@
           "recall": 1.0,
           "f1": 1.0,
           "is_perfect_match": true,
-          "elapsed_seconds": 6.0,
+          "elapsed_seconds": 7.4,
           "fn_context": [],
           "log": "Code executed successfully (no output)\nCode executed successfully (no output)"
         },
@@ -3455,7 +3551,7 @@
           "recall": 0.1,
           "f1": 0.18181818181818182,
           "is_perfect_match": false,
-          "elapsed_seconds": 18.4,
+          "elapsed_seconds": 17.9,
           "fn_context": [
             {
               "title": "Space.-1.22 : Treppenhaus West - Eg[1-19]",
@@ -3723,7 +3819,7 @@
           "recall": 0.0,
           "f1": 0.0,
           "is_perfect_match": false,
-          "elapsed_seconds": 9.2,
+          "elapsed_seconds": 9.3,
           "fn_context": [
             {
               "title": "Space.0.2 : Living[106]",
@@ -3825,7 +3921,7 @@
           "recall": 0.3333333333333333,
           "f1": 0.5,
           "is_perfect_match": false,
-          "elapsed_seconds": 7.8,
+          "elapsed_seconds": 8.2,
           "fn_context": [
             {
               "title": "Space.0.47 : Mens Rr[135]",
@@ -4012,7 +4108,7 @@
           "recall": 0.3333333333333333,
           "f1": 0.4,
           "is_perfect_match": false,
-          "elapsed_seconds": 5.9,
+          "elapsed_seconds": 6.3,
           "fn_context": [
             {
               "title": "Space.0.2 : 1st Floor[4]",
@@ -4502,7 +4598,7 @@
           "recall": 1.0,
           "f1": 0.21428571428571425,
           "is_perfect_match": false,
-          "elapsed_seconds": 17.8,
+          "elapsed_seconds": 20.3,
           "fn_context": [],
           "log": "Code executed successfully (no output)\nCode executed successfully (no output)"
         },
@@ -4687,7 +4783,7 @@
           "recall": 1.0,
           "f1": 0.962962962962963,
           "is_perfect_match": false,
-          "elapsed_seconds": 8.9,
+          "elapsed_seconds": 10.0,
           "fn_context": [],
           "log": "Code executed successfully (no output)\nCode executed successfully (no output)"
         },
@@ -4722,7 +4818,7 @@
           "recall": 0.0,
           "f1": 0.0,
           "is_perfect_match": false,
-          "elapsed_seconds": 7.0,
+          "elapsed_seconds": 8.4,
           "fn_context": [],
           "log": "Code executed successfully (no output)\nCode executed successfully (no output)"
         }
@@ -4751,7 +4847,7 @@
           "recall": 1.0,
           "f1": 1.0,
           "is_perfect_match": true,
-          "elapsed_seconds": 5.2,
+          "elapsed_seconds": 6.5,
           "fn_context": [],
           "log": "Code executed successfully (no output)\nCode executed successfully (no output)"
         },
@@ -5539,7 +5635,7 @@
           "recall": 1.0,
           "f1": 1.0,
           "is_perfect_match": true,
-          "elapsed_seconds": 5.9,
+          "elapsed_seconds": 7.1,
           "fn_context": [],
           "log": "Code executed successfully (no output)\nCode executed successfully (no output)"
         },
@@ -5556,7 +5652,7 @@
           "recall": 1.0,
           "f1": 1.0,
           "is_perfect_match": true,
-          "elapsed_seconds": 8.1,
+          "elapsed_seconds": 9.1,
           "fn_context": [],
           "log": "Code executed successfully (no output)\nCode executed successfully (no output)"
         },
@@ -6296,7 +6392,7 @@
           "recall": 1.0,
           "f1": 1.0,
           "is_perfect_match": true,
-          "elapsed_seconds": 5.3,
+          "elapsed_seconds": 6.3,
           "fn_context": [],
           "log": "Code executed successfully (no output)\nCode executed successfully (no output)"
         }
@@ -6367,7 +6463,7 @@
           "recall": 0.0,
           "f1": 0.0,
           "is_perfect_match": false,
-          "elapsed_seconds": 6.5,
+          "elapsed_seconds": 7.5,
           "fn_context": [],
           "log": "Code executed successfully (no output)\nCode executed successfully (no output)"
         },
@@ -6492,7 +6588,7 @@
           "recall": 0.0,
           "f1": 0.0,
           "is_perfect_match": false,
-          "elapsed_seconds": 13.3,
+          "elapsed_seconds": 15.3,
           "fn_context": [
             {
               "title": "Unallocated Area (4.97 M2)",
@@ -6700,7 +6796,7 @@
           "recall": 0.0,
           "f1": 0.0,
           "is_perfect_match": false,
-          "elapsed_seconds": 8.7,
+          "elapsed_seconds": 10.0,
           "fn_context": [
             {
               "title": "Unallocated Area (8.40 M2)",
@@ -6880,7 +6976,7 @@
           "recall": 0.0,
           "f1": 0.0,
           "is_perfect_match": false,
-          "elapsed_seconds": 9.2,
+          "elapsed_seconds": 10.2,
           "fn_context": [],
           "log": "Code executed successfully (no output)\nCode executed successfully (no output)"
         }
@@ -6896,11 +6992,11 @@
     }
   },
   "global": {
-    "tp": 166,
-    "fp": 163,
+    "tp": 182,
+    "fp": 151,
     "fn": 77,
-    "precision": 0.5046,
-    "recall": 0.6831,
-    "f1": 0.5804
+    "precision": 0.5465,
+    "recall": 0.7027,
+    "f1": 0.6149
   }
 }
