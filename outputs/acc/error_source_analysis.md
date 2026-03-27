@@ -134,6 +134,8 @@ Likely causes:
 
 ### 7. large_spaces_more_than_one_door — F1=0.267 (TP=4, FP=1, FN=21)
 
+--- confirmed - Models have no IfcRelSpaceBoundary, so the tool can't count doors per space. The tool relies on `IfcRelSpaceBoundary` to navigate from Spaces to their bounding elments, i.e., walls. - More training models would help. Or export problem/missing relationsips.
+
 **All elements are IfcSpace.** High precision (0.80) but very low recall (0.16).
 
 **FN root cause: E2 — Relationship traversal gap.**
@@ -148,6 +150,8 @@ The digital_hub model (11 FN) is the worst — likely has poor/missing
 ---
 
 ### 8. slabs_guarded_against_falling — F1=0.167 (TP=1, FP=4, FN=6)
+--- Double-check ---probably geometry-based
+
 
 **All elements are IfcSlab.** V2 ground truth dramatically simplified this rule
 (was 58 FN with V1, now 6 FN) by only expecting slab GUIDs, not barrier GUIDs.
