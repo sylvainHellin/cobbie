@@ -2,9 +2,9 @@
   "metadata": {
     "model_name": "dental_clinic",
     "version": "v2",
-    "total_topics": 70,
+    "total_topics": 72,
     "rules_count": 16,
-    "pass_rules_count": 9
+    "pass_rules_count": 8
   },
   "rules": {
     "404_2_5_two_doors_in_series": {
@@ -441,6 +441,76 @@
           ],
           "extraction_element": [
             "IfcDoor"
+          ]
+        }
+      ]
+    },
+    "doors_and_windows": {
+      "rule_code": "BIM Validation: Doors and Windows",
+      "rule_title": "doors_and_windows",
+      "question": "What doors or windows in the current IFC model are not located in the same floor as the wall they are related to, or are orphan doors/windows without a relation to any wall?",
+      "rule": "Doors and Windows\nThis rule checks that doors and windows in the model are located in the same floor as the wall they are related to. The rule checks also that the model doesn't contain any orphan doors or windows (a door or a window, which doesn't have a relation to any wall).",
+      "parameters": "Check Orphan Doors and Windows: True",
+      "issues_count": 2,
+      "issues": [
+        {
+          "topic_id": "5e0bcf0f-5439-4647-b7fa-b75a1ab38627",
+          "title": "First Floor",
+          "description": "Doors and Windows\nDoor components in First Floor aren't related to any wall (or to roof etc.). \n",
+          "all_guids": [
+            "1oCmeD_UH0NAQ13DTKAKXn",
+            "3LjuaIy0TB9BYwqsSadrQS",
+            "3o5ntlA212uQCF0q6eQsZI"
+          ],
+          "all_guids_enriched": [
+            {
+              "guid": "1oCmeD_UH0NAQ13DTKAKXn",
+              "ifc_type": "IfcDoor"
+            },
+            {
+              "guid": "3LjuaIy0TB9BYwqsSadrQS",
+              "ifc_type": "IfcDoor"
+            },
+            {
+              "guid": "3o5ntlA212uQCF0q6eQsZI",
+              "ifc_type": "IfcDoor"
+            }
+          ],
+          "required_guids": [
+            "1oCmeD_UH0NAQ13DTKAKXn",
+            "3LjuaIy0TB9BYwqsSadrQS",
+            "3o5ntlA212uQCF0q6eQsZI"
+          ],
+          "extraction_element": [
+            "IfcDoor",
+            "IfcWindow"
+          ]
+        },
+        {
+          "topic_id": "f6edc00c-d2ba-4749-9be9-65dd5080770f",
+          "title": "Tof Footing",
+          "description": "Doors and Windows\nDoor components in TOF Footing aren't related to any wall (or to roof etc.). \n",
+          "all_guids": [
+            "2NHD_$8fb3ZexljM$wSStT",
+            "3eIXtbz01CQuZOCQ8qhuxf"
+          ],
+          "all_guids_enriched": [
+            {
+              "guid": "2NHD_$8fb3ZexljM$wSStT",
+              "ifc_type": "IfcDoor"
+            },
+            {
+              "guid": "3eIXtbz01CQuZOCQ8qhuxf",
+              "ifc_type": "IfcDoor"
+            }
+          ],
+          "required_guids": [
+            "2NHD_$8fb3ZexljM$wSStT",
+            "3eIXtbz01CQuZOCQ8qhuxf"
+          ],
+          "extraction_element": [
+            "IfcDoor",
+            "IfcWindow"
           ]
         }
       ]
@@ -3052,15 +3122,6 @@
       "question": "What stairs in the current IFC model have tread lengths that do not meet the required minimum?",
       "rule": "504.2 Treads and Risers\nTreads shall be 11 inches (280 mm) deep minimum.",
       "parameters": "Stair Classification: Stair*",
-      "issues_count": 0,
-      "issues": []
-    },
-    "doors_and_windows": {
-      "rule_code": "BIM Validation: Doors and Windows",
-      "rule_title": "doors_and_windows",
-      "question": "What doors or windows in the current IFC model are not located in the same floor as the wall they are related to, or are orphan doors/windows without a relation to any wall?",
-      "rule": "Doors and Windows\nThis rule checks that doors and windows in the model are located in the same floor as the wall they are related to. The rule checks also that the model doesn't contain any orphan doors or windows (a door or a window, which doesn't have a relation to any wall).",
-      "parameters": "Check Orphan Doors and Windows: True",
       "issues_count": 0,
       "issues": []
     },

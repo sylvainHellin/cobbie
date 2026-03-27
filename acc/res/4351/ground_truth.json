@@ -2,7 +2,7 @@
   "metadata": {
     "model_name": "4351",
     "version": "v2",
-    "total_topics": 13,
+    "total_topics": 14,
     "rules_count": 16,
     "pass_rules_count": 11
   },
@@ -73,8 +73,62 @@
       "question": "What doors or windows in the current IFC model are not located in the same floor as the wall they are related to, or are orphan doors/windows without a relation to any wall?",
       "rule": "Doors and Windows\nThis rule checks that doors and windows in the model are located in the same floor as the wall they are related to. The rule checks also that the model doesn't contain any orphan doors or windows (a door or a window, which doesn't have a relation to any wall).",
       "parameters": "Check Orphan Doors and Windows: True",
-      "issues_count": 2,
+      "issues_count": 3,
       "issues": [
+        {
+          "topic_id": "0f2e144d-c930-47b9-b1cd-36122e8a8c9a",
+          "title": "Door Components In 02 Second Floor, Wall Components In 01 First Floor",
+          "description": "Doors and Windows\n",
+          "all_guids": [
+            "1Vp_ZIf01ANQz9mYpe1Peb",
+            "1o6iSxmUv8P91r$iXVGZJQ",
+            "2SqDm2VurA4wpcRwks3Xlh",
+            "2gTG8I4eL6z9beKMqLBe0M",
+            "2gTG8I4eL6z9beKMqLBe0q",
+            "2gTG8I4eL6z9beKMqLBlUb",
+            "2rY6ZB_FT3bRLgI3yFLROE"
+          ],
+          "all_guids_enriched": [
+            {
+              "guid": "1Vp_ZIf01ANQz9mYpe1Peb",
+              "ifc_type": "IfcDoor"
+            },
+            {
+              "guid": "1o6iSxmUv8P91r$iXVGZJQ",
+              "ifc_type": "IfcWall"
+            },
+            {
+              "guid": "2SqDm2VurA4wpcRwks3Xlh",
+              "ifc_type": "IfcDoor"
+            },
+            {
+              "guid": "2gTG8I4eL6z9beKMqLBe0M",
+              "ifc_type": "IfcDoor"
+            },
+            {
+              "guid": "2gTG8I4eL6z9beKMqLBe0q",
+              "ifc_type": "IfcDoor"
+            },
+            {
+              "guid": "2gTG8I4eL6z9beKMqLBlUb",
+              "ifc_type": "IfcWallStandardCase"
+            },
+            {
+              "guid": "2rY6ZB_FT3bRLgI3yFLROE",
+              "ifc_type": "IfcWall"
+            }
+          ],
+          "required_guids": [
+            "1Vp_ZIf01ANQz9mYpe1Peb",
+            "2SqDm2VurA4wpcRwks3Xlh",
+            "2gTG8I4eL6z9beKMqLBe0M",
+            "2gTG8I4eL6z9beKMqLBe0q"
+          ],
+          "extraction_element": [
+            "IfcDoor",
+            "IfcWindow"
+          ]
+        },
         {
           "topic_id": "8ba6c321-dfd1-4c6f-b62c-c5d7619d4dec",
           "title": "Window.1.1 And Wall.0.25",

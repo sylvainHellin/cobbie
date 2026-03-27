@@ -91,7 +91,7 @@
   "doors_and_windows": {
     "rule_code": "BIM Validation: Doors and Windows",
     "rule_title": "doors_and_windows",
-    "description_pattern": "Doors and Windows\n* components are included",
+    "description_pattern": "Doors and Windows\n",
     "question": "What doors or windows in the current IFC model are not located in the same floor as the wall they are related to, or are orphan doors/windows without a relation to any wall?",
     "rule": "Doors and Windows\nThis rule checks that doors and windows in the model are located in the same floor as the wall they are related to. The rule checks also that the model doesn't contain any orphan doors or windows (a door or a window, which doesn't have a relation to any wall).",
     "solibri_description": "This rule checks that doors and windows in the model are located in the same floor as the wall they are related to. The rule checks also that the model doesn't contain any orphan doors or windows (a door or a window, which doesn't have a relation to any wall)\nSupport Tag: SOL/176/2.2.",

@@ -2,9 +2,9 @@
   "metadata": {
     "model_name": "166",
     "version": "v2",
-    "total_topics": 41,
+    "total_topics": 42,
     "rules_count": 16,
-    "pass_rules_count": 8
+    "pass_rules_count": 7
   },
   "rules": {
     "304_3_1_circular_space": {
@@ -765,6 +765,79 @@
           ],
           "extraction_element": [
             "IfcDoor"
+          ]
+        }
+      ]
+    },
+    "doors_and_windows": {
+      "rule_code": "BIM Validation: Doors and Windows",
+      "rule_title": "doors_and_windows",
+      "question": "What doors or windows in the current IFC model are not located in the same floor as the wall they are related to, or are orphan doors/windows without a relation to any wall?",
+      "rule": "Doors and Windows\nThis rule checks that doors and windows in the model are located in the same floor as the wall they are related to. The rule checks also that the model doesn't contain any orphan doors or windows (a door or a window, which doesn't have a relation to any wall).",
+      "parameters": "Check Orphan Doors and Windows: True",
+      "issues_count": 1,
+      "issues": [
+        {
+          "topic_id": "69b2a438-3259-4e1f-b603-574519f7671d",
+          "title": "Ebene 3",
+          "description": "Doors and Windows\nWindow components in Ebene 3 aren't related to any wall (or to roof etc.). \n",
+          "all_guids": [
+            "02kQjOPwTDDPySbFiiS2$L",
+            "02kQjOPwTDDPySbFiiS2$M",
+            "02kQjOPwTDDPySbFiiS2$N",
+            "02kQjOPwTDDPySbFiiS2$O",
+            "02kQjOPwTDDPySbFiiS2$Q",
+            "02kQjOPwTDDPySbFiiS2$R",
+            "02kQjOPwTDDPySbFiiS2$U",
+            "02kQjOPwTDDPySbFiiS2$V"
+          ],
+          "all_guids_enriched": [
+            {
+              "guid": "02kQjOPwTDDPySbFiiS2$L",
+              "ifc_type": "IfcWindow"
+            },
+            {
+              "guid": "02kQjOPwTDDPySbFiiS2$M",
+              "ifc_type": "IfcWindow"
+            },
+            {
+              "guid": "02kQjOPwTDDPySbFiiS2$N",
+              "ifc_type": "IfcWindow"
+            },
+            {
+              "guid": "02kQjOPwTDDPySbFiiS2$O",
+              "ifc_type": "IfcWindow"
+            },
+            {
+              "guid": "02kQjOPwTDDPySbFiiS2$Q",
+              "ifc_type": "IfcWindow"
+            },
+            {
+              "guid": "02kQjOPwTDDPySbFiiS2$R",
+              "ifc_type": "IfcWindow"
+            },
+            {
+              "guid": "02kQjOPwTDDPySbFiiS2$U",
+              "ifc_type": "IfcWindow"
+            },
+            {
+              "guid": "02kQjOPwTDDPySbFiiS2$V",
+              "ifc_type": "IfcWindow"
+            }
+          ],
+          "required_guids": [
+            "02kQjOPwTDDPySbFiiS2$L",
+            "02kQjOPwTDDPySbFiiS2$M",
+            "02kQjOPwTDDPySbFiiS2$N",
+            "02kQjOPwTDDPySbFiiS2$O",
+            "02kQjOPwTDDPySbFiiS2$Q",
+            "02kQjOPwTDDPySbFiiS2$R",
+            "02kQjOPwTDDPySbFiiS2$U",
+            "02kQjOPwTDDPySbFiiS2$V"
+          ],
+          "extraction_element": [
+            "IfcDoor",
+            "IfcWindow"
           ]
         }
       ]
@@ -1921,15 +1994,6 @@
       "question": "What stairs in the current IFC model have riser heights that do not meet the required minimum or maximum?",
       "rule": "504.2 Treads and Risers\nRisers shall be 4 inches (100 mm) high minimum and 7 inches (180 mm) high maximum.",
       "parameters": "Stair Classification: Stair*",
-      "issues_count": 0,
-      "issues": []
-    },
-    "doors_and_windows": {
-      "rule_code": "BIM Validation: Doors and Windows",
-      "rule_title": "doors_and_windows",
-      "question": "What doors or windows in the current IFC model are not located in the same floor as the wall they are related to, or are orphan doors/windows without a relation to any wall?",
-      "rule": "Doors and Windows\nThis rule checks that doors and windows in the model are located in the same floor as the wall they are related to. The rule checks also that the model doesn't contain any orphan doors or windows (a door or a window, which doesn't have a relation to any wall).",
-      "parameters": "Check Orphan Doors and Windows: True",
       "issues_count": 0,
       "issues": []
     },

@@ -2,9 +2,9 @@
   "metadata": {
     "model_name": "samuel_macalister_sample_house",
     "version": "v2",
-    "total_topics": 27,
+    "total_topics": 30,
     "rules_count": 16,
-    "pass_rules_count": 7
+    "pass_rules_count": 6
   },
   "rules": {
     "305_3_size": {
@@ -169,6 +169,143 @@
           ],
           "extraction_element": [
             "IfcDoor"
+          ]
+        }
+      ]
+    },
+    "doors_and_windows": {
+      "rule_code": "BIM Validation: Doors and Windows",
+      "rule_title": "doors_and_windows",
+      "question": "What doors or windows in the current IFC model are not located in the same floor as the wall they are related to, or are orphan doors/windows without a relation to any wall?",
+      "rule": "Doors and Windows\nThis rule checks that doors and windows in the model are located in the same floor as the wall they are related to. The rule checks also that the model doesn't contain any orphan doors or windows (a door or a window, which doesn't have a relation to any wall).",
+      "parameters": "Check Orphan Doors and Windows: True",
+      "issues_count": 3,
+      "issues": [
+        {
+          "topic_id": "8a6a4b85-ddf3-442e-90b7-ed70b1b39d2a",
+          "title": "Window Components In Level 1 Living Rm., Wall Components In Level 1",
+          "description": "Doors and Windows\n",
+          "all_guids": [
+            "20nhVaBTTAJguMI9o6oBQ8",
+            "20nhVaBTTAJguMI9o6oBQ9",
+            "20nhVaBTTAJguMI9o6oBQE",
+            "20nhVaBTTAJguMI9o6oBQF",
+            "20nhVaBTTAJguMI9o6oD2l",
+            "20nhVaBTTAJguMI9o6oD4T",
+            "20nhVaBTTAJguMI9o6oD5Q",
+            "20nhVaBTTAJguMI9o6oDQ8",
+            "2OulbipBrAkwQNv_KJRV9c",
+            "38NblWsDL1I8DljLvn67Sd"
+          ],
+          "all_guids_enriched": [
+            {
+              "guid": "20nhVaBTTAJguMI9o6oBQ8",
+              "ifc_type": "IfcWindow"
+            },
+            {
+              "guid": "20nhVaBTTAJguMI9o6oBQ9",
+              "ifc_type": "IfcWindow"
+            },
+            {
+              "guid": "20nhVaBTTAJguMI9o6oBQE",
+              "ifc_type": "IfcWindow"
+            },
+            {
+              "guid": "20nhVaBTTAJguMI9o6oBQF",
+              "ifc_type": "IfcWindow"
+            },
+            {
+              "guid": "20nhVaBTTAJguMI9o6oD2l",
+              "ifc_type": "IfcWindow"
+            },
+            {
+              "guid": "20nhVaBTTAJguMI9o6oD4T",
+              "ifc_type": "IfcWindow"
+            },
+            {
+              "guid": "20nhVaBTTAJguMI9o6oD5Q",
+              "ifc_type": "IfcWindow"
+            },
+            {
+              "guid": "20nhVaBTTAJguMI9o6oDQ8",
+              "ifc_type": "IfcWindow"
+            },
+            {
+              "guid": "2OulbipBrAkwQNv_KJRV9c",
+              "ifc_type": "IfcWall"
+            },
+            {
+              "guid": "38NblWsDL1I8DljLvn67Sd",
+              "ifc_type": "IfcWallStandardCase"
+            }
+          ],
+          "required_guids": [
+            "20nhVaBTTAJguMI9o6oBQ8",
+            "20nhVaBTTAJguMI9o6oBQ9",
+            "20nhVaBTTAJguMI9o6oBQE",
+            "20nhVaBTTAJguMI9o6oBQF",
+            "20nhVaBTTAJguMI9o6oD2l",
+            "20nhVaBTTAJguMI9o6oD4T",
+            "20nhVaBTTAJguMI9o6oD5Q",
+            "20nhVaBTTAJguMI9o6oDQ8"
+          ],
+          "extraction_element": [
+            "IfcDoor",
+            "IfcWindow"
+          ]
+        },
+        {
+          "topic_id": "1aac620e-c4d0-40a2-9822-d1cf32c46e3c",
+          "title": "Level 2",
+          "description": "Doors and Windows\nDoor components in Level 2 aren't related to any wall (or to roof etc.). \n",
+          "all_guids": [
+            "2wm6PO6TX9IxXwLP21HySo",
+            "2wm6PO6TX9IxXwLP21HyWr"
+          ],
+          "all_guids_enriched": [
+            {
+              "guid": "2wm6PO6TX9IxXwLP21HySo",
+              "ifc_type": "IfcDoor"
+            },
+            {
+              "guid": "2wm6PO6TX9IxXwLP21HyWr",
+              "ifc_type": "IfcDoor"
+            }
+          ],
+          "required_guids": [
+            "2wm6PO6TX9IxXwLP21HySo",
+            "2wm6PO6TX9IxXwLP21HyWr"
+          ],
+          "extraction_element": [
+            "IfcDoor",
+            "IfcWindow"
+          ]
+        },
+        {
+          "topic_id": "fbf71241-35fa-46ad-bf6c-9e5fcf1835e6",
+          "title": "Roof Line",
+          "description": "Doors and Windows\nWindow components in Roof Line aren't related to any wall (or to roof etc.). \n",
+          "all_guids": [
+            "12QTT5rufCoeOFfLiN060S",
+            "12QTT5rufCoeOFfLiN06FB"
+          ],
+          "all_guids_enriched": [
+            {
+              "guid": "12QTT5rufCoeOFfLiN060S",
+              "ifc_type": "IfcWindow"
+            },
+            {
+              "guid": "12QTT5rufCoeOFfLiN06FB",
+              "ifc_type": "IfcWindow"
+            }
+          ],
+          "required_guids": [
+            "12QTT5rufCoeOFfLiN060S",
+            "12QTT5rufCoeOFfLiN06FB"
+          ],
+          "extraction_element": [
+            "IfcDoor",
+            "IfcWindow"
           ]
         }
       ]
@@ -1120,15 +1257,6 @@
       "question": "What stairs in the current IFC model have tread lengths that do not meet the required minimum?",
       "rule": "504.2 Treads and Risers\nTreads shall be 11 inches (280 mm) deep minimum.",
       "parameters": "Stair Classification: Stair*",
-      "issues_count": 0,
-      "issues": []
-    },
-    "doors_and_windows": {
-      "rule_code": "BIM Validation: Doors and Windows",
-      "rule_title": "doors_and_windows",
-      "question": "What doors or windows in the current IFC model are not located in the same floor as the wall they are related to, or are orphan doors/windows without a relation to any wall?",
-      "rule": "Doors and Windows\nThis rule checks that doors and windows in the model are located in the same floor as the wall they are related to. The rule checks also that the model doesn't contain any orphan doors or windows (a door or a window, which doesn't have a relation to any wall).",
-      "parameters": "Check Orphan Doors and Windows: True",
       "issues_count": 0,
       "issues": []
     },
