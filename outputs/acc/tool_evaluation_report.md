@@ -1,31 +1,31 @@
 # ACC Tool Evaluation Report — Test Models
 
-Generated: 2026-03-26T06:49:28.708943
+Generated: 2026-03-27T07:12:44.681576
 Models: 4351, digital_hub, samuel_macalister_sample_house, wbdg_office
 
 ## Global Summary
 | Metric | Value |
 |--------|-------|
-| F1 (aggregated) | **0.516** |
-| Precision | 0.412 |
-| Recall | 0.691 |
-| TP / FP / FN | 168 / 240 / 75 |
+| F1 (aggregated) | **0.580** |
+| Precision | 0.505 |
+| Recall | 0.683 |
+| TP / FP / FN | 166 / 163 / 77 |
 
 ## Per-Rule Summary
 | Rule | F1 | Precision | Recall | TP | FP | FN |
 |------|---:|----------:|-------:|---:|---:|---:|
 | 304_3_1_circular_space | 1.000 | 1.000 | 1.000 | 2 | 0 | 0 |
-| 305_3_size | 0.000 | 0.000 | 0.000 | 0 | 7 | 1 |
-| 404_2_5_two_doors_in_series | 0.000 | 0.000 | 0.000 | 0 | 46 | 2 |
-| 504_2_non_uniform_risers_treads | 0.000 | 0.000 | 0.000 | 0 | 1 | 0 |
-| 504_2_riser_height | 0.053 | 0.029 | 0.333 | 1 | 34 | 2 |
+| 305_3_size | 0.000 | 0.000 | 0.000 | 0 | 0 | 1 |
+| 404_2_5_two_doors_in_series | 0.000 | 0.000 | 0.000 | 0 | 0 | 2 |
+| 504_2_non_uniform_risers_treads | 0.000 | 0.000 | 0.000 | 0 | 5 | 0 |
+| 504_2_riser_height | 0.222 | 0.167 | 0.333 | 1 | 5 | 2 |
 | 504_2_stair_slab_connection | 1.000 | 1.000 | 1.000 | 2 | 0 | 0 |
 | 504_2_tread_length | 0.667 | 0.500 | 1.000 | 2 | 2 | 0 |
-| clearance_front_of_doors | 0.154 | 0.090 | 0.545 | 6 | 61 | 5 |
+| clearance_front_of_doors | 0.112 | 0.064 | 0.455 | 5 | 73 | 6 |
 | doors_and_windows | 0.250 | 0.143 | 1.000 | 2 | 12 | 0 |
 | large_spaces_more_than_one_door | 0.267 | 0.800 | 0.160 | 4 | 1 | 21 |
 | slab_thickness | 0.000 | 0.000 | 0.000 | 0 | 0 | 3 |
-| slabs_guarded_against_falling | 0.167 | 0.118 | 0.286 | 2 | 15 | 5 |
+| slabs_guarded_against_falling | 0.167 | 0.200 | 0.143 | 1 | 4 | 6 |
 | space_validation_inside | 0.300 | 1.000 | 0.176 | 3 | 0 | 14 |
 | space_validation_intersect | 0.444 | 0.294 | 0.909 | 20 | 48 | 2 |
 | spaces_same_storey_same_bottom_elevation | 1.000 | 1.000 | 1.000 | 124 | 0 | 0 |
@@ -40,23 +40,13 @@ No errors on test models.
 
 **4351**: PASS (TP=0)
 **digital_hub**: PASS (TP=0)
-**samuel_macalister_sample_house**: F1=0.00 | P=0.00 R=0.00 | TP=0 FP=5 FN=1
-  - **False Positives** (predicted but not expected): 5 GUIDs
-    - `{'guid': '1N_4TwOEH5194SbNmRTFml', 'type': 'IfcFurniture'}`
-    - `{'guid': '1mNYMX4dvDThNrJdPk$s13', 'type': 'IfcFurniture'}`
-    - `{'guid': '1mNYMX4dvDThNrJdPk$si3', 'type': 'IfcFurniture'}`
-    - `{'guid': '29jzdd0Ab5sOIOupfzxDfN', 'type': 'IfcFurniture'}`
-    - `{'guid': '2PbrheIID1GfgGRPO3yx$6', 'type': 'IfcFurniture'}`
+**samuel_macalister_sample_house**: F1=0.00 | P=0.00 R=0.00 | TP=0 FP=0 FN=1
   - **False Negatives** (expected but missed): 1 GUIDs
     - **Space.2.8 : Master Bedroom[206]**: 305.3 Size
 Space.2.8 : Master Bedroom[206] has inaccessible areas.
       - `{'guid': '3ch3OBgkrCEw4mDhJ2eObq', 'type': 'IfcSpace'}`
 
-**wbdg_office**: F1=0.00 | P=0.00 R=0.00 | TP=0 FP=2 FN=0
-  - **False Positives** (predicted but not expected): 2 GUIDs
-    - `{'guid': '2$Ac70E451LvAGNHpGKDfo', 'type': 'IfcFurnishingElement'}`
-    - `{'guid': '2$Ac70E451LvAGNHpGKDt5', 'type': 'IfcFurnishingElement'}`
-
+**wbdg_office**: PASS (TP=0)
 
 ### 404_2_5_two_doors_in_series — F1=0.000
 
@@ -69,98 +59,33 @@ Distance between doors is 1.16 m. The minimum distance is 1.22 m.
       - `{'guid': '1$p8tACJ938vr1_lKOJJ9g', 'type': 'IfcDoor'}`
       - `{'guid': '1PDnLIM013wvkZO9Lb4$s7', 'type': 'IfcDoor'}`
 
-**wbdg_office**: F1=0.00 | P=0.00 R=0.00 | TP=0 FP=46 FN=0
-  - **False Positives** (predicted but not expected): 46 GUIDs
-    - `{'guid': '06njXbG3HC4RydTXssDq$e', 'type': 'IfcDoor'}`
-    - `{'guid': '0YUzX040H3bhUyeerRS91$', 'type': 'IfcDoor'}`
-    - `{'guid': '1B_elmwz51ieqPd_MO2yZ0', 'type': 'IfcDoor'}`
-    - `{'guid': '1h7qyFpbf0qggP_pQnt_$4', 'type': 'IfcDoor'}`
-    - `{'guid': '1h7qyFpbf0qggP_pQnt_0z', 'type': 'IfcDoor'}`
-    - `{'guid': '1h7qyFpbf0qggP_pQnt_1D', 'type': 'IfcDoor'}`
-    - `{'guid': '1h7qyFpbf0qggP_pQnt_1e', 'type': 'IfcDoor'}`
-    - `{'guid': '1h7qyFpbf0qggP_pQnt_3s', 'type': 'IfcDoor'}`
-    - `{'guid': '1h7qyFpbf0qggP_pQnt_4u', 'type': 'IfcDoor'}`
-    - `{'guid': '1h7qyFpbf0qggP_pQnt_Gm', 'type': 'IfcDoor'}`
-    - `{'guid': '1h7qyFpbf0qggP_pQnt_kO', 'type': 'IfcDoor'}`
-    - `{'guid': '1h7qyFpbf0qggP_pQnt_rV', 'type': 'IfcDoor'}`
-    - `{'guid': '1h7qyFpbf0qggP_pQnt_vQ', 'type': 'IfcDoor'}`
-    - `{'guid': '1h7qyFpbf0qggP_pQnt_ws', 'type': 'IfcDoor'}`
-    - `{'guid': '1h7qyFpbf0qggP_pQnt_yp', 'type': 'IfcDoor'}`
-    - `{'guid': '1h7qyFpbf0qggP_pQnt_zR', 'type': 'IfcDoor'}`
-    - `{'guid': '1h7qyFpbf0qggP_pQnt_zc', 'type': 'IfcDoor'}`
-    - `{'guid': '2N3oFtM8X6lO2dN1$77u0o', 'type': 'IfcDoor'}`
-    - `{'guid': '2N3oFtM8X6lO2dN1$77u2P', 'type': 'IfcDoor'}`
-    - `{'guid': '2N3oFtM8X6lO2dN1$77u2e', 'type': 'IfcDoor'}`
-    - `{'guid': '2N3oFtM8X6lO2dN1$77u3r', 'type': 'IfcDoor'}`
-    - `{'guid': '2N3oFtM8X6lO2dN1$77u5A', 'type': 'IfcDoor'}`
-    - `{'guid': '2N3oFtM8X6lO2dN1$77wwb', 'type': 'IfcDoor'}`
-    - `{'guid': '2N3oFtM8X6lO2dN1$77x0R', 'type': 'IfcDoor'}`
-    - `{'guid': '2N3oFtM8X6lO2dN1$77x1u', 'type': 'IfcDoor'}`
-    - `{'guid': '2N3oFtM8X6lO2dN1$77x7o', 'type': 'IfcDoor'}`
-    - `{'guid': '2N3oFtM8X6lO2dN1$77x9N', 'type': 'IfcDoor'}`
-    - `{'guid': '2N3oFtM8X6lO2dN1$77xAg', 'type': 'IfcDoor'}`
-    - `{'guid': '2N3oFtM8X6lO2dN1$77xCp', 'type': 'IfcDoor'}`
-    - `{'guid': '2N3oFtM8X6lO2dN1$77xD6', 'type': 'IfcDoor'}`
-    - `{'guid': '2N3oFtM8X6lO2dN1$77xDb', 'type': 'IfcDoor'}`
-    - `{'guid': '2N3oFtM8X6lO2dN1$77xEd', 'type': 'IfcDoor'}`
-    - `{'guid': '2N3oFtM8X6lO2dN1$77xF_', 'type': 'IfcDoor'}`
-    - `{'guid': '2N3oFtM8X6lO2dN1$77xGO', 'type': 'IfcDoor'}`
-    - `{'guid': '2N3oFtM8X6lO2dN1$77xGt', 'type': 'IfcDoor'}`
-    - `{'guid': '2N3oFtM8X6lO2dN1$77xH0', 'type': 'IfcDoor'}`
-    - `{'guid': '2N3oFtM8X6lO2dN1$77xJp', 'type': 'IfcDoor'}`
-    - `{'guid': '2N3oFtM8X6lO2dN1$77xKn', 'type': 'IfcDoor'}`
-    - `{'guid': '2N3oFtM8X6lO2dN1$77xNK', 'type': 'IfcDoor'}`
-    - `{'guid': '2N3oFtM8X6lO2dN1$77xUv', 'type': 'IfcDoor'}`
-    - `{'guid': '2N3oFtM8X6lO2dN1$77xVs', 'type': 'IfcDoor'}`
-    - `{'guid': '2N3oFtM8X6lO2dN1$77xaz', 'type': 'IfcDoor'}`
-    - `{'guid': '2N3oFtM8X6lO2dN1$77xnt', 'type': 'IfcDoor'}`
-    - `{'guid': '2N3oFtM8X6lO2dN1$77xsW', 'type': 'IfcDoor'}`
-    - `{'guid': '2N3oFtM8X6lO2dN1$77xwP', 'type': 'IfcDoor'}`
-    - `{'guid': '3If4otxpvBjO9DSa$bK$uj', 'type': 'IfcDoor'}`
-
+**wbdg_office**: PASS (TP=0)
 
 ### 504_2_non_uniform_risers_treads — F1=0.000
 
-**4351**: F1=0.00 | P=0.00 R=0.00 | TP=0 FP=1 FN=0
-  - **False Positives** (predicted but not expected): 1 GUIDs
+**4351**: F1=0.00 | P=0.00 R=0.00 | TP=0 FP=2 FN=0
+  - **False Positives** (predicted but not expected): 2 GUIDs
+    - `{'guid': '1AMAMzZITBfejW_xu2IBMi', 'type': 'IfcStair'}`
     - `{'guid': '2yrvjJLF5DO99bzmxJnJrl', 'type': 'IfcStair'}`
 
 **digital_hub**: PASS (TP=0)
-**samuel_macalister_sample_house**: PASS (TP=0)
+**samuel_macalister_sample_house**: F1=0.00 | P=0.00 R=0.00 | TP=0 FP=3 FN=0
+  - **False Positives** (predicted but not expected): 3 GUIDs
+    - `{'guid': '07dHKEjXj6kwcHAxpyAkMS', 'type': 'IfcStair'}`
+    - `{'guid': '1N_4TwOEH5194SbNmRTDNX', 'type': 'IfcStair'}`
+    - `{'guid': '2ZlFFrvcbDavSm_g3LjLIe', 'type': 'IfcStair'}`
+
 **wbdg_office**: PASS (TP=0)
 
-### 504_2_riser_height — F1=0.053
+### 504_2_riser_height — F1=0.222
 
-**4351**: F1=0.00 | P=0.00 R=0.00 | TP=0 FP=17 FN=0
-  - **False Positives** (predicted but not expected): 17 GUIDs
-    - `{'guid': '05IUfpHsL9BgFcXObHJJxD', 'type': 'IfcMember'}`
-    - `{'guid': '0F8IyAXCD7S9i7ZjXP77iP', 'type': 'IfcMember'}`
-    - `{'guid': '0QunSioVvB2xY3ux28I6JO', 'type': 'IfcMember'}`
-    - `{'guid': '0zm_RkrLH2tRithg6zqFH2', 'type': 'IfcRailing'}`
-    - `{'guid': '0zm_RkrLH2tRithg6zqFHE', 'type': 'IfcRailing'}`
+**4351**: F1=0.00 | P=0.00 R=0.00 | TP=0 FP=3 FN=0
+  - **False Positives** (predicted but not expected): 3 GUIDs
     - `{'guid': '0zm_RkrLH2tRithg6zqFIz', 'type': 'IfcStair'}`
-    - `{'guid': '1AMAMzZITBfejW_xu2IBK7', 'type': 'IfcRailing'}`
-    - `{'guid': '1AMAMzZITBfejW_xu2IBKB', 'type': 'IfcRailing'}`
     - `{'guid': '1AMAMzZITBfejW_xu2IBMi', 'type': 'IfcStair'}`
-    - `{'guid': '1AUHUgTAH1ZPnbMDxS_z8d', 'type': 'IfcStairFlight'}`
-    - `{'guid': '1RuZ0BfEf5qvvxOl1$DCmW', 'type': 'IfcStair'}`
-    - `{'guid': '1rJwPna6j36Ryf9BeRhyi1', 'type': 'IfcSlab'}`
-    - `{'guid': '2ggG7xSg5EB8p5NZA9Vthc', 'type': 'IfcMember'}`
-    - `{'guid': '2t7Cp302P04g8y50Ws9Abn', 'type': 'IfcStairFlight'}`
-    - `{'guid': '2yrvjJLF5DO99bzmxJnJos', 'type': 'IfcRailing'}`
     - `{'guid': '2yrvjJLF5DO99bzmxJnJrl', 'type': 'IfcStair'}`
-    - `{'guid': '3GUUpM0_TFyOHeW8WSUinC', 'type': 'IfcStairFlight'}`
 
-**digital_hub**: F1=0.00 | P=0.00 R=0.00 | TP=0 FP=8 FN=2
-  - **False Positives** (predicted but not expected): 8 GUIDs
-    - `{'guid': '0YVU7tDBX86u6UVVsSmdw5', 'type': 'IfcStairFlight'}`
-    - `{'guid': '0YVU7tDBX86u6UVVsSmdwA', 'type': 'IfcStairFlight'}`
-    - `{'guid': '0YVU7tDBX86u6UVVsSmdxt', 'type': 'IfcStairFlight'}`
-    - `{'guid': '0YVU7tDBX86u6UVVsSmdxy', 'type': 'IfcStairFlight'}`
-    - `{'guid': '3LF03GdXv2GhSTK1xTZzXJ', 'type': 'IfcStairFlight'}`
-    - `{'guid': '3LF03GdXv2GhSTK1xTZzXK', 'type': 'IfcStairFlight'}`
-    - `{'guid': '3LF03GdXv2GhSTK1xTZzXZ', 'type': 'IfcStairFlight'}`
-    - `{'guid': '3LF03GdXv2GhSTK1xTZzXa', 'type': 'IfcStairFlight'}`
+**digital_hub**: F1=0.00 | P=0.00 R=0.00 | TP=0 FP=0 FN=2
   - **False Negatives** (expected but missed): 2 GUIDs
     - **Stair.-2.1: 329 Mm**: 504.2 Treads and Risers
 Stair Stair.-2.1 has steps at the beginning that are non-uniform. Riser height at beginning is 0.33 m and elsewhere 0.18 m.
@@ -169,17 +94,10 @@ Stair Stair.-2.1 has steps at the beginning that are non-uniform. Riser height a
 Stair Stair.-2.2 has steps at the beginning that are non-uniform. Riser height at beginning is 0.33 m and elsewhere 0.18 m.
       - `{'guid': '3LF03GdXv2GhSTK1xTZzXx', 'type': 'IfcStair'}`
 
-**samuel_macalister_sample_house**: F1=0.18 | P=0.10 R=1.00 | TP=1 FP=9 FN=0
-  - **False Positives** (predicted but not expected): 9 GUIDs
-    - `{'guid': '07dHKEjXj6kwcHAxpyAkHd', 'type': 'IfcStairFlight'}`
+**samuel_macalister_sample_house**: F1=0.50 | P=0.33 R=1.00 | TP=1 FP=2 FN=0
+  - **False Positives** (predicted but not expected): 2 GUIDs
     - `{'guid': '07dHKEjXj6kwcHAxpyAkMS', 'type': 'IfcStair'}`
-    - `{'guid': '0H7vgQcNjEo8efFHzwVqPR', 'type': 'IfcRailing'}`
-    - `{'guid': '1N_4TwOEH5194SbNmRTDH0', 'type': 'IfcSlab'}`
     - `{'guid': '1N_4TwOEH5194SbNmRTDNX', 'type': 'IfcStair'}`
-    - `{'guid': '1N_4TwOEH5194SbNmRTDNY', 'type': 'IfcStairFlight'}`
-    - `{'guid': '1SDKa3RCzEzvwMoVlm1Auv', 'type': 'IfcRailing'}`
-    - `{'guid': '2ZlFFrvcbDavSm_g3LjLIb', 'type': 'IfcStairFlight'}`
-    - `{'guid': '2ZlFFrvcbDavSm_g3LjLiI', 'type': 'IfcRailing'}`
 
 **wbdg_office**: PASS (TP=0)
 
@@ -197,11 +115,11 @@ No errors on test models.
 **samuel_macalister_sample_house**: PASS (TP=0)
 **wbdg_office**: PASS (TP=0)
 
-### clearance_front_of_doors — F1=0.154
+### clearance_front_of_doors — F1=0.112
 
 **4351**: F1=0.00 | P=0.00 R=0.00 | TP=0 FP=1 FN=2
   - **False Positives** (predicted but not expected): 1 GUIDs
-    - `{'guid': '2rY6ZB_FT3bRLgI3yFLRkp', 'type': 'IfcDoor'}`
+    - `{'guid': '2EvxrJh$nBCOf6drB7QwTZ', 'type': 'IfcDoor'}`
   - **False Negatives** (expected but missed): 2 GUIDs
     - **Slab.2.1 Too Close To Door.1.1 Component**: Clearance in Front of Doors
 - Component Slab.2.1 intersects the required free area with dimensions 1.07 m and 0.15 m.
@@ -210,44 +128,27 @@ No errors on test models.
 - Component Wall.2.8 intersects the required free area with dimensions 0.07 m and 0.05 m.
       - `{'guid': '3aFPed1ijDewmDm14mfRrH', 'type': 'IfcDoor'}`
 
-**digital_hub**: F1=0.17 | P=0.09 R=1.00 | TP=6 FP=58 FN=0
-  - **False Positives** (predicted but not expected): 58 GUIDs
+**digital_hub**: F1=0.25 | P=0.15 R=0.83 | TP=5 FP=29 FN=1
+  - **False Positives** (predicted but not expected): 29 GUIDs
     - `{'guid': '03fYK2KZb9bQXMSPptFYJv', 'type': 'IfcDoor'}`
-    - `{'guid': '03fYK2KZb9bQXMSPptFYK6', 'type': 'IfcDoor'}`
     - `{'guid': '03fYK2KZb9bQXMSPptFYLQ', 'type': 'IfcDoor'}`
     - `{'guid': '03fYK2KZb9bQXMSPptFYNK', 'type': 'IfcDoor'}`
     - `{'guid': '03fYK2KZb9bQXMSPptFYOs', 'type': 'IfcDoor'}`
-    - `{'guid': '03fYK2KZb9bQXMSPptFYPu', 'type': 'IfcDoor'}`
-    - `{'guid': '03fYK2KZb9bQXMSPptFYQ4', 'type': 'IfcDoor'}`
-    - `{'guid': '03fYK2KZb9bQXMSPptFYRK', 'type': 'IfcDoor'}`
-    - `{'guid': '03fYK2KZb9bQXMSPptFYV5', 'type': 'IfcDoor'}`
     - `{'guid': '03fYK2KZb9bQXMSPptFYf$', 'type': 'IfcDoor'}`
     - `{'guid': '03fYK2KZb9bQXMSPptFYku', 'type': 'IfcDoor'}`
-    - `{'guid': '03fYK2KZb9bQXMSPptFYlU', 'type': 'IfcDoor'}`
     - `{'guid': '03fYK2KZb9bQXMSPptFYlo', 'type': 'IfcDoor'}`
     - `{'guid': '03fYK2KZb9bQXMSPptFZay', 'type': 'IfcDoor'}`
-    - `{'guid': '03fYK2KZb9bQXMSPptFZbq', 'type': 'IfcDoor'}`
-    - `{'guid': '03fYK2KZb9bQXMSPptFZdK', 'type': 'IfcDoor'}`
     - `{'guid': '03fYK2KZb9bQXMSPptFZdo', 'type': 'IfcDoor'}`
     - `{'guid': '03fYK2KZb9bQXMSPptFZeI', 'type': 'IfcDoor'}`
-    - `{'guid': '03fYK2KZb9bQXMSPptFZf8', 'type': 'IfcDoor'}`
-    - `{'guid': '03fYK2KZb9bQXMSPptFZgm', 'type': 'IfcDoor'}`
     - `{'guid': '03fYK2KZb9bQXMSPptFZhc', 'type': 'IfcDoor'}`
     - `{'guid': '03fYK2KZb9bQXMSPptFZkk', 'type': 'IfcDoor'}`
     - `{'guid': '03fYK2KZb9bQXMSPptFZlI', 'type': 'IfcDoor'}`
     - `{'guid': '0YVU7tDBX86u6UVVsSmdwk', 'type': 'IfcDoor'}`
-    - `{'guid': '0ehNcYPbH3JQicvZQLHO$q', 'type': 'IfcDoor'}`
-    - `{'guid': '0ehNcYPbH3JQicvZQLHOvk', 'type': 'IfcDoor'}`
-    - `{'guid': '11eI7IJI9EJgsn80j11Erx', 'type': 'IfcDoor'}`
-    - `{'guid': '1oTOc$LbLC8Ob8HP$$4q0L', 'type': 'IfcDoor'}`
     - `{'guid': '1oTOc$LbLC8Ob8HP$$4q0n', 'type': 'IfcDoor'}`
     - `{'guid': '1oTOc$LbLC8Ob8HP$$4q13', 'type': 'IfcDoor'}`
-    - `{'guid': '1oTOc$LbLC8Ob8HP$$4q2x', 'type': 'IfcDoor'}`
     - `{'guid': '1oTOc$LbLC8Ob8HP$$4q33', 'type': 'IfcDoor'}`
     - `{'guid': '1oTOc$LbLC8Ob8HP$$4q6s', 'type': 'IfcDoor'}`
-    - `{'guid': '1oTOc$LbLC8Ob8HP$$4q7Q', 'type': 'IfcDoor'}`
     - `{'guid': '1oTOc$LbLC8Ob8HP$$4q7y', 'type': 'IfcDoor'}`
-    - `{'guid': '1oTOc$LbLC8Ob8HP$$4qvE', 'type': 'IfcDoor'}`
     - `{'guid': '279opIq2rEtREtELGBVxB4', 'type': 'IfcDoor'}`
     - `{'guid': '279opIq2rEtREtELGBVxCY', 'type': 'IfcDoor'}`
     - `{'guid': '279opIq2rEtREtELGBVxDe', 'type': 'IfcDoor'}`
@@ -256,20 +157,13 @@ No errors on test models.
     - `{'guid': '279opIq2rEtREtELGBVxTT', 'type': 'IfcDoor'}`
     - `{'guid': '279opIq2rEtREtELGBVxUT', 'type': 'IfcDoor'}`
     - `{'guid': '279opIq2rEtREtELGBVxqA', 'type': 'IfcDoor'}`
-    - `{'guid': '3A8hY1UoD7JhnLeZeDyU3l', 'type': 'IfcDoor'}`
-    - `{'guid': '3LF03GdXv2GhSTK1xTZzXE', 'type': 'IfcDoor'}`
-    - `{'guid': '3LJODRGPbDdfXHXShFL8Do', 'type': 'IfcDoor'}`
-    - `{'guid': '3LJODRGPbDdfXHXShFL8H6', 'type': 'IfcDoor'}`
-    - `{'guid': '3LJODRGPbDdfXHXShFL8OS', 'type': 'IfcDoor'}`
-    - `{'guid': '3LJODRGPbDdfXHXShFL8TR', 'type': 'IfcDoor'}`
-    - `{'guid': '3LJODRGPbDdfXHXShFL8Tj', 'type': 'IfcDoor'}`
-    - `{'guid': '3LJODRGPbDdfXHXShFL8U8', 'type': 'IfcDoor'}`
-    - `{'guid': '3LJODRGPbDdfXHXShFL8Ua', 'type': 'IfcDoor'}`
     - `{'guid': '3LJODRGPbDdfXHXShFL8Z2', 'type': 'IfcDoor'}`
     - `{'guid': '3LJODRGPbDdfXHXShFL8bJ', 'type': 'IfcDoor'}`
-    - `{'guid': '3LJODRGPbDdfXHXShFLBss', 'type': 'IfcDoor'}`
-    - `{'guid': '3LJODRGPbDdfXHXShFLBtN', 'type': 'IfcDoor'}`
-    - `{'guid': '3LJODRGPbDdfXHXShFLBtR', 'type': 'IfcDoor'}`
+  - **False Negatives** (expected but missed): 1 GUIDs
+    - **Slab.0.1, Slab.0.3 Too Close To Door.0.1 Component**: Clearance in Front of Doors
+- Component Slab.0.1 intersects the required free area with dimensions 0.91 m and 0.25 m.<br/>
+- Slab.0.3 intersects the required free area in 2 locations: with dimensions 
+      - `{'guid': '3LJODRGPbDdfXHXShFLASv', 'type': 'IfcDoor'}`
 
 **samuel_macalister_sample_house**: F1=0.00 | P=0.00 R=0.00 | TP=0 FP=0 FN=2
   - **False Negatives** (expected but missed): 2 GUIDs
@@ -280,10 +174,51 @@ No errors on test models.
 - Component Wall.2.30 intersects the required free area with dimensions 0.85 m and 0.12 m.
       - `{'guid': '2wm6PO6TX9IxXwLP21HyWr', 'type': 'IfcDoor'}`
 
-**wbdg_office**: F1=0.00 | P=0.00 R=0.00 | TP=0 FP=2 FN=1
-  - **False Positives** (predicted but not expected): 2 GUIDs
+**wbdg_office**: F1=0.00 | P=0.00 R=0.00 | TP=0 FP=43 FN=1
+  - **False Positives** (predicted but not expected): 43 GUIDs
+    - `{'guid': '0YUzX040H3bhUyeerRS91$', 'type': 'IfcDoor'}`
+    - `{'guid': '1B_elmwz51ieqPd_MO2yaj', 'type': 'IfcDoor'}`
+    - `{'guid': '1giqnsgvr6uA16isIlsnKU', 'type': 'IfcDoor'}`
+    - `{'guid': '1h7qyFpbf0qggP_pQnt_0z', 'type': 'IfcDoor'}`
     - `{'guid': '1h7qyFpbf0qggP_pQnt_66', 'type': 'IfcDoor'}`
+    - `{'guid': '1h7qyFpbf0qggP_pQnt_6x', 'type': 'IfcDoor'}`
+    - `{'guid': '1h7qyFpbf0qggP_pQnt_8l', 'type': 'IfcDoor'}`
+    - `{'guid': '1h7qyFpbf0qggP_pQnt_AF', 'type': 'IfcDoor'}`
+    - `{'guid': '1h7qyFpbf0qggP_pQnt_Ac', 'type': 'IfcDoor'}`
+    - `{'guid': '1h7qyFpbf0qggP_pQnt_Ct', 'type': 'IfcDoor'}`
+    - `{'guid': '1h7qyFpbf0qggP_pQnt_DD', 'type': 'IfcDoor'}`
+    - `{'guid': '1h7qyFpbf0qggP_pQnt_Ft', 'type': 'IfcDoor'}`
+    - `{'guid': '1h7qyFpbf0qggP_pQnt_qr', 'type': 'IfcDoor'}`
+    - `{'guid': '1h7qyFpbf0qggP_pQnt_ro', 'type': 'IfcDoor'}`
+    - `{'guid': '1h7qyFpbf0qggP_pQnt_sR', 'type': 'IfcDoor'}`
+    - `{'guid': '1h7qyFpbf0qggP_pQnt_ws', 'type': 'IfcDoor'}`
+    - `{'guid': '1h7qyFpbf0qggP_pQnt_zR', 'type': 'IfcDoor'}`
+    - `{'guid': '1h7qyFpbf0qggP_pQnt_zc', 'type': 'IfcDoor'}`
+    - `{'guid': '27dLDsxMX8Sv5rKurGZzpG', 'type': 'IfcDoor'}`
+    - `{'guid': '27dLDsxMX8Sv5rKurGZzpH', 'type': 'IfcDoor'}`
+    - `{'guid': '27dLDsxMX8Sv5rKurGZzuM', 'type': 'IfcDoor'}`
+    - `{'guid': '27dLDsxMX8Sv5rKurGZzuN', 'type': 'IfcDoor'}`
+    - `{'guid': '2N3oFtM8X6lO2dN1$77u0o', 'type': 'IfcDoor'}`
+    - `{'guid': '2N3oFtM8X6lO2dN1$77u67', 'type': 'IfcDoor'}`
+    - `{'guid': '2N3oFtM8X6lO2dN1$77u8l', 'type': 'IfcDoor'}`
+    - `{'guid': '2N3oFtM8X6lO2dN1$77x$U', 'type': 'IfcDoor'}`
+    - `{'guid': '2N3oFtM8X6lO2dN1$77x7o', 'type': 'IfcDoor'}`
+    - `{'guid': '2N3oFtM8X6lO2dN1$77xCp', 'type': 'IfcDoor'}`
+    - `{'guid': '2N3oFtM8X6lO2dN1$77xEd', 'type': 'IfcDoor'}`
+    - `{'guid': '2N3oFtM8X6lO2dN1$77xGO', 'type': 'IfcDoor'}`
+    - `{'guid': '2N3oFtM8X6lO2dN1$77xGt', 'type': 'IfcDoor'}`
+    - `{'guid': '2N3oFtM8X6lO2dN1$77xJp', 'type': 'IfcDoor'}`
+    - `{'guid': '2N3oFtM8X6lO2dN1$77xKn', 'type': 'IfcDoor'}`
+    - `{'guid': '2N3oFtM8X6lO2dN1$77xOj', 'type': 'IfcDoor'}`
+    - `{'guid': '2N3oFtM8X6lO2dN1$77xQu', 'type': 'IfcDoor'}`
+    - `{'guid': '2N3oFtM8X6lO2dN1$77xRk', 'type': 'IfcDoor'}`
+    - `{'guid': '2N3oFtM8X6lO2dN1$77xUv', 'type': 'IfcDoor'}`
+    - `{'guid': '2N3oFtM8X6lO2dN1$77xYv', 'type': 'IfcDoor'}`
+    - `{'guid': '2N3oFtM8X6lO2dN1$77xcM', 'type': 'IfcDoor'}`
+    - `{'guid': '2N3oFtM8X6lO2dN1$77xei', 'type': 'IfcDoor'}`
     - `{'guid': '2N3oFtM8X6lO2dN1$77xjY', 'type': 'IfcDoor'}`
+    - `{'guid': '2N3oFtM8X6lO2dN1$77xq_', 'type': 'IfcDoor'}`
+    - `{'guid': '2N3oFtM8X6lO2dN1$77xtv', 'type': 'IfcDoor'}`
   - **False Negatives** (expected but missed): 1 GUIDs
     - **Sanitary Terminal.0.33.2 Too Close To Door.0.18 Component**: Clearance in Front of Doors
 - Component Sanitary Terminal.0.33.2 intersects the required free area with dimensions 0.16 m and 0.02 m.
@@ -422,28 +357,19 @@ Slab.1.2 has barriers that are too low. The required height of a barrier is 1.00
 Slab.2.1 has barriers that are too low. The required height of a barrier is 1.00 m, and the height in the model is 0.59 m.
       - `{'guid': '0S4TGKDX5FsvETM2lopwZJ', 'type': 'IfcSlab'}`
 
-**digital_hub**: F1=0.00 | P=0.00 R=0.00 | TP=0 FP=4 FN=1
-  - **False Positives** (predicted but not expected): 4 GUIDs
-    - `{'guid': '0CWDnGbzX4Sf1BesL9TjKx', 'type': 'IfcSlab'}`
-    - `{'guid': '0qHt$K$J1CDgKrHmzIgbUy', 'type': 'IfcSlab'}`
+**digital_hub**: F1=0.00 | P=0.00 R=0.00 | TP=0 FP=1 FN=1
+  - **False Positives** (predicted but not expected): 1 GUIDs
     - `{'guid': '3A8hY1UoD7JhnLeZeDyU2J', 'type': 'IfcSlab'}`
-    - `{'guid': '3LJODRGPbDdfXHXShFL9C6', 'type': 'IfcSlab'}`
   - **False Negatives** (expected but missed): 1 GUIDs
     - **Slab.0.4**: Slabs must be Guarded against Falling
 Slab.0.4 has barriers that are too low. The required height of a barrier is 1.00 m, and the height in the model is 0.50 m.
       - `{'guid': '3BmeJtEDj3AQO77Os2w6ld', 'type': 'IfcSlab'}`
 
-**samuel_macalister_sample_house**: F1=0.17 | P=0.11 R=0.33 | TP=1 FP=8 FN=2
-  - **False Positives** (predicted but not expected): 8 GUIDs
-    - `{'guid': '0LKJKCHUL1kBtnlFXddz6a', 'type': 'IfcSlab'}`
-    - `{'guid': '0PSFPzOkvFnf082fy0SVrB', 'type': 'IfcSlab'}`
-    - `{'guid': '0WFFycJ9rEj9FbADAA0q3o', 'type': 'IfcSlab'}`
-    - `{'guid': '1UXnAYut94jfvp2gf33JX9', 'type': 'IfcSlab'}`
-    - `{'guid': '1UXnAYut94jfvp2gf33Js1', 'type': 'IfcSlab'}`
-    - `{'guid': '1ypci01sD9aQpE0S$W9jFF', 'type': 'IfcSlab'}`
-    - `{'guid': '3OLNF2_DL6hfPgh8Bw7fI7', 'type': 'IfcSlab'}`
-    - `{'guid': '3Pf5WxDcT7yf4sAHDxknUs', 'type': 'IfcSlab'}`
-  - **False Negatives** (expected but missed): 2 GUIDs
+**samuel_macalister_sample_house**: F1=0.00 | P=0.00 R=0.00 | TP=0 FP=0 FN=3
+  - **False Negatives** (expected but missed): 3 GUIDs
+    - **Slab.0.1**: Slabs must be Guarded against Falling
+Slab.0.1 is missing a barrier/barriers.
+      - `{'guid': '0NWseyvsH7_gBW225aGtZP', 'type': 'IfcSlab'}`
     - **Slab.0.3**: Slabs must be Guarded against Falling
 Slab.0.3 has barriers that are too low. The required height of a barrier is 1.00 m, and the height in the model is 0.79 m.
       - `{'guid': '1cCK8nA61FduUezO75i8dB', 'type': 'IfcSlab'}`
