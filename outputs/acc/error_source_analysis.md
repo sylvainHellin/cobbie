@@ -162,8 +162,7 @@ tool doesn't robustly detect "missing barrier" scenarios.
 
 --- Geometry checks too restricive + Solibri parameters not descibed enough. Multiple sub-rules in one rule.
 
-Check Bottom Surface: True" in SOL/202 (Space Validation) means: the bottom surface of each space must touch a slab or another space
-  below it. If no slab is found beneath the space, it gets flagged.
+Check Bottom Surface: True" in SOL/202 (Space Validation) means: the bottom surface of each space must touch a slab or another space below it. If no slab is found beneath the space, it gets flagged.
 
 **All elements are IfcSpace.** Perfect precision but low recall.
 
@@ -244,18 +243,41 @@ approach doesn't detect as boundaries of unallocated areas.
 
 ## Summary of Error Sources
 
+Total errors across 12 failing rules: **FP=151, FN=77**
+
 | Error Source | Rules Affected | Total FP | Total FN |
 |---|---|---|---|
-| **E3: Geometry approximation** | clearance_doors, slabs_guarded, space_inside, space_intersect, 305_3, unallocated | 125 | 23 |
-| **E2: Relationship traversal** | large_spaces, 404_2_5 | 0 | 23 |
-| **E5: Threshold/tolerance mismatch** | riser_height, tread_length, non_uniform, space_intersect | 12 | 0 |
-| **E4: Missing rule logic** | clearance_doors, space_inside, riser_height | 0 | 12 |
-| **E1: Property lookup failure** | slab_thickness | 0 | 3 |
-| **E6: Model-specific structure** | space_intersect | 0 | 2 |
+| **E3: Geometry-based heuristic** | clearance_doors, slabs_guarded, space_inside, space_intersect, non_uniform, 305_3, unallocated | 130 | 27 |
+| **E2: Relationship traversal gap** | large_spaces, 404_2_5 | 1 | 23 |
+| **E4: Missing rule logic / sub-rules** | clearance_doors, space_inside, riser_height | 0 | 12 |
+| **E1: Property lookup / unit conversion** | slab_thickness, riser_height | 5 | 5 |
+| **E5: Threshold / tolerance mismatch** | tread_length, space_intersect | 2 | 0 |
+| **E6: Model-specific IFC structure** | space_intersect | 0 | 2 |
 
-**Top error source:** Geometry approximation (E3) accounts for 83% of FPs and 30% of FNs.
-Relationship traversal gaps (E2) account for 30% of FNs — these are models where
-`IfcRelSpaceBoundary` is incomplete, forcing geometric approaches.
+Notes on reclassification based on manual review:
 
-Note: 4 rules achieve perfect F1=1.0 on test (circular_space, stair_slab_connection,
-same_storey_elevation, doors_and_windows), accounting for 146 of 182 total TPs.
+- **riser_height FP** reclassified from E5 to E1: samuel_macalister stores riser height
+  as 180.556mm (missing unit conversion); 4351 has conflicting property values
+  (Pset_StairCommon.RiserHeight=0.55m vs Revit max=0.18m)
+- **non_uniform_risers_treads** reclassified from E5 to E3: the heuristic for detecting
+  uniformity doesn't work well — needs geometry-based approach rather than property comparison
+- **space_validation_intersect FP** reclassified from E5 to E3: geometry check too restrictive,
+  not a threshold issue
+
+**Key findings:**
+
+1. **Geometry-based heuristics (E3)** are the dominant error source, accounting for 86% of
+   FPs and 35% of FNs. The LLM-generated tools use coarse approximations (bounding boxes,
+   convex hulls, random sampling) that don't match Solibri's precise geometry engine.
+
+2. **Missing IFC relationships (E2)** account for 30% of FNs. Models without
+   `IfcRelSpaceBoundary` force the tool to rely on geometry, which it can't do well.
+   More diverse training models or fallback to geometric door-counting would help.
+
+3. **Property/unit issues (E1)** affect multilingual models (German "Dicke" vs English
+   "Thickness") and models with inconsistent unit conventions.
+
+4. **4 rules achieve perfect F1=1.0** on test (circular_space, stair_slab_connection,
+   same_storey_elevation, doors_and_windows), accounting for 146 of 182 total TPs.
+   These succeed because they use unambiguous logic (single property comparisons,
+   direct collision detection, or well-defined IFC relationships).
