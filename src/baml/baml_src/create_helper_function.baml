@@ -52,12 +52,16 @@ function HelperFunctionCreator(
     {% endif %}
 
     EXECUTION ENVIRONMENT:
-    Your code runs in a persistent Python session. Variables, imports, loaded models, and test results from previous iterations are still available — for testing purposes reuse them instead of recomputing.
+    Your code runs in a Python sandbox where imports and runtime tools are pre-loaded. Each code execution is isolated — variables and state from previous iterations do NOT carry over. Re-import and re-load anything you need in each CodeAction.
 
     FINAL FUNCTION SIGNATURE (MUST BE USED FOR THE NEW HELPER FUNCTION):
     Your function MUST accept exactly one parameter: `path_ifc_model: str` (the file path to the IFC model).
     Open the model inside the function body: `model = ifcopenshell.open(path_ifc_model)`
     Do NOT accept an already-opened ifcopenshell.file object — always accept the path as a string.
+
+    IMPORTANT — IMPORTS IN FINAL FUNCTION:
+    Runtime tools like `classify_spaces` and `query_ifcopenshell_docs` are pre-loaded in the sandbox during development, but the final NewHelperFunction must be a standalone file.
+    If your function uses `classify_spaces`, you MUST include `from src.tools.initial import classify_spaces` in the imports of your final function_implementation.
 
     REQUIREMENTS:
     1. **Type Safety**: Use proper type hints (typing.List, typing.Dict, etc.) for all parameters and return types
