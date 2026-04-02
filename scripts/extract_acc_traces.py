@@ -26,7 +26,7 @@ from mlflow.entities import Run, Trace
 warnings.filterwarnings("ignore", category=FutureWarning, message=".*experiment_ids.*")
 
 # Default parent run ID from the plan
-DEFAULT_PARENT_RUN_ID = "7ca5817aba3e40879b3205398d958102"
+DEFAULT_PARENT_RUN_ID = "67849559d0fb4fceab2d88bb17ce4737"
 DEFAULT_EXPERIMENT = "ACC_Training_v2"
 OUTPUT_DIR = Path("outputs/ec3")
 
@@ -45,7 +45,7 @@ def parse_args() -> argparse.Namespace:
     )
     parser.add_argument(
         "--mlflow-uri",
-        default="http://127.0.0.1:5000",
+        default="http://127.0.0.1:5001",
         help="MLflow tracking URI",
     )
     parser.add_argument(
