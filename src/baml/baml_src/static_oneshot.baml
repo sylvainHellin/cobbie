@@ -4,7 +4,8 @@
 function StaticCodeGenerator(
   user_input: string,
   available_tools: string,
-  model_path: string? @description("Path to the IFC model file, if available")
+  model_path: string? @description("Path to the IFC model file, if available"),
+  doc_context: string? @description("Pre-fetched IfcOpenShell documentation, if available")
 ) -> CodeAction {
   client GLM_4_7
   prompt #"
@@ -19,6 +20,12 @@ function StaticCodeGenerator(
   {% endif %}
 
   Question: {{ user_input }}
+
+  {% if doc_context %}
+  ## PRE-FETCHED IFCOPENSHELL DOCUMENTATION
+  The following API documentation was retrieved for you. Use it directly -- do NOT call query_ifcopenshell_docs.
+  {{ doc_context }}
+  {% endif %}
 
   ## AVAILABLE TOOLS
 

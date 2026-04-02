@@ -1,5 +1,11 @@
 // BAML schemas for BIM QA system
 
+// Documentation query plan produced by the DocQueryPlanner agent
+class DocQueryPlan {
+  thoughts string @description("Reasoning about which IfcOpenShell APIs/patterns are needed")
+  queries string[] @description("Up to 5 documentation query strings to resolve before writing code")
+}
+
 // Code execution action (loop mode)
 class CodeAction {
   thoughts string @description("Reasoning for next step")
