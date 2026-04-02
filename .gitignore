@@ -51,5 +51,4 @@ src/docs_indexer/external/
 # outputs/
 
 
-acc_traces.json
 scripts/debug_*
