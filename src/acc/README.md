@@ -10,13 +10,11 @@ Ground truth generation and GUID-based evaluation for IFC compliance checking.
 src/acc/
 ├── AutorunGenerator.py      # Solibri autorun XML config
 ├── BcfHandler.py            # BCF extraction → topics.json
-├── GroundTruthGenerator.py  # topics.json → ground_truth.json
-├── Evaluator.py             # GUID-based P/R/F1 metrics
-├── ModelProcessor.py        # Pipeline orchestration
-└── SolibriManagerMac.py     # Solibri execution on macOS
+├── SolibriManagerMac.py     # Solibri execution on macOS
+└── guid_comparison.py       # GUID-based P/R/F1 metrics
 
 acc/
-├── config/rule_templates.json  # Rule definitions + GUID strategies
+├── config/rule_templates.json  # Rule definitions
 ├── setup/                      # Solibri classification CSVs & configs
 └── res/{model}/
     ├── bcfzip/                 # Solibri BCF output
@@ -24,62 +22,33 @@ acc/
     └── ground_truth.json       # Evaluation ground truth
 ```
 
-## GUID Strategies
-
-Rules use different strategies to determine which GUIDs are required for a compliance match:
-
-| Strategy | Required GUIDs | Example |
-|----------|---------------|---------|
-| `single` | First element | Space with insufficient wheelchair clearance |
-| `primary_and_cause` | First element only | Stair (primary), slabs are context |
-| `multiple` | All GUIDs | Colliding elements |
-| `context_and_primary` | After first type change | [Space, Space, Door] → [Door] |
-
 ## Usage
 
 ### Generate Ground Truth
 
-```python
-from src.acc.GroundTruthGenerator import generate_ground_truth, generate_all_ground_truth
-
-# Single model
-generate_ground_truth("duplex")
-
-# All models
-generate_all_ground_truth()
+```bash
+uv run scripts/generate_ground_truth.py
+uv run scripts/generate_ground_truth.py --models duplex digital_hub
 ```
 
-### Evaluate Predictions
-
-```python
-from src.acc.Evaluator import AccEvaluator, format_evaluation_result
-
-evaluator = AccEvaluator("duplex")
-
-# Predictions format: rule_title -> list of {topic_id, predicted_guids}
-predictions = {
-    "304_3_1_circular_space": [
-        {"topic_id": "abc-123", "predicted_guids": ["GUID1", "GUID2"]}
-    ]
-}
-
-result = evaluator.evaluate(predictions)
-print(format_evaluation_result(result))
-```
-
-### Run Full Pipeline
+### Run Tool Evaluation
 
 ```bash
-# Generate ground truth
-uv run python -c "from src.acc.GroundTruthGenerator import generate_all_ground_truth; generate_all_ground_truth()"
+uv run scripts/run_acc_tool_evaluation.py
+```
 
-# Run ACC evaluation
-uv run scripts/run_acc_evaluation.py --model duplex
+### Run Training
+
+```bash
+uv run scripts/run_acc_training.py --rules 304_3_1_circular_space
+uv run scripts/run_acc_training.py --start 0 --end 5
 ```
 
 ## Rule Templates
 
-Rules are defined in `acc/config/rule_templates.json`:
+Rules are defined in `acc/config/rule_templates.json`. Each rule specifies an
+`extraction_element` field — the IFC type used to filter enriched GUIDs from
+Solibri topics into the ground truth.
 
 ```json
 {
@@ -88,21 +57,13 @@ Rules are defined in `acc/config/rule_templates.json`:
     "rule_title": "304_3_1_circular_space",
     "description_pattern": "304.3.1 Circular Space",
     "question": "What spaces do not have enough room for wheelchair turning?",
-    "guid_strategy": "single"
+    "extraction_element": "IfcSpace"
   }
 }
 ```
 
 ## Metrics
 
-The evaluator computes:
+GUID-based evaluation computes:
 - **Per-issue:** TP, FP, FN, precision, recall, F1
 - **Per-rule:** Aggregated metrics + matched issues count
-- **Overall:** Micro-averaged and macro-averaged P/R/F1
-
-```bash
-uv run mlflow server --host 127.0.0.1 --port 5000 \
-  --backend-store-uri sqlite:///acc.sqlite \
-  --default-artifact-root .mlflow/mlartifacts \
-  --gunicorn-opts "--timeout=120 -w 1"
-```

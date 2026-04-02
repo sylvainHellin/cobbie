@@ -7,7 +7,6 @@
     "rule": "304.3.1 Circular Space\nCircular space shall have a diameter of 1.52 m (60 inches) minimum.",
     "solibri_description": "The turning space shall be a circular space with a 60–inch (1525 mm) minimum diameter. Please note: The turning space shall be permitted to include knee and toe clearance. This rule is not checking knee and toe clearance.\nSupport Tag: SOL/209/2.0",
     "parameters": "Applicable Space Classifications: Balcony, Circulation, Garage, Habitable, Institutional, Lobby, Mercantile, Office, Parking, Production, Refuge, Stair Hall, Workplace",
-    "guid_strategy": "single",
     "extraction_element": "IfcSpace"
   },
   "305.3": {
@@ -18,7 +17,6 @@
     "rule": "305.3 Size\nThe clear floor or ground space shall be 30 inches (760 mm) minimum by 48 inches (1220 mm) minimum.",
     "solibri_description": "The clear floor or ground space shall be 30 inches (760 mm) minimum by 48 inches (1220 mm) minimum.\nSupport Tag: SOL/209/2.0",
     "parameters": "Applicable Space Classifications: Balcony, Circulation, Garage, Habitable, Institutional, Lobby, Mercantile, Office, Parking, Production, Refuge, Stair Hall, Workplace",
-    "guid_strategy": "primary_and_cause",
     "extraction_element": "IfcSpace"
   },
   "404.2.5": {
@@ -29,8 +27,6 @@
     "rule": "404.2.5 Two Doors in Series\nDistance between two hinged or pivoted doors in series shall be 48 inches (1220 mm) minimum plus the width of any door swinging into the space.",
     "solibri_description": "Distance between two hinged or pivoted doors in series shall be 48 inches (1220 mm) minimum plus the width of any door swinging into the space.\nSupport Tag: SOL/208/4.3",
     "parameters": "Space Classification: One space must be Circulation, the other can be any classification (*); Door Defaults: Frame thickness = 0.03 m, Panel thickness = 0.04 m, Threshold height = 0.01 m",
-    "guid_strategy": "context_and_primary",
-    "guid_strategy_note": "Skip first GUID (IfcSpace - context), take remaining GUIDs (IfcDoor elements - primary non-compliant elements)",
     "extraction_element": "IfcDoor"
   },
   "504.2": {
@@ -41,7 +37,6 @@
     "rule": "504.2 Treads and Risers\nAll stairs shall be connected to slabs.",
     "solibri_description": "All stairs shall be connected to slabs.\nSupport Tag: SOL/210/4.1",
     "parameters": "Stair Classification: Stair*",
-    "guid_strategy": "single",
     "extraction_element": "IfcStair"
   },
   "504.2_non_uniform": {
@@ -52,7 +47,6 @@
     "rule": "504.2 Treads and Risers\nAll steps on a flight of stairs shall have uniform riser heights and uniform tread depths.",
     "solibri_description": "All steps on a flight of stairs shall have uniform riser heights and uniform tread depths.\nSupport Tag: SOL/210/4.1",
     "parameters": "Stair Classification: Stair*",
-    "guid_strategy": "primary_and_cause",
     "extraction_element": "IfcStair"
   },
   "504.2_riser_height": {
@@ -63,7 +57,6 @@
     "rule": "504.2 Treads and Risers\nRisers shall be 4 inches (100 mm) high minimum and 7 inches (180 mm) high maximum.",
     "solibri_description": "Risers shall be 4 inches (100 mm) high minimum and 7 inches (180 mm) high maximum.\nSupport Tag: SOL/210/4.1",
     "parameters": "Stair Classification: Stair*",
-    "guid_strategy": "single",
     "extraction_element": "IfcStair"
   },
   "504.2_tread_length": {
@@ -74,7 +67,6 @@
     "rule": "504.2 Treads and Risers\nTreads shall be 11 inches (280 mm) deep minimum.",
     "solibri_description": "Treads shall be 11 inches (280 mm) deep minimum.\nSupport Tag: SOL/210/4.1",
     "parameters": "Stair Classification: Stair*",
-    "guid_strategy": "single",
     "extraction_element": "IfcStair"
   },
   "clearance_front_of_doors": {
@@ -85,7 +77,6 @@
     "rule": "Clearance in Front of Doors\nThis rule checks there is enough clearance in front of doors.",
     "solibri_description": "This rule checks there is enough clearance on both sides of doors.\nSupport Tag: SOL/226/3.1",
     "parameters": "Width, Depth, Height Adjustment: 0.05 m; Check both sides: false; Exclude: Door is Hatch",
-    "guid_strategy": "primary_and_cause",
     "extraction_element": "IfcDoor"
   },
   "doors_and_windows": {
@@ -96,7 +87,6 @@
     "rule": "Doors and Windows\nThis rule checks that doors and windows in the model are located in the same floor as the wall they are related to. The rule checks also that the model doesn't contain any orphan doors or windows (a door or a window, which doesn't have a relation to any wall).",
     "solibri_description": "This rule checks that doors and windows in the model are located in the same floor as the wall they are related to. The rule checks also that the model doesn't contain any orphan doors or windows (a door or a window, which doesn't have a relation to any wall)\nSupport Tag: SOL/176/2.2.",
     "parameters": "Check Orphan Doors and Windows: True",
-    "guid_strategy": "primary_and_cause",
     "extraction_element": "IfcDoor, IfcWindow"
   },
   "large_spaces_more_than_one_door": {
@@ -107,7 +97,6 @@
     "rule": "Large Spaces Have to Have More than One Door\nLarge spaces must have at least 2 doors.",
     "solibri_description": "This rule checks that large spaces have at least 2 doors.\nSupport Tag: SOL/231/1.7",
     "parameters": "Include Space Group Type: Is Undefined; Include Space Area: ≥ 50.0; Exclude - Space Usage: One Of [Outdoor Space, Parking, Terrace]; Target Value: 2; Exclude door = Hatch",
-    "guid_strategy": "single",
     "extraction_element": "IfcSpace"
   },
   "slab_thickness": {
@@ -118,7 +107,6 @@
     "rule": "Slab Thickness\nThis rule checks that slab thickness is not too small or too large. Minimum thickness 0.30 m, maximum 1.0 m.",
     "solibri_description": "This rule checks that slab thickness is not too small or too large.\nSupport Tag: SOL/230/1.1",
     "parameters": "Exclude Slab Building Elements - General: One Of [Fixed Furnishings, Suspended Ceilings]; Include Slab Thickness: ≥ 0.30 m; Include Slab Thickness: ≤ 1.0 m",
-    "guid_strategy": "multiple",
     "extraction_element": "IfcSlab"
   },
   "slabs_guarded_against_falling": {
@@ -129,7 +117,6 @@
     "rule": "Slabs must be Guarded against Falling\nThis rule checks that it is not possible to fall from slabs. The rule checks that horizontal components are surrounded by vertical components, such as walls or railings. If no vertical component exists on the edge of a horizontal component, another horizontal component or stairs needs to continue and the drop to the other horizontal component must not be more than specified.",
     "solibri_description": "This rule checks that it is not possible to fall from slabs. The rule checks that horizontal components are surrounded by vertical components, such as walls, or railings. If no vertical component exists on the edge of a horizontal component, another horizontal component or stairs needs to continue and the drop to the other horizontal component must not be more than specified.\nSupport Tag: SOL/236/1.2",
     "parameters": "Include Slab Building Elements - General: One Of [Balconies, Floor Slabs]. Barrier Components: Include Wall, Railing, Object, Column, Stair. Min barrier total height 1 m; max horizontal or vertical gap between barriers 0.1 m; max horizontal or vertical gap from platform to barriers 0.1 m. Fall and Landing: Include Slab, Site, Stair, Ramp. Max distance to landing 0.1 m; max fall 0.5 m; min landing width 0.2 m. Barrier height and climbable: distance to top of barrier (longest reach) 1 m; height of climb (unclimbable above) 0.6 m; side width (min foothold) 0.15 m. Barrier height measured from top of climbable curb: False",
-    "guid_strategy": "single",
     "extraction_element": "IfcSlab"
   },
   "space_validation_inside": {
@@ -140,7 +127,6 @@
     "rule": "Space Validation\nThis rule checks that space geometry and location are correct. It also checks intersections (inside only) with other components. This template focuses only on the 'inside' check: components that are inside the space.",
     "solibri_description": "This rule checks that space geometry and location are correct. It checks intersections (inside only) with other components.\nSupport Tag: SOL/202/1.4",
     "parameters": "Include: Wall, CurtainWall, Column, Slab, Roof. Tolerance 0.03 m. Check Bottom surface: True; Check Top surface: False",
-    "guid_strategy": "element",
     "extraction_element": "IfcSpace"
   },
   "space_validation_intersect": {
@@ -151,7 +137,6 @@
     "rule": "Space Validation\nThis rule checks that space geometry and location are correct. It checks that space does not incorrectly intersect with slabs, walls or other components. This template focuses only on the 'intersect' check.",
     "solibri_description": "This rule checks that space geometry and location are correct. It checks that boundaries are near walls, columns or other objects, and space is touching a slab surface above and below itself. It also checks space height and intersections with other components.\nSupport Tag: SOL/202/1.4",
     "parameters": "Include: Wall, CurtainWall, Column, Slab, Roof. Tolerance 0.03 m. Check Bottom surface: True; Check Top surface: False; Exclude: If component is fully inside the space.",
-    "guid_strategy": "element",
     "extraction_element": "IfcSpace"
   },
   "spaces_same_storey_same_bottom_elevation": {
@@ -162,7 +147,6 @@
     "rule": "Spaces in Same Building Storey Must Have Same Bottom Elevation\nThe rule checks that components in the model or in the same building storey with the same construction type have same dimensions.",
     "solibri_description": "The rule checks that components in the model or in the same building storey with the same construction type have same dimensions.\nSupport Tag: SOL/171/1.4",
     "parameters": "",
-    "guid_strategy": "multiple",
     "extraction_element": "IfcSpace"
   },
   "unallocated_areas": {
@@ -173,7 +157,6 @@
     "rule": "Unallocated Areas\nThis rule checks that space geometry and location are correct.",
     "solibri_description": "This rule checks that space geometry and location are correct. \nSupport Tag: SOL/202/1.4",
     "parameters": "Maximum allowed Unallocated space: 0.50 m2; Return Surrounding Walls",
-    "guid_strategy": "multiple",
     "extraction_element": "IfcWall, IfcWallStandardCase, IfcCurtainWall, IfcColumn"
   }
 }

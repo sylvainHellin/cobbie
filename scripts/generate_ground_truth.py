@@ -1,14 +1,11 @@
-"""Generate ground_truth_v2.json using extraction_element from rule_templates.
+"""Generate ground_truth.json for ACC models using extraction_element from rule_templates.
 
-Instead of the complex guid_strategy logic (single, primary_and_cause,
-context_and_primary, element), V2 uses a single approach: filter each topic's
-enriched GUIDs to only those whose ifc_type matches the rule's extraction_element.
-
-Also compares V1 vs V2 and reports differences.
+For each Solibri topic, filters enriched GUIDs to only those whose ifc_type matches
+the rule's extraction_element field.
 
 Usage:
-    uv run scripts/generate_ground_truth_v2.py
-    uv run scripts/generate_ground_truth_v2.py --models duplex digital_hub
+    uv run scripts/generate_ground_truth.py
+    uv run scripts/generate_ground_truth.py --models duplex digital_hub
 """
 
 import argparse
