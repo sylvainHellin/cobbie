@@ -52,7 +52,7 @@ A slab with no recognisable thickness property is silently skipped rather than f
 
 ### 2. 504_2_riser_height — F1=0.462 (TP=3, FP=7, FN=0)
 
-- MacCallister has 180.55555555556 - likely some thresholds/tolerances need to be adjusted; Pset_StairCommon --- No, missing unit conversion
+- MacCallister has 180.55555555556 - likely some thresholds/tolerances need to be adjusted; Pset_StairCommon --- unit conversion?
 - 4351 has 0.55 --- measurements considered? -- Pset_StairCommon.RiserHeight = 0.55m, but max riser height from revit is correct - 0.18.
 
 **All elements are IfcStair.** All violations are caught (FN=0) but 7 stairs are over-flagged (FP=7): 3 in 4351, 2 in digital_hub, 2 in samuel_macalister.
@@ -221,7 +221,7 @@ Total errors across 12 failing rules: **FP=90, FN=76**
 | **E3: Geometry-based heuristic** | clearance_doors, slabs_guarded, space_inside, space_intersect, non_uniform, 305_3, unallocated | 73 | 30 |
 | **E2: Relationship traversal gap** | large_spaces, 404_2_5 | 1 | 23 |
 | **E4: Missing rule logic / sub-rules** | clearance_doors, space_inside | 0 | 15 |
-| **E1: Property lookup / unit conversion** | slab_thickness | 0 | 3 |
+| **E1: Property lookup** | slab_thickness | 0 | 3 |
 | **E5: Threshold / tolerance mismatch** | riser_height, tread_length | 9 | 0 |
 | **E6: Model-specific IFC structure** | — | 0 | 0 |
 
@@ -235,8 +235,8 @@ Total errors across 12 failing rules: **FP=90, FN=76**
    `IfcRelSpaceBoundary` force the tool to rely on geometry, which it can't do well.
    More diverse training models or fallback to geometric door-counting would help.
 
-3. **Property/unit issues (E1)** affect multilingual models (German "Dicke" vs English
-   "Thickness") and models with inconsistent unit conventions. Only slab_thickness (3 FN)
+3. **Property (E1)** affect multilingual models (German "Dicke" vs English
+   "Thickness"). Only slab_thickness (3 FN)
    remains affected.
 
 4. **4 rules achieve perfect F1=1.0** on test (circular_space, stair_slab_connection,
