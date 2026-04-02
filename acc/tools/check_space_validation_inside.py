@@ -1,133 +1,161 @@
 import ifcopenshell
 import ifcopenshell.geom
-import ifcopenshell.util.shape
 import trimesh
 import numpy as np
-from typing import List, Dict, Any
+from typing import List
+import logging
 
+logging.basicConfig(level=logging.WARNING)
+logger = logging.getLogger(__name__)
 
 def check_space_validation_inside(path_ifc_model: str) -> List[str]:
     """
-    Check for components incorrectly inside spaces.
-
-    This rule checks that space geometry and location are correct by identifying
-    components that are improperly contained within spaces. A component is considered
-    incorrectly inside if all of its vertices are contained within the space volume.
-
+    Rule: General Space Check: Space Validation space_validation_inside
+    
+    This rule checks that space geometry and location are correct. It also checks
+    intersections (inside only) with other components. This template focuses only on
+    the 'inside' check: components that are inside the space.
+    
     Parameters:
     - Include: Wall, CurtainWall, Column, Slab, Roof
-    - Tolerance: 0.03 m (handled by geometric containment check)
+    - Tolerance: 0.03 m
     - Check Bottom surface: True
     - Check Top surface: False
-
+    
     Args:
-        path_ifc_model: Path to the IFC model file
-
+        path_ifc_model (str): Path to the IFC model file.
+    
     Returns:
-        List of IFC GUIDs of spaces that have components incorrectly inside them.
-        Returns empty list if model has no spaces or no violations found.
-
+        List[str]: List of IFC GUIDs of spaces that have components incorrectly
+                   inside them (violating the rule).
+                   
+                   Note: This function uses geometric containment detection.
+                   Some violations may not be detected due to complex geometries
+                   or missing representations. Components that fail geometry
+                   processing are skipped.
+    
     Example:
         >>> guids = check_space_validation_inside('/path/to/model.ifc')
         >>> print(f"Found {len(guids)} violations")
-        ['3LbNSBzHHBSuzhUUvuwCoN', '3NhaIUfh12PAdrGa$S3xUm']
     """
-    model = ifcopenshell.open(path_ifc_model)
-    settings = ifcopenshell.geom.settings()
+    # Validate input
+    if not path_ifc_model:
+        return []
     
-    # Component types to check as specified in the rule
-    component_types = ['IfcWall', 'IfcCurtainWall', 'IfcColumn', 'IfcSlab', 'IfcRoof']
-    
-    def get_element_mesh(elem) -> trimesh.Trimesh:
-        """Get trimesh mesh for an IFC element.
-        
-        Returns None if geometry cannot be created.
-        """
-        try:
-            shape = ifcopenshell.geom.create_shape(settings, elem)
-            verts = ifcopenshell.util.shape.get_vertices(shape.geometry)
-            faces = ifcopenshell.util.shape.get_faces(shape.geometry)
-            return trimesh.Trimesh(vertices=verts, faces=faces)
-        except (AttributeError, RuntimeError, Exception):
-            return None
-    
-    def bounds_overlap(bounds1: np.ndarray, bounds2: np.ndarray) -> bool:
-        """Check if two bounding boxes overlap in 3D."""
-        return not (
-            bounds1[1][0] < bounds2[0][0] or bounds1[0][0] > bounds2[1][0] or
-            bounds1[1][1] < bounds2[0][1] or bounds1[0][1] > bounds2[1][1] or
-            bounds1[1][2] < bounds2[0][2] or bounds1[0][2] > bounds2[1][2]
-        )
-    
-    def is_component_inside_space(space_mesh: trimesh.Trimesh, 
-                                  component_mesh: trimesh.Trimesh) -> bool:
-        """Check if component is completely inside space (violation).
-        
-        Returns True if all component vertices are inside the space volume.
-        """
-        if space_mesh is None or component_mesh is None:
-            return False
-        
-        try:
-            contains = space_mesh.contains(component_mesh.vertices)
-            return np.all(contains)
-        except (AttributeError, ValueError, Exception):
-            return False
+    try:
+        model = ifcopenshell.open(path_ifc_model)
+    except Exception as e:
+        logger.warning(f"Failed to open IFC model: {e}")
+        return []
     
     # Get all spaces
-    spaces = model.by_type('IfcSpace')
+    spaces = list(model.by_type('IfcSpace'))
     if not spaces:
         return []
     
-    # Pre-compute space meshes
-    space_data: List[Dict[str, Any]] = []
-    skipped_spaces = 0
-    
-    for space in spaces:
-        mesh = get_element_mesh(space)
-        if mesh is None:
-            skipped_spaces += 1
-            continue
-        space_data.append({
-            'guid': space.GlobalId,
-            'name': getattr(space, 'Name', 'Unknown'),
-            'mesh': mesh,
-            'bounds': mesh.bounds
-        })
+    # Component types to check
+    component_types = ['IfcWall', 'IfcCurtainWall', 'IfcColumn', 'IfcSlab', 'IfcRoof']
     
     # Collect all components
-    all_components = []
+    components = []
     for comp_type in component_types:
-        all_components.extend(model.by_type(comp_type))
+        try:
+            components.extend(model.by_type(comp_type))
+        except Exception:
+            pass
     
-    if not all_components:
+    if not components:
         return []
     
-    # Find violations
-    violation_guids = set()
-    skipped_components = 0
+    # Settings for geometry creation
+    settings = ifcopenshell.geom.settings()
     
-    for comp in all_components:
-        comp_mesh = get_element_mesh(comp)
-        if comp_mesh is None:
-            skipped_components += 1
+    # Build meshes for spaces
+    space_meshes = {}
+    space_skipped = 0
+    
+    for space in spaces:
+        try:
+            shape = ifcopenshell.geom.create_shape(settings, space)
+            verts = shape.geometry.verts
+            faces = shape.geometry.faces
+            
+            # Reshape vertices: flat list -> (N, 3) array
+            verts_array = np.array(verts, dtype=np.float32).reshape(-1, 3)
+            faces_array = np.array(faces, dtype=np.int32).reshape(-1, 3)
+            
+            mesh = trimesh.Trimesh(vertices=verts_array, faces=faces_array)
+            space_meshes[space.GlobalId] = mesh
+        except Exception:
+            space_skipped += 1
+            continue
+    
+    if space_skipped > 0:
+        logger.warning(f"Skipped {space_skipped}/{len(spaces)} spaces due to geometry errors")
+    
+    if not space_meshes:
+        return []
+    
+    # Build meshes for components
+    component_meshes = {}
+    comp_skipped = 0
+    
+    for comp in components:
+        try:
+            shape = ifcopenshell.geom.create_shape(settings, comp)
+            verts = shape.geometry.verts
+            faces = shape.geometry.faces
+            
+            verts_array = np.array(verts, dtype=np.float32).reshape(-1, 3)
+            faces_array = np.array(faces, dtype=np.int32).reshape(-1, 3)
+            
+            mesh = trimesh.Trimesh(vertices=verts_array, faces=faces_array)
+            component_meshes[comp.GlobalId] = mesh
+        except Exception:
+            comp_skipped += 1
+            continue
+    
+    if comp_skipped > 0:
+        logger.warning(f"Skipped {comp_skipped}/{len(components)} components due to geometry errors")
+    
+    if not component_meshes:
+        return []
+    
+    # Check each space for components inside
+    violating_space_guids = []
+    
+    for space_guid, space_mesh in space_meshes.items():
+        # Check if space mesh is valid for containment checks
+        if not space_mesh.is_watertight:
             continue
         
-        comp_bounds = comp_mesh.bounds
+        has_inside_component = False
         
-        # Check each space for this component
-        for space_info in space_data:
-            # Skip if already found violation for this space
-            if space_info['guid'] in violation_guids:
+        for comp_guid, comp_mesh in component_meshes.items():
+            try:
+                # Check if component bounding box is inside space bounding box first
+                # This is a fast pre-filter
+                bb_contains = trimesh.bounds.contains(space_mesh.bounds, comp_mesh.bounds)
+                # bb_contains is an array, need all dimensions to be True
+                if not np.all(bb_contains):
+                    continue
+                
+                # Check if component is fully inside space
+                # Sample points from component vertices
+                sample_points = comp_mesh.vertices
+                
+                # Check if all vertices are inside the space
+                is_inside = space_mesh.contains(sample_points)
+                
+                # If all vertices are inside, consider component inside
+                if np.all(is_inside):
+                    has_inside_component = True
+                    break
+                    
+            except Exception:
                 continue
-            
-            # Quick bounds overlap check to filter non-overlapping elements
-            if not bounds_overlap(space_info['bounds'], comp_bounds):
-                continue
-            
-            # Detailed containment check
-            if is_component_inside_space(space_info['mesh'], comp_mesh):
-                violation_guids.add(space_info['guid'])
-                break
+        
+        if has_inside_component:
+            violating_space_guids.append(space_guid)
     
-    return list(violation_guids)
+    return violating_space_guids

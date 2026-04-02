@@ -1,180 +1,173 @@
 import ifcopenshell
 import ifcopenshell.util.element
 import ifcopenshell.util.placement
-from typing import List, Dict, Set
+import ifcopenshell.geom
+from typing import List, Dict, Tuple, Set, Any
 import numpy as np
-import re
+from src.tools.initial import classify_spaces
+
 
 def check_404_2_5_two_doors_in_series(path_ifc_model: str) -> List[str]:
     """
-    Check if doors in series meet the minimum distance requirement per ADA 404.2.5.
+    Check rule 404.2.5: Two Doors in Series
     
     Distance between two hinged or pivoted doors in series shall be 48 inches 
     (1220 mm) minimum plus the width of any door swinging into the space.
+    
     One space must be Circulation, the other can be any classification.
     
     Args:
-        path_ifc_model: Path to the IFC model file.
+        path_ifc_model: Path to the IFC model file
         
     Returns:
-        List of IFC GUIDs of all doors that violate the rule.
+        List of IFC GUIDs of all door elements that violate this rule
         
     Example:
-        >>> guids = check_404_2_5_two_doors_in_series('model.ifc')
-        >>> print(f"Found {len(guids)} violations")
+        >>> guids = check_404_2_5_two_doors_in_series('/path/to/model.ifc')
+        >>> print(f"Found {len(guids)} violating doors")
     """
     model = ifcopenshell.open(path_ifc_model)
     
-    # Constants
-    MIN_DISTANCE = 1.22  # 1220 mm in meters
-    
-    # Get all doors
+    # Get all doors and spaces
     doors = model.by_type('IfcDoor')
+    spaces = model.by_type('IfcSpace')
+    
     if not doors:
         return []
     
-    # Get all spaces and classify them
-    spaces = model.by_type('IfcSpace')
-    space_data = []
+    # Create space info dictionary for classification
+    space_info_list = []
     for space in spaces:
-        space_info = {
+        space_info_list.append({
             'guid': space.GlobalId,
-            'name': space.Name or '',
-            'long_name': getattr(space, 'LongName', '') or ''
-        }
-        space_data.append(space_info)
+            'name': getattr(space, 'LongName', None) or getattr(space, 'Name', '')
+        })
     
-    # Classify spaces
+    # Classify spaces using the classify_spaces tool
     try:
-        classified_spaces = classify_spaces(space_data, path_ifc_model)
-        space_classification = {s['guid']: s['classification'] for s in classified_spaces}
-    except Exception:
-        # If classification fails, assume unclassified
-        space_classification = {s['guid']: 'Unclassified' for s in space_data}
+        classified_spaces = classify_spaces(space_info_list, path_ifc_model)
+        space_map = {s['guid']: s for s in classified_spaces}
+    except Exception as e:
+        print(f"Warning: Could not classify spaces: {e}")
+        space_map = {}
     
-    # Build door-to-spaces mapping using IfcRelSpaceBoundary
+    # Map doors to spaces using IfcRelSpaceBoundary
     door_to_spaces: Dict[str, Set[str]] = {}
-    rel_boundaries = model.by_type('IfcRelSpaceBoundary')
+    door_data: Dict[str, Dict[str, Any]] = {}
     
-    for rel in rel_boundaries:
-        if hasattr(rel, 'RelatedBuildingElement') and rel.RelatedBuildingElement:
-            if rel.RelatedBuildingElement.is_a('IfcDoor'):
-                door_guid = rel.RelatedBuildingElement.GlobalId
-                space = rel.RelatingSpace
-                if space:
-                    if door_guid not in door_to_spaces:
-                        door_to_spaces[door_guid] = set()
-                    door_to_spaces[door_guid].add(space.GlobalId)
+    # Get geometry settings
+    settings = ifcopenshell.geom.settings()
     
-    # Build door data dictionary with positions
-    door_data: Dict[str, Dict] = {}
-    skipped_count = 0
-    
+    # First, collect door data and positions
+    skipped_doors = 0
     for door in doors:
-        guid = door.GlobalId
-        
-        # Get door position
-        position = None
-        if door.ObjectPlacement:
-            try:
-                matrix = ifcopenshell.util.placement.get_local_placement(door.ObjectPlacement)
-                position = np.array([matrix[0, 3], matrix[1, 3], matrix[2, 3]])
-            except Exception:
-                skipped_count += 1
-                continue
-        
-        if position is None:
-            skipped_count += 1
+        try:
+            # Get global placement
+            placement = ifcopenshell.util.placement.get_local_placement(door.ObjectPlacement)
+            global_pos = placement[:3, 3]
+            
+            # Get geometry
+            shape = ifcopenshell.geom.create_shape(settings, door)
+            verts = np.array(shape.geometry.verts).reshape(-1, 3)
+            center = verts.mean(axis=0)
+            
+            door_data[door.GlobalId] = {
+                'guid': door.GlobalId,
+                'name': door.Name,
+                'width': getattr(door, 'OverallWidth', 0.915),  # Default width if not available
+                'global_pos': global_pos,
+                'geometry_center': center,
+                'door_obj': door
+            }
+        except Exception as e:
+            skipped_doors += 1
             continue
+    
+    if skipped_doors > 0:
+        print(f"Warning: Skipped {skipped_doors} doors due to geometry errors")
+    
+    # Map doors to spaces using IfcRelSpaceBoundary
+    space_boundaries = model.by_type('IfcRelSpaceBoundary')
+    for rel in space_boundaries:
+        try:
+            if hasattr(rel, 'RelatedBuildingElement') and rel.RelatedBuildingElement:
+                building_elem = rel.RelatingBuildingElement
+                if building_elem and building_elem.is_a('IfcDoor'):
+                    door_guid = building_elem.GlobalId
+                    
+                    if hasattr(rel, 'RelatingSpace') and rel.RelatingSpace:
+                        space_guid = rel.RelatingSpace.GlobalId
+                        
+                        if door_guid not in door_to_spaces:
+                            door_to_spaces[door_guid] = set()
+                        door_to_spaces[door_guid].add(space_guid)
+        except AttributeError:
+            continue
+    
+    # For doors with no space boundaries, try alternative methods
+    for door_guid, data in door_data.items():
+        if door_guid not in door_to_spaces:
+            door_to_spaces[door_guid] = set()
+    
+    # Find pairs of doors that share at least one space (doors in series)
+    violating_guids: List[str] = []
+    door_guids = list(door_data.keys())
+    
+    def get_min_distance_between_doors(door1: Dict[str, Any], door2: Dict[str, Any]) -> float:
+        """Calculate minimum distance between two door boundaries."""
+        pos1 = door1['global_pos']
+        pos2 = door2['global_pos']
+        width1 = door1['width']
+        width2 = door2['width']
         
-        # Get door width
-        width = 0.915  # Default width in meters
-        psets = ifcopenshell.util.element.get_psets(door)
-        door_common = psets.get('Pset_DoorCommon', {})
+        # Simple distance between positions minus half widths
+        # This is an approximation - ideally we'd use actual geometry
+        center_dist = np.linalg.norm(pos2 - pos1)
         
-        # Try to extract width from Reference or other properties
-        ref = door_common.get('Reference', '')
-        if ref:
-            try:
-                # Look for pattern like "0915" before 'x' or space
-                match = re.search(r'[:\s](\d{3,4})\s*[xX]', ref)
-                if match:
-                    width_mm = float(match.group(1))
-                    width = width_mm / 1000.0  # Convert to meters
-            except Exception:
-                pass
+        # Subtract half widths to get distance between edges
+        min_dist = max(0, center_dist - (width1 + width2) / 2)
         
-        # Check operation type (hinged or pivoted) - assume most doors are for accessibility
-        operation_type = 'HINGED_OR_PIVOTED'
-        door_type = ifcopenshell.util.element.get_type(door)
-        if door_type:
-            pred_type = getattr(door_type, 'PredefinedType', None)
-            if pred_type:
-                pred_type_str = str(pred_type).upper()
-                if 'HINGE' in pred_type_str or 'PIVOT' in pred_type_str or 'SWING' in pred_type_str:
-                    operation_type = 'HINGED_OR_PIVOTED'
-        
-        door_data[guid] = {
-            'door': door,
-            'position': position,
-            'width': width,
-            'operation_type': operation_type,
-            'spaces': door_to_spaces.get(guid, set())
-        }
+        return min_dist
     
-    if skipped_count > 0:
-        print(f"Warning: Skipped {skipped_count} doors due to missing placement data")
-    
-    # Find doors that are in circulation-adjacent spaces
-    circulation_door_guids: Set[str] = set()
-    
-    for guid, data in door_data.items():
-        spaces = data['spaces']
-        for space_guid in spaces:
-            if space_classification.get(space_guid, 'Unclassified') == 'Circulation':
-                circulation_door_guids.add(guid)
-                break
-    
-    # Find pairs of doors that share a circulation space and are too close
-    violating_guids: Set[str] = set()
-    
-    # Check all pairs of doors in circulation areas
-    circulation_guids_list = list(circulation_door_guids)
-    
-    for i in range(len(circulation_guids_list)):
-        for j in range(i + 1, len(circulation_guids_list)):
-            guid1 = circulation_guids_list[i]
-            guid2 = circulation_guids_list[j]
+    # Check all pairs of doors
+    for i in range(len(door_guids)):
+        for j in range(i + 1, len(door_guids)):
+            guid1 = door_guids[i]
+            guid2 = door_guids[j]
             
-            data1 = door_data[guid1]
-            data2 = door_data[guid2]
+            # Check if doors share at least one space (in series)
+            spaces1 = door_to_spaces.get(guid1, set())
+            spaces2 = door_to_spaces.get(guid2, set())
+            shared_spaces = spaces1 & spaces2
             
-            # Check if doors share a common space
-            common_spaces = data1['spaces'] & data2['spaces']
+            if not shared_spaces:
+                continue
             
-            # Check if common space includes circulation
-            has_circulation_in_common = False
-            for space_guid in common_spaces:
-                if space_classification.get(space_guid, 'Unclassified') == 'Circulation':
-                    has_circulation_in_common = True
+            # Check circulation requirement (one space must be Circulation)
+            has_circulation = False
+            for space_guid in shared_spaces:
+                space = space_map.get(space_guid)
+                if space and space.get('classification') == 'Circulation':
+                    has_circulation = True
                     break
             
-            # Only check if they share a circulation space
-            if not has_circulation_in_common:
+            if not has_circulation:
                 continue
             
-            # Calculate distance between doors
-            pos1 = data1['position']
-            pos2 = data2['position']
-            distance = np.linalg.norm(pos1[:2] - pos2[:2])  # XY distance only
+            # Calculate minimum distance
+            door1 = door_data[guid1]
+            door2 = door_data[guid2]
+            min_dist = get_min_distance_between_doors(door1, door2)
             
-            # Calculate required minimum distance
-            # Rule: 1.22m + width of door swinging into space
-            # Using the larger width of the two doors
-            required_distance = MIN_DISTANCE + max(data1['width'], data2['width'])
+            # Required distance: 1.22m + width of door swinging into space
+            # Simplified: add one door width (assuming at least one swings into circulation space)
+            required_dist = 1.22 + min(door1['width'], door2['width'])
             
-            if distance < required_distance:
-                violating_guids.add(guid1)
-                violating_guids.add(guid2)
+            # Check if violation
+            if min_dist < required_dist:
+                if guid1 not in violating_guids:
+                    violating_guids.append(guid1)
+                if guid2 not in violating_guids:
+                    violating_guids.append(guid2)
     
-    return sorted(list(violating_guids))
+    return violating_guids

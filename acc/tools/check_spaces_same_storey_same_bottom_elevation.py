@@ -1,76 +1,95 @@
 import ifcopenshell
 import ifcopenshell.util.element
 import ifcopenshell.geom
-from typing import List
+import numpy as np
+from typing import List, Dict
+from collections import Counter
 
 
 def check_spaces_same_storey_same_bottom_elevation(path_ifc_model: str) -> List[str]:
     """
-    Check that spaces in the same building storey have the same bottom elevation.
+    Identifies spaces in the same building storey that do not have the same bottom elevation.
     
-    This rule validates that all IfcSpace elements within a single IfcBuildingStorey
-    share the same bottom elevation value. Spaces in storeys with varying bottom
-    elevations are considered violations.
+    This rule checks that spaces within each building storey have consistent bottom elevations.
+    If a storey contains spaces with different bottom elevations, ALL spaces in that storey
+    are flagged as violations.
 
     Args:
-        path_ifc_model (str): The file path to the IFC model.
+        path_ifc_model: Path to the IFC model file.
 
     Returns:
-        List[str]: A list of IFC GUIDs of all spaces that violate this rule.
-                   Returns an empty list if all spaces in each storey have
-                   consistent bottom elevations, or if no spaces are found.
+        List of IFC GUIDs of spaces that violate the rule (spaces in storeys with
+        non-uniform bottom elevations). Returns an empty list if no violations are found
+        or if the model contains no spaces.
 
     Example:
-        >>> violating_guids = check_spaces_same_storey_same_bottom_elevation('model.ifc')
-        >>> print(f"Found {len(violating_guids)} spaces with inconsistent bottom elevations")
+        >>> violations = check_spaces_same_storey_same_bottom_elevation('model.ifc')
+        >>> print(f"Found {len(violations)} violating spaces")
     """
     model = ifcopenshell.open(path_ifc_model)
     
-    violating_guids: List[str] = []
+    # Get all storeys
+    storeys = model.by_type('IfcBuildingStorey')
+    
+    if not storeys:
+        return []
+    
+    # Group spaces by storey using get_decomposition
+    storey_spaces: Dict[int, List[Dict]] = {}
+    settings = ifcopenshell.geom.settings()
     skipped = 0
     
-    settings = ifcopenshell.geom.settings()
-    
-    # Iterate through all building storeys
-    for storey in model.by_type('IfcBuildingStorey'):
-        # Get all elements decomposed by this storey
-        elements = ifcopenshell.util.element.get_decomposition(storey)
-        spaces = [e for e in elements if e.is_a() == 'IfcSpace']
+    for storey in storeys:
+        storey_id = storey.id()
         
-        if not spaces:
+        # Get all decomposed elements (includes spaces via aggregation hierarchy)
+        try:
+            elements = ifcopenshell.util.element.get_decomposition(storey)
+        except (RuntimeError, AttributeError):
+            continue
+            
+        spaces_in_storey = [e for e in elements if e.is_a('IfcSpace')]
+        
+        if not spaces_in_storey:
             continue
         
-        space_elevations = []
-        
-        # Calculate bottom elevation for each space
-        for space in spaces:
+        # Process spaces in this storey
+        storey_spaces[storey_id] = []
+        for space in spaces_in_storey:
             try:
-                # Get geometry to determine bottom elevation
+                # Get geometry to find bottom elevation
                 shape = ifcopenshell.geom.create_shape(settings, space)
                 verts = shape.geometry.verts
                 
-                # Extract Z coordinates from vertices (array is [x1,y1,z1, x2,y2,z2, ...])
-                z_coords = [verts[i+2] for i in range(0, len(verts), 3)]
-                bottom_elevation = round(min(z_coords), 2)
+                # Reshape flat list to (N, 3) array and find min Z (bottom elevation)
+                verts_array = np.array(verts).reshape(-1, 3)
+                bottom_elevation = float(verts_array[:, 2].min())
                 
-                space_elevations.append({
-                    'elevation': bottom_elevation,
-                    'guid': space.GlobalId
+                storey_spaces[storey_id].append({
+                    'guid': space.GlobalId,
+                    'bottom_elevation': bottom_elevation
                 })
-            except (AttributeError, RuntimeError) as e:
-                # Skip spaces with geometry errors
+            except (RuntimeError, AttributeError, ValueError) as e:
                 skipped += 1
                 continue
-        
-        # Check if all elevations in this storey are the same
-        unique_elevations = set(s['elevation'] for s in space_elevations)
-        
-        if len(unique_elevations) > 1:
-            # Storey has spaces with different bottom elevations - all are violations
-            for space_data in space_elevations:
-                violating_guids.append(space_data['guid'])
     
     if skipped > 0:
         print(f"Warning: Skipped {skipped} spaces due to geometry errors")
+    
+    # Check each storey for violations
+    violating_guids = []
+    
+    for storey_id, spaces_data in storey_spaces.items():
+        if len(spaces_data) < 2:
+            continue  # No issue if only 1 space
+        
+        # Round elevations to 2 decimal places for comparison
+        elevations = [round(s['bottom_elevation'], 2) for s in spaces_data]
+        unique_elevations = set(elevations)
+        
+        # If storey has multiple elevations, ALL spaces are violations
+        if len(unique_elevations) > 1:
+            for s in spaces_data:
+                violating_guids.append(s['guid'])
     
     return violating_guids

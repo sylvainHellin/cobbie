@@ -1,47 +1,61 @@
 import ifcopenshell
 import ifcopenshell.geom
-import trimesh
+import ifcopenshell.util.shape
 import numpy as np
-from shapely.geometry import Polygon, box
-from shapely.affinity import translate, rotate
-from typing import List, Optional
+import trimesh
+from shapely.geometry import Polygon
+from typing import List
+import sys
 
 
 def check_305_3_size(path_ifc_model: str) -> List[str]:
     """
-    Rule 305.3 Size: Check if spaces have inaccessible areas.
+    Check if spaces violate rule 305.3 Size - minimum clear floor space of 760mm x 1220mm.
     
-    The clear floor or ground space shall be 30 inches (760 mm) minimum 
-    by 48 inches (1220 mm) minimum.
+    Rule 305.3 requires that the clear floor or ground space shall be 30 inches (760 mm) 
+    minimum by 48 inches (1220 mm) minimum. This function checks if a space can accommodate
+    this minimum rectangle anywhere within its floor area.
     
-    Applicable Space Classifications: Balcony, Circulation, Garage, Habitable, 
-    Institutional, Lobby, Mercantile, Office, Parking, Production, Refuge, 
-    Stair Hall, Workplace
+    Parameters:
+    - Applicable Space Classifications: Balcony, Circulation, Garage, Habitable, Institutional, 
+      Lobby, Mercantile, Office, Parking, Production, Refuge, Stair Hall, Workplace
     
     Args:
-        path_ifc_model: Path to the IFC model file
+        path_ifc_model: Path to the IFC model file.
         
     Returns:
-        List of IFC GUIDs of spaces that violate this rule (cannot accommodate
-        a 760mm x 1220mm clear floor space)
+        List of IFC GUIDs of spaces that violate the rule (have inaccessible areas
+        where the required 760x1220mm rectangle cannot fit).
         
     Example:
-        >>> violations = check_305_3_size('model.ifc')
-        >>> print(f"Found {len(violations)} violating spaces")
+        >>> guids = check_305_3_size('/path/to/model.ifc')
+        >>> print(f"Found {len(guids)} violating spaces")
     """
-    # Constants from the rule (in millimeters)
-    MIN_WIDTH_MM = 760.0
-    MIN_DEPTH_MM = 1220.0
+    # Import classify_spaces for space classification
+    try:
+        from src.tools.initial import classify_spaces
+    except ImportError:
+        # Fallback if not in expected environment
+        classify_spaces = None
     
-    # Applicable space classifications
-    APPLICABLE_CLASSIFICATIONS = {
+    # Required dimensions in meters
+    min_width = 0.760  # 760 mm
+    min_length = 1.220  # 1220 mm
+    
+    # Applicable space classifications per the rule
+    applicable_classifications = {
         'Balcony', 'Circulation', 'Garage', 'Habitable', 'Institutional',
         'Lobby', 'Mercantile', 'Office', 'Parking', 'Production', 
         'Refuge', 'Stair Hall', 'Workplace'
     }
     
-    # Open the IFC model
-    model = ifcopenshell.open(path_ifc_model)
+    violating_guids = []
+    
+    try:
+        model = ifcopenshell.open(path_ifc_model)
+    except Exception as e:
+        print(f"Error opening IFC model: {e}")
+        return []
     
     # Get all spaces
     spaces = model.by_type('IfcSpace')
@@ -51,145 +65,120 @@ def check_305_3_size(path_ifc_model: str) -> List[str]:
     # Prepare space data for classification
     space_data = []
     for space in spaces:
+        name = getattr(space, 'LongName', None) or getattr(space, 'Name', '') or ''
         space_data.append({
-            "guid": space.GlobalId,
-            "name": getattr(space, 'LongName', None) or getattr(space, 'Name', '')
+            'guid': space.GlobalId,
+            'name': name
         })
     
     # Classify spaces
-    classified_spaces = classify_spaces(space_data, path_ifc_model)
-    
-    # Create a mapping from GUID to classification
-    classification_map = {s['guid']: s['classification'] for s in classified_spaces}
-    
-    # Filter for applicable spaces
-    applicable_spaces = []
-    for space in spaces:
-        classification = classification_map.get(space.GlobalId, 'Unclassified')
-        if classification in APPLICABLE_CLASSIFICATIONS:
-            applicable_spaces.append(space)
-    
-    if not applicable_spaces:
-        return []
-    
-    violating_guids = []
-    skipped_count = 0
-    
-    # Set up geometry settings
-    settings = ifcopenshell.geom.settings()
-    settings.set(settings.USE_WORLD_COORDS, True)
-    
-    # Check each applicable space
-    for space in applicable_spaces:
+    space_classification = {}
+    if classify_spaces is not None:
         try:
-            # Extract geometry
+            classified_spaces = classify_spaces(space_data, path_ifc_model)
+            space_classification = {s['guid']: s.get('classification', 'Unclassified') 
+                                   for s in classified_spaces}
+        except Exception as e:
+            print(f"Warning: Could not classify spaces: {e}")
+    
+    # Settings for geometry creation
+    settings = ifcopenshell.geom.settings()
+    
+    skipped = 0
+    
+    for space in spaces:
+        try:
+            # Check if space is of applicable classification
+            classification = space_classification.get(space.GlobalId, 'Unclassified')
+            if classification not in applicable_classifications:
+                continue
+            
+            # Get shape geometry
             shape = ifcopenshell.geom.create_shape(settings, space)
             
-            # Get vertices and faces
-            verts = shape.geometry.verts
-            faces = shape.geometry.faces
+            # Get vertices, faces, and matrix using utility functions
+            verts = ifcopenshell.util.shape.get_vertices(shape.geometry)
+            faces = ifcopenshell.util.shape.get_faces(shape.geometry)
+            matrix = ifcopenshell.util.shape.get_shape_matrix(shape)
             
-            if len(verts) == 0 or len(faces) == 0:
-                skipped_count += 1
-                continue
+            # Transform vertices to world coordinates
+            verts_transformed = verts @ matrix[:3, :3].T + matrix[:3, 3]
             
             # Create trimesh
-            verts_array = np.array(verts).reshape(-1, 3)
-            faces_array = np.array(faces).reshape(-1, 3)
-            mesh = trimesh.Trimesh(vertices=verts_array, faces=faces_array)
+            mesh = trimesh.Trimesh(vertices=verts_transformed, faces=faces)
             
-            # Get 2D footprint via horizontal section
-            z_level = (mesh.bounds[0, 2] + mesh.bounds[1, 2]) / 2
-            section = mesh.section(plane_origin=[0, 0, z_level], plane_normal=[0, 0, 1])
+            # Get horizontal section at mid-height
+            z_min = mesh.bounds[0, 2]
+            z_max = mesh.bounds[1, 2]
+            z_mid = (z_min + z_max) / 2
             
-            if section is None:
-                skipped_count += 1
-                continue
+            section = mesh.section(plane_origin=[0, 0, z_mid], plane_normal=[0, 0, 1])
             
-            path2d, transform = section.to_planar()
-            
-            if not hasattr(path2d, 'polygons_full') or len(path2d.polygons_full) == 0:
-                skipped_count += 1
-                continue
-            
-            polygon = path2d.polygons_full[0]
-            
-            # Check if polygon is valid
-            if not polygon.is_valid or polygon.is_empty:
-                skipped_count += 1
-                continue
-            
-            # Convert dimensions to millimeters (assuming model is in meters)
-            min_width = MIN_WIDTH_MM / 1000.0
-            min_depth = MIN_DEPTH_MM / 1000.0
-            
-            # Check if rectangle can fit by testing multiple positions and rotations
-            can_fit = _can_rectangle_fit(polygon, min_width, min_depth)
-            
-            if not can_fit:
-                violating_guids.append(space.GlobalId)
-                
-        except (AttributeError, RuntimeError, ValueError) as e:
-            skipped_count += 1
+            if section and section.to_planar():
+                path2d, _ = section.to_planar()
+                if path2d.polygons_full:
+                    # Get the largest polygon (main space footprint)
+                    main_poly = max(path2d.polygons_full, key=lambda p: p.area)
+                    
+                    if not main_poly.is_valid or main_poly.is_empty:
+                        continue
+                    
+                    # Check if the required rectangle can fit anywhere in the polygon
+                    # using grid search
+                    minx, miny, maxx, maxy = main_poly.bounds
+                    
+                    # Quick bounding box check
+                    bbox_width = maxx - minx
+                    bbox_length = maxy - miny
+                    
+                    # If bounding box is too small, it's definitely a violation
+                    if bbox_width < min_width or bbox_length < min_width:
+                        violating_guids.append(space.GlobalId)
+                        continue
+                    
+                    # Grid search to find if rectangle can fit anywhere
+                    step = 0.1  # 10cm resolution
+                    fits = False
+                    
+                    # Try both orientations of the rectangle
+                    for x in np.arange(minx, maxx - min_width + step, step):
+                        for y in np.arange(miny, maxy - min_length + step, step):
+                            # Test orientation 1: width x length
+                            rect1 = Polygon([
+                                (x, y),
+                                (x + min_width, y),
+                                (x + min_width, y + min_length),
+                                (x, y + min_length)
+                            ])
+                            
+                            if main_poly.contains(rect1):
+                                fits = True
+                                break
+                            
+                            # Test orientation 2: length x width
+                            rect2 = Polygon([
+                                (x, y),
+                                (x + min_length, y),
+                                (x + min_length, y + min_width),
+                                (x, y + min_width)
+                            ])
+                            
+                            if main_poly.contains(rect2):
+                                fits = True
+                                break
+                        
+                        if fits:
+                            break
+                    
+                    # If rectangle cannot fit anywhere, it's a violation
+                    if not fits:
+                        violating_guids.append(space.GlobalId)
+        
+        except Exception as e:
+            skipped += 1
             continue
     
-    if skipped_count > 0:
-        print(f"Warning: Skipped {skipped_count} spaces due to geometry issues")
+    if skipped > 0:
+        print(f"Warning: Skipped {skipped} spaces due to processing errors")
     
     return violating_guids
-
-
-def _can_rectangle_fit(polygon: Polygon, width: float, depth: float) -> bool:
-    """
-    Check if a rectangle of given dimensions can fit inside a polygon.
-    
-    Tests multiple positions and rotations to determine if the rectangle
-    can be placed entirely within the polygon.
-    
-    Args:
-        polygon: The space footprint as a Shapely Polygon
-        width: Rectangle width (in same units as polygon)
-        depth: Rectangle depth (in same units as polygon)
-        
-    Returns:
-        True if rectangle can fit, False otherwise
-    """
-    import math
-    
-    # Get polygon bounds
-    minx, miny, maxx, maxy = polygon.bounds
-    poly_width = maxx - minx
-    poly_height = maxy - miny
-    
-    # Quick rejection: if bounding box is too small in both orientations
-    if not ((poly_width >= width and poly_height >= depth) or 
-            (poly_width >= depth and poly_height >= width)):
-        return False
-    
-    # Create test rectangle at origin
-    test_rect = box(0, 0, width, depth)
-    
-    # Check rotation from 0 to 90 degrees (every 5 degrees)
-    for angle in np.linspace(0, 90, 19):
-        # Rotate rectangle
-        rotated_rect = rotate(test_rect, angle, origin='centroid', use_radians=False)
-        
-        # Get bounds of rotated rectangle
-        rx_min, ry_min, rx_max, ry_max = rotated_rect.bounds
-        rect_width = rx_max - rx_min
-        rect_height = ry_max - ry_min
-        
-        # Sample positions on a grid within polygon bounds
-        # Use smaller step for better accuracy
-        step = min(width, depth) / 10.0
-        
-        for test_x in np.arange(minx - rx_min, maxx - rx_max + step, step):
-            for test_y in np.arange(miny - ry_min, maxy - ry_max + step, step):
-                # Translate test polygon
-                translated = translate(rotated_rect, xoff=test_x, yoff=test_y)
-                
-                # Check containment
-                if polygon.contains(translated):
-                    return True
-    
-    return False

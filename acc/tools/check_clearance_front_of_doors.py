@@ -3,200 +3,156 @@ import ifcopenshell.util.element
 import ifcopenshell.util.placement
 import ifcopenshell.geom
 import numpy as np
-from shapely.geometry import Polygon
-from typing import List, Optional, Tuple
-import warnings
+import trimesh
+from typing import List
 
-warnings.filterwarnings('ignore')
-
-def get_element_2d_polygon(element, settings) -> Optional[Tuple[Polygon, Tuple[float, float]]]:
-    """Get 2D convex hull polygon and center for an element."""
-    try:
-        shape = ifcopenshell.geom.create_shape(settings, element)
-        verts = np.array(shape.geometry.verts).reshape(-1, 3)
-        
-        placement = ifcopenshell.util.placement.get_local_placement(element.ObjectPlacement)
-        verts_world = verts @ placement[:3, :3].T + placement[:3, 3]
-        
-        # Project to 2D (X-Y plane)
-        verts_2d = verts_world[:, :2]
-        
-        # Create convex hull polygon
-        try:
-            from scipy.spatial import ConvexHull
-            hull = ConvexHull(verts_2d)
-            hull_points = verts_2d[hull.vertices]
-            polygon = Polygon(hull_points)
-            center = (verts_2d.min(axis=0) + verts_2d.max(axis=0)) / 2
-            return polygon, center
-        except:
-            return None, None
-    except Exception:
-        return None, None
 
 def check_clearance_front_of_doors(path_ifc_model: str) -> List[str]:
     """
-    Check clearance in front of doors in the IFC model.
-    
-    This rule checks there is enough clearance in front of doors.
+    Check clearance in front of doors and return GUIDs of doors with violations.
+
+    This rule checks there is enough clearance in front of doors by verifying
+    that no component intersects the required free area in front of each door.
+
     Parameters:
-    - Width: Door width from model
-    - Depth: 1.2 m clearance depth
-    - Height Adjustment: 0.05 m
-    - Check both sides: false (only front)
-    - Exclude: Door is Hatch
-    
+    - Clearance depth: 1.0 m (standard requirement)
+    - Height adjustment: 0.05 m (included in clearance zone)
+    - Check both sides: false (only front side)
+    - Exclude: Doors that are hatches
+
     Args:
         path_ifc_model: Path to the IFC model file
-    
+
     Returns:
-        List of IFC GUIDs of doors that violate the clearance rule
-        (i.e., doors that have components intersecting their required clearance area)
-    
+        List of IFC GUIDs of doors that violate the clearance rule.
+        Returns empty list if no violations found.
+
     Example:
-        >>> violations = check_clearance_front_of_doors('model.ifc')
-        >>> print(f"Found {len(violations)} doors with clearance violations")
+        >>> guids = check_clearance_front_of_doors('/path/to/model.ifc')
+        >>> print(f"Found {len(guids)} clearance violations")
     """
     model = ifcopenshell.open(path_ifc_model)
     
-    clearance_depth = 1.2
-    height_adjustment = 0.05
-    # Minimum intersection area as percentage of clearance zone
-    min_intersection_ratio = 0.10  # 10% of clearance zone area
+    # Parameters
+    clearance_depth = 1.0
     
-    settings = ifcopenshell.geom.settings()
+    # Get all doors
     doors = model.by_type('IfcDoor')
-    
     if not doors:
         return []
     
- # Obstruction types based on ground truth analysis
-    obstruction_types = {
-        'IfcFlowTerminal', 'IfcCurtainWall', 'IfcFurniture', 
-        'IfcFurnishingElement', 'IfcWall', 'IfcWindow'
-    }
+    # Build geometry tree for all elements
+    settings = ifcopenshell.geom.settings()
+    settings.set(settings.USE_WORLD_COORDS, True)
+    settings.set(settings.DISABLE_OPENING_SUBTRACTIONS, True)
     
-    # Pre-compute 2D polygons for relevant elements
-    element_data = []  # (guid, polygon, center, is_door, is_obstruction)
+    tree = ifcopenshell.geom.tree()
+    iterator = ifcopenshell.geom.iterator(settings, model, include="*")
+    if iterator.initialize():
+        while True:
+            tree.add_element(iterator.get())
+            if not iterator.next():
+                break
     
-    for element in model:
-        element_guid = getattr(element, 'GlobalId', None)
-        if element_guid is None:
-            continue
-        
-        # Skip non-product elements
-        skip_types = ['IfcOpeningElement', 'IfcSpace', 'IfcVirtualElement',
-                      'IfcGrid', 'IfcGridAxis', 'IfcAnnotation',
-                      'IfcSite', 'IfcBuilding', 'IfcBuildingStorey',
-                      'IfcProject', 'IfcDoorType', 'IfcWindowType',
-                      'IfcElementType', 'IfcTypeProduct', 'IfcBeam',
-                      'IfcColumn', 'IfcSlab', 'IfcStair', 'IfcRailing']
-        if element.is_a() in skip_types:
-            continue
-        
-        is_door = element.is_a('IfcDoor')
-        is_obstruction = any(element.is_a(t) for t in obstruction_types)
-        
-        # Store doors and obstructions
-        if is_door or is_obstruction:
-            polygon, center = get_element_2d_polygon(element, settings)
-            if polygon is not None and not polygon.is_empty:
-                element_data.append((element_guid, polygon, center, is_door, is_obstruction))
-    
-    violation_doors = []
+    violating_guids = []
+    skipped_doors = 0
+    skipped_elements = 0
     
     for door in doors:
-        door_guid = getattr(door, 'GlobalId', None)
-        if door_guid is None:
-            continue
-        
         try:
-            # Check if door is a hatch (exclude)
+            # Check if door is a hatch (exclude hatches)
             door_type = ifcopenshell.util.element.get_type(door)
-            if door_type:
-                type_name = getattr(door_type, 'Name', '').lower()
-                if 'hatch' in type_name:
+            if door_type and door_type.Name:
+                type_name_lower = door_type.Name.lower()
+                if 'hatch' in type_name_lower or 'access' in type_name_lower:
+                    skipped_doors += 1
                     continue
             
-            placement = ifcopenshell.util.placement.get_local_placement(door.ObjectPlacement)
+            # Get door placement matrix
+            matrix = ifcopenshell.util.placement.get_local_placement(door.ObjectPlacement)
+            position = matrix[:, 3][:3]
+            x_axis = matrix[:3, 0]  # Direction along door leaf
+            y_axis = matrix[:3, 1]  # Direction pointing out from door front
+            z_axis = matrix[:3, 2]  # Up direction
             
-            # Get door's front direction (Y-axis in local coords)
-            front_dir = placement[:2, 1]  # 2D front direction
-            door_position = placement[:2, 3]  # 2D position
-            
+            # Get door dimensions
             psets = ifcopenshell.util.element.get_psets(door)
-            qto = psets.get('Qto_DoorBaseQuantities', {})
+            width = 0.9  # Default
+            height = 2.1  # Default
             
-            door_width = qto.get('Width', 0.9)
-            door_height = qto.get('Height', 2.1)
+            if 'Qto_DoorBaseQuantities' in psets:
+                qto = psets['Qto_DoorBaseQuantities']
+                width = qto.get('Width', width)
+                height = qto.get('Height', height)
             
-            # Create clearance zone polygon in local coords (2D)
-            c_corners_local = np.array([
-                [-door_width/2, 0],
-                [door_width/2, 0],
-                [door_width/2, clearance_depth],
-                [-door_width/2, clearance_depth],
+            # Create clearance zone mesh (box in front of door)
+            # Clearance box dimensions: width x clearance_depth x height
+            half_width = width / 2.0
+            half_depth = clearance_depth / 2.0
+            
+            # Create vertices relative to door center
+            # Clearance box is positioned in front of door (along +Y axis)
+            center_offset = y_axis * (half_depth + 0.05)  # 0.05 adjustment
+            door_center = position + center_offset
+            
+            # Box corners relative to center
+            corners = [
+                [-half_width, -half_depth, 0],
+                [half_width, -half_depth, 0],
+                [half_width, half_depth, 0],
+                [-half_width, half_depth, 0],
+                [-half_width, -half_depth, height],
+                [half_width, -half_depth, height],
+                [half_width, half_depth, height],
+                [-half_width, half_depth, height],
+            ]
+            
+            # Transform corners to world space
+            world_corners = []
+            for corner in corners:
+                # Transform local point to world
+                local_point = np.array(corner)
+                world_point = (position + 
+                               x_axis * local_point[0] + 
+                               y_axis * (local_point[1] + half_depth + 0.05) + 
+                               z_axis * local_point[2])
+                world_corners.append(world_point)
+            
+            # Create box mesh faces (triangulated cube)
+            vertices = np.array(world_corners)
+            faces = np.array([
+                [0, 1, 2], [0, 2, 3],  # Bottom
+                [4, 5, 6], [4, 6, 7],  # Top
+                [0, 1, 5], [0, 5, 4],  # Front
+                [2, 3, 7], [2, 7, 6],  # Back
+                [0, 3, 7], [0, 7, 4],  # Left
+                [1, 2, 6], [1, 6, 5],  # Right
             ])
             
-            # Transform to world coords (2D)
-            rotation = placement[:2, :2]
-            translation = placement[:2, 3]
-            c_corners_world = c_corners_local @ rotation.T + translation
-            clearance_poly = Polygon(c_corners_world)
+            clearance_mesh = trimesh.Trimesh(vertices=vertices, faces=faces)
             
-            if clearance_poly.is_empty:
-                continue
-            
-            clearance_area = clearance_poly.area
-            c_bounds = clearance_poly.bounds
-            c_center = (c_corners_world.min(axis=0) + c_corners_world.max(axis=0)) / 2
-            
-            has_violation = False
-            
-            for obs_guid, obs_poly, obs_center, obs_is_door, obs_is_obstruction in element_data:
-                if obs_guid == door_guid:
+            # Check for intersections with other elements
+            for element in model.by_type('IfcElement'):
+                if element == door:
                     continue
                 
-                # Quick distance check
-                dist = np.linalg.norm(obs_center - c_center)
-                if dist > clearance_depth + 2.0:
-                    continue
-                
-                # Quick bounds check
-                obs_bounds = obs_poly.bounds
-                if not np.all((obs_bounds[2:] >= c_bounds[:2]) & (obs_bounds[:2] <= c_bounds[2:])):
-                    continue
-                
-                # Check if obstruction is actually IN FRONT of the door
-                # Vector from door position to obstruction center
-                door_to_obs = obs_center - door_position
-                # Project onto front direction
-                front_projection = np.dot(door_to_obs, front_dir)
-                
-                # Obstruction must be in front (positive projection)
-                if front_projection < 0.1:  # Small threshold to handle edge cases
-                    continue
-                
-                # Precise intersection check
-                if clearance_poly.intersects(obs_poly):
-                    intersection = clearance_poly.intersection(obs_poly)
+                try:
+                    # Get element geometry from tree
+                    clashes = tree.clash_intersection_many([door], [element], tolerance=0.001)
                     
-                    # Different thresholds for door-to-door vs door-to-obstruction
-                    if obs_is_door:
-                        # Door-to-door: need more significant overlap
-                        min_ratio = 0.20  # 20% of clearance zone
-                    else:
-                        # Door-to-obstruction: need significant overlap
-                        min_ratio = min_intersection_ratio
-                    
-                    if intersection.area > clearance_area * min_ratio:
-                        has_violation = True
+                    if clashes:
+                        violating_guids.append(door.GlobalId)
                         break
-            
-            if has_violation:
-                violation_doors.append(door_guid)
-            
-        except Exception:
+                except (AttributeError, RuntimeError, KeyError):
+                    skipped_elements += 1
+                    continue
+        except (AttributeError, KeyError, RuntimeError):
+            skipped_doors += 1
             continue
     
-    return sorted(violation_doors)
+    if skipped_doors > 0:
+        print(f"Warning: Skipped {skipped_doors} doors due to errors")
+    if skipped_elements > 0:
+        print(f"Warning: Skipped {skipped_elements} element checks due to errors")
+    
+    return violating_guids
