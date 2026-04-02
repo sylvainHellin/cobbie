@@ -1,6 +1,6 @@
 {
   "metadata": {
-    "timestamp": "2026-03-27T21:13:58.844796",
+    "timestamp": "2026-04-02T08:17:00.679944",
     "num_tools": 16,
     "num_models": 4,
     "models": [
@@ -26,7 +26,7 @@
           "recall": 1.0,
           "f1": 1.0,
           "is_perfect_match": true,
-          "elapsed_seconds": 7.5,
+          "elapsed_seconds": 8.0,
           "fn_context": [],
           "log": "Code executed successfully (no output)\nCode executed successfully (no output)"
         },
@@ -70,7 +70,7 @@
           "recall": 1.0,
           "f1": 1.0,
           "is_perfect_match": true,
-          "elapsed_seconds": 7.7,
+          "elapsed_seconds": 7.9,
           "fn_context": [],
           "log": "Code executed successfully (no output)\nCode executed successfully (no output)"
         },
@@ -87,7 +87,7 @@
           "recall": 1.0,
           "f1": 1.0,
           "is_perfect_match": true,
-          "elapsed_seconds": 9.9,
+          "elapsed_seconds": 10.2,
           "fn_context": [],
           "log": "Code executed successfully (no output)\nCode executed successfully (no output)"
         },
@@ -104,7 +104,7 @@
           "recall": 1.0,
           "f1": 1.0,
           "is_perfect_match": true,
-          "elapsed_seconds": 6.9,
+          "elapsed_seconds": 7.0,
           "fn_context": [],
           "log": "Code executed successfully (no output)\nCode executed successfully (no output)"
         }
@@ -133,24 +133,42 @@
           "recall": 1.0,
           "f1": 1.0,
           "is_perfect_match": true,
-          "elapsed_seconds": 6.7,
+          "elapsed_seconds": 6.8,
           "fn_context": [],
           "log": "Code executed successfully (no output)\nCode executed successfully (no output)"
         },
         "digital_hub": {
-          "predicted": [],
+          "predicted": [
+            {
+              "guid": "3DCde23Rb8uBrhrJgjcLQA",
+              "type": "IfcSpace"
+            },
+            {
+              "guid": "3DCde23Rb8uBrhrJgjcLQn",
+              "type": "IfcSpace"
+            }
+          ],
           "expected": [],
           "tp_guids": [],
-          "fp_guids": [],
+          "fp_guids": [
+            {
+              "guid": "3DCde23Rb8uBrhrJgjcLQA",
+              "type": "IfcSpace"
+            },
+            {
+              "guid": "3DCde23Rb8uBrhrJgjcLQn",
+              "type": "IfcSpace"
+            }
+          ],
           "fn_guids": [],
           "tp": 0,
-          "fp": 0,
+          "fp": 2,
           "fn": 0,
-          "precision": 1.0,
-          "recall": 1.0,
-          "f1": 1.0,
-          "is_perfect_match": true,
-          "elapsed_seconds": 12.7,
+          "precision": 0.0,
+          "recall": 0.0,
+          "f1": 0.0,
+          "is_perfect_match": false,
+          "elapsed_seconds": 8.7,
           "fn_context": [],
           "log": "Code executed successfully (no output)\nCode executed successfully (no output)"
         },
@@ -177,7 +195,7 @@
           "recall": 0.0,
           "f1": 0.0,
           "is_perfect_match": false,
-          "elapsed_seconds": 12.1,
+          "elapsed_seconds": 10.1,
           "fn_context": [
             {
               "title": "Space.2.8 : Master Bedroom[206]",
@@ -215,14 +233,14 @@
           "recall": 1.0,
           "f1": 1.0,
           "is_perfect_match": true,
-          "elapsed_seconds": 7.4,
+          "elapsed_seconds": 7.2,
           "fn_context": [],
           "log": "Code executed successfully (no output)\nCode executed successfully (no output)"
         }
       },
       "aggregated": {
         "tp": 0,
-        "fp": 0,
+        "fp": 2,
         "fn": 1,
         "precision": 0.0,
         "recall": 0.0,
@@ -261,7 +279,7 @@
           "recall": 1.0,
           "f1": 1.0,
           "is_perfect_match": true,
-          "elapsed_seconds": 7.4,
+          "elapsed_seconds": 26.8,
           "fn_context": [],
           "log": "Code executed successfully (no output)\nCode executed successfully (no output)"
         },
@@ -296,7 +314,7 @@
           "recall": 0.0,
           "f1": 0.0,
           "is_perfect_match": false,
-          "elapsed_seconds": 10.3,
+          "elapsed_seconds": 10.1,
           "fn_context": [
             {
               "title": "Door.0.2 And Door.0.3",
@@ -342,7 +360,7 @@
           "recall": 1.0,
           "f1": 1.0,
           "is_perfect_match": true,
-          "elapsed_seconds": 7.1,
+          "elapsed_seconds": 7.4,
           "fn_context": [],
           "log": "Code executed successfully (no output)\nCode executed successfully (no output)"
         }
@@ -359,41 +377,6 @@
     "504_2_non_uniform_risers_treads": {
       "models": {
         "4351": {
-          "predicted": [
-            {
-              "guid": "1AMAMzZITBfejW_xu2IBMi",
-              "type": "IfcStair"
-            },
-            {
-              "guid": "2yrvjJLF5DO99bzmxJnJrl",
-              "type": "IfcStair"
-            }
-          ],
-          "expected": [],
-          "tp_guids": [],
-          "fp_guids": [
-            {
-              "guid": "1AMAMzZITBfejW_xu2IBMi",
-              "type": "IfcStair"
-            },
-            {
-              "guid": "2yrvjJLF5DO99bzmxJnJrl",
-              "type": "IfcStair"
-            }
-          ],
-          "fn_guids": [],
-          "tp": 0,
-          "fp": 2,
-          "fn": 0,
-          "precision": 0.0,
-          "recall": 0.0,
-          "f1": 0.0,
-          "is_perfect_match": false,
-          "elapsed_seconds": 7.2,
-          "fn_context": [],
-          "log": "Code executed successfully (no output)\nWarning: Skipped 2 stairs and 0 flights due to missing data"
-        },
-        "digital_hub": {
           "predicted": [],
           "expected": [],
           "tp_guids": [],
@@ -406,22 +389,30 @@
           "recall": 1.0,
           "f1": 1.0,
           "is_perfect_match": true,
-          "elapsed_seconds": 7.3,
+          "elapsed_seconds": 6.8,
           "fn_context": [],
-          "log": "Code executed successfully (no output)\nCode executed successfully (no output)"
+          "log": "Code executed successfully (no output)\nWarning: Skipped 1 stair elements due to missing attributes"
         },
-        "samuel_macalister_sample_house": {
+        "digital_hub": {
           "predicted": [
             {
-              "guid": "07dHKEjXj6kwcHAxpyAkMS",
+              "guid": "0YVU7tDBX86u6UVVsSmdwD",
               "type": "IfcStair"
             },
             {
-              "guid": "1N_4TwOEH5194SbNmRTDNX",
+              "guid": "0YVU7tDBX86u6UVVsSmdx$",
               "type": "IfcStair"
             },
             {
-              "guid": "2ZlFFrvcbDavSm_g3LjLIe",
+              "guid": "3LF03GdXv2GhSTK1xTZzXh",
+              "type": "IfcStair"
+            },
+            {
+              "guid": "3LF03GdXv2GhSTK1xTZzXx",
+              "type": "IfcStair"
+            },
+            {
+              "guid": "3LF03GdXv2GhSTK1xTZzjL",
               "type": "IfcStair"
             }
           ],
@@ -429,26 +420,51 @@
           "tp_guids": [],
           "fp_guids": [
             {
-              "guid": "07dHKEjXj6kwcHAxpyAkMS",
+              "guid": "0YVU7tDBX86u6UVVsSmdwD",
               "type": "IfcStair"
             },
             {
-              "guid": "1N_4TwOEH5194SbNmRTDNX",
+              "guid": "0YVU7tDBX86u6UVVsSmdx$",
               "type": "IfcStair"
             },
             {
-              "guid": "2ZlFFrvcbDavSm_g3LjLIe",
+              "guid": "3LF03GdXv2GhSTK1xTZzXh",
+              "type": "IfcStair"
+            },
+            {
+              "guid": "3LF03GdXv2GhSTK1xTZzXx",
+              "type": "IfcStair"
+            },
+            {
+              "guid": "3LF03GdXv2GhSTK1xTZzjL",
               "type": "IfcStair"
             }
           ],
           "fn_guids": [],
           "tp": 0,
-          "fp": 3,
+          "fp": 5,
           "fn": 0,
           "precision": 0.0,
           "recall": 0.0,
           "f1": 0.0,
           "is_perfect_match": false,
+          "elapsed_seconds": 6.9,
+          "fn_context": [],
+          "log": "Code executed successfully (no output)\nCode executed successfully (no output)"
+        },
+        "samuel_macalister_sample_house": {
+          "predicted": [],
+          "expected": [],
+          "tp_guids": [],
+          "fp_guids": [],
+          "fn_guids": [],
+          "tp": 0,
+          "fp": 0,
+          "fn": 0,
+          "precision": 1.0,
+          "recall": 1.0,
+          "f1": 1.0,
+          "is_perfect_match": true,
           "elapsed_seconds": 9.9,
           "fn_context": [],
           "log": "Code executed successfully (no output)\nCode executed successfully (no output)"
@@ -466,7 +482,7 @@
           "recall": 1.0,
           "f1": 1.0,
           "is_perfect_match": true,
-          "elapsed_seconds": 6.3,
+          "elapsed_seconds": 6.2,
           "fn_context": [],
           "log": "Code executed successfully (no output)\nCode executed successfully (no output)"
         }
@@ -521,12 +537,29 @@
           "recall": 0.0,
           "f1": 0.0,
           "is_perfect_match": false,
-          "elapsed_seconds": 6.8,
+          "elapsed_seconds": 6.7,
           "fn_context": [],
-          "log": "Code executed successfully (no output)\nWarning: Could not find riser height data for 1 stair(s)"
+          "log": "Code executed successfully (no output)\nWarning: Skipped 1 stair elements due to missing data or errors"
         },
         "digital_hub": {
-          "predicted": [],
+          "predicted": [
+            {
+              "guid": "0YVU7tDBX86u6UVVsSmdwD",
+              "type": "IfcStair"
+            },
+            {
+              "guid": "0YVU7tDBX86u6UVVsSmdx$",
+              "type": "IfcStair"
+            },
+            {
+              "guid": "3LF03GdXv2GhSTK1xTZzXh",
+              "type": "IfcStair"
+            },
+            {
+              "guid": "3LF03GdXv2GhSTK1xTZzXx",
+              "type": "IfcStair"
+            }
+          ],
           "expected": [
             {
               "guid": "0YVU7tDBX86u6UVVsSmdx$",
@@ -537,9 +570,7 @@
               "type": "IfcStair"
             }
           ],
-          "tp_guids": [],
-          "fp_guids": [],
-          "fn_guids": [
+          "tp_guids": [
             {
               "guid": "0YVU7tDBX86u6UVVsSmdx$",
               "type": "IfcStair"
@@ -549,56 +580,26 @@
               "type": "IfcStair"
             }
           ],
-          "tp": 0,
-          "fp": 0,
-          "fn": 2,
-          "precision": 0.0,
-          "recall": 0.0,
-          "f1": 0.0,
-          "is_perfect_match": false,
-          "elapsed_seconds": 7.2,
-          "fn_context": [
+          "fp_guids": [
             {
-              "title": "Stair.-2.1: 329 Mm",
-              "description": "504.2 Treads and Risers\nStair Stair.-2.1 has steps at the beginning that are non-uniform. Riser height at beginning is 0.33 m and elsewhere 0.18 m.\n",
-              "missed_guids": [
-                {
-                  "guid": "0YVU7tDBX86u6UVVsSmdx$",
-                  "type": "IfcStair"
-                }
-              ],
-              "all_guids": [
-                {
-                  "guid": "0YVU7tDBX86u6UVVsSmdx$",
-                  "type": "IfcStair"
-                },
-                {
-                  "guid": "23Np8uMAvEN9H6Ds49deXD",
-                  "type": "IfcSlab"
-                }
-              ]
+              "guid": "0YVU7tDBX86u6UVVsSmdwD",
+              "type": "IfcStair"
             },
             {
-              "title": "Stair.-2.2: 329 Mm",
-              "description": "504.2 Treads and Risers\nStair Stair.-2.2 has steps at the beginning that are non-uniform. Riser height at beginning is 0.33 m and elsewhere 0.18 m.\n",
-              "missed_guids": [
-                {
-                  "guid": "3LF03GdXv2GhSTK1xTZzXx",
-                  "type": "IfcStair"
-                }
-              ],
-              "all_guids": [
-                {
-                  "guid": "23Np8uMAvEN9H6Ds49deXD",
-                  "type": "IfcSlab"
-                },
-                {
-                  "guid": "3LF03GdXv2GhSTK1xTZzXx",
-                  "type": "IfcStair"
-                }
-              ]
+              "guid": "3LF03GdXv2GhSTK1xTZzXh",
+              "type": "IfcStair"
             }
           ],
+          "fn_guids": [],
+          "tp": 2,
+          "fp": 2,
+          "fn": 0,
+          "precision": 0.5,
+          "recall": 1.0,
+          "f1": 0.6666666666666666,
+          "is_perfect_match": false,
+          "elapsed_seconds": 7.3,
+          "fn_context": [],
           "log": "Code executed successfully (no output)\nCode executed successfully (no output)"
         },
         "samuel_macalister_sample_house": {
@@ -646,7 +647,7 @@
           "recall": 1.0,
           "f1": 0.5,
           "is_perfect_match": false,
-          "elapsed_seconds": 10.1,
+          "elapsed_seconds": 12.8,
           "fn_context": [],
           "log": "Code executed successfully (no output)\nCode executed successfully (no output)"
         },
@@ -663,18 +664,18 @@
           "recall": 1.0,
           "f1": 1.0,
           "is_perfect_match": true,
-          "elapsed_seconds": 6.2,
+          "elapsed_seconds": 7.9,
           "fn_context": [],
           "log": "Code executed successfully (no output)\nCode executed successfully (no output)"
         }
       },
       "aggregated": {
-        "tp": 1,
-        "fp": 5,
-        "fn": 2,
-        "precision": 0.1667,
-        "recall": 0.3333,
-        "f1": 0.2222
+        "tp": 3,
+        "fp": 7,
+        "fn": 0,
+        "precision": 0.3,
+        "recall": 1.0,
+        "f1": 0.4615
       }
     },
     "504_2_stair_slab_connection": {
@@ -692,7 +693,7 @@
           "recall": 1.0,
           "f1": 1.0,
           "is_perfect_match": true,
-          "elapsed_seconds": 12.5,
+          "elapsed_seconds": 7.3,
           "fn_context": [],
           "log": "Code executed successfully (no output)\nCode executed successfully (no output)"
         },
@@ -709,7 +710,7 @@
           "recall": 1.0,
           "f1": 1.0,
           "is_perfect_match": true,
-          "elapsed_seconds": 10.9,
+          "elapsed_seconds": 6.1,
           "fn_context": [],
           "log": "Code executed successfully (no output)\nCode executed successfully (no output)"
         },
@@ -726,9 +727,9 @@
           "recall": 1.0,
           "f1": 1.0,
           "is_perfect_match": true,
-          "elapsed_seconds": 106.6,
+          "elapsed_seconds": 7.9,
           "fn_context": [],
-          "log": "Code executed successfully (no output)\nSTDERR:\n/Users/stefanfuchs/Repos/cobbie/.venv/lib/python3.12/site-packages/trimesh/triangles.py:302: RuntimeWarning: invalid value encountered in divide\n  center_mass = integrated[1:4] / volume"
+          "log": "Code executed successfully (no output)\nCode executed successfully (no output)"
         },
         "wbdg_office": {
           "predicted": [
@@ -770,7 +771,7 @@
           "recall": 1.0,
           "f1": 1.0,
           "is_perfect_match": true,
-          "elapsed_seconds": 9.1,
+          "elapsed_seconds": 5.4,
           "fn_context": [],
           "log": "Code executed successfully (no output)\nCode executed successfully (no output)"
         }
@@ -799,9 +800,9 @@
           "recall": 1.0,
           "f1": 1.0,
           "is_perfect_match": true,
-          "elapsed_seconds": 7.0,
+          "elapsed_seconds": 5.5,
           "fn_context": [],
-          "log": "Code executed successfully (no output)\nWarning: Skipped 1/4 stair elements due to missing tread length data"
+          "log": "Code executed successfully (no output)\nCode executed successfully (no output)"
         },
         "digital_hub": {
           "predicted": [
@@ -860,7 +861,7 @@
           "recall": 1.0,
           "f1": 0.6666666666666666,
           "is_perfect_match": false,
-          "elapsed_seconds": 6.9,
+          "elapsed_seconds": 5.7,
           "fn_context": [],
           "log": "Code executed successfully (no output)\nCode executed successfully (no output)"
         },
@@ -877,7 +878,7 @@
           "recall": 1.0,
           "f1": 1.0,
           "is_perfect_match": true,
-          "elapsed_seconds": 11.0,
+          "elapsed_seconds": 7.8,
           "fn_context": [],
           "log": "Code executed successfully (no output)\nCode executed successfully (no output)"
         },
@@ -894,7 +895,7 @@
           "recall": 1.0,
           "f1": 1.0,
           "is_perfect_match": true,
-          "elapsed_seconds": 6.2,
+          "elapsed_seconds": 4.9,
           "fn_context": [],
           "log": "Code executed successfully (no output)\nCode executed successfully (no output)"
         }
@@ -911,12 +912,7 @@
     "clearance_front_of_doors": {
       "models": {
         "4351": {
-          "predicted": [
-            {
-              "guid": "2EvxrJh$nBCOf6drB7QwTZ",
-              "type": "IfcDoor"
-            }
-          ],
+          "predicted": [],
           "expected": [
             {
               "guid": "2gTG8I4eL6z9beKMqLBe0M",
@@ -928,12 +924,7 @@
             }
           ],
           "tp_guids": [],
-          "fp_guids": [
-            {
-              "guid": "2EvxrJh$nBCOf6drB7QwTZ",
-              "type": "IfcDoor"
-            }
-          ],
+          "fp_guids": [],
           "fn_guids": [
             {
               "guid": "2gTG8I4eL6z9beKMqLBe0M",
@@ -945,13 +936,13 @@
             }
           ],
           "tp": 0,
-          "fp": 1,
+          "fp": 0,
           "fn": 2,
           "precision": 0.0,
           "recall": 0.0,
           "f1": 0.0,
           "is_perfect_match": false,
-          "elapsed_seconds": 73.4,
+          "elapsed_seconds": 5.5,
           "fn_context": [
             {
               "title": "Slab.2.1 Too Close To Door.1.1 Component",
@@ -997,144 +988,7 @@
           "log": "Code executed successfully (no output)\nCode executed successfully (no output)"
         },
         "digital_hub": {
-          "predicted": [
-            {
-              "guid": "03fYK2KZb9bQXMSPptFYJv",
-              "type": "IfcDoor"
-            },
-            {
-              "guid": "03fYK2KZb9bQXMSPptFYLQ",
-              "type": "IfcDoor"
-            },
-            {
-              "guid": "03fYK2KZb9bQXMSPptFYNK",
-              "type": "IfcDoor"
-            },
-            {
-              "guid": "03fYK2KZb9bQXMSPptFYOs",
-              "type": "IfcDoor"
-            },
-            {
-              "guid": "03fYK2KZb9bQXMSPptFYf$",
-              "type": "IfcDoor"
-            },
-            {
-              "guid": "03fYK2KZb9bQXMSPptFYku",
-              "type": "IfcDoor"
-            },
-            {
-              "guid": "03fYK2KZb9bQXMSPptFYlo",
-              "type": "IfcDoor"
-            },
-            {
-              "guid": "03fYK2KZb9bQXMSPptFZay",
-              "type": "IfcDoor"
-            },
-            {
-              "guid": "03fYK2KZb9bQXMSPptFZdo",
-              "type": "IfcDoor"
-            },
-            {
-              "guid": "03fYK2KZb9bQXMSPptFZeI",
-              "type": "IfcDoor"
-            },
-            {
-              "guid": "03fYK2KZb9bQXMSPptFZhc",
-              "type": "IfcDoor"
-            },
-            {
-              "guid": "03fYK2KZb9bQXMSPptFZkk",
-              "type": "IfcDoor"
-            },
-            {
-              "guid": "03fYK2KZb9bQXMSPptFZlI",
-              "type": "IfcDoor"
-            },
-            {
-              "guid": "0YVU7tDBX86u6UVVsSmdsz",
-              "type": "IfcDoor"
-            },
-            {
-              "guid": "0YVU7tDBX86u6UVVsSmdwk",
-              "type": "IfcDoor"
-            },
-            {
-              "guid": "0YVU7tDBX86u6UVVsSmdwl",
-              "type": "IfcDoor"
-            },
-            {
-              "guid": "1oTOc$LbLC8Ob8HP$$4q0n",
-              "type": "IfcDoor"
-            },
-            {
-              "guid": "1oTOc$LbLC8Ob8HP$$4q13",
-              "type": "IfcDoor"
-            },
-            {
-              "guid": "1oTOc$LbLC8Ob8HP$$4q33",
-              "type": "IfcDoor"
-            },
-            {
-              "guid": "1oTOc$LbLC8Ob8HP$$4q6s",
-              "type": "IfcDoor"
-            },
-            {
-              "guid": "1oTOc$LbLC8Ob8HP$$4q7y",
-              "type": "IfcDoor"
-            },
-            {
-              "guid": "279opIq2rEtREtELGBVxB4",
-              "type": "IfcDoor"
-            },
-            {
-              "guid": "279opIq2rEtREtELGBVxCY",
-              "type": "IfcDoor"
-            },
-            {
-              "guid": "279opIq2rEtREtELGBVxDe",
-              "type": "IfcDoor"
-            },
-            {
-              "guid": "279opIq2rEtREtELGBVxHB",
-              "type": "IfcDoor"
-            },
-            {
-              "guid": "279opIq2rEtREtELGBVxHq",
-              "type": "IfcDoor"
-            },
-            {
-              "guid": "279opIq2rEtREtELGBVxTT",
-              "type": "IfcDoor"
-            },
-            {
-              "guid": "279opIq2rEtREtELGBVxUT",
-              "type": "IfcDoor"
-            },
-            {
-              "guid": "279opIq2rEtREtELGBVxqA",
-              "type": "IfcDoor"
-            },
-            {
-              "guid": "3LF03GdXv2GhSTK1xTZzXF",
-              "type": "IfcDoor"
-            },
-            {
-              "guid": "3LF03GdXv2GhSTK1xTZzYt",
-              "type": "IfcDoor"
-            },
-            {
-              "guid": "3LJODRGPbDdfXHXShFL8Z2",
-              "type": "IfcDoor"
-            },
-            {
-              "guid": "3LJODRGPbDdfXHXShFL8bJ",
-              "type": "IfcDoor"
-            },
-            {
-              "guid": "3LJODRGPbDdfXHXShFLAS$",
-              "type": "IfcDoor"
-            }
-          ],
+          "predicted": [],
           "expected": [
             {
               "guid": "0YVU7tDBX86u6UVVsSmdsz",
@@ -1161,7 +1015,9 @@
               "type": "IfcDoor"
             }
           ],
-          "tp_guids": [
+          "tp_guids": [],
+          "fp_guids": [],
+          "fn_guids": [
             {
               "guid": "0YVU7tDBX86u6UVVsSmdsz",
               "type": "IfcDoor"
@@ -1181,141 +1037,101 @@
             {
               "guid": "3LJODRGPbDdfXHXShFLAS$",
               "type": "IfcDoor"
-            }
-          ],
-          "fp_guids": [
-            {
-              "guid": "03fYK2KZb9bQXMSPptFYJv",
-              "type": "IfcDoor"
             },
-            {
-              "guid": "03fYK2KZb9bQXMSPptFYLQ",
-              "type": "IfcDoor"
-            },
-            {
-              "guid": "03fYK2KZb9bQXMSPptFYNK",
-              "type": "IfcDoor"
-            },
-            {
-              "guid": "03fYK2KZb9bQXMSPptFYOs",
-              "type": "IfcDoor"
-            },
-            {
-              "guid": "03fYK2KZb9bQXMSPptFYf$",
-              "type": "IfcDoor"
-            },
-            {
-              "guid": "03fYK2KZb9bQXMSPptFYku",
-              "type": "IfcDoor"
-            },
-            {
-              "guid": "03fYK2KZb9bQXMSPptFYlo",
-              "type": "IfcDoor"
-            },
-            {
-              "guid": "03fYK2KZb9bQXMSPptFZay",
-              "type": "IfcDoor"
-            },
-            {
-              "guid": "03fYK2KZb9bQXMSPptFZdo",
-              "type": "IfcDoor"
-            },
-            {
-              "guid": "03fYK2KZb9bQXMSPptFZeI",
-              "type": "IfcDoor"
-            },
-            {
-              "guid": "03fYK2KZb9bQXMSPptFZhc",
-              "type": "IfcDoor"
-            },
-            {
-              "guid": "03fYK2KZb9bQXMSPptFZkk",
-              "type": "IfcDoor"
-            },
-            {
-              "guid": "03fYK2KZb9bQXMSPptFZlI",
-              "type": "IfcDoor"
-            },
-            {
-              "guid": "0YVU7tDBX86u6UVVsSmdwk",
-              "type": "IfcDoor"
-            },
-            {
-              "guid": "1oTOc$LbLC8Ob8HP$$4q0n",
-              "type": "IfcDoor"
-            },
-            {
-              "guid": "1oTOc$LbLC8Ob8HP$$4q13",
-              "type": "IfcDoor"
-            },
-            {
-              "guid": "1oTOc$LbLC8Ob8HP$$4q33",
-              "type": "IfcDoor"
-            },
-            {
-              "guid": "1oTOc$LbLC8Ob8HP$$4q6s",
-              "type": "IfcDoor"
-            },
-            {
-              "guid": "1oTOc$LbLC8Ob8HP$$4q7y",
-              "type": "IfcDoor"
-            },
-            {
-              "guid": "279opIq2rEtREtELGBVxB4",
-              "type": "IfcDoor"
-            },
-            {
-              "guid": "279opIq2rEtREtELGBVxCY",
-              "type": "IfcDoor"
-            },
-            {
-              "guid": "279opIq2rEtREtELGBVxDe",
-              "type": "IfcDoor"
-            },
-            {
-              "guid": "279opIq2rEtREtELGBVxHB",
-              "type": "IfcDoor"
-            },
-            {
-              "guid": "279opIq2rEtREtELGBVxHq",
-              "type": "IfcDoor"
-            },
-            {
-              "guid": "279opIq2rEtREtELGBVxTT",
-              "type": "IfcDoor"
-            },
-            {
-              "guid": "279opIq2rEtREtELGBVxUT",
-              "type": "IfcDoor"
-            },
-            {
-              "guid": "279opIq2rEtREtELGBVxqA",
-              "type": "IfcDoor"
-            },
-            {
-              "guid": "3LJODRGPbDdfXHXShFL8Z2",
-              "type": "IfcDoor"
-            },
-            {
-              "guid": "3LJODRGPbDdfXHXShFL8bJ",
-              "type": "IfcDoor"
-            }
-          ],
-          "fn_guids": [
             {
               "guid": "3LJODRGPbDdfXHXShFLASv",
               "type": "IfcDoor"
             }
           ],
-          "tp": 5,
-          "fp": 29,
-          "fn": 1,
-          "precision": 0.14705882352941177,
-          "recall": 0.8333333333333334,
-          "f1": 0.25,
+          "tp": 0,
+          "fp": 0,
+          "fn": 6,
+          "precision": 0.0,
+          "recall": 0.0,
+          "f1": 0.0,
           "is_perfect_match": false,
-          "elapsed_seconds": 60.6,
+          "elapsed_seconds": 6.3,
           "fn_context": [
+            {
+              "title": "Slab.-1.1 Too Close To Door.-1.9 Component",
+              "description": "Clearance in Front of Doors\n- Component Slab.-1.1 intersects the required free area with dimensions 1.00 m and 0.91 m.\n",
+              "missed_guids": [
+                {
+                  "guid": "3LF03GdXv2GhSTK1xTZzYt",
+                  "type": "IfcDoor"
+                }
+              ],
+              "all_guids": [
+                {
+                  "guid": "3LF03GdXv2GhSTK1xTZzYt",
+                  "type": "IfcDoor"
+                },
+                {
+                  "guid": "3LJODRGPbDdfXHXShFLBhv",
+                  "type": "IfcSlab"
+                }
+              ]
+            },
+            {
+              "title": "Slab.-1.1 Too Close To Door.-1.7 Component",
+              "description": "Clearance in Front of Doors\n- Component Slab.-1.1 intersects the required free area with dimensions 1.25 m and 0.91 m.\n",
+              "missed_guids": [
+                {
+                  "guid": "3LF03GdXv2GhSTK1xTZzXF",
+                  "type": "IfcDoor"
+                }
+              ],
+              "all_guids": [
+                {
+                  "guid": "3LF03GdXv2GhSTK1xTZzXF",
+                  "type": "IfcDoor"
+                },
+                {
+                  "guid": "3LJODRGPbDdfXHXShFLBhv",
+                  "type": "IfcSlab"
+                }
+              ]
+            },
+            {
+              "title": "Slab.-1.2 Too Close To Door.-1.18 Component",
+              "description": "Clearance in Front of Doors\n- Component Slab.-1.2 intersects the required free area with dimensions 1.00 m and 0.91 m.\n",
+              "missed_guids": [
+                {
+                  "guid": "0YVU7tDBX86u6UVVsSmdsz",
+                  "type": "IfcDoor"
+                }
+              ],
+              "all_guids": [
+                {
+                  "guid": "0YVU7tDBX86u6UVVsSmdsz",
+                  "type": "IfcDoor"
+                },
+                {
+                  "guid": "3LJODRGPbDdfXHXShFLBXo",
+                  "type": "IfcSlab"
+                }
+              ]
+            },
+            {
+              "title": "Slab.-1.2 Too Close To Door.-1.6 Component",
+              "description": "Clearance in Front of Doors\n- Component Slab.-1.2 intersects the required free area with dimensions 1.25 m and 0.91 m.\n",
+              "missed_guids": [
+                {
+                  "guid": "0YVU7tDBX86u6UVVsSmdwl",
+                  "type": "IfcDoor"
+                }
+              ],
+              "all_guids": [
+                {
+                  "guid": "0YVU7tDBX86u6UVVsSmdwl",
+                  "type": "IfcDoor"
+                },
+                {
+                  "guid": "3LJODRGPbDdfXHXShFLBXo",
+                  "type": "IfcSlab"
+                }
+              ]
+            },
             {
               "title": "Slab.0.1, Slab.0.3 Too Close To Door.0.1 Component",
               "description": "Clearance in Front of Doors\n- Component Slab.0.1 intersects the required free area with dimensions 0.91 m and 0.25 m.<br/>\n- Slab.0.3 intersects the required free area in 2 locations: with dimensions  0.91 m and 0.25 m\n  1.00 m and 0.91 m\n",
@@ -1336,6 +1152,30 @@
                 },
                 {
                   "guid": "3LJODRGPbDdfXHXShFLBb7",
+                  "type": "IfcSlab"
+                }
+              ]
+            },
+            {
+              "title": "Slab.0.2, Slab.0.3 Too Close To Door.0.2 Component",
+              "description": "Clearance in Front of Doors\n- Component Slab.0.2 intersects the required free area with dimensions 0.91 m and 0.25 m.<br/>\n- Slab.0.3 intersects the required free area in 2 locations: with dimensions  0.91 m and 0.25 m\n  1.00 m and 0.91 m\n",
+              "missed_guids": [
+                {
+                  "guid": "3LJODRGPbDdfXHXShFLAS$",
+                  "type": "IfcDoor"
+                }
+              ],
+              "all_guids": [
+                {
+                  "guid": "3LJODRGPbDdfXHXShFLAS$",
+                  "type": "IfcDoor"
+                },
+                {
+                  "guid": "3LJODRGPbDdfXHXShFLAxF",
+                  "type": "IfcSlab"
+                },
+                {
+                  "guid": "3LJODRGPbDdfXHXShFLBWf",
                   "type": "IfcSlab"
                 }
               ]
@@ -1374,7 +1214,7 @@
           "recall": 0.0,
           "f1": 0.0,
           "is_perfect_match": false,
-          "elapsed_seconds": 67.8,
+          "elapsed_seconds": 9.0,
           "fn_context": [
             {
               "title": "Wall.2.30 Too Close To Door.2.1 Component",
@@ -1420,180 +1260,7 @@
           "log": "Code executed successfully (no output)\nCode executed successfully (no output)"
         },
         "wbdg_office": {
-          "predicted": [
-            {
-              "guid": "0YUzX040H3bhUyeerRS91$",
-              "type": "IfcDoor"
-            },
-            {
-              "guid": "1B_elmwz51ieqPd_MO2yaj",
-              "type": "IfcDoor"
-            },
-            {
-              "guid": "1giqnsgvr6uA16isIlsnKU",
-              "type": "IfcDoor"
-            },
-            {
-              "guid": "1h7qyFpbf0qggP_pQnt_0z",
-              "type": "IfcDoor"
-            },
-            {
-              "guid": "1h7qyFpbf0qggP_pQnt_66",
-              "type": "IfcDoor"
-            },
-            {
-              "guid": "1h7qyFpbf0qggP_pQnt_6x",
-              "type": "IfcDoor"
-            },
-            {
-              "guid": "1h7qyFpbf0qggP_pQnt_8l",
-              "type": "IfcDoor"
-            },
-            {
-              "guid": "1h7qyFpbf0qggP_pQnt_AF",
-              "type": "IfcDoor"
-            },
-            {
-              "guid": "1h7qyFpbf0qggP_pQnt_Ac",
-              "type": "IfcDoor"
-            },
-            {
-              "guid": "1h7qyFpbf0qggP_pQnt_Ct",
-              "type": "IfcDoor"
-            },
-            {
-              "guid": "1h7qyFpbf0qggP_pQnt_DD",
-              "type": "IfcDoor"
-            },
-            {
-              "guid": "1h7qyFpbf0qggP_pQnt_Ft",
-              "type": "IfcDoor"
-            },
-            {
-              "guid": "1h7qyFpbf0qggP_pQnt_qr",
-              "type": "IfcDoor"
-            },
-            {
-              "guid": "1h7qyFpbf0qggP_pQnt_ro",
-              "type": "IfcDoor"
-            },
-            {
-              "guid": "1h7qyFpbf0qggP_pQnt_sR",
-              "type": "IfcDoor"
-            },
-            {
-              "guid": "1h7qyFpbf0qggP_pQnt_ws",
-              "type": "IfcDoor"
-            },
-            {
-              "guid": "1h7qyFpbf0qggP_pQnt_zR",
-              "type": "IfcDoor"
-            },
-            {
-              "guid": "1h7qyFpbf0qggP_pQnt_zc",
-              "type": "IfcDoor"
-            },
-            {
-              "guid": "27dLDsxMX8Sv5rKurGZzpG",
-              "type": "IfcDoor"
-            },
-            {
-              "guid": "27dLDsxMX8Sv5rKurGZzpH",
-              "type": "IfcDoor"
-            },
-            {
-              "guid": "27dLDsxMX8Sv5rKurGZzuM",
-              "type": "IfcDoor"
-            },
-            {
-              "guid": "27dLDsxMX8Sv5rKurGZzuN",
-              "type": "IfcDoor"
-            },
-            {
-              "guid": "2N3oFtM8X6lO2dN1$77u0o",
-              "type": "IfcDoor"
-            },
-            {
-              "guid": "2N3oFtM8X6lO2dN1$77u67",
-              "type": "IfcDoor"
-            },
-            {
-              "guid": "2N3oFtM8X6lO2dN1$77u8l",
-              "type": "IfcDoor"
-            },
-            {
-              "guid": "2N3oFtM8X6lO2dN1$77x$U",
-              "type": "IfcDoor"
-            },
-            {
-              "guid": "2N3oFtM8X6lO2dN1$77x7o",
-              "type": "IfcDoor"
-            },
-            {
-              "guid": "2N3oFtM8X6lO2dN1$77xCp",
-              "type": "IfcDoor"
-            },
-            {
-              "guid": "2N3oFtM8X6lO2dN1$77xEd",
-              "type": "IfcDoor"
-            },
-            {
-              "guid": "2N3oFtM8X6lO2dN1$77xGO",
-              "type": "IfcDoor"
-            },
-            {
-              "guid": "2N3oFtM8X6lO2dN1$77xGt",
-              "type": "IfcDoor"
-            },
-            {
-              "guid": "2N3oFtM8X6lO2dN1$77xJp",
-              "type": "IfcDoor"
-            },
-            {
-              "guid": "2N3oFtM8X6lO2dN1$77xKn",
-              "type": "IfcDoor"
-            },
-            {
-              "guid": "2N3oFtM8X6lO2dN1$77xOj",
-              "type": "IfcDoor"
-            },
-            {
-              "guid": "2N3oFtM8X6lO2dN1$77xQu",
-              "type": "IfcDoor"
-            },
-            {
-              "guid": "2N3oFtM8X6lO2dN1$77xRk",
-              "type": "IfcDoor"
-            },
-            {
-              "guid": "2N3oFtM8X6lO2dN1$77xUv",
-              "type": "IfcDoor"
-            },
-            {
-              "guid": "2N3oFtM8X6lO2dN1$77xYv",
-              "type": "IfcDoor"
-            },
-            {
-              "guid": "2N3oFtM8X6lO2dN1$77xcM",
-              "type": "IfcDoor"
-            },
-            {
-              "guid": "2N3oFtM8X6lO2dN1$77xei",
-              "type": "IfcDoor"
-            },
-            {
-              "guid": "2N3oFtM8X6lO2dN1$77xjY",
-              "type": "IfcDoor"
-            },
-            {
-              "guid": "2N3oFtM8X6lO2dN1$77xq_",
-              "type": "IfcDoor"
-            },
-            {
-              "guid": "2N3oFtM8X6lO2dN1$77xtv",
-              "type": "IfcDoor"
-            }
-          ],
+          "predicted": [],
           "expected": [
             {
               "guid": "1giqnsgvr6uA16isIlsnGp",
@@ -1601,180 +1268,7 @@
             }
           ],
           "tp_guids": [],
-          "fp_guids": [
-            {
-              "guid": "0YUzX040H3bhUyeerRS91$",
-              "type": "IfcDoor"
-            },
-            {
-              "guid": "1B_elmwz51ieqPd_MO2yaj",
-              "type": "IfcDoor"
-            },
-            {
-              "guid": "1giqnsgvr6uA16isIlsnKU",
-              "type": "IfcDoor"
-            },
-            {
-              "guid": "1h7qyFpbf0qggP_pQnt_0z",
-              "type": "IfcDoor"
-            },
-            {
-              "guid": "1h7qyFpbf0qggP_pQnt_66",
-              "type": "IfcDoor"
-            },
-            {
-              "guid": "1h7qyFpbf0qggP_pQnt_6x",
-              "type": "IfcDoor"
-            },
-            {
-              "guid": "1h7qyFpbf0qggP_pQnt_8l",
-              "type": "IfcDoor"
-            },
-            {
-              "guid": "1h7qyFpbf0qggP_pQnt_AF",
-              "type": "IfcDoor"
-            },
-            {
-              "guid": "1h7qyFpbf0qggP_pQnt_Ac",
-              "type": "IfcDoor"
-            },
-            {
-              "guid": "1h7qyFpbf0qggP_pQnt_Ct",
-              "type": "IfcDoor"
-            },
-            {
-              "guid": "1h7qyFpbf0qggP_pQnt_DD",
-              "type": "IfcDoor"
-            },
-            {
-              "guid": "1h7qyFpbf0qggP_pQnt_Ft",
-              "type": "IfcDoor"
-            },
-            {
-              "guid": "1h7qyFpbf0qggP_pQnt_qr",
-              "type": "IfcDoor"
-            },
-            {
-              "guid": "1h7qyFpbf0qggP_pQnt_ro",
-              "type": "IfcDoor"
-            },
-            {
-              "guid": "1h7qyFpbf0qggP_pQnt_sR",
-              "type": "IfcDoor"
-            },
-            {
-              "guid": "1h7qyFpbf0qggP_pQnt_ws",
-              "type": "IfcDoor"
-            },
-            {
-              "guid": "1h7qyFpbf0qggP_pQnt_zR",
-              "type": "IfcDoor"
-            },
-            {
-              "guid": "1h7qyFpbf0qggP_pQnt_zc",
-              "type": "IfcDoor"
-            },
-            {
-              "guid": "27dLDsxMX8Sv5rKurGZzpG",
-              "type": "IfcDoor"
-            },
-            {
-              "guid": "27dLDsxMX8Sv5rKurGZzpH",
-              "type": "IfcDoor"
-            },
-            {
-              "guid": "27dLDsxMX8Sv5rKurGZzuM",
-              "type": "IfcDoor"
-            },
-            {
-              "guid": "27dLDsxMX8Sv5rKurGZzuN",
-              "type": "IfcDoor"
-            },
-            {
-              "guid": "2N3oFtM8X6lO2dN1$77u0o",
-              "type": "IfcDoor"
-            },
-            {
-              "guid": "2N3oFtM8X6lO2dN1$77u67",
-              "type": "IfcDoor"
-            },
-            {
-              "guid": "2N3oFtM8X6lO2dN1$77u8l",
-              "type": "IfcDoor"
-            },
-            {
-              "guid": "2N3oFtM8X6lO2dN1$77x$U",
-              "type": "IfcDoor"
-            },
-            {
-              "guid": "2N3oFtM8X6lO2dN1$77x7o",
-              "type": "IfcDoor"
-            },
-            {
-              "guid": "2N3oFtM8X6lO2dN1$77xCp",
-              "type": "IfcDoor"
-            },
-            {
-              "guid": "2N3oFtM8X6lO2dN1$77xEd",
-              "type": "IfcDoor"
-            },
-            {
-              "guid": "2N3oFtM8X6lO2dN1$77xGO",
-              "type": "IfcDoor"
-            },
-            {
-              "guid": "2N3oFtM8X6lO2dN1$77xGt",
-              "type": "IfcDoor"
-            },
-            {
-              "guid": "2N3oFtM8X6lO2dN1$77xJp",
-              "type": "IfcDoor"
-            },
-            {
-              "guid": "2N3oFtM8X6lO2dN1$77xKn",
-              "type": "IfcDoor"
-            },
-            {
-              "guid": "2N3oFtM8X6lO2dN1$77xOj",
-              "type": "IfcDoor"
-            },
-            {
-              "guid": "2N3oFtM8X6lO2dN1$77xQu",
-              "type": "IfcDoor"
-            },
-            {
-              "guid": "2N3oFtM8X6lO2dN1$77xRk",
-              "type": "IfcDoor"
-            },
-            {
-              "guid": "2N3oFtM8X6lO2dN1$77xUv",
-              "type": "IfcDoor"
-            },
-            {
-              "guid": "2N3oFtM8X6lO2dN1$77xYv",
-              "type": "IfcDoor"
-            },
-            {
-              "guid": "2N3oFtM8X6lO2dN1$77xcM",
-              "type": "IfcDoor"
-            },
-            {
-              "guid": "2N3oFtM8X6lO2dN1$77xei",
-              "type": "IfcDoor"
-            },
-            {
-              "guid": "2N3oFtM8X6lO2dN1$77xjY",
-              "type": "IfcDoor"
-            },
-            {
-              "guid": "2N3oFtM8X6lO2dN1$77xq_",
-              "type": "IfcDoor"
-            },
-            {
-              "guid": "2N3oFtM8X6lO2dN1$77xtv",
-              "type": "IfcDoor"
-            }
-          ],
+          "fp_guids": [],
           "fn_guids": [
             {
               "guid": "1giqnsgvr6uA16isIlsnGp",
@@ -1782,13 +1276,13 @@
             }
           ],
           "tp": 0,
-          "fp": 43,
+          "fp": 0,
           "fn": 1,
           "precision": 0.0,
           "recall": 0.0,
           "f1": 0.0,
           "is_perfect_match": false,
-          "elapsed_seconds": 21.0,
+          "elapsed_seconds": 7.2,
           "fn_context": [
             {
               "title": "Sanitary Terminal.0.33.2 Too Close To Door.0.18 Component",
@@ -1815,12 +1309,12 @@
         }
       },
       "aggregated": {
-        "tp": 5,
-        "fp": 73,
-        "fn": 6,
-        "precision": 0.0641,
-        "recall": 0.4545,
-        "f1": 0.1124
+        "tp": 0,
+        "fp": 0,
+        "fn": 11,
+        "precision": 0.0,
+        "recall": 0.0,
+        "f1": 0.0
       }
     },
     "doors_and_windows": {
@@ -1913,7 +1407,7 @@
           "recall": 1.0,
           "f1": 1.0,
           "is_perfect_match": true,
-          "elapsed_seconds": 7.1,
+          "elapsed_seconds": 6.4,
           "fn_context": [],
           "log": "Code executed successfully (no output)\nCode executed successfully (no output)"
         },
@@ -1930,7 +1424,7 @@
           "recall": 1.0,
           "f1": 1.0,
           "is_perfect_match": true,
-          "elapsed_seconds": 7.3,
+          "elapsed_seconds": 5.7,
           "fn_context": [],
           "log": "Code executed successfully (no output)\nCode executed successfully (no output)"
         },
@@ -2094,7 +1588,7 @@
           "recall": 1.0,
           "f1": 1.0,
           "is_perfect_match": true,
-          "elapsed_seconds": 10.3,
+          "elapsed_seconds": 8.3,
           "fn_context": [],
           "log": "Code executed successfully (no output)\nCode executed successfully (no output)"
         },
@@ -2111,7 +1605,7 @@
           "recall": 1.0,
           "f1": 1.0,
           "is_perfect_match": true,
-          "elapsed_seconds": 6.5,
+          "elapsed_seconds": 5.6,
           "fn_context": [],
           "log": "Code executed successfully (no output)\nCode executed successfully (no output)"
         }
@@ -2166,7 +1660,7 @@
           "recall": 0.0,
           "f1": 0.0,
           "is_perfect_match": false,
-          "elapsed_seconds": 7.1,
+          "elapsed_seconds": 5.9,
           "fn_context": [
             {
               "title": "Space.0.2 : 1st Floor[4]: Count (0) Of The Components Does Not Match The Requirement: ≥ 2",
@@ -2217,7 +1711,7 @@
               ]
             }
           ],
-          "log": "Code executed successfully (no output)\nCode executed successfully (no output)"
+          "log": "Code executed successfully (no output)\nWarning: Skipped 2 spaces with missing/small area, 0 spaces with excluded classifications"
         },
         "digital_hub": {
           "predicted": [],
@@ -2322,7 +1816,7 @@
           "recall": 0.0,
           "f1": 0.0,
           "is_perfect_match": false,
-          "elapsed_seconds": 7.1,
+          "elapsed_seconds": 5.7,
           "fn_context": [
             {
               "title": "Space.-1.1 : Vr/ar Lab[1-11]: Count (0) Of The Components Does Not Match The Requirement: ≥ 2",
@@ -2501,7 +1995,7 @@
               ]
             }
           ],
-          "log": "Code executed successfully (no output)\nCode executed successfully (no output)"
+          "log": "Code executed successfully (no output)\nWarning: Skipped 64 spaces with missing/small area, 0 spaces with excluded classifications"
         },
         "samuel_macalister_sample_house": {
           "predicted": [],
@@ -2534,7 +2028,7 @@
           "recall": 0.0,
           "f1": 0.0,
           "is_perfect_match": false,
-          "elapsed_seconds": 10.4,
+          "elapsed_seconds": 8.1,
           "fn_context": [
             {
               "title": "Space.0.2 : Living[106]: Count (0) Of The Components Does Not Match The Requirement: ≥ 2",
@@ -2569,7 +2063,7 @@
               ]
             }
           ],
-          "log": "Code executed successfully (no output)\nCode executed successfully (no output)"
+          "log": "Code executed successfully (no output)\nWarning: Skipped 14 spaces with missing/small area, 0 spaces with excluded classifications"
         },
         "wbdg_office": {
           "predicted": [
@@ -2685,7 +2179,7 @@
           "recall": 0.4444444444444444,
           "f1": 0.5714285714285714,
           "is_perfect_match": false,
-          "elapsed_seconds": 7.6,
+          "elapsed_seconds": 5.3,
           "fn_context": [
             {
               "title": "Space.0.13 : Scif Open Office[143]: Count (0) Of The Components Does Not Match The Requirement: ≥ 2",
@@ -2768,7 +2262,7 @@
               ]
             }
           ],
-          "log": "Code executed successfully (no output)\nCode executed successfully (no output)"
+          "log": "Code executed successfully (no output)\nWarning: Skipped 84 spaces with missing/small area, 0 spaces with excluded classifications"
         }
       },
       "aggregated": {
@@ -2795,9 +2289,9 @@
           "recall": 1.0,
           "f1": 1.0,
           "is_perfect_match": true,
-          "elapsed_seconds": 7.0,
+          "elapsed_seconds": 5.6,
           "fn_context": [],
-          "log": "Code executed successfully (no output)\nWarning: Skipped 1 elements due to missing data or errors"
+          "log": "Code executed successfully (no output)\nWarning: Skipped 2 elements due to missing or invalid thickness data"
         },
         "digital_hub": {
           "predicted": [],
@@ -2838,7 +2332,7 @@
           "recall": 0.0,
           "f1": 0.0,
           "is_perfect_match": false,
-          "elapsed_seconds": 7.4,
+          "elapsed_seconds": 5.9,
           "fn_context": [
             {
               "title": "Wrong Value Of Property - Thickness: 0.00 M",
@@ -2881,7 +2375,7 @@
               ]
             }
           ],
-          "log": "Code executed successfully (no output)\nWarning: Skipped 23 elements due to missing data or errors"
+          "log": "Code executed successfully (no output)\nWarning: Skipped 23 elements due to missing or invalid thickness data"
         },
         "samuel_macalister_sample_house": {
           "predicted": [],
@@ -2896,9 +2390,9 @@
           "recall": 1.0,
           "f1": 1.0,
           "is_perfect_match": true,
-          "elapsed_seconds": 10.4,
+          "elapsed_seconds": 8.1,
           "fn_context": [],
-          "log": "Code executed successfully (no output)\nWarning: Skipped 12 elements due to missing data or errors"
+          "log": "Code executed successfully (no output)\nWarning: Skipped 12 elements due to missing or invalid thickness data"
         },
         "wbdg_office": {
           "predicted": [],
@@ -2913,9 +2407,9 @@
           "recall": 1.0,
           "f1": 1.0,
           "is_perfect_match": true,
-          "elapsed_seconds": 6.5,
+          "elapsed_seconds": 5.3,
           "fn_context": [],
-          "log": "Code executed successfully (no output)\nWarning: Skipped 2 elements due to missing data or errors"
+          "log": "Code executed successfully (no output)\nWarning: Skipped 2 elements due to missing or invalid thickness data"
         }
       },
       "aggregated": {
@@ -2983,7 +2477,7 @@
           "recall": 0.3333333333333333,
           "f1": 0.4,
           "is_perfect_match": false,
-          "elapsed_seconds": 51.6,
+          "elapsed_seconds": 22.2,
           "fn_context": [
             {
               "title": "Slab.1.2",
@@ -3063,7 +2557,27 @@
         "digital_hub": {
           "predicted": [
             {
+              "guid": "0YVU7tDBX86u6UVVsSmdw3",
+              "type": "IfcSlab"
+            },
+            {
+              "guid": "0qHt$K$J1CDgKrHmzIgbUy",
+              "type": "IfcSlab"
+            },
+            {
               "guid": "3A8hY1UoD7JhnLeZeDyU2J",
+              "type": "IfcSlab"
+            },
+            {
+              "guid": "3BmeJtEDj3AQO77Os2w6ld",
+              "type": "IfcSlab"
+            },
+            {
+              "guid": "3LF03GdXv2GhSTK1xTZzXT",
+              "type": "IfcSlab"
+            },
+            {
+              "guid": "3LF03GdXv2GhSTK1xTZzjV",
               "type": "IfcSlab"
             }
           ],
@@ -3073,113 +2587,69 @@
               "type": "IfcSlab"
             }
           ],
-          "tp_guids": [],
-          "fp_guids": [
-            {
-              "guid": "3A8hY1UoD7JhnLeZeDyU2J",
-              "type": "IfcSlab"
-            }
-          ],
-          "fn_guids": [
+          "tp_guids": [
             {
               "guid": "3BmeJtEDj3AQO77Os2w6ld",
               "type": "IfcSlab"
             }
           ],
-          "tp": 0,
-          "fp": 1,
-          "fn": 1,
-          "precision": 0.0,
-          "recall": 0.0,
-          "f1": 0.0,
-          "is_perfect_match": false,
-          "elapsed_seconds": 187.3,
-          "fn_context": [
+          "fp_guids": [
             {
-              "title": "Slab.0.4",
-              "description": "Slabs must be Guarded against Falling\nSlab.0.4 has barriers that are too low. The required height of a barrier is 1.00 m, and the height in the model is 0.50 m.\n",
-              "missed_guids": [
-                {
-                  "guid": "3BmeJtEDj3AQO77Os2w6ld",
-                  "type": "IfcSlab"
-                }
-              ],
-              "all_guids": [
-                {
-                  "guid": "12bPoIwbv0tBGfPfnvCUW2",
-                  "type": "IfcWall"
-                },
-                {
-                  "guid": "12bPoIwbv0tBGfPfnvCUYu",
-                  "type": "IfcWall"
-                },
-                {
-                  "guid": "12bPoIwbv0tBGfPfnvCUau",
-                  "type": "IfcWall"
-                },
-                {
-                  "guid": "12bPoIwbv0tBGfPfnvCUc2",
-                  "type": "IfcWall"
-                },
-                {
-                  "guid": "23Np8uMAvEN9H6Ds49de1S",
-                  "type": "IfcWall"
-                },
-                {
-                  "guid": "23Np8uMAvEN9H6Ds49de3t",
-                  "type": "IfcWall"
-                },
-                {
-                  "guid": "23Np8uMAvEN9H6Ds49de4U",
-                  "type": "IfcWall"
-                },
-                {
-                  "guid": "23Np8uMAvEN9H6Ds49de77",
-                  "type": "IfcWall"
-                },
-                {
-                  "guid": "23Np8uMAvEN9H6Ds49dh$Z",
-                  "type": "IfcWall"
-                },
-                {
-                  "guid": "23Np8uMAvEN9H6Ds49dh_f",
-                  "type": "IfcWall"
-                },
-                {
-                  "guid": "23Np8uMAvEN9H6Ds49dhvA",
-                  "type": "IfcWall"
-                },
-                {
-                  "guid": "23Np8uMAvEN9H6Ds49dhvb",
-                  "type": "IfcWall"
-                },
-                {
-                  "guid": "23Np8uMAvEN9H6Ds49dhw1",
-                  "type": "IfcWall"
-                },
-                {
-                  "guid": "23Np8uMAvEN9H6Ds49dhxn",
-                  "type": "IfcWall"
-                },
-                {
-                  "guid": "23Np8uMAvEN9H6Ds49dhyz",
-                  "type": "IfcWall"
-                },
-                {
-                  "guid": "23Np8uMAvEN9H6Ds49dhzi",
-                  "type": "IfcWall"
-                },
-                {
-                  "guid": "3BmeJtEDj3AQO77Os2w6ld",
-                  "type": "IfcSlab"
-                }
-              ]
+              "guid": "0YVU7tDBX86u6UVVsSmdw3",
+              "type": "IfcSlab"
+            },
+            {
+              "guid": "0qHt$K$J1CDgKrHmzIgbUy",
+              "type": "IfcSlab"
+            },
+            {
+              "guid": "3A8hY1UoD7JhnLeZeDyU2J",
+              "type": "IfcSlab"
+            },
+            {
+              "guid": "3LF03GdXv2GhSTK1xTZzXT",
+              "type": "IfcSlab"
+            },
+            {
+              "guid": "3LF03GdXv2GhSTK1xTZzjV",
+              "type": "IfcSlab"
             }
           ],
+          "fn_guids": [],
+          "tp": 1,
+          "fp": 5,
+          "fn": 0,
+          "precision": 0.16666666666666666,
+          "recall": 1.0,
+          "f1": 0.2857142857142857,
+          "is_perfect_match": false,
+          "elapsed_seconds": 82.1,
+          "fn_context": [],
           "log": "Code executed successfully (no output)\nCode executed successfully (no output)"
         },
         "samuel_macalister_sample_house": {
-          "predicted": [],
+          "predicted": [
+            {
+              "guid": "0LKJKCHUL1kBtnlFXddz6a",
+              "type": "IfcSlab"
+            },
+            {
+              "guid": "0NWseyvsH7_gBW225aGtZP",
+              "type": "IfcSlab"
+            },
+            {
+              "guid": "1UXnAYut94jfvp2gf33JX9",
+              "type": "IfcSlab"
+            },
+            {
+              "guid": "1ypci01sD9aQpE0S$W9jFF",
+              "type": "IfcSlab"
+            },
+            {
+              "guid": "3Pf5WxDcT7yf4sAHDxknUs",
+              "type": "IfcSlab"
+            }
+          ],
           "expected": [
             {
               "guid": "0NWseyvsH7_gBW225aGtZP",
@@ -3198,13 +2668,31 @@
               "type": "IfcSlab"
             }
           ],
-          "tp_guids": [],
-          "fp_guids": [],
-          "fn_guids": [
+          "tp_guids": [
             {
               "guid": "0NWseyvsH7_gBW225aGtZP",
               "type": "IfcSlab"
+            }
+          ],
+          "fp_guids": [
+            {
+              "guid": "0LKJKCHUL1kBtnlFXddz6a",
+              "type": "IfcSlab"
             },
+            {
+              "guid": "1UXnAYut94jfvp2gf33JX9",
+              "type": "IfcSlab"
+            },
+            {
+              "guid": "1ypci01sD9aQpE0S$W9jFF",
+              "type": "IfcSlab"
+            },
+            {
+              "guid": "3Pf5WxDcT7yf4sAHDxknUs",
+              "type": "IfcSlab"
+            }
+          ],
+          "fn_guids": [
             {
               "guid": "1cCK8nA61FduUezO75i8dB",
               "type": "IfcSlab"
@@ -3214,31 +2702,15 @@
               "type": "IfcSlab"
             }
           ],
-          "tp": 0,
-          "fp": 0,
-          "fn": 3,
-          "precision": 0.0,
-          "recall": 0.0,
-          "f1": 0.0,
+          "tp": 1,
+          "fp": 4,
+          "fn": 2,
+          "precision": 0.2,
+          "recall": 0.3333333333333333,
+          "f1": 0.25,
           "is_perfect_match": false,
-          "elapsed_seconds": 166.5,
+          "elapsed_seconds": 83.0,
           "fn_context": [
-            {
-              "title": "Slab.0.1",
-              "description": "Slabs must be Guarded against Falling\nSlab.0.1 is missing a barrier/barriers.\n",
-              "missed_guids": [
-                {
-                  "guid": "0NWseyvsH7_gBW225aGtZP",
-                  "type": "IfcSlab"
-                }
-              ],
-              "all_guids": [
-                {
-                  "guid": "0NWseyvsH7_gBW225aGtZP",
-                  "type": "IfcSlab"
-                }
-              ]
-            },
             {
               "title": "Slab.0.3",
               "description": "Slabs must be Guarded against Falling\nSlab.0.3 has barriers that are too low. The required height of a barrier is 1.00 m, and the height in the model is 0.79 m.\n",
@@ -3391,10 +2863,6 @@
             {
               "guid": "1Cckmc_QjEFAHHQ3e8qDFi",
               "type": "IfcSlab"
-            },
-            {
-              "guid": "37hauuzqP2MBAzwN0mWNjY",
-              "type": "IfcSlab"
             }
           ],
           "expected": [],
@@ -3403,32 +2871,28 @@
             {
               "guid": "1Cckmc_QjEFAHHQ3e8qDFi",
               "type": "IfcSlab"
-            },
-            {
-              "guid": "37hauuzqP2MBAzwN0mWNjY",
-              "type": "IfcSlab"
             }
           ],
           "fn_guids": [],
           "tp": 0,
-          "fp": 2,
+          "fp": 1,
           "fn": 0,
           "precision": 0.0,
           "recall": 0.0,
           "f1": 0.0,
           "is_perfect_match": false,
-          "elapsed_seconds": 13.5,
+          "elapsed_seconds": 11.0,
           "fn_context": [],
           "log": "Code executed successfully (no output)\nCode executed successfully (no output)"
         }
       },
       "aggregated": {
-        "tp": 1,
-        "fp": 4,
-        "fn": 6,
-        "precision": 0.2,
-        "recall": 0.1429,
-        "f1": 0.1667
+        "tp": 3,
+        "fp": 11,
+        "fn": 4,
+        "precision": 0.2143,
+        "recall": 0.4286,
+        "f1": 0.2857
       }
     },
     "space_validation_inside": {
@@ -3446,7 +2910,7 @@
           "recall": 1.0,
           "f1": 1.0,
           "is_perfect_match": true,
-          "elapsed_seconds": 7.4,
+          "elapsed_seconds": 7.2,
           "fn_context": [],
           "log": "Code executed successfully (no output)\nCode executed successfully (no output)"
         },
@@ -3551,7 +3015,7 @@
           "recall": 0.1,
           "f1": 0.18181818181818182,
           "is_perfect_match": false,
-          "elapsed_seconds": 17.9,
+          "elapsed_seconds": 21.3,
           "fn_context": [
             {
               "title": "Space.-1.22 : Treppenhaus West - Eg[1-19]",
@@ -3819,7 +3283,7 @@
           "recall": 0.0,
           "f1": 0.0,
           "is_perfect_match": false,
-          "elapsed_seconds": 9.3,
+          "elapsed_seconds": 9.8,
           "fn_context": [
             {
               "title": "Space.0.2 : Living[106]",
@@ -3856,6 +3320,14 @@
             },
             {
               "guid": "04Sq57eS5FffNezn2ilgt8",
+              "type": "IfcSpace"
+            },
+            {
+              "guid": "06njXbG3HC4RydTXssDq$2",
+              "type": "IfcSpace"
+            },
+            {
+              "guid": "06njXbG3HC4RydTXssDqW$",
               "type": "IfcSpace"
             }
           ],
@@ -3895,7 +3367,16 @@
               "type": "IfcSpace"
             }
           ],
-          "fp_guids": [],
+          "fp_guids": [
+            {
+              "guid": "06njXbG3HC4RydTXssDq$2",
+              "type": "IfcSpace"
+            },
+            {
+              "guid": "06njXbG3HC4RydTXssDqW$",
+              "type": "IfcSpace"
+            }
+          ],
           "fn_guids": [
             {
               "guid": "04Sq57eS5FffNezn2ilgrW",
@@ -3915,13 +3396,13 @@
             }
           ],
           "tp": 2,
-          "fp": 0,
+          "fp": 2,
           "fn": 4,
-          "precision": 1.0,
+          "precision": 0.5,
           "recall": 0.3333333333333333,
-          "f1": 0.5,
+          "f1": 0.4,
           "is_perfect_match": false,
-          "elapsed_seconds": 8.2,
+          "elapsed_seconds": 8.9,
           "fn_context": [
             {
               "title": "Space.0.47 : Mens Rr[135]",
@@ -4045,11 +3526,11 @@
       },
       "aggregated": {
         "tp": 3,
-        "fp": 0,
+        "fp": 2,
         "fn": 14,
-        "precision": 1.0,
+        "precision": 0.6,
         "recall": 0.1765,
-        "f1": 0.3
+        "f1": 0.2727
       }
     },
     "space_validation_intersect": {
@@ -4057,11 +3538,27 @@
         "4351": {
           "predicted": [
             {
+              "guid": "2tMe7qG7n4XhDG_TV6Qih_",
+              "type": "IfcSpace"
+            },
+            {
               "guid": "2tMe7qG7n4XhDG_TV6Qihh",
               "type": "IfcSpace"
             },
             {
+              "guid": "2tMe7qG7n4XhDG_TV6Qihi",
+              "type": "IfcSpace"
+            },
+            {
               "guid": "2tMe7qG7n4XhDG_TV6Qihs",
+              "type": "IfcSpace"
+            },
+            {
+              "guid": "2tMe7qG7n4XhDG_TV6Qihv",
+              "type": "IfcSpace"
+            },
+            {
+              "guid": "2tMe7qG7n4XhDG_TV6Qihy",
               "type": "IfcSpace"
             }
           ],
@@ -4081,19 +3578,11 @@
           ],
           "tp_guids": [
             {
-              "guid": "2tMe7qG7n4XhDG_TV6Qihs",
-              "type": "IfcSpace"
-            }
-          ],
-          "fp_guids": [
-            {
-              "guid": "2tMe7qG7n4XhDG_TV6Qihh",
-              "type": "IfcSpace"
-            }
-          ],
-          "fn_guids": [
-            {
               "guid": "2tMe7qG7n4XhDG_TV6Qihi",
+              "type": "IfcSpace"
+            },
+            {
+              "guid": "2tMe7qG7n4XhDG_TV6Qihs",
               "type": "IfcSpace"
             },
             {
@@ -4101,74 +3590,36 @@
               "type": "IfcSpace"
             }
           ],
-          "tp": 1,
-          "fp": 1,
-          "fn": 2,
-          "precision": 0.5,
-          "recall": 0.3333333333333333,
-          "f1": 0.4,
-          "is_perfect_match": false,
-          "elapsed_seconds": 6.3,
-          "fn_context": [
+          "fp_guids": [
             {
-              "title": "Space.0.2 : 1st Floor[4]",
-              "description": "Space Validation\n- Space intersects with Wall.0.1 and Wall.0.6. The intersection area is 8.56 m2.\n- Space perimeter is not totally aligned with bounding components. The total length of these segments is 3.96 m.\n\n",
-              "missed_guids": [
-                {
-                  "guid": "2tMe7qG7n4XhDG_TV6Qihi",
-                  "type": "IfcSpace"
-                }
-              ],
-              "all_guids": [
-                {
-                  "guid": "1o6iSxmUv8P91r$iXVGZJQ",
-                  "type": "IfcWall"
-                },
-                {
-                  "guid": "2rY6ZB_FT3bRLgI3yFLRfy",
-                  "type": "IfcWallStandardCase"
-                },
-                {
-                  "guid": "2tMe7qG7n4XhDG_TV6Qihi",
-                  "type": "IfcSpace"
-                }
-              ]
+              "guid": "2tMe7qG7n4XhDG_TV6Qih_",
+              "type": "IfcSpace"
             },
             {
-              "title": "Space.2.1 : 3rd Floor[8]",
-              "description": "Space Validation\n- Space intersects with Wall.0.6. The intersection area is 1.48 m2.\n- Space touches slab, roof, or space surface below itself, but the area of touching is only 173.49 m2, which is 96% of the components surface.\n\n",
-              "missed_guids": [
-                {
-                  "guid": "2tMe7qG7n4XhDG_TV6Qihy",
-                  "type": "IfcSpace"
-                }
-              ],
-              "all_guids": [
-                {
-                  "guid": "2rY6ZB_FT3bRLgI3yFLRfy",
-                  "type": "IfcWallStandardCase"
-                },
-                {
-                  "guid": "2tMe7qG7n4XhDG_TV6Qihy",
-                  "type": "IfcSpace"
-                }
-              ]
+              "guid": "2tMe7qG7n4XhDG_TV6Qihh",
+              "type": "IfcSpace"
+            },
+            {
+              "guid": "2tMe7qG7n4XhDG_TV6Qihv",
+              "type": "IfcSpace"
             }
           ],
+          "fn_guids": [],
+          "tp": 3,
+          "fp": 3,
+          "fn": 0,
+          "precision": 0.5,
+          "recall": 1.0,
+          "f1": 0.6666666666666666,
+          "is_perfect_match": false,
+          "elapsed_seconds": 6.4,
+          "fn_context": [],
           "log": "Code executed successfully (no output)\nCode executed successfully (no output)"
         },
         "digital_hub": {
           "predicted": [
             {
-              "guid": "1aFRCtje92oh3_jKdNxTM0",
-              "type": "IfcSpace"
-            },
-            {
-              "guid": "1aFRCtje92oh3_jKdNxTM1",
-              "type": "IfcSpace"
-            },
-            {
-              "guid": "1aFRCtje92oh3_jKdNxTM3",
+              "guid": "1aFRCtje92oh3_jKdNxTM4",
               "type": "IfcSpace"
             },
             {
@@ -4176,27 +3627,7 @@
               "type": "IfcSpace"
             },
             {
-              "guid": "1aFRCtje92oh3_jKdNxTMQ",
-              "type": "IfcSpace"
-            },
-            {
-              "guid": "1aFRCtje92oh3_jKdNxTMR",
-              "type": "IfcSpace"
-            },
-            {
               "guid": "1aFRCtje92oh3_jKdNxTMS",
-              "type": "IfcSpace"
-            },
-            {
-              "guid": "1aFRCtje92oh3_jKdNxTMT",
-              "type": "IfcSpace"
-            },
-            {
-              "guid": "1aFRCtje92oh3_jKdNxTMU",
-              "type": "IfcSpace"
-            },
-            {
-              "guid": "1aFRCtje92oh3_jKdNxTMV",
               "type": "IfcSpace"
             },
             {
@@ -4208,23 +3639,7 @@
               "type": "IfcSpace"
             },
             {
-              "guid": "3DCde23Rb8uBrhrJgjcLQ3",
-              "type": "IfcSpace"
-            },
-            {
-              "guid": "3DCde23Rb8uBrhrJgjcLQ4",
-              "type": "IfcSpace"
-            },
-            {
               "guid": "3DCde23Rb8uBrhrJgjcLQ5",
-              "type": "IfcSpace"
-            },
-            {
-              "guid": "3DCde23Rb8uBrhrJgjcLQ6",
-              "type": "IfcSpace"
-            },
-            {
-              "guid": "3DCde23Rb8uBrhrJgjcLQ7",
               "type": "IfcSpace"
             },
             {
@@ -4232,15 +3647,7 @@
               "type": "IfcSpace"
             },
             {
-              "guid": "3DCde23Rb8uBrhrJgjcLQ9",
-              "type": "IfcSpace"
-            },
-            {
-              "guid": "3DCde23Rb8uBrhrJgjcLQB",
-              "type": "IfcSpace"
-            },
-            {
-              "guid": "3DCde23Rb8uBrhrJgjcLQE",
+              "guid": "3DCde23Rb8uBrhrJgjcLQF",
               "type": "IfcSpace"
             },
             {
@@ -4264,7 +3671,11 @@
               "type": "IfcSpace"
             },
             {
-              "guid": "3DCde23Rb8uBrhrJgjcLQr",
+              "guid": "3DCde23Rb8uBrhrJgjcLQm",
+              "type": "IfcSpace"
+            },
+            {
+              "guid": "3DCde23Rb8uBrhrJgjcLQo",
               "type": "IfcSpace"
             },
             {
@@ -4292,51 +3703,11 @@
               "type": "IfcSpace"
             },
             {
-              "guid": "3DbdJyICv8GP1HEYzu7WjT",
-              "type": "IfcSpace"
-            },
-            {
-              "guid": "3DbdJyICv8GP1HEYzu7WjU",
-              "type": "IfcSpace"
-            },
-            {
               "guid": "3DbdJyICv8GP1HEYzu7WjV",
               "type": "IfcSpace"
             },
             {
-              "guid": "3DbdJyICv8GP1HEYzu7WjX",
-              "type": "IfcSpace"
-            },
-            {
-              "guid": "3DbdJyICv8GP1HEYzu7WjY",
-              "type": "IfcSpace"
-            },
-            {
-              "guid": "3DbdJyICv8GP1HEYzu7WjZ",
-              "type": "IfcSpace"
-            },
-            {
-              "guid": "3DbdJyICv8GP1HEYzu7Wja",
-              "type": "IfcSpace"
-            },
-            {
-              "guid": "3DbdJyICv8GP1HEYzu7Wjb",
-              "type": "IfcSpace"
-            },
-            {
               "guid": "3DbdJyICv8GP1HEYzu7Wjc",
-              "type": "IfcSpace"
-            },
-            {
-              "guid": "3DbdJyICv8GP1HEYzu7Wjd",
-              "type": "IfcSpace"
-            },
-            {
-              "guid": "3DbdJyICv8GP1HEYzu7Wje",
-              "type": "IfcSpace"
-            },
-            {
-              "guid": "3DbdJyICv8GP1HEYzu7Wjf",
               "type": "IfcSpace"
             },
             {
@@ -4353,10 +3724,6 @@
             },
             {
               "guid": "3DbdJyICv8GP1HEYzu7Wjk",
-              "type": "IfcSpace"
-            },
-            {
-              "guid": "3DbdJyICv8GP1HEYzu7Wjo",
               "type": "IfcSpace"
             }
           ],
@@ -4414,15 +3781,7 @@
           ],
           "fp_guids": [
             {
-              "guid": "1aFRCtje92oh3_jKdNxTM0",
-              "type": "IfcSpace"
-            },
-            {
-              "guid": "1aFRCtje92oh3_jKdNxTM1",
-              "type": "IfcSpace"
-            },
-            {
-              "guid": "1aFRCtje92oh3_jKdNxTM3",
+              "guid": "1aFRCtje92oh3_jKdNxTM4",
               "type": "IfcSpace"
             },
             {
@@ -4430,27 +3789,7 @@
               "type": "IfcSpace"
             },
             {
-              "guid": "1aFRCtje92oh3_jKdNxTMQ",
-              "type": "IfcSpace"
-            },
-            {
-              "guid": "1aFRCtje92oh3_jKdNxTMR",
-              "type": "IfcSpace"
-            },
-            {
               "guid": "1aFRCtje92oh3_jKdNxTMS",
-              "type": "IfcSpace"
-            },
-            {
-              "guid": "1aFRCtje92oh3_jKdNxTMT",
-              "type": "IfcSpace"
-            },
-            {
-              "guid": "1aFRCtje92oh3_jKdNxTMU",
-              "type": "IfcSpace"
-            },
-            {
-              "guid": "1aFRCtje92oh3_jKdNxTMV",
               "type": "IfcSpace"
             },
             {
@@ -4462,23 +3801,7 @@
               "type": "IfcSpace"
             },
             {
-              "guid": "3DCde23Rb8uBrhrJgjcLQ3",
-              "type": "IfcSpace"
-            },
-            {
-              "guid": "3DCde23Rb8uBrhrJgjcLQ4",
-              "type": "IfcSpace"
-            },
-            {
               "guid": "3DCde23Rb8uBrhrJgjcLQ5",
-              "type": "IfcSpace"
-            },
-            {
-              "guid": "3DCde23Rb8uBrhrJgjcLQ6",
-              "type": "IfcSpace"
-            },
-            {
-              "guid": "3DCde23Rb8uBrhrJgjcLQ7",
               "type": "IfcSpace"
             },
             {
@@ -4486,15 +3809,7 @@
               "type": "IfcSpace"
             },
             {
-              "guid": "3DCde23Rb8uBrhrJgjcLQ9",
-              "type": "IfcSpace"
-            },
-            {
-              "guid": "3DCde23Rb8uBrhrJgjcLQB",
-              "type": "IfcSpace"
-            },
-            {
-              "guid": "3DCde23Rb8uBrhrJgjcLQE",
+              "guid": "3DCde23Rb8uBrhrJgjcLQF",
               "type": "IfcSpace"
             },
             {
@@ -4510,7 +3825,11 @@
               "type": "IfcSpace"
             },
             {
-              "guid": "3DCde23Rb8uBrhrJgjcLQr",
+              "guid": "3DCde23Rb8uBrhrJgjcLQm",
+              "type": "IfcSpace"
+            },
+            {
+              "guid": "3DCde23Rb8uBrhrJgjcLQo",
               "type": "IfcSpace"
             },
             {
@@ -4530,51 +3849,11 @@
               "type": "IfcSpace"
             },
             {
-              "guid": "3DbdJyICv8GP1HEYzu7WjT",
-              "type": "IfcSpace"
-            },
-            {
-              "guid": "3DbdJyICv8GP1HEYzu7WjU",
-              "type": "IfcSpace"
-            },
-            {
               "guid": "3DbdJyICv8GP1HEYzu7WjV",
               "type": "IfcSpace"
             },
             {
-              "guid": "3DbdJyICv8GP1HEYzu7WjX",
-              "type": "IfcSpace"
-            },
-            {
-              "guid": "3DbdJyICv8GP1HEYzu7WjY",
-              "type": "IfcSpace"
-            },
-            {
-              "guid": "3DbdJyICv8GP1HEYzu7WjZ",
-              "type": "IfcSpace"
-            },
-            {
-              "guid": "3DbdJyICv8GP1HEYzu7Wja",
-              "type": "IfcSpace"
-            },
-            {
-              "guid": "3DbdJyICv8GP1HEYzu7Wjb",
-              "type": "IfcSpace"
-            },
-            {
               "guid": "3DbdJyICv8GP1HEYzu7Wjc",
-              "type": "IfcSpace"
-            },
-            {
-              "guid": "3DbdJyICv8GP1HEYzu7Wjd",
-              "type": "IfcSpace"
-            },
-            {
-              "guid": "3DbdJyICv8GP1HEYzu7Wje",
-              "type": "IfcSpace"
-            },
-            {
-              "guid": "3DbdJyICv8GP1HEYzu7Wjf",
               "type": "IfcSpace"
             },
             {
@@ -4584,19 +3863,15 @@
             {
               "guid": "3DbdJyICv8GP1HEYzu7Wjh",
               "type": "IfcSpace"
-            },
-            {
-              "guid": "3DbdJyICv8GP1HEYzu7Wjo",
-              "type": "IfcSpace"
             }
           ],
           "fn_guids": [],
           "tp": 6,
-          "fp": 44,
+          "fp": 21,
           "fn": 0,
-          "precision": 0.12,
+          "precision": 0.2222222222222222,
           "recall": 1.0,
-          "f1": 0.21428571428571425,
+          "f1": 0.3636363636363636,
           "is_perfect_match": false,
           "elapsed_seconds": 20.3,
           "fn_context": [],
@@ -4783,18 +4058,118 @@
           "recall": 1.0,
           "f1": 0.962962962962963,
           "is_perfect_match": false,
-          "elapsed_seconds": 10.0,
+          "elapsed_seconds": 9.3,
           "fn_context": [],
           "log": "Code executed successfully (no output)\nCode executed successfully (no output)"
         },
         "wbdg_office": {
           "predicted": [
             {
+              "guid": "04Sq57eS5FffNezn2ilg3k",
+              "type": "IfcSpace"
+            },
+            {
+              "guid": "04Sq57eS5FffNezn2ilgC3",
+              "type": "IfcSpace"
+            },
+            {
+              "guid": "04Sq57eS5FffNezn2ilgC4",
+              "type": "IfcSpace"
+            },
+            {
+              "guid": "04Sq57eS5FffNezn2ilgCG",
+              "type": "IfcSpace"
+            },
+            {
               "guid": "04Sq57eS5FffNezn2ilgC_",
               "type": "IfcSpace"
             },
             {
+              "guid": "04Sq57eS5FffNezn2ilgCu",
+              "type": "IfcSpace"
+            },
+            {
+              "guid": "04Sq57eS5FffNezn2ilgmr",
+              "type": "IfcSpace"
+            },
+            {
+              "guid": "04Sq57eS5FffNezn2ilgnU",
+              "type": "IfcSpace"
+            },
+            {
+              "guid": "04Sq57eS5FffNezn2ilgrb",
+              "type": "IfcSpace"
+            },
+            {
+              "guid": "04Sq57eS5FffNezn2ilgs1",
+              "type": "IfcSpace"
+            },
+            {
+              "guid": "04Sq57eS5FffNezn2ilgs2",
+              "type": "IfcSpace"
+            },
+            {
+              "guid": "04Sq57eS5FffNezn2ilgsJ",
+              "type": "IfcSpace"
+            },
+            {
+              "guid": "04Sq57eS5FffNezn2ilgsK",
+              "type": "IfcSpace"
+            },
+            {
               "guid": "04Sq57eS5FffNezn2ilgt8",
+              "type": "IfcSpace"
+            },
+            {
+              "guid": "04Sq57eS5FffNezn2ilgtD",
+              "type": "IfcSpace"
+            },
+            {
+              "guid": "04Sq57eS5FffNezn2ilgtJ",
+              "type": "IfcSpace"
+            },
+            {
+              "guid": "06njXbG3HC4RydTXssDqW4",
+              "type": "IfcSpace"
+            },
+            {
+              "guid": "06njXbG3HC4RydTXssDqX2",
+              "type": "IfcSpace"
+            },
+            {
+              "guid": "06njXbG3HC4RydTXssDqXB",
+              "type": "IfcSpace"
+            },
+            {
+              "guid": "06njXbG3HC4RydTXssDqXE",
+              "type": "IfcSpace"
+            },
+            {
+              "guid": "06njXbG3HC4RydTXssDqXH",
+              "type": "IfcSpace"
+            },
+            {
+              "guid": "06njXbG3HC4RydTXssDqXi",
+              "type": "IfcSpace"
+            },
+            {
+              "guid": "06njXbG3HC4RydTXssDqYC",
+              "type": "IfcSpace"
+            },
+            {
+              "guid": "06njXbG3HC4RydTXssDqYa",
+              "type": "IfcSpace"
+            },
+            {
+              "guid": "06njXbG3HC4RydTXssDqYd",
+              "type": "IfcSpace"
+            },
+            {
+              "guid": "06njXbG3HC4RydTXssDqYj",
+              "type": "IfcSpace"
+            },
+            {
+              "guid": "06njXbG3HC4RydTXssDqYp",
               "type": "IfcSpace"
             }
           ],
@@ -4802,34 +4177,134 @@
           "tp_guids": [],
           "fp_guids": [
             {
+              "guid": "04Sq57eS5FffNezn2ilg3k",
+              "type": "IfcSpace"
+            },
+            {
+              "guid": "04Sq57eS5FffNezn2ilgC3",
+              "type": "IfcSpace"
+            },
+            {
+              "guid": "04Sq57eS5FffNezn2ilgC4",
+              "type": "IfcSpace"
+            },
+            {
+              "guid": "04Sq57eS5FffNezn2ilgCG",
+              "type": "IfcSpace"
+            },
+            {
               "guid": "04Sq57eS5FffNezn2ilgC_",
+              "type": "IfcSpace"
+            },
+            {
+              "guid": "04Sq57eS5FffNezn2ilgCu",
+              "type": "IfcSpace"
+            },
+            {
+              "guid": "04Sq57eS5FffNezn2ilgmr",
+              "type": "IfcSpace"
+            },
+            {
+              "guid": "04Sq57eS5FffNezn2ilgnU",
+              "type": "IfcSpace"
+            },
+            {
+              "guid": "04Sq57eS5FffNezn2ilgrb",
+              "type": "IfcSpace"
+            },
+            {
+              "guid": "04Sq57eS5FffNezn2ilgs1",
+              "type": "IfcSpace"
+            },
+            {
+              "guid": "04Sq57eS5FffNezn2ilgs2",
+              "type": "IfcSpace"
+            },
+            {
+              "guid": "04Sq57eS5FffNezn2ilgsJ",
+              "type": "IfcSpace"
+            },
+            {
+              "guid": "04Sq57eS5FffNezn2ilgsK",
               "type": "IfcSpace"
             },
             {
               "guid": "04Sq57eS5FffNezn2ilgt8",
               "type": "IfcSpace"
+            },
+            {
+              "guid": "04Sq57eS5FffNezn2ilgtD",
+              "type": "IfcSpace"
+            },
+            {
+              "guid": "04Sq57eS5FffNezn2ilgtJ",
+              "type": "IfcSpace"
+            },
+            {
+              "guid": "06njXbG3HC4RydTXssDqW4",
+              "type": "IfcSpace"
+            },
+            {
+              "guid": "06njXbG3HC4RydTXssDqX2",
+              "type": "IfcSpace"
+            },
+            {
+              "guid": "06njXbG3HC4RydTXssDqXB",
+              "type": "IfcSpace"
+            },
+            {
+              "guid": "06njXbG3HC4RydTXssDqXE",
+              "type": "IfcSpace"
+            },
+            {
+              "guid": "06njXbG3HC4RydTXssDqXH",
+              "type": "IfcSpace"
+            },
+            {
+              "guid": "06njXbG3HC4RydTXssDqXi",
+              "type": "IfcSpace"
+            },
+            {
+              "guid": "06njXbG3HC4RydTXssDqYC",
+              "type": "IfcSpace"
+            },
+            {
+              "guid": "06njXbG3HC4RydTXssDqYa",
+              "type": "IfcSpace"
+            },
+            {
+              "guid": "06njXbG3HC4RydTXssDqYd",
+              "type": "IfcSpace"
+            },
+            {
+              "guid": "06njXbG3HC4RydTXssDqYj",
+              "type": "IfcSpace"
+            },
+            {
+              "guid": "06njXbG3HC4RydTXssDqYp",
+              "type": "IfcSpace"
             }
           ],
           "fn_guids": [],
           "tp": 0,
-          "fp": 2,
+          "fp": 27,
           "fn": 0,
           "precision": 0.0,
           "recall": 0.0,
           "f1": 0.0,
           "is_perfect_match": false,
-          "elapsed_seconds": 8.4,
+          "elapsed_seconds": 7.2,
           "fn_context": [],
           "log": "Code executed successfully (no output)\nCode executed successfully (no output)"
         }
       },
       "aggregated": {
-        "tp": 20,
-        "fp": 48,
-        "fn": 2,
-        "precision": 0.2941,
-        "recall": 0.9091,
-        "f1": 0.4444
+        "tp": 22,
+        "fp": 52,
+        "fn": 0,
+        "precision": 0.2973,
+        "recall": 1.0,
+        "f1": 0.4583
       }
     },
     "spaces_same_storey_same_bottom_elevation": {
@@ -4847,7 +4322,7 @@
           "recall": 1.0,
           "f1": 1.0,
           "is_perfect_match": true,
-          "elapsed_seconds": 6.5,
+          "elapsed_seconds": 5.4,
           "fn_context": [],
           "log": "Code executed successfully (no output)\nCode executed successfully (no output)"
         },
@@ -5635,7 +5110,7 @@
           "recall": 1.0,
           "f1": 1.0,
           "is_perfect_match": true,
-          "elapsed_seconds": 7.1,
+          "elapsed_seconds": 5.8,
           "fn_context": [],
           "log": "Code executed successfully (no output)\nCode executed successfully (no output)"
         },
@@ -5652,7 +5127,7 @@
           "recall": 1.0,
           "f1": 1.0,
           "is_perfect_match": true,
-          "elapsed_seconds": 9.1,
+          "elapsed_seconds": 7.7,
           "fn_context": [],
           "log": "Code executed successfully (no output)\nCode executed successfully (no output)"
         },
@@ -6392,7 +5867,7 @@
           "recall": 1.0,
           "f1": 1.0,
           "is_perfect_match": true,
-          "elapsed_seconds": 6.3,
+          "elapsed_seconds": 5.3,
           "fn_context": [],
           "log": "Code executed successfully (no output)\nCode executed successfully (no output)"
         }
@@ -6411,7 +5886,23 @@
         "4351": {
           "predicted": [
             {
+              "guid": "1neW5R2EX8$hGUNVKNOafz",
+              "type": "IfcWallStandardCase"
+            },
+            {
+              "guid": "1neW5R2EX8$hGUNVKNOagh",
+              "type": "IfcWallStandardCase"
+            },
+            {
               "guid": "1neW5R2EX8$hGUNVKNOajs",
+              "type": "IfcWallStandardCase"
+            },
+            {
+              "guid": "1neW5R2EX8$hGUNVKNOajs",
+              "type": "IfcWallStandardCase"
+            },
+            {
+              "guid": "1neW5R2EX8$hGUNVKNOakd",
               "type": "IfcWallStandardCase"
             },
             {
@@ -6423,8 +5914,12 @@
               "type": "IfcWallStandardCase"
             },
             {
-              "guid": "1o6iSxmUv8P91r$iXVGZJQ",
-              "type": "IfcWall"
+              "guid": "1o6iSxmUv8P91r$iXVGWXs",
+              "type": "IfcWallStandardCase"
+            },
+            {
+              "guid": "1o6iSxmUv8P91r$iXVGWYv",
+              "type": "IfcWallStandardCase"
             },
             {
               "guid": "2iLpbw1JTCxhSAA5dilMd9",
@@ -6435,6 +5930,14 @@
           "tp_guids": [],
           "fp_guids": [
             {
+              "guid": "1neW5R2EX8$hGUNVKNOafz",
+              "type": "IfcWallStandardCase"
+            },
+            {
+              "guid": "1neW5R2EX8$hGUNVKNOagh",
+              "type": "IfcWallStandardCase"
+            },
+            {
               "guid": "1neW5R2EX8$hGUNVKNOajs",
               "type": "IfcWallStandardCase"
             },
@@ -6447,8 +5950,8 @@
               "type": "IfcWallStandardCase"
             },
             {
-              "guid": "1o6iSxmUv8P91r$iXVGZJQ",
-              "type": "IfcWall"
+              "guid": "1o6iSxmUv8P91r$iXVGWYv",
+              "type": "IfcWallStandardCase"
             },
             {
               "guid": "2iLpbw1JTCxhSAA5dilMd9",
@@ -6457,39 +5960,18 @@
           ],
           "fn_guids": [],
           "tp": 0,
-          "fp": 5,
+          "fp": 7,
           "fn": 0,
           "precision": 0.0,
           "recall": 0.0,
           "f1": 0.0,
           "is_perfect_match": false,
-          "elapsed_seconds": 7.5,
+          "elapsed_seconds": 6.6,
           "fn_context": [],
           "log": "Code executed successfully (no output)\nCode executed successfully (no output)"
         },
         "digital_hub": {
-          "predicted": [
-            {
-              "guid": "09DVD6VyjAQPA6lucynkDP",
-              "type": "IfcWall"
-            },
-            {
-              "guid": "12bPoIwbv0tBGfPfnvCUAC",
-              "type": "IfcWall"
-            },
-            {
-              "guid": "12bPoIwbv0tBGfPfnvCUYu",
-              "type": "IfcWall"
-            },
-            {
-              "guid": "12bPoIwbv0tBGfPfnvCUc2",
-              "type": "IfcWall"
-            },
-            {
-              "guid": "12bPoIwbv0tBGfPfnvCUq4",
-              "type": "IfcWall"
-            }
-          ],
+          "predicted": [],
           "expected": [
             {
               "guid": "0YVU7tDBX86u6UVVsSmdwG",
@@ -6525,28 +6007,7 @@
             }
           ],
           "tp_guids": [],
-          "fp_guids": [
-            {
-              "guid": "09DVD6VyjAQPA6lucynkDP",
-              "type": "IfcWall"
-            },
-            {
-              "guid": "12bPoIwbv0tBGfPfnvCUAC",
-              "type": "IfcWall"
-            },
-            {
-              "guid": "12bPoIwbv0tBGfPfnvCUYu",
-              "type": "IfcWall"
-            },
-            {
-              "guid": "12bPoIwbv0tBGfPfnvCUc2",
-              "type": "IfcWall"
-            },
-            {
-              "guid": "12bPoIwbv0tBGfPfnvCUq4",
-              "type": "IfcWall"
-            }
-          ],
+          "fp_guids": [],
           "fn_guids": [
             {
               "guid": "0YVU7tDBX86u6UVVsSmdwG",
@@ -6582,13 +6043,13 @@
             }
           ],
           "tp": 0,
-          "fp": 5,
+          "fp": 0,
           "fn": 8,
           "precision": 0.0,
           "recall": 0.0,
           "f1": 0.0,
           "is_perfect_match": false,
-          "elapsed_seconds": 15.3,
+          "elapsed_seconds": 5.7,
           "fn_context": [
             {
               "title": "Unallocated Area (4.97 M2)",
@@ -6671,7 +6132,7 @@
               ]
             }
           ],
-          "log": "Code executed successfully (no output)\nWarning: Skipped 68 elements during processing"
+          "log": "Code executed successfully (no output)\nCode executed successfully (no output)"
         },
         "samuel_macalister_sample_house": {
           "predicted": [],
@@ -6796,7 +6257,7 @@
           "recall": 0.0,
           "f1": 0.0,
           "is_perfect_match": false,
-          "elapsed_seconds": 10.0,
+          "elapsed_seconds": 9.0,
           "fn_context": [
             {
               "title": "Unallocated Area (8.40 M2)",
@@ -6935,20 +6396,12 @@
               ]
             }
           ],
-          "log": "Code executed successfully (no output)\nWarning: Skipped 4 elements during processing"
+          "log": "Code executed successfully (no output)\nCode executed successfully (no output)"
         },
         "wbdg_office": {
           "predicted": [
             {
               "guid": "1b0OOEH1P4cx$jYCmjq8Ya",
-              "type": "IfcWallStandardCase"
-            },
-            {
-              "guid": "1b0OOEH1P4cx$jYCmjqBV2",
-              "type": "IfcWallStandardCase"
-            },
-            {
-              "guid": "27dLDsxMX8Sv5rKurGZzmr",
               "type": "IfcWallStandardCase"
             }
           ],
@@ -6958,32 +6411,24 @@
             {
               "guid": "1b0OOEH1P4cx$jYCmjq8Ya",
               "type": "IfcWallStandardCase"
-            },
-            {
-              "guid": "1b0OOEH1P4cx$jYCmjqBV2",
-              "type": "IfcWallStandardCase"
-            },
-            {
-              "guid": "27dLDsxMX8Sv5rKurGZzmr",
-              "type": "IfcWallStandardCase"
             }
           ],
           "fn_guids": [],
           "tp": 0,
-          "fp": 3,
+          "fp": 1,
           "fn": 0,
           "precision": 0.0,
           "recall": 0.0,
           "f1": 0.0,
           "is_perfect_match": false,
-          "elapsed_seconds": 10.2,
+          "elapsed_seconds": 9.5,
           "fn_context": [],
           "log": "Code executed successfully (no output)\nCode executed successfully (no output)"
         }
       },
       "aggregated": {
         "tp": 0,
-        "fp": 13,
+        "fp": 8,
         "fn": 20,
         "precision": 0.0,
         "recall": 0.0,
@@ -6992,11 +6437,11 @@
     }
   },
   "global": {
-    "tp": 182,
-    "fp": 151,
-    "fn": 77,
-    "precision": 0.5465,
-    "recall": 0.7027,
-    "f1": 0.6149
+    "tp": 183,
+    "fp": 90,
+    "fn": 76,
+    "precision": 0.6703,
+    "recall": 0.7066,
+    "f1": 0.688
   }
 }

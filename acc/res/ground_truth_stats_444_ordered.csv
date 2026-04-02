@@ -1,0 +1,17 @@
+rule_code,rule_title,rule_label,class,train_total,validate_total,test_total
+BIM Validation: Slab Thickness,slab_thickness,Slab thickness,1,14,0,3
+504.2,504_2_riser_height,Riser height,1,5,37,3
+504.2,504_2_tread_length,Tread length,1,2,45,2
+504.2,504_2_non_uniform_risers_treads,Non-uniform risers/treads,2,2,21,0
+504.2,504_2_stair_slab_connection,Stair--slab connection,2,3,0,2
+BIM Validation: Doors and Windows,doors_and_windows,Doors and windows,2,7,8,18
+Advanced Space Check: Large Spaces Have to Have More than One Door,large_spaces_more_than_one_door,Large spaces >= 2 doors,2,22,9,25
+Spaces in Same Building Storey Must Have Same Bottom Elevation,spaces_same_storey_same_bottom_elevation,Same-storey elevation,2,180,110,124
+General Space Check: Space Validation,space_validation_inside,Space validation (inside),2,17,7,17
+General Space Check: Space Validation,space_validation_intersect,Space validation (intersect),2,24,55,22
+304.3.1,304_3_1_circular_space,Circular space (304.3.1),3,2,22,2
+305.3,305_3_size,Clear floor space (305.3),3,18,23,1
+404.2.5,404_2_5_two_doors_in_series,Two doors in series (404.2.5),3,8,0,2
+BIM Validation: Clearance in Front of Doors,clearance_front_of_doors,Clearance front of doors,3,28,30,11
+Slabs must be Guarded against Falling,slabs_guarded_against_falling,Slabs guarded against falling,3,34,11,8
+Unallocated Areas,unallocated_areas,Unallocated areas,3,6,0,23
