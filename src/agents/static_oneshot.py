@@ -18,6 +18,7 @@ from src.baml.baml_client import b
 from src.baml.baml_client.types import CodeAction
 from src.schemas.agent_error import AgentError, CobbiResult
 from src.util.baml_retry import call_baml_with_retry
+from src.util.fallback_code_parser import try_parse_code_action
 from src.util.extract_raw_prompt import extract_raw_prompt
 from src.util.generate_tools_docs import generate_tools_docs
 from src.util.python_executor import execute_python, setup_interpreter
@@ -116,15 +117,24 @@ def static_oneshot(
                 code_gen_duration = time.time() - code_gen_start
 
                 if isinstance(code_result, AgentError):
-                    gen_span.set_outputs(
-                        {
-                            "error": code_result.error_message,
-                            "error_type": code_result.error_type,
-                        }
-                    )
-                    gen_span.set_status("ERROR")
-                    main_span.set_status("ERROR")
-                    return CobbiResult(error=code_result, collector=collector, history="")
+                    # Try fallback parser before giving up
+                    fallback = try_parse_code_action(code_result)
+                    if fallback is not None:
+                        logger.info(
+                            "[STATIC] Fallback parser recovered CodeAction "
+                            f"from failed BAML response ({len(fallback.python_code)} chars)"
+                        )
+                        code_result = fallback
+                    else:
+                        gen_span.set_outputs(
+                            {
+                                "error": code_result.error_message,
+                                "error_type": code_result.error_type,
+                            }
+                        )
+                        gen_span.set_status("ERROR")
+                        main_span.set_status("ERROR")
+                        return CobbiResult(error=code_result, collector=collector, history="")
 
                 # Extract token usage for code generation
                 gen_input_tokens = 0

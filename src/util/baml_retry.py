@@ -40,6 +40,11 @@ def call_baml_with_retry(
                 f"[{context_name}] Attempt {attempt}/{max_retries} failed "
                 f"({error_type}): {str(e)[:200]}"
             )
+            if raw_output:
+                logger.debug(
+                    f"[{context_name}] Raw LLM output ({len(raw_output)} chars): "
+                    f"{raw_output[:500]}"
+                )
 
             # Log to MLflow (best-effort)
             try:

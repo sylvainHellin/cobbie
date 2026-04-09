@@ -30,8 +30,7 @@ cp .env.example .env  # Edit with your API keys
 ### MLflow Tracking
 
 ```bash
-z .mlflow && uv run mlflow server --host 127.0.0.1 --port 5000 \
-  --backend-store-uri sqlite:///mlflow.sqlite
+z .mlflow && uv run mlflow server --host 127.0.0.1 --port 5000 --backend-store-uri sqlite:///mlflow.sqlite
 ```
 
 Access the UI at: http://127.0.0.1:5000

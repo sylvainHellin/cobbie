@@ -121,14 +121,17 @@ class DocVectorStore:
             settings=Settings(anonymized_telemetry=False),
         )
 
-        # Create collections for chunks and questions
+        # Create collections for chunks and questions.
+        # sync_threshold=100 ensures the HNSW segment is fully flushed to disk
+        # (default 1000 leaves small collections only partially persisted in the WAL,
+        # which causes "HNSW segment reader: Nothing found on disk" errors on cold start).
         self.chunks_collection = self.client.get_or_create_collection(
             name="doc_chunks",
-            metadata={"hnsw:space": "cosine"},
+            metadata={"hnsw:space": "cosine", "hnsw:sync_threshold": 100},
         )
         self.questions_collection = self.client.get_or_create_collection(
             name="doc_questions",
-            metadata={"hnsw:space": "cosine"},
+            metadata={"hnsw:space": "cosine", "hnsw:sync_threshold": 100},
         )
 
         # Initialize BM25 index

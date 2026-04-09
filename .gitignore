@@ -46,3 +46,8 @@ outputs/
 src/db/Solibri-BIM-F
 src/db/Solibri-BIM-F.zip
 /.pi/workflow
+/src/db/chroma_docs/a139c992-ee36-486a-a8c4-c9476a420dfa/index_metadata.pickle
+/src/db/chroma_docs/9bef75b0-f17d-40a9-9183-f84c299d4cb3/index_metadata.pickle
+/src/db/chroma_docs/0d45442a-e333-46f7-9799-f9eb7bda1e4e/index_metadata.pickle
+/src/db/chroma_docs/0d45442a-e333-46f7-9799-f9eb7bda1e4e
+/src/db/chroma_docs/chroma.sqlite3

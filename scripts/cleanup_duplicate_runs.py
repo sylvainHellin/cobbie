@@ -20,7 +20,7 @@ from tabulate import tabulate
 from src.analysis.data_extraction import fetch_nested_runs
 from src.config import MLFLOW_URI
 
-# The 9 parent run IDs
+# The 10 parent run IDs
 PARENT_RUNS: dict[str, str] = {
     "dynamic-manual-doc": "316c9f396ced42e6bfb14d86063a2cd8",
     "dynamic-auto-doc": "2f976d9502b14496857a5334acfcc1a6",
@@ -31,6 +31,7 @@ PARENT_RUNS: dict[str, str] = {
     "static-manual": "77e41658053f458fadb33bb7a253bb50",
     "static-created": "b03fc6134c5847fe83da0b0c201db52d",
     "static-None": "d252e3844235428aa52ced2470b9b846",
+    "static-doc": "0453b1c2f839495d9f6b7704a0854688",
 }
 
 

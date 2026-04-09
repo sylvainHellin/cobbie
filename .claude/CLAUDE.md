@@ -129,6 +129,7 @@ outputs/
 | `static-manual` | `77e41658053f458fadb33bb7a253bb50` | `--system static --tools manual` |
 | `static-created` | `b03fc6134c5847fe83da0b0c201db52d` | `--system static --tools created` |
 | `static-None` | `d252e3844235428aa52ced2470b9b846` | `--system static` |
+| `static-doc` | `0453b1c2f839495d9f6b7704a0854688` | `--system static-doc --doc custom` |
 
 ## Important Guidelines
 - Use `uv run` prefix for all Python commands

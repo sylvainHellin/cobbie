@@ -2,7 +2,7 @@
 """
 Analyze 3x4 Evaluation Matrix from MLflow.
 
-Loads all 11 evaluation runs (3 model rows x 4 augmentation strategies), builds a
+Loads all 12 evaluation runs (3 model rows x 4 augmentation strategies), builds a
 unified DataFrame, and produces comparative analyses across dimensions
 (model variant, augmentation strategy) with breakdowns by question category
 and IFC project. Special focus on manual tool bias for duplex/dental_clinic.
@@ -42,8 +42,9 @@ RUN_IDS: dict[tuple[str, str], str] = {
     ("dynamic-4.5", "doc"): "78fdd42f57314b9198746bddfcc9fb0c",
     ("dynamic-4.5", "manual"): "cb8b67457a7f457ab3830ea9b2ac2c3b",
     ("dynamic-4.5", "auto"): "3fb49ba2784c4541825d602fbb69f9dc",
-    # static GLM 4.7 (no doc variant exists)
+    # static GLM 4.7
     ("static-4.7", "none"): "d252e3844235428aa52ced2470b9b846",
+    ("static-4.7", "doc"): "0453b1c2f839495d9f6b7704a0854688",
     ("static-4.7", "manual"): "77e41658053f458fadb33bb7a253bb50",
     ("static-4.7", "auto"): "b03fc6134c5847fe83da0b0c201db52d",
 }
@@ -488,6 +489,16 @@ def write_changelog(path: str) -> None:
     """Write a changelog summarising the matrix restructuring."""
     content = """\
 # Evaluation Matrix Changelog
+
+## 2026-04-09: Matrix fully populated (12 cells)
+
+- Added the `static-4.7 + doc` run (`0453b1c2f839495d9f6b7704a0854688`,
+  CLI args: `--system static-doc --doc custom`).
+- The 3x4 matrix now has all 12 cells populated; the previous N/A cell for
+  `static-4.7 / doc` is gone.
+- `src/analysis/data_extraction.py` was extended to fall back to
+  `static_doc_*` MLflow metrics so cost/latency analysis picks up the new
+  run correctly.
 
 ## 2026-02-21: Restructured from 3x3 to 3x4
 

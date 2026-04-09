@@ -80,21 +80,29 @@ def extract_run_data(run) -> dict:
         "cobbie_duration": (
             metrics.get("cobbie_duration", 0)
             or metrics.get("static_duration", 0)
+            or metrics.get("static_doc_duration", 0)
             or metrics.get("baseline_duration", 0)
         ),
         "verifier_duration": metrics.get("verifier_duration", 0),
         "total_duration": (
-            (metrics.get("cobbie_duration", 0) or metrics.get("static_duration", 0) or metrics.get("baseline_duration", 0))
+            (
+                metrics.get("cobbie_duration", 0)
+                or metrics.get("static_duration", 0)
+                or metrics.get("static_doc_duration", 0)
+                or metrics.get("baseline_duration", 0)
+            )
             + metrics.get("verifier_duration", 0)
         ),
         "cobbie_input_tokens": (
             metrics.get("cobbie_input_tokens", 0)
             or metrics.get("static_input_tokens", 0)
+            or metrics.get("static_doc_input_tokens", 0)
             or metrics.get("baseline_input_tokens", 0)
         ),
         "cobbie_output_tokens": (
             metrics.get("cobbie_output_tokens", 0)
             or metrics.get("static_output_tokens", 0)
+            or metrics.get("static_doc_output_tokens", 0)
             or metrics.get("baseline_output_tokens", 0)
         ),
         "verifier_input_tokens": metrics.get("verifier_input_tokens", 0),

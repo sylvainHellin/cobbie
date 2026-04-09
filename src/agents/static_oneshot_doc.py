@@ -2,9 +2,9 @@
 Doc-augmented Static One-Shot: plan doc queries, fetch docs, generate code, execute, synthesize.
 
 Pipeline:
-  Step 0 -- DocQueryPlanner  (which APIs do I need?)
-  Step 1 -- Doc fetching     (retrieve + dedup + format)
-  Step 2 -- StaticCodeGenerator (with pre-fetched doc_context)
+  Step 0 -- DocQueryPlanner        (which APIs do I need?)
+  Step 1 -- Doc fetching            (retrieve + dedup + format)
+  Step 2 -- DocStaticCodeGenerator  (code gen with pre-fetched doc_context)
   Step 3 -- Code execution
   Step 4 -- StaticAnswerSynthesizer
 """
@@ -23,9 +23,14 @@ from src.baml.baml_client.types import CodeAction
 from src.docs_indexer.retriever import format_results, retrieve
 from src.schemas.agent_error import AgentError, CobbiResult
 from src.util.baml_retry import call_baml_with_retry
+from src.util.fallback_code_parser import try_parse_code_action
 from src.util.extract_raw_prompt import extract_raw_prompt
-from src.util.generate_tools_docs import generate_tools_docs
 from src.util.python_executor import execute_python, setup_interpreter
+
+
+# Defaults for doc context limits
+MAX_DOC_CHUNKS = 10  # max deduped chunks to keep (was unbounded, typically 15-25)
+MAX_DOC_CHARS = 16_000  # hard cap on doc_context string length (~4k tokens)
 
 
 def static_oneshot_doc(
@@ -34,6 +39,8 @@ def static_oneshot_doc(
     model_path: Optional[str] = None,
     client: str = "GLM_4_7",
     mlflow_run_id: Optional[str] = None,
+    max_doc_chunks: int = MAX_DOC_CHUNKS,
+    max_doc_chars: int = MAX_DOC_CHARS,
 ) -> CobbiResult:
     """
     Doc-augmented static one-shot baseline for BIM question answering.
@@ -59,8 +66,7 @@ def static_oneshot_doc(
     client_registry = baml_py.ClientRegistry()
     client_registry.set_primary(client)
 
-    # Prepare tools (empty for this system) and interpreter
-    tools_docs = generate_tools_docs(tools) if tools else "No tools available."
+    # Prepare interpreter (tools passed for execution env, not for prompt)
     interpreter = setup_interpreter(model_path, tools)
 
     # MLflow run context
@@ -169,8 +175,16 @@ def static_oneshot_doc(
                         if chunk.id not in seen_ids:
                             seen_ids[chunk.id] = chunk
 
-                deduped_chunks = list(seen_ids.values())
+                deduped_chunks = list(seen_ids.values())[:max_doc_chunks]
                 doc_context = format_results(deduped_chunks)  # type: ignore[arg-type]
+
+                # Hard cap on character length to keep prompt manageable
+                if len(doc_context) > max_doc_chars:
+                    logger.info(
+                        f"[STATIC-DOC] Truncating doc_context from "
+                        f"{len(doc_context):,} to {max_doc_chars:,} chars"
+                    )
+                    doc_context = doc_context[:max_doc_chars] + "\n\n[... documentation truncated ...]"
                 fetch_duration = time.time() - fetch_start
 
                 fetch_span.set_outputs(
@@ -202,7 +216,6 @@ def static_oneshot_doc(
                 gen_span.set_inputs(
                     {
                         "user_input": user_input,
-                        "available_tools": tools_docs,
                         "model_path": model_path or "None",
                         "doc_context_length": len(doc_context),
                     }
@@ -213,26 +226,34 @@ def static_oneshot_doc(
                     lambda: b.with_options(
                         collector=collector,
                         client_registry=client_registry,
-                    ).StaticCodeGenerator(
+                    ).DocStaticCodeGenerator(
                         user_input=user_input,
-                        available_tools=tools_docs,
                         model_path=model_path,
                         doc_context=doc_context,
                     ),
-                    context_name="StaticCodeGenerator",
+                    context_name="DocStaticCodeGenerator",
                 )
                 code_gen_duration = time.time() - code_gen_start
 
                 if isinstance(code_result, AgentError):
-                    gen_span.set_outputs(
-                        {
-                            "error": code_result.error_message,
-                            "error_type": code_result.error_type,
-                        }
-                    )
-                    gen_span.set_status("ERROR")
-                    main_span.set_status("ERROR")
-                    return CobbiResult(error=code_result, collector=collector, history="")
+                    # Try fallback parser before giving up
+                    fallback = try_parse_code_action(code_result)
+                    if fallback is not None:
+                        logger.info(
+                            "[STATIC-DOC] Fallback parser recovered CodeAction "
+                            f"from failed BAML response ({len(fallback.python_code)} chars)"
+                        )
+                        code_result = fallback
+                    else:
+                        gen_span.set_outputs(
+                            {
+                                "error": code_result.error_message,
+                                "error_type": code_result.error_type,
+                            }
+                        )
+                        gen_span.set_status("ERROR")
+                        main_span.set_status("ERROR")
+                        return CobbiResult(error=code_result, collector=collector, history="")
 
                 gen_input_tokens = 0
                 gen_output_tokens = 0

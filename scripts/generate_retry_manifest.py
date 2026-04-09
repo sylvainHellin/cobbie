@@ -75,6 +75,11 @@ RUN_CONFIG: dict[str, dict] = {
         "eval_args": "--system static",
         "retry_classification": "error",
     },
+    "static-doc": {
+        "run_id": "0453b1c2f839495d9f6b7704a0854688",
+        "eval_args": "--system static-doc --doc custom",
+        "retry_classification": "unknown",
+    },
 }
 
 OUTPUT_PATH = "outputs/eval/retry_manifest.json"
@@ -122,6 +127,7 @@ def main() -> None:
 
         nested_runs = fetch_nested_runs(client, run_id, experiment_id)
         count = 0
+        seen_qids: set[int] = set()  # deduplicate by question_id within a run
 
         for nested_run in nested_runs:
             data = extract_run_data(nested_run)
@@ -134,6 +140,10 @@ def main() -> None:
                 continue
 
             qid_int = int(qid)
+            if qid_int in seen_qids:
+                continue
+            seen_qids.add(qid_int)
+
             devset_idx = qid_to_idx.get(qid_int)
             if devset_idx is None:
                 print(f"  WARNING: question_id {qid_int} not found in DEVSET, skipping")
