@@ -1,10 +1,5 @@
 # CLAUDE.md
 
-> **Note:** This repo was moved on 2025-01-19.
-> Old path: `~/GitHub/4_phd/cobbie`
-> New path: `~/code/tum/cobbie`
-> If something breaks due to hardcoded paths, this might be the cause.
-
 ## Build & Test Commands
 
 ### Backend (Python)
@@ -115,21 +110,6 @@ outputs/
 - **Never** write generated files to the project root or ad-hoc directories.
 - New scripts must write to one of the three existing subdirectories.
 - If a new output doesn't fit any of them, **ask permission** before creating a new subdirectory under `outputs/`.
-
-### Evaluation Matrix Runs
-
-| Run Name | Run ID | CLI Args |
-|---|---|---|
-| `dynamic-manual-doc` | `316c9f396ced42e6bfb14d86063a2cd8` | `--system cobbie --tools manual --doc context7` |
-| `dynamic-auto-doc` | `2f976d9502b14496857a5334acfcc1a6` | `--system cobbie --tools created --doc context7` |
-| `dynamic-None-doc` | `4ab1263aff1c43a589a7e15bb2d67b48` | `--system cobbie --doc context7` |
-| `dynamic-manual-no_doc` | `b18012e63c424101b139d91f1e3a4066` | `--system cobbie --tools manual --doc custom` |
-| `dynamic-auto-no_doc` | `437a86bd3b864de1863456ecb38d6821` | `--system cobbie --tools created --doc custom` |
-| `dynamic-None-no_doc` | `389125f2d3654b718bf4606d306182cb` | `--system cobbie --doc custom` |
-| `static-manual` | `77e41658053f458fadb33bb7a253bb50` | `--system static --tools manual` |
-| `static-created` | `b03fc6134c5847fe83da0b0c201db52d` | `--system static --tools created` |
-| `static-None` | `d252e3844235428aa52ced2470b9b846` | `--system static` |
-| `static-doc` | `0453b1c2f839495d9f6b7704a0854688` | `--system static-doc --doc custom` |
 
 ## Important Guidelines
 - Use `uv run` prefix for all Python commands

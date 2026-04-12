@@ -10,8 +10,8 @@ client<llm> GLM_4_7{
     temperature 0.1
     max_tokens 8192
     http {
-      connect_timeout_ms 10000
-      request_timeout_ms 90000
+      connect_timeout_ms 30000
+      request_timeout_ms 180000
     }
   }
 }
