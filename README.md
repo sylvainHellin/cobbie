@@ -1,12 +1,17 @@
 # Cobbie — ACC / EC3 Paper Reproduction
 
-This branch contains the code and data required to reproduce the EC3 paper on
-**Automated Code Compliance (ACC) checking** with Cobbie. It is a slim subset
-of the full Cobbie repo — only the modules needed for the ACC pipeline remain.
+Reproduction package for:
 
-Cobbie generates Python helper functions that implement building-code
-compliance checks against IFC models. Solibri's rule engine provides the
-ground truth; Cobbie's tools are trained to match its per-element verdicts.
+> Fuchs, S., Hellin, S., Borrmann, A. **Assessing the Viability of LLM
+> Agents for Generating Reusable Compliance Checking Functions.**
+> *2026 European Conference on Computing in Construction (EC³)*,
+> Corfu, Greece, July 12–15, 2026.
+
+This branch is a slim subset of the full Cobbie repo — only the modules
+needed for the ACC (Automated Code Compliance) pipeline remain. The agent
+generates Python helper functions that implement building-code compliance
+checks against IFC models; Solibri's rule engine provides the ground truth,
+and the agent's tools are trained to match its per-element verdicts.
 
 ## Pipeline Overview
 
@@ -45,6 +50,23 @@ ground truth; Cobbie's tools are trained to match its per-element verdicts.
     (`z-ai/glm-4.7`) via OpenRouter if your z.ai key is unavailable.
 - Solibri Anywhere (only needed to regenerate `topics.json` from `.ifc` files;
   committed `topics.json` already covers all 12 models)
+
+### BIM models
+
+The 12 `.ifc` models used in the paper are **not committed** (`acc/bim_models/`
+is gitignored). Sources per Table 1 of the paper:
+
+|              | Training    | Validation | Test               |
+|--------------|-------------|------------|--------------------|
+|              | 141*        | 103*       | 4351               |
+|              | AC20        | 166*       | Digital Hub        |
+|              | Dental Clinic | FZK House | S. MacAlister      |
+|              | Duplex      | Smiley West | WBDG Office       |
+
+Models marked with `*` are from the authors' BIM fundamentals course; the
+remaining nine are from **IFCBench** (Hellin et al., 2025). Place each model
+under `acc/bim_models/<name>/<name>.ifc` (plus the corresponding `.smc` /
+`Rules.xlsx` / classification CSVs in `acc/setup/`) before running steps 2–5.
 
 ```bash
 uv sync
@@ -88,8 +110,11 @@ uv run scripts/generate_ground_truth.py
 
 ### 4. Train tools (batched to avoid `ifcopenshell` memory growth)
 ```bash
-bash scripts/run_acc_training_batched.sh --nb-samples 17 --batch-size 1
+bash scripts/run_acc_training_batched.sh --nb-samples 16 --batch-size 1
 ```
+
+Defaults match the paper: `--max-iterations 15` (n_max_iter) and
+`--max-retries 2` (retry budget for validation-driven refinement).
 
 Follow the prompt for the MLflow run ID after the first batch, then reuse it
 with `--continue <run_id>` for subsequent resumes.
@@ -121,7 +146,10 @@ src/
 ├── agents/               # create_acc_function.py, assess_acc_tool.py
 ├── baml/                 # BAML sources + generated client
 ├── config.py             # Paths & env-var loading
-├── tools/initial/        # classify_spaces, query_ifcopenshell_docs
+├── tools/initial/        # classify_spaces (mirrors Solibri's semantic
+│                         #   space-usage classifications so the agent is on
+│                         #   equal footing with the verifier, per §Experi-
+│                         #   mental Setup of the paper) + query_ifcopenshell_docs
 └── util/                 # setup_logger, save_new_tool, code_act loop,
                           # python_executor, mlflow_utils
 
@@ -139,8 +167,17 @@ uvx ty check src
 
 ## Citation
 
-If you use this code, please cite the EC3 paper. *(Citation details once
-published.)*
+```bibtex
+@inproceedings{fuchs2026acc,
+  title     = {Assessing the Viability of LLM Agents for Generating
+               Reusable Compliance Checking Functions},
+  author    = {Fuchs, Stefan and Hellin, Sylvain and Borrmann, Andr{\'e}},
+  booktitle = {2026 European Conference on Computing in Construction (EC$^3$)},
+  address   = {Corfu, Greece},
+  year      = {2026},
+  month     = jul,
+}
+```
 
 ## License
 

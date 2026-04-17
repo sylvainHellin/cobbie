@@ -1,7 +1,14 @@
 # TODO
 
-## Before publication
-- [ ] Decide on orphan root SQLite files (`acc_server.sqlite`, `acc_old.sqlite`, `mlflow.sqlite`) — gitignored, but still ~2 GB on disk
+## Before publication (in this repo)
+
 - [ ] End-to-end reproduction check — run steps 3–6 against committed inputs and diff `outputs/ec3/` against committed versions
-- [ ] Fix pre-existing lint/type issues in `src/notebooks/acc_results.ipynb` and `src/util/get_function_code.py`
-- [ ] Add citation block to `README.md` once the paper is accepted
+
+## When moving to the final public repo (`github.com/stefan-1992/ACC-function-generation`)
+
+- [ ] Ship IFC data so reviewers can reproduce end-to-end:
+  - `acc/bim_models/<name>/*.ifc` + `*.smc` + per-model rule/classification files — currently gitignored (`acc/bim_models` in `.gitignore`, `*.ifc` globally ignored)
+  - `acc/res/<name>/bcfzip/*` — currently gitignored (`acc/res/*/bcfzip`)
+  - `acc/res/<name>/smc/*` — currently gitignored (`acc/res/*/smc`)
+  - Keep `acc/res/<name>/temp/` ignored (intermediate)
+  - Licences: the 3 course-sourced models (141, 103, 166) and IFCBench models are OK to redistribute under the repo's MIT licence
