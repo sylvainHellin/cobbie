@@ -15,6 +15,7 @@ dependencies = [
     "mlflow>3.5.2",
     "numpy>=1.26",
     "pandas>=2.2",
+    "psutil>=5.9",
     "python-dotenv>=1.1.0",
     "requests>=2.31",
     "scipy>=1.13",
