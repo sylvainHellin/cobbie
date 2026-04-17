@@ -1,33 +1,12 @@
-arize-phoenix==8.24.0
 baml-py==0.218.1
-docutils>=0.22.4
-fastapi[standard]>=0.115.9
-# ifcopenshell>=0.8.2
-ipykernel>=6.29.5
-jupyter>=1.1.1
-krippendorff>=0.7.0
+# ifcopenshell>=0.8.2   # unavailable on linux x86_64 — installed via pyproject marker only
 loguru>=0.7.3
-mermaid-magic>=0.1.4
-mlflow>=3.1.0
-mypy>=1.16.1
-ollama>=0.4.8
-openinference-instrumentation-smolagents>=0.1.11
-openpyxl>=3.1.5
-opentelemetry-exporter-otlp>=1.32.1
-opentelemetry-sdk>=1.32.1
-pydantic>=2.11.4
+mlflow>3.5.2
+numpy>=1.26
+pandas>=2.2
 python-dotenv>=1.1.0
-result>=0.17.0
-rtree>=1.4.1
-scikit-learn>=1.6.0
-seaborn>=0.13.2
-sentence-transformers>=5.2.0
-sqlacodegen>=3.1.1
-sqlite-vec>=0.1.6
-chromadb>=1.0.0
-rank-bm25>=0.2.2
-sqlmodel>=0.0.25
-streamlit>=1.41.0
-tabulate>=0.9.0
+requests>=2.31
+scipy>=1.13
+shapely>=2.0.0
 tiktoken>=0.12.0
-# torch>=2.2,<2.3  # macOS-only in pyproject
+trimesh>=4.0.0
