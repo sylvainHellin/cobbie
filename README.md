@@ -1,4 +1,4 @@
-# Cobbie — ACC / EC3 Paper Reproduction
+# ACC Function Generation — EC³ 2026 Reproduction Package
 
 Reproduction package for:
 
@@ -7,11 +7,11 @@ Reproduction package for:
 > *2026 European Conference on Computing in Construction (EC³)*,
 > Corfu, Greece, July 12–15, 2026.
 
-This branch is a slim subset of the full Cobbie repo — only the modules
-needed for the ACC (Automated Code Compliance) pipeline remain. The agent
-generates Python helper functions that implement building-code compliance
-checks against IFC models; Solibri's rule engine provides the ground truth,
-and the agent's tools are trained to match its per-element verdicts.
+An LLM agent (using the Code-Act pattern) iteratively generates Python
+helper functions that implement building-code compliance checks against IFC
+models. Solibri's rule engine provides the ground truth; the generated
+functions are trained, validated, and tested against its per-element
+verdicts.
 
 ## Pipeline Overview
 
@@ -24,7 +24,7 @@ and the agent's tools are trained to match its per-element verdicts.
           ▼
    acc/res/<model>/ground_truth.json       ← generate_ground_truth.py
           │
-          ▼   (Cobbie CodeAct + validation + assessment loop)
+          ▼   (Code-Act create + validation + assessment loop)
    acc/tools/check_*.py                    ← run_acc_training.py
           │
           ▼   (execute tools on the test split)
@@ -49,24 +49,22 @@ and the agent's tools are trained to match its per-element verdicts.
     any `.baml` function to `client GLM_4_7_OpenRouter` to run the same model
     (`z-ai/glm-4.7`) via OpenRouter if your z.ai key is unavailable.
 - Solibri Anywhere (only needed to regenerate `topics.json` from `.ifc` files;
-  committed `topics.json` already covers all 12 models)
+  the committed `topics.json` already covers all 12 models)
 
 ### BIM models
 
-The 12 `.ifc` models used in the paper are **not committed** (`acc/bim_models/`
-is gitignored). Sources per Table 1 of the paper:
+The 12 `.ifc` models used in the paper live under `acc/bim_models/<name>/`.
+Per Table 1 of the paper, they are split:
 
-|              | Training    | Validation | Test               |
-|--------------|-------------|------------|--------------------|
-|              | 141*        | 103*       | 4351               |
-|              | AC20        | 166*       | Digital Hub        |
-|              | Dental Clinic | FZK House | S. MacAlister      |
-|              | Duplex      | Smiley West | WBDG Office       |
+|              | Training      | Validation  | Test          |
+|--------------|---------------|-------------|---------------|
+|              | 141*          | 103*        | 4351          |
+|              | AC20          | 166*        | Digital Hub   |
+|              | Dental Clinic | FZK House   | S. MacAlister |
+|              | Duplex        | Smiley West | WBDG Office   |
 
-Models marked with `*` are from the authors' BIM fundamentals course; the
-remaining nine are from **IFCBench** (Hellin et al., 2025). Place each model
-under `acc/bim_models/<name>/<name>.ifc` (plus the corresponding `.smc` /
-`Rules.xlsx` / classification CSVs in `acc/setup/`) before running steps 2–5.
+Models marked `*` are from the authors' BIM fundamentals course; the
+remaining nine are from **IFCBench** (Hellin et al., 2025).
 
 ```bash
 uv sync
@@ -94,21 +92,25 @@ All intermediate artefacts (`topics.json`, `ground_truth.json`,
 `model_splits.json`, BAML client) are committed, so you can start at any step.
 
 ### 1. (Optional) Regenerate model split
+
 ```bash
 uv run scripts/run_acc_split_models.py
 ```
 
 ### 2. (Optional) Re-run Solibri and extract BCF
+
 ```bash
 uv run scripts/run_acc_check.py --all
 ```
 
 ### 3. Ground truth
+
 ```bash
 uv run scripts/generate_ground_truth.py
 ```
 
 ### 4. Train tools (batched to avoid `ifcopenshell` memory growth)
+
 ```bash
 bash scripts/run_acc_training_batched.sh --nb-samples 16 --batch-size 1
 ```
@@ -120,11 +122,13 @@ Follow the prompt for the MLflow run ID after the first batch, then reuse it
 with `--continue <run_id>` for subsequent resumes.
 
 ### 5. Evaluate tools on the held-out test split
+
 ```bash
 uv run scripts/run_acc_tool_evaluation.py
 ```
 
 ### 6. Generate paper outputs
+
 ```bash
 uv run scripts/extract_acc_metadata.py      # outputs/ec3/acc_metadata.json
 uv run scripts/extract_acc_traces.py        # outputs/ec3/acc_traces.json
@@ -139,7 +143,7 @@ acc/                      # ACC data & tools
 ├── config/               # rule_templates.json, model_splits.json, coverage_matrix.csv
 ├── res/<model>/          # Solibri outputs + ground_truth.json per model
 ├── setup/                # Solibri rule sets, autorun config
-└── tools/                # Cobbie-trained check_*.py (paper's tools)
+└── tools/                # Generated check_*.py (the paper's tools)
 
 src/
 ├── acc/                  # Solibri integration, BCF parsing, GUID comparison
@@ -181,4 +185,4 @@ uvx ty check src
 
 ## License
 
-MIT
+MIT — see [`LICENSE`](LICENSE).
