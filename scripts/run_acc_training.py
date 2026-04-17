@@ -833,8 +833,7 @@ def handle_save_tool(ctx: ACCContext) -> Tuple[ACCTrainingState, ACCContext]:
         save_success = save_new_tool(
             function_name=ctx.tool_name,
             function_implementation=implementation,
-            directory_path=f"{ACC_TOOLS_PATH}",
-            global_question_num=ctx.rule_idx,
+            directory_path=ACC_TOOLS_PATH,
         )
 
         if save_success:

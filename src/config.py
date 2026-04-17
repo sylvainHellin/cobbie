@@ -1,44 +1,28 @@
 import os
-from dotenv import load_dotenv, find_dotenv
 from typing import Literal
+
+from dotenv import find_dotenv, load_dotenv
 
 load_dotenv(find_dotenv())
 
-# Path
+# Paths
 ROOT_PATH = os.environ["ROOT_PATH"]
-SRC_PATH = os.path.join(ROOT_PATH, "src")
-TEST_IFC_PATH = os.path.join(ROOT_PATH, "src/db/bim_models/duplex/arc.ifc")
-DEVSET_PATH = os.path.join(ROOT_PATH, "src/db/dev_set.json")
-DB_PATH = os.path.join(ROOT_PATH, "src/db/db.db")
-DIRECTORY_IFC_MODELS_PATH = os.path.join(ROOT_PATH, "src/db/bim_models")
-CREATED_TOOLS_PATH = os.path.join(ROOT_PATH, "src/tools/created")
-INITIAL_TOOLS_PATH = os.path.join(ROOT_PATH, "src/tools/initial")
-MANUAL_TOOLS_PATH = os.path.join(ROOT_PATH, "src/tools/manual")
 
-# ACC paths
-ACC_ROOT_PATH = os.path.join(ROOT_PATH, "acc")
 ACC_RES_PATH = os.path.join(ROOT_PATH, "acc", "res")
 ACC_TOOLS_PATH = os.path.join(ROOT_PATH, "acc", "tools")
 ACC_CONFIG_PATH = os.path.join(ROOT_PATH, "acc", "config")
 ACC_SETUP_PATH = os.path.join(ROOT_PATH, "acc", "setup")
 ACC_MODELS_PATH = os.path.join(ROOT_PATH, "acc", "bim_models")
+ACC_ROOT_PATH = os.path.join(ROOT_PATH, "acc")
 
-# URI
+# MLflow
 MLFLOW_URI = "http://127.0.0.1:5000"
 
-# loads secrets
-ANTHROPIC_API_KEY = os.environ["ANTHROPIC_API_KEY"]
-OPENAI_API_KEY = os.environ["OPENAI_API_KEY"]
-GEMINI_API_KEY = os.environ["GEMINI_API_KEY"]
-DEEPSEEK_API_KEY = os.environ["DEEPSEEK_API_KEY"]
-GROQ_API_KEY = os.environ["GROQ_API_KEY"]
-MISTRAL_API_KEY = os.environ["MISTRAL_API_KEY"]
-FIREWORKS_API_KEY = os.environ["FIREWORKS_API_KEY"]
-CEREBRAS_API_KEY = os.environ["CEREBRAS_API_KEY"]
-OPENROUTER_API_KEY = os.environ["OPENROUTER_API_KEY"]
+# Logging
+LOG_LEVEL: Literal["DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"] = "INFO"
 
 
-# Boilerplate code for the toolmaker
+# Boilerplate code prepended to every generated helper function at execution time.
 FUNCTION_BOILERPLATE = """
 import ifcopenshell
 import ifcopenshell.util.element
@@ -138,7 +122,3 @@ def get_library_docs(no_trimesh: bool = False, no_shapely: bool = False) -> str:
     if not no_shapely:
         parts.append(SHAPELY_DOCS)
     return "\n".join(parts)
-
-
-# Configure logger
-LOG_LEVEL: Literal["DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"] = "INFO"
