@@ -15,7 +15,6 @@ wheels/
 # junk
 *.DS_Store
 *.pyc
-*.pdf
 *.bin
 *.pem
 

@@ -118,10 +118,9 @@ src/
 ├── agents/               # create_acc_function.py, assess_acc_tool.py
 ├── baml/                 # BAML sources + generated client
 ├── config.py             # Paths & env-var loading
-├── notebooks/            # acc_results.ipynb
-├── schemas/              # result.py (Ok/Err)
 ├── tools/initial/        # classify_spaces, query_ifcopenshell_docs
-└── util/                 # code_act loop, python_executor, mlflow_utils, ...
+└── util/                 # setup_logger, save_new_tool, code_act loop,
+                          # python_executor, mlflow_utils
 
 scripts/                  # Pipeline entry points (see above)
 outputs/acc/              # Tool-evaluation reports

@@ -405,8 +405,6 @@ def _create_helper_function(
                 )
                 previous_attempts += f"\n{current_attempt}\n"
 
-                # Store raw code as fallback; _create_function_from_source_code
-                # (used downstream in _execute_tool) handles full code blocks via exec()
                 last_function_implementation = result.python_code
 
                 iteration_span.set_attributes(
