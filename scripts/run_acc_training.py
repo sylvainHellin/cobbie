@@ -4,10 +4,7 @@
 #   uv run scripts/run_acc_training.py --start 0 --end 5 --max-retries 3
 
 """
-ACC Training Phase v2 - GUID-Based Validation (Multi-Model)
-
-This script implements the ACC training flow with direct GUID-based validation
-instead of Cobbie-based Q&A verification.
+ACC Training — GUID-based validation across multiple BIM models.
 
 Training Flow:
     START -> CREATE_TOOL -> VALIDATE_TOOL

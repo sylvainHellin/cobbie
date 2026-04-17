@@ -1,5 +1,5 @@
 """
-MLflow utility functions for the Cobbie training system.
+MLflow utility functions for the ACC training pipeline.
 
 This module provides helper functions for managing MLflow runs,
 particularly for continuing existing runs to mitigate memory leak issues.

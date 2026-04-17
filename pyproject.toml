@@ -3,9 +3,9 @@ requires = ["setuptools>=61.0", "wheel"]
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "cobbie"
+name = "acc-function-generation"
 version = "0.1.0"
-description = "Cobbie ACC — reproduction package for the EC3 paper on automated code compliance with IFC models."
+description = "Reproduction package for the EC3 2026 paper on LLM-agent-generated automated code compliance checking functions for IFC models."
 readme = "README.md"
 requires-python = ">=3.12, <3.13"
 dependencies = [

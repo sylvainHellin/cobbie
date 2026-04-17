@@ -1,4 +1,4 @@
-"""Python execution utilities for COBBIE and other components."""
+"""Python execution utilities — sandboxed interpreter + code-action runner."""
 
 from __future__ import annotations
 

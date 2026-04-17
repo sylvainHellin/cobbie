@@ -1,8 +1,4 @@
-"""Loguru logger configuration for the Cobbie system.
-
-This module provides centralized logging configuration using loguru,
-replacing the custom ColoredFormatter-based logging system.
-"""
+"""Loguru logger configuration."""
 
 import sys
 from pathlib import Path
@@ -17,13 +13,9 @@ def setup_logger():
 
     Sets up two handlers:
     1. Console (stderr) with colored output
-    2. Rotating file handler in logs/cobbie.log
+    2. Rotating file handler in logs/acc.log (10 MB rotation, 5 files retained)
 
     The logger respects the LOG_LEVEL setting from src/config.py.
-    File rotation occurs at 10 MB with retention of 5 files (~50 MB total).
-
-    Returns:
-        logger: Configured loguru logger instance
     """
     logger.remove()
 
@@ -38,7 +30,7 @@ def setup_logger():
     log_dir.mkdir(parents=True, exist_ok=True)
 
     logger.add(
-        log_dir / "cobbie.log",
+        log_dir / "acc.log",
         rotation="10 MB",  # Rotate when file reaches 10MB
         retention=5,  # Keep 5 rotated files
         level=LOG_LEVEL,

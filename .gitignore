@@ -37,6 +37,7 @@ logs/
 logs.log
 
 # ACC intermediate Solibri artefacts (regenerate via run_acc_check.py)
+acc/setup/autorun_setting.xml
 acc/res/*/smc
 acc/res/*/bcfzip
 acc/res/*/temp

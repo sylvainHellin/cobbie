@@ -1,7 +1,4 @@
-"""
-Agent that creates new helper functions.
-Extracts and implements reusable helper functions from successful Cobbie executions.
-"""
+"""Code-Act agent that iteratively generates a reusable ACC check function."""
 
 import os
 import time
@@ -44,8 +41,8 @@ def _helper_function_creator_iter(
     calling the LLM to either generate code or provide a final implementation.
 
     Args:
-        history: Complete execution history from Cobbie
-        example_question: Question answered by Cobbie
+        history: Accumulated execution history from previous iterations
+        example_question: The rule's natural-language question
         example_answer: Ground truth answer
         example_bim_model: Path to BIM model used in example
         other_bim_models_for_testing: List of other BIM models for testing
@@ -143,8 +140,8 @@ def _create_helper_function(
     by iteratively generating and executing Python code.
 
     Args:
-        history: Complete execution history from Cobbie
-        example_question: Question answered by Cobbie
+        history: Accumulated execution history from previous iterations
+        example_question: The rule's natural-language question
         example_answer: Ground truth answer
         example_bim_model: Path to BIM model used in example
         function_name: Name of the function to create or enhance
@@ -514,8 +511,8 @@ def create_helper_function(
     Returns NewHelperFunction, Collector, and execution history for performance tracking.
 
     Args:
-        history: Complete execution history from Cobbie
-        example_question: Question answered by Cobbie
+        history: Accumulated execution history from previous iterations
+        example_question: The rule's natural-language question
         example_answer: Ground truth answer
         example_bim_model: Path to BIM model used in example
         function_name: Name of the function to create or enhance
@@ -696,7 +693,7 @@ if __name__ == "__main__":
     mlflow.set_tracking_uri("http://127.0.0.1:5000")
     mlflow.set_experiment("CreateACCFunction")
 
-    # Setup tools for Cobbie
+    # Pre-loaded runtime tools available to the agent
     tools_dict = {
         "query_ifcopenshell_docs": query_ifcopenshell_docs,
     }

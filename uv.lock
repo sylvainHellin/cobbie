@@ -3,6 +3,50 @@ revision = 1
 requires-python = "==3.12.*"
 
 [[package]]
+name = "acc-function-generation"
+version = "0.1.0"
+source = { editable = "." }
+dependencies = [
+    { name = "baml-py" },
+    { name = "ifcopenshell", marker = "platform_machine != 'x86_64' or sys_platform != 'linux'" },
+    { name = "loguru" },
+    { name = "mlflow" },
+    { name = "numpy" },
+    { name = "pandas" },
+    { name = "python-dotenv" },
+    { name = "requests" },
+    { name = "scipy" },
+    { name = "shapely" },
+    { name = "tiktoken" },
+    { name = "trimesh" },
+]
+
+[package.optional-dependencies]
+dev = [
+    { name = "pytest" },
+    { name = "ty" },
+]
+
+[package.metadata]
+requires-dist = [
+    { name = "baml-py", specifier = "==0.218.1" },
+    { name = "ifcopenshell", marker = "platform_machine != 'x86_64' or sys_platform != 'linux'", specifier = ">=0.8.2" },
+    { name = "loguru", specifier = ">=0.7.3" },
+    { name = "mlflow", specifier = ">3.5.2" },
+    { name = "numpy", specifier = ">=1.26" },
+    { name = "pandas", specifier = ">=2.2" },
+    { name = "pytest", marker = "extra == 'dev'", specifier = ">=9.0.1" },
+    { name = "python-dotenv", specifier = ">=1.1.0" },
+    { name = "requests", specifier = ">=2.31" },
+    { name = "scipy", specifier = ">=1.13" },
+    { name = "shapely", specifier = ">=2.0.0" },
+    { name = "tiktoken", specifier = ">=0.12.0" },
+    { name = "trimesh", specifier = ">=4.0.0" },
+    { name = "ty", marker = "extra == 'dev'", specifier = ">=0.0.1a6" },
+]
+provides-extras = ["dev"]
+
+[[package]]
 name = "alembic"
 version = "1.18.1"
 source = { registry = "https://pypi.org/simple" }
@@ -157,50 +201,6 @@ sdist = { url = "https://files.pythonhosted.org/packages/27/fb/576f067976d320f5f
 wheels = [
     { url = "https://files.pythonhosted.org/packages/88/39/799be3f2f0f38cc727ee3b4f1445fe6d5e4133064ec2e4115069418a5bb6/cloudpickle-3.1.2-py3-none-any.whl", hash = "sha256:9acb47f6afd73f60dc1df93bb801b472f05ff42fa6c84167d25cb206be1fbf4a", size = 22228 },
 ]
-
-[[package]]
-name = "cobbie"
-version = "0.1.0"
-source = { editable = "." }
-dependencies = [
-    { name = "baml-py" },
-    { name = "ifcopenshell", marker = "platform_machine != 'x86_64' or sys_platform != 'linux'" },
-    { name = "loguru" },
-    { name = "mlflow" },
-    { name = "numpy" },
-    { name = "pandas" },
-    { name = "python-dotenv" },
-    { name = "requests" },
-    { name = "scipy" },
-    { name = "shapely" },
-    { name = "tiktoken" },
-    { name = "trimesh" },
-]
-
-[package.optional-dependencies]
-dev = [
-    { name = "pytest" },
-    { name = "ty" },
-]
-
-[package.metadata]
-requires-dist = [
-    { name = "baml-py", specifier = "==0.218.1" },
-    { name = "ifcopenshell", marker = "platform_machine != 'x86_64' or sys_platform != 'linux'", specifier = ">=0.8.2" },
-    { name = "loguru", specifier = ">=0.7.3" },
-    { name = "mlflow", specifier = ">3.5.2" },
-    { name = "numpy", specifier = ">=1.26" },
-    { name = "pandas", specifier = ">=2.2" },
-    { name = "pytest", marker = "extra == 'dev'", specifier = ">=9.0.1" },
-    { name = "python-dotenv", specifier = ">=1.1.0" },
-    { name = "requests", specifier = ">=2.31" },
-    { name = "scipy", specifier = ">=1.13" },
-    { name = "shapely", specifier = ">=2.0.0" },
-    { name = "tiktoken", specifier = ">=0.12.0" },
-    { name = "trimesh", specifier = ">=4.0.0" },
-    { name = "ty", marker = "extra == 'dev'", specifier = ">=0.0.1a6" },
-]
-provides-extras = ["dev"]
 
 [[package]]
 name = "colorama"

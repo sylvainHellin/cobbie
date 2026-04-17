@@ -1,6 +1,8 @@
-"""
-Site customization for the cobbie project.
-This file is automatically imported by Python and sets up the environment.
+"""Site customization.
+
+Automatically imported by Python. Locates the project root (identified by
+pyproject.toml / uv.lock), loads its .env, and adds ROOT_PATH to sys.path so
+`from src...` imports resolve from any cwd.
 """
 
 import os

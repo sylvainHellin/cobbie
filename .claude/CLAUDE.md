@@ -1,9 +1,9 @@
 # CLAUDE.md
 
-This branch (`acc_published`) is the slim reproduction package for the EC3
-paper on ACC (Automated Code Compliance) checking with Cobbie. Only ACC-related
-modules are kept; the BIM-QA training/evaluation stack on `main` has been
-removed here.
+Reproduction package for the EC³ 2026 paper *Assessing the Viability of LLM
+Agents for Generating Reusable Compliance Checking Functions*
+(Fuchs, Hellin, Borrmann). Keep the repo narrowly scoped to the ACC
+pipeline described below.
 
 ## Build, Lint & Type Check
 
@@ -16,7 +16,7 @@ All Python commands must use `uv run`.
 
 ## MLflow Server
 
-Start before any training/extraction script:
+Start before any training / extraction script:
 
 ```bash
 cd .mlflow
@@ -26,6 +26,18 @@ uv run mlflow server --host 127.0.0.1 --port 5000 \
 ```
 
 `-w 1` is required to avoid SQLite contention on concurrent writes.
+
+## API Keys
+
+Required in `.env` (see `.env.example`):
+
+- `CONTEXT7_API_KEY` — `query_ifcopenshell_docs` fetches from Context7's
+  `/ifcopenshell/ifcopenshell` library.
+- `Z_AI_API_KEY` — default BAML client (`GLM_4_7`) used to produce the
+  paper results.
+
+Optional: `OPENROUTER_API_KEY` — swap `client GLM_4_7` → `client GLM_4_7_OpenRouter`
+in any `.baml` function to run `z-ai/glm-4.7` via OpenRouter instead.
 
 ## ACC Pipeline
 
@@ -38,13 +50,14 @@ uv run mlflow server --host 127.0.0.1 --port 5000 \
 | 5. Evaluate | `scripts/run_acc_tool_evaluation.py` | `outputs/acc/tool_evaluation_*.{json,md}` |
 | 6. Paper outputs | `scripts/extract_acc_metadata.py`, `extract_acc_traces.py`, `generate_acc_results_table.py` | `outputs/ec3/*` |
 
-Training is batched as separate subprocesses to prevent `ifcopenshell`
-C++ object accumulation. The shell script handles run-id wiring and resume
-via `--continue <mlflow_run_id>`.
+Training defaults match the paper: `--max-iterations 15` (n_max_iter),
+`--max-retries 2` (retry budget). Training is batched as separate
+subprocesses to prevent `ifcopenshell` C++ object accumulation; the shell
+wrapper handles run-id wiring and resume via `--continue <mlflow_run_id>`.
 
 ## Architecture
 
-- **`src/agents/create_acc_function.py`** — CodeAct-style BAML loop that
+- **`src/agents/create_acc_function.py`** — Code-Act-style BAML loop that
   develops a candidate ACC check function. Writes, executes, and iterates
   until the function compiles and passes in-loop sanity tests.
 - **`src/agents/assess_acc_tool.py`** — Diagnoses why a tool under-performed
@@ -53,8 +66,9 @@ via `--continue <mlflow_run_id>`.
 - **`src/util/code_act_inner_loop.py`** — `_execute_code_action` sandbox
   runner shared by the tool-creation loop.
 - **`src/tools/initial/`** — Pre-loaded utilities the trained tools may call:
-  `classify_spaces`, `query_ifcopenshell_docs` (fetches from Context7's
-  `/ifcopenshell/ifcopenshell` library; requires `CONTEXT7_API_KEY`).
+  `classify_spaces` (mirrors Solibri's semantic space-usage classifications
+  so the agent is on equal footing with the verifier, per §Experimental
+  Setup of the paper) + `query_ifcopenshell_docs`.
 
 ## BAML
 
@@ -62,29 +76,24 @@ Sources in `src/baml/baml_src/`, generated client in `src/baml/baml_client/`.
 Regenerate after any `.baml` change:
 
 ```bash
-uv run baml-cli generate
+cd src/baml && uv run baml-cli generate
 ```
 
 Active BAML functions: `HelperFunctionCreator`, `ACCToolAssessor`.
 
 ## Generated Outputs
 
-All generated files go under `outputs/` — either `outputs/acc/` (tool-eval
-reports) or `outputs/ec3/` (paper artefacts). Do not write generated files
-elsewhere.
+All generated files go under `outputs/` — either `outputs/acc/`
+(tool-eval reports) or `outputs/ec3/` (paper artefacts). Do not write
+generated files elsewhere. Run-time logs go to `logs/` at repo root.
 
 ## Development Rules
 
 - Use `uv run` for all Python commands.
-- No need to update CLAUDE.md / README.md unless the pipeline itself changes.
+- Update `CLAUDE.md` / `README.md` when the pipeline, dependencies, or
+  required env vars change.
 - Before claiming a change is done: `uv run ruff check .` and
-  `uvx ty check <changed paths>` must pass cleanly *on the changed code*.
-  (There are pre-existing warnings in the repo; do not regress them.)
-- Use `context7` MCP for library docs (`/mlflow/mlflow`, `/websites/boundaryml`)
-  before writing non-trivial API calls.
-
-## Non-goals on this branch
-
-The BIM-QA pipeline, IFC-Bench dataset, human-judge IRR computation, baseline
-system, manual tools, and the dynamically-created BIM-QA tools have all been
-removed. Do not reintroduce them here — they live on `main`.
+  `uvx ty check <changed paths>` must pass cleanly *on the changed code*
+  (pre-existing warnings in the repo exist — do not regress them).
+- Use `context7` MCP for library docs (`/mlflow/mlflow`,
+  `/websites/boundaryml`) before writing non-trivial API calls.
