@@ -8,11 +8,7 @@ from .get_function_code import get_function_code
 from .get_created_tools import get_created_tools, get_tools_description, get_tools_names
 from .get_usage_openrouter import get_usage_openrouter
 from .generate_tools_docs import generate_tools_docs
-from .delete_tool import delete_tool
-from .extract_tool_usage import extract_tools_used
 from .code_act_inner_loop import _execute_code_action
-# NOTE: metrics module not imported here to avoid circular import with answer_verifier
-# Import directly from src.util.metrics if needed
 
 __all__ = [
     "setup_logger",
@@ -27,7 +23,5 @@ __all__ = [
     "get_tools_names",
     "get_usage_openrouter",
     "generate_tools_docs",
-    "delete_tool",
-    "extract_tools_used",
-    "_execute_code_action"
+    "_execute_code_action",
 ]

@@ -19,72 +19,11 @@ type_map = {
     "types.ACCToolAssessment": types.ACCToolAssessment,
     "stream_types.ACCToolAssessment": stream_types.ACCToolAssessment,
 
-    "types.AlignedQAPair": types.AlignedQAPair,
-    "stream_types.AlignedQAPair": stream_types.AlignedQAPair,
-
-    "types.AnswerEvaluationResult": types.AnswerEvaluationResult,
-    "stream_types.AnswerEvaluationResult": stream_types.AnswerEvaluationResult,
-
-    "types.AssessmentResult": types.AssessmentResult,
-    "stream_types.AssessmentResult": stream_types.AssessmentResult,
-
-    "types.CategoryValidationResult": types.CategoryValidationResult,
-    "stream_types.CategoryValidationResult": stream_types.CategoryValidationResult,
-
-    "types.ChunkReviewInput": types.ChunkReviewInput,
-    "stream_types.ChunkReviewInput": stream_types.ChunkReviewInput,
-
-    "types.ChunkReviewOutput": types.ChunkReviewOutput,
-    "stream_types.ChunkReviewOutput": stream_types.ChunkReviewOutput,
-
     "types.CodeAction": types.CodeAction,
     "stream_types.CodeAction": stream_types.CodeAction,
-
-    "types.ErrorAnalysisResult": types.ErrorAnalysisResult,
-    "stream_types.ErrorAnalysisResult": stream_types.ErrorAnalysisResult,
-
-    "types.FaultyToolAnalysis": types.FaultyToolAnalysis,
-    "stream_types.FaultyToolAnalysis": stream_types.FaultyToolAnalysis,
-
-    "types.FinalAnswer": types.FinalAnswer,
-    "stream_types.FinalAnswer": stream_types.FinalAnswer,
-
-    "types.FunctionImplementation": types.FunctionImplementation,
-    "stream_types.FunctionImplementation": stream_types.FunctionImplementation,
-
-    "types.HelperFunctionAssessment": types.HelperFunctionAssessment,
-    "stream_types.HelperFunctionAssessment": stream_types.HelperFunctionAssessment,
-
-    "types.ImprovedImplementation": types.ImprovedImplementation,
-    "stream_types.ImprovedImplementation": stream_types.ImprovedImplementation,
 
     "types.NewHelperFunction": types.NewHelperFunction,
     "stream_types.NewHelperFunction": stream_types.NewHelperFunction,
 
-    "types.NewToolAnalysis": types.NewToolAnalysis,
-    "stream_types.NewToolAnalysis": stream_types.NewToolAnalysis,
-
-    "types.SimilarityResult": types.SimilarityResult,
-    "stream_types.SimilarityResult": stream_types.SimilarityResult,
-
-    "types.TestAndImproveError": types.TestAndImproveError,
-    "stream_types.TestAndImproveError": stream_types.TestAndImproveError,
-
-    "types.TestAndImproveSuccess": types.TestAndImproveSuccess,
-    "stream_types.TestAndImproveSuccess": stream_types.TestAndImproveSuccess,
-
-    "types.ToolCreationResult": types.ToolCreationResult,
-    "stream_types.ToolCreationResult": stream_types.ToolCreationResult,
-
-    "types.ToolOptimizationResult": types.ToolOptimizationResult,
-    "stream_types.ToolOptimizationResult": stream_types.ToolOptimizationResult,
-
-    "types.UpdatedHelperFunction": types.UpdatedHelperFunction,
-    "stream_types.UpdatedHelperFunction": stream_types.UpdatedHelperFunction,
-
-
-    "types.CriterionResult": types.CriterionResult,
-
-    "types.QuestionCategory": types.QuestionCategory,
 
 }
