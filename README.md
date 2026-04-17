@@ -38,8 +38,11 @@ ground truth; Cobbie's tools are trained to match its per-element verdicts.
 - API keys in `.env` (see `.env.example`):
   - `CONTEXT7_API_KEY` — required; `query_ifcopenshell_docs` fetches IFC docs
     from [Context7](https://context7.com) (`/ifcopenshell/ifcopenshell`)
-  - LLM provider key(s) for the training model (e.g. `OPENROUTER_API_KEY`,
-    `ANTHROPIC_API_KEY`)
+  - `Z_AI_API_KEY` — required; the default BAML client (`GLM_4_7`) calls
+    z.ai directly. This is the configuration the paper was produced with.
+  - `OPENROUTER_API_KEY` — optional backup. Swap the `client GLM_4_7` line in
+    any `.baml` function to `client GLM_4_7_OpenRouter` to run the same model
+    (`z-ai/glm-4.7`) via OpenRouter if your z.ai key is unavailable.
 - Solibri Anywhere (only needed to regenerate `topics.json` from `.ifc` files;
   committed `topics.json` already covers all 12 models)
 

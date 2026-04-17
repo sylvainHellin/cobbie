@@ -1,53 +1,45 @@
-# Python-generated files
+# Python
 __pycache__/
 *.py[oc]
+*.pyc
 build/
 dist/
 wheels/
 *.egg-info
+.ruff_cache
 
 # Virtual environments
 .venv
 
-# secrets
+# Secrets
 .env
 
-# junk
+# OS / editor junk
 *.DS_Store
-*.pyc
+.cursor
+.claude
+
+# Binaries
 *.bin
 *.pem
 
-# big files
+# Large / heavy files
 *.ifc
+*.sqlite
+*.db
 
-# no need to upload
-src/bim_models
-src.db/*.txt
-src.db/*.csv
-src/db/bim_models
-src/db/logs/
-pyrightconfig.json
+# MLflow
 .mlflow/
 mlartifacts/
-logs.log
-.cursor
-scripts/text_count_tokens.txt
 
+# Logs
+logs/
+logs.log
+
+# ACC intermediate Solibri artefacts (regenerate via run_acc_check.py)
 acc/res/*/smc
 acc/res/*/bcfzip
 acc/res/*/temp
 
+# ACC BIM models are distributed separately
 acc/bim_models
-.claude
-.ruff_cache
-*.sqlite
-*.db
-# External cloned repos (for docs indexing)
-src/docs_indexer/external/
-
-# All generated outputs (reports, figures, cache)
-# outputs/
-
-
-scripts/debug_*

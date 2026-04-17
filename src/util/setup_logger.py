@@ -17,7 +17,7 @@ def setup_logger():
 
     Sets up two handlers:
     1. Console (stderr) with colored output
-    2. Rotating file handler in src/db/logs/cobbie.log
+    2. Rotating file handler in logs/cobbie.log
 
     The logger respects the LOG_LEVEL setting from src/config.py.
     File rotation occurs at 10 MB with retention of 5 files (~50 MB total).
@@ -25,10 +25,8 @@ def setup_logger():
     Returns:
         logger: Configured loguru logger instance
     """
-    # Remove default handler
     logger.remove()
 
-    # Console handler with colors and detailed formatting
     logger.add(
         sys.stderr,
         format="<green>{time:YYYY-MM-DD HH:mm:ss}</green> | <level>{level: <8}</level> | <cyan>{file.name}</cyan>:<cyan>{function}</cyan>:<cyan>{line}</cyan> - <level>{message}</level>",
@@ -36,8 +34,7 @@ def setup_logger():
         colorize=True,
     )
 
-    # File handler with rotation
-    log_dir = Path(ROOT_PATH) / "src" / "db" / "logs"
+    log_dir = Path(ROOT_PATH) / "logs"
     log_dir.mkdir(parents=True, exist_ok=True)
 
     logger.add(

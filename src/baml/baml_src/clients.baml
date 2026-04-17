@@ -1,18 +1,12 @@
-// Learn more about clients at https://docs.boundaryml.com/docs/snippets/clients/overview
+// LLM clients for the ACC pipeline.
+//
+// Primary: Z.AI GLM 4.7 (the config used to produce the paper results).
+// The `base_url` below is the exact endpoint the paper runs targeted — if
+// your Z.AI key doesn't accept it, swap `client GLM_4_7` to
+// `client GLM_4_7_OpenRouter` in any baml function to run the same model
+// (z-ai/glm-4.7) via OpenRouter.
 
-// Anthropic Claude Haiku - for lightweight tasks like chunk review
-client<llm> ClaudeHaiku {
-  provider anthropic
-  retry_policy Exponential
-  options {
-    model "claude-3-5-haiku-latest"
-    api_key env.ANTHROPIC_API_KEY
-    max_tokens 1024
-  }
-}
-
-// Z.AI GLM 4.7 (with Coding Plan API key)
-client<llm> GLM_4_7{
+client<llm> GLM_4_7 {
   provider openai
   retry_policy Exponential
   options {
@@ -24,69 +18,14 @@ client<llm> GLM_4_7{
   }
 }
 
-// Z.AI GLM 4.7 Flash (lightweight variant, free)
-client<llm> GLM_4_7_Flash {
-  provider openai
+client<llm> GLM_4_7_OpenRouter {
+  provider openrouter
   retry_policy Exponential
   options {
-    base_url "https://api.z.ai/api/coding/paas/v4"
-    model "glm-4.7-flash"
-    api_key env.Z_AI_API_KEY
+    model "z-ai/glm-4.7"
+    api_key env.OPENROUTER_API_KEY
     temperature 0.1
     max_tokens 8192
-  }
-}
-
-// Z.AI GLM 4.5 (with Coding Plan API key)
-client<llm> GLM_4_5_air{
-  provider openai
-  retry_policy Exponential
-  options {
-    base_url "https://api.z.ai/api/coding/paas/v4"
-    model "glm-4.5-air"
-    api_key env.Z_AI_API_KEY
-    temperature 0.1
-    max_tokens 8192
-  }
-}
-
-client<llm> Devstral {
-  provider "openai-generic"
-  retry_policy Constant
-  options {
-    base_url "http://localhost:11434/v1"
-    model "devstral-small-2:latest"
-  }
-}
-
-client<llm> Gemini_2_5_Flash_Lite {
-  provider google-ai
-  retry_policy Exponential
-  options {
-    model "gemini-2.5-flash-lite"
-    api_key env.GEMINI_API_KEY
-    generationConfig {
-      temperature 0.1
-    }
-  }
-}
-
-// Gemini 3 Pro Preview - for second LLM judge evaluation
-client<llm> Gemini_3_Pro {
-  provider google-ai
-  retry_policy Exponential
-  options {
-    model "gemini-3-pro-preview"
-    api_key env.GEMINI_API_KEY
-  }
-}
-
-// https://docs.boundaryml.com/docs/snippets/clients/retry
-retry_policy Constant {
-  max_retries 3
-  strategy {
-    type constant_delay
-    delay_ms 200
   }
 }
 

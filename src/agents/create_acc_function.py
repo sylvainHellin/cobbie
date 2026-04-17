@@ -705,7 +705,7 @@ if __name__ == "__main__":
     test_question = """Rule: 304.3.1 Circular Space Circular space shall have a diameter of 1.52 m (60 inches) minimum.
 Parameters: Applicable Space Classifications: Balcony, Circulation, Garage, Habitable, Institutional, Lobby, Mercantile, Office, Parking, Production, Refuge, Stair Hall, Workplace
 Question: What spaces in the current IFC model do not have enough room for wheelchair turning space with the required diameter? Return the IFC GUIDs of the spaces."""
-    model_path = "src/db/bim_models/duplex/arc.ifc"
+    model_path = "acc/bim_models/duplex/arc.ifc"
     ground_truth = "[10mjSDZJj9gPS2PrQaxa3z, 10mjSDZJj9gPS2PrQaxa4o]"  # Adjust based on actual model
 
 
