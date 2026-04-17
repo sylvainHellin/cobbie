@@ -22,10 +22,10 @@ Start before any training / extraction script:
 cd .mlflow
 uv run mlflow server --host 127.0.0.1 --port 5000 \
   --backend-store-uri sqlite:///mlflow.sqlite \
-  --uvicorn-opts "--timeout=120 -w 1"
+  --uvicorn-opts "--timeout-keep-alive 120 --workers 1"
 ```
 
-`-w 1` is required to avoid SQLite contention on concurrent writes.
+`--workers 1` is required to avoid SQLite contention on concurrent writes.
 
 ## API Keys
 

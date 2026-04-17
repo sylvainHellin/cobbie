@@ -72,7 +72,7 @@ cursor=$start
 if [[ -z "$run_id" ]]; then
     echo ""
     echo "> Running first rule (index ${start}) to create MLflow run..."
-    output=$(python scripts/run_acc_training.py --start "$start" --end $(( start + 1 )) "${extra_args[@]}")
+    output=$(python scripts/run_acc_training.py --start "$start" --end $(( start + 1 )) ${extra_args[@]+"${extra_args[@]}"})
     run_id=$(echo "$output" | grep '^MLFLOW_RUN_ID=' | cut -d= -f2)
 
     if [[ -z "$run_id" ]]; then
@@ -91,7 +91,7 @@ while [[ $cursor -lt $total_end ]]; do
 
     echo ""
     echo "> Batch: rules ${cursor}..$(( cursor + current_batch - 1 )) (${current_batch} rules)"
-    python scripts/run_acc_training.py --start "$cursor" --end $(( cursor + current_batch )) --continue "$run_id" "${extra_args[@]}"
+    python scripts/run_acc_training.py --start "$cursor" --end $(( cursor + current_batch )) --continue "$run_id" ${extra_args[@]+"${extra_args[@]}"}
 
     if [[ $? -ne 0 ]]; then
         echo "Error: Batch starting at ${cursor} failed."
