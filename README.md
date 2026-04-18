@@ -90,26 +90,26 @@ uv run mlflow server \
 
 All intermediate artefacts (`topics.json`, `ground_truth.json`,
 `model_splits.json`, BAML client) are committed, so you can start at any step.
+`acc/config/model_splits.json` is the frozen 4/4/4 split reported in the
+paper (Table 1). The greedy coverage-maximising splitter that produced it
+lives at `scripts/run_acc_split_models.py`; it reads
+`acc/res/ground_truth_stats.csv`. Note that subsequent fixes to the ground
+truth have changed those stats, so re-running the splitter today will yield
+a different split — do not regenerate if you want to reproduce the paper.
 
-### 1. (Optional) Regenerate model split
-
-```bash
-uv run scripts/run_acc_split_models.py
-```
-
-### 2. (Optional) Re-run Solibri and extract BCF
+### 1. (Optional) Re-run Solibri and extract BCF
 
 ```bash
 uv run scripts/run_acc_check.py --all
 ```
 
-### 3. Ground truth
+### 2. Ground truth
 
 ```bash
 uv run scripts/generate_ground_truth.py
 ```
 
-### 4. Train tools (batched to avoid `ifcopenshell` memory growth)
+### 3. Train tools (batched to avoid `ifcopenshell` memory growth)
 
 ```bash
 bash scripts/run_acc_training_batched.sh --nb-samples 16 --batch-size 1
@@ -121,13 +121,13 @@ Defaults match the paper: `--max-iterations 15` (n_max_iter) and
 Follow the prompt for the MLflow run ID after the first batch, then reuse it
 with `--continue <run_id>` for subsequent resumes.
 
-### 5. Evaluate tools on the held-out test split
+### 4. Evaluate tools on the held-out test split
 
 ```bash
 uv run scripts/run_acc_tool_evaluation.py
 ```
 
-### 6. Generate paper outputs
+### 5. Generate paper outputs
 
 ```bash
 uv run scripts/extract_acc_metadata.py      # outputs/ec3/acc_metadata.json

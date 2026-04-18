@@ -41,14 +41,19 @@ in any `.baml` function to run `z-ai/glm-4.7` via OpenRouter instead.
 
 ## ACC Pipeline
 
+The 4/4/4 model split is frozen in `acc/config/model_splits.json` (paper
+Table 1). The greedy splitter that produced it is `scripts/run_acc_split_models.py`;
+ground-truth fixes since the paper have changed the input stats, so
+re-running it now yields a *different* split. Treat the committed JSON as
+authoritative; do not regenerate when reproducing.
+
 | Step | Script | Output |
 |---|---|---|
-| 1. Split models | `scripts/run_acc_split_models.py` | `acc/config/model_splits.json` |
-| 2. Run Solibri | `scripts/run_acc_check.py` | `acc/res/<model>/issues/topics.json` |
-| 3. Ground truth | `scripts/generate_ground_truth.py` | `acc/res/<model>/ground_truth.json` |
-| 4. Train tools | `scripts/run_acc_training_batched.sh` | MLflow runs + `acc/tools/*.py` |
-| 5. Evaluate | `scripts/run_acc_tool_evaluation.py` | `outputs/acc/tool_evaluation_*.{json,md}` |
-| 6. Paper outputs | `scripts/extract_acc_metadata.py`, `extract_acc_traces.py`, `generate_acc_results_table.py` | `outputs/ec3/*` |
+| 1. Run Solibri | `scripts/run_acc_check.py` | `acc/res/<model>/issues/topics.json` |
+| 2. Ground truth | `scripts/generate_ground_truth.py` | `acc/res/<model>/ground_truth.json` |
+| 3. Train tools | `scripts/run_acc_training_batched.sh` | MLflow runs + `acc/tools/*.py` |
+| 4. Evaluate | `scripts/run_acc_tool_evaluation.py` | `outputs/acc/tool_evaluation_*.{json,md}` |
+| 5. Paper outputs | `scripts/extract_acc_metadata.py`, `extract_acc_traces.py`, `generate_acc_results_table.py` | `outputs/ec3/*` |
 
 Training defaults match the paper: `--max-iterations 15` (n_max_iter),
 `--max-retries 2` (retry budget). Training is batched as separate
