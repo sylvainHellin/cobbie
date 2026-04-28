@@ -49,9 +49,7 @@ This is a sophisticated AI System named Cobbie (COde Based BIM Information Extra
 - **Tool Ecosystem**: `src/tools/initial/` (base tools) and `src/tools/created/` (dynamically generated)
 - **BAML**: `src/baml/baml_src/` (source) and `src/baml/baml_client/` (auto-generated). Regenerate with `cd src/baml && uv run baml-cli generate`
 - **Data Pipeline**: SQLite database with MLflow tracking
-- **Web Interface**: See [cobbie-web](../cobbie-web) for FastAPI backend and React frontend
-  - **Backend**: `cd ../cobbie-web/api && uv run uvicorn main:app --host 127.0.0.1 --port 8000 --reload`
-  - **Frontend**: `cd ../cobbie-web && pnpm run dev` (runs on port 8080)
+- **Web Interface**: Optional companion web UI (separate repository)
 
 
 ## Development Notes
@@ -74,7 +72,7 @@ This is a sophisticated AI System named Cobbie (COde Based BIM Information Extra
 - MLflow for experiment tracking and model performance monitoring
 
 ### Key Workflows
-1. **Development**: Start MLflow, then use cobbie-web for API and web interface
+1. **Development**: Start MLflow, then run training/evaluation scripts
 2. **Training**: Use training scripts with configurable models, batch processing, and resume capabilities
 3. **Evaluation**: Run evaluation scripts with comprehensive metrics and MLflow tracking
 4. **Tool Management**: Tools are dynamically created during training and persisted for inference

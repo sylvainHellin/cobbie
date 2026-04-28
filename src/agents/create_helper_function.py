@@ -655,7 +655,7 @@ if __name__ == "__main__":
 
     from src.agents.cobbie import cobbie
     from src.agents.identify_helper_function import identify_helper_function
-    from src.config import TEST_IFC_PATH
+    from src.config import TEST_IFC_PATH, DIRECTORY_IFC_MODELS_PATH
     from src.tools.initial import query_ifcopenshell_docs
 
     # Try to set up MLflow tracking
@@ -675,7 +675,7 @@ if __name__ == "__main__":
     # Get list of available BIM models for testing
     import os
 
-    bim_models_dir = "/Users/sylvainhellin/code/tum/cobbie/src/db/bim_models"
+    bim_models_dir = DIRECTORY_IFC_MODELS_PATH
     print("=" * 80)
     print("STEP 1: Running Cobbie to answer question")
     print("=" * 80)

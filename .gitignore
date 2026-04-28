@@ -62,3 +62,4 @@ src/db/Solibri-BIM-F
 src/db/Solibri-BIM-F.zip
 /.pi/workflow
 /src/db/chroma_docs/
+/.fastembed_cache

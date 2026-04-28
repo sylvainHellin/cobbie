@@ -225,8 +225,8 @@ def count_doors_by_floor(ifc_file_path: str, floor_name: str) -> int:
     """#
     error_description "The function ignores the floor_name parameter and returns ALL doors in the building (14) instead of just the doors on the specified floor (6 for Level 1). The function should filter doors by their ContainedInStructure relationships and only count doors where RelatingStructure.Name == floor_name."
     history_faulty_tool_use "Cobbie called count_doors_by_floor(ifc_file_path, 'Level 1') expecting to get only doors on Level 1, but got 14 (total doors) instead of 6 (Level 1 doors). The function was used to answer 'How many doors are on the ground floor?'"
-    ifc_model_path "/Users/sylvainhellin/code/tum/cobbie/src/db/bim_models/duplex/arc.ifc"
-    other_bim_models_for_testing ["/Users/sylvainhellin/code/tum/cobbie/src/db/bim_models/duplex/arc.ifc", "/Users/sylvainhellin/code/tum/cobbie/src/db/bim_models/house.ifc"]
+    ifc_model_path "/path/to/bim_models/duplex/arc.ifc"
+    other_bim_models_for_testing ["/path/to/bim_models/duplex/arc.ifc", "/path/to/bim_models/house.ifc"]
   }
 }
 
@@ -261,7 +261,7 @@ def get_element_thickness(ifc_file_path: str, element_guid: str) -> float:
     return 0.0
     """#
     error_description "The function looks for 'Width' property when it should look for 'Thickness' property. When called on a wall element that has Thickness=0.2m, the function returns 0.0 because it's searching for the wrong property name."
-    ifc_model_path "/Users/sylvainhellin/code/tum/cobbie/src/db/bim_models/duplex/arc.ifc"
+    ifc_model_path "/path/to/bim_models/duplex/arc.ifc"
   }
 }
 
@@ -297,6 +297,6 @@ def calculate_area_by_type(ifc_file_path: str, ifc_type: str) -> float:
     return total_area
     """#
     error_description "The function fails when elements don't have geometry or when the IFC type doesn't exist. It should handle cases where geometry is not available and validate that the ifc_type parameter is valid before processing."
-    ifc_model_path "/Users/sylvainhellin/code/tum/cobbie/src/db/bim_models/duplex/arc.ifc"
+    ifc_model_path "/path/to/bim_models/duplex/arc.ifc"
   }
 }
