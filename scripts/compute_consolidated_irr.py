@@ -2,7 +2,7 @@
 """
 Compute IRR between Consolidated Human Judgment and LLM Judges.
 
-After Sylvain and Stefan discussed all disagreements, this script:
+After H1 and H2 discussed all disagreements, this script:
 1. Builds the full post-discussion dataset (original agreements + discussed disagreements)
 2. Computes H1 vs H2 alpha after discussion (showing improvement)
 3. For questions where humans now agree: computes consolidated vs LLM₁ and LLM₂
@@ -26,8 +26,8 @@ from scipy.stats import spearmanr
 # File paths
 # ---------------------------------------------------------------------------
 EVAL_DIR = Path("src/db/eval")
-SYLVAIN_FILE = EVAL_DIR / "EC3-2026 - sylvain (sylvain) 2026-01-20_21-07.csv"
-STEFAN_FILE = EVAL_DIR / "EC3-2026 - stefan (stefan) 2026-01-20_21-07.csv"
+H1_FILE = EVAL_DIR / "EC3-2026 - H1 (H1) 2026-01-20_21-07.csv"
+H2_FILE = EVAL_DIR / "EC3-2026 - H2 (H2) 2026-01-20_21-07.csv"
 LLM_FILE = EVAL_DIR / "EC3-2026 - LLM_Judge (LLM_Judge) 2026-01-20_21-08.csv"
 GEMINI_FILE = EVAL_DIR / "EC3-2026 - Gemini_Judge (Gemini_Judge) 2026-01-21_16-00.csv"
 CONSOLIDATED_FILE = EVAL_DIR / "EC3-2026 - human-human final agreement.csv"
@@ -38,8 +38,8 @@ FIGURES_DIR = OUTPUT_DIR / "figures"
 CRITERIA = ["Abstention", "Faithfulness", "Completeness", "Transparency", "Relevance"]
 
 DISPLAY_NAMES = {
-    "sylvain": "H1",
-    "stefan": "H2",
+    "h1": "H1",
+    "h2": "H2",
     "consolidated": "H_cons",
     "llm": "LLM₁",
     "gemini": "LLM₂",
@@ -85,18 +85,18 @@ def normalise_abstention(val: object) -> object:
 
 def load_original_ratings() -> tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame, pd.DataFrame]:
     """Load the 4 original rating files (pre-discussion)."""
-    sylvain = pd.read_csv(SYLVAIN_FILE)
-    stefan = pd.read_csv(STEFAN_FILE)
+    h1 = pd.read_csv(H1_FILE)
+    h2 = pd.read_csv(H2_FILE)
     llm = pd.read_csv(LLM_FILE)
     gemini = pd.read_csv(GEMINI_FILE)
 
-    stefan = stefan.dropna(subset=["Question ID"])
+    h2 = h2.dropna(subset=["Question ID"])
 
-    for df in [sylvain, stefan, llm, gemini]:
+    for df in [h1, h2, llm, gemini]:
         df["Question ID"] = df["Question ID"].astype(int)
         df["Abstention"] = df["Abstention"].apply(normalise_abstention)
 
-    return sylvain, stefan, llm, gemini
+    return h1, h2, llm, gemini
 
 
 def load_consolidated() -> pd.DataFrame:
@@ -110,21 +110,21 @@ def load_consolidated() -> pd.DataFrame:
 
 
 def filter_valid_ids(
-    sylvain: pd.DataFrame,
-    stefan: pd.DataFrame,
+    h1: pd.DataFrame,
+    h2: pd.DataFrame,
     llm: pd.DataFrame,
     gemini: pd.DataFrame,
 ) -> set[int]:
     """Return question IDs valid across all 4 original raters."""
-    sylvain_valid = sylvain[(sylvain["Error"] == 0) & (sylvain["UPDATED"] != "x")]
-    stefan_valid = stefan[
-        (stefan["Error"] == 0)
-        & (stefan["UPDATED"] != "x")
-        & stefan["Abstention"].notna()
+    h1_valid = h1[(h1["Error"] == 0) & (h1["UPDATED"] != "x")]
+    h2_valid = h2[
+        (h2["Error"] == 0)
+        & (h2["UPDATED"] != "x")
+        & h2["Abstention"].notna()
     ]
     return (
-        set(sylvain_valid["Question ID"])
-        & set(stefan_valid["Question ID"])
+        set(h1_valid["Question ID"])
+        & set(h2_valid["Question ID"])
         & set(llm["Question ID"])
         & set(gemini["Question ID"])
     )
@@ -135,15 +135,15 @@ def filter_valid_ids(
 # ---------------------------------------------------------------------------
 
 def build_post_discussion_dataset(
-    sylvain: pd.DataFrame,
-    stefan: pd.DataFrame,
+    h1: pd.DataFrame,
+    h2: pd.DataFrame,
     consolidated: pd.DataFrame,
     valid_ids: set[int],
 ) -> tuple[pd.DataFrame, pd.DataFrame, set[int], set[int]]:
     """Build the full post-discussion dataset.
 
     Returns:
-        merged: DataFrame with columns {rater}_{criterion} for sylvain_post, stefan_post
+        merged: DataFrame with columns {rater}_{criterion} for h1_post, h2_post
         consolidated_df: DataFrame with consolidated_{criterion} (only agreed questions)
         agreed_ids: question IDs where humans agree on ALL criteria after discussion
         disagreed_ids: question IDs where at least one criterion still differs
@@ -161,8 +161,8 @@ def build_post_discussion_dataset(
 
     # 1) Originally agreed questions: use original ratings directly
     for qid in originally_agreed_ids:
-        s_row = sylvain[sylvain["Question ID"] == qid].iloc[0]
-        st_row = stefan[stefan["Question ID"] == qid].iloc[0]
+        s_row = h1[h1["Question ID"] == qid].iloc[0]
+        st_row = h2[h2["Question ID"] == qid].iloc[0]
 
         row: dict[str, object] = {
             "Question ID": qid,
@@ -173,8 +173,8 @@ def build_post_discussion_dataset(
         for c in CRITERIA:
             sv = s_row[c]
             stv = st_row[c]
-            row[f"sylvain_post_{c}"] = sv
-            row[f"stefan_post_{c}"] = stv
+            row[f"h1_post_{c}"] = sv
+            row[f"h2_post_{c}"] = stv
 
             # They originally agreed, so set consolidated
             row[f"consolidated_{c}"] = sv
@@ -198,14 +198,14 @@ def build_post_discussion_dataset(
         if len(q_rows) < 2:
             continue  # need both evaluators
 
-        sylvain_post = q_rows[q_rows["Evaluator"].str.lower().str.strip() == "sylvain"]
-        stefan_post = q_rows[q_rows["Evaluator"].str.lower().str.strip() == "stefan"]
+        h1_post = q_rows[q_rows["Evaluator"].str.lower().str.strip() == "h1"]
+        h2_post = q_rows[q_rows["Evaluator"].str.lower().str.strip() == "h2"]
 
-        if sylvain_post.empty or stefan_post.empty:
+        if h1_post.empty or h2_post.empty:
             continue
 
-        s_row = sylvain_post.iloc[0]
-        st_row = stefan_post.iloc[0]
+        s_row = h1_post.iloc[0]
+        st_row = h2_post.iloc[0]
 
         row = {
             "Question ID": qid,
@@ -216,8 +216,8 @@ def build_post_discussion_dataset(
         for c in CRITERIA:
             sv = s_row[c]
             stv = st_row[c]
-            row[f"sylvain_post_{c}"] = sv
-            row[f"stefan_post_{c}"] = stv
+            row[f"h1_post_{c}"] = sv
+            row[f"h2_post_{c}"] = stv
 
             if encode_criterion(sv, c) == encode_criterion(stv, c):
                 row[f"consolidated_{c}"] = sv
@@ -305,9 +305,9 @@ def compute_post_discussion_h1h2_alpha(
     """H1 vs H2 after discussion (all questions, including still-disagreed)."""
     results = []
     for c in CRITERIA:
-        alpha = compute_alpha(merged, c, [f"sylvain_post_{c}", f"stefan_post_{c}"])
-        pct = compute_pct_agreement(merged, c, f"sylvain_post_{c}", f"stefan_post_{c}")
-        rho, p = compute_spearman(merged, c, f"sylvain_post_{c}", f"stefan_post_{c}")
+        alpha = compute_alpha(merged, c, [f"h1_post_{c}", f"h2_post_{c}"])
+        pct = compute_pct_agreement(merged, c, f"h1_post_{c}", f"h2_post_{c}")
+        rho, p = compute_spearman(merged, c, f"h1_post_{c}", f"h2_post_{c}")
         results.append({
             "Criterion": c,
             "Alpha (H1-H2 post)": alpha,
@@ -388,10 +388,10 @@ def compute_disagreed_vs_llm(
             df[f"gemini_{c}"] = df[f"gemini_{c}"].apply(normalise_abstention)
 
     comparisons = [
-        ("sylvain_post", "llm", f"{display('sylvain')}_post-{display('llm')}"),
-        ("sylvain_post", "gemini", f"{display('sylvain')}_post-{display('gemini')}"),
-        ("stefan_post", "llm", f"{display('stefan')}_post-{display('llm')}"),
-        ("stefan_post", "gemini", f"{display('stefan')}_post-{display('gemini')}"),
+        ("h1_post", "llm", f"{display('h1')}_post-{display('llm')}"),
+        ("h1_post", "gemini", f"{display('h1')}_post-{display('gemini')}"),
+        ("h2_post", "llm", f"{display('h2')}_post-{display('llm')}"),
+        ("h2_post", "gemini", f"{display('h2')}_post-{display('gemini')}"),
     ]
 
     results = []
@@ -412,15 +412,15 @@ def compute_disagreed_vs_llm(
 # ---------------------------------------------------------------------------
 
 def compute_pre_discussion_baseline(
-    sylvain: pd.DataFrame,
-    stefan: pd.DataFrame,
+    h1: pd.DataFrame,
+    h2: pd.DataFrame,
     llm: pd.DataFrame,
     gemini: pd.DataFrame,
     valid_ids: set[int],
 ) -> pd.DataFrame:
     """Recompute H1-H2 pre-discussion alpha for direct comparison."""
-    s = sylvain[sylvain["Question ID"].isin(valid_ids)].set_index("Question ID")
-    st = stefan[stefan["Question ID"].isin(valid_ids)].set_index("Question ID")
+    s = h1[h1["Question ID"].isin(valid_ids)].set_index("Question ID")
+    st = h2[h2["Question ID"].isin(valid_ids)].set_index("Question ID")
     ll = llm[llm["Question ID"].isin(valid_ids)].set_index("Question ID")
     gm = gemini[gemini["Question ID"].isin(valid_ids)].set_index("Question ID")
 
@@ -492,12 +492,12 @@ def compute_pre_discussion_baseline(
 
         results.append({
             "Criterion": c,
-            f"Alpha ({display('sylvain')}-{display('stefan')} pre)": alpha_h1h2,
-            f"Alpha ({display('sylvain')}-{display('llm')} pre)": alpha_h1l1,
-            f"Alpha ({display('stefan')}-{display('llm')} pre)": alpha_h2l1,
-            f"Alpha ({display('sylvain')}-{display('gemini')} pre)": alpha_h1l2,
-            f"Alpha ({display('stefan')}-{display('gemini')} pre)": alpha_h2l2,
-            f"Agree ({display('sylvain')}-{display('stefan')} pre) (%)": pct_h1h2,
+            f"Alpha ({display('h1')}-{display('h2')} pre)": alpha_h1h2,
+            f"Alpha ({display('h1')}-{display('llm')} pre)": alpha_h1l1,
+            f"Alpha ({display('h2')}-{display('llm')} pre)": alpha_h2l1,
+            f"Alpha ({display('h1')}-{display('gemini')} pre)": alpha_h1l2,
+            f"Alpha ({display('h2')}-{display('gemini')} pre)": alpha_h2l2,
+            f"Agree ({display('h1')}-{display('h2')} pre) (%)": pct_h1h2,
         })
 
     return pd.DataFrame(results)
@@ -522,11 +522,11 @@ def build_comparison_table(
         rows.append({
             "Criterion": c,
             # Pre-discussion
-            "α H1-H2 (pre)": pre_row[f"Alpha ({display('sylvain')}-{display('stefan')} pre)"],
-            "α H1-LLM₁ (pre)": pre_row[f"Alpha ({display('sylvain')}-{display('llm')} pre)"],
-            "α H2-LLM₁ (pre)": pre_row[f"Alpha ({display('stefan')}-{display('llm')} pre)"],
-            "α H1-LLM₂ (pre)": pre_row[f"Alpha ({display('sylvain')}-{display('gemini')} pre)"],
-            "α H2-LLM₂ (pre)": pre_row[f"Alpha ({display('stefan')}-{display('gemini')} pre)"],
+            "α H1-H2 (pre)": pre_row[f"Alpha ({display('h1')}-{display('h2')} pre)"],
+            "α H1-LLM₁ (pre)": pre_row[f"Alpha ({display('h1')}-{display('llm')} pre)"],
+            "α H2-LLM₁ (pre)": pre_row[f"Alpha ({display('h2')}-{display('llm')} pre)"],
+            "α H1-LLM₂ (pre)": pre_row[f"Alpha ({display('h1')}-{display('gemini')} pre)"],
+            "α H2-LLM₂ (pre)": pre_row[f"Alpha ({display('h2')}-{display('gemini')} pre)"],
             # Post-discussion
             "α H1-H2 (post)": post_row["Alpha (H1-H2 post)"],
             # Consolidated vs LLM
@@ -641,7 +641,7 @@ def plot_agreement_bar_comparison(
 
         rows.append({
             "Criterion": c,
-            "H1-H2 (pre)": pre_row[f"Agree ({display('sylvain')}-{display('stefan')} pre) (%)"],
+            "H1-H2 (pre)": pre_row[f"Agree ({display('h1')}-{display('h2')} pre) (%)"],
             "H1-H2 (post)": post_row["Agreement (H1-H2 post) (%)"],
             "H_cons-LLM₁": cons_row[f"Agree ({display('consolidated')}-{display('llm')}) (%)"],
             "H_cons-LLM₂": cons_row[f"Agree ({display('consolidated')}-{display('gemini')}) (%)"],
@@ -729,9 +729,9 @@ def main() -> None:
 
     # 1. Load data
     print("\n1. Loading data...")
-    sylvain, stefan, llm, gemini = load_original_ratings()
+    h1, h2, llm, gemini = load_original_ratings()
     consolidated = load_consolidated()
-    valid_ids = filter_valid_ids(sylvain, stefan, llm, gemini)
+    valid_ids = filter_valid_ids(h1, h2, llm, gemini)
     print(f"   Valid question IDs (4-way): {len(valid_ids)}")
 
     discussed_ids = set(consolidated["Question ID"].unique()) & valid_ids
@@ -741,7 +741,7 @@ def main() -> None:
     # 2. Build post-discussion dataset
     print("\n2. Building post-discussion dataset...")
     merged, consolidated_df, agreed_ids, disagreed_ids = build_post_discussion_dataset(
-        sylvain, stefan, consolidated, valid_ids,
+        h1, h2, consolidated, valid_ids,
     )
     print(f"   Total questions: {len(merged)}")
     print(f"   Fully agreed (post-discussion): {len(agreed_ids)}")
@@ -749,7 +749,7 @@ def main() -> None:
 
     # 3. Pre-discussion baseline
     print("\n3. Computing pre-discussion baseline...")
-    pre_df = compute_pre_discussion_baseline(sylvain, stefan, llm, gemini, valid_ids)
+    pre_df = compute_pre_discussion_baseline(h1, h2, llm, gemini, valid_ids)
     save_results(
         pre_df,
         "pre_discussion_baseline",

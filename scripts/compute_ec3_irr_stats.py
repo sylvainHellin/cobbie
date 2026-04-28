@@ -32,8 +32,8 @@ from src.config import MLFLOW_URI
 
 # File paths
 EVAL_DIR = Path("src/db/eval")
-SYLVAIN_FILE = EVAL_DIR / "EC3-2026 - sylvain (sylvain) 2026-01-20_21-07.csv"
-STEFAN_FILE = EVAL_DIR / "EC3-2026 - stefan (stefan) 2026-01-20_21-07.csv"
+H1_FILE = EVAL_DIR / "EC3-2026 - H1 (H1) 2026-01-20_21-07.csv"
+H2_FILE = EVAL_DIR / "EC3-2026 - H2 (H2) 2026-01-20_21-07.csv"
 LLM_FILE = EVAL_DIR / "EC3-2026 - LLM_Judge (LLM_Judge) 2026-01-20_21-08.csv"
 GEMINI_FILE = EVAL_DIR / "EC3-2026 - Gemini_Judge (Gemini_Judge) 2026-01-21_16-00.csv"
 CONSOLIDATED_FILE = EVAL_DIR / "EC3-2026 - human-human final agreement.csv"
@@ -41,12 +41,12 @@ OUTPUT_DIR = Path("outputs/ec3")
 FIGURES_DIR = OUTPUT_DIR / "figures"
 
 CRITERIA = ["Abstention", "Faithfulness", "Completeness", "Transparency", "Relevance"]
-RATERS = ["sylvain", "stefan", "llm", "gemini"]
+RATERS = ["h1", "h2", "llm", "gemini"]
 
-# Display names for figures and tables (anonymized)
+# Display names for figures and tables
 RATER_DISPLAY_NAMES = {
-    "sylvain": "H1",
-    "stefan": "H2",
+    "h1": "H1",
+    "h2": "H2",
     "llm": "LLM₁",
     "gemini": "LLM₂",
     "consolidated": "H_cons",
@@ -65,7 +65,7 @@ def get_display_name(rater: str) -> str:
     return RATER_DISPLAY_NAMES.get(rater, rater)
 
 def get_pair_display_name(pair: str) -> str:
-    """Get display name for a rater pair like 'sylvain-stefan' -> 'H1-H2'."""
+    """Get display name for a rater pair like 'h1-h2' -> 'H1-H2'."""
     parts = pair.split("-")
     return "-".join(get_display_name(p) for p in parts)
 
@@ -81,30 +81,30 @@ GEMINI_RUN_ID = "b1ce27fe59714eaeb343753ddc5f61d0"
 
 def load_and_clean_data() -> tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame, pd.DataFrame, pd.DataFrame]:
     """Load and clean the 5 CSV files (4 original raters + consolidated)."""
-    sylvain = pd.read_csv(SYLVAIN_FILE)
-    stefan = pd.read_csv(STEFAN_FILE)
+    h1 = pd.read_csv(H1_FILE)
+    h2 = pd.read_csv(H2_FILE)
     llm = pd.read_csv(LLM_FILE)
     gemini = pd.read_csv(GEMINI_FILE)
     consolidated = pd.read_csv(CONSOLIDATED_FILE)
 
     # Drop empty rows
-    stefan = stefan.dropna(subset=["Question ID"])
+    h2 = h2.dropna(subset=["Question ID"])
     consolidated = consolidated.dropna(subset=["Question ID"])
 
     # Ensure Question ID is int
-    for df in [sylvain, stefan, llm, gemini, consolidated]:
+    for df in [h1, h2, llm, gemini, consolidated]:
         df["Question ID"] = df["Question ID"].astype(int)
 
     # Normalise Abstention across all sources
-    for df in [sylvain, stefan, llm, gemini, consolidated]:
+    for df in [h1, h2, llm, gemini, consolidated]:
         df["Abstention"] = df["Abstention"].apply(normalise_abstention)
 
-    return sylvain, stefan, llm, gemini, consolidated
+    return h1, h2, llm, gemini, consolidated
 
 
 def filter_valid_questions(
-    sylvain: pd.DataFrame,
-    stefan: pd.DataFrame,
+    h1: pd.DataFrame,
+    h2: pd.DataFrame,
     llm: pd.DataFrame,
     gemini: pd.DataFrame,
     consolidated: pd.DataFrame,
@@ -113,14 +113,14 @@ def filter_valid_questions(
 
     For discussed questions (those in consolidated CSV), both evaluators must be present.
     """
-    # Filter Sylvain: Error=0, UPDATED != 'x'
-    sylvain_valid = sylvain[(sylvain["Error"] == 0) & (sylvain["UPDATED"] != "x")]
+    # Filter H1: Error=0, UPDATED != 'x'
+    h1_valid = h1[(h1["Error"] == 0) & (h1["UPDATED"] != "x")]
 
-    # Filter Stefan: Error=0, UPDATED != 'x', Abstention not NaN
-    stefan_valid = stefan[
-        (stefan["Error"] == 0)
-        & (stefan["UPDATED"] != "x")
-        & stefan["Abstention"].notna()
+    # Filter H2: Error=0, UPDATED != 'x', Abstention not NaN
+    h2_valid = h2[
+        (h2["Error"] == 0)
+        & (h2["UPDATED"] != "x")
+        & h2["Abstention"].notna()
     ]
 
     # LLM and Gemini have no Error/UPDATED columns, all are complete
@@ -129,8 +129,8 @@ def filter_valid_questions(
 
     # Original 4-way intersection
     original_valid = (
-        set(sylvain_valid["Question ID"])
-        & set(stefan_valid["Question ID"])
+        set(h1_valid["Question ID"])
+        & set(h2_valid["Question ID"])
         & set(llm_valid["Question ID"])
         & set(gemini_valid["Question ID"])
     )
@@ -141,7 +141,7 @@ def filter_valid_questions(
     for qid in discussed_ids:
         q_rows = consolidated[consolidated["Question ID"] == qid]
         evaluators = set(q_rows["Evaluator"].str.lower().str.strip())
-        if {"sylvain", "stefan"} <= evaluators:
+        if {"h1", "h2"} <= evaluators:
             consolidated_valid.add(qid)
 
     # Valid = original valid, but discussed questions must also be in consolidated_valid
@@ -157,22 +157,22 @@ def filter_valid_questions(
 
 
 def merge_ratings(
-    sylvain: pd.DataFrame,
-    stefan: pd.DataFrame,
+    h1: pd.DataFrame,
+    h2: pd.DataFrame,
     llm: pd.DataFrame,
     gemini: pd.DataFrame,
     valid_ids: set[int],
 ) -> pd.DataFrame:
     """Merge ratings from all 4 raters into a single DataFrame."""
     # Filter to valid IDs
-    s = sylvain[sylvain["Question ID"].isin(valid_ids)].copy()
-    st = stefan[stefan["Question ID"].isin(valid_ids)].copy()
+    s = h1[h1["Question ID"].isin(valid_ids)].copy()
+    st = h2[h2["Question ID"].isin(valid_ids)].copy()
     ll = llm[llm["Question ID"].isin(valid_ids)].copy()
     gm = gemini[gemini["Question ID"].isin(valid_ids)].copy()
 
     # Rename columns with rater prefix
-    s_cols = {c: f"sylvain_{c}" for c in CRITERIA}
-    st_cols = {c: f"stefan_{c}" for c in CRITERIA}
+    s_cols = {c: f"h1_{c}" for c in CRITERIA}
+    st_cols = {c: f"h2_{c}" for c in CRITERIA}
     l_cols = {c: f"llm_{c}" for c in CRITERIA}
     g_cols = {c: f"gemini_{c}" for c in CRITERIA}
 
@@ -198,14 +198,14 @@ def merge_ratings(
 
 def augment_with_consolidated(
     merged: pd.DataFrame,
-    sylvain: pd.DataFrame,
-    stefan: pd.DataFrame,
+    h1: pd.DataFrame,
+    h2: pd.DataFrame,
     consolidated: pd.DataFrame,
     valid_ids: set[int],
 ) -> tuple[pd.DataFrame, int, int]:
-    """Add sylvain_post_*, stefan_post_*, and consolidated_* columns to merged.
+    """Add h1_post_*, h2_post_*, and consolidated_* columns to merged.
 
-    For originally-agreed questions: post = original, consolidated = sylvain's value.
+    For originally-agreed questions: post = original, consolidated = h1's value.
     For discussed questions: post = post-discussion values from consolidated CSV,
     consolidated = agreed value (NaN where still disagreed).
 
@@ -226,8 +226,8 @@ def augment_with_consolidated(
     n_disagreed = 0
 
     for criterion in CRITERIA:
-        sylvain_post_vals = []
-        stefan_post_vals = []
+        h1_post_vals = []
+        h2_post_vals = []
         consolidated_vals = []
 
         for _, mrow in merged.iterrows():
@@ -235,12 +235,12 @@ def augment_with_consolidated(
 
             if qid in discussed_ids and qid in cons_lookup:
                 # Discussed question: use post-discussion values
-                s_post = cons_lookup[qid].get("sylvain")
-                st_post = cons_lookup[qid].get("stefan")
+                s_post = cons_lookup[qid].get("h1")
+                st_post = cons_lookup[qid].get("h2")
                 sv = s_post[criterion] if s_post is not None else np.nan
                 stv = st_post[criterion] if st_post is not None else np.nan
-                sylvain_post_vals.append(sv)
-                stefan_post_vals.append(stv)
+                h1_post_vals.append(sv)
+                h2_post_vals.append(stv)
 
                 # Consolidated = agreed value or NaN
                 if encode_criterion(sv, criterion) == encode_criterion(stv, criterion):
@@ -249,15 +249,15 @@ def augment_with_consolidated(
                     consolidated_vals.append(np.nan)
             else:
                 # Originally agreed: post = original
-                sv = mrow[f"sylvain_{criterion}"]
-                stv = mrow[f"stefan_{criterion}"]
-                sylvain_post_vals.append(sv)
-                stefan_post_vals.append(stv)
-                # Consolidated = sylvain's value (they agreed)
+                sv = mrow[f"h1_{criterion}"]
+                stv = mrow[f"h2_{criterion}"]
+                h1_post_vals.append(sv)
+                h2_post_vals.append(stv)
+                # Consolidated = h1's value (they agreed)
                 consolidated_vals.append(sv)
 
-        merged[f"sylvain_post_{criterion}"] = sylvain_post_vals
-        merged[f"stefan_post_{criterion}"] = stefan_post_vals
+        merged[f"h1_post_{criterion}"] = h1_post_vals
+        merged[f"h2_post_{criterion}"] = h2_post_vals
         merged[f"consolidated_{criterion}"] = consolidated_vals
 
     # Count agreed/disagreed (check all criteria per question)
@@ -334,27 +334,27 @@ def compute_all_krippendorff(merged: pd.DataFrame) -> pd.DataFrame:
         row = {
             "Criterion": criterion,
             "Alpha (4 raters)": compute_krippendorff_alpha(merged, criterion, RATERS),
-            f"Alpha ({get_display_name('sylvain')}-{get_display_name('stefan')})": compute_krippendorff_alpha(
-                merged, criterion, ["sylvain", "stefan"]
+            f"Alpha ({get_display_name('h1')}-{get_display_name('h2')})": compute_krippendorff_alpha(
+                merged, criterion, ["h1", "h2"]
             ),
-            f"Alpha ({get_display_name('sylvain')}-{get_display_name('llm')})": compute_krippendorff_alpha(
-                merged, criterion, ["sylvain", "llm"]
+            f"Alpha ({get_display_name('h1')}-{get_display_name('llm')})": compute_krippendorff_alpha(
+                merged, criterion, ["h1", "llm"]
             ),
-            f"Alpha ({get_display_name('stefan')}-{get_display_name('llm')})": compute_krippendorff_alpha(
-                merged, criterion, ["stefan", "llm"]
+            f"Alpha ({get_display_name('h2')}-{get_display_name('llm')})": compute_krippendorff_alpha(
+                merged, criterion, ["h2", "llm"]
             ),
-            f"Alpha ({get_display_name('sylvain')}-{get_display_name('gemini')})": compute_krippendorff_alpha(
-                merged, criterion, ["sylvain", "gemini"]
+            f"Alpha ({get_display_name('h1')}-{get_display_name('gemini')})": compute_krippendorff_alpha(
+                merged, criterion, ["h1", "gemini"]
             ),
-            f"Alpha ({get_display_name('stefan')}-{get_display_name('gemini')})": compute_krippendorff_alpha(
-                merged, criterion, ["stefan", "gemini"]
+            f"Alpha ({get_display_name('h2')}-{get_display_name('gemini')})": compute_krippendorff_alpha(
+                merged, criterion, ["h2", "gemini"]
             ),
             f"Alpha ({get_display_name('llm')}-{get_display_name('gemini')})": compute_krippendorff_alpha(
                 merged, criterion, ["llm", "gemini"]
             ),
             # Post-discussion and consolidated comparisons
             "Alpha (H1-H2 post)": compute_krippendorff_alpha(
-                merged, criterion, ["sylvain_post", "stefan_post"]
+                merged, criterion, ["h1_post", "h2_post"]
             ),
             f"Alpha ({get_display_name('consolidated')}-{get_display_name('llm')})": compute_krippendorff_alpha(
                 merged, criterion, ["consolidated", "llm"]
@@ -376,13 +376,13 @@ def compute_all_krippendorff(merged: pd.DataFrame) -> pd.DataFrame:
 def compute_percentage_agreement(merged: pd.DataFrame, criterion: str) -> dict:
     """Compute percentage agreement for a criterion."""
     pairs = [
-        ("sylvain", "stefan"),
-        ("sylvain", "llm"),
-        ("stefan", "llm"),
-        ("sylvain", "gemini"),
-        ("stefan", "gemini"),
+        ("h1", "h2"),
+        ("h1", "llm"),
+        ("h2", "llm"),
+        ("h1", "gemini"),
+        ("h2", "gemini"),
         ("llm", "gemini"),
-        ("sylvain_post", "stefan_post"),
+        ("h1_post", "h2_post"),
         ("consolidated", "llm"),
         ("consolidated", "gemini"),
     ]
@@ -430,14 +430,14 @@ def compute_all_agreements(merged: pd.DataFrame) -> pd.DataFrame:
         agreement = compute_percentage_agreement(merged, criterion)
         row = {
             "Criterion": criterion,
-            f"{get_display_name('sylvain')}-{get_display_name('stefan')} (%)": agreement["sylvain-stefan"]["pct"] * 100,
-            f"{get_display_name('sylvain')}-{get_display_name('llm')} (%)": agreement["sylvain-llm"]["pct"] * 100,
-            f"{get_display_name('stefan')}-{get_display_name('llm')} (%)": agreement["stefan-llm"]["pct"] * 100,
-            f"{get_display_name('sylvain')}-{get_display_name('gemini')} (%)": agreement["sylvain-gemini"]["pct"] * 100,
-            f"{get_display_name('stefan')}-{get_display_name('gemini')} (%)": agreement["stefan-gemini"]["pct"] * 100,
+            f"{get_display_name('h1')}-{get_display_name('h2')} (%)": agreement["h1-h2"]["pct"] * 100,
+            f"{get_display_name('h1')}-{get_display_name('llm')} (%)": agreement["h1-llm"]["pct"] * 100,
+            f"{get_display_name('h2')}-{get_display_name('llm')} (%)": agreement["h2-llm"]["pct"] * 100,
+            f"{get_display_name('h1')}-{get_display_name('gemini')} (%)": agreement["h1-gemini"]["pct"] * 100,
+            f"{get_display_name('h2')}-{get_display_name('gemini')} (%)": agreement["h2-gemini"]["pct"] * 100,
             f"{get_display_name('llm')}-{get_display_name('gemini')} (%)": agreement["llm-gemini"]["pct"] * 100,
             "4-way (%)": agreement["4-way"]["pct"] * 100,
-            "H1-H2 post (%)": agreement["sylvain_post-stefan_post"]["pct"] * 100,
+            "H1-H2 post (%)": agreement["h1_post-h2_post"]["pct"] * 100,
             f"{get_display_name('consolidated')}-{get_display_name('llm')} (%)": agreement["consolidated-llm"]["pct"] * 100,
             f"{get_display_name('consolidated')}-{get_display_name('gemini')} (%)": agreement["consolidated-gemini"]["pct"] * 100,
         }
@@ -451,11 +451,11 @@ def compute_confusion_matrices(
 ) -> dict[str, np.ndarray]:
     """Compute confusion matrices for all rater pairs."""
     pairs = [
-        ("sylvain", "stefan"),
-        ("sylvain", "llm"),
-        ("stefan", "llm"),
-        ("sylvain", "gemini"),
-        ("stefan", "gemini"),
+        ("h1", "h2"),
+        ("h1", "llm"),
+        ("h2", "llm"),
+        ("h1", "gemini"),
+        ("h2", "gemini"),
         ("llm", "gemini"),
     ]
 
@@ -488,7 +488,7 @@ def compute_spearman_correlations(merged: pd.DataFrame) -> pd.DataFrame:
     encoded = pd.DataFrame()
     encoded["Question ID"] = merged["Question ID"]
 
-    all_prefixes = RATERS + ["sylvain_post", "stefan_post", "consolidated"]
+    all_prefixes = RATERS + ["h1_post", "h2_post", "consolidated"]
     for prefix in all_prefixes:
         for criterion in CRITERIA:
             col = f"{prefix}_{criterion}"
@@ -498,13 +498,13 @@ def compute_spearman_correlations(merged: pd.DataFrame) -> pd.DataFrame:
     # Compute correlations between raters for same criterion
     results = []
     pairs = [
-        ("sylvain", "stefan"),
-        ("sylvain", "llm"),
-        ("stefan", "llm"),
-        ("sylvain", "gemini"),
-        ("stefan", "gemini"),
+        ("h1", "h2"),
+        ("h1", "llm"),
+        ("h2", "llm"),
+        ("h1", "gemini"),
+        ("h2", "gemini"),
         ("llm", "gemini"),
-        ("sylvain_post", "stefan_post"),
+        ("h1_post", "h2_post"),
         ("consolidated", "llm"),
         ("consolidated", "gemini"),
     ]
@@ -515,8 +515,8 @@ def compute_spearman_correlations(merged: pd.DataFrame) -> pd.DataFrame:
             col1 = f"{r1}_{criterion}"
             col2 = f"{r2}_{criterion}"
             # Use display names, with special handling for post-discussion prefixes
-            if r1 == "sylvain_post":
-                pair_display = "H1_post-H2_post" if r2 == "stefan_post" else f"H1_post-{get_display_name(r2)}"
+            if r1 == "h1_post":
+                pair_display = "H1_post-H2_post" if r2 == "h2_post" else f"H1_post-{get_display_name(r2)}"
             elif r1 == "consolidated":
                 pair_display = f"{get_display_name('consolidated')}-{get_display_name(r2)}"
             else:
@@ -559,8 +559,8 @@ def compute_inter_criteria_correlations(
 
 
 def compute_criteria_vs_binary(
-    sylvain: pd.DataFrame,
-    stefan: pd.DataFrame,
+    h1: pd.DataFrame,
+    h2: pd.DataFrame,
     llm: pd.DataFrame,
     gemini: pd.DataFrame,
     valid_ids: set[int],
@@ -570,8 +570,8 @@ def compute_criteria_vs_binary(
     Shows how well each criterion predicts the overall binary assessment
     and whether granular criteria add value beyond binary.
     """
-    # Get Sylvain's binary classification (ground truth for this analysis)
-    s = sylvain[sylvain["Question ID"].isin(valid_ids)].copy()
+    # Get H1's binary classification (ground truth for this analysis)
+    s = h1[h1["Question ID"].isin(valid_ids)].copy()
 
     # Encode binary classification
     s["Binary"] = s["Binary Classification"].apply(
@@ -1252,14 +1252,14 @@ def main() -> None:
 
     # Load data
     print("\n1. Loading data...")
-    sylvain, stefan, llm, gemini, consolidated = load_and_clean_data()
-    valid_ids = filter_valid_questions(sylvain, stefan, llm, gemini, consolidated)
-    merged = merge_ratings(sylvain, stefan, llm, gemini, valid_ids)
+    h1, h2, llm, gemini, consolidated = load_and_clean_data()
+    valid_ids = filter_valid_questions(h1, h2, llm, gemini, consolidated)
+    merged = merge_ratings(h1, h2, llm, gemini, valid_ids)
     print(f"   Valid questions: {len(merged)}")
 
     # Augment with consolidated human judgment
     merged, n_agreed, n_disagreed = augment_with_consolidated(
-        merged, sylvain, stefan, consolidated, valid_ids,
+        merged, h1, h2, consolidated, valid_ids,
     )
     discussed_ids = set(consolidated["Question ID"].unique()) & valid_ids
     print(f"   Discussed questions: {len(discussed_ids)}")
@@ -1326,7 +1326,7 @@ def main() -> None:
 
     # Criteria vs Binary classification
     print("\n7. Computing criteria vs binary classification...")
-    binary_df = compute_criteria_vs_binary(sylvain, stefan, llm, gemini, valid_ids)
+    binary_df = compute_criteria_vs_binary(h1, h2, llm, gemini, valid_ids)
     save_results(
         binary_df,
         "criteria_vs_binary",

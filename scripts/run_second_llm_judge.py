@@ -2,7 +2,7 @@
 """
 Run Second LLM Judge (Gemini 3.0 Pro) on existing evaluation data.
 
-Reads answers from Sylvain's grading sheet and evaluates them with Gemini,
+Reads answers from H1's grading sheet and evaluates them with Gemini,
 outputting results in the same format as existing eval CSVs.
 
 Includes full MLflow tracing for debugging and analysis.
@@ -27,8 +27,8 @@ from src.agents.answer_verifier import derive_binary_classification
 from src.baml.baml_client import b
 from src.baml.baml_client.types import QuestionCategory
 
-# Input file (Sylvain's grading sheet with all data)
-INPUT_FILE = Path("src/db/eval/EC3-2026 - sylvain (sylvain) 2026-01-20_21-07.csv")
+# Input file (H1's grading sheet with all data)
+INPUT_FILE = Path("src/db/eval/EC3-2026 - H1 (H1) 2026-01-20_21-07.csv")
 OUTPUT_DIR = Path("src/db/eval")
 
 # Client info for MLflow logging
