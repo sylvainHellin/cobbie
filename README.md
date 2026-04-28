@@ -2,7 +2,7 @@
 
 An LLM-based multi-agent system for answering questions about BIM models in IFC format. Cobbie uses a dynamic tool creation architecture where the system learns to generate reusable Python functions during training, then applies them during inference.
 
-> **Paper**: *[Title TBD]*, submitted to *Automation in Construction*. Authors: [TBD].
+> **Paper**: *BIM Information Extraction Through LLM-based Adaptive Exploration*, submitted to *Automation in Construction*. Authors: S. Hellin, S. Jang, S. Fuchs, S. Nousias, A. Borrmann.
 > This repository accompanies the paper. Please cite it if you use this code or the IFC-Bench dataset.
 
 ## Features
@@ -174,10 +174,6 @@ The system supports multiple LLM providers via BAML client definitions:
 - **Google** (Gemini)
 - **DeepSeek**, **Groq**, **Mistral**, **Fireworks**, **Cerebras**, **OpenRouter**
 
-## Web Interface
-
-The companion [cobbie-web](https://github.com/TODO/cobbie-web) repository provides a FastAPI backend and React frontend for interactive use.
-
 ## Development
 
 ```bash
@@ -193,4 +189,4 @@ cd src/baml && uv run baml-cli generate
 
 ## License
 
-MIT License -- see [LICENSE](LICENSE).
+CC BY 4.0 -- see [LICENSE](LICENSE).
