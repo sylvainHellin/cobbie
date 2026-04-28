@@ -92,10 +92,10 @@ def verify_answer(
     # Create collector for token tracking
     collector = Collector(name="AnswerVerifier")
 
-    # Add collector to kwargs for BAML calls
+    # Add collector to kwargs for BAML calls (merge with any caller-provided baml_options)
     if "baml_options" not in kwargs:
         kwargs["baml_options"] = {}
-        kwargs["baml_options"]["collector"] = collector
+    kwargs["baml_options"]["collector"] = collector
 
     with mlflow.start_span(name="AnswerVerifier", span_type="LLM") as verifier_span:
         verifier_span.set_inputs(

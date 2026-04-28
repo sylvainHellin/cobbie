@@ -7,6 +7,7 @@ function Cobbie(
 ) -> CodeAction | FinalAnswer {
   client GLM_4_7
   prompt #"
+  {{ _.role("system") }}
   You are a helpful assistant specializing in retrieving information from BIM models using Python code and the IfcOpenShell library. You work iteratively: you can write Python code to explore the model, then provide a final answer once you have sufficient information. You have access to higher-level helper functions for common information retrieval tasks. These helper functions are pre-loaded and available directly in your Python code—do NOT attempt to import them, as this will raise an exception.
 
   {% if model_path %}
@@ -19,6 +20,7 @@ function Cobbie(
   Your code runs in a persistent Python session. Variables, imports, loaded models, and computed results from previous iterations are still available — reuse them instead of recomputing.
   Note: only stdout and stderr are visible in the execution results.
 
+  {{ _.role("user") }}
   Question: {{ user_input }}
 
   ## AVAILABLE TOOLS

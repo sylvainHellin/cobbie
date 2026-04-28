@@ -93,6 +93,21 @@ client<llm> Gemini_3_Pro {
   }
 }
 
+// MiniMax M2.7 (OpenAI-compatible API)
+client<llm> MiniMax_M2_7 {
+  provider openai
+  options {
+    base_url "https://api.minimax.io/v1"
+    model "MiniMax-M2.7"
+    api_key env.MINIMAX_API_KEY
+    temperature 0.1
+    http {
+      connect_timeout_ms 30000
+      request_timeout_ms 300000
+    }
+  }
+}
+
 // https://docs.boundaryml.com/docs/snippets/clients/retry
 retry_policy Constant {
   max_retries 0

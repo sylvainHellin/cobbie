@@ -19,19 +19,8 @@ function EvaluateResponse(
   client GLM_4_7
 
   prompt #"
+    {{ _.role("system") }}
     You are evaluating a BIM information extraction system's response to a question using a multi-criteria assessment framework.
-
-    QUESTION CATEGORY: {{ category }}
-    QUESTION: {{ question }}
-
-    REFERENCE ANSWER: {{ ground_truth }}
-
-    Note: This reference answer is one possible response from a human expert labeller.
-    However, it is not necessarily the only valid answer (see the evaluation framework below)..
-
-    SYSTEM RESPONSE: {{ system_response }}
-
-    ---
 
     ## QUESTION CATEGORIES (Background)
 
@@ -196,6 +185,19 @@ function EvaluateResponse(
        - Keep to 2-3 sentences
 
     {{ ctx.output_format }}
+
+    {{ _.role("user") }}
+    QUESTION CATEGORY: {{ category }}
+    QUESTION: {{ question }}
+
+    REFERENCE ANSWER: {{ ground_truth }}
+
+    Note: This reference answer is one possible response from a human expert labeller.
+    However, it is not necessarily the only valid answer (see the evaluation framework above).
+
+    SYSTEM RESPONSE: {{ system_response }}
+
+    Evaluate the system response according to the evaluation framework above.
   "#
 }
 

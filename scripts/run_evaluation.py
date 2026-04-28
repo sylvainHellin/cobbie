@@ -24,6 +24,7 @@ Usage:
 
 import argparse
 import gc
+import json
 import os
 import sys
 import time
@@ -31,6 +32,7 @@ import traceback
 from datetime import datetime
 from typing import Callable, cast, Dict, List, Literal, Optional
 
+import baml_py
 import mlflow
 from loguru import logger
 from tqdm import tqdm
@@ -42,6 +44,7 @@ from src.agents.static_oneshot_doc import static_oneshot_doc
 from src.config import ROOT_PATH
 from src.schemas.agent_error import AgentError
 from src.db import DEVSET
+from src.db.models import IfcBench
 from src.db.query import (
     clear_eval_tool_stats,
     get_all_eval_tool_stats,
@@ -63,6 +66,7 @@ CLIENT_INFO: Dict[str, Dict[str, str]] = {
     "GLM_4_5_air": {"model": "glm-4.5-air", "provider": "zai"},
     "Devstral": {"model": "devstral-small-2", "provider": "ollama"},
     "Gemini_2_5_Flash_Lite": {"model": "gemini-2.5-flash-lite", "provider": "google"},
+    "MiniMax_M2_7": {"model": "MiniMax-M2.7", "provider": "minimax"},
 }
 
 
@@ -502,11 +506,14 @@ def process_question(
 
             if final_answer and final_answer.answer and ground_truth:
                 verifier_start = time.time()
+                judge_registry = baml_py.ClientRegistry()
+                judge_registry.set_primary(args.judge_client)
                 verifier_result, verifier_collector = verify_answer(
                     question=question,
                     category=category,
                     ground_truth=ground_truth,
                     system_response=final_answer.answer,
+                    baml_options={"client_registry": judge_registry},
                 )
 
                 verifier_duration = time.time() - verifier_start
@@ -789,11 +796,14 @@ def process_question_baseline(
 
             if final_answer.answer and ground_truth:
                 verifier_start = time.time()
+                judge_registry = baml_py.ClientRegistry()
+                judge_registry.set_primary(args.judge_client)
                 verifier_result, verifier_collector = verify_answer(
                     question=question,
                     category=category,
                     ground_truth=ground_truth,
                     system_response=final_answer.answer,
+                    baml_options={"client_registry": judge_registry},
                 )
                 verifier_duration = time.time() - verifier_start
 
@@ -1010,11 +1020,14 @@ def process_question_static(
 
             if final_answer and final_answer.answer and ground_truth:
                 verifier_start = time.time()
+                judge_registry = baml_py.ClientRegistry()
+                judge_registry.set_primary(args.judge_client)
                 verifier_result, verifier_collector = verify_answer(
                     question=question,
                     category=category,
                     ground_truth=ground_truth,
                     system_response=final_answer.answer,
+                    baml_options={"client_registry": judge_registry},
                 )
                 verifier_duration = time.time() - verifier_start
 
@@ -1257,11 +1270,14 @@ def process_question_static_doc(
 
             if final_answer and final_answer.answer and ground_truth:
                 verifier_start = time.time()
+                judge_registry = baml_py.ClientRegistry()
+                judge_registry.set_primary(args.judge_client)
                 verifier_result, verifier_collector = verify_answer(
                     question=question,
                     category=category,
                     ground_truth=ground_truth,
                     system_response=final_answer.answer,
+                    baml_options={"client_registry": judge_registry},
                 )
                 verifier_duration = time.time() - verifier_start
 
@@ -1490,8 +1506,16 @@ Examples:
         "--client",
         type=str,
         default="GLM_4_7",
-        choices=["GLM_4_7", "GLM_4_7_Flash", "GLM_4_5_air", "Devstral", "Gemini_2_5_Flash_Lite"],
+        choices=["GLM_4_7", "GLM_4_7_Flash", "GLM_4_5_air", "Devstral", "Gemini_2_5_Flash_Lite", "MiniMax_M2_7"],
         help="Client to use for evaluation (default: GLM_4_7)",
+    )
+
+    parser.add_argument(
+        "--judge-client",
+        type=str,
+        default=None,
+        choices=["GLM_4_7", "GLM_4_7_Flash", "GLM_4_5_air", "Devstral", "Gemini_2_5_Flash_Lite", "MiniMax_M2_7"],
+        help="Client to use for the answer verifier (judge). Defaults to --client value.",
     )
 
     parser.add_argument(
@@ -1516,23 +1540,72 @@ Examples:
         help="Documentation backend for query_ifcopenshell_docs: 'custom' (local vector store) or 'context7' (external API). Default: custom"
     )
 
+    parser.add_argument(
+        "--question-ids",
+        type=str,
+        default=None,
+        help="Path to a JSON file containing a list of question IDs (integers). "
+             "When provided, loads questions by ID from the full database (bypassing train/dev split). "
+             "--start and --nb-samples are ignored.",
+    )
+
     args = parser.parse_args()
+
+    # Default judge client to the same as the main client
+    if args.judge_client is None:
+        args.judge_client = args.client
 
     # Set DOC_BACKEND environment variable early, before any tool imports
     os.environ["DOC_BACKEND"] = args.doc
 
-    # Validate arguments
-    if args.start < 0:
-        print("Error: --start must be non-negative")
-        return 1
+    # Load dataset by question IDs if provided (bypass DEVSET entirely)
+    use_question_ids = args.question_ids is not None
+    dataset: List[IfcBench] = []
+    end_index = 0
 
-    if args.nb_samples <= 0:
-        print("Error: --nb-samples must be positive")
-        return 1
+    if use_question_ids:
+        with open(args.question_ids) as f:
+            question_ids: List[int] = json.load(f)
+        if not isinstance(question_ids, list) or not all(isinstance(x, int) for x in question_ids):
+            print("Error: --question-ids file must contain a JSON list of integers")
+            return 1
+        if len(question_ids) == 0:
+            print("Error: --question-ids file is empty")
+            return 1
 
-    if args.start >= len(DEVSET):
-        print(f"Error: --start ({args.start}) exceeds dataset size ({len(DEVSET)})")
-        return 1
+        from src.db.query import get_dataset, get_ifc_models
+        all_questions = get_dataset()
+        ifc_models = get_ifc_models()
+        ifc_model_map = {model.id: model for model in ifc_models}
+        for q in all_questions:
+            q.ifc = ifc_model_map.get(q.ifc_id)
+
+        id_set = set(question_ids)
+        dataset = [q for q in all_questions if q.id in id_set]
+        missing_ids = id_set - {q.id for q in dataset}
+        if missing_ids:
+            logger.warning(f"{len(missing_ids)} question IDs not found in DB: {sorted(missing_ids)[:10]}...")
+        end_index = len(dataset)
+        print(f"Loaded {len(dataset)} questions by ID (from {len(question_ids)} requested)")
+    else:
+        # Validate arguments
+        if args.start < 0:
+            print("Error: --start must be non-negative")
+            return 1
+
+        if args.nb_samples <= 0:
+            print("Error: --nb-samples must be positive")
+            return 1
+
+        if args.start >= len(DEVSET):
+            print(f"Error: --start ({args.start}) exceeds dataset size ({len(DEVSET)})")
+            return 1
+
+        end_index = min(args.start + args.nb_samples, len(DEVSET))
+        actual_samples = end_index - args.start
+        print(
+            f"Processing {actual_samples} samples from index {args.start} to {end_index - 1}"
+        )
 
     # Validate and deduplicate tools argument
     if not args.tools:
@@ -1546,13 +1619,6 @@ Examples:
                 seen.add(tool_dir)
                 unique_tools.append(tool_dir)
         args.tools = unique_tools
-
-    end_index = min(args.start + args.nb_samples, len(DEVSET))
-    actual_samples = end_index - args.start
-
-    print(
-        f"Processing {actual_samples} samples from index {args.start} to {end_index - 1}"
-    )
     logger.info(f"Using documentation backend: {args.doc}")
     if not args.tools:
         logger.info("Running without tools")
@@ -1588,7 +1654,8 @@ Examples:
         logger.info(f"Cleared {deleted_count} evaluation tool metric entries")
 
     # Setup MLflow tracking URI and experiment
-    mlflow.set_tracking_uri("http://127.0.0.1:5000")
+    mlflow_uri = os.environ.get("MLFLOW_TRACKING_URI", "http://127.0.0.1:5000")
+    mlflow.set_tracking_uri(mlflow_uri)
     mlflow.set_experiment("Evaluation")
 
     # Prepare tools for COBBIE based on mode
@@ -1613,8 +1680,9 @@ Examples:
             logger.error(f"Failed to load tools: {e}")
             return 1
 
-    # Prepare dataset
-    dataset = DEVSET[args.start : end_index]
+    # Prepare dataset (when using --question-ids, dataset is already populated)
+    if not use_question_ids:
+        dataset = DEVSET[args.start : end_index]
     logger.info(f"Using {len(dataset)} samples for evaluation")
 
     # Determine run_id based on --continue flag
@@ -1825,7 +1893,7 @@ Examples:
 
         # Log batch tracking metrics
         batch_metrics = {
-            "batch_start_index": args.start,
+            "batch_start_index": args.start if not use_question_ids else 0,
             "batch_end_index": end_index - 1,
             "batch_size": len(dataset),
         }
