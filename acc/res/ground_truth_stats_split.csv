@@ -1,4 +1,4 @@
-rule_code,rule_title,train_141,train_ac20,train_dental_clinic,train_duplex,validate_103,validate_166,validate_fzk_house,validate_smiley_west,test_4351,test_digital_hub,test_samuel_macalister_sample_house,test_wbdg_office
+rule_code,rule_title,train_146,train_ac20,train_dental_clinic,train_duplex,validate_106,validate_172,validate_fzk_house,validate_smiley_west,test_4351,test_digital_hub,test_samuel_macalister_sample_house,test_wbdg_office
 304.3.1,304_3_1_circular_space,0,0,0,2,1,21,0,0,0,2,0,0
 305.3,305_3_size,13,5,0,0,5,5,0,13,0,0,1,0
 404.2.5,404_2_5_two_doors_in_series,0,0,6,2,0,0,0,0,0,0,2,0

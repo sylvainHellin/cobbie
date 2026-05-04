@@ -58,8 +58,8 @@ Per Table 1 of the paper, they are split:
 
 |              | Training      | Validation  | Test          |
 |--------------|---------------|-------------|---------------|
-|              | 141*          | 103*        | 4351          |
-|              | AC20          | 166*        | Digital Hub   |
+|              | 146*          | 106*        | 4351          |
+|              | AC20          | 172*        | Digital Hub   |
 |              | Dental Clinic | FZK House   | S. MacAlister |
 |              | Duplex        | Smiley West | WBDG Office   |
 

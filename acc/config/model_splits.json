@@ -1,13 +1,13 @@
 {
   "train": [
-    "141",
+    "146",
     "ac20",
     "dental_clinic",
     "duplex"
   ],
   "validate": [
-    "103",
-    "166",
+    "106",
+    "172",
     "fzk_house",
     "smiley_west"
   ],

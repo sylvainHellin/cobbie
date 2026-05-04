@@ -11,4 +11,4 @@
   - `acc/res/<name>/bcfzip/*` — currently gitignored (`acc/res/*/bcfzip`)
   - `acc/res/<name>/smc/*` — currently gitignored (`acc/res/*/smc`)
   - Keep `acc/res/<name>/temp/` ignored (intermediate)
-  - Licences: the 3 course-sourced models (141, 103, 166) and IFCBench models are OK to redistribute under the repo's MIT licence
+  - Licences: the 3 course-sourced models (146, 106, 172) and the IFCBench models retain their original licences.

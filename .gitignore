@@ -44,3 +44,5 @@ acc/res/*/temp
 
 # ACC BIM models are distributed separately
 acc/bim_models
+
+~$*
