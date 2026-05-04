@@ -63,8 +63,15 @@ Per Table 1 of the paper, they are split:
 |              | Dental Clinic | FZK House   | S. MacAlister |
 |              | Duplex        | Smiley West | WBDG Office   |
 
-Models marked `*` are from the authors' BIM fundamentals course; the
-remaining nine are from **IFCBench** (Hellin et al., 2025).
+Models marked `*` are from the **GNI BIM Dataset** (Wang et al., 2026 —
+[Zenodo](https://doi.org/10.5281/zenodo.19722012)); the remaining nine are
+from **IFCBench** (Hellin et al., 2025 —
+[GitHub](https://github.com/sylvainHellin/ifc-bench)).
+
+> Wang, Z., Fuchs, S., Wu, J., Esser, S., Wrabel, T., & Borrmann, A. (2026).
+> *GNI BIM Dataset* (1.0.0) [Data set]. Technical University of Munich,
+> Georg Nemetschek Institute (GNI). Zenodo.
+> <https://doi.org/10.5281/zenodo.19722012>
 
 ```bash
 uv sync
