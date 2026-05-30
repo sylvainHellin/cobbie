@@ -34,7 +34,7 @@ cp .env.example .env  # Then fill in your API keys
 
 The IFC-Bench dataset and IFC model files are hosted on HuggingFace:
 
-1. **Download the dataset** from [ifc-bench-v2](https://huggingface.co/datasets/ifc-bench-v2) on HuggingFace.
+1. **Download the dataset** from [ifc-bench-v2](https://huggingface.co/datasets/sylvainHellin/ifc-bench) on HuggingFace.
 2. **Place the database** at `src/db/db.db`.
 3. **Download the IFC model files** and place them under `src/db/bim_models/`. The database contains file paths referencing this directory -- update the `model_path` column in the `ifcmodels` table if your paths differ.
 

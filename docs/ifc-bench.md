@@ -8,7 +8,7 @@ Each entry pairs a natural-language question with a ground-truth answer, linked 
 
 ## Dataset Location
 
-The dataset is hosted on HuggingFace: [ifc-bench-v2](https://huggingface.co/datasets/ifc-bench-v2)
+The dataset is hosted on HuggingFace: [ifc-bench-v2](https://huggingface.co/datasets/sylvainHellin/ifc-bench)
 
 It consists of:
 - A SQLite database (`db.db`) containing the questions, ground truth answers, and IFC model metadata
