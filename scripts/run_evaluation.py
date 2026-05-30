@@ -67,6 +67,7 @@ CLIENT_INFO: Dict[str, Dict[str, str]] = {
     "Devstral": {"model": "devstral-small-2", "provider": "ollama"},
     "Gemini_2_5_Flash_Lite": {"model": "gemini-2.5-flash-lite", "provider": "google"},
     "MiniMax_M2_7": {"model": "MiniMax-M2.7", "provider": "minimax"},
+    "Claude_Sonnet_4_6": {"model": "claude-sonnet-4-6", "provider": "anthropic"},
 }
 
 
@@ -1506,7 +1507,7 @@ Examples:
         "--client",
         type=str,
         default="GLM_4_7",
-        choices=["GLM_4_7", "GLM_4_7_Flash", "GLM_4_5_air", "Devstral", "Gemini_2_5_Flash_Lite", "MiniMax_M2_7"],
+        choices=["GLM_4_7", "GLM_4_7_Flash", "GLM_4_5_air", "Devstral", "Gemini_2_5_Flash_Lite", "MiniMax_M2_7", "Claude_Sonnet_4_6"],
         help="Client to use for evaluation (default: GLM_4_7)",
     )
 
@@ -1514,7 +1515,7 @@ Examples:
         "--judge-client",
         type=str,
         default=None,
-        choices=["GLM_4_7", "GLM_4_7_Flash", "GLM_4_5_air", "Devstral", "Gemini_2_5_Flash_Lite", "MiniMax_M2_7"],
+        choices=["GLM_4_7", "GLM_4_7_Flash", "GLM_4_5_air", "Devstral", "Gemini_2_5_Flash_Lite", "MiniMax_M2_7", "Claude_Sonnet_4_6"],
         help="Client to use for the answer verifier (judge). Defaults to --client value.",
     )
 
