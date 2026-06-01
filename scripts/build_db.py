@@ -81,6 +81,10 @@ CREATE TABLE IF NOT EXISTS tool_usage_stats_eval (
 # Expected category distribution for the v2 dataset (sanity check only).
 EXPECTED = {1: 152, 2: 569, 3: 112, 4: 194}
 
+# model_path values are stored relative to the repo root, matching the
+# convention used by the published db.db (e.g. src/db/bim_models/duplex/arc.ifc).
+MODELS_REL_PREFIX = "src/db/bim_models"
+
 
 def model_description(bim_dir, project, ifc_model):
     """Return a per-model description from the project's model_card.md.
@@ -113,7 +117,12 @@ def model_description(bim_dir, project, ifc_model):
 
 
 def build(csv_path, bim_dir, db_path):
-    """Create the schema and load the dataset into a fresh database."""
+    """Create the schema and load the dataset into a fresh database.
+
+    ``bim_dir`` is the absolute directory the IFC files live in (used to read
+    model_card.md and verify files); the stored ``model_path`` is repo-root
+    relative so it matches the published db.db.
+    """
     df = pd.read_csv(csv_path)
 
     os.makedirs(os.path.dirname(db_path) or ".", exist_ok=True)
@@ -127,16 +136,16 @@ def build(csv_path, bim_dir, db_path):
     cur.execute("DELETE FROM ifcmodels")
 
     # ifcmodels: one row per unique (project, ifc_model) referenced by the CSV.
-    # model_path is absolute so it resolves regardless of working directory,
-    # matching the repo's own TEST_IFC_PATH convention.
+    # model_path is stored relative to the repo root (src/db/bim_models/...),
+    # matching the published db.db; the code resolves it from ROOT_PATH at runtime.
     model_id = {}
     for (project, ifc_model), _ in df.groupby(["project", "ifc_model"]):
-        path = os.path.join(bim_dir, str(project), f"{ifc_model}.ifc")
+        rel_path = os.path.join(MODELS_REL_PREFIX, str(project), f"{ifc_model}.ifc")
         cur.execute(
             "INSERT INTO ifcmodels "
             "(project_name, model_name, model_path, model_description) "
             "VALUES (?, ?, ?, ?)",
-            (str(project), str(ifc_model), path,
+            (str(project), str(ifc_model), rel_path,
              model_description(bim_dir, project, ifc_model)),
         )
         model_id[(project, ifc_model)] = cur.lastrowid
@@ -155,8 +164,12 @@ def build(csv_path, bim_dir, db_path):
     return con, cur
 
 
-def report(cur, bim_dir):
-    """Print counts, verify the category split, and check files on disk."""
+def report(cur, bim_dir, root):
+    """Print counts, verify the category split, and check files on disk.
+
+    Stored model_path values are repo-root relative, so they are resolved
+    against ``root`` before checking the filesystem.
+    """
     n_models = cur.execute("SELECT COUNT(*) FROM ifcmodels").fetchone()[0]
     n_q = cur.execute("SELECT COUNT(*) FROM ifc_bench").fetchone()[0]
     print(f"Inserted {n_models} models and {n_q} questions.")
@@ -175,7 +188,7 @@ def report(cur, bim_dir):
         print("Category counts match the v2 dataset. \u2713")
 
     missing = [p for (p,) in cur.execute("SELECT model_path FROM ifcmodels")
-               if not os.path.exists(p)]
+               if not os.path.exists(os.path.join(root, p))]
     if missing:
         print(f"\n\u26a0\ufe0f  {len(missing)} model file(s) not found on disk, e.g.:")
         for p in missing[:5]:
@@ -208,7 +221,7 @@ def main():
         )
 
     con, cur = build(args.csv, bim_dir, args.db)
-    report(cur, bim_dir)
+    report(cur, bim_dir, root)
     con.close()
     print(f"\nDatabase written to {args.db}")
 
