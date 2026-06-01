@@ -36,7 +36,11 @@ The IFC-Bench dataset and IFC model files are hosted on HuggingFace:
 
 1. **Download the dataset** from [ifc-bench-v2](https://huggingface.co/datasets/sylvainHellin/ifc-bench) on HuggingFace.
 2. **Place the database** at `src/db/db.db`.
-3. **Download the IFC model files** and place them under `src/db/bim_models/`. The database contains file paths referencing this directory -- update the `model_path` column in the `ifcmodels` table if your paths differ.
+3. **Link the IFC model files.** The database references paths under `src/db/bim_models/`. Create a symlink to the ifc-bench project directory:
+   ```bash
+   ln -s /path/to/ifc-bench/projects src/db/bim_models
+   ```
+   If your models live elsewhere, update the `model_path` column in the `ifcmodels` table.
 
 ### MLflow Setup
 
@@ -63,7 +67,7 @@ cobbie/
 │   │   └── baml_client/  # Auto-generated client (gitignored)
 │   ├── baseline/         # Static baseline implementations
 │   ├── db/               # Database layer, models, and queries
-│   │   └── bim_models/   # IFC model files (gitignored, download from HF)
+│   │   └── bim_models/   # Symlink to ifc-bench/projects (gitignored)
 │   ├── docs_indexer/     # IfcOpenShell documentation retrieval (RAG)
 │   ├── schemas/          # Pydantic data models
 │   ├── tools/

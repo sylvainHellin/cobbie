@@ -79,7 +79,7 @@ To add new questions:
 1. Register new IFC models in the `ifcmodels` table with their file paths.
 2. Add QA pairs to the `ifc_bench` table, linking each to an `ifc_id`.
 3. Assign a category (1-4) to each question.
-4. Place the corresponding `.ifc` files under `src/db/bim_models/`.
+4. Ensure the `.ifc` files are accessible via the `src/db/bim_models/` symlink (points to `ifc-bench/projects/`).
 
 Use the `sqlacodegen` tool to regenerate models if the schema changes:
 
