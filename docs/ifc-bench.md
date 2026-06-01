@@ -11,8 +11,13 @@ Each entry pairs a natural-language question with a ground-truth answer, linked 
 The dataset is hosted on HuggingFace: [ifc-bench-v2](https://huggingface.co/datasets/sylvainHellin/ifc-bench)
 
 It consists of:
-- A SQLite database (`db.db`) containing the questions, ground truth answers, and IFC model metadata
-- IFC model files referenced by the database
+- A questions CSV (`ifc-bench-v2.csv`) with the questions, ground truth answers, and per-question IFC model references
+- Per-project IFC model folders (with a `model_card.md` describing each model)
+
+Note: the dataset does not ship a prebuilt SQLite database. Build the `db.db` that the
+rest of the code expects with `scripts/build_db.py` (see the project README). This was
+flagged and the build script contributed in [PR #3](https://github.com/sylvainHellin/bim-qas/pull/3),
+alongside the URL fix in [PR #1](https://github.com/sylvainHellin/bim-qas/pull/1).
 
 ## Statistics
 
