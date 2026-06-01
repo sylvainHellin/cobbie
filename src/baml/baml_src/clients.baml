@@ -108,6 +108,22 @@ client<llm> MiniMax_M2_7 {
   }
 }
 
+// Anthropic Claude Sonnet 4.6
+client<llm> Claude_Sonnet_4_6 {
+  provider anthropic
+  retry_policy Exponential
+  options {
+    model "claude-sonnet-4-6"
+    api_key env.ANTHROPIC_API_KEY
+    max_tokens 8192
+    temperature 0.1
+    http {
+      connect_timeout_ms 30000
+      request_timeout_ms 180000
+    }
+  }
+}
+
 // https://docs.boundaryml.com/docs/snippets/clients/retry
 retry_policy Constant {
   max_retries 0
