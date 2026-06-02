@@ -32,15 +32,22 @@ cp .env.example .env  # Then fill in your API keys
 
 ### Dataset Setup
 
-The IFC-Bench dataset and IFC model files are hosted on HuggingFace:
+The IFC-Bench dataset and IFC model files are hosted on HuggingFace. The dataset
+ships the question-answer pairs as a CSV (`questions/ifc-bench-v2.csv`) plus
+per-project IFC model folders under `projects/`. It does **not** ship a prebuilt
+database; Cobbie expects a SQLite database at `src/db/db.db`, which you build
+from the CSV with the bundled script.
 
-1. **Download the dataset** from [ifc-bench-v2](https://huggingface.co/datasets/sylvainHellin/ifc-bench) on HuggingFace.
-2. **Place the database** at `src/db/db.db`.
-3. **Link the IFC model files.** The database references paths under `src/db/bim_models/`. Create a symlink to the ifc-bench project directory:
+1. **Download the dataset** from [ifc-bench-v2](https://huggingface.co/datasets/sylvainHellin/ifc-bench) on HuggingFace (the `ifc-bench-v2.csv` and the `projects/` folder).
+2. **Link the IFC model files.** Cobbie expects them under `src/db/bim_models/`. Create a symlink to the ifc-bench project directory:
    ```bash
    ln -s /path/to/ifc-bench/projects src/db/bim_models
    ```
-   If your models live elsewhere, update the `model_path` column in the `ifcmodels` table.
+3. **Build the database** at `src/db/db.db` from the CSV:
+   ```bash
+   uv run python scripts/build_db.py --csv /path/to/ifc-bench-v2.csv
+   ```
+   The script creates the schema, loads the QA pairs, registers the IFC models referenced by the questions (reading descriptions from each project's `model_card.md`), and verifies that the category counts and model files match. `model_path` values are stored relative to the repo root and resolved against `ROOT_PATH` at runtime, so if your models live elsewhere, adjust the symlink in step 2 rather than editing the database.
 
 ### MLflow Setup
 
