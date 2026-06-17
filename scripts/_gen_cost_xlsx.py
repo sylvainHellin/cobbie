@@ -24,13 +24,13 @@ WRAP = Alignment(wrap_text=True, vertical="top")
 # Order: cell_id, paradigm, tools, n, mean_input, mean_cached, mean_output,
 # mean_latency_s, mean_tool_calls, mean_iterations.
 CELLS = [
-    ("minimax-anthropic-MiniMax-M3__agentic__none", "agentic", "none",
+    ("minimax-m3__agentic__none", "agentic", "none",
      40, 135100.8, 117687.2, 2999.7, 99.38, 8.25, 8.25),
-    ("minimax-anthropic-MiniMax-M3__agentic__tools", "agentic", "tools",
+    ("minimax-m3__agentic__tools", "agentic", "tools",
      40, 169234.6, 148941.1, 3698.4, 106.81, 9.90, 9.90),
-    ("minimax-anthropic-MiniMax-M3__static__none", "static", "none",
+    ("minimax-m3__static__none", "static", "none",
      40, 13195.9, 7105.4, 896.2, 21.77, 0.97, 0.97),
-    ("minimax-anthropic-MiniMax-M3__static__tools", "static", "tools",
+    ("minimax-m3__static__tools", "static", "tools",
      40, 15084.9, 8409.8, 783.6, 21.09, 1.00, 1.00),
 ]
 
@@ -197,7 +197,7 @@ def build_notes(wb):
     ws["A1"].font = BOLD
     lines = [
         "Data source: dev-midi run, 40 questions per cell, MiniMax-M3 via the "
-        "Anthropic-compatible endpoint (minimax-anthropic:MiniMax-M3), "
+        "Anthropic-compatible endpoint (minimax-m3), "
         "stratified by category (10 per category). This supersedes the earlier "
         "10-question dev-mini probe. Values copied from "
         ".agents/research/2026-06-17-minimax-cost-probe.md.",

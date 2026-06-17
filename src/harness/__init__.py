@@ -7,18 +7,18 @@ tools axis added. No tracing (no MLflow/Phoenix).
 
 from src.harness.agent import (
     AgentResult,
+    Answer,
     create_ifc_agent,
     run_question,
-    sanitize_answer,
 )
 from src.harness.llm import init_llm
 from src.harness.prompts import render_question_message, render_system_prompt
 
 __all__ = [
     "AgentResult",
+    "Answer",
     "create_ifc_agent",
     "run_question",
-    "sanitize_answer",
     "init_llm",
     "render_system_prompt",
     "render_question_message",

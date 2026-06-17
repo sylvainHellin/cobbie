@@ -7,11 +7,14 @@ three cobbie-specific changes:
    cell (paradigm + tools axis only); the ifc path and question go in the first
    human message. This makes the system prefix cacheable and lets us measure
    cached-input tokens.
-2. Static vs agentic paradigm. ``static=True`` caps the loop at exactly one
-   code-generation+execution then forces synthesis (``StaticCapMiddleware`` with
-   cap=1); ``static=False`` runs the normal agentic loop with the recursion
-   guard. Same LLM, kernel, tool set, scaffolding -- the only difference is
-   single-pass vs iterative.
+2. Static vs agentic paradigm. Both paradigms share one ``CapMiddleware(cap)``;
+   ``static=True`` uses ``cap=1`` (exactly one code round, then a forced final
+   answer), ``static=False`` uses ``cap=warn_after`` (iterative loop with a
+   recursion guard). The two arms share the same agent construction, LLM,
+   kernel, tool set, scaffolding, and ``response_format``. The treatment is
+   operationalized by two things together: the integer cap and the
+   paradigm-specific guidelines block in the system prompt (the
+   ``{% if static %}`` branch rendered by ``render_system_prompt(static=...)``).
 3. Tools axis. In the tools arm the 15 curated helpers are preloaded into the
    kernel namespace (not registered as LangChain tools) and documented in the
    static system prompt.
@@ -23,7 +26,6 @@ tokens for the cost study.
 
 from __future__ import annotations
 
-import re
 import time
 import uuid
 from dataclasses import dataclass, field
@@ -35,78 +37,91 @@ from langchain.agents.middleware.types import (
     ModelRequest,
     ModelResponse,
 )
+from langchain.agents.structured_output import ToolStrategy
 from langchain_core.messages import HumanMessage
 from langchain_core.tools import tool
+from pydantic import BaseModel, Field
 
 from src.harness.interpreter import JupyterInterpreter
 from src.harness.llm import init_llm
 from src.harness.prompts import render_question_message, render_system_prompt
 from src.harness.tools_axis import build_preload_code, build_tools_docs
 
-_TOOL_CALL_XML_RE = re.compile(r"<minimax:tool_call>.*?</minimax:tool_call>", re.DOTALL)
-_THINK_BLOCK_RE = re.compile(r"<think>.*?</think>\s*", re.DOTALL)
-
-
-def sanitize_answer(text: str) -> str:
-    """Strip model artifacts from the final answer.
-
-    Removes (1) ``<think>...</think>`` reasoning blocks and (2) hallucinated
-    ``<minimax:tool_call>`` XML emitted when tools are stripped at the static cap
-    or recursion guard, so only the user-facing answer is stored and judged.
-    """
-    text = _THINK_BLOCK_RE.sub("", text)
-    text = _TOOL_CALL_XML_RE.sub("", text)
-    return text.strip()
-
-
+# Injected on the cap turn alongside the forced Answer tool. The structural
+# constraint (only the Answer tool is available) guarantees a parsed Answer
+# object, but the model still needs the natural-language signal to STOP
+# exploring and synthesize -- otherwise it dumps its intended next code call
+# into Answer.text instead of an actual answer.
 _WRAP_UP_MSG = (
-    "You have reached the exploration limit. Write your final answer now. "
-    "Follow the answer format from your instructions: "
-    "cite the IFC source for every value in parentheses, "
-    "state any assumptions with 'Assuming [condition], [conclusion]', "
-    "and if the information is not in the model, say so explicitly."
+    "Stop here. Do not request any more code execution. Using only what you "
+    "have already observed, call the Answer tool now with your final answer. "
+    "Put the complete user-facing answer in the 'text' field as natural-language "
+    "prose (no code, no tool-call syntax): cite the IFC source for every value "
+    "in parentheses, introduce every inference with 'Assuming [condition], "
+    "[conclusion]', and if the information is not in the model, say so "
+    "explicitly. Set 'sufficient_info' to whether the model had enough "
+    "information to answer."
 )
 
 
-class RecursionGuardMiddleware(AgentMiddleware):
-    """Force a wrap-up once the agent has taken too many steps (agentic arm).
+class Answer(BaseModel):
+    """The final, user-facing answer to one IFC question.
 
-    Counts AI messages in state as a step proxy. When the count reaches
-    ``warn_after``, tools are stripped and a wrap-up HumanMessage is injected,
-    forcing a text-only final answer that ends the loop.
+    The agent emits this as a structured tool call instead of free text, which
+    is what makes leaked ``<minimax:tool_call>`` XML or raw ```python blocks
+    structurally impossible in the stored answer: the model can only ever pick
+    the ``python_exec`` tool or this ``Answer`` tool, never plain message
+    content. The loop ends the moment ``Answer`` is chosen.
     """
 
-    def __init__(self, *, warn_after: int = 25) -> None:
-        self._warn_after = warn_after
-
-    def wrap_model_call(
-        self,
-        request: ModelRequest,
-        handler: Callable[[ModelRequest], ModelResponse],
-    ) -> ModelResponse | Any:
-        ai_count = sum(
-            1
-            for m in request.state.get("messages", [])
-            if getattr(m, "type", None) == "ai"
+    text: str = Field(
+        description=(
+            "The complete natural-language answer for the user, following the "
+            "answer-format guidance from the system prompt: cite the IFC source "
+            "for every value in parentheses (e.g. 'NetFloorArea in "
+            "Qto_SpaceBaseQuantities on IfcSpace #123'); introduce every "
+            "inference with 'Assuming [condition], [conclusion]'; and if the "
+            "information is genuinely not in the model, say so explicitly as a "
+            "factual finding. Do not include tool-call XML, code fences, or "
+            "<think> reasoning blocks -- only the answer prose."
         )
-        if ai_count >= self._warn_after:
-            request = request.override(
-                tools=[],
-                messages=[*request.messages, HumanMessage(content=_WRAP_UP_MSG)],
-            )
-        return handler(request)
+    )
+    sufficient_info: bool = Field(
+        description=(
+            "True if the model contained enough information to answer the "
+            "question; False if the answer had to abstain or report the "
+            "information as not available after an exhaustive search."
+        )
+    )
 
 
-class StaticCapMiddleware(AgentMiddleware):
-    """Single-pass cap for the static paradigm.
+# Structured-output tool name LangChain derives from the schema class name. Used
+# to keep the forced final-answer turn out of the code/observation transcript.
+_ANSWER_TOOL_NAME = Answer.__name__
 
-    Allows exactly ``cap`` code-generation+execution rounds, then strips tools
-    and injects the wrap-up message so the agent must synthesize its final
-    answer from that one observation. With ``cap=1`` the agent gets one
-    ``python_exec`` call and then a forced text answer.
 
-    Implemented by counting AI messages: the first AI message carries the single
-    tool call; once ``cap`` AI messages exist, the next model call has no tools.
+class CapMiddleware(AgentMiddleware):
+    """Cap the agent loop at ``cap`` code rounds, then force the structured answer.
+
+    This integer ``cap`` is one of the two things that distinguish the two
+    paradigms. The static and agentic arms share an identical agent construction
+    -- same LLM, kernel, tool set, system scaffolding, and
+    ``response_format=ToolStrategy(Answer)``. They differ in this cap and in the
+    paradigm-specific guidelines block of the system prompt (the
+    ``{% if static %}`` branch); the cap values are:
+
+    - static:  ``cap=1``         -- one ``python_exec`` round, then a forced answer.
+    - agentic: ``cap=warn_after`` -- iterate freely up to the recursion guard.
+
+    Because ``response_format`` is set at agent-construction time, the factory
+    binds the model with ``tool_choice="any"`` on every turn, so the model must
+    always pick either ``python_exec`` or the ``Answer`` tool and can never emit
+    free-form text (which is where MiniMax used to leak native tool-call XML).
+
+    Once ``cap`` AI messages exist, this middleware overrides ``tools=[]`` for the
+    next call. The factory still re-adds the structured ``Answer`` tool, so the
+    model is left with exactly one legal move: emit ``Answer``. That ends the
+    loop with a clean, parsed structured response.
     """
 
     def __init__(self, *, cap: int = 1) -> None:
@@ -123,6 +138,10 @@ class StaticCapMiddleware(AgentMiddleware):
             if getattr(m, "type", None) == "ai"
         )
         if ai_count >= self._cap:
+            # Strip the exploration tools; the factory keeps the Answer tool and
+            # forces tool_choice, so the only legal move is to emit Answer. Also
+            # inject the wrap-up signal so the model synthesizes a real answer
+            # instead of describing the next code call it would have run.
             request = request.override(
                 tools=[],
                 messages=[*request.messages, HumanMessage(content=_WRAP_UP_MSG)],
@@ -135,6 +154,7 @@ class AgentResult:
     """Normalized result from a single question run."""
 
     answer: str
+    structured: Answer | None = None
     trace: list[dict] = field(default_factory=list)
     input_tokens: int = 0
     cached_input_tokens: int = 0
@@ -177,16 +197,19 @@ def create_ifc_agent(
     tools_docs = build_tools_docs() if tools else None
     system_prompt = render_system_prompt(static=static, tools_docs=tools_docs)
 
-    if static:
-        middleware: list[AgentMiddleware] = [StaticCapMiddleware(cap=1)]
-    else:
-        middleware = [RecursionGuardMiddleware(warn_after=warn_after)]
+    # static caps the loop at one code round, agentic at warn_after. The agent
+    # construction (response_format included) is identical across paradigms; the
+    # other half of the treatment is the paradigm-specific guidelines block,
+    # already baked into system_prompt via render_system_prompt(static=...).
+    cap = 1 if static else warn_after
+    middleware: list[AgentMiddleware] = [CapMiddleware(cap=cap)]
 
     agent = create_deep_agent(
         model=llm,
         tools=[python_exec],
         system_prompt=system_prompt,
         middleware=middleware,
+        response_format=ToolStrategy(Answer),
     )
     agent._ifc_interpreter = interp
     agent._system_prompt = system_prompt
@@ -226,22 +249,34 @@ def run_question(
     elapsed = time.perf_counter() - t0
 
     messages = result["messages"]
-    answer = sanitize_answer(_normalize_content(messages[-1].content))
-    if not answer:
-        # Some models (e.g. MiniMax M2.7) emit only hallucinated tool-call XML
-        # on the forced wrap-up turn, which sanitizes to empty. Fall back to the
-        # last AI message that still carries real text after sanitizing.
-        for msg in reversed(messages):
-            if getattr(msg, "type", None) == "ai":
-                candidate = sanitize_answer(_normalize_content(msg.content))
-                if candidate:
-                    answer = candidate
-                    break
+    # Primary path: the forced structured Answer. The agent loop only ends once
+    # the model picks the Answer tool, so this is the user-facing answer.
+    structured = result.get("structured_response")
+    if isinstance(structured, Answer):
+        answer = structured.text.strip()
+    else:
+        # Defensive guard, not a live path for current providers. With
+        # tool_choice="any" the loop ends only by the model picking the Answer
+        # tool (which sets structured_response, handled above) or by exceeding
+        # recursion_limit, which raises and is recorded as an error row before
+        # reaching here. So a returned result with no Answer does not occur
+        # today; this falls back to the last AI message carrying text only if
+        # some future provider ever returns without calling Answer.
+        structured = None
+        answer = _normalize_content(messages[-1].content)
+        if not answer:
+            for msg in reversed(messages):
+                if getattr(msg, "type", None) == "ai":
+                    candidate = _normalize_content(msg.content)
+                    if candidate:
+                        answer = candidate
+                        break
     trace_entries = _extract_trace(messages)
     in_tok, cached_tok, out_tok, tool_calls = _sum_usage(messages)
 
     return AgentResult(
         answer=answer,
+        structured=structured,
         trace=trace_entries,
         input_tokens=in_tok,
         cached_input_tokens=cached_tok,
@@ -261,7 +296,12 @@ def _normalize_content(content) -> str:
 
 
 def _extract_trace(messages) -> list[dict]:
-    """Extract the code/observation transcript from the message history."""
+    """Extract the code/observation transcript from the message history.
+
+    The forced structured ``Answer`` tool call (and its synthetic tool message)
+    is excluded: it is the final answer, not a CodeAct step, so it must not land
+    in the steps table or inflate the iteration count.
+    """
     entries: list[dict] = []
     step = 0
     for msg in messages:
@@ -273,7 +313,11 @@ def _extract_trace(messages) -> list[dict]:
             content = _normalize_content(msg.content)
             if content:
                 entry["content"] = content
-            tool_calls = getattr(msg, "tool_calls", [])
+            tool_calls = [
+                tc
+                for tc in getattr(msg, "tool_calls", [])
+                if tc.get("name") != _ANSWER_TOOL_NAME
+            ]
             if tool_calls:
                 tc_list = []
                 for tc in tool_calls:
@@ -289,6 +333,8 @@ def _extract_trace(messages) -> list[dict]:
             if content or tool_calls:
                 entries.append(entry)
         elif msg_type == "tool":
+            if getattr(msg, "name", "") == _ANSWER_TOOL_NAME:
+                continue
             raw = msg.content if isinstance(msg.content, str) else str(msg.content)
             entries.append(
                 {
@@ -321,5 +367,9 @@ def _sum_usage(messages) -> tuple[int, int, int, int]:
                 cached_tok += details.get("cache_read", 0) or 0
         tc = getattr(msg, "tool_calls", None)
         if tc:
-            tool_calls += len(tc)
+            # The forced Answer tool call is the final answer, not a CodeAct
+            # tool call; exclude it from the tool-call count.
+            tool_calls += sum(
+                1 for c in tc if c.get("name") != _ANSWER_TOOL_NAME
+            )
     return in_tok, cached_tok, out_tok, tool_calls

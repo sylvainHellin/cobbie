@@ -76,7 +76,18 @@ def _resolve_ifc(path: str) -> str:
     return path if os.path.isabs(path) else os.path.join(ROOT_PATH, path)
 
 
+# Explicit model-id -> short slug map. Prefer adding an entry here over the
+# brittle string transform so each backbone gets a clean, stable cell-dir name
+# (e.g. future GLM models map to glm-4.6 rather than glm-z-ai-GLM-4-6).
+_MODEL_SLUGS = {
+    "minimax-anthropic:MiniMax-M3": "minimax-m3",
+    "minimax:MiniMax-M3": "minimax-m3",
+}
+
+
 def _model_slug(model: str) -> str:
+    if model in _MODEL_SLUGS:
+        return _MODEL_SLUGS[model]
     return model.replace(":", "-").replace("/", "-")
 
 
