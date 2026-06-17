@@ -5,10 +5,10 @@ import random
 
 from src.db.models import IfcBench
 
-def load_train_dev_split(
+def load_train_test_split(
     frac: float = 0.5, seed: int = 42
 ) -> Tuple[List[IfcBench], List[IfcBench]]:
-    """Load the dataset and split it into a train and dev set."""
+    """Load the dataset and split it into a train and held-out test set."""
     # Load the dataset table from SQLite database
     dataset = get_dataset()
     ifc_models = get_ifc_models()
@@ -20,7 +20,7 @@ def load_train_dev_split(
     for data in dataset:
         data.ifc = ifc_model_map.get(data.ifc_id)
 
-    # Split into training and dev sets
+    # Split into training and held-out test sets
     total_items = len(dataset)
     train_size = int(total_items * frac)
 
@@ -31,16 +31,16 @@ def load_train_dev_split(
 
     # Split the shuffled dataset
     train_data = shuffled_dataset[:train_size]
-    dev_data = shuffled_dataset[train_size:]
+    test_data = shuffled_dataset[train_size:]
 
-    return train_data, dev_data
+    return train_data, test_data
 
 
 # Load the datasets
-TRAINSET, DEVSET = load_train_dev_split()
+TRAINSET, TESTSET = load_train_test_split()
 
 __all__ = [
-    "load_train_dev_split",
+    "load_train_test_split",
     "TRAINSET",
-    "DEVSET",
+    "TESTSET",
 ]

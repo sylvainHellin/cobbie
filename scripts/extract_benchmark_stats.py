@@ -14,7 +14,7 @@ import json
 from collections import Counter
 from pathlib import Path
 
-from src.db.load_dataset import DEVSET, TRAINSET, load_train_dev_split
+from src.db.load_dataset import TESTSET, TRAINSET, load_train_test_split
 from src.db.query import get_dataset
 
 OUTPUT_DIR = Path("outputs/ifc-bench")
@@ -32,18 +32,18 @@ def main() -> None:
 
     full_dataset = get_dataset()
     train_data = TRAINSET
-    dev_data = DEVSET
+    test_data = TESTSET
 
     total = len(full_dataset)
     train_size = len(train_data)
-    dev_size = len(dev_data)
+    test_size = len(test_data)
 
     # Category distribution (full dataset)
     cat_counts: Counter[int | None] = Counter(q.category for q in full_dataset)
 
     # Project distribution (full dataset) — need ifc model info
     # Reload with ifc model data
-    _, _ = load_train_dev_split()  # ensures models are loaded
+    _, _ = load_train_test_split()  # ensures models are loaded
     project_questions: dict[str, dict] = {}
     unique_model_ids: set[int] = set()
 
@@ -51,7 +51,7 @@ def main() -> None:
         # Find project info by joining with ifc model
         # Use the ifc relationship from train/dev data which has it populated
         ifc_obj = None
-        for item in train_data + dev_data:
+        for item in train_data + test_data:
             if item.id == q.id:
                 ifc_obj = item.ifc
                 break
@@ -85,7 +85,7 @@ def main() -> None:
         "total_ifc_models": len(unique_model_ids),
         "total_projects": unique_projects,
         "train_size": train_size,
-        "dev_size": dev_size,
+        "test_size": test_size,
         "split_fraction": 0.5,
         "split_seed": 42,
         "dev_projects_for_manual_tools": ["duplex", "dental_clinic"],
@@ -141,7 +141,7 @@ def main() -> None:
     # --- Print summary ---
     print("\n--- ifc-bench v2 Summary ---")
     print(f"Total QA pairs: {total}")
-    print(f"Train / Dev: {train_size} / {dev_size}")
+    print(f"Train / Test: {train_size} / {test_size}")
     print(f"Projects: {unique_projects}")
     print(f"Unique IFC models: {len(unique_model_ids)}")
     print(f"Categories: {dict(sorted(cat_counts.items(), key=lambda x: (x[0] is None, x[0])))}")
