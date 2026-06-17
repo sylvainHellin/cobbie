@@ -9,23 +9,13 @@ description = "An AI agent that can answer any question related to a given BIM m
 readme = "README.md"
 requires-python = ">=3.12, <3.13"
 dependencies = [
-    "arize-phoenix==8.24.0",
-    "baml-py>=0.215.2",
     "docutils>=0.22.4",
-    "fastapi[standard]>=0.115.9",
     "ifcopenshell>=0.8.2",
     "ipykernel>=6.29.5",
     "jupyter>=1.1.1",
-    "krippendorff>=0.7.0",
     "loguru>=0.7.3",
-    "mermaid-magic>=0.1.4",
-    "mlflow==3.5.1",
     "mypy>=1.16.1",
-    "ollama>=0.4.8",
-    "openinference-instrumentation-smolagents>=0.1.11",
     "openpyxl>=3.1.5",
-    "opentelemetry-exporter-otlp>=1.32.1",
-    "opentelemetry-sdk>=1.32.1",
     "pydantic>=2.11.4",
     "python-dotenv>=1.1.0",
     "result>=0.17.0",
@@ -33,16 +23,18 @@ dependencies = [
     "scikit-learn>=1.6.0",
     "seaborn>=0.13.2",
     "sentence-transformers>=5.2.0",
-    "sqlacodegen>=3.1.1",
     "sqlite-vec>=0.1.6",
     "chromadb>=1.0.0",
     "rank-bm25>=0.2.2",
     "sqlmodel>=0.0.25",
-    "streamlit>=1.41.0",
     "tabulate>=0.9.0",
     "tiktoken>=0.12.0",
-    "mlx>=0.30.3",
-    "mlx-lm>=0.29.1",
+    # New harness + analysis stack
+    "langchain>=0.3",
+    "langgraph>=0.2",
+    "deepagents",
+    "jupyter-client>=8",
+    "google-genai>=0.3",
 ]
 
 [tool.setuptools]

@@ -4,13 +4,39 @@ import sys
 import time
 from typing import Any
 
-import mlflow
 from loguru import logger
 
 from src.docs_indexer.embedder import embed_text
 from src.docs_indexer.models import DocChunk
 from src.docs_indexer.storage import DEFAULT_DB_PATH, DocVectorStore
-from src.util.python_executor import count_tokens
+from src.util.tokens import count_tokens
+
+
+class _NoOpSpan:
+    """No-op tracing span: tracing was removed with the MLflow dependency."""
+
+    def __enter__(self):
+        return self
+
+    def __exit__(self, *exc):
+        return False
+
+    def set_inputs(self, *a, **k):
+        pass
+
+    def set_outputs(self, *a, **k):
+        pass
+
+    def set_attributes(self, *a, **k):
+        pass
+
+
+class _NoOpTracer:
+    def start_span(self, *a, **k):
+        return _NoOpSpan()
+
+
+mlflow = _NoOpTracer()
 
 # Jina reranker v3 MLX - optimized for Apple Silicon
 RERANKER_MODEL = "jinaai/jina-reranker-v3-mlx"

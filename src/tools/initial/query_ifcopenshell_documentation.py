@@ -1,12 +1,8 @@
 import os
-import time
 from typing import Literal
 
-import mlflow
 import requests
 from dotenv import find_dotenv, load_dotenv
-
-from src.util.python_executor import count_tokens
 
 load_dotenv(find_dotenv())
 CONTEXT7_API_KEY = os.getenv("CONTEXT7_API_KEY")
@@ -83,30 +79,15 @@ def query_ifcopenshell_docs(query: str) -> None:
     Example:
         >>> query_ifcopenshell_docs("How to access element properties")
     """
-    start = time.time()
-
     # Read DOC_BACKEND at runtime to allow configuration via environment variable
     doc_backend: Literal["context7", "custom"] = os.getenv("DOC_BACKEND", "custom")  # type: ignore
 
-    with mlflow.start_span(name="query_ifcopenshell_docs", span_type="TOOL") as span:
-        span.set_inputs({"query": query, "backend": doc_backend})
+    if doc_backend == "context7":
+        result = _query_context7(query)
+    else:
+        result = _query_custom(query)
 
-        if doc_backend == "context7":
-            result = _query_context7(query)
-        else:
-            result = _query_custom(query)
-
-        duration = time.time() - start
-        result_tokens = count_tokens(result)
-
-        span.set_outputs({"result": result})
-        span.set_attributes({
-            "backend": doc_backend,
-            "duration_ms": duration * 1000,
-            "result_tokens": result_tokens,
-        })
-
-        print(result)
+    print(result)
 
 
 if __name__ == "__main__":

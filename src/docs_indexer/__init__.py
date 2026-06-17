@@ -8,8 +8,7 @@ This module provides tools to:
 5. Retrieve relevant documentation
 """
 
-from src.docs_indexer.indexer import run_indexing
 from src.docs_indexer.models import DocChunk
 from src.docs_indexer.retriever import query_docs, retrieve
 
-__all__ = ["DocChunk", "query_docs", "retrieve", "run_indexing"]
+__all__ = ["DocChunk", "query_docs", "retrieve"]
