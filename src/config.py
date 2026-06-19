@@ -14,20 +14,9 @@ CREATED_TOOLS_PATH = os.path.join(ROOT_PATH, "src/tools/created")
 INITIAL_TOOLS_PATH = os.path.join(ROOT_PATH, "src/tools/initial")
 MANUAL_TOOLS_PATH = os.path.join(ROOT_PATH, "src/tools/manual")
 
-# URI
-MLFLOW_URI = "http://127.0.0.1:5000"
-
-# loads secrets
-ANTHROPIC_API_KEY = os.environ["ANTHROPIC_API_KEY"]
-OPENAI_API_KEY = os.environ["OPENAI_API_KEY"]
-GEMINI_API_KEY = os.environ["GEMINI_API_KEY"]
-DEEPSEEK_API_KEY = os.environ["DEEPSEEK_API_KEY"]
-GROQ_API_KEY = os.environ["GROQ_API_KEY"]
-MISTRAL_API_KEY = os.environ["MISTRAL_API_KEY"]
-FIREWORKS_API_KEY = os.environ["FIREWORKS_API_KEY"]
-CEREBRAS_API_KEY = os.environ["CEREBRAS_API_KEY"]
-OPENROUTER_API_KEY = os.environ["OPENROUTER_API_KEY"]
-
+# Provider API keys are read directly from os.environ by the consumers that need
+# them (src/harness/llm.py prefix routing, scripts/judge.py). config.py does not
+# hard-require them, so a missing optional provider key never blocks import.
 
 # Boilerplate code for the toolmaker
 FUNCTION_BOILERPLATE = """
