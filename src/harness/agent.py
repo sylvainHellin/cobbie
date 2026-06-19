@@ -7,14 +7,21 @@ three cobbie-specific changes:
    cell (paradigm + tools axis only); the ifc path and question go in the first
    human message. This makes the system prefix cacheable and lets us measure
    cached-input tokens.
-2. Static vs agentic paradigm. Both paradigms share one ``CapMiddleware(cap)``;
-   ``static=True`` uses ``cap=1`` (exactly one code round, then a forced final
-   answer), ``static=False`` uses ``cap=warn_after`` (iterative loop with a
-   recursion guard). The two arms share the same agent construction, LLM,
-   kernel, tool set, scaffolding, and ``response_format``. The treatment is
-   operationalized by two things together: the integer cap and the
-   paradigm-specific guidelines block in the system prompt (the
-   ``{% if static %}`` branch rendered by ``render_system_prompt(static=...)``).
+2. Static vs agentic paradigm. They differ in their generation path. The
+   agentic arm is a single tool-calling agent: ``CapMiddleware(cap=warn_after)``
+   iterates freely up to a recursion guard, then forces a structured final
+   answer (``response_format=ToolStrategy(Answer)`` + wrap-up injection). The
+   static arm is a two-call pipeline (see ``run_question``): Phase 1 runs
+   exactly one ``python_exec`` round and stops (``StaticOneRoundMiddleware``,
+   no forced Answer, no wrap-up); Phase 2 is a SEPARATE plain
+   ``init_llm(...).invoke(...)`` completion that synthesizes the final
+   natural-language answer from {question + ifc context + Phase-1 code +
+   Phase-1 observation + the shared answer-format guidelines}. Separating the
+   answer-producing turn from the tool-calling turn is what prevents the static
+   arm leaking raw tool-call markup into the answer. Both arms share the same
+   LLM, kernel, tool set, scaffolding, and the paradigm-specific guidelines
+   block in the system prompt (the ``{% if static %}`` branch rendered by
+   ``render_system_prompt(static=...)``).
 3. Tools axis. In the tools arm the 15 curated helpers are preloaded into the
    kernel namespace (not registered as LangChain tools) and documented in the
    static system prompt.
@@ -26,6 +33,7 @@ tokens for the cost study.
 
 from __future__ import annotations
 
+import re
 import time
 import uuid
 from dataclasses import dataclass, field
@@ -38,13 +46,17 @@ from langchain.agents.middleware.types import (
     ModelResponse,
 )
 from langchain.agents.structured_output import ToolStrategy
-from langchain_core.messages import HumanMessage
+from langchain_core.messages import AIMessage, HumanMessage
 from langchain_core.tools import tool
 from pydantic import BaseModel, Field
 
 from src.harness.interpreter import JupyterInterpreter
 from src.harness.llm import init_llm
-from src.harness.prompts import render_question_message, render_system_prompt
+from src.harness.prompts import (
+    extract_answer_format_section,
+    render_question_message,
+    render_system_prompt,
+)
 from src.harness.tools_axis import build_preload_code, build_tools_docs
 
 # Injected on the cap turn alongside the forced Answer tool. The structural
@@ -101,22 +113,17 @@ _ANSWER_TOOL_NAME = Answer.__name__
 
 
 class CapMiddleware(AgentMiddleware):
-    """Cap the agent loop at ``cap`` code rounds, then force the structured answer.
+    """Cap the agentic loop at ``cap`` code rounds, then force the structured answer.
 
-    This integer ``cap`` is one of the two things that distinguish the two
-    paradigms. The static and agentic arms share an identical agent construction
-    -- same LLM, kernel, tool set, system scaffolding, and
-    ``response_format=ToolStrategy(Answer)``. They differ in this cap and in the
-    paradigm-specific guidelines block of the system prompt (the
-    ``{% if static %}`` branch); the cap values are:
-
-    - static:  ``cap=1``         -- one ``python_exec`` round, then a forced answer.
-    - agentic: ``cap=warn_after`` -- iterate freely up to the recursion guard.
-
-    Because ``response_format`` is set at agent-construction time, the factory
-    binds the model with ``tool_choice="any"`` on every turn, so the model must
-    always pick either ``python_exec`` or the ``Answer`` tool and can never emit
-    free-form text (which is where MiniMax used to leak native tool-call XML).
+    Used by the AGENTIC arm only (the static arm uses
+    ``StaticOneRoundMiddleware`` + a separate Phase-2 synthesis call). The
+    agentic agent is built with ``response_format=ToolStrategy(Answer)``, so the
+    factory binds the model with ``tool_choice="any"`` on every turn: the model
+    must always pick either ``python_exec`` or the ``Answer`` tool and can never
+    emit free-form text (which is where MiniMax used to leak native tool-call
+    XML). The arm iterates freely with ``cap=warn_after`` up to the recursion
+    guard; the paradigm-specific guidelines block of the system prompt (the
+    ``{% if static %}`` branch) carries the other half of the treatment.
 
     Once ``cap`` AI messages exist, this middleware overrides ``tools=[]`` for the
     next call. The factory still re-adds the structured ``Answer`` tool, so the
@@ -146,6 +153,36 @@ class CapMiddleware(AgentMiddleware):
                 tools=[],
                 messages=[*request.messages, HumanMessage(content=_WRAP_UP_MSG)],
             )
+        return handler(request)
+
+
+class StaticOneRoundMiddleware(AgentMiddleware):
+    """End the static Phase-1 loop after exactly one ``python_exec`` round.
+
+    The static arm is a two-call pipeline. Phase 1 is a plain CodeAct agent
+    (no ``response_format``, no forced ``Answer``, no wrap-up) whose only job is
+    to run a single ``python_exec`` round and stop -- the final answer is
+    produced separately in Phase 2 (a plain ``init_llm().invoke()`` synthesis,
+    see ``run_question``). Once one AI message exists (the ``python_exec`` tool
+    call, whose observation is now in state), this middleware short-circuits the
+    next model call with an empty ``AIMessage`` that carries no tool calls,
+    which ends the agent loop without generating a second tool-calling turn.
+    The injected message has no content and no tool calls, so it never enters
+    the trace, the steps table, or the token totals.
+    """
+
+    def wrap_model_call(
+        self,
+        request: ModelRequest,
+        handler: Callable[[ModelRequest], ModelResponse],
+    ) -> ModelResponse | Any:
+        ai_count = sum(
+            1
+            for m in request.state.get("messages", [])
+            if getattr(m, "type", None) == "ai"
+        )
+        if ai_count >= 1:
+            return ModelResponse(result=[AIMessage(content="")])
         return handler(request)
 
 
@@ -197,22 +234,36 @@ def create_ifc_agent(
     tools_docs = build_tools_docs() if tools else None
     system_prompt = render_system_prompt(static=static, tools_docs=tools_docs)
 
-    # static caps the loop at one code round, agentic at warn_after. The agent
-    # construction (response_format included) is identical across paradigms; the
-    # other half of the treatment is the paradigm-specific guidelines block,
-    # already baked into system_prompt via render_system_prompt(static=...).
-    cap = 1 if static else warn_after
-    middleware: list[AgentMiddleware] = [CapMiddleware(cap=cap)]
-
-    agent = create_deep_agent(
-        model=llm,
-        tools=[python_exec],
-        system_prompt=system_prompt,
-        middleware=middleware,
-        response_format=ToolStrategy(Answer),
-    )
+    if static:
+        # Phase 1 of the two-call static pipeline: a plain CodeAct agent that
+        # runs exactly one python_exec round and stops. No forced Answer (no
+        # response_format -> no tool_choice="any"), no wrap-up injection. The
+        # final answer is synthesized separately in run_question (Phase 2).
+        agent = create_deep_agent(
+            model=llm,
+            tools=[python_exec],
+            system_prompt=system_prompt,
+            middleware=[StaticOneRoundMiddleware()],
+        )
+    else:
+        # Agentic arm: iterate freely up to warn_after, then force a clean
+        # structured Answer via the cap turn (tools stripped + wrap-up) and
+        # response_format=ToolStrategy(Answer).
+        agent = create_deep_agent(
+            model=llm,
+            tools=[python_exec],
+            system_prompt=system_prompt,
+            middleware=[CapMiddleware(cap=warn_after)],
+            response_format=ToolStrategy(Answer),
+        )
     agent._ifc_interpreter = interp
     agent._system_prompt = system_prompt
+    # Stashed for run_question: the static flag selects the Phase-2 synthesis
+    # branch, and the model id rebuilds the synthesis LLM. Kept on the agent to
+    # avoid churning the run_question signature / run_cell.py callsite.
+    agent._static = static
+    agent._model = model
+    agent._max_retries = max_retries
     return agent, interp
 
 
@@ -231,6 +282,13 @@ def run_question(
     helpers and the open ``model`` are preloaded into the namespace before the
     agent runs. Token usage (input/cached-input/output), tool-call count, and
     latency are extracted from the LangChain message history.
+
+    Static arm: Phase 1 runs one ``python_exec`` round (the agent built with
+    ``StaticOneRoundMiddleware`` stops after it), then Phase 2 makes a SEPARATE
+    plain ``init_llm().invoke()`` synthesis call whose ``.content`` is the final
+    answer. Phase-2 tokens and latency are not in ``result["messages"]``, so they
+    are summed in explicitly; the synthesis call is not a step and never enters
+    the trace.
     """
     if tools:
         interp.preload(build_preload_code(ifc_path))
@@ -249,30 +307,50 @@ def run_question(
     elapsed = time.perf_counter() - t0
 
     messages = result["messages"]
-    # Primary path: the forced structured Answer. The agent loop only ends once
-    # the model picks the Answer tool, so this is the user-facing answer.
-    structured = result.get("structured_response")
-    if isinstance(structured, Answer):
-        answer = structured.text.strip()
-    else:
-        # Defensive guard, not a live path for current providers. With
-        # tool_choice="any" the loop ends only by the model picking the Answer
-        # tool (which sets structured_response, handled above) or by exceeding
-        # recursion_limit, which raises and is recorded as an error row before
-        # reaching here. So a returned result with no Answer does not occur
-        # today; this falls back to the last AI message carrying text only if
-        # some future provider ever returns without calling Answer.
-        structured = None
-        answer = _normalize_content(messages[-1].content)
-        if not answer:
-            for msg in reversed(messages):
-                if getattr(msg, "type", None) == "ai":
-                    candidate = _normalize_content(msg.content)
-                    if candidate:
-                        answer = candidate
-                        break
     trace_entries = _extract_trace(messages)
     in_tok, cached_tok, out_tok, tool_calls = _sum_usage(messages)
+
+    if getattr(agent, "_static", False):
+        # Two-call static pipeline: Phase 1 produced the code + observation
+        # (above); Phase 2 synthesizes the final answer in a separate plain
+        # completion. structured stays None (no Answer tool in this arm).
+        structured = None
+        answer, synth_elapsed, synth_usage = _synthesize_static_answer(
+            agent,
+            question=question,
+            ifc_path=ifc_path,
+            trace_entries=trace_entries,
+        )
+        elapsed += synth_elapsed
+        # Add Phase-2 usage; _sum_usage never saw the synthesis message.
+        in_tok += synth_usage[0]
+        cached_tok += synth_usage[1]
+        out_tok += synth_usage[2]
+    else:
+        # Agentic arm: the forced structured Answer. The agent loop only ends
+        # once the model picks the Answer tool, so this is the user-facing
+        # answer.
+        structured = result.get("structured_response")
+        if isinstance(structured, Answer):
+            answer = structured.text.strip()
+        else:
+            # Defensive guard, not a live path for current providers. With
+            # tool_choice="any" the loop ends only by the model picking the
+            # Answer tool (which sets structured_response, handled above) or by
+            # exceeding recursion_limit, which raises and is recorded as an
+            # error row before reaching here. So a returned result with no
+            # Answer does not occur today; this falls back to the last AI
+            # message carrying text only if some future provider ever returns
+            # without calling Answer.
+            structured = None
+            answer = _normalize_content(messages[-1].content)
+            if not answer:
+                for msg in reversed(messages):
+                    if getattr(msg, "type", None) == "ai":
+                        candidate = _normalize_content(msg.content)
+                        if candidate:
+                            answer = candidate
+                            break
 
     return AgentResult(
         answer=answer,
@@ -293,6 +371,136 @@ def _normalize_content(content) -> str:
             b.get("text", "") if isinstance(b, dict) else str(b) for b in content
         ).strip()
     return str(content).strip() if content else ""
+
+
+_THINK_BLOCK_RE = re.compile(r"<\s*think\s*>.*?<\s*/\s*think\s*>", re.DOTALL | re.IGNORECASE)
+_FENCE_LINE_RE = re.compile(r"^\s*```[^\n`]*\s*$")
+
+
+def _strip_synthesis_artifacts(text: str) -> str:
+    """Defensively clean the Phase-2 static synthesis completion.
+
+    Phase 2 is a plain (non-tool) completion, so tool-call XML cannot appear,
+    but the backbone model may still emit ``<think>...</think>`` reasoning
+    blocks or wrap the whole answer in a markdown code fence despite the prompt
+    instruction. This strips both post-hoc so the static arm stays clean for any
+    backbone, not just MiniMax-M3. Applied ONLY to the static synthesis output;
+    the agentic path never calls this.
+
+    1. Remove every ``<think>...</think>`` block (DOTALL, case-insensitive,
+       tolerant of whitespace inside the tags).
+    2. If the remainder is wrapped in a single markdown code fence (a leading
+       line that is ``` optionally followed by a language token, with a matching
+       trailing ```), unwrap it to the inner text. Otherwise strip a stray
+       leading fence line if present, without removing inner content.
+    3. Re-trim whitespace.
+    """
+    cleaned = _THINK_BLOCK_RE.sub("", text).strip()
+
+    lines = cleaned.split("\n")
+    if len(lines) >= 2 and _FENCE_LINE_RE.match(lines[0]):
+        # Find a matching trailing fence line (a bare ``` with no language).
+        if lines[-1].strip() == "```":
+            inner = lines[1:-1]
+            # Only unwrap if no fence remains inside the block (single wrapper).
+            if not any(line.strip().startswith("```") for line in inner):
+                cleaned = "\n".join(inner).strip()
+        else:
+            # Stray leading fence line without a matching closer: drop just it,
+            # but only when it carries no inline content of its own.
+            if not any(line.strip().startswith("```") for line in lines[1:]):
+                cleaned = "\n".join(lines[1:]).strip()
+
+    return cleaned
+
+
+def _first_round_code_and_observation(trace_entries: list[dict]) -> tuple[str, str]:
+    """Pull the single (code, observation) from a one-round static Phase-1 trace.
+
+    Returns ``("", "")`` when Phase 1 emitted no ``python_exec`` call (model
+    error or empty turn), which the caller handles by synthesizing from the
+    question alone.
+    """
+    code = ""
+    observation = ""
+    for entry in trace_entries:
+        if entry.get("role") == "assistant" and not code:
+            for tc in entry.get("tool_calls", []):
+                code = tc.get("args", {}).get("code", "") or ""
+                if code:
+                    break
+        elif entry.get("role") == "tool" and not observation:
+            observation = entry.get("content", "") or ""
+    return code, observation
+
+
+def _synthesize_static_answer(
+    agent,
+    *,
+    question: str,
+    ifc_path: str,
+    trace_entries: list[dict],
+) -> tuple[str, float, tuple[int, int, int]]:
+    """Phase 2: synthesize the final static answer in a separate plain completion.
+
+    A plain ``init_llm(...).invoke([...])`` call (no ``response_format``, no
+    ``tool_choice``) fed the question, the IFC context, the Phase-1 executed
+    code, the Phase-1 kernel observation, and the SAME canonical answer-format
+    guidelines the agentic arm uses (extracted from the rendered system prompt).
+    The synthesis ``.content`` is the final answer. Because this turn is not a
+    tool-calling turn, it cannot leak tool-call markup into the answer.
+
+    Returns ``(answer, elapsed_s, (input_tokens, cached_tokens, output_tokens))``.
+    """
+    code, observation = _first_round_code_and_observation(trace_entries)
+    answer_format = extract_answer_format_section(agent._system_prompt)
+
+    if code:
+        evidence = (
+            "You ran one `python_exec` inspection of the model. Here is the "
+            "exact code you executed and the kernel output it produced.\n\n"
+            "Executed code:\n```python\n"
+            f"{code}\n```\n\n"
+            "Kernel observation:\n```\n"
+            f"{observation}\n```"
+        )
+    else:
+        evidence = (
+            "No code was executed for this question (the inspection step "
+            "produced no output). Answer from the question alone, and if the "
+            "information cannot be determined, say so explicitly."
+        )
+
+    synth_prompt = (
+        "You are a BIM expert. Give the final, user-facing answer to one IFC "
+        "question, using ONLY the inspection evidence below.\n\n"
+        f"IFC model path: {ifc_path}\n\n"
+        f"Question: {question}\n\n"
+        f"{evidence}\n\n"
+        f"{answer_format}\n\n"
+        "Write only the answer prose (and tables if helpful). Do not include "
+        "tool-call syntax, code fences, or <think> reasoning blocks."
+    )
+
+    synth_llm = init_llm(
+        agent._model,
+        temperature=0,
+        max_retries=getattr(agent, "_max_retries", 3),
+    )
+    t0 = time.perf_counter()
+    synth_msg = synth_llm.invoke([HumanMessage(content=synth_prompt)])
+    elapsed = time.perf_counter() - t0
+
+    answer = _strip_synthesis_artifacts(_normalize_content(synth_msg.content))
+    usage = getattr(synth_msg, "usage_metadata", None) or {}
+    in_tok = usage.get("input_tokens", 0) if isinstance(usage, dict) else 0
+    out_tok = usage.get("output_tokens", 0) if isinstance(usage, dict) else 0
+    cached_tok = 0
+    if isinstance(usage, dict):
+        details = usage.get("input_token_details") or {}
+        if isinstance(details, dict):
+            cached_tok = details.get("cache_read", 0) or 0
+    return answer, elapsed, (in_tok, cached_tok, out_tok)
 
 
 def _extract_trace(messages) -> list[dict]:

@@ -17,6 +17,33 @@ from jinja2 import Template
 
 _TEMPLATE_PATH = Path(__file__).parent / "system_prompt.jinja2"
 
+# The shared answer-format section heading in the system prompt. Both arms hold
+# answers to this same rubric: the agentic arm via the system prompt (and the
+# Answer.text field description / _WRAP_UP_MSG echoing it), and the static arm's
+# Phase-2 synthesis via extract_answer_format_section() below. Sourcing the
+# static synthesis guidelines from the rendered prompt (not a hand-written copy)
+# keeps the rubric identical across arms.
+_ANSWER_FORMAT_HEADING = "# Answer format"
+
+
+def extract_answer_format_section(system_prompt: str) -> str:
+    """Return the canonical "# Answer format" section from a rendered system prompt.
+
+    The static Phase-2 synthesis call reuses these exact guidelines (cite the
+    IFC source per value, "Assuming [condition], [conclusion]" phrasing, metric
+    SI, no tool-call XML / code fences / <think>) so static answers are held to
+    the same rubric as the agentic arm. It slices from the "# Answer format"
+    heading to the end of the prompt, which is the last section in the template.
+    Raises if the heading is absent so a template change cannot silently drop
+    the guidelines.
+    """
+    idx = system_prompt.find(_ANSWER_FORMAT_HEADING)
+    if idx == -1:
+        raise ValueError(
+            f"{_ANSWER_FORMAT_HEADING!r} section not found in system prompt"
+        )
+    return system_prompt[idx:].strip()
+
 
 def render_system_prompt(*, static: bool = False, tools_docs: str | None = None) -> str:
     """Render the static, cacheable system prompt for a cell.
