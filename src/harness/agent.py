@@ -291,6 +291,10 @@ def run_question(
     the trace.
     """
     if tools:
+        # preload() restarts the kernel before seeding the namespace, so the
+        # tools arm gets the same clean-kernel-per-question guarantee as the
+        # none arm's reset(). This prevents a broken/silent kernel (e.g. left
+        # after a timeout) persisting across questions in the tools arm.
         interp.preload(build_preload_code(ifc_path))
     else:
         interp.reset()

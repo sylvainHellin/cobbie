@@ -16,6 +16,7 @@ from __future__ import annotations
 
 import re
 import time
+from queue import Empty
 
 import jupyter_client
 import tiktoken
@@ -75,14 +76,18 @@ class JupyterInterpreter:
     # ------------------------------------------------------------------
 
     def preload(self, setup_code: str) -> str:
-        """Execute *setup_code* to seed the kernel namespace and remember it.
+        """Restart the kernel, then execute *setup_code* to seed the namespace.
 
         Used by the tools arm to inject the curated helper library and any
-        common imports. The code is re-run after every ``reset()`` so each
+        common imports. Restarting first makes per-question kernel handling
+        symmetric with the none arm's ``reset()``: a kernel left in a broken
+        state (e.g. post-timeout) by the previous question can never persist
+        into this one. The code is also re-run after every ``reset()`` so each
         question starts from the same preloaded namespace. Returns the raw
         execution output (empty on success); raises nothing.
         """
         self._preamble = setup_code
+        self._restart()
         return self.run(setup_code)
 
     # ------------------------------------------------------------------
@@ -90,46 +95,106 @@ class JupyterInterpreter:
     # ------------------------------------------------------------------
 
     def run(self, code: str, timeout: int = 60) -> str:
-        """Execute *code* in the kernel and return collected output."""
+        """Execute *code* in the kernel and return collected output.
+
+        On timeout the runaway cell is interrupted (SIGINT) and any stale iopub
+        messages it left behind are drained, so the *next* execute is not
+        poisoned by output attributed to an already-returned request. This is
+        the fix for the silent-stdout blackout: previously a deadline made
+        ``get_iopub_msg`` raise ``queue.Empty``, which the broad ``except`` swallowed
+        with a bare ``break`` -- no interrupt, no marker, and the runaway cell's
+        late output then leaked onto subsequent executes and was dropped by the
+        ``parent_header`` filter, blacking out stdout for the rest of the question.
+        """
         msg_id = self.kc.execute(code)
         output_parts: list[str] = []
         deadline = time.monotonic() + timeout
+        timed_out = False
 
-        try:
-            while True:
-                remaining = deadline - time.monotonic()
-                if remaining <= 0:
-                    raise TimeoutError
+        while True:
+            remaining = deadline - time.monotonic()
+            if remaining <= 0:
+                timed_out = True
+                break
 
-                try:
-                    iopub_msg = self.kc.get_iopub_msg(timeout=remaining)
-                except Exception:
-                    # Channel closed or kernel died.
-                    break
+            try:
+                iopub_msg = self.kc.get_iopub_msg(timeout=remaining)
+            except Empty:
+                # No message before the deadline: the cell is still running.
+                timed_out = True
+                break
+            except Exception:
+                # Channel closed or kernel died -- nothing more to collect.
+                break
 
-                if iopub_msg.get("parent_header", {}).get("msg_id") != msg_id:
-                    continue
+            if iopub_msg.get("parent_header", {}).get("msg_id") != msg_id:
+                continue
 
-                msg_type = iopub_msg["header"]["msg_type"]
-                content = iopub_msg["content"]
+            msg_type = iopub_msg["header"]["msg_type"]
+            content = iopub_msg["content"]
 
-                if msg_type == "stream":
-                    output_parts.append(content.get("text", ""))
-                elif msg_type == "execute_result":
-                    data = content.get("data", {})
-                    output_parts.append(data.get("text/plain", ""))
-                elif msg_type == "error":
-                    tb = "\n".join(content.get("traceback", []))
-                    output_parts.append(_ANSI_RE.sub("", tb))
-                elif msg_type == "status" and content.get("execution_state") == "idle":
-                    break
+            if msg_type == "stream":
+                output_parts.append(content.get("text", ""))
+            elif msg_type == "execute_result":
+                data = content.get("data", {})
+                output_parts.append(data.get("text/plain", ""))
+            elif msg_type == "error":
+                tb = "\n".join(content.get("traceback", []))
+                output_parts.append(_ANSI_RE.sub("", tb))
+            elif msg_type == "status" and content.get("execution_state") == "idle":
+                break
 
-        except TimeoutError:
-            self.interrupt()
+        if timed_out:
+            self._recover_from_timeout()
             return f"[Timeout] Execution exceeded {timeout}s and was interrupted."
 
         result = "".join(output_parts)
         return _truncate_by_tokens(result, self.max_output_tokens)
+
+    def _recover_from_timeout(self) -> None:
+        """Interrupt a runaway cell and drain its stale output.
+
+        SIGINT stops the cell, then we wait for the kernel to return to ``idle``
+        and flush every queued iopub/shell message left over from the killed
+        execute. Without this drain, the dead cell's late ``stream``/``status``
+        messages sit in the channel and get mis-attributed -- the next execute
+        sees the leftover ``idle`` and returns before its own output arrives,
+        which is the first-print-after-timeout blackout. If the kernel will not
+        come back to a clean idle state, fall back to a full restart so the next
+        question always starts from a working kernel.
+        """
+        self.interrupt()
+        drained_to_idle = False
+        drain_deadline = time.monotonic() + 10
+        while time.monotonic() < drain_deadline:
+            try:
+                msg = self.kc.get_iopub_msg(timeout=1)
+            except Empty:
+                # Channel quiet; if we already saw idle we are clean.
+                if drained_to_idle:
+                    break
+                continue
+            except Exception:
+                break
+            content = msg.get("content", {})
+            if (
+                msg.get("header", {}).get("msg_type") == "status"
+                and content.get("execution_state") == "idle"
+            ):
+                drained_to_idle = True
+        # Flush any pending shell replies (e.g. the interrupted execute_reply)
+        # so they cannot be mismatched against the next execute.
+        while True:
+            try:
+                self.kc.get_shell_msg(timeout=0.2)
+            except Empty:
+                break
+            except Exception:
+                break
+        if not drained_to_idle:
+            # Interrupt did not cleanly settle the kernel; restart it so the
+            # next execute is guaranteed to deliver its output.
+            self.reset()
 
     # ------------------------------------------------------------------
     # Kernel lifecycle helpers
@@ -142,10 +207,14 @@ class JupyterInterpreter:
         except Exception:
             pass
 
-    def reset(self) -> None:
-        """Restart the kernel with a clean namespace, re-applying any preamble."""
+    def _restart(self) -> None:
+        """Restart the kernel process and wait for it to be ready."""
         self.km.restart_kernel(now=True)
         self.kc.wait_for_ready(timeout=30)
+
+    def reset(self) -> None:
+        """Restart the kernel with a clean namespace, re-applying any preamble."""
+        self._restart()
         if self._preamble:
             self.run(self._preamble)
 
