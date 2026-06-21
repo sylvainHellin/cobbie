@@ -82,6 +82,8 @@ def _resolve_ifc(path: str) -> str:
 _MODEL_SLUGS = {
     "minimax-anthropic:MiniMax-M3": "minimax-m3",
     "minimax:MiniMax-M3": "minimax-m3",
+    "glm:glm-5.2": "glm-5.2",
+    "glm:glm-4.5-air": "glm-4.5-air",
 }
 
 
