@@ -367,12 +367,23 @@ def main() -> None:
         default=3,
         help="per-question error-row retry cap across reruns",
     )
+    parser.add_argument(
+        "--out-dir",
+        default=None,
+        help=(
+            "Base output directory under which <cell_id>/results.sqlite is "
+            "written. Defaults to outputs/factorial. Use a separate base "
+            "(e.g. outputs/factorial_rerun_YYYYMMDD) to avoid touching "
+            "existing results."
+        ),
+    )
     args = parser.parse_args()
 
     static = args.paradigm == "static"
     use_tools = args.tools == "tools"
     cell_id = _cell_id(args.model, args.paradigm, args.tools)
-    out_dir = os.path.join(ROOT_PATH, "outputs", "factorial", cell_id)
+    base_dir = args.out_dir or os.path.join(ROOT_PATH, "outputs", "factorial")
+    out_dir = os.path.join(base_dir, cell_id)
     db_path = os.path.join(out_dir, "results.sqlite")
 
     questions = _select_questions(args)
