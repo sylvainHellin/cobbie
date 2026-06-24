@@ -20,6 +20,17 @@ _OPENAI_COMPAT = {
     "openrouter": ("https://openrouter.ai/api/v1", "OPENROUTER_API_KEY"),
 }
 
+# When GLM_PROVIDER=openrouter is set, the ``glm:`` prefix is rerouted through
+# OpenRouter instead of Z.AI's own API. Useful when the Z.AI weekly/monthly quota
+# is exhausted (rate-limit 429 with a reset date several days out) and the same
+# model is available on OpenRouter under the ``z-ai/`` namespace, e.g.
+# ``z-ai/glm-4.5-air`` and ``z-ai/glm-5.2``. Set in ``.env`` or the shell, not
+# hard-coded; the cell-id slug and run_metadata.model field stay unchanged so
+# the rerun hits the existing sqlite (resume-safe).
+_GLM_PROVIDER_OVERRIDE = {
+    "openrouter": ("https://openrouter.ai/api/v1", "OPENROUTER_API_KEY", "z-ai/"),
+}
+
 # Anthropic-compatible providers: prefix -> (base_url, env var holding the key).
 # Routed through ChatAnthropic so prompt-cache tokens (cache_creation /
 # cache_read) are reported explicitly in usage_metadata -- needed for the
@@ -60,6 +71,16 @@ def init_llm(model: str, *, request_timeout: float | None = 120, **kwargs):
 
     if prefix in _OPENAI_COMPAT:
         base_url, env_key = _OPENAI_COMPAT[prefix]
+        # Optional override: route ``glm:`` through a different provider (e.g.
+        # OpenRouter when Z.AI is rate-limited). Triggered by the
+        # ``GLM_PROVIDER`` env var. Preserves the original model id so cell-id
+        # slugs and run_metadata.model stay unchanged across the rerun.
+        if prefix == "glm":
+            override = os.environ.get("GLM_PROVIDER", "").lower()
+            if override and override in _GLM_PROVIDER_OVERRIDE:
+                base_url, env_key, name_prefix = _GLM_PROVIDER_OVERRIDE[override]
+                if not model_name.startswith(name_prefix):
+                    model_name = name_prefix + model_name
         if request_timeout is not None:
             kwargs.setdefault("request_timeout", request_timeout)
         return init_chat_model(

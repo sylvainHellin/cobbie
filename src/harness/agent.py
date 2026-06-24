@@ -33,6 +33,7 @@ tokens for the cost study.
 
 from __future__ import annotations
 
+import os
 import re
 import time
 import uuid
@@ -58,6 +59,25 @@ from src.harness.prompts import (
     render_system_prompt,
 )
 from src.harness.tools_axis import build_preload_code, build_tools_docs
+
+# Per-call output-token cap. Some backbones (notably glm-4.5-air in the static
+# arm) occasionally enter a degenerate generation loop and emit tens of
+# thousands of output tokens for a single BIM question -- a ~16-minute,
+# multi-dollar runaway that always produces an unusable answer. A hard
+# max_tokens ceiling turns that pathology into a bounded (truncated) response
+# instead. Default 16384 clips <0.3% of legitimate answers (observed p99 ~12k,
+# max ~36k) while capping the 66k-token runaways. Override with
+# HARNESS_MAX_OUTPUT_TOKENS; set to 0/empty to disable.
+def _max_output_tokens() -> int | None:
+    raw = os.environ.get("HARNESS_MAX_OUTPUT_TOKENS", "16384").strip()
+    if not raw:
+        return None
+    try:
+        val = int(raw)
+    except ValueError:
+        return None
+    return val if val > 0 else None
+
 
 # Injected on the cap turn alongside the forced Answer tool. The structural
 # constraint (only the Answer tool is available) guarantees a parsed Answer
@@ -218,7 +238,9 @@ def create_ifc_agent(
     Returns ``(agent, interpreter)``. The interpreter is also attached as
     ``agent._ifc_interpreter`` for convenience.
     """
-    llm = init_llm(model, temperature=0, max_retries=max_retries)
+    _cap = _max_output_tokens()
+    _cap_kw = {"max_tokens": _cap} if _cap is not None else {}
+    llm = init_llm(model, temperature=0, max_retries=max_retries, **_cap_kw)
     interp = JupyterInterpreter()
 
     @tool
@@ -486,10 +508,13 @@ def _synthesize_static_answer(
         "tool-call syntax, code fences, or <think> reasoning blocks."
     )
 
+    _synth_cap = _max_output_tokens()
+    _synth_cap_kw = {"max_tokens": _synth_cap} if _synth_cap is not None else {}
     synth_llm = init_llm(
         agent._model,
         temperature=0,
         max_retries=getattr(agent, "_max_retries", 3),
+        **_synth_cap_kw,
     )
     t0 = time.perf_counter()
     synth_msg = synth_llm.invoke([HumanMessage(content=synth_prompt)])
