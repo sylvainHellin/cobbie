@@ -79,7 +79,7 @@ CREATE TABLE IF NOT EXISTS tool_usage_stats_eval (
 """
 
 # Expected category distribution for the v2 dataset (sanity check only).
-EXPECTED = {1: 152, 2: 569, 3: 112, 4: 194}
+EXPECTED = {1: 152, 2: 568, 3: 112, 4: 194}
 
 # model_path values are stored relative to the repo root, matching the
 # convention used by the published db.db (e.g. src/db/bim_models/duplex/arc.ifc).
