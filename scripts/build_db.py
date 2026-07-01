@@ -125,6 +125,16 @@ def build(csv_path, bim_dir, db_path):
     """
     df = pd.read_csv(csv_path)
 
+    # The CSV carries a stable identity via an explicit ``id`` column; consume it
+    # directly so the db id equals the CSV id regardless of row order.
+    if "id" not in df.columns:
+        raise SystemExit(
+            "CSV is missing the required 'id' column. Expected a leading 'id' "
+            "column (1..N) that pins each question's stable identity."
+        )
+    if df["id"].duplicated().any():
+        raise SystemExit("CSV 'id' column contains duplicate values; ids must be unique.")
+
     os.makedirs(os.path.dirname(db_path) or ".", exist_ok=True)
     con = sqlite3.connect(db_path)
     cur = con.cursor()
@@ -150,13 +160,15 @@ def build(csv_path, bim_dir, db_path):
         )
         model_id[(project, ifc_model)] = cur.lastrowid
 
-    # ifc_bench: the QA pairs, each linked to its IFC model.
+    # ifc_bench: the QA pairs, each linked to its IFC model. The explicit ``id``
+    # from the CSV is inserted as the primary key so the db id == CSV id and is
+    # robust to any future row reordering (instead of relying on iterrows order).
     for _, r in df.iterrows():
         cur.execute(
             "INSERT INTO ifc_bench "
-            "(question, ground_truth, ifc_id, category, cobbie) "
-            "VALUES (?, ?, ?, ?, NULL)",
-            (r["question"], r["ground_truth"],
+            "(id, question, ground_truth, ifc_id, category, cobbie) "
+            "VALUES (?, ?, ?, ?, ?, NULL)",
+            (int(r["id"]), r["question"], r["ground_truth"],
              model_id[(r["project"], r["ifc_model"])], int(r["category"])),
         )
 
