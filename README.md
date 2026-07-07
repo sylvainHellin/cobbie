@@ -1,4 +1,4 @@
-# Cobbie -- Code-Based BIM Information Extraction
+# Cobbie: Code-Based BIM Information Extraction
 
 An LLM-based multi-agent system for answering questions about BIM models in IFC format. Cobbie uses a dynamic tool creation architecture where the system learns to generate reusable Python functions during training, then applies them during inference.
 
