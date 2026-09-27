@@ -5,7 +5,7 @@
 # Writes to a SEPARATE base dir via --out-dir so the existing final results in
 # outputs/factorial/<cell>/results.sqlite are never read-for-write or touched.
 set -uo pipefail
-cd /home/sylvain/code/tum/cobbie
+cd /home/sylvain/code/tum/_archiv/cobbie
 M=minimax-anthropic:MiniMax-M3
 QS=full
 OUTDIR=outputs/factorial_rerun_20260624

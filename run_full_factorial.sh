@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 set -uo pipefail
-cd /home/sylvain/code/tum/cobbie
+cd /home/sylvain/code/tum/_archiv/cobbie
 M=minimax-anthropic:MiniMax-M3
 QS=full
 ts() { date +%Y-%m-%dT%H:%M:%S; }

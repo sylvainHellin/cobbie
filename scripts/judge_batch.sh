@@ -10,7 +10,7 @@
 #
 # Usage: scripts/judge_batch.sh [--cells all] [--phase all] [--dry-run] ...
 set -uo pipefail
-cd /home/sylvain/code/tum/cobbie
+cd /home/sylvain/code/tum/_archiv/cobbie
 mkdir -p outputs/factorial/_logs
 LOG=outputs/factorial/_logs/judge_batch_$(date +%Y%m%dT%H%M%S).log
 exec uv run python -u scripts/judge_batch.py "$@" 2>&1 | tee -a "$LOG"

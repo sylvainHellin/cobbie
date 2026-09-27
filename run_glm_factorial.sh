@@ -5,7 +5,7 @@
 # skipped and prior status='error' rows are retried, so re-running simply
 # completes the remaining questions per cell.
 set -uo pipefail
-cd /home/sylvain/code/tum/cobbie
+cd /home/sylvain/code/tum/_archiv/cobbie
 QS=full
 ts() { date +%Y-%m-%dT%H:%M:%S; }
 mkdir -p outputs/factorial/_logs
