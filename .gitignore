@@ -63,3 +63,6 @@ src/db/Solibri-BIM-F.zip
 /.pi/workflow
 /src/db/chroma_docs/
 /.fastembed_cache
+
+# editor state
+.nvim/
