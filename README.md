@@ -1,17 +1,23 @@
 # Cobbie -- Code-Based BIM Information Extraction
 
-An LLM-based multi-agent system for answering questions about BIM models in IFC format. Cobbie uses a dynamic tool creation architecture where the system learns to generate reusable Python functions during training, then applies them during inference.
+Experiment harness for answering natural-language questions about BIM models in IFC format with LLM agents that write and execute Python (CodeAct) against [IfcOpenShell](https://ifcopenshell.org/).
 
-> **Paper**: *BIM Information Extraction Through LLM-based Adaptive Exploration*, submitted to *Automation in Construction*. Authors: S. Hellin, S. Jang, S. Fuchs, S. Nousias, A. Borrmann.
+> **Paper**: *BIM Information Extraction Through LLM-based Adaptive Exploration*, submitted to *Automation in Construction* (under revision). Authors: S. Hellin, S. Jang, S. Fuchs, S. Nousias, A. Borrmann.
 > This repository accompanies the paper. Please cite it if you use this code or the IFC-Bench dataset.
 
-## Features
+> **Note**: the original multi-agent system with dynamic tool creation (BAML agents, MLflow tracking) described in the submitted manuscript was replaced during revision by the leaner factorial harness documented here. The old implementation is available in the git history.
 
-- **Multi-agent architecture**: Specialized agents for code generation, verification, tool creation, debugging, and assessment
-- **Dynamic tool creation**: Automatically generates and manages reusable Python functions during training
-- **Multiple system configurations**: Agentic (Cobbie), static one-shot, and doc-augmented baselines
-- **Comprehensive evaluation**: MLflow-tracked experiments with LLM-based answer grading
-- **IFC-Bench dataset**: 200 questions across 10 IFC building models spanning 8 categories
+## What the harness does
+
+The revision experiments are a **model x paradigm x tools factorial**: each *cell* runs one LLM backbone in one of two paradigms, with or without curated tools, over the IFC-Bench question set.
+
+- **Paradigm axis** -- `agentic`: a CodeAct loop (DeepAgents + persistent Jupyter kernel) that iterates freely up to a cap, then is forced to emit a structured final `Answer`; `static`: a two-call baseline (one `python_exec` inspection round, then a separate plain synthesis completion).
+- **Tools axis** -- `tools`: the curated helper functions in `src/tools/curated/` are preloaded into the kernel namespace and documented in the system prompt; `none`: bare IfcOpenShell.
+- **Model axis** -- any prefixed model id supported by `src/harness/llm.py` (MiniMax, Z.AI/GLM, OpenRouter, Fireworks, xAI, Gemini, OpenAI, Anthropic, ...).
+
+The system prompt is static per cell (the IFC path and question go in the first human message), so provider prompt caching holds and cached-input tokens are measured for the cost study.
+
+Each cell writes a single sqlite (`outputs/factorial/<cell_id>/results.sqlite`) with per-question answers, full code/observation transcripts, token/latency accounting, and (after judging) the correctness classification. Runs are resume-safe: re-launching a cell skips completed rows.
 
 ## Quick Start
 
@@ -19,7 +25,7 @@ An LLM-based multi-agent system for answering questions about BIM models in IFC 
 
 - Python 3.12+
 - [`uv`](https://docs.astral.sh/uv/) package manager
-- API keys for at least one supported LLM provider (see `.env.example`)
+- API keys for the providers you want to run (see `.env.example`); `GEMINI_API_KEY` is required for the judge
 
 ### Installation
 
@@ -27,7 +33,7 @@ An LLM-based multi-agent system for answering questions about BIM models in IFC 
 git clone <repository-url>
 cd cobbie
 uv sync
-cp .env.example .env  # Then fill in your API keys
+cp .env.example .env  # Then fill in your API keys, and set ROOT_PATH to the repo root
 ```
 
 ### Dataset Setup
@@ -47,143 +53,91 @@ from the CSV with the bundled script.
    ```bash
    uv run python scripts/build_db.py --csv /path/to/ifc-bench-v2.csv
    ```
-   The script creates the schema, loads the QA pairs, registers the IFC models referenced by the questions (reading descriptions from each project's `model_card.md`), and verifies that the category counts and model files match. `model_path` values are stored relative to the repo root and resolved against `ROOT_PATH` at runtime, so if your models live elsewhere, adjust the symlink in step 2 rather than editing the database.
 
-### MLflow Setup
+The evaluation set (`TESTSET`) holds 514 questions across 19 projects in 4 categories (direct property / aggregation / computation / estimation-or-unavailable).
 
-MLflow is required for experiment tracking. Start it from the `.mlflow/` directory:
+## Running experiments
+
+### One factorial cell
 
 ```bash
-cd .mlflow
-uv run mlflow server --host 127.0.0.1 --port 5000 \
-  --backend-store-uri sqlite:///mlflow.sqlite \
-  --uvicorn-opts "--timeout=120 -w 1"
+uv run python scripts/run_cell.py \
+  --model minimax-anthropic:MiniMax-M3 \
+  --paradigm agentic --tools none \
+  --question-set full
 ```
 
-Access the UI at http://127.0.0.1:5000. Use a single worker (`-w 1`) to avoid SQLite locking issues.
+Key arguments:
+
+| Argument | Options | Default | Description |
+|---|---|---|---|
+| `--model` | prefixed id, e.g. `glm:glm-5.2`, `openrouter:qwen/qwen3.5-35b-a3b` | required | LLM backbone (see `src/harness/llm.py` for prefixes) |
+| `--paradigm` | `static`, `agentic` | required | Generation paradigm |
+| `--tools` | `none`, `tools` | required | Curated-tools axis |
+| `--question-set` | `dev-mini` (10), `dev-midi` (40), `dev-large` (100), `full` (514) | `dev-mini` | Deterministic category-stratified subsets; each is a strict superset of the smaller ones |
+| `--limit`, `--question-ids` | -- | -- | Escape hatches over the chosen set |
+| `--repeats` | int | 1 | Repeated samples per question |
+| `--thinking` | `off`, `adaptive` | `off` | Extended-thinking mode (MiniMax-M3) |
+| `--temperature` | float | 0.0 | Sampling temperature |
+| `--concurrency` | int | 5 | Parallel agents (one Jupyter kernel each) |
+| `--out-dir` | path | `outputs/factorial` | Base dir for `<cell_id>/results.sqlite` |
+
+`run_full_factorial.sh` / `run_glm_factorial.sh` / `scripts/run_minimax*_rerun.sh` show the full-stack invocations used for the paper.
+
+### Judging
+
+Correctness is scored post-hoc by a Gemini LLM-as-judge (`gemini-3.1-pro-preview`) against the multi-criteria BIM rubric; it writes `classification` (`correct` / `wrong` / `abstained` / `error`) back into each cell's sqlite. Resume-safe (already-classified rows are skipped).
+
+```bash
+# Spot-check / small cells: synchronous
+uv run python scripts/judge.py --judge-mode sync --cell '<cell_id>' --dry-run
+uv run python scripts/judge.py --judge-mode sync --cell '<cell_id>'
+
+# Full pass: Gemini Batch API, one job per cell, submit/wait/collect
+uv run python scripts/judge_batch.py --cells all            # or a glob, e.g. '*agentic*'
+uv run python scripts/judge_batch.py --base-dir outputs/factorial_rerun_YYYYMMDD --cells all
+```
+
+### Analysis
+
+All analysis scripts read the judged cell sqlites:
+
+```bash
+uv run python scripts/compare_runs.py                 # cross-cell accuracy/cost comparison
+uv run python scripts/analyze_per_category.py         # per-category accuracy breakdown
+uv run python scripts/analyze_per_project.py          # per-project quality
+uv run python scripts/analyze_complementarity.py      # complementarity + significance tests
+uv run python scripts/analyze_census.py               # failure-mode census over open-coded traces
+uv run python scripts/view_traces_streamlit.py        # interactive trace viewer
+```
 
 ## Project Structure
 
 ```
 cobbie/
 ├── src/
-│   ├── agents/           # Multi-agent implementations
-│   ├── analysis/         # Evaluation data extraction and analysis
-│   ├── baml/
-│   │   ├── baml_src/     # BAML agent definitions (source of truth)
-│   │   └── baml_client/  # Auto-generated client (gitignored)
-│   ├── baseline/         # Static baseline implementations
-│   ├── db/               # Database layer, models, and queries
+│   ├── harness/          # CodeAct harness: agent loop, Jupyter interpreter,
+│   │                     #   LLM routing, system prompt (jinja2), tools axis
+│   ├── db/               # SQLite dataset layer, models, queries, dev subsets
 │   │   └── bim_models/   # Symlink to ifc-bench/projects (gitignored)
-│   ├── docs_indexer/     # IfcOpenShell documentation retrieval (RAG)
-│   ├── schemas/          # Pydantic data models
-│   ├── tools/
-│   │   ├── initial/      # Base tools (docs query, web search)
-│   │   ├── created/      # Dynamically generated tools from training
-│   │   └── manual/       # Manually curated tools
-│   └── util/             # Utilities (metrics, execution, logging)
-├── scripts/              # Training, evaluation, and analysis scripts
+│   ├── tools/curated/    # Curated helper functions for the tools axis
+│   ├── baseline/         # IFC summary helper for the static arm
+│   └── util/             # Utilities
+├── scripts/              # Cell runner, judge, analysis scripts
+├── prompts/              # Open-coding / census prompts for failure analysis
 ├── docs/                 # Architecture and dataset documentation
-├── outputs/              # Generated reports and figures (gitignored)
-└── .mlflow/              # MLflow tracking data (gitignored)
-```
-
-## Reproducing the Experiments
-
-### Environment Variables
-
-Copy `.env.example` to `.env` and fill in the required API keys. The minimum required key depends on which experiments you run:
-
-| Provider | Key | Used by |
-|---|---|---|
-| Z.AI | `Z_AI_API_KEY` | GLM-4.7 (default model for all experiments) |
-| Google | `GEMINI_API_KEY` | Gemini models, LLM judge |
-| OpenAI | `OPENAI_API_KEY` | GPT models |
-| Anthropic | `ANTHROPIC_API_KEY` | Claude models |
-
-Set `ROOT_PATH` to the absolute path of the repository root.
-
-### Training
-
-Training runs the agentic system on the training split, dynamically creating tools:
-
-```bash
-# Basic training (questions 0-9)
-uv run scripts/run_training_phase.py --start 0 --end 10
-
-# Batched training (memory-safe, runs each batch as a separate process)
-fish scripts/run_training_batched.fish --nb-samples 20 --batch-size 5
-
-# Continue a previous run
-uv run scripts/run_training_phase.py --start 10 --end 20 --continue <run-id>
-```
-
-### Evaluation
-
-Evaluation runs one of several system configurations on the evaluation split:
-
-```bash
-# Agentic system with manual tools and context7 docs
-uv run scripts/run_evaluation.py --start 0 --nb-samples 200 \
-  --system cobbie --tools manual --doc context7
-
-# Static one-shot baseline (no tools)
-uv run scripts/run_evaluation.py --start 0 --nb-samples 200 --system static
-
-# Batched evaluation (memory-safe)
-fish scripts/run_eval_batched.fish --nb-samples 200 --batch-size 10
-```
-
-Key CLI arguments for `run_evaluation.py`:
-
-| Argument | Options | Default | Description |
-|---|---|---|---|
-| `--system` | `cobbie`, `static`, `static-doc` | `cobbie` | QA system to evaluate |
-| `--tools` | `initial`, `created`, `manual` | none | Tool directories to load (space-separated) |
-| `--doc` | `custom`, `context7` | `custom` | Documentation backend |
-| `--client` | `GLM_4_7`, etc. | `GLM_4_7` | LLM client |
-
-### Evaluation Matrix
-
-The paper reports results from 10 system configurations. Each is a separate MLflow run:
-
-| Run Name | System | Tools | Docs | CLI Args |
-|---|---|---|---|---|
-| `dynamic-manual-doc` | cobbie | manual | context7 | `--system cobbie --tools manual --doc context7` |
-| `dynamic-auto-doc` | cobbie | created | context7 | `--system cobbie --tools created --doc context7` |
-| `dynamic-None-doc` | cobbie | -- | context7 | `--system cobbie --doc context7` |
-| `dynamic-manual-no_doc` | cobbie | manual | custom | `--system cobbie --tools manual --doc custom` |
-| `dynamic-auto-no_doc` | cobbie | created | custom | `--system cobbie --tools created --doc custom` |
-| `dynamic-None-no_doc` | cobbie | -- | custom | `--system cobbie --doc custom` |
-| `static-manual` | static | manual | -- | `--system static --tools manual` |
-| `static-created` | static | created | -- | `--system static --tools created` |
-| `static-None` | static | -- | -- | `--system static` |
-| `static-doc` | static-doc | -- | custom | `--system static-doc --doc custom` |
-
-### Analysis
-
-After evaluation runs complete:
-
-```bash
-# Cross-run comparison and metrics
-uv run scripts/analyze_evaluation_matrix.py
-
-# Single-run detailed analysis
-uv run scripts/analyze_evaluation_runs.py --run-ids <run-id>
-
-# Interactive error analysis (Streamlit app)
-uv run streamlit run scripts/eval_analysis_app.py
+└── outputs/              # Cell sqlites, judge summaries, figures (gitignored)
 ```
 
 ## Supported LLM Providers
 
-The system supports multiple LLM providers via BAML client definitions:
+Prefix-routed in `src/harness/llm.py`:
 
-- **Z.AI** (GLM-4.7) -- default for all experiments
-- **OpenAI** (GPT models)
-- **Anthropic** (Claude)
-- **Google** (Gemini)
-- **DeepSeek**, **Groq**, **Mistral**, **Fireworks**, **Cerebras**, **OpenRouter**
+- **MiniMax** (`minimax:` OpenAI-compatible, `minimax-anthropic:` Anthropic-compatible with cache-token reporting)
+- **Z.AI / GLM** (`glm:`, optionally rerouted through OpenRouter via `GLM_PROVIDER=openrouter`)
+- **OpenRouter** (`openrouter:<vendor>/<model>`)
+- **Fireworks** (`fireworks:`), **xAI** (`grok:`)
+- **Google** (`gemini:`), **OpenAI** (`openai:`), **Anthropic** (`anthropic:`)
 
 ## Development
 
@@ -194,8 +148,8 @@ uv run ruff check .
 # Type check
 uvx ty check
 
-# Regenerate BAML client after editing baml_src/
-cd src/baml && uv run baml-cli generate
+# Harness smoke test
+uv run python scripts/smoke_harness.py
 ```
 
 ## License
