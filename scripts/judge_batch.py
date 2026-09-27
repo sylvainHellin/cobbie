@@ -314,6 +314,11 @@ def _run_judge_submit(cell_filter: Optional[str]) -> int:
         "python",
         "-u",
         os.path.join("scripts", "judge.py"),
+        # Thread the active base dir into the subprocess so its enumeration,
+        # batch-state file and JSONL all resolve under the same out-dir as the
+        # driver (otherwise the subprocess would default to outputs/factorial).
+        "--base-dir",
+        judge.BASE_DIR,
         "--judge-mode",
         "batch",
         "--batch-phase",
@@ -561,7 +566,7 @@ def collect_phase(
 
 def dry_run(cells: list[tuple[str, str]]) -> None:
     if not cells:
-        _log("dry-run: no cells matched under outputs/factorial/*/results.sqlite")
+        _log(f"dry-run: no cells matched under {judge.BASE_DIR}/*/results.sqlite")
         return
     total_judge = 0
     total_err = 0
@@ -623,7 +628,7 @@ def write_summary(
     state: list[dict],
 ) -> str:
     stamp = datetime.now(timezone.utc).strftime("%Y%m%dT%H%M%SZ")
-    out_dir = os.path.join(ROOT_PATH, "outputs", "factorial")
+    out_dir = judge.BASE_DIR
     os.makedirs(out_dir, exist_ok=True)
     out_path = os.path.join(out_dir, f"judge_summary_{stamp}.md")
 
@@ -703,9 +708,18 @@ def write_summary(
 def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     parser.add_argument(
+        "--base-dir",
+        "--out-dir",
+        dest="base_dir",
+        default=None,
+        help="factorial run base dir holding the cells (default outputs/factorial); "
+        "relative paths resolve under ROOT_PATH. The batch-state file and summary "
+        "live under this dir so concurrent judging of different out-dirs never collides",
+    )
+    parser.add_argument(
         "--cells",
         default="all",
-        help="glob | comma-list | 'all' of cell-dir names under outputs/factorial",
+        help="glob | comma-list | 'all' of cell-dir names under the base dir",
     )
     parser.add_argument("--poll-interval-s", type=int, default=60)
     parser.add_argument("--poll-max-interval-s", type=int, default=600)
@@ -724,10 +738,13 @@ def main() -> None:
     )
     args = parser.parse_args()
 
+    # Set the active base dir before any enumeration/state IO so judge.py's
+    # module-global path helpers resolve under the chosen out-dir.
+    base_dir = judge.set_base_dir(args.base_dir)
     cells = resolve_cells(args.cells)
     if not cells:
         raise SystemExit(
-            f"no cells matched --cells {args.cells!r} under outputs/factorial/*/results.sqlite"
+            f"no cells matched --cells {args.cells!r} under {base_dir}/*/results.sqlite"
         )
 
     if args.dry_run:

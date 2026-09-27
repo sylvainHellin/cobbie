@@ -59,8 +59,35 @@ from src.db.query import fetch_question_data
 # all cells.
 JUDGE_MODEL = "gemini-3.1-pro-preview"
 
-# State file persisting submitted batch jobs between the submit and collect phases.
-_BATCH_STATE_FILE = os.path.join(ROOT_PATH, "outputs", "factorial", "judge_batch_jobs.json")
+# Run base dir holding the factorial cells. Default ``outputs/factorial``;
+# overridable via --base-dir so any factorial out-dir (e.g. a rerun dir) can be
+# judged. Set once at startup via ``set_base_dir`` (judge_batch.py threads the
+# same value in). Every run-base-relative path (cell enumeration, batch-state
+# file, JSONL, summary, failed-job db_path reconstruction) derives from BASE_DIR
+# so concurrent judging of different out-dirs never collides.
+DEFAULT_BASE_DIR = os.path.join(ROOT_PATH, "outputs", "factorial")
+BASE_DIR = DEFAULT_BASE_DIR
+
+
+def set_base_dir(base_dir: Optional[str]) -> str:
+    """Set the module-global run base dir. Relative paths resolve under ROOT_PATH.
+
+    A falsy ``base_dir`` keeps the default ``outputs/factorial``. Returns the
+    resolved absolute base dir.
+    """
+    global BASE_DIR
+    if not base_dir:
+        BASE_DIR = DEFAULT_BASE_DIR
+    elif os.path.isabs(base_dir):
+        BASE_DIR = base_dir
+    else:
+        BASE_DIR = os.path.join(ROOT_PATH, base_dir)
+    return BASE_DIR
+
+
+def _batch_state_file() -> str:
+    """State file persisting submitted batch jobs, under the active base dir."""
+    return os.path.join(BASE_DIR, "judge_batch_jobs.json")
 
 # Display-only category names (the prompt only interpolates the integer).
 CATEGORY_NAMES = {
@@ -504,13 +531,12 @@ class JudgeStore:
 
 
 def enumerate_cells(cell_filter: Optional[str]) -> list[str]:
-    """Return sorted results.sqlite paths under outputs/factorial.
+    """Return sorted results.sqlite paths under the active base dir (BASE_DIR).
 
     ``cell_filter`` is an optional cell-dir name or glob matched against the cell
     directory name (e.g. ``minimax-m3__static__none`` or ``*static*``).
     """
-    base = os.path.join(ROOT_PATH, "outputs", "factorial")
-    paths = sorted(glob.glob(os.path.join(base, "*", "results.sqlite")))
+    paths = sorted(glob.glob(os.path.join(BASE_DIR, "*", "results.sqlite")))
     if cell_filter:
         paths = [
             p
@@ -677,15 +703,17 @@ def _parse_batch_key(key: str) -> tuple[str, int, int]:
 
 
 def _load_batch_state() -> list[dict]:
-    if os.path.exists(_BATCH_STATE_FILE):
-        with open(_BATCH_STATE_FILE) as fh:
+    state_file = _batch_state_file()
+    if os.path.exists(state_file):
+        with open(state_file) as fh:
             return json.load(fh)
     return []
 
 
 def _save_batch_state(state: list[dict]) -> None:
-    os.makedirs(os.path.dirname(_BATCH_STATE_FILE), exist_ok=True)
-    with open(_BATCH_STATE_FILE, "w") as fh:
+    state_file = _batch_state_file()
+    os.makedirs(os.path.dirname(state_file), exist_ok=True)
+    with open(state_file, "w") as fh:
         json.dump(state, fh, indent=2)
 
 
@@ -755,9 +783,9 @@ def run_batch_submit(cells: list[str], limit: Optional[int]) -> None:
         print("No judgeable rows; nothing to submit.", flush=True)
         return
 
-    os.makedirs(os.path.join(ROOT_PATH, "outputs", "factorial"), exist_ok=True)
+    os.makedirs(BASE_DIR, exist_ok=True)
     stamp = datetime.now(timezone.utc).strftime("%Y%m%dT%H%M%SZ")
-    jsonl_path = os.path.join(ROOT_PATH, "outputs", "factorial", f"judge_batch_{stamp}.jsonl")
+    jsonl_path = os.path.join(BASE_DIR, f"judge_batch_{stamp}.jsonl")
     with open(jsonl_path, "w") as fh:
         for req in requests:
             fh.write(json.dumps(req) + "\n")
@@ -790,7 +818,7 @@ def run_batch_submit(cells: list[str], limit: Optional[int]) -> None:
     _save_batch_state(state)
     print(
         f"Submitted batch job {job.name} ({len(requests)} requests, state={getattr(job.state, 'name', job.state)}).\n"
-        f"State saved to {_BATCH_STATE_FILE}. Run --batch-phase collect later.",
+        f"State saved to {_batch_state_file()}. Run --batch-phase collect later.",
         flush=True,
     )
 
@@ -802,7 +830,7 @@ def run_batch_collect() -> None:
     collect run (exit 0)."""
     state = _load_batch_state()
     if not state:
-        print(f"No batch jobs in {_BATCH_STATE_FILE}; submit first.", flush=True)
+        print(f"No batch jobs in {_batch_state_file()}; submit first.", flush=True)
         return
     client = _genai_client()
     stores: dict[str, JudgeStore] = {}
@@ -945,7 +973,7 @@ def _route_job_keys_to_error(keys: list[str], get_store) -> int:
         except Exception:
             print(f"  ! cannot parse key {key!r}; skipped", flush=True)
             continue
-        db_path = os.path.join(ROOT_PATH, "outputs", "factorial", cell_id, "results.sqlite")
+        db_path = os.path.join(BASE_DIR, cell_id, "results.sqlite")
         store = get_store(db_path)
         store.write_verdict(qid, ridx, "error", None, JUDGE_MODEL, only_if_null=True)
         erred += 1
@@ -968,7 +996,7 @@ def _apply_batch_record(obj: dict, get_store) -> bool:
     except Exception:
         print(f"  ! cannot parse key {key!r}; skipped", flush=True)
         return False
-    db_path = os.path.join(ROOT_PATH, "outputs", "factorial", cell_id, "results.sqlite")
+    db_path = os.path.join(BASE_DIR, cell_id, "results.sqlite")
     store = get_store(db_path)
 
     if obj.get("error"):
@@ -1000,7 +1028,7 @@ def run_dry(cells: list[str], limit: Optional[int]) -> None:
     columns exist for inspection, without touching any existing row data.
     """
     if not cells:
-        print("No cells found under outputs/factorial/*/results.sqlite", flush=True)
+        print(f"No cells found under {os.path.join(BASE_DIR, '*', 'results.sqlite')}", flush=True)
         return
     total_judgeable = 0
     total_errors = 0
@@ -1042,6 +1070,14 @@ def run_dry(cells: list[str], limit: Optional[int]) -> None:
 
 def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument(
+        "--base-dir",
+        "--out-dir",
+        dest="base_dir",
+        default=None,
+        help="factorial run base dir holding the cells (default outputs/factorial); "
+        "relative paths resolve under ROOT_PATH",
+    )
     parser.add_argument("--judge-mode", required=True, choices=["sync", "batch"])
     parser.add_argument(
         "--batch-phase",
@@ -1061,6 +1097,7 @@ def main() -> None:
     )
     args = parser.parse_args()
 
+    set_base_dir(args.base_dir)
     cells = enumerate_cells(args.cell)
 
     if args.dry_run:
