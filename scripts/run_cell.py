@@ -20,6 +20,7 @@ from __future__ import annotations
 
 import argparse
 import hashlib
+import json
 import os
 import queue
 import random
@@ -27,11 +28,12 @@ import sqlite3
 import subprocess
 import threading
 import time
+import traceback
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from datetime import datetime, timezone
 
 from src.config import ROOT_PATH
-from src.db.dev_mini import dev_midi_subset, dev_mini_subset
+from src.db.dev_mini import dev_large_subset, dev_midi_subset, dev_mini_subset
 from src.db.load_dataset import TESTSET
 from src.harness.agent import AgentResult, create_ifc_agent, run_question
 
@@ -52,6 +54,25 @@ _RATE_LIMIT_MARKERS = (
     "resource_exhausted",
     "resource exhausted",
 )
+
+# Transient malformed/partial provider responses worth a few quick inline
+# retries. MiniMax-M3 over the Anthropic-compatible endpoint occasionally
+# returns an assistant turn whose content is None, which langchain_anthropic /
+# deepagents iterate while formatting the exchange -> "TypeError: 'NoneType'
+# object is not iterable" (and the closely-related subscript variant). These are
+# stochastic even at temperature=0 (verified: every such agentic-arm failure in
+# the rerun succeeds on a fresh attempt with a real answer), so a small bounded
+# inline retry re-invokes the real model and yields a genuine answer instead of
+# a spurious error row. This is distinct from rate limits (which keep the longer
+# backoff envelope above) and is intentionally narrow: it does NOT fabricate or
+# coerce any answer, it only re-runs the model call.
+_MALFORMED_RESPONSE_MARKERS = (
+    "object is not iterable",
+    "object is not subscriptable",
+)
+_TRANSIENT_MAX_ATTEMPTS = 3
+_TRANSIENT_BASE_S = 1.5
+_TRANSIENT_CEILING_S = 20.0
 
 
 def _now_iso() -> str:
@@ -84,6 +105,7 @@ _MODEL_SLUGS = {
     "minimax:MiniMax-M3": "minimax-m3",
     "glm:glm-5.2": "glm-5.2",
     "glm:glm-4.5-air": "glm-4.5-air",
+    "openrouter:qwen/qwen3.5-35b-a3b": "qwen3.5-35b-a3b",
 }
 
 
@@ -103,9 +125,37 @@ def _is_rate_limit(exc: BaseException) -> bool:
     return any(marker in text for marker in _RATE_LIMIT_MARKERS)
 
 
+def _is_malformed_response(exc: BaseException) -> bool:
+    """Heuristic: a transient malformed/partial provider response (None content)."""
+    text = f"{type(exc).__name__} {exc}".lower()
+    return any(marker in text for marker in _MALFORMED_RESPONSE_MARKERS)
+
+
 # ----------------------------------------------------------------------
 # Trace -> steps mapping
 # ----------------------------------------------------------------------
+
+
+def _to_db_text(value) -> str | None:
+    """Coerce a value to a TEXT-bindable string for sqlite.
+
+    ``None`` stays ``None`` (SQL NULL) and ``str`` passes through unchanged, so
+    the default / no-thinking path is byte-for-byte identical. Structured values
+    (``dict``/``list``) are JSON-serialized rather than dropped: under thinking
+    mode MiniMax-M3 occasionally emits a ``python_exec`` tool call whose
+    ``args['code']`` is a dict (e.g. ``{"language": "python", "code": ...}``)
+    instead of a bare code string. Serializing preserves the real transcript
+    content as inspectable text instead of crashing the bind (sqlite cannot bind
+    a dict) or losing the step. Anything else falls back to ``str()``.
+    """
+    if value is None or isinstance(value, str):
+        return value
+    if isinstance(value, (dict, list)):
+        try:
+            return json.dumps(value, ensure_ascii=False, default=str)
+        except (TypeError, ValueError):
+            return str(value)
+    return str(value)
 
 
 def _extract_steps(trace: list[dict]) -> list[tuple[int, str, str]]:
@@ -117,6 +167,9 @@ def _extract_steps(trace: list[dict]) -> list[tuple[int, str, str]]:
     Any trailing tool call with no observation (e.g. truncated at the recursion
     guard) still emits a row with an empty observation so the transcript is
     complete. step_idx is 0-based per question.
+
+    ``code`` and ``observation`` are coerced to TEXT via ``_to_db_text`` so a
+    structured (dict) tool arg can never reach the sqlite bind as a raw dict.
     """
     pending_codes: list[str] = []
     steps: list[tuple[int, str, str]] = []
@@ -125,9 +178,9 @@ def _extract_steps(trace: list[dict]) -> list[tuple[int, str, str]]:
         role = entry.get("role")
         if role == "assistant":
             for tc in entry.get("tool_calls", []):
-                pending_codes.append(tc.get("args", {}).get("code", "") or "")
+                pending_codes.append(_to_db_text(tc.get("args", {}).get("code", "")) or "")
         elif role == "tool":
-            observation = entry.get("content", "") or ""
+            observation = _to_db_text(entry.get("content", "")) or ""
             code = pending_codes.pop(0) if pending_codes else ""
             steps.append((step_idx, code, observation))
             step_idx += 1
@@ -142,6 +195,62 @@ def _count_iterations(trace: list[dict]) -> int:
     return sum(
         1 for entry in trace if entry.get("role") == "assistant" and entry.get("tool_calls")
     )
+
+
+def _persist_result(store, result_row: dict, step_rows: list[tuple]) -> bool:
+    """Persist one result row + steps, isolating DB-write failures per question.
+
+    A single malformed bind (a value sqlite cannot store) must never abort the
+    whole cell again -- the offending ``steps`` write previously sat outside the
+    per-question try/except and killed the run_cell process (rc=1) on one bad
+    row. Here any exception during the write is caught: a ``done`` row is
+    downgraded to a ``status='error'`` row carrying the bind traceback (so
+    resume retries it, consistent with the existing error handling) and the run
+    continues. If the error row itself cannot be written we log and move on so
+    the cell still completes. Returns ``True`` on a clean write, ``False`` if the
+    row had to be recorded as an error (or could not be persisted at all).
+    """
+    try:
+        store.write_result(result_row, step_rows)
+        return True
+    except Exception as exc:  # noqa: BLE001
+        tb = traceback.format_exc()
+        qid = result_row.get("question_id")
+        ridx = result_row.get("repeat_idx")
+        if result_row.get("status") == "error":
+            # The error row itself failed to persist; nothing safe left to do but
+            # log and continue so a single malformed row cannot abort the cell.
+            print(
+                f"  [persist-error] q={qid} r={ridx} could not write error row: "
+                f"{type(exc).__name__}: {exc}",
+                flush=True,
+            )
+            return False
+        error_row = dict(result_row)
+        error_row.update(
+            predicted=None,
+            input_tokens=0,
+            cached_input_tokens=0,
+            output_tokens=0,
+            latency_s=0.0,
+            num_tool_calls=0,
+            num_iterations=0,
+            status="error",
+            retry_count=(result_row.get("retry_count") or 0) + 1,
+            error=f"DB write failed: {type(exc).__name__}: {exc}\n\n{tb}",
+            classification=None,
+            created_at=_now_iso(),
+        )
+        print(
+            f"  [persist-error] q={qid} r={ridx} DB write failed, recording "
+            f"error row: {type(exc).__name__}: {exc}",
+            flush=True,
+        )
+        # Record the downgraded error row (also guarded against its own failure),
+        # but always report False so the caller counts this question as an error
+        # rather than a success.
+        _persist_result(store, error_row, [])
+        return False
 
 
 # ----------------------------------------------------------------------
@@ -244,40 +353,49 @@ class CellStore:
             self._conn.commit()
 
     def write_result(self, result_row: dict, step_rows: list[tuple]) -> None:
-        """Write one results row and its steps rows in a single transaction."""
+        """Write one results row and its steps rows in a single transaction.
+
+        On any failure (e.g. an unbindable value) the transaction is rolled back
+        so the connection is left clean for the caller's recovery write, and the
+        exception is re-raised for the caller to isolate.
+        """
         with self._lock:
             qid = result_row["question_id"]
             ridx = result_row["repeat_idx"]
-            self._conn.execute(
-                "DELETE FROM steps WHERE question_id = ? AND repeat_idx = ?",
-                (qid, ridx),
-            )
-            self._conn.execute(
-                """
-                INSERT OR REPLACE INTO results (
-                    question_id, repeat_idx, project, category, predicted,
-                    input_tokens, cached_input_tokens, output_tokens, latency_s,
-                    num_tool_calls, num_iterations, status, retry_count, error,
-                    classification, created_at
-                ) VALUES (
-                    :question_id, :repeat_idx, :project, :category, :predicted,
-                    :input_tokens, :cached_input_tokens, :output_tokens, :latency_s,
-                    :num_tool_calls, :num_iterations, :status, :retry_count, :error,
-                    :classification, :created_at
+            try:
+                self._conn.execute(
+                    "DELETE FROM steps WHERE question_id = ? AND repeat_idx = ?",
+                    (qid, ridx),
                 )
-                """,
-                result_row,
-            )
-            if step_rows:
-                self._conn.executemany(
+                self._conn.execute(
                     """
-                    INSERT OR REPLACE INTO steps (
-                        question_id, repeat_idx, step_idx, generated_code, observation
-                    ) VALUES (?, ?, ?, ?, ?)
+                    INSERT OR REPLACE INTO results (
+                        question_id, repeat_idx, project, category, predicted,
+                        input_tokens, cached_input_tokens, output_tokens, latency_s,
+                        num_tool_calls, num_iterations, status, retry_count, error,
+                        classification, created_at
+                    ) VALUES (
+                        :question_id, :repeat_idx, :project, :category, :predicted,
+                        :input_tokens, :cached_input_tokens, :output_tokens, :latency_s,
+                        :num_tool_calls, :num_iterations, :status, :retry_count, :error,
+                        :classification, :created_at
+                    )
                     """,
-                    step_rows,
+                    result_row,
                 )
-            self._conn.commit()
+                if step_rows:
+                    self._conn.executemany(
+                        """
+                        INSERT OR REPLACE INTO steps (
+                            question_id, repeat_idx, step_idx, generated_code, observation
+                        ) VALUES (?, ?, ?, ?, ?)
+                        """,
+                        step_rows,
+                    )
+                self._conn.commit()
+            except Exception:
+                self._conn.rollback()
+                raise
 
     def close(self) -> None:
         self._conn.close()
@@ -296,6 +414,8 @@ def _select_questions(args) -> list:
         questions = dev_mini_subset(TESTSET)
     elif args.question_set == "dev-midi":
         questions = dev_midi_subset(TESTSET)
+    elif args.question_set == "dev-large":
+        questions = dev_large_subset(TESTSET)
     else:
         questions = list(TESTSET)
     questions.sort(key=lambda q: q.id)
@@ -318,8 +438,13 @@ def _run_with_backoff(
     tools: bool,
     recursion_limit: int,
 ) -> AgentResult:
-    """Call run_question with bounded exponential backoff on rate limits."""
+    """Call run_question with bounded exponential backoff on rate limits.
+
+    A separate, smaller bounded retry handles transient malformed-response
+    errors (see ``_MALFORMED_RESPONSE_MARKERS``) by re-invoking the model.
+    """
     attempt = 0
+    transient_attempt = 0
     while True:
         try:
             return run_question(
@@ -343,6 +468,21 @@ def _run_with_backoff(
                 time.sleep(wait)
                 attempt += 1
                 continue
+            if _is_malformed_response(exc) and transient_attempt < _TRANSIENT_MAX_ATTEMPTS:
+                wait = min(
+                    _TRANSIENT_BASE_S * (2 ** transient_attempt), _TRANSIENT_CEILING_S
+                )
+                wait = random.uniform(0, wait)
+                print(
+                    f"  [retry] transient malformed response "
+                    f"({type(exc).__name__}: {exc}); "
+                    f"attempt {transient_attempt + 1}/{_TRANSIENT_MAX_ATTEMPTS}, "
+                    f"sleeping {wait:.1f}s",
+                    flush=True,
+                )
+                time.sleep(wait)
+                transient_attempt += 1
+                continue
             raise
 
 
@@ -354,11 +494,33 @@ def main() -> None:
     )
     parser.add_argument("--tools", required=True, choices=["none", "tools"])
     parser.add_argument(
-        "--question-set", default="dev-mini", choices=["dev-mini", "dev-midi", "full"]
+        "--question-set",
+        default="dev-mini",
+        choices=["dev-mini", "dev-midi", "dev-large", "full"],
     )
     parser.add_argument("--limit", type=int, default=None)
     parser.add_argument("--question-ids", type=int, nargs="+", default=None)
     parser.add_argument("--repeats", type=int, default=1)
+    parser.add_argument(
+        "--thinking",
+        choices=["off", "adaptive"],
+        default="off",
+        help=(
+            "Extended-thinking mode for the backbone. 'off' (default) is "
+            "byte-for-byte the original arm (no thinking kwarg). 'adaptive' "
+            "sends thinking={'type': 'adaptive'} (MiniMax-M3 over the "
+            "Anthropic-compatible endpoint)."
+        ),
+    )
+    parser.add_argument(
+        "--temperature",
+        type=float,
+        default=0.0,
+        help=(
+            "Sampling temperature passed to the agent + static synthesis LLM. "
+            "Default 0.0. MiniMax recommends 1.0 when thinking is on."
+        ),
+    )
     parser.add_argument("--concurrency", type=int, default=5)
     parser.add_argument("--recursion-limit", type=int, default=120)
     parser.add_argument(
@@ -381,6 +543,7 @@ def main() -> None:
 
     static = args.paradigm == "static"
     use_tools = args.tools == "tools"
+    thinking = {"type": "adaptive"} if args.thinking == "adaptive" else None
     cell_id = _cell_id(args.model, args.paradigm, args.tools)
     base_dir = args.out_dir or os.path.join(ROOT_PATH, "outputs", "factorial")
     out_dir = os.path.join(base_dir, cell_id)
@@ -439,7 +602,12 @@ def main() -> None:
     agents: list[tuple] = []
     for _ in range(pool_size):
         agent, interp = create_ifc_agent(
-            args.model, static=static, tools=use_tools, max_retries=args.max_retries
+            args.model,
+            static=static,
+            tools=use_tools,
+            max_retries=args.max_retries,
+            thinking=thinking,
+            temperature=args.temperature,
         )
         agents.append((agent, interp))
         pool.put((agent, interp))
@@ -477,9 +645,9 @@ def main() -> None:
                 tools=use_tools,
                 recursion_limit=args.recursion_limit,
             )
-            return task, res, None
+            return task, res, None, None
         except Exception as exc:  # noqa: BLE001
-            return task, None, exc
+            return task, None, exc, traceback.format_exc()
         finally:
             pool.put((agent, interp))
 
@@ -489,7 +657,7 @@ def main() -> None:
         with ThreadPoolExecutor(max_workers=pool_size) as executor:
             futures = [executor.submit(_worker, t) for t in tasks]
             for fut in as_completed(futures):
-                task, res, exc = fut.result()
+                task, res, exc, tb = fut.result()
                 q, ridx, prior_retry = task
                 project = q.ifc.project_name if q.ifc else None
                 if exc is None and res is not None:
@@ -497,7 +665,8 @@ def main() -> None:
                         (q.id, ridx, s_idx, code, obs)
                         for (s_idx, code, obs) in _extract_steps(res.trace)
                     ]
-                    store.write_result(
+                    persisted = _persist_result(
+                        store,
                         {
                             "question_id": q.id,
                             "repeat_idx": ridx,
@@ -518,16 +687,20 @@ def main() -> None:
                         },
                         step_rows,
                     )
-                    done += 1
-                    print(
-                        f"  [done] q={q.id} r={ridx} "
-                        f"tool_calls={res.num_tool_calls} "
-                        f"in={res.input_tokens} cached={res.cached_input_tokens} "
-                        f"out={res.output_tokens} t={res.elapsed_s}s",
-                        flush=True,
-                    )
+                    if persisted:
+                        done += 1
+                        print(
+                            f"  [done] q={q.id} r={ridx} "
+                            f"tool_calls={res.num_tool_calls} "
+                            f"in={res.input_tokens} cached={res.cached_input_tokens} "
+                            f"out={res.output_tokens} t={res.elapsed_s}s",
+                            flush=True,
+                        )
+                    else:
+                        errors += 1
                 else:
-                    store.write_result(
+                    _persist_result(
+                        store,
                         {
                             "question_id": q.id,
                             "repeat_idx": ridx,
@@ -542,7 +715,11 @@ def main() -> None:
                             "num_iterations": 0,
                             "status": "error",
                             "retry_count": prior_retry + 1,
-                            "error": f"{type(exc).__name__}: {exc}",
+                            "error": (
+                                f"{type(exc).__name__}: {exc}\n\n{tb}"
+                                if tb
+                                else f"{type(exc).__name__}: {exc}"
+                            ),
                             "classification": None,
                             "created_at": _now_iso(),
                         },

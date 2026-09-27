@@ -227,6 +227,8 @@ def create_ifc_agent(
     tools: bool = False,
     max_retries: int = 3,
     warn_after: int = 25,
+    thinking: dict | None = None,
+    temperature: float | None = None,
 ):
     """Create a CodeAct DeepAgent for one factorial cell.
 
@@ -240,7 +242,24 @@ def create_ifc_agent(
     """
     _cap = _max_output_tokens()
     _cap_kw = {"max_tokens": _cap} if _cap is not None else {}
-    llm = init_llm(model, temperature=0, max_retries=max_retries, **_cap_kw)
+    # Optional extended-thinking path. Opt-in only: when ``thinking`` is None the
+    # arm is byte-for-byte the original (temperature=0, no thinking kwarg), so
+    # existing experiment semantics are unchanged. MiniMax-M3 enables reasoning
+    # via ``thinking={"type": "adaptive"}`` over its Anthropic-compatible
+    # endpoint and recommends temperature=1 when thinking is on (accepted range
+    # [0, 2]); we follow that recommendation for the thinking arm.
+    _think_kw = {"thinking": thinking} if thinking else {}
+    # An explicit ``temperature`` is authoritative when given; otherwise fall
+    # back to the legacy default (1.0 when thinking is on, else 0). Passing
+    # ``temperature=0`` with ``thinking=None`` is byte-for-byte the original arm.
+    _temperature = temperature if temperature is not None else (1.0 if thinking else 0)
+    llm = init_llm(
+        model,
+        temperature=_temperature,
+        max_retries=max_retries,
+        **_cap_kw,
+        **_think_kw,
+    )
     interp = JupyterInterpreter()
 
     @tool
@@ -286,6 +305,10 @@ def create_ifc_agent(
     agent._static = static
     agent._model = model
     agent._max_retries = max_retries
+    # Mirror the thinking + temperature config onto the static Phase-2 synthesis
+    # call so both phases use identical sampling settings.
+    agent._thinking = thinking
+    agent._temperature = _temperature
     return agent, interp
 
 
@@ -357,6 +380,37 @@ def run_question(
         # once the model picks the Answer tool, so this is the user-facing
         # answer.
         structured = result.get("structured_response")
+        # Recovery turns: some providers (observed with qwen3.5-35b-a3b over
+        # OpenRouter) occasionally return an EMPTY assistant turn with no tool
+        # calls despite tool_choice="any", which ends the deepagents loop with
+        # no structured Answer and would store an empty answer. Re-invoke,
+        # continuing from the accumulated transcript plus the wrap-up message,
+        # so the model synthesizes the final Answer from work already done
+        # (cheap: the exploration is not redone, and prompt caching holds).
+        # Bounded to 2 attempts; providers that always emit Answer (all three
+        # original backbones) never enter this loop.
+        recovery_attempts = 0
+        while not isinstance(structured, Answer) and recovery_attempts < 2:
+            recovery_attempts += 1
+            followup = {
+                "messages": [
+                    *result["messages"],
+                    HumanMessage(content=_WRAP_UP_MSG),
+                ]
+            }
+            config = {
+                "configurable": {"thread_id": str(uuid.uuid4())},
+                "recursion_limit": recursion_limit,
+            }
+            result = agent.invoke(followup, config=config)
+            structured = result.get("structured_response")
+        if recovery_attempts:
+            # Recompute the transcript over the final message list (each
+            # message appears exactly once, so usage is not double-counted).
+            messages = result["messages"]
+            trace_entries = _extract_trace(messages)
+            in_tok, cached_tok, out_tok, tool_calls = _sum_usage(messages)
+            elapsed = time.perf_counter() - t0
         if isinstance(structured, Answer):
             answer = structured.text.strip()
         else:
@@ -510,11 +564,19 @@ def _synthesize_static_answer(
 
     _synth_cap = _max_output_tokens()
     _synth_cap_kw = {"max_tokens": _synth_cap} if _synth_cap is not None else {}
+    # Mirror the agent's thinking config (opt-in; default off keeps temperature=0
+    # and no thinking kwarg, identical to the original synthesis call).
+    _synth_thinking = getattr(agent, "_thinking", None)
+    _synth_think_kw = {"thinking": _synth_thinking} if _synth_thinking else {}
+    _synth_temperature = getattr(agent, "_temperature", None)
+    if _synth_temperature is None:
+        _synth_temperature = 1.0 if _synth_thinking else 0
     synth_llm = init_llm(
         agent._model,
-        temperature=0,
+        temperature=_synth_temperature,
         max_retries=getattr(agent, "_max_retries", 3),
         **_synth_cap_kw,
+        **_synth_think_kw,
     )
     t0 = time.perf_counter()
     synth_msg = synth_llm.invoke([HumanMessage(content=synth_prompt)])

@@ -27,6 +27,11 @@ DEV_MINI_SIZE = 10
 # dev-midi target size. Same round-robin draw, four strata, ~10 per category.
 DEV_MIDI_SIZE = 40
 
+# dev-large target size. Same round-robin draw, four strata, ~25 per category.
+# Used for cross-model comparison runs that need more statistical power than
+# dev-midi but not the full 514-question set (e.g. the qwen3.5-35b-a3b probe).
+DEV_LARGE_SIZE = 100
+
 
 def dev_mini_subset(testset: List[IfcBench], size: int = DEV_MINI_SIZE) -> List[IfcBench]:
     """Return a fixed stratified subset of *testset*, stratified by category.
@@ -84,4 +89,20 @@ def dev_midi_subset(testset: List[IfcBench], size: int = DEV_MIDI_SIZE) -> List[
     return dev_mini_subset(testset, size=size)
 
 
-__all__ = ["dev_mini_subset", "dev_midi_subset", "DEV_MINI_SIZE", "DEV_MIDI_SIZE"]
+def dev_large_subset(testset: List[IfcBench], size: int = DEV_LARGE_SIZE) -> List[IfcBench]:
+    """Return the dev-large subset: same draw as dev-mini/midi, size 100.
+
+    Strict superset of dev-midi (and dev-mini) by the same prefix-extension
+    argument, and byte-stable across runs for a fixed *testset*.
+    """
+    return dev_mini_subset(testset, size=size)
+
+
+__all__ = [
+    "dev_mini_subset",
+    "dev_midi_subset",
+    "dev_large_subset",
+    "DEV_MINI_SIZE",
+    "DEV_MIDI_SIZE",
+    "DEV_LARGE_SIZE",
+]
