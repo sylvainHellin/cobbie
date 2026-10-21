@@ -88,6 +88,8 @@ Key arguments:
 
 Correctness is scored post-hoc by a Gemini LLM-as-judge (`gemini-3.1-pro-preview`) against the multi-criteria BIM rubric; it writes `classification` (`correct` / `wrong` / `abstained` / `error`) back into each cell's sqlite. Resume-safe (already-classified rows are skipped).
 
+The judge sees only the question category, the question, the reference answer and the final system answer, never the execution trace; Section 2.3 of the published paper wrongly says it also receives the trace.
+
 ```bash
 # Spot-check / small cells: synchronous
 uv run python scripts/judge.py --judge-mode sync --cell '<cell_id>' --dry-run
